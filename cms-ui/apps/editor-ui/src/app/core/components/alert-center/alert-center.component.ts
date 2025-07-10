@@ -10,8 +10,9 @@ import { ApplicationStateService } from '../../../state';
     selector: 'alert-center',
     templateUrl: './alert-center.component.html',
     styleUrls: ['./alert-center.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
+})
 export class AlertCenterComponent {
 
     @Output()

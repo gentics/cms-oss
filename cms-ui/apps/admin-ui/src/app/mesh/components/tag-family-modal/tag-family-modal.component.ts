@@ -10,6 +10,7 @@ import { TagFamilyPropertiesMode } from '../tag-family-properties/tag-family-pro
     templateUrl: './tag-family-modal.component.html',
     styleUrls: ['./tag-family-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TagFamilyModal extends BaseModal<TagFamily> implements OnInit {
 

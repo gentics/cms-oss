@@ -147,3 +147,40 @@
 .GENTICS_block[data-gcn-construct-ctl-style="click"] .aloha-construct-buttons-container .gcn-block-button {
 	display: none;
 }
+
+@keyframes gcn-loading-indicator {
+	0% {
+		transform: rotateZ(0deg);
+	}
+	100% {
+		transform: rotateZ(-360deg);
+	}
+}
+
+.gcn-tag-insert-placeholder {
+	width: 1em;
+	height: 1em;
+	font-size: 1.5rem !important;
+	padding: 0.125rem;
+  	margin-left: 0.5rem;
+	position: relative;
+	box-sizing: content-box;
+	user-select: none;
+
+	&::before {
+		content: 'sync';
+		display: block;
+		position: absolute;
+		top: 0.125rem;
+		left: 0.125rem;
+		height: 1em;
+		width: 1em;
+		font-size: 1em;
+		animation: 2s linear 0s infinite gcn-loading-indicator;
+	}
+}
+
+div.gcn-tag-insert-placeholder {
+	display: block !important;
+	margin-left: 0;
+}

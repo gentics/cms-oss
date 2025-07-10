@@ -136,6 +136,9 @@
 
     .cell-content-wrapper {
         margin: auto 0;
+        word-wrap: break-word;
+        text-wrap-mode: wrap;
+        white-space-collapse: collapse;
     }
 }
 

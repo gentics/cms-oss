@@ -4,7 +4,8 @@ import { translationTable } from '../translations';
 
 @Pipe({
     name: 'translate',
-    pure: true
+    pure: true,
+    standalone: false
 })
 export class TranslatePipe implements PipeTransform {
 

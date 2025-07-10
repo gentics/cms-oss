@@ -16,7 +16,8 @@ import { EditorOverlayService } from '../../providers/editor-overlay.service';
 @Component({
     selector: 'editor-overlay',
     template: '',
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class EditorOverlay implements OnInit, OnDestroy {
 

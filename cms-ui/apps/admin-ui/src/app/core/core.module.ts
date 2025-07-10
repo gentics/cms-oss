@@ -9,7 +9,7 @@ import {
 import { MeshModule } from '@admin-ui/mesh';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
-import { APP_INITIALIZER, NgModule, Optional, SkipSelf } from '@angular/core';
+import { NgModule, Optional, SkipSelf, inject, provideAppInitializer } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
@@ -34,6 +34,7 @@ import {
 import { AuthGuard, DiscardChangesGuard, PermissionsGuard } from './guards';
 import {
     ActivityManagerService,
+    AdminHandlerService,
     BreadcrumbResolver,
     ConstructCategoryHandlerService,
     ConstructHandlerService,
@@ -77,6 +78,7 @@ import {
     PermissionsTrableLoaderService,
     RoleOperations,
     RouteEntityResolverService,
+    ScheduleHandlerService,
     ScheduleExecutionOperations,
     ScheduleOperations,
     ScheduleTaskOperations,
@@ -161,6 +163,7 @@ const OPERATIONS: any[] = [
 
 const PROVIDERS: any[] = [
     ActivityManagerService,
+    AdminHandlerService,
     AuthGuard,
     BreadcrumbResolver,
     BreadcrumbsService,
@@ -201,6 +204,7 @@ const PROVIDERS: any[] = [
     PermissionsService,
     PermissionsTrableLoaderService,
     RouteEntityResolverService,
+    ScheduleHandlerService,
     ServerStorageService,
     TagMapEntryTableLoaderService,
     TemplateTableLoaderService,
@@ -220,12 +224,10 @@ const PROVIDERS: any[] = [
         useFactory: createSidObservable,
         deps: [AppStateService],
     },
-    {
-        provide: APP_INITIALIZER,
-        useFactory: initializeApp,
-        deps: [ AppStateService, GCMSRestClientService, KeycloakService],
-        multi: true,
-    },
+    provideAppInitializer(() => {
+        const initializerFn = (initializeApp)(inject(AppStateService), inject(GCMSRestClientService), inject(KeycloakService));
+        return initializerFn();
+      }),
 ];
 
 @NgModule({

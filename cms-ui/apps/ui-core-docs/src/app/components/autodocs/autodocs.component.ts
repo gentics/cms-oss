@@ -9,6 +9,7 @@ import { IDocumentation } from '../../common/docs';
     selector: 'gtx-autodocs',
     templateUrl: './autodocs.component.html',
     styleUrls: ['./autodocs.component.scss'],
+    standalone: false
 })
 export class AutodocsComponent implements OnInit {
 

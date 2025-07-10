@@ -10,15 +10,17 @@ describe('StringListComponent', () => {
 
     describe('StringListComponent via Value', () => {
         @Component({
-            template: `<gtx-string-list
-                [label]="label"
-                [disabled]="disabled"
-                [sortable]="sortable"
-                [value]="value"
-                [errors]="errors"
-                (valueChange)="onValueChange($event)"
-                (touch)="onTouch($event)"
-            ></gtx-string-list>`,
+            template: `
+                <gtx-string-list
+                    [label]="label"
+                    [disabled]="disabled"
+                    [sortable]="sortable"
+                    [value]="value"
+                    [errors]="errors"
+                    (valueChange)="onValueChange($event)"
+                    (touch)="onTouch($event)"
+                ></gtx-string-list>`,
+            standalone: false,
         })
         class TestComponent {
             public label: string;
@@ -233,16 +235,18 @@ describe('StringListComponent', () => {
 
     describe('StringListComponent via FormControl', () => {
         @Component({
-            template: `<ng-container [formGroup]="form">
-                <gtx-string-list
-                    [label]="label"
-                    [sortable]="sortable"
-                    [errors]="errors"
-                    formControlName="test"
-                    (valueChange)="onValueChange($event)"
-                    (touch)="onTouch($event)"
-                ></gtx-string-list>
-            </ng-container>`,
+            template: `
+                <ng-container [formGroup]="form">
+                    <gtx-string-list
+                        [label]="label"
+                        [sortable]="sortable"
+                        [errors]="errors"
+                        formControlName="test"
+                        (valueChange)="onValueChange($event)"
+                        (touch)="onTouch($event)"
+                    ></gtx-string-list>
+                </ng-container>`,
+            standalone: false,
         })
         class TestComponent {
             public label: string;

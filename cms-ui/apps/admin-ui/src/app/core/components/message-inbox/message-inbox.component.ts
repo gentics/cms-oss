@@ -17,6 +17,7 @@ import { MessageModalComponent } from '../message-modal/message-modal.component'
     templateUrl: './message-inbox.tpl.html',
     styleUrls: ['./message-inbox.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MessageInboxComponent implements OnInit {
 

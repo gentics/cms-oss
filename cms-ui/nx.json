@@ -123,6 +123,5 @@
                 "{workspaceRoot}/eslint.config.js"
             ]
         }
-    },
-    "useLegacyCache": true
+    }
 }

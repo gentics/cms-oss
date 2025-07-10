@@ -5,6 +5,8 @@ import java.util.List;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import com.webcohesion.enunciate.metadata.ReadOnly;
+
 /**
  * REST Model for a Node
  */
@@ -30,13 +32,17 @@ public class Node extends ContentNodeItem implements Serializable {
 	private Integer inheritedFromId;
 
 	/**
+	 * Name of the node or channel which this node inherits from
+	 */
+	private String inheritedFromName;
+
+	/**
 	 * Id of the master node.
 	 */
 	private Integer masterNodeId;
 	private String publishDir;
 	private String binaryPublishDir;
 	private Boolean pubDirSegment;
-	private Boolean https;
 	private Boolean publishImageVariants;
 	private String host;
 	private String hostProperty;
@@ -79,6 +85,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	 * ID of the root folder
 	 * @return root folder ID
 	 */
+	@ReadOnly
 	public Integer getFolderId() {
 		return folderId;
 	}
@@ -108,7 +115,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
-	 * Get the publish directory for binaries
+	 * Publish directory for binaries
 	 * @return publish directory for binaries
 	 */
 	public String getBinaryPublishDir() {
@@ -140,14 +147,6 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
-	 * True if secure https is enabled for this node
-	 * @return true for secure https
-	 */
-	public Boolean isHttps() {
-		return https;
-	}
-
-	/**
 	 * Set image variants should be created on page/object property publish
 	 * @param publishImageVariants
 	 */
@@ -164,15 +163,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
-	 * Set whether secure https is enabled for the node
-	 * @param https
-	 */
-	public void setHttps(Boolean https) {
-		this.https = https;
-	}
-
-	/**
-	 * Hostname for publishing into the Filesystem
+	 * Hostname of the node
 	 * @return hostname
 	 */
 	public String getHost() {
@@ -450,10 +441,18 @@ public class Node extends ContentNodeItem implements Serializable {
 		this.defaultImageFolderId = defaultImageFolderId;
 	}
 
+	/**
+	 * Ordered list of IDs of the languages assigned to the node
+	 * @return list of language IDs
+	 */
 	public List<Integer> getLanguagesId() {
 		return languagesId;
 	}
 
+	/**
+	 * Set the languages IDs
+	 * @param languagesId list of IDs
+	 */
 	public void setLanguagesId(List<Integer> languagesId) {
 		this.languagesId = languagesId;
 	}
@@ -479,9 +478,10 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
-	 * Return id of the node or channel which inherits the node.
-	 * @return
+	 * ID of the node or channel from which this node inherits from directly (immediate master node)
+	 * @return ID
 	 */
+	@ReadOnly
 	public Integer getInheritedFromId() {
 		return inheritedFromId;
 	}
@@ -495,9 +495,27 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
-	 * Return the id of the master node of the node. The id will point to the node itself if there is no specific master.
+	 * Name of the node or channel this channel inherits from directly (immediate master node)
+	 * @return name
+	 */
+	@ReadOnly
+	public String getInheritedFromName() {
+		return inheritedFromName;
+	}
+
+	/**
+	 * Set the name of the node or channel this node inherits from
+	 * @param inheritedFromName name
+	 */
+	public void setInheritedFromName(String inheritedFromName) {
+		this.inheritedFromName = inheritedFromName;
+	}
+
+	/**
+	 * ID of the top master node of the node. The id will point to the node itself if there is no specific master.
 	 * @return
 	 */
+	@ReadOnly
 	public Integer getMasterNodeId() {
 		return masterNodeId;
 	}
@@ -594,6 +612,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	 * Mesh Project, this node publishes into
 	 * @return mesh project
 	 */
+	@ReadOnly
 	public String getMeshProject() {
 		return meshProject;
 	}
@@ -614,26 +633,43 @@ public class Node extends ContentNodeItem implements Serializable {
 		this.meshProjectName = meshProjectName;
 	}
 
+	/**
+	 * True to omit page extensions when generating filenames of pages
+	 * @return flag
+	 */
 	public Boolean getOmitPageExtension() {
 		return omitPageExtension;
 	}
 
+	/**
+	 * Set the flag to omit page extensions
+	 * @param omitPageExtension flag
+	 */
 	public void setOmitPageExtension(Boolean omitPageExtension) {
 		this.omitPageExtension = omitPageExtension;
 	}
 
+	/**
+	 * Setting for placement of language codes for pages
+	 * @return language code placement
+	 */
 	public PageLanguageCode getPageLanguageCode() {
 		return pageLanguageCode;
 	}
 
+	/**
+	 * Set the language code placenment
+	 * @param pageLanguageCode language code placement
+	 */
 	public void setPageLanguageCode(PageLanguageCode pageLanguageCode) {
 		this.pageLanguageCode = pageLanguageCode;
 	}
 
 	/**
-	 * Get the name of the master node
+	 * Name of the master node, if this node is a channel
 	 * @return master node name
 	 */
+	@ReadOnly
 	public String getMasterName() {
 		return masterName;
 	}
@@ -647,9 +683,10 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
-	 * Get the name of the content repository
+	 * Name of the content repository assigned to the node
 	 * @return content repository name
 	 */
+	@ReadOnly
 	public String getContentRepositoryName() {
 		return contentRepositoryName;
 	}
@@ -660,5 +697,10 @@ public class Node extends ContentNodeItem implements Serializable {
 	 */
 	public void setContentRepositoryName(String contentRepositoryName) {
 		this.contentRepositoryName = contentRepositoryName;
+	}
+
+	@Override
+	public String toString() {
+		return "Node %s".formatted(getName());
 	}
 }

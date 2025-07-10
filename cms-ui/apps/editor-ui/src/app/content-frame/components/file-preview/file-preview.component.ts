@@ -36,6 +36,7 @@ import { ApplicationStateService, ApplyImageDimensionsAction, FolderActionsServi
     templateUrl: './file-preview.tpl.html',
     styleUrls: ['./file-preview.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FilePreviewComponent implements OnChanges, OnDestroy {
 

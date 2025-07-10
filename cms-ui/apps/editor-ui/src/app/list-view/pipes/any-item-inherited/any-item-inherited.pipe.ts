@@ -5,7 +5,8 @@ import { InheritableItem } from '@gentics/cms-models';
  * Pipe that returns true if any of the passed items (>= 1) is "inherited".
  */
 @Pipe({
-    name: 'anyItemInherited'
+    name: 'anyItemInherited',
+    standalone: false
 })
 export class AnyItemInheritedPipe implements PipeTransform {
     transform(items: InheritableItem[]): boolean {

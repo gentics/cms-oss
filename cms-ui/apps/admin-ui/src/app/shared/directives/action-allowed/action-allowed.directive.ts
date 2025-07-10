@@ -90,6 +90,7 @@ export const GTX_ACTION_ALLOWED_SELECTOR = `
  */
 @Directive({
     selector: GTX_ACTION_ALLOWED_SELECTOR,
+    standalone: false
 })
 export class ActionAllowedDirective implements OnInit, OnDestroy {
 

@@ -231,11 +231,13 @@ describe('SearchBarComponent', () => {
 
 @Component({
     template: `
-        <gtx-search-bar query="foo"
-                        (search)="onSearch($event)"
-                        (change)="onChange($event)"
-                        (clear)="onClear($event)">
-        </gtx-search-bar>`,
+        <gtx-search-bar
+            query="foo"
+            (search)="onSearch($event)"
+            (change)="onChange($event)"
+            (clear)="onClear($event)"
+        ></gtx-search-bar>`,
+    standalone: false,
 })
 class TestComponent {
     query = '';

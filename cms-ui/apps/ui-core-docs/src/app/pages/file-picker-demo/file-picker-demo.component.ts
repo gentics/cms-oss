@@ -6,6 +6,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
     templateUrl: './file-picker-demo.component.html',
     styleUrls: ['./file-picker-demo.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class FilePickerDemoPage {
 

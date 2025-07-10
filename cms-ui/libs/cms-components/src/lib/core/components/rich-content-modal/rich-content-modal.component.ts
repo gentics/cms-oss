@@ -8,6 +8,7 @@ import { RichContent, RichContentType } from '../../../common/models';
     templateUrl: './rich-content-modal.component.html',
     styleUrls: ['./rich-content-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RichContentModal extends BaseModal<RichContent> implements OnInit {
 

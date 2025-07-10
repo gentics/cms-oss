@@ -107,9 +107,7 @@ hr {
 
     &::ng-deep {
         .grouped-tabs {
-            width: 100%;
-            min-height: 100%;
-            overflow: visible;
+            flex: 1 1 !important;
 
             .collapsible {
                 border-right: none;
@@ -121,16 +119,10 @@ hr {
                         background: linear-gradient(to left, white 25%, rgba(255, 255, 255, 0));
                         content: '';
                         height: 100%;
-                        width: 20px;
+                        width: 1rem;
                         position: absolute;
                         right: 0;
                         top: 0;
-                    }
-
-                    icon[left] {
-                        float: left;
-                        margin-right: 8px;
-                        font-size: 16px;
                     }
                 }
 
@@ -140,6 +132,10 @@ hr {
                     &.status-icon::before {
                         color: $gtx-color-warning !important;
                     }
+                }
+
+                .tab-link {
+                    padding-right: 1rem !important;
                 }
 
                 > li.tab-link,
@@ -225,24 +221,6 @@ hr {
 
     .tag-editor {
         overflow-y: auto;
-    }
-}
-
-.tag-list-container {
-    padding-left: 24px;
-}
-
-tag-editor-overlay-host.active {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
-    @media screen and (max-width: $small-screen) {
-        left: auto;
-        width: 90%;
     }
 }
 

@@ -114,6 +114,7 @@ export class ResourceUrlBuilder {
             new: newTimestamp,
             nodeId: nodeId,
             source: false,
+            daisyDiff: true,
         });
         return `${API_BASE_URL}/page/diff/versions/${pageId}?${params}`;
     }
@@ -127,6 +128,7 @@ export class ResourceUrlBuilder {
             new: newTimestamp,
             nodeId: nodeId,
             source: true,
+            daisyDiff: true,
         });
         return `${API_BASE_URL}/page/diff/versions/${pageId}?${params}`;
     }

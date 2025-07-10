@@ -21,6 +21,7 @@ enum VersionManagement {
     styleUrls: ['./time-management-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [I18nDatePipe],
+    standalone: false
 })
 export class TimeManagementModal extends BaseModal<TimeManagement> implements OnDestroy, OnInit {
 

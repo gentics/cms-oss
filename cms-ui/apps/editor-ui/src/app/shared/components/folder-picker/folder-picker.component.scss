@@ -1,0 +1,76 @@
+@import 'variables';
+
+label {
+    display: block;
+    color: $gtx-color-dark-gray;
+    font-size: 0.8rem;
+    transition: color 0.2s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.wrapper {
+    box-sizing: border-box;
+    border: 2px solid $gtx-color-light-gray;
+    border-radius: 3px;
+    height: 2.5rem;
+    transition: border 0.2s;
+    display: flex;
+
+    .picker-value {
+        flex: 1 1 auto;
+        padding: 5px;
+        align-content: center;
+    }
+
+    .addon-button {
+        flex: 0 0 auto;
+        padding: 4px 0.3rem;
+        background: $gtx-color-very-light-gray;
+        border-left: 1px solid $gtx-color-light-gray;
+        cursor: pointer;
+        transition: 0.2s;
+        align-content: center;
+
+        &::ng-deep .button-event-wrapper .btn icon {
+            font-size: 1.2rem;
+        }
+
+        &:hover::ng-deep .button-event-wrapper .btn {
+            color: #0085c3;
+
+            &.alert {
+                color: #c9302c;
+            }
+        }
+    }
+
+    &.disabled {
+        background: $gtx-color-very-light-gray;
+
+        .picker-value {
+            color: $gtx-color-dark-gray;
+        }
+
+        .addon-button {
+            cursor: default;
+        }
+    }
+}
+
+:host.ng-invalid .wrapper,
+.wrapper.invalid {
+    border-color: $gtx-color-alert;
+
+    .addon-button {
+        border-color: $gtx-color-alert;
+    }
+}
+
+:host.ng-invalid label,
+label.invalid {
+    color: $gtx-color-alert;
+}

@@ -6,6 +6,7 @@ import { coerceToBoolean } from '@gentics/ui-core';
     selector: 'gtx-dashboard-item',
     templateUrl: './dashboard-item.component.html',
     styleUrls: ['./dashboard-item.component.scss'],
+    standalone: false
 })
 export class DashboardItemComponent {
 

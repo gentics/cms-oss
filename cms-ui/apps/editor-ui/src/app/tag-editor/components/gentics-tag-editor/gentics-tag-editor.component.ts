@@ -2,6 +2,7 @@ import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, I
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import {
     CompleteTagEditor,
+    ModalClosingReason,
     MultiValidationResult,
     TagChangedFn,
     TagEditorContext,
@@ -32,6 +33,7 @@ import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-
     templateUrl: './gentics-tag-editor.component.html',
     styleUrls: ['./gentics-tag-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewInit, OnDestroy {
 
@@ -94,7 +96,7 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
     private subscriptions = new Subscription();
 
     private editResolve: (result: TagEditorResult) => void;
-    private editReject: () => void;
+    private editReject: (reason?: ModalClosingReason) => void;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
@@ -166,7 +168,7 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
     }
 
     onCancelClick(): void {
-        this.editReject();
+        this.editReject(ModalClosingReason.CANCEL);
     }
 
     onOkClick(): void {

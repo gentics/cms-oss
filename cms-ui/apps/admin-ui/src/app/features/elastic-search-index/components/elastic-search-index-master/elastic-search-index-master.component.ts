@@ -7,6 +7,7 @@ import { ElasticSearchIndex, NormalizableEntityType } from '@gentics/cms-models'
     selector: 'gtx-elastic-search-index-master',
     templateUrl: './elastic-search-index-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ElasticSearchIndexMasterComponent extends BaseTableMasterComponent<ElasticSearchIndex, ElasticSearchIndexBO> {
 

@@ -145,6 +145,7 @@ function triggerClickEventOn(element: Element): void {
 
 @Component({
     template: '<favourite-toggle [item]="item"></favourite-toggle>',
+    standalone: false,
 })
 class TestComponent {
     item: any = {};

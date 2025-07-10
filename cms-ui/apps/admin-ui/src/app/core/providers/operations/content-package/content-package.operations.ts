@@ -11,13 +11,12 @@ import {
     ContentPackageSyncOptions,
     Response,
 } from '@gentics/cms-models';
-import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { NotificationService, OpenedNotification } from '@gentics/ui-core';
 import { last } from 'lodash-es';
 import { Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
@@ -27,19 +26,18 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
 
     constructor(
         injector: Injector,
-        private api: GcmsApi,
+        private client: GCMSRestClientService,
         private entityManager: EntityManagerService,
         private appState: AppStateService,
         private i18nNotification: I18nNotificationService,
         private notification: NotificationService,
-        private client: GCMSRestClientService,
     ) {
         super(injector, 'contentPackage');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-module-boundary-types
     getAll(options?: any, parentId?: string): Observable<ContentPackageBO[]> {
-        return this.api.contentStaging.listContentPackages(options).pipe(
+        return this.client.contentStaging.list(options).pipe(
             map(res => (res.items || []).map(item => this.mapToBusinessObject(item))),
             tap(packages => {
                 this.entityManager.addEntities(this.entityIdentifier, packages);
@@ -50,7 +48,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-module-boundary-types
     get(entityId: string, options?: any, parentId?: string | number): Observable<ContentPackageBO> {
-        return this.api.contentStaging.getContentPackage(entityId).pipe(
+        return this.client.contentStaging.get(entityId).pipe(
             map(res => this.mapToBusinessObject(res.contentPackage)),
             tap(pkg => this.entityManager.addEntity(this.entityIdentifier, pkg)),
             this.catchAndRethrowError(),
@@ -58,7 +56,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
     }
 
     create(body: ContentPackageCreateRequest, notify: boolean = true): Observable<ContentPackageBO> {
-        return this.api.contentStaging.createContentPackage(body).pipe(
+        return this.client.contentStaging.create(body).pipe(
             map(res => this.mapToBusinessObject(res.contentPackage)),
             tap(pkg => {
                 this.entityManager.addEntity(this.entityIdentifier, pkg);
@@ -77,7 +75,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
     }
 
     update(entityId: string, body: ContentPackageSaveRequest, notify: boolean = true): Observable<ContentPackageBO> {
-        return this.api.contentStaging.updateContentPackage(entityId, body).pipe(
+        return this.client.contentStaging.update(entityId, body).pipe(
             map(res => this.mapToBusinessObject(res.contentPackage)),
             tap(pkg => {
                 this.entityManager.addEntity(this.entityIdentifier, pkg);
@@ -96,16 +94,14 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
     }
 
     delete(entityId: string, notify: boolean = true): Observable<void> {
-        const pktToBeDeleted = this.appState.now.entity.contentPackage[entityId];
-
-        return this.api.contentStaging.deleteContentPackage(entityId).pipe(
+        return this.client.contentStaging.delete(entityId).pipe(
             discard(() => {
-                if (notify && pktToBeDeleted) {
+                if (notify) {
                     this.i18nNotification.show({
                         type: 'success',
                         message: 'shared.item_singular_deleted',
                         translationParams: {
-                            name: pktToBeDeleted.name,
+                            name: entityId,
                         },
                     });
                 }
@@ -124,7 +120,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
             downloadName = `gcms_export_${entityId}.zip`;
         }
 
-        return this.api.contentStaging.downloadContentPackage(entityId).pipe(
+        return this.client.contentStaging.download(entityId).pipe(
             switchMap(blob => from(downloadFromBlob(blob, downloadName))),
             map(() => true),
             catchError(err => {
@@ -147,7 +143,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
     }
 
     upload(entityId: string, file: File, notify: boolean = true): Observable<ContentPackageBO> {
-        return this.api.contentStaging.uploadContentPackage(entityId, file).pipe(
+        return this.client.contentStaging.upload(entityId, file).pipe(
             map(res => this.mapToBusinessObject(res.contentPackage)),
             tap(pkg => {
                 this.entityManager.addEntity(this.entityIdentifier, pkg);
@@ -156,26 +152,32 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                         type: 'success',
                         message: 'content_staging.upload_to_content_package_finished',
                         translationParams: {
-                            packageName: pkg.name,
+                            packageName: entityId,
                         },
                     });
                 }
             }),
             catchError(err => {
-                const pkg = this.appState.now.entity.contentPackage[entityId];
+                let errMsg = err.message;
+
+                if (err instanceof GCMSRestClientRequestError) {
+                    errMsg = last(err.data?.messages)?.message
+                        || err.data?.responseInfo?.responseMessage
+                        || errMsg;
+                }
 
                 this.i18nNotification.show({
                     type: 'alert',
                     message: 'content_staging.upload_to_content_package_failed',
+                    delay: 10_000,
                     translationParams: {
-                        packageName: pkg?.name,
-                        errorMessage: err.message,
+                        packageName: entityId,
+                        errorMessage: errMsg,
                     },
                 });
 
-                return throwError(err);
+                return throwError(() => err);
             }),
-            this.catchAndRethrowError(),
         )
     }
 
@@ -218,7 +220,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                 }
 
                 if (!(err instanceof GCMSRestClientRequestError)) {
-                    return throwError(err);
+                    return throwError(() => err);
                 }
 
                 const res: Response = err.data;
@@ -238,7 +240,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
     }
 
     getImportErrors(entityId: string): Observable<ContentPackageErrorResponse> {
-        return this.api.contentStaging.getImportErrors(entityId);
+        return this.client.contentStaging.errors(entityId);
     }
 
     exportToFileSystem(entityId: string, options?: ContentPackageSyncOptions, notify: boolean = true): Observable<void> {
@@ -260,7 +262,7 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                     },
                 });
             }),
-            switchMap(() => this.api.contentStaging.exportContentPackage(entityId, options)),
+            switchMap(() => this.client.contentStaging.export(entityId, options)),
             discard(res => {
                 if (startNotif) {
                     startNotif.dismiss();
@@ -279,11 +281,11 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
                     startNotif.dismiss();
                 }
 
-                if (!(err instanceof ApiError)) {
-                    return throwError(err);
+                if (!(err instanceof GCMSRestClientRequestError)) {
+                    return throwError(() => err);
                 }
 
-                const res: Response = err.response;
+                const res: Response = err.data;
 
                 this.notification.show({
                     type: 'alert',

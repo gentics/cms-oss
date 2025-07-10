@@ -38,6 +38,7 @@ enum UpdateQueue {
     styleUrls: ['./rich-content-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(RichContentEditorComponent)],
+    standalone: false
 })
 export class RichContentEditorComponent extends BaseFormElementComponent<string> implements AfterViewInit {
 

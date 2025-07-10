@@ -11,10 +11,10 @@ import {
 import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { Group, GroupResponse, Permission } from '@gentics/mesh-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshGroupModal } from '../mesh-group-modal/mesh-group-modal.component';
@@ -33,6 +33,7 @@ const MANAGE_ROLES_ACTION = 'manageRoles';
     templateUrl: './mesh-group-table.component.html',
     styleUrls: ['./mesh-group-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshGroupTableComponent
     extends BaseEntityTableComponent<Group, MeshGroupBO, MeshGroupTableLoaderOptions>
@@ -83,7 +84,7 @@ export class MeshGroupTableComponent
         this.booleanInputs.push('users');
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.users) {

@@ -11,6 +11,7 @@ import { MeshUserPropertiesMode } from '../mesh-user-properties/mesh-user-proper
     templateUrl: './mesh-user-modal.component.html',
     styleUrls: ['./mesh-user-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshUserModal extends BaseModal<User> implements OnInit {
 

@@ -13,7 +13,6 @@ import { ApplicationStateService, FolderActionsService, PostUpdateBehavior, STAT
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { componentTest } from '@editor-ui/testing';
-import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.mock';
 import {
     File as CmsFile,
@@ -41,6 +40,7 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { MockApiBase } from '@gentics/cms-rest-clients-angular/base/api-base.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';

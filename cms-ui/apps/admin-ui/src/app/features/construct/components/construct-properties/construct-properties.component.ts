@@ -59,6 +59,7 @@ export enum ConstructPropertiesMode {
         generateFormProvider(ConstructPropertiesComponent),
         generateValidatorProvider(ConstructPropertiesComponent),
     ],
+    standalone: false
 })
 export class ConstructPropertiesComponent
     extends BasePropertiesComponent<ConstructPropertiesFormData>

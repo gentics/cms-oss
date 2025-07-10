@@ -13,6 +13,7 @@ import { } from '../../../state';
     templateUrl: './grid-item.component.html',
     styleUrls: ['./grid-item.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GridItemComponent {
 

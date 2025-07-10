@@ -1,16 +1,17 @@
 import { AdminUIModuleRoutes } from '@admin-ui/common';
-import { AuthOperations, PermissionsService } from '@admin-ui/core';
+import { AdminHandlerService, AuthOperations, PermissionsService, ScheduleHandlerService } from '@admin-ui/core';
 import { AppStateService, CloseEditor, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AccessControlledType, Feature, GcmsPermission, Variant } from '@gentics/cms-models';
-import { Subscription, combineLatest, of } from 'rxjs';
+import { AccessControlledType, Feature, GcmsPermission, PublishInfo, SchedulerStatus, Variant } from '@gentics/cms-models';
+import { Observable, Subscription, combineLatest, forkJoin, interval, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
+    standalone: false,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit, OnDestroy {
@@ -42,12 +43,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     private subscriptions: Subscription[] = [];
 
+    public publishInfo: PublishInfo;
+    public schedulerStatus: SchedulerStatus;
+    public hasFailedSchedules = false;
+
     constructor(
         private changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
         private authOps: AuthOperations,
         private permissions: PermissionsService,
         private router: Router,
+        private admin: AdminHandlerService,
+        private schedule: ScheduleHandlerService,
     ) {}
 
     ngOnInit(): void {
@@ -264,6 +271,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
            in another module - this bug is still relevant with direct navigation
            by URL to modules with no detail view */
         this.appState.dispatch(new CloseEditor());
+
+        // Schedule automatic refresh of the publish data all 10s
+        this.subscriptions.push(
+            interval(10_000).pipe(
+                switchMap(() => this.loadPublishProcessData()),
+            ).subscribe());
+
+        // Load the data right from the beginning as well
+        this.subscriptions.push(this.loadPublishProcessData().subscribe());
     }
 
     ngOnDestroy(): void {
@@ -277,4 +293,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
             });
     }
 
+    private loadPublishProcessData(): Observable<void> {
+        return forkJoin([
+            this.admin.getPublishInfo(),
+            this.schedule.status(),
+            this.schedule.list(null, { pageSize: 0, sort: '-edate', failed: true }),
+        ]).pipe(
+            map(([publishInfo, schedulerStatus, failedTasks]) => {
+                this.publishInfo = publishInfo;
+                this.schedulerStatus = schedulerStatus.status;
+                this.hasFailedSchedules = failedTasks.numItems > 0;
+            }),
+        );
+    }
 }

@@ -1,12 +1,12 @@
 import { GroupBO } from '@admin-ui/common';
-import { ErrorHandler, I18nService } from '@admin-ui/core';
+import { ErrorHandler, GroupOperations, I18nNotificationService, I18nService, UserOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
-import { Feature, Raw, User } from '@gentics/cms-models';
-import { BaseModal, ModalService, TableAction, TableActionClickEvent } from '@gentics/ui-core';
-import { Subscription } from 'rxjs';
-import { UserDataService } from '../../providers/user-data/user-data.service';
+import { Feature, Group, Raw, User } from '@gentics/cms-models';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, ModalService, TableAction, TableActionClickEvent, TableSelection, toSelectionArray } from '@gentics/ui-core';
+import { combineLatest, forkJoin, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AssignNodeRestrictionsToUsersModalComponent } from '../assign-node-restriction-to-users-modal/assign-node-restriction-to-users-modal.component';
 
 const ACTION_NODE_RESTRICTIONS = 'restrict-by-nodes';
@@ -16,42 +16,96 @@ const ACTION_NODE_RESTRICTIONS = 'restrict-by-nodes';
     templateUrl: './assign-user-to-groups-modal.component.html',
     styleUrls: ['./assign-user-to-groups-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
-export class AssignUserToGroupsModal extends BaseModal<User<Raw>[] | boolean> implements OnInit, OnDestroy {
+export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnInit, OnDestroy {
 
     /** IDs of users to be (un)assigned to/from groups */
     @Input()
     public userIds: number[] = [];
 
-    /** IDs of groups to which the users shall finally be assigned to */
-    @Input()
-    public userGroupIds: number[] = [];
-
-    @Input()
-    public user: User;
-
-    public selected: string[] = [];
+    public selected: TableSelection = {};
     public actions: TableAction<GroupBO>[] = [];
 
     public loading = false;
+
+    protected users: Record<number, User<Raw>> = {};
+    /**
+     * @key groupId
+     */
+    protected currentAssignment: Record<number, Set<number>> = null;
 
     private subscriptions: Subscription[] = [];
 
     constructor(
         private changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
-        private userData: UserDataService,
+        private userOps: UserOperations,
+        private groupsOps: GroupOperations,
         private i18n: I18nService,
         private modalService: ModalService,
         private errorHandler: ErrorHandler,
+        private notifications: I18nNotificationService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.selected = this.userGroupIds.map(id => `${id}`);
+        this.subscriptions.push(combineLatest([
+            this.groupsOps.getFlattned(),
+            forkJoin(
+                this.userIds.map(id => this.userOps.get(id)),
+            ),
+            forkJoin(
+                this.userIds.map(id => this.userOps.groups(id).pipe(
+                    map(groups => [id, groups] as [number, Group<Raw>[]]),
+                )),
+            ),
+        ]).subscribe(([allGroups, loadedUsers, entries]) => {
+            const assignment: Record<number, Set<number>> = {};
+            const newSelection: TableSelection = {};
+
+            for (const user of loadedUsers) {
+                this.users[user.id] = user;
+            }
+
+            // Create a reverse mapping
+            for (const [userId, userGroups] of entries) {
+                for (const group of userGroups) {
+                    if (!assignment[group.id]) {
+                        assignment[group.id] = new Set();
+                    }
+                    assignment[group.id].add(userId);
+                }
+            }
+
+            // Check each groups selection state
+            for (const group of allGroups) {
+                const userCount = assignment[group.id]?.size ?? 0;
+
+                switch (userCount) {
+                    case 0:
+                        newSelection[group.id] = false;
+                        break;
+
+                    case this.userIds.length:
+                        newSelection[group.id] = true;
+                        break;
+
+                    default:
+                        newSelection[group.id] = CHECKBOX_STATE_INDETERMINATE;
+                        break;
+                }
+            }
+
+            // Apply new values
+            this.selected = newSelection;
+            this.currentAssignment = assignment;
+            this.changeDetector.markForCheck();
+        }));
+
         this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MULTICHANNELLING]).subscribe(multiChanneling => {
-            if (!multiChanneling && this.userIds.length === 1) {
+            if (!multiChanneling || this.userIds.length !== 1) {
                 this.actions = [];
                 this.changeDetector.markForCheck();
                 return;
@@ -79,17 +133,7 @@ export class AssignUserToGroupsModal extends BaseModal<User<Raw>[] | boolean> im
      * If user clicks "assign"
      */
     async handleConfirm(): Promise<void> {
-        this.loading = true;
-        this.changeDetector.markForCheck();
-
-        try {
-            const updatedUsers = await this.changeGroupsOfUsers();
-
-            this.closeFn(updatedUsers);
-        } finally {
-            this.loading = false;
-            this.changeDetector.markForCheck();
-        }
+        this.closeFn(await this.changeGroupsOfUsers());
     }
 
     handleActionClick(event: TableActionClickEvent<GroupBO>): void {
@@ -123,8 +167,55 @@ export class AssignUserToGroupsModal extends BaseModal<User<Raw>[] | boolean> im
         }
     }
 
-    private changeGroupsOfUsers(): Promise<User<Raw>[] | boolean> {
-        return this.userData.changeGroupsOfUsers(this.userIds, this.selected.map(id => Number(id)), true).toPromise();
-    }
+    private async changeGroupsOfUsers(): Promise<boolean> {
+        this.loading = true;
+        this.changeDetector.markForCheck();
+        let didChange = false;
 
+        for (const userId of this.userIds) {
+            const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
+            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
+
+            for (const groupToAdd of toAdd) {
+                if (this.currentAssignment[groupToAdd]?.has?.(userId)) {
+                    continue;
+                }
+
+                try {
+                    await this.userOps.addToGroup(userId, groupToAdd).toPromise();
+                    didChange = true;
+                } catch (err) {
+                    this.errorHandler.catch(err);
+                    // TODO: Handle error
+                }
+            }
+
+            for (const groupToRemove of toRemove) {
+                if (!this.currentAssignment[groupToRemove]?.has?.(userId)) {
+                    continue;
+                }
+
+                try {
+                    await this.userOps.removeFromGroup(userId, groupToRemove).toPromise();
+                    didChange = true;
+                } catch (err) {
+                    this.errorHandler.catch(err);
+                    // TODO: Handle error
+                }
+            }
+
+            this.notifications.show({
+                message: 'shared.assign_users_to_groups_success',
+                translationParams: {
+                    entityName: `${this.users[userId].firstName} ${this.users[userId].lastName}`,
+                },
+                type: 'success',
+            });
+        }
+
+        this.loading = false;
+        this.changeDetector.markForCheck();
+
+        return didChange;
+    }
 }

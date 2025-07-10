@@ -16,6 +16,7 @@ import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
     templateUrl: './server-overview.component.html',
     styleUrls: ['./server-overview.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ServerOverviewComponent implements OnInit {
 

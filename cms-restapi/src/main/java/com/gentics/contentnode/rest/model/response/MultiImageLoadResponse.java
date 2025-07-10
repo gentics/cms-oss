@@ -11,7 +11,7 @@ import com.gentics.contentnode.rest.model.Image;
  * Response containing information about multiple images.
  */
 @XmlRootElement
-public class MultiImageLoadResponse extends StagingResponse<String> {
+public class MultiImageLoadResponse extends AbstractStagingResponse<String> {
 
 	private static final long serialVersionUID = -5704792864208230620L;
 	/**

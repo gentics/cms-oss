@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs';
     templateUrl: './upload-content-package-modal.component.html',
     styleUrls: ['./upload-content-package-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UploadContentPackageModalComponent extends BaseModal<void> implements OnDestroy {
 
@@ -55,13 +56,13 @@ export class UploadContentPackageModalComponent extends BaseModal<void> implemen
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.subscription = this.entityOperations.upload(this.contentPackage[BO_ID], this.file).subscribe(
-            () => this.closeFn(),
-            () => {
-                /* Nothing to do, error notification is done in the upload function */
+        this.subscription = this.entityOperations.upload(this.contentPackage[BO_ID], this.file).subscribe({
+            next: () => this.closeFn(),
+            error: () => {
+                // error notification is done in the upload function
                 this.loading = false;
                 this.changeDetector.markForCheck();
             },
-        );
+        });
     }
 }

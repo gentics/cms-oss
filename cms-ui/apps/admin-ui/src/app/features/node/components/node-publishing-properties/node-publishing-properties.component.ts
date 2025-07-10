@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { ContentRepository, ContentRepositoryType, Node, NodePageLanguageCode, NodeUrlMode, Raw } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
@@ -11,6 +11,11 @@ import { FormProperties, generateFormProvider, generateValidatorProvider, setCon
 export type NodePublishingPropertiesFormData = Pick<Node, 'disablePublish' | 'publishFs' | 'publishFsPages' | 'publishDir' |
 'publishFsFiles' | 'binaryPublishDir' | 'contentRepositoryId' | 'publishContentMap' | 'publishContentMapPages' | 'publishContentMapFiles' |
 'publishContentMapFolders' | 'urlRenderWayPages' | 'urlRenderWayFiles' | 'omitPageExtension' | 'pageLanguageCode'>;
+
+const FS_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
+    'publishFsPages',
+    'publishFsFiles',
+];
 
 const CR_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
     'publishContentMap',
@@ -34,6 +39,7 @@ const PUBLISH_MAP_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
         generateFormProvider(NodePublishingPropertiesComponent),
         generateValidatorProvider(NodePublishingPropertiesComponent),
     ],
+    standalone: false
 })
 export class NodePublishingPropertiesComponent extends BasePropertiesComponent<NodePublishingPropertiesFormData> implements OnInit {
 
@@ -50,6 +56,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
     public contentRepositories: ContentRepository<Raw>[] = [];
 
     public publishDirsLinked: boolean = null;
+    public linkButtonDisabled = false;
 
     private previousPublishCr = false;
 
@@ -73,7 +80,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
     }
 
     protected createForm(): FormGroup<FormProperties<NodePublishingPropertiesFormData>> {
-        this.previousPublishCr = this.value?.publishContentMap ?? false;
+        this.previousPublishCr = this.safeValue('publishContentMap') ?? false;
 
         this.initLinkedDir();
 
@@ -82,9 +89,15 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
             publishFs: new FormControl(this.safeValue('publishFs')),
             publishFsPages: new FormControl(this.safeValue('publishFsPages')),
-            publishDir: new FormControl(this.safeValue('publishDir')),
+            publishDir: new FormControl(this.safeValue('publishDir'), [
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_PATH_REGEXP),
+            ]),
             publishFsFiles: new FormControl(this.safeValue('publishFsFiles')),
-            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir')),
+            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir'), [
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_PATH_REGEXP),
+            ]),
 
             publishContentMap: new FormControl(this.safeValue('publishContentMap')),
             publishContentMapPages: new FormControl(this.safeValue('publishContentMapPages')),
@@ -106,14 +119,26 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
         setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
         setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
-        const crAllowsDirs = this.checkContentRepository();
+        setControlsEnabled(this.form, FS_CONTROLS, value?.publishFs, options);
 
-        setControlsEnabled(this.form, ['publishDir'], value?.publishFsPages && crAllowsDirs, options);
-        setControlsEnabled(this.form, ['binaryPublishDir'], value?.publishFsFiles && crAllowsDirs, options);
+        let cr: ContentRepository | null = null;
+        if (this.form.value.contentRepositoryId > 0) {
+            cr = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
+        }
+        const isMeshCr = cr?.crType === ContentRepositoryType.MESH;
+        const isProjectPerNode = cr?.projectPerNode;
+        this.linkButtonDisabled = cr != null && isMeshCr;
+        if (this.linkButtonDisabled) {
+            this.publishDirsLinked = true;
+        }
+
+        setControlsEnabled(this.form, ['publishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
 
         // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
         this.form.updateValueAndValidity();
         const tmpValue = this.form.value;
+
         // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
         // If so, then set these to `true`, to enable them by default.
         if (tmpValue?.publishContentMap
@@ -140,20 +165,11 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
     }
 
     protected assembleValue(value: NodePublishingPropertiesFormData): NodePublishingPropertiesFormData {
-        return value;
-    }
-
-    protected checkContentRepository(): boolean {
-        let enabled = true;
-
-        if (this.form.value.contentRepositoryId > 0) {
-            const found = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
-            if (found && found.crType === ContentRepositoryType.MESH && found.projectPerNode) {
-                enabled = false;
-            }
-        }
-
-        return enabled;
+        return {
+            ...value,
+            publishDir: value?.publishDir || '',
+            binaryPublishDir: value?.binaryPublishDir || '',
+        };
     }
 
     protected initLinkedDir(): void {

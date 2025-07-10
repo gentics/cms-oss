@@ -5304,7 +5304,7 @@ public class PageFactory extends AbstractFactory {
 				cDate, new ContentNodeDate(rs.getInt("custom_cdate")), eDate, new ContentNodeDate(rs.getInt("custom_edate")), pDate, creatorId, editorId,
 				publisherId, timePub, timePubVersion, pubQueueUserId, timePubQueue, timePubVersionQueue, timeOff, offQueueUserId, timeOffQueue, channelSetId,
 				channelId, syncPageId, syncTimestamp, master, exclude, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"),
-				rs.getBoolean("modified"), getUdate(rs), getGlobalId(rs), unpublisherId, unpublishedDate, futureUnpublisherId, futurePublisherId);
+				rs.getBoolean("modified"), getUdate(rs), getGlobalId(rs, "page"), unpublisherId, unpublishedDate, futureUnpublisherId, futurePublisherId);
 	}
 
 	private Content loadContentObject(Integer id, NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws SQLException {
@@ -5312,7 +5312,7 @@ public class PageFactory extends AbstractFactory {
 		int locked = rs.getInt("locked");
 		int lockedBy = rs.getInt("locked_by");
 
-		return new FactoryContent(id, info, locked, lockedBy, tagIds, rs.getInt("node_id"), getUdate(rs), getGlobalId(rs));
+		return new FactoryContent(id, info, locked, lockedBy, tagIds, rs.getInt("node_id"), getUdate(rs), getGlobalId(rs, "content"));
 	}
 
 	/* (non-Javadoc)
@@ -5341,7 +5341,7 @@ public class PageFactory extends AbstractFactory {
 				Node channel = page.getChannel();
 				t.setChannelId(channel != null ? channel.getId() : 0);
 				try {
-					throw new ReadOnlyException(e.getMessage(), "page.readonly.locked", ModelBuilder.getFolderPath(page.getFolder()) + page.getName());
+					throw new ReadOnlyException(e.getMessage(), "page.readonly.locked", I18NHelper.getName(page));
 				} finally {
 					t.resetChannel();
 				}
@@ -5410,7 +5410,7 @@ public class PageFactory extends AbstractFactory {
 						throw new ReadOnlyException(
 								"Could not lock {" + object + "} for user {" + currentTransaction.getUserId() + "}, since it is locked for user {" + lockedBy
 								+ "} since {" + lockTime + "}",
-								"page.readonly.locked");
+								"page.readonly.locked", I18NHelper.getName(object));
 					}
 				} catch (SQLException e) {
 					throw new NodeException("Error while locking {" + object + "} for editing for user {" + currentTransaction.getUserId() + "}", e);

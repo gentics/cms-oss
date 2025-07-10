@@ -33,17 +33,14 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
                     'margin-left': '*',
                     'margin-right': '*',
                 }),
-                animate(
-                    '0.2s ease-in-out',
-                    style({
-                        opacity: 1,
-                        width: '*',
-                        'padding-left': '*',
-                        'padding-right': '*',
-                        'margin-left': '*',
-                        'margin-right': '*',
-                    }),
-                ),
+                animate('0.2s ease-in-out', style({
+                    opacity: 1,
+                    width: '*',
+                    'padding-left': '*',
+                    'padding-right': '*',
+                    'margin-left': '*',
+                    'margin-right': '*',
+                })),
             ]),
             transition('* => void', [
                 style({
@@ -54,20 +51,18 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
                     'margin-left': '*',
                     'margin-right': '*',
                 }),
-                animate(
-                    '0.2s ease-in-out',
-                    style({
-                        opacity: 0,
-                        width: '0',
-                        'padding-left': '*',
-                        'padding-right': '*',
-                        'margin-left': '*',
-                        'margin-right': '*',
-                    }),
-                ),
+                animate('0.2s ease-in-out', style({
+                    opacity: 0,
+                    width: '0',
+                    'padding-left': '*',
+                    'padding-right': '*',
+                    'margin-left': '*',
+                    'margin-right': '*',
+                })),
             ]),
         ]),
     ],
+    standalone: false
 })
 export class FormLanguageIndicatorComponent
     extends BaseLanguageIndicatorComponent<Form<Normalized>>

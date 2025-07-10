@@ -6,6 +6,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
     templateUrl: './side-menu-demo.component.html',
     styleUrls: ['./side-menu-demo.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SideMenuDemoPage {
 

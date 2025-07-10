@@ -1,5 +1,5 @@
 import { DataSourceHandlerService } from '@admin-ui/core';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { DataSource, DataSourceCreateRequest } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
@@ -8,13 +8,18 @@ import { BaseModal } from '@gentics/ui-core';
     selector: 'gtx-create-data-source-modal',
     templateUrl: './create-data-source-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateDataSourceModalComponent extends BaseModal<DataSource> implements OnInit {
 
     /** form instance */
     form: UntypedFormControl;
 
+    /** Will be set when the create call is sent */
+    loading = false;
+
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private handler: DataSourceHandlerService,
     ) {
         super();
@@ -29,8 +34,18 @@ export class CreateDataSourceModalComponent extends BaseModal<DataSource> implem
      * If user clicks to create a new dataSource
      */
     buttonCreateEntityClicked(): void {
+        this.form.disable({ emitEvent: false });
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
         this.createEntity()
-            .then(dataSourceCreated => this.closeFn(dataSourceCreated));
+            .then(dataSourceCreated => {
+                this.closeFn(dataSourceCreated);
+            }, () => {
+                this.form.enable({ emitEvent: false });
+                this.loading = false;
+                this.changeDetector.markForCheck();
+            });
     }
 
     private createEntity(): Promise<DataSource> {

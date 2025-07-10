@@ -10,6 +10,7 @@ const PROVIDER_SOURCE = require('!!raw-loader!../../directives/demo-format/demo-
 @Component({
     templateUrl: './date-time-picker-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DateTimePickerDemoPage {
 

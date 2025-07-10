@@ -5,6 +5,7 @@ import { IDocumentation } from '../../common/docs';
 @Component({
     templateUrl: './base-table-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class BaseTableDemoPage {
 

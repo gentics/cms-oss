@@ -123,11 +123,6 @@
                     [ngClass]="'gtx-table-cell-boolean-' + value"
                 >{{ value ? 'check' : 'close' }}</icon>
             </ng-template>
-
-            <tag-editor-overlay-host
-                #taglistOverlayHost
-                [class.active]="taglistOverlayHost.isVisible"
-            ></tag-editor-overlay-host>
         </div>
 
         <div

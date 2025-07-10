@@ -8,6 +8,7 @@ import { MeshGroupTableComponent } from '../mesh-group-table/mesh-group-table.co
     templateUrl: './select-group-modal.component.html',
     styleUrls: ['./select-group-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectGroupModal extends BaseModal<MeshGroupBO | MeshGroupBO[]> {
 

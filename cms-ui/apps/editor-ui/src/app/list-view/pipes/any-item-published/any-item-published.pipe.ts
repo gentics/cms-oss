@@ -7,6 +7,7 @@ import { PublishableStateUtil } from '../../../shared/util/entity-states';
  */
 @Pipe({
     name: 'anyItemPublished',
+    standalone: false
 })
 export class AnyItemPublishedPipe implements PipeTransform {
     transform(items: (Page | Form)[]): boolean {

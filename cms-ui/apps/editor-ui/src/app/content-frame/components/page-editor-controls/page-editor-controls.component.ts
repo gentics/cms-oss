@@ -86,6 +86,7 @@ const ATTR_LINK_CHECKER_HREF = 'data-gcnlinkchecker-href';
     templateUrl: './page-editor-controls.component.html',
     styleUrls: ['./page-editor-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PageEditorControlsComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 

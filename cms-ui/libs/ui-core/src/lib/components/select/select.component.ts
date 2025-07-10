@@ -54,6 +54,7 @@ type SingleOrArray<T> = T | T[];
     styleUrls: ['./select.component.scss'],
     providers: [generateFormProvider(SelectComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SelectComponent
     extends BaseFormElementComponent<SingleOrArray<string | number>>
@@ -206,7 +207,7 @@ export class SelectComponent
 
     protected onValueChange(): void {
         if (!Array.isArray(this.value)) {
-            this.valueArray = this.value ? [this.value] : [];
+            this.valueArray = this.value != null ? [this.value] : [];
         } else {
             this.valueArray = this.value;
         }

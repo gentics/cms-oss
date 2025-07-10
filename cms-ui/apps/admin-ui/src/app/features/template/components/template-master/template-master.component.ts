@@ -60,6 +60,7 @@ enum Action {
     templateUrl: './template-master.component.html',
     styleUrls: ['./template-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateMasterComponent extends BaseTableMasterComponent<Template, TemplateBO> implements OnInit {
 
@@ -204,7 +205,11 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 return;
 
             case Action.LINK_TO_NODE:
-                this.linkTemplatesToNodes(items);
+                this.linkTemplatesToNodes(items).then(didChange => {
+                    if (didChange) {
+                        this.loader.reload();
+                    }
+                });
                 return;
 
             case Action.LOCALIZE:
@@ -257,10 +262,10 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }
     }
 
-    protected async linkTemplatesToNodes(templates: TemplateBO[]): Promise<void> {
+    protected async linkTemplatesToNodes(templates: TemplateBO[]): Promise<boolean> {
         // Can't open without selection
         if (templates.length === 0) {
-            return;
+            return false;
         }
 
         let doAbort = false;
@@ -278,7 +283,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         });
 
         if (doAbort) {
-            return;
+            return false;
         }
 
         // Close the details, as we have no way of reloading the assignment inside the details right now.
@@ -289,7 +294,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
             );
 
             if (!closed) {
-                return;
+                return false;
             }
         }
 
@@ -300,7 +305,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
             templates,
         });
 
-        await dialog.open();
+        return dialog.open();
     }
 
     protected async linkTemplatesToFolders(templates: TemplateBO[]): Promise<void> {
@@ -361,7 +366,6 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
             (templateId, options) => this.operations.unlocalizeTemplate(templateId, options), 'template.unlocalize_success');
     }
 
-
     private executeTemplateOperation(
         templates: TemplateBO[],
         operation: (id: number, options: LocalizeRequest | UnlocalizeRequest) => Observable<Response>,
@@ -393,7 +397,6 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         });
     }
 
-
     private isChannel(): boolean {
         if (this.activeNode?.masterNodeId === this.activeNode?.id) {
             return false;
@@ -401,6 +404,4 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
         return true;
     }
-
-
 }

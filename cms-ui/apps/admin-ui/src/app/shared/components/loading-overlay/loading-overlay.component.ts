@@ -10,6 +10,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, Input, Renderer2, ViewC
     templateUrl: './loading-overlay.component.html',
     styleUrls: ['./loading-overlay.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LoadingOverlayComponent {
     @ViewChild('messageEl', { static: false }) messageElRef: ElementRef;

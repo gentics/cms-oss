@@ -3,19 +3,18 @@ package com.gentics.contentnode.job;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.Level;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.UpdatePagesResult;
-import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.Template;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.lib.i18n.CNI18nString;
@@ -139,11 +138,11 @@ public class TemplateSaveJob extends AbstractBackgroundJob {
 			}
 		}
 
-		addMessage(new DefaultNodeMessage(Level.INFO, Template.class, msgBuilder.toString()));
+		addMessage(new Message().setType(Type.SUCCESS).setMessage(msgBuilder.toString()));
 
 		if (result != null) {
 			for (NodeMessage message : result.getMessages()) {
-				addMessage(message);
+				addMessage(MiscUtils.getMessageFromNodeMessage(message));
 			}
 		}
 	}

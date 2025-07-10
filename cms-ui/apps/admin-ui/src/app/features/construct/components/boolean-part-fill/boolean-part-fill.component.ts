@@ -9,6 +9,7 @@ import { pick } from'lodash-es'
     styleUrls: ['./boolean-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(BooleanPartFillComponent)],
+    standalone: false
 })
 export class BooleanPartFillComponent extends BaseFormElementComponent<BooleanTagPartProperty> {
 
@@ -22,7 +23,7 @@ export class BooleanPartFillComponent extends BaseFormElementComponent<BooleanTa
         const newValue: BooleanTagPartProperty = {
             ...pick(this.value || {}, ['id', 'globalId', 'partId']),
             type: TagPropertyType.BOOLEAN,
-            booleanValue: !this.value.booleanValue,
+            booleanValue: !(this.value?.booleanValue ?? false),
         };
 
         this.triggerChange(newValue);

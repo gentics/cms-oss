@@ -14,6 +14,7 @@ interface NormalizedItem {
     styleUrls: ['./aloha-symbol-search-grid-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaSymbolSearchGridRendererComponent)],
+    standalone: false
 })
 export class AlohaSymbolSearchGridRendererComponent extends AlohaSymbolGridRendererComponent implements OnInit {
 

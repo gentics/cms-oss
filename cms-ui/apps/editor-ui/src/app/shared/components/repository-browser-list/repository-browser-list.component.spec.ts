@@ -13,7 +13,6 @@ import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
-import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelection,
@@ -38,6 +37,7 @@ import {
     getExampleTemplateDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { NEVER, Observable } from 'rxjs';
 import { RepositoryBrowserClient, RepositoryBrowserDataService } from '../../providers';
 import { RepositoryBrowser } from '../repository-browser/repository-browser.component';
@@ -178,6 +178,7 @@ function getRepositoryBrowser(fixture: ComponentFixture<TestComponent>): { eleme
 
 @Component({
     template: '<gtx-overlay-host></gtx-overlay-host>',
+    standalone: false,
 })
 class TestComponent { }
 

@@ -6,7 +6,8 @@ import { Component } from '@angular/core';
 @Component({
     selector: 'detail-chip',
     template: `<ng-content></ng-content>`,
-    styleUrls: ['./detail-chip.scss']
+    styleUrls: ['./detail-chip.scss'],
+    standalone: false
 })
 export class DetailChipComponent {
     constructor() { }

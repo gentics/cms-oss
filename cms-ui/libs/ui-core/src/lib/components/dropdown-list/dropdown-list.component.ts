@@ -61,6 +61,7 @@ import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
     templateUrl: './dropdown-list.component.html',
     styleUrls: ['./dropdown-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DropdownListComponent extends BaseComponent implements OnDestroy {
 

@@ -21,6 +21,7 @@ export interface DisplayField {
     templateUrl: './mesh-browser-editor.component.html',
     styleUrls: ['./mesh-browser-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserEditorComponent  implements OnChanges {
 
@@ -71,6 +72,10 @@ export class MeshBrowserEditorComponent  implements OnChanges {
     }
 
     public loadNode(nodeUuid: string): void {
+        if (nodeUuid == null) {
+            return;
+        }
+
         this.navigator.navigateToDetails(this.route, {
             project: this.project,
             branch: this.branch,

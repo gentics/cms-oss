@@ -12,9 +12,9 @@ import {
     ContentMaintenanceAction,
     ContentMaintenanceActionRequest,
     ContentMaintenanceType,
-    DirtQueueItem,
+    DirtQueueEntry,
     DirtQueueListOptions,
-    DirtQueueSummary,
+    DirtQueueSummaryResponse,
     JobListRequestOptions,
     Jobs,
     MaintenanceModeRequestOptions,
@@ -121,14 +121,14 @@ export class AdminOperations extends OperationsBase {
         );
     }
 
-    getDirtQueue(options?: DirtQueueListOptions): Observable<DirtQueueItem[]> {
+    getDirtQueue(options?: DirtQueueListOptions): Observable<DirtQueueEntry[]> {
         return this.api.adminInfo.getDirtQueue(options).pipe(
             map(response => response.items),
             this.catchAndRethrowError(),
         );
     }
 
-    getPublishQueueSummary(): Observable<DirtQueueSummary> {
+    getPublishQueueSummary(): Observable<DirtQueueSummaryResponse> {
         return this.api.adminInfo.getPublishQueueSummary().pipe(
             this.catchAndRethrowError(),
         );

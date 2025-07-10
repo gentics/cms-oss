@@ -1,8 +1,8 @@
 import { BoolQuery } from 'elastic-types/queries';
-import { DirtQueueItem, Jobs } from './admin-info';
+import { DirtQueueEntry, Jobs } from './admin-info';
 import { EditableFormProps, Form, FormStatus } from './cms-form';
 import { ConstructCategory } from './construct-category';
-import { ContentPackage } from './content-package';
+import { ContentPackage, EditableContentPackage } from './content-package';
 import { CRElasticsearchModel, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType } from './content-repository';
 import { ContentRepositoryFragment } from './cr-fragment';
 import { DataSource } from './data-source';
@@ -742,7 +742,7 @@ export interface LinkCheckerReplaceRequest {
     scope?: ReplaceScope;
 }
 
-export interface DirtQueueListOptions extends BaseListOptionsWithPaging<DirtQueueItem> {
+export interface DirtQueueListOptions extends BaseListOptionsWithPaging<DirtQueueEntry> {
     /** If the response should only include failed tasks. */
     failed?: boolean;
     /** Timestamp from which time on the tasks should be listed. */
@@ -869,9 +869,16 @@ export interface TemplateListRequest extends BaseListOptionsWithPaging<Template>
     reduce?: boolean;
 }
 
+export interface BulkLinkUpdateRequest {
+    /** Node Ids */
+    ids: number[];
+    /** The entity ids */
+    targetIds: number[];
+}
+
 export interface NodeMultiLinkRequest {
     nodeIds: number[];
-    ids: string[];
+    ids: (number | string)[];
 }
 
 export interface ObjectMoveRequest {
@@ -2309,9 +2316,9 @@ export interface ContentPackageSyncOptions {
     test?: boolean;
 }
 
-export type ContentPackageCreateRequest = Required<Pick<ContentPackage, 'name'>> & Pick<ContentPackage, 'description'>;
+export type ContentPackageCreateRequest = EditableContentPackage;
 
-export type ContentPackageSaveRequest = Partial<Pick<ContentPackage, 'name'> & Pick<ContentPackage, 'description'>>;
+export type ContentPackageSaveRequest = Partial<EditableContentPackage>;
 
 export interface AssignEntityToContentPackageOptions {
     recursive?: boolean;

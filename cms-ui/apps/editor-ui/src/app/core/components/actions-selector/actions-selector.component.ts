@@ -24,6 +24,7 @@ import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-comp
     templateUrl: './actions-selector.component.html',
     styleUrls: ['./actions-selector.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ActionsSelectorComponent implements OnInit, OnDestroy {
 

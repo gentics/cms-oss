@@ -33,7 +33,7 @@
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'shared.info_selected_nodes' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'shared.info_selected_nodes' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
@@ -50,6 +50,7 @@
     [rows]="rows"
     [actions]="actions"
     [selected]="selected"
+    [useSelectionMap]="useSelectionMap"
     [active]="activeEntity"
     [totalCount]="totalCount"
 
@@ -97,5 +98,5 @@
         class="gtx-table-cell-link"
         [routerLink]="AdminUIEntityDetailRoutes.NODE | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
-    >{{ row.item?.masterName || value }}</a>
+    >{{ row.item?.inheritedFromName || value }}</a>
 </ng-template>

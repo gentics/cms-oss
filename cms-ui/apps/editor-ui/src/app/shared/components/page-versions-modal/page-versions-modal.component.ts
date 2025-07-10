@@ -24,6 +24,7 @@ import { PublishableStateUtil } from '../../util/entity-states';
     templateUrl: './page-versions-modal.tpl.html',
     styleUrls: ['./page-versions-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterContentInit, OnDestroy {
 
@@ -149,6 +150,9 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
 
                     resolve(this.selectedPageVariant.currentVersion);
                 }, error => {
+                    this.loading = false;
+                    this.changeDetector.markForCheck();
+
                     reject(error);
                 });
         });

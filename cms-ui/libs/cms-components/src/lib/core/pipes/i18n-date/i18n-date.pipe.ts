@@ -27,6 +27,7 @@ declare var navigator: Navigator &  {
 @Pipe({
     name: 'i18nDate',
     pure: false,
+    standalone: false
 })
 export class GtxI18nDatePipe implements OnDestroy, PipeTransform {
 

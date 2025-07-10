@@ -769,7 +769,7 @@ public class PartFactory extends AbstractFactory {
 	@SuppressWarnings("unchecked")
 	protected <T extends NodeObject> T loadResultSet(Class<T> clazz, Integer id, NodeObjectInfo info,
 			FactoryDataRow rs, List<Integer>[] idLists) throws SQLException, NodeException {
-		return (T) new FactoryPart(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs), rs.getInt("value_id"));
+		return (T) new FactoryPart(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "part"), rs.getInt("value_id"));
 	}
 
 	protected static URI newPolicyURI(Integer id, String uri) throws NodeException {

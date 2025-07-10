@@ -111,6 +111,7 @@ import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navi
     templateUrl: './content-frame.component.html',
     styleUrls: ['./content-frame.component.scss'],
     providers: [CustomScriptHostService],
+    standalone: false
 })
 export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -521,6 +522,13 @@ del.gtx-diff {
   background: rgba(255, 0, 0, 0.2);
 }
 ins.gtx-diff {
+  background: rgba(0, 255, 0, 0.2);
+}
+span.diff-html-removed {
+  text-decoration: line-through;
+  background: rgba(255, 0, 0, 0.2);
+}
+span.diff-html-added {
   background: rgba(0, 255, 0, 0.2);
 }`;
             masterFrame.contentDocument.head.appendChild(styleElem);

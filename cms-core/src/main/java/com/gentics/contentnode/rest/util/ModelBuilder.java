@@ -1981,6 +1981,7 @@ public class ModelBuilder {
 		// Determine from which node this node was inherited and set the found nodeId.
 		if (nodeNode.isChannel()) {
 			node.setInheritedFromId(nodeNode.getFolder().getChannelMaster().getNode().getId());
+			node.setInheritedFromName(nodeNode.getFolder().getChannelMaster().getNode().getName());
 		} else {
 			// Fallback to the node's id if the node is no channel. This is similar to the way the inheritedFromId field is handled for folders, files.
 			node.setInheritedFromId(nodeNode.getId());
@@ -1991,8 +1992,7 @@ public class ModelBuilder {
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT)) {
 			node.setPubDirSegment(nodeNode.isPubDirSegment());
 		}
-		node.setHttps(nodeNode.isHttps());
-		node.setHost(nodeNode.getHostname());
+		node.setHost((nodeNode.isHttps() ? "https://" : "http://") + nodeNode.getHostname());
 		node.setHostProperty(nodeNode.getHostnameProperty());
 		node.setUtf8(nodeNode.isUtf8());
 		node.setPublishFs(nodeNode.doPublishFilesystem());

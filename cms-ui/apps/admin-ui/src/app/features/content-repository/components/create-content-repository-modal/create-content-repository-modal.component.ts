@@ -12,6 +12,7 @@ import {
     selector: 'gtx-create-content-repository-modal',
     templateUrl: './create-content-repository-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepositoryBO> implements IModalDialog, OnInit {
 

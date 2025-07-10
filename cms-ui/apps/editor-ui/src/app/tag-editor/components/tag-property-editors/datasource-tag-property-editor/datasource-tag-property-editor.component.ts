@@ -19,6 +19,7 @@ import { cloneDeep } from 'lodash-es';
     templateUrl: './datasource-tag-property-editor.component.html',
     styleUrls: ['./datasource-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DataSourceTagPropertyEditor implements TagPropertyEditor {
 

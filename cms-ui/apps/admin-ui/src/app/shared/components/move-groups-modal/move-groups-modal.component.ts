@@ -10,11 +10,12 @@ import { mergeMap } from 'rxjs/operators';
     selector: 'gtx-move-groups-modal',
     templateUrl: './move-groups-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MoveGroupsModalComponent extends BaseModal<Group<Raw>[] | boolean> {
 
     /** IDs of groups to be moved */
-    sourceGroupIds: number[] = [];
+    sourceGroupIds: (string | number)[] = [];
 
     /** IDs of groups the source groups shall be moved to */
     targetGroupId: number;

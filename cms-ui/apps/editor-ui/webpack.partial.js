@@ -49,6 +49,28 @@ module.exports = (config, options, targetOptions) => {
                             path.normalize(path.resolve(__dirname, '../../libs')),
                             path.normalize(path.resolve(__dirname, '../../node_modules')),
                         ],
+                        silenceDeprecations: [
+                            "call-string",
+                            "elseif",
+                            "moz-document",
+                            "relative-canonical",
+                            "new-global",
+                            "color-module-compat",
+                            "slash-div",
+                            "bogus-combinators",
+                            "function-units",
+                            "duplicate-var-flags",
+                            "null-alpha",
+                            "abs-percent",
+                            "fs-importer-cwd",
+                            "css-function-mixin",
+                            "mixed-decls",
+                            "color-4-api",
+                            "color-functions",
+                            "legacy-js-api",
+                            "import",
+                            "global-builtin"
+                        ],
                     }
                 }
             },

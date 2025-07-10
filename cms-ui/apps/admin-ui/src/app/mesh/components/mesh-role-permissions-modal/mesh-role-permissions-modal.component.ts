@@ -7,6 +7,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './mesh-role-permissions-modal.component.html',
     styleUrls: ['./mesh-role-permissions-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshRolePermissionsModal extends BaseModal<void> {
 

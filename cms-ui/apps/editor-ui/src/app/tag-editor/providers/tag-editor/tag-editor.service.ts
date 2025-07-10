@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { stripLeadingSlash } from '@editor-ui/app/common/utils/strip';
 import {
     GcmsUiServices,
+    ModalClosingReason,
     RepositoryBrowserOptions,
     TagEditorContext,
     TagEditorOptions,
@@ -11,6 +12,7 @@ import {
 import {
     AnyModelType,
     EditableTag,
+    EditorControlStyle,
     File,
     Folder,
     Image,
@@ -21,20 +23,19 @@ import {
     TagType,
     Template,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
-import { ModalService } from '@gentics/ui-core';
+import { IModalInstance, ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
-import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction, SetTagEditorOpenAction } from '../../../state';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
 import { UploadWithPropertiesModalComponent } from '../../components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
-import { TagEditorOverlayHostComponent } from '../../components/tag-editor-overlay-host/tag-editor-overlay-host.component';
+import { TagEditorModal } from '../../components/tag-editor-modal/tag-editor-modal.component';
 
 /**
  * Captures information for creating a new `TagEditorContext`.
@@ -70,7 +71,7 @@ export interface EditTagInfo {
 @Injectable()
 export class TagEditorService {
 
-    private tagEditorOverlayHost: TagEditorOverlayHostComponent = null;
+    private tagEditorModal: IModalInstance<TagEditorModal>;
 
     constructor(
         private appState: ApplicationStateService,
@@ -78,7 +79,6 @@ export class TagEditorService {
         private entityResolver: EntityResolver,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private translateService: TranslateService,
-        private userAgentRef: UserAgentRef,
         private modals: ModalService,
         private apiBase: ApiBase,
         private client: GCMSRestClientService,
@@ -107,7 +107,7 @@ export class TagEditorService {
             tagOwner: page,
             node: node,
             readOnly: false, // openTagEditor() is called when a page is in edit mode, so the user has edit permissions.
-            withDelete: options?.withDelete ?? false,
+            withDelete: options?.withDelete ?? tagType.editorControlStyle === EditorControlStyle.CLICK,
             tagOwnerFromIFrame: true,
         });
 
@@ -115,45 +115,47 @@ export class TagEditorService {
             this.appState.dispatch(new IncreaseOverlayCountAction()).toPromise(),
             this.appState.dispatch(new SetTagEditorOpenAction(true)).toPromise(),
         ]);
+
+        let result: TagEditorResult;
+        let error = null;
+
+        this.tagEditorModal = await this.modals.fromComponent(TagEditorModal, {
+            closeOnEscape: false,
+            closeOnOverlayClick: false,
+            width: '80%',
+        }, {
+            context: tagEditorContext,
+        });
+
         try {
-            const result = await this.tagEditorOverlayHost.openTagEditor(tagEditorContext.editedTag, tagEditorContext)
-            if (result.tag) {
+            result = await this.tagEditorModal.open();
+
+            if (result?.tag) {
                 delete result.tag.tagType;
             }
-            return result;
-        } finally {
-            await Promise.all([
-                this.appState.dispatch(new DecreaseOverlayCountAction()).toPromise(),
-                this.appState.dispatch(new SetTagEditorOpenAction(false)).toPromise(),
-            ]);
+        } catch (err) {
+            error = err;
         }
+
+        this.tagEditorModal = null;
+        await Promise.all([
+            this.appState.dispatch(new DecreaseOverlayCountAction()).toPromise(),
+            this.appState.dispatch(new SetTagEditorOpenAction(false)).toPromise(),
+        ]);
+
+        if (error) {
+            throw error;
+        }
+
+        return result;
     }
 
     /**
      * Force Closes the opened tag editor
      */
     forceCloseTagEditor(): void {
-        if (this.tagEditorOverlayHost != null) {
-            this.tagEditorOverlayHost.forceCloseTagEditor();
-        }
-    }
-
-    /**
-     * Registers the specified TagEditorOverlayHostComponent with the TagPropertyEditorService.
-     * This is needed, such that this service knows, which component it can tell to open the TagEditor.
-     * This method should only be used by TagEditorOverlayHostComponent.
-     */
-    registerTagEditorOverlayHost(tagEditorOverlayHost: TagEditorOverlayHostComponent): void {
-        this.tagEditorOverlayHost = tagEditorOverlayHost;
-    }
-
-    /**
-     * Unregisters the specified TagEditorOverlayHostComponent.
-     * This method should only be used by TagEditorOverlayHostComponent.
-     */
-    unregisterTagEditorOverlayHost(tagEditorOverlayHost: TagEditorOverlayHostComponent): void {
-        if (this.tagEditorOverlayHost === tagEditorOverlayHost) {
-            this.tagEditorOverlayHost = null;
+        if (this.tagEditorModal) {
+            this.tagEditorModal.instance.cancelFn(null, ModalClosingReason.API);
         }
     }
 
@@ -167,7 +169,7 @@ export class TagEditorService {
      * @param editTagInfo The information needed to create the TagEditorContext.
      */
     createTagEditorContext(editTagInfo: EditTagInfo): TagEditorContext {
-        let editableTag: EditableTag = {
+        const editableTag: EditableTag = {
             ...editTagInfo.tag,
             tagType: editTagInfo.tagType,
         };
@@ -200,11 +202,6 @@ export class TagEditorService {
         let tagOwner = editTagInfo.tagOwner;
         if (tagOwner.type === 'page') {
             tagOwner = this.createSafePageCopy(tagOwner);
-
-            if (editTagInfo.tagOwnerFromIFrame && this.userAgentRef.isIE11) {
-                editableTag = this.applyIE11Polyfills(editableTag);
-                tagOwner = this.applyIE11Polyfills(tagOwner);
-            }
         }
         const rawTagOwner = this.entityResolver.denormalizeEntity(tagOwner.type, tagOwner);
         const rawNode = this.entityResolver.denormalizeEntity('node', editTagInfo.node);
@@ -241,17 +238,4 @@ export class TagEditorService {
         delete safePage.languageVariants;
         return safePage;
     }
-
-    /**
-     * Applies necessary IE11 polyfills to the specified object.
-     *
-     * The reason we need this method is that the tag object was created in the
-     * Aloha IFrame, which does not contain the polyfills available in the GCMS UI app.
-     * Thus we need to apply them now.
-     */
-    private applyIE11Polyfills(obj: any): any {
-        const json = JSON.stringify(obj);
-        return JSON.parse(json);
-    }
-
 }

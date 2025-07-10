@@ -10,6 +10,7 @@ export enum ObjectPropertyModuleTabs {
     templateUrl: './object-property-module-master.component.html',
     styleUrls: ['./object-property-module-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ObjectPropertyModuleMasterComponent {
 

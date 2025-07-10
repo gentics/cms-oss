@@ -10,27 +10,23 @@ import {
 } from '@admin-ui/features/mesh-browser/providers/mesh-browser-repository-table-loader.service';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, ContentRepository, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
-
 
 @Component({
     selector: 'gtx-mesh-browser-repository-table',
     templateUrl: './mesh-browser-repository-table.component.html',
     styleUrls: ['./mesh-browser-repository-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryTableComponent
-    extends BaseEntityTableComponent<ContentRepository, ContentRepositoryBO, MeshContentRepositoryTableLoaderOptions>
-    implements OnChanges {
+    extends BaseEntityTableComponent<ContentRepository, ContentRepositoryBO, MeshContentRepositoryTableLoaderOptions> {
 
     public readonly ContentRepositoryDetailTabs = ContentRepositoryDetailTabs;
     public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
-
-    @Input()
-    public linkDetails = false;
 
     protected rawColumns: TableColumn<ContentRepositoryBO>[] = [
         {

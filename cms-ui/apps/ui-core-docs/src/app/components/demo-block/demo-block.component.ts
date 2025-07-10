@@ -4,6 +4,7 @@ import { Component, ElementRef, Input } from '@angular/core';
     selector: 'gtx-demo-block',
     templateUrl: './demo-block.component.html',
     styleUrls: ['./demo-block.component.scss'],
+    standalone: false
 })
 export class DemoBlockComponent {
 

@@ -1,9 +1,8 @@
 import { ConstructBO } from '@admin-ui/common';
 import { ConstructHandlerService, I18nNotificationService, NodeOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { EntityIdType, IndexById, Node, Raw, TagTypeBO } from '@gentics/cms-models';
-import { BaseModal } from '@gentics/ui-core';
-import { intersection } from'lodash-es'
+import { IndexById, Node, Raw } from '@gentics/cms-models';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
 import { Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -12,19 +11,23 @@ import { map } from 'rxjs/operators';
     templateUrl: './assign-constructs-to-nodes-modal.component.html',
     styleUrls: ['./assign-constructs-to-nodes-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
-export class AssignConstructsToNodesModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
+export class AssignConstructsToNodesModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 
     @Input()
-    public constructs: (TagTypeBO<Raw> | ConstructBO)[] = [];
+    public constructs: ConstructBO[] = [];
 
     public loading = false;
-    public selectedIds: string[] = [];
+    public selected: TableSelection = {};
 
     protected nodes: IndexById<Node<Raw>> = {};
-    protected selectedPerConstruct: { [constructId: EntityIdType]: string[] } = {};
+    /**
+     * @key nodeId
+     */
+    protected currentAssignment: Record<number, Set<number>> = null;
 
-    private subscription: Subscription = new Subscription();
+    private subscriptions: Subscription[] = [];
 
     constructor(
         private changeDetector: ChangeDetectorRef,
@@ -36,77 +39,81 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
     }
 
     ngOnInit(): void {
-        this.loadNodes();
-    }
-
-    ngOnDestroy(): void {
-        if (this.subscription) {
-            this.subscription.unsubscribe();
-        }
-    }
-
-    loadNodes(): void {
-        this.loading = true;
-        this.selectedPerConstruct = {};
-        this.changeDetector.markForCheck();
-
-        // Nodes are loaded here since this might be the first module which is being opened,
-        // and the nodes are therefore not yet in the state. Would otherwise not display anything
-        // in the list then.
-        this.subscription.add(forkJoin([
+        this.subscriptions.push(forkJoin([
             this.nodeOperations.getAll(),
-            ...this.constructs.map(con => this.handler.getLinkedNodes(con.id).pipe(
-                map(linked => ([con.id, linked])),
-            )),
-        ]).subscribe(([nodes, ...linkedNodesPerConstruct]) => {
-            this.nodes = {};
-            nodes.forEach(node => this.nodes[node.id] = node);
+            forkJoin(this.constructs.map(con => this.handler.getLinkedNodes(con.id).pipe(
+                map(linked => [con.id, linked]),
+            ))),
+        ]).subscribe(([loadedNodes, links]: [Node[], [number, Node[]][]]) => {
+            const assignment: Record<number, Set<number>> = {};
+            const newSelection: TableSelection = {};
 
-            const links = (linkedNodesPerConstruct as [EntityIdType, Node<Raw>[]][]).map(([constructId, linkedNodes]) => {
-                const nodeIds = linkedNodes.map(node => `${node.id}`);
-                this.selectedPerConstruct[constructId] = nodeIds;
-                return nodeIds;
-            });
+            // Create a reverse mapping
+            for (const [constructId, linkedNodes] of links) {
+                for (const linkedNode of linkedNodes) {
+                    if (!assignment[linkedNode.id]) {
+                        assignment[linkedNode.id] = new Set();
+                    }
+                    assignment[linkedNode.id].add(constructId);
+                }
+            }
 
-            // Gives us a unique list of all nodes which are selected by all constructs
-            this.selectedIds = Array.from(new Set<string>(intersection(...links)));
-            this.loading = false;
+            // Check each selection state
+            for (const node of loadedNodes) {
+                this.nodes[node.id] = node;
+                const assignCount = assignment[node.id]?.size ?? 0;
+
+                switch (assignCount) {
+                    case 0:
+                        newSelection[node.id] = false;
+                        break;
+
+                    case this.constructs.length:
+                        newSelection[node.id] = true;
+                        break;
+
+                    default:
+                        newSelection[node.id] = CHECKBOX_STATE_INDETERMINATE;
+                        break;
+                }
+            }
+
+            // Apply new values
+            this.selected = newSelection;
+            this.currentAssignment = assignment;
             this.changeDetector.markForCheck();
-        }, err => {
-            console.error(err);
-            this.notification.show({
-                type: 'alert',
-                message: 'common.loading_error',
-            });
-            this.cancelFn();
         }));
     }
 
-    selectionChange(newSelection: string[]): void {
-        this.selectedIds = newSelection;
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     async okButtonClicked(): Promise<void> {
+        this.closeFn(await this.applySelection());
+    }
+
+    async applySelection(): Promise<boolean> {
         this.loading = true;
         this.changeDetector.markForCheck();
-        const addSuccess = new Set<string>();
-        const removeSucess = new Set<string>();
+
+        const addSuccess = new Set<number>();
+        const removeSucess = new Set<number>();
+        let didChange = false;
 
         for (const construct of this.constructs) {
-            const toAdd = new Set<string>(this.selectedIds);
-            const toRemove = new Set<string>(this.selectedPerConstruct[construct.id]);
-
-            for (const alreadAssigned of this.selectedPerConstruct[construct.id]) {
-                toAdd.delete(alreadAssigned);
-            }
-            for (const stillAssigned of this.selectedIds) {
-                toRemove.delete(stillAssigned);
-            }
+            const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
+            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
 
             for (const nodeToAdd of toAdd) {
+                if (this.currentAssignment[nodeToAdd]?.has?.(construct.id)) {
+                    continue;
+                }
+
                 try {
-                    await this.handler.linkToNode(construct.id, Number(nodeToAdd)).toPromise();
+                    await this.handler.linkToNode(construct.id, nodeToAdd).toPromise();
                     addSuccess.add(nodeToAdd);
+                    didChange = true;
                 } catch (err) {
                     this.notification.show({
                         type: 'alert',
@@ -121,9 +128,14 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
             }
 
             for (const nodeToRemove of toRemove) {
+                if (!this.currentAssignment[nodeToRemove]?.has?.(construct.id)) {
+                    continue;
+                }
+
                 try {
-                    await this.handler.unlinkFromNode(construct.id, Number(nodeToRemove)).toPromise();
+                    await this.handler.unlinkFromNode(construct.id, nodeToRemove).toPromise();
                     removeSucess.add(nodeToRemove);
+                    didChange = true;
                 } catch (err) {
                     this.notification.show({
                         type: 'alert',
@@ -182,6 +194,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<void> imple
 
         this.loading = false;
         this.changeDetector.markForCheck();
-        this.closeFn();
+
+        return didChange;
     }
 }

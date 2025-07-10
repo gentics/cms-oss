@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue in the edit-mode, where the state of the control buttons would not always update correctly.

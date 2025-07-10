@@ -31,6 +31,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     selector: 'gtx-paging',
     templateUrl: './paging.component.html',
     styleUrls: ['./paging.component.scss'],
+    standalone: false
 })
 export class PaginationComponent {
 

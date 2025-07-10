@@ -6,7 +6,6 @@ import { Api } from '@editor-ui/app/core/providers/api';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import { ItemInNode, Language, Page, Raw } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
@@ -18,6 +17,7 @@ import {
     FormEditorService,
 } from '@gentics/form-generator';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
@@ -194,6 +194,7 @@ describe('FormPropertiesForm', () => {
             [languages]="languages"
         ></gtx-form-properties>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('propertiesForm', { static: true })

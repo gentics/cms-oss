@@ -1,26 +1,64 @@
 @import "variables";
 
+.checkbox-input {
+    display: block;
+    padding-bottom: 3rem;
+}
+
+.section-header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .heading {
     border-bottom: 1px solid $gtx-color-light-gray;
-    font-size: $gtx-font-size-lead;
-    margin-top: 70px;
+    font-size: 1.4rem;
+    padding-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.simple-header {
+    border-bottom: 1px solid $gtx-color-very-light-gray;
+    text-transform: uppercase;
+}
+
+.flex-row {
     display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.checkbox-group {
+    padding: 1rem 0;
     justify-content: space-between;
-    .title {
-        padding-top: 2px;
-        margin-right: 30px;
+}
+
+.publishing-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+
+    .publish-group {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+        flex: 1 1 auto;
     }
 }
 
-.split-row {
-    @media screen and (min-width: $small-screen){
-        display: flex;
-        > * {
-            flex: 1;
-            &:not(:first-child) {
-                margin-left: 20px;
-            }
-        }
+.rendering-section {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    padding-top: 1rem;
+
+    > * {
+        flex: 1 1 auto;
     }
 }
 
@@ -39,84 +77,125 @@
 .inheritance-info {
     color: $gcms-color-icon-inheritance;
     display: flex;
-    margin-bottom: 19px;
-    margin-left: 8px;
-    icon {
-        margin-right: 3px;
-    }
+    gap: 0.5rem;
+    align-content: center;
 }
 
-.checkbox-row {
-    margin-bottom: 20px;
-}
-
-.default-folder-select {
-    display: flex;
-
-    gtx-input {
-        flex: 1;
-    }
-    gtx-button {
-        margin-top: 24px;
-        margin-left: 8px;
-    }
-}
-
-.publishing-section {
-    &.disabled {
-        opacity: 0.7;
-    }
-    .section {
-        margin-bottom: 30px;
-    }
-}
-
-.publish-target {
-    margin-left: 5px;
-    text-transform: uppercase;
-    border-bottom: 1px solid $gtx-color-very-light-gray;
-    margin-bottom: 6px;
-    ::ng-deep label {
-        color: $gtx-color-dark-gray;
-    }
-}
-
-.section-split {
-    display: flex;
-    justify-content: space-between;
-    > * {
-        flex: 1;
-        margin: 0 8px;
-    }
-    .type {
-        text-transform: capitalize;
-        display: flex;
-        margin-left: -3px;
-    }
-    &.disabled {
-        opacity: 0.5;
-    }
-}
-
-.link-inputs-wrapper {
+.linkable-fields-wrapper {
     position: relative;
-    .link-inputs {
-        cursor: pointer;
-        position: absolute;
-        right: -20px;
-        bottom: 18px;
-        z-index: 1;
-        color: $gtx-color-mid-gray;
-        &.active {
-            color: $gtx-color-primary;
+    width: 100%;
+    padding-top: 0.5rem;
+    padding-bottom: 20px;
+
+    display: grid;
+    grid-template: "a b" auto "c b" auto / 1fr 30px;
+    gap: 0.75rem 0;
+
+    .linkable-field {
+        flex: 1 1 auto;
+
+        ::ng-deep .input-element {
+            margin-bottom: 0;
         }
-        &.disabled {
-            color: $gtx-color-light-gray;
-            cursor: default;
+    }
+
+    .link-inputs {
+        width: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        justify-content: center;
+        padding: 36px 0 16px;
+
+        grid-row-start: a-start;
+        grid-row-end: c-end;
+        grid-column-start: b-start;
+        grid-column-end: b-end;
+
+        .top-link-display,
+        .bottom-link-display {
+            border: 1px solid $gtx-color-dark-gray;
+            border-left: none;
+            flex: 1 1 auto;
+        }
+
+        .top-link-display {
+            border-bottom: none;
+            border-top-right-radius: 2px;
+        }
+
+        .bottom-link-display {
+            border-top: none;
+            border-bottom-right-radius: 2px;
+        }
+
+        .link-button {
+            outline: none;
+            border: none;
+            background: transparent;
+            display: inline-block;
+            aspect-ratio: 1/1;
+            color: #d6d6d6;
+            cursor: pointer;
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            padding: 2px;
+            box-sizing: content-box;
+            margin-left: 8px;
+
+            &[disabled] {
+                background: transparent;
+                color: $gtx-color-mid-gray;
+                cursor: not-allowed;
+            }
+        }
+
+        icon {
+            font-size: inherit;
+            color: inherit;
+        }
+
+        &.active {
+            .link-button {
+                color: $gtx-color-primary;
+            }
+        }
+    }
+
+    @media (min-width: 800px) {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        width: unset;
+        gap: 0.5rem;
+
+        .link-inputs {
+            padding: 20px 0 0 0;
+            width: unset;
+
+            .top-link-display,
+            .bottom-link-display {
+                display: none;
+            }
+
+            .link-button {
+                margin: 0;
+            }
         }
     }
 }
 
 .container-validator-errors {
     color: $gtx-color-alert;
+}
+
+.hostname-group {
+    align-items: center;
+    gap: 2rem;
+    padding-top: 0.5rem;
+
+    .hostname-type {
+        flex: 1 1 auto;
+    }
 }

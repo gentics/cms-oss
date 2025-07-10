@@ -75,6 +75,7 @@ import { TabComponent } from '../tab/tab.component';
     templateUrl: './tabs.component.html',
     styleUrls: ['./tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
 

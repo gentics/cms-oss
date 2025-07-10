@@ -11,6 +11,7 @@ import { EntityManagerService } from '../../providers';
     templateUrl: './message-list.tpl.html',
     styleUrls: ['./message-list.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MessageListComponent {
     @Input() waitsForDeleteConfirmation: Message;

@@ -1,19 +1,19 @@
 {
   "name": "@gentics/cms-rest-client-angular",
-  "version": "6.3.0-SNAPSHOT",
+  "version": "6.3.2",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@angular/common": ">=18.0.0",
-    "@angular/core": ">=18.0.0",
+    "@angular/common": ">=19.0.0",
+    "@angular/core": ">=19.0.0",
     "@gentics/cms-models": "^6.2.3",
     "@gentics/cms-rest-client": "^6.2.3",
     "@gentics/mesh-models": "^2.1.0 || ^3.0.0"
   },
   "devDependencies": {
-    "@angular/common": ">=18.0.0",
-    "@angular/core": ">=18.0.0",
-    "@gentics/cms-models": "^6.3.0-SNAPSHOT",
-    "@gentics/cms-rest-client": "^6.3.0-SNAPSHOT",
+    "@angular/common": ">=19.0.0",
+    "@angular/core": ">=19.0.0",
+    "@gentics/cms-models": "^6.3.2",
+    "@gentics/cms-rest-client": "^6.3.2",
     "@gentics/mesh-models": "^2.1.0"
   },
   "publishConfig": {

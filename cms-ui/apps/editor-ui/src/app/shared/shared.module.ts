@@ -20,6 +20,7 @@ import {
     FilePropertiesComponent,
     FileStatusLabel,
     FolderPropertiesComponent,
+    FolderPickerComponent,
     FormLanguageIndicatorComponent,
     FormLanguageIndicatorCurrentComponent,
     FormLanguageSelectorComponent,
@@ -118,7 +119,6 @@ import {
     RepositoryBrowserClient,
     SuggestionSearchService,
     UIOverridesService,
-    UserAgentRef,
     TranslationActionsService,
 } from './providers';
 
@@ -131,6 +131,7 @@ const COMPONENTS = [
     FileStatusLabel,
     FolderContextMenuComponent,
     FolderPropertiesComponent,
+    FolderPickerComponent,
     FormLanguageIndicatorComponent,
     FormLanguageIndicatorComponent,
     FormLanguageIndicatorCurrentComponent,
@@ -250,7 +251,6 @@ const PROVIDERS = [
     RepositoryBrowserClient,
     SuggestionSearchService,
     UIOverridesService,
-    UserAgentRef,
     WindowRef,
     TranslationActionsService,
 ];

@@ -3,6 +3,7 @@ import { AfterViewInit, Directive, ElementRef, EventEmitter, OnDestroy, Output }
 /** See MasonryGrid for usage. */
 @Directive({
     selector: 'masonry-item, [masonryItem]',
+    standalone: false
 })
 export class MasonryItemDirective implements AfterViewInit, OnDestroy {
 

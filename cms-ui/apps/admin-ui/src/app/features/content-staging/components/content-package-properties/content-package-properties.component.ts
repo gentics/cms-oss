@@ -1,15 +1,13 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { ContentPackageCreateRequest, ContentPackageSaveRequest } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { EditableContentPackage } from '@gentics/cms-models';
+import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum ContentPackagePropertiesMode {
     UPDATE = 'update',
     CREATE = 'create',
 }
-
-type ContentPackagePropertiesValue = ContentPackageSaveRequest | ContentPackageCreateRequest;
 
 @Component({
     selector: 'gtx-content-package-properties',
@@ -20,24 +18,25 @@ type ContentPackagePropertiesValue = ContentPackageSaveRequest | ContentPackageC
         generateFormProvider(ContentPackagePropertiesComponent),
         generateValidatorProvider(ContentPackagePropertiesComponent),
     ],
+    standalone: false
 })
-export class ContentPackagePropertiesComponent extends BasePropertiesComponent<ContentPackagePropertiesValue> {
+export class ContentPackagePropertiesComponent extends BasePropertiesComponent<EditableContentPackage> {
 
     @Input()
     public mode: ContentPackagePropertiesMode = ContentPackagePropertiesMode.UPDATE;
 
-    protected override createForm(): UntypedFormGroup {
-        return new UntypedFormGroup({
-            name: new UntypedFormControl(this.safeValue('name'), Validators.required),
-            description: new UntypedFormControl(this.safeValue('description')),
+    protected override createForm(): FormGroup<FormProperties<EditableContentPackage>> {
+        return new FormGroup<FormProperties<EditableContentPackage>>({
+            name: new FormControl(this.safeValue('name'), Validators.required),
+            description: new FormControl(this.safeValue('description')),
         });
     }
 
-    protected override configureForm(value: ContentPackagePropertiesValue, loud?: boolean): void {
+    protected override configureForm(value: EditableContentPackage, loud?: boolean): void {
         // Nothing to do
     }
 
-    protected override assembleValue(value: ContentPackagePropertiesValue): ContentPackagePropertiesValue {
+    protected override assembleValue(value: EditableContentPackage): EditableContentPackage {
         return value;
     }
 }

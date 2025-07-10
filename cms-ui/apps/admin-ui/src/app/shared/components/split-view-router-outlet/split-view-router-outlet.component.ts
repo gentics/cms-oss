@@ -18,6 +18,7 @@ import { delay, map } from 'rxjs/operators';
     selector: 'gtx-split-view-router-outlet',
     templateUrl: './split-view-router-outlet.component.html',
     styleUrls: ['./split-view-router-outlet.component.scss'],
+    standalone: false
 })
 export class SplitViewRouterOutletComponent implements OnInit {
 

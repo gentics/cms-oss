@@ -28,12 +28,35 @@
                         "apps/admin-ui/src/styles",
                         "libs",
                         "node_modules"
-                    ]
+                    ],
+                    "sass": {
+                        "silenceDeprecations": [
+                            "call-string",
+                            "elseif",
+                            "moz-document",
+                            "relative-canonical",
+                            "new-global",
+                            "color-module-compat",
+                            "slash-div",
+                            "bogus-combinators",
+                            "function-units",
+                            "duplicate-var-flags",
+                            "null-alpha",
+                            "abs-percent",
+                            "fs-importer-cwd",
+                            "css-function-mixin",
+                            "mixed-decls",
+                            "color-4-api",
+                            "color-functions",
+                            "legacy-js-api",
+                            "import",
+                            "global-builtin"
+                        ]
+                    }
                 },
                 "scripts": [],
                 "allowedCommonJsDependencies": [
                     "@bevacqua/rome",
-                    "angular2-hotkeys",
                     "base64-js",
                     "hammerjs",
                     "js-sha256",

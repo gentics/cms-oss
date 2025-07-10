@@ -622,6 +622,7 @@ describe('RadioGroupDirective', () => {
 
 @Component({
     template: '<gtx-radio-button></gtx-radio-button>',
+    standalone: false,
 })
 class TestComponent {
 

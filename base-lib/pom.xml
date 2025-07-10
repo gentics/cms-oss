@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms-oss</artifactId>
-		<version>6.3.0-SNAPSHOT</version>
+		<version>6.3.3-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms-oss</groupId>
@@ -315,9 +315,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.13</version>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>9.3.0</version>
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
@@ -434,6 +434,13 @@
 		<dependency>
 			<groupId>com.sksamuel.scrimage</groupId>
 			<artifactId>scrimage-webp</artifactId>
+			<!-- Exclude transitive logback dependency, because we are using log4j2 -->
+			<exclusions>
+				<exclusion>
+					<groupId>ch.qos.logback</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tika</groupId>
@@ -472,7 +479,6 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-1.2-api</artifactId>
-			<version>2.17.1</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -606,6 +612,16 @@
 			<groupId>concurrent</groupId>
 			<artifactId>concurrent</artifactId>
 			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.nekohtml</groupId>
+			<artifactId>nekohtml</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- These libraries are only needed for compiling the code -->

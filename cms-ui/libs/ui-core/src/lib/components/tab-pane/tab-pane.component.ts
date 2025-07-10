@@ -31,6 +31,7 @@ let uniqueTabPaneId = 0;
         </ng-template>
     `,
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TabPaneComponent extends BaseComponent {
 

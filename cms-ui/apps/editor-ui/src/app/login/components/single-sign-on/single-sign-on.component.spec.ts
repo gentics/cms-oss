@@ -9,7 +9,7 @@ import { ErrorHandler } from '../../../core/providers/error-handler/error-handle
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
 import { ApplicationStateService, AuthActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { SingleSignOn } from './single-sign-on.component';
+import { SingleSignOnComponent } from './single-sign-on.component';
 
 class MockActivatedRoute {}
 
@@ -28,6 +28,7 @@ class MockRouter {}
 
 @Component({
     template: '<single-sign-on></single-sign-on>',
+    standalone: false,
 })
 class TestComponent implements OnInit {
     ngOnInitSpy = jasmine.createSpy('ngOnInit');
@@ -40,7 +41,7 @@ class TestComponent implements OnInit {
     }
 }
 
-describe('SingleSignOn', () => {
+describe('SingleSignOnComponent', () => {
     let keycloakService: MockKeycloakService;
     let state: TestApplicationState;
 
@@ -58,7 +59,7 @@ describe('SingleSignOn', () => {
             ],
             declarations: [
                 ButtonComponent,
-                SingleSignOn,
+                SingleSignOnComponent,
                 TestComponent,
             ],
         });

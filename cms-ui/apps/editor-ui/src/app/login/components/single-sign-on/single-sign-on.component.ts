@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject, Subscription } from 'rxjs';
-import { filter, take } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs';
+import { filter, take, takeUntil } from 'rxjs/operators';
 import { KeycloakService } from '@gentics/cms-components';
+import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
@@ -14,13 +15,14 @@ import { ApplicationStateService, AuthActionsService } from '../../../state';
     templateUrl: './single-sign-on.component.html',
     styleUrls: ['./single-sign-on.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
-export class SingleSignOn implements OnDestroy, OnInit {
+export class SingleSignOnComponent implements OnDestroy, OnInit {
 
     enabled$ = new BehaviorSubject(false);
     url: SafeUrl;
 
-    private subscriptions: Subscription[] = [];
+    private stopper = new ObservableStopper();
 
     constructor(
         private appState: ApplicationStateService,
@@ -53,22 +55,20 @@ export class SingleSignOn implements OnDestroy, OnInit {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.stopper.stop();
     }
 
     attemptSsoWithKeycloak(): void {
         this.keycloakService.attemptCmsLogin().subscribe((result: string) => {
             this.handleSsoResponse(result);
-            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-            if (!returnUrl) {
-                return;
-            }
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/no-nodes';
             const onLogin$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
                 filter(isLoggedIn => !!isLoggedIn),
+                takeUntil(this.stopper.stopper$),
             );
-            this.subscriptions.push(onLogin$.subscribe(() => {
+            onLogin$.subscribe(() => {
                 this.router.navigateByUrl(returnUrl);
-            }));
+            });
         });
     }
 

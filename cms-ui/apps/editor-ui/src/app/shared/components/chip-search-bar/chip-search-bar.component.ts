@@ -79,6 +79,7 @@ const patternShortCutSyntaxId = /^(?:jump):(\d+)$/;
     templateUrl: './chip-search-bar.component.html',
     styleUrls: ['./chip-search-bar.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 

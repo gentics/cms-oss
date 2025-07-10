@@ -14,7 +14,7 @@ import com.gentics.contentnode.rest.model.request.Permission;
  * @param <T> type of the objects contained in the list
  */
 @XmlRootElement
-public abstract class AbstractListResponse <T extends Object> extends StagingResponse<String> {
+public abstract class AbstractListResponse <T extends Object> extends GenericResponse {
 	/**
 	 * Serial Version UID
 	 */

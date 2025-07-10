@@ -200,7 +200,11 @@ export class NodeOperations extends ExtendedEntityOperationsBase<'node'> {
         );
     }
 
-    updateNodeFeatures(nodeId: number, update: Partial<Record<NodeFeature, boolean>>): Observable<(keyof NodeFeatures)[]> {
+    updateNodeFeatures(
+        nodeId: number,
+        update: Partial<Record<NodeFeature, boolean>>,
+        skipNotification: boolean = false,
+    ): Observable<(keyof NodeFeatures)[]> {
         const updateQueries = [];
 
         Object.keys(update).forEach((feature: NodeFeature) => {
@@ -211,13 +215,19 @@ export class NodeOperations extends ExtendedEntityOperationsBase<'node'> {
             }
         });
 
+        if (updateQueries.length === 0) {
+            return of([]);
+        }
+
         return forkJoin(updateQueries).pipe(
             switchMap(() => this.getNodeFeatures(nodeId)),
-            tap((nodeFeatures: (keyof NodeFeatures)[]) => {
-                this.notification.show({
-                    type: 'success',
-                    message: 'node.features_updated',
-                });
+            tap(() => {
+                if (!skipNotification) {
+                    this.notification.show({
+                        type: 'success',
+                        message: 'node.features_updated',
+                    });
+                }
             }),
             this.catchAndRethrowError(),
         );
@@ -244,14 +254,16 @@ export class NodeOperations extends ExtendedEntityOperationsBase<'node'> {
         );
     }
 
-    updateNodeLanguages(nodeId: number, update: Language[]): Observable<Language[]> {
+    updateNodeLanguages(nodeId: number, update: Language[], skipNotification: boolean = false): Observable<Language[]> {
         return this.api.node.updateNodeLanguages(nodeId, update).pipe(
             switchMap(() => this.getNodeLanguages(nodeId)),
-            tap((nodeLanguages: Language[]) => {
-                this.notification.show({
-                    type: 'success',
-                    message: 'node.languages_updated',
-                });
+            tap(() => {
+                if (!skipNotification) {
+                    this.notification.show({
+                        type: 'success',
+                        message: 'node.languages_updated',
+                    });
+                }
             }),
             this.catchAndRethrowError(),
         );

@@ -21,14 +21,13 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { cloneDeep } from 'lodash-es';
 import { TagEditorHostComponent } from '../..';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { spyOnDynamicallyCreatedComponent } from '../../../../testing/dynamic-components';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
 import { TagPropertyLabelPipe } from '../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
@@ -48,7 +47,6 @@ describe('GenticsTagEditorComponent', () => {
             ],
             providers: [
                 TagPropertyEditorResolverService,
-                UserAgentRef,
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
@@ -1123,6 +1121,7 @@ function validateMockedTag(tag: EditableTag): void {
     template: `
         <tag-editor-host #tagEditorHost></tag-editor-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild('tagEditorHost', { static: true })

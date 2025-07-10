@@ -3,7 +3,7 @@ import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ActionLogEntry, AnyModelType, LogsListRequest, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { ActionLogEntry, AnyModelType, LogsListRequest, LogTypeListItem, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
 import { ActionLogEntryLoaderService } from '../../providers';
 
@@ -12,6 +12,7 @@ import { ActionLogEntryLoaderService } from '../../providers';
     templateUrl: './action-log-entry-table.component.html',
     styleUrls: ['./action-log-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO, LogsListRequest> implements OnInit {
 
@@ -49,9 +50,10 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'logs';
 
-    public logTypes = [];
-
-    public logActions = [];
+    public logTypes: LogTypeListItem[] = [];
+    public logActions: LogTypeListItem[] = [];
+    public startMax: Date | null = null;
+    public endMin: Date | null = null;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -67,7 +69,6 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
             loader,
             modalService,
         );
-        this.init();
     }
 
     ngOnInit(): void {
@@ -90,20 +91,13 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
         this.clear();
     }
 
-    public getMinFilterDate(): Date {
-        if (this.filters.start) {
-            return new Date(this.filters.start * 1000);
-        } else {
-            return null;
-        }
-    }
-
-    public getMaxFilterDate(): Date {
-        if (this.filters.end) {
-            return new Date(this.filters.end * 1000);
-        } else {
-            return null;
-        }
+    protected override onFilterChange(): void {
+        this.startMax = this.filters.end
+            ? new Date(this.filters.end * 1000)
+            : null;
+        this.endMin = this.filters.start
+            ? new Date(this.filters.start * 1000)
+            : null;
     }
 
     private clear(): void {
@@ -118,5 +112,6 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
             start,
             end,
         };
+        this.onFilterChange();
     }
 }

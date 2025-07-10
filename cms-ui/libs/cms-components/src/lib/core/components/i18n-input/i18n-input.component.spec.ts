@@ -132,6 +132,7 @@ describe('I18nInputComponent', () => {
             [language]="activeLanguage"
             [availableLanguages]="availableLanguages"
         ></gtx-i18n-input>`,
+    standalone: false,
 })
 class TestComponent implements OnInit, OnDestroy {
 
@@ -161,7 +162,10 @@ class TestComponent implements OnInit, OnDestroy {
     }
 }
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(value: string): string {
         return value;

@@ -26,6 +26,7 @@ interface SchemaRenderInfo {
     templateUrl: './mesh-browser-schema-list.component.html',
     styleUrls: ['./mesh-browser-schema-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserSchemaListComponent implements OnChanges {
 
@@ -79,6 +80,7 @@ export class MeshBrowserSchemaListComponent implements OnChanges {
             || changes.availableLanguages
             || changes.branch
             || changes.node
+            || changes.language
         ) {
             this.reloadSchemasToRender();
         }

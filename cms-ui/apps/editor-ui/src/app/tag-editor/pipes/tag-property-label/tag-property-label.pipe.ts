@@ -7,7 +7,10 @@ import { TagPart } from '@gentics/cms-models';
  * the labeling the component that is used to edit the corresponding TagProperty.
  * An '*' is added to this string if the TagPart is mandatory.
  */
-@Pipe({ name: 'tagPropLabel' })
+@Pipe({
+    name: 'tagPropLabel',
+    standalone: false
+})
 export class TagPropertyLabelPipe implements PipeTransform {
 
     transform(value: TagPart, language?: GcmsUiLanguage): string {

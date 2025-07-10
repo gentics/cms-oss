@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { AlohaPlugin } from '@gentics/aloha-models';
+import { AlohaPlugin, AlohaRangeObject } from '@gentics/aloha-models';
 import { ExternalLink, LinkCheckerCheckResponse } from '@gentics/cms-models';
+import { TagEditorOptions } from './tag-editor';
 
 /** Aloha/Edit-Mode Tab-ID to insert/manage constructs in a Page. */
 export const TAB_ID_CONSTRUCTS = 'gtx.constructs';
@@ -115,15 +116,40 @@ export interface GCNLinkCheckerPluginSettings {
     tagtypeWhitelist?: string[];
 }
 
+export interface TagInsertOptions extends TagEditorOptions {
+    /** If it should skip/ignore the construct option `openEditorOnInsert` and not open the tag fill once the tag has been inserted. */
+    skipInsertFill?: boolean;
+}
+
 export interface GCNAlohaPlugin extends AlohaPlugin {
     settings: GCNPluginSettings;
-    createTag(constructId: number, async?: boolean, successCallback?: (html: string, tag: any, data: any) => any): void;
-    handleBlock(data: any, insert: boolean, onInsert: () => void, content?: any): void;
-    openTagFill(tagId: string | number, pageId: string | number, withDelete?: boolean): void;
+    createTag(
+        constructId: number,
+        async?: boolean,
+        successCallback?: (html: string, tag: any, data: any) => any,
+        range?: Range | AlohaRangeObject,
+    ): void;
+    handleBlock(
+        data: any,
+        insert: boolean,
+        onInsert: () => void,
+        content?: any,
+        range?: Range | AlohaRangeObject,
+    ): void;
+    openTagFill(tagId: string | number, pageId: string | number, options?: TagEditorOptions): void;
+    insertNewTag(
+        constructId: number,
+        range?: Range | AlohaRangeObject,
+        options?: TagInsertOptions,
+    ): Promise<any>;
 }
 
 export interface GCNTags {
-    insert(data: any, callback?: (data: any) => void): JQuery;
+    insert(
+        data: any,
+        callback?: (data: any) => void,
+        range?: Range | AlohaRangeObject,
+    ): JQuery;
     decorate(tag: any, data: any, callback?: () => void): void;
 }
 

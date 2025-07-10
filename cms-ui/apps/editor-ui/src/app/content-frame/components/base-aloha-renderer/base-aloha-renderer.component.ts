@@ -15,7 +15,10 @@ import { BaseFormElementComponent } from '@gentics/ui-core';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { patchMultipleAlohaFunctions, unpatchAllAlohaFunctions } from '../../utils';
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
     extends BaseFormElementComponent<T>
     implements OnInit, OnChanges, OnDestroy {
@@ -92,20 +95,6 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
             enable: () => this.setDisabledState(false),
             getValue: () => this.getFinalValue(),
             setValue: (val) => this.writeValue(val),
-            show: () => {
-                if (!this.settings.visible) {
-                    this.settings.visible = true;
-                    this.aloha.reloadToolbarSettings();
-                    this.changeDetector.markForCheck();
-                }
-            },
-            hide: () => {
-                if (this.settings.visible) {
-                    this.settings.visible = false;
-                    this.aloha.reloadToolbarSettings();
-                    this.changeDetector.markForCheck();
-                }
-            },
             touch: () => this.triggerTouch(),
         });
     }

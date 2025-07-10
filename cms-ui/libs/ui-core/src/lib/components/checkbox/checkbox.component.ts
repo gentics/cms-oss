@@ -11,11 +11,8 @@ import {
     ViewChild,
 } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
-import { KeyCode } from '../../common';
-import { generateFormProvider } from '../../utils';
-
-export type CheckState = boolean | 'indeterminate';
-const randomID = (): string => 'checkbox-' + Math.random().toString(36).substr(2);
+import { CHECKBOX_STATE_INDETERMINATE, CheckboxState, KeyCode } from '../../common';
+import { generateFormProvider, randomId } from '../../utils';
 
 /**
  * Checkbox wraps the native `<input type="checkbox">` form element.
@@ -46,6 +43,7 @@ const randomID = (): string => 'checkbox-' + Math.random().toString(36).substr(2
     templateUrl: './checkbox.component.html',
     styleUrls: ['./checkbox.component.scss'],
     providers: [generateFormProvider(CheckboxComponent)],
+    standalone: false
 })
 export class CheckboxComponent implements ControlValueAccessor, OnInit, AfterViewInit {
     /**
@@ -74,11 +72,11 @@ export class CheckboxComponent implements ControlValueAccessor, OnInit, AfterVie
      * Set to "indeterminate" for an indeterminate state (-)
      */
     @Input() get indeterminate(): boolean {
-        return this.checkState === 'indeterminate';
+        return this.checkState === CHECKBOX_STATE_INDETERMINATE;
     }
     set indeterminate(val: boolean) {
-        if (val != (this.checkState === 'indeterminate')) {
-            this.checkState = val ? 'indeterminate' : false;
+        if (val != (this.checkState === CHECKBOX_STATE_INDETERMINATE)) {
+            this.checkState = val ? CHECKBOX_STATE_INDETERMINATE : false;
             this.change.emit(this.checkState);
             this.onChange(this.checkState);
         }
@@ -91,7 +89,7 @@ export class CheckboxComponent implements ControlValueAccessor, OnInit, AfterVie
     /**
      * Checkbox ID
      */
-    @Input() id: string = randomID();
+    @Input() id = `checkbox-${randomId()}`;
     /**
      * Label for the checkbox
      */
@@ -112,17 +110,17 @@ export class CheckboxComponent implements ControlValueAccessor, OnInit, AfterVie
     /**
      * Blur event
      */
-    @Output() blur = new EventEmitter<CheckState>();
+    @Output() blur = new EventEmitter<CheckboxState>();
     /**
      * Focus event
      */
-    @Output() focus = new EventEmitter<CheckState>();
+    @Output() focus = new EventEmitter<CheckboxState>();
     /**
      * Change event
      */
-    @Output() change = new EventEmitter<CheckState>();
+    @Output() change = new EventEmitter<CheckboxState>();
 
-    checkState: CheckState = false;
+    checkState: CheckboxState = false;
     tabbedFocus = false;
 
     @ViewChild('labelElement', { static: true })
@@ -173,7 +171,7 @@ export class CheckboxComponent implements ControlValueAccessor, OnInit, AfterVie
         if (e) {
             e.stopPropagation();
         }
-        let newState: CheckState = input.indeterminate ? 'indeterminate' : input.checked;
+        let newState: CheckboxState = input.indeterminate ? 'indeterminate' : input.checked;
         if (this.statelessMode) {
             if (input.checked !== this.checkState) {
                 input.checked = !!this.checkState;

@@ -1,5 +1,5 @@
 import { BO_ID, ContentPackageBO, EntityTableActionClickEvent } from '@admin-ui/common';
-import { ContentPackageOperations, I18nService, PermissionsService } from '@admin-ui/core';
+import { ContentPackageOperations, ErrorHandler, I18nService, PermissionsService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
@@ -21,6 +21,7 @@ const IMPORT_PACKAGE_ACTION = 'importPackage';
     templateUrl: './content-package-table.component.html',
     styleUrls: ['./content-package-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentPackageTableComponent extends BaseEntityTableComponent<ContentPackage, ContentPackageBO> {
 
@@ -68,6 +69,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
         modalService: ModalService,
         protected permissions: PermissionsService,
         protected operations: ContentPackageOperations,
+        protected errorHandler: ErrorHandler,
     ) {
         super(
             changeDetector,
@@ -186,13 +188,17 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
     }
 
     protected async uploadContentPackage(pkg: ContentPackageBO): Promise<void> {
-        const dialog = await this.modalService.fromComponent(UploadContentPackageModalComponent, {
-            closeOnEscape: false,
-            closeOnOverlayClick: false,
-        }, {
-            contentPackage: pkg,
-        });
-        await dialog.open();
+        try {
+            const dialog = await this.modalService.fromComponent(UploadContentPackageModalComponent, {
+                closeOnEscape: false,
+                closeOnOverlayClick: false,
+            }, {
+                contentPackage: pkg,
+            });
+            await dialog.open();
+        } catch (err) {
+            this.errorHandler.catch(err);
+        }
     }
 
     async importPackages(packages: ContentPackageBO[]): Promise<void> {

@@ -14,6 +14,7 @@ import { RoleTableLoaderService } from '../../providers';
     templateUrl: './role-table.component.html',
     styleUrls: ['./role-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RoleTableComponent extends BaseEntityTableComponent<Role<Raw>, RoleBO> {
 

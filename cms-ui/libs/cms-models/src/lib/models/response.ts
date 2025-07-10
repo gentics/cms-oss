@@ -1,6 +1,17 @@
 import { Form, FormDownloadInfo } from './cms-form';
 import { ConstructCategory } from './construct-category';
-import { ContentPackage, ContentPackageImportError, ContentPackageSyncProgress } from './content-package';
+import {
+    ContentPackage,
+    ContentPackageChannel,
+    ContentPackageFile,
+    ContentPackageFolder,
+    ContentPackageForm,
+    ContentPackageImage,
+    ContentPackageImportError,
+    ContentPackageNode,
+    ContentPackagePage,
+    ContentPackageSyncProgress,
+} from './content-package';
 import { ContentRepository } from './content-repository';
 import { ContentRepositoryFragment } from './cr-fragment';
 import { DataSource } from './data-source';
@@ -36,7 +47,7 @@ import { StagedItemsMap, StagingStatus } from './staging-status';
 import { Construct, Tag, TagStatus, TagType } from './tag';
 import { TagmapEntry, TagmapEntryError } from './tagmap-entry';
 import { Template } from './template';
-import { DefaultModelType, ModelType, NormalizableEntity, Raw } from './type-util';
+import { Raw } from './type-util';
 import { User } from './user';
 import { UsersnapSettings } from './usersnap';
 import { NodeVersionInfo, Variant } from './version';
@@ -1426,18 +1437,40 @@ export interface ContentPackageResponse extends Response {
     contentPackage: ContentPackage;
 }
 
+export interface JobProgress {
+    done: number;
+    total: number;
+    started: number;
+    finished: number;
+}
+
+export interface JobStatus {
+    running: boolean;
+    progress?: JobProgress;
+    messages?: ResponseMessage[];
+}
+
 export interface ContentPackageSyncResponse extends Response {
     running: boolean;
     progress?: ContentPackageSyncProgress;
 }
 
-
-export interface ContentPackageErrorResponse extends Response{
+export interface ContentPackageErrorResponse extends Response {
     errors: ContentPackageImportError[];
     mismatches: string[];
     timestamp: string;
 }
 
+export interface ContentPackageFolderResponse extends Response {
+    import: JobStatus;
+    nodes: ContentPackageNode[];
+    channels: ContentPackageChannel[];
+    folders: ContentPackageFolder[];
+    files: ContentPackageFile[];
+    images: ContentPackageImage[];
+    pages: ContentPackagePage[];
+    forms: ContentPackageForm[];
+}
 
 // CLUSTERING //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

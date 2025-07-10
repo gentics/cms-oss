@@ -10,6 +10,7 @@ import { patchMultipleAlohaFunctions } from '../../utils';
     styleUrls: ['./aloha-split-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaSplitButtonRendererComponent)],
+    standalone: false
 })
 export class AlohaSplitButtonRendererComponent extends BaseAlohaRendererComponent<AlohaSplitButtonComponent, void> {
 

@@ -158,6 +158,7 @@ class MockFileDropArea {
             (fileSelect)="onFileSelect($event)"
             (fileSelectReject)="onFileSelectReject($event)"
         ></gtx-file-picker>`,
+    standalone: false,
 })
 class TestComponent {
     disabled = false;

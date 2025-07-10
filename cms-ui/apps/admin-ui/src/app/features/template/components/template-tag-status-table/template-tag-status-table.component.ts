@@ -2,9 +2,9 @@ import { AdminUIEntityDetailRoutes, TagStatusBO } from '@admin-ui/common';
 import { I18nNotificationService, I18nService, TemplateTagStatusOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, TagStatus } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TemplateTagStatusTableLoaderOptions, TemplateTagStatusTableLoaderService } from '../../providers';
@@ -16,6 +16,7 @@ const SYNC_ACTION = 'syncTag';
     templateUrl: './template-tag-status-table.component.html',
     styleUrls: ['./template-tag-status-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TemplateTagStatusTableComponent
     extends BaseEntityTableComponent<TagStatus, TagStatusBO, TemplateTagStatusTableLoaderOptions>
@@ -82,7 +83,7 @@ export class TemplateTagStatusTableComponent
         );
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.templateId) {

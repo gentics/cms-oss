@@ -7,6 +7,7 @@ import { GroupUserDataService } from '../../providers/group-user-data/group-user
     selector: 'gtx-assign-group-to-users-modal',
     templateUrl: './assign-group-to-users-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AssignGroupToUsersModal extends BaseModal<void> implements OnInit {
 
@@ -39,7 +40,7 @@ export class AssignGroupToUsersModal extends BaseModal<void> implements OnInit {
         try {
             const updatedUsers = await this.changeUsersOfGroup();
             this.closeFn(updatedUsers);
-        } finally {
+        } catch (err) {
             this.loading = false;
             this.changeDetector.markForCheck();
         }

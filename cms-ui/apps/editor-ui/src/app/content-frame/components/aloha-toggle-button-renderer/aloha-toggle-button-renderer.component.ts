@@ -10,6 +10,7 @@ import { patchMultipleAlohaFunctions } from '../../utils';
     styleUrls: ['./aloha-toggle-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaToggleButtonRendererComponent)],
+    standalone: false
 })
 export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererComponent<AlohaToggleButtonComponent, boolean> {
 
@@ -64,7 +65,7 @@ export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererCompone
         this.aloha.restoreSelection();
     }
 
-    protected getFinalValue(): boolean {
+    protected override getFinalValue(): boolean {
         return this.settings.active;
     }
 

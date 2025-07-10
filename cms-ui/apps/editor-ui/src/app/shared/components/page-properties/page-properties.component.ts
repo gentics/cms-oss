@@ -50,6 +50,7 @@ export enum PagePropertiesMode {
         generateFormProvider(PagePropertiesComponent),
         generateValidatorProvider(PagePropertiesComponent),
     ],
+    standalone: false
 })
 export class PagePropertiesComponent
     extends BasePropertiesComponent<EditablePageProps>

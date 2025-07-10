@@ -21,7 +21,7 @@
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'elasticSearchIndex.info_selected_indices' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'elasticSearchIndex.info_selected_indices' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
@@ -74,6 +74,6 @@
 
 <ng-template #numberRenderer let-value="value">
     <span class="gtx-table-cell-text">
-        {{ value | i18nNumber }}
+        {{ value | gtxI18nNumber }}
     </span>
 </ng-template>

@@ -11,6 +11,7 @@ import { SchedulePropertiesMode } from '../schedule-properties/schedule-properti
     templateUrl: './create-schedule-modal.component.html',
     styleUrls: ['./create-schedule-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateScheduleModalComponent extends BaseModal<ScheduleBO | false> implements OnInit, OnDestroy {
 

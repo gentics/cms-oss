@@ -14,6 +14,7 @@ import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
+import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
 import {
@@ -28,9 +29,9 @@ import {
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { BehaviorSubject, NEVER, Observable, of as observableOf } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import { Api } from '../../../core/providers/api/api.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -48,7 +49,7 @@ import { ItemStatusLabelComponent } from '../../../shared/components/item-status
 import { DynamicDisableDirective } from '../../../shared/directives/dynamic-disable/dynamic-disable.directive';
 import { ItemIsLocalizedPipe } from '../../../shared/pipes/item-is-localized/item-is-localized.pipe';
 import { BreadcrumbsService } from '../../../shared/providers/breadcrumbs.service';
-import { ApplicationStateService, EditorActionsService, FolderActionsService, MarkContentAsModifiedAction } from '../../../state';
+import { ApplicationStateService, EditorActionsService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { TagEditorService } from '../../../tag-editor';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
@@ -56,7 +57,6 @@ import { CustomerScriptService } from '../../providers/customer-script/customer-
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { NodePropertiesComponent } from '../node-properties/node-properties.component';
 import { ContentFrameComponent } from './content-frame.component';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 
 let appState: TestApplicationState;
 let permissionService: MockPermissionService;
@@ -125,7 +125,10 @@ class MockChangeDetector {
     markForCheck = jasmine.createSpy('markForCheck');
 }
 
-@Directive({ selector: '[overrideSlot],[overrideParams]' })
+@Directive({
+    selector: '[overrideSlot],[overrideParams]',
+    standalone: false,
+})
 class MockOverrideSlotDirective {}
 
 class MockEditorActions {
@@ -174,6 +177,7 @@ class MockRepositoryBrowserClient {}
     template: `<content-frame></content-frame>
         <gtx-overlay-host></gtx-overlay-host>
     `,
+    standalone: false,
 })
 class TestComponent {
     @ViewChild(ContentFrameComponent, { static: true }) contentFrame: ContentFrameComponent;
@@ -186,6 +190,7 @@ class TestComponent {
 @Component({
     selector: 'file-preview',
     template: '',
+    standalone: false,
 })
 class MockFilePreview {
     @Input() file: any;
@@ -195,6 +200,7 @@ class MockFilePreview {
 @Component({
     selector: 'combined-properties-editor',
     template: '',
+    standalone: false,
     providers: [
         {
             provide: CombinedPropertiesEditorComponent,
@@ -217,6 +223,7 @@ class MockCombinedPropertiesEditor {
 @Component({
     selector: 'gtx-form-editor',
     template: '',
+    standalone: false,
 })
 class MockFormEditor {
     @Input() item: Form;
@@ -226,18 +233,13 @@ class MockFormEditor {
 @Component({
     selector: 'item-state-contextmenu',
     template: '',
+    standalone: false,
 })
 class MockPageStateContextMenu {
     @Input() nodeLanguages: Language[];
     @Input() page: Page;
     @Input() activeNodeId: number;
 }
-
-@Component({
-    selector: 'tag-editor-overlay-host',
-    template: '',
-})
-class MockTagEditorOverlayHost {}
 
 class MockTagEditorService {
     forceCloseTagEditor(): void {}
@@ -519,7 +521,6 @@ describe('ContentFrameComponent', () => {
                 MockFilePreview,
                 MockOverrideSlotDirective,
                 MockPageStateContextMenu,
-                MockTagEditorOverlayHost,
                 NodePropertiesComponent,
                 ItemStatusLabelComponent,
                 TestComponent,

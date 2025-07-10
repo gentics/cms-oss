@@ -1,5 +1,7 @@
 package com.gentics.contentnode.rest.model.response.log;
 
+import java.util.List;
+
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.gentics.contentnode.rest.model.response.AbstractListResponse;
@@ -13,4 +15,9 @@ public class ActionLogEntryList extends AbstractListResponse<ActionLogEntry> {
 	 * Serial Version UId
 	 */
 	private static final long serialVersionUID = 6690012877836880544L;
+
+	@Override
+	public List<ActionLogEntry> getItems() {
+		return super.getItems();
+}
 }

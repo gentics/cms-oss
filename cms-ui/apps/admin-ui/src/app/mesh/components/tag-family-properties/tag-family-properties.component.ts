@@ -18,6 +18,7 @@ export enum TagFamilyPropertiesMode {
         generateFormProvider(TagFamilyPropertiesComponent),
         generateValidatorProvider(TagFamilyPropertiesComponent),
     ],
+    standalone: false
 })
 export class TagFamilyPropertiesComponent extends BasePropertiesComponent<EditableTagFamilyProperties> {
 

@@ -49,6 +49,7 @@ const CONTROLS_I18N: (keyof EditableFolderProps)[] = ['nameI18n', 'descriptionI1
         generateFormProvider(FolderPropertiesComponent),
         generateValidatorProvider(FolderPropertiesComponent),
     ],
+    standalone: false
 })
 export class FolderPropertiesComponent
     extends BasePropertiesComponent<EditableFolderProps>
@@ -173,13 +174,13 @@ export class FolderPropertiesComponent
 
     protected createForm(): FormGroup {
         const form = new FormGroup<FormProperties<EditableFolderProps>>({
-            name: new FormControl(this.value?.name, [Validators.required, (ctrl) => {
+            name: new FormControl(this.safeValue('name'), [Validators.required, (ctrl) => {
                 return this.sibilingsHaveEqualProperty('name', ctrl.value) ? {
                     [ERROR_DIRECTORY_DUPLICATE]: true,
                 } : null;
             }]),
-            description: new FormControl(this.value?.description),
-            publishDir: new FormControl(this.value?.publishDir, [Validators.required, (ctrl) => {
+            description: new FormControl(this.safeValue('description')),
+            publishDir: new FormControl(this.safeValue('publishDir'), [Validators.required, (ctrl) => {
                 const value = ctrl.value;
                 let hasErr = false;
                 const err = {};
@@ -198,9 +199,9 @@ export class FolderPropertiesComponent
             }]),
 
             // I18n properties
-            nameI18n: new FormControl(this.value?.nameI18n || {}),
-            descriptionI18n: new FormControl(this.value?.descriptionI18n || {}),
-            publishDirI18n: new FormControl(this.value?.publishDirI18n || {}),
+            nameI18n: new FormControl(this.safeValue('nameI18n') || {}),
+            descriptionI18n: new FormControl(this.safeValue('descriptionI18n') || {}),
+            publishDirI18n: new FormControl(this.safeValue('publishDirI18n') || {}),
         });
 
         this.subscriptions.push(form.controls.name.valueChanges.pipe(

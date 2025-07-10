@@ -19,6 +19,7 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './dev-tool-package-trable.component.html',
     styleUrls: ['./dev-tool-package-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PackageCheckTrableComponent
     extends BaseEntityTrableComponent<PackageDependencyEntity, PackageDependencyEntityBO, PackageCheckTrableLoaderOptions>

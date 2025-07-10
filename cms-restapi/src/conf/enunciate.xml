@@ -5,6 +5,11 @@
 		<rest defaultRestSubcontext="/CNPortletapp/rest" />
 	</services>
 
+	<api-classes>
+		<include pattern="com.gentics.contentnode.rest.resource.**"/>
+		<include pattern="com.gentics.contentnode.rest.model.**"/>
+	</api-classes>
+
 	<modules>
 		<!-- Docs -->
 		<docs splashPackage="com.gentics.contentnode.rest" title="Gentics CMS REST API"
@@ -13,7 +18,7 @@
 		<csharp-xml-client disabled="true" />
 		<gwt-json-overlay disabled="true" />
 		<idl disabled="true" />
-		<jackson disabled="false" />
+		<jackson disabled="false" collapse-type-hierarchy="true" />
 		<jackson1 disabled="true" />
 		<java-json-client disabled="true" />
 		<java-xml-client disabled="true" />

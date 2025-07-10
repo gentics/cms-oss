@@ -28,6 +28,7 @@ const NEEDS_NEW_PASSWORD_ERROR = 'auth_login_password_change_required';
     templateUrl: './login-gate.component.html',
     styleUrls: ['./login-gate.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
 

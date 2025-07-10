@@ -20,7 +20,7 @@ services:
       retries: 3
 
   mesh:
-    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-3.0.0-SNAPSHOT}
+    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-3.1.0}
 
     environment:
       MESH_INITIAL_ADMIN_PASSWORD_FORCE_RESET: false
@@ -87,8 +87,8 @@ services:
         condition: service_healthy
 
   playwright:
-    image: mcr.microsoft.com/playwright:v1.51.1-noble
-    entrypoint: "npx -y playwright@1.51.1 run-server --port 3000 --host 0.0.0.0"
+    image: mcr.microsoft.com/playwright:v1.53.2-noble
+    entrypoint: "npx -y playwright@1.53.2 run-server --port 3000 --host 0.0.0.0"
     ports:
       - 3000:3000
 

@@ -17,6 +17,7 @@ const ACTION_PUSH = 'push';
     templateUrl: './content-repository-license-table.component.html',
     styleUrls: ['./content-repository-license-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ContentRepositoryLicenseTableComponent
     extends BaseEntityTableComponent<ContentRepositoryLicenseBO>
@@ -104,9 +105,9 @@ export class ContentRepositoryLicenseTableComponent
         switch (event.actionId) {
             case ACTION_PUSH:
                 this.pushLicense({
-                    crIds: event.selection ?
-                        this.selected.map(Number).filter(id => Number.isInteger(id)) :
-                        [event.item?.id],
+                    crIds: this.getAffectedEntityIds(event)
+                        .map(Number)
+                        .filter(id => Number.isInteger(id)),
                 }, true);
                 break;
 

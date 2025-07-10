@@ -11,6 +11,7 @@ import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
     templateUrl: './management.component.html',
     styleUrls: ['./management.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ManagementComponent {
 

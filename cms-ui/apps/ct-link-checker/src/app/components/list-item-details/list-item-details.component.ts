@@ -18,7 +18,8 @@ const MAX_HEIGHT = '80px';
     selector: 'list-item-details',
     templateUrl: './list-item-details.component.tpl.html',
     styleUrls: ['./list-item-details.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ListItemDetailsComponent {
     @Input() fields: string[];

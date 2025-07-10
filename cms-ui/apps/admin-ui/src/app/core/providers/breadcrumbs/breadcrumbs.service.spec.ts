@@ -31,11 +31,13 @@ const RESOLVE_DELAY = 100;
 
 @Component({
     template: '<router-outlet></router-outlet>',
+    standalone: false,
 })
 class RootComponent { }
 
 @Component({
     template: '<router-outlet></router-outlet>',
+    standalone: false,
 })
 class TestComponent { }
 

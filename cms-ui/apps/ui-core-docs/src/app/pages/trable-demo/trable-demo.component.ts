@@ -119,6 +119,7 @@ function mapToTrableRow(folder: FolderContent, level: number = 0, parent?: Trabl
     templateUrl: './trable-demo.component.html',
     styleUrls: ['./trable-demo.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TrableDemoPage implements OnInit {
 

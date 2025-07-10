@@ -12,7 +12,8 @@ import { ToolApiService } from '../../services/tool-api/tool-api.service';
 @Component({
     selector: 'gtxct-item-list-header',
     templateUrl: './item-list-header.tpl.html',
-    styleUrls: ['./item-list-header.scss']
+    styleUrls: ['./item-list-header.scss'],
+    standalone: false
 })
 export class ItemListHeaderComponent implements OnInit, OnDestroy {
 

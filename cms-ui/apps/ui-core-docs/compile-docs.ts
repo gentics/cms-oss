@@ -10,7 +10,7 @@ import { AccessModifer, DocBlock, DocumentationType, IDocumentation, PropertyGro
 marked.setOptions({
     highlight: (code: string, lang: string): string => {
         if (lang && hljs.getLanguage(lang)) {
-            return hljs.highlight(lang, code, true).value;
+            return hljs.highlight(code, { language: lang, ignoreIllegals: true }).value;
         } else {
             return hljs.highlightAuto(code).value;
         }

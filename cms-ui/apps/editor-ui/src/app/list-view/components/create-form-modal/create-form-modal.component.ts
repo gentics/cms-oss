@@ -13,6 +13,7 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
     templateUrl: './create-form-modal.component.html',
     styleUrls: ['./create-form-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateFormModalComponent
     extends BaseModal<Form>

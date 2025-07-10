@@ -1,0 +1,1 @@
+User Interface: Modals which lock user-input will properly unlock on error. Modals with user-input will not automatically close on error, to prevent user-input data loss.

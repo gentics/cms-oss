@@ -55,7 +55,10 @@ class MockFormEditorConfigurationService implements Partial<FormEditorConfigurat
     };
 }
 
-@Pipe({ name: 'i18nfg$' })
+@Pipe({
+    name: 'i18nfg$',
+    standalone: false
+})
 class MockI18nFgPipe implements Partial<I18nFgPipe>, PipeTransform {
     transform(labelI18n: CmsFormElementI18nValue<string | number | boolean>, source: I18nFgSource, fallbackLangCode?: string): Observable<any> {
         return of(labelI18n);

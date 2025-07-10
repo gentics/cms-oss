@@ -1,84 +1,92 @@
-<gtx-loading-trigger></gtx-loading-trigger>
-<div class="gtx-entity-master">
 
-    <gtx-tabs
-        pure
-        [activeId]="activeTabId"
-    >
-        <gtx-tab
-            [id]="ContentMaintenanceTabs.GENERAL"
-            [title]="'contentmaintenance.title_general' | i18n"
-            (select)="changeTab($event)"
-        >
-            <gtx-progress-bar [active]="isLoading$ | async"></gtx-progress-bar>
+<div class="maintenance-tab-content" [class.hide-sidebar]="activeTabId !== ContentMaintenanceTabs.GENERAL">
 
-            <div class="maintenance-tab-content">
-                <div class="columns small-12 medium-2">
-                    <gtx-widget-task-queue
-                        [lifeSyncEnabled]="lifeSyncEnabled"
-                        [lifeSyncIntervall]="lifeSyncIntervall"
-                    ></gtx-widget-task-queue>
+    <div class="sidebar sidebar-left">
+        <ng-container *ngIf="activeTabId === ContentMaintenanceTabs.GENERAL">
+            <gtx-dirt-queue-summary
+                [summary]="dirtQueueSummary"
+                [failedTasks]="failedTasks"
+            ></gtx-dirt-queue-summary>
 
-                    <gtx-widget-publishing-process
-                        [lifeSyncEnabled]="lifeSyncEnabled"
-                        [lifeSyncIntervall]="lifeSyncIntervall"
-                        [showTitle]="true"
-                    ></gtx-widget-publishing-process>
-                </div>
+            <gtx-publish-process-summary
+                [showTitle]="true"
+                [info]="publishInfo"
+                [hasFailedJobs]="hasFailedSchedules"
+                [publisherStatus]="schedulerStatus"
+            ></gtx-publish-process-summary>
+        </ng-container>
+    </div>
 
-                <div class="columns small-12 medium-6">
-                    <gtx-widget-publishing-process-per-node
-                        [selectable]="true"
-                        [lifeSyncEnabled]="lifeSyncEnabled"
-                        [lifeSyncIntervall]="lifeSyncIntervall"
-                        (selectedIdsChange)="updateSelectedIds($event)"
-                    ></gtx-widget-publishing-process-per-node>
-                </div>
+    <div class="main-content">
+        <gtx-tabs pure [activeId]="activeTabId">
+            <gtx-tab
+                [id]="ContentMaintenanceTabs.GENERAL"
+                [title]="'contentmaintenance.title_general' | i18n"
+                (select)="changeTab($event)"
+            >
+                <gtx-progress-bar [active]="loading"></gtx-progress-bar>
 
-                <div class="columns small-12 medium-4">
-                    <div class="gtx-widget-container">
-                        <div class="gtx-sync-setter">
-                            <div class="input-container">
-                                <gtx-checkbox
-                                    [label]="'contentmaintenance.life_sync' | i18n"
-                                    [checked]="lifeSyncEnabled"
-                                    (change)="changeLifeSyncPoll($event)"
-                                ></gtx-checkbox>
-                            </div>
+                <gtx-node-publish-process-table
+                    [showSearch]="true"
+                    [(selected)]="selectedNodeIds"
+                    [publishQueue]="publishQueue"
+                    (actionClick)="handleTableAction($event)"
+                ></gtx-node-publish-process-table>
+            </gtx-tab>
 
-                            <div class="input-container">
-                                <gtx-input
-                                    type="number"
-                                    step="1"
-                                    min="1"
-                                    placeholder="3"
-                                    [required]="true"
-                                    [label]="'contentmaintenance.life_sync_intervall' | i18n"
-                                    [value]="(lifeSyncIntervall / 1000)"
-                                    (valueChange)="updateInterval($event)"
-                                ></gtx-input>
-                            </div>
-                        </div>
-                    </div>
+            <gtx-tab
+                [id]="ContentMaintenanceTabs.FAILED_TASKS"
+                [title]="'contentmaintenance.title_failedTasks' | i18n"
+                (select)="changeTab($event)"
+            >
+                <gtx-dirt-queue-item-table
+                    [showSearch]="true"
+                ></gtx-dirt-queue-item-table>
+            </gtx-tab>
+        </gtx-tabs>
+    </div>
 
-                    <gtx-widget-publishing-process-per-node-overview
-                        [lifeSyncEnabled]="lifeSyncEnabled"
-                        [lifeSyncIntervall]="lifeSyncIntervall"
-                    ></gtx-widget-publishing-process-per-node-overview>
-                </div>
+    <div class="sidebar sidebar-right">
+        <ng-container *ngIf="activeTabId === ContentMaintenanceTabs.GENERAL">
+            <div class="maintanance-buttons">
+                <gtx-button
+                    class="reload-button"
+                    flat
+                    size="small"
+                    type="primary"
+                    [disabled]="loading"
+                    (click)="loadData()"
+                >
+                    <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+                </gtx-button>
+
+                <gtx-button
+                    class="reload-button"
+                    flat
+                    size="small"
+                    type="primary"
+                    [disabled]="working"
+                    (click)="reloadConfiguration()"
+                >
+                    <icon left>settings_applications</icon> {{ 'contentmaintenance.reload_configuration' | i18n }}
+                </gtx-button>
+
+                <gtx-button
+                    class="reload-button"
+                    flat
+                    size="small"
+                    type="primary"
+                    [disabled]="working"
+                    (click)="stopPublishing()"
+                >
+                    <icon left>highlight_off</icon> {{ 'contentmaintenance.stop_publishing' | i18n }}
+                </gtx-button>
             </div>
-        </gtx-tab>
 
-        <gtx-tab
-            [id]="ContentMaintenanceTabs.FAILED_TASKS"
-            [title]="'contentmaintenance.title_failedTasks' | i18n"
-            (select)="changeTab($event)"
-        >
-            <gtx-dirt-queue-item-table
-                *ngIf="activeTabId === ContentMaintenanceTabs.FAILED_TASKS"
-                [showSearch]="true"
-            ></gtx-dirt-queue-item-table>
-        </gtx-tab>
-    </gtx-tabs>
-
+            <gtx-publish-queue-summary
+                [nodes]="nodes"
+                [publishQueue]="publishQueue"
+            ></gtx-publish-queue-summary>
+        </ng-container>
+    </div>
 </div>

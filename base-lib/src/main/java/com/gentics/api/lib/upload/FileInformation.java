@@ -235,7 +235,12 @@ public class FileInformation extends ResolvableBean {
 		String contentType = fileItem.getContentType();
 
 		if (fileItem.isInMemory()) {
-			memoryCache = fileItem.get();
+			try {
+				memoryCache = fileItem.get();
+			} catch (IOException e) {
+				logger.error("Error while reading file from memory.", e);
+				return null;
+			}
 		} else {
 			try {
 				if (fileUploadProvider == null) {

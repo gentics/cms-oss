@@ -39,14 +39,11 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     /** ID of the root folder */
     folderId: number;
 
-    /** Hostname for publishing into the Filesystem */
+    /** Hostname for publishing into the Filesystem. May contain a protocol prefix. */
     host: string;
 
     /** Property of the hostname for publishing into the Filesystem */
     hostProperty: string;
-
-    /** True if secure https is enabled for this node */
-    https: boolean;
 
     /**
      * ID of the node or channel from which this node is inherited.
@@ -60,6 +57,10 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
      * - `C` (channel derived from channel B => `C.masterNodeId = A.id` and `C.inheritedFromId = B.id`)
      */
     inheritedFromId: number;
+    /**
+     * The name of the Node/Channel this channel is inheriting from.
+     */
+    inheritedFromName?: string;
 
     /** IDs of the languages enabled on this node */
     languagesId: number[];
@@ -195,3 +196,5 @@ export enum NodePreviewurlType {
 }
 
 export const NODE_PREVIEW_URL_PROPERTY_PREFIX = 'NODE_PREVIEWURL';
+// export const NODE_HOSTNAME_REGEXP = /^[0-9a-z]([-.]?[0-9a-z:])*$/;
+// export const NODE_PATH_REGEXP = /^\/?([a-zA-Z0-9._-]{1,64}\/?){0,127}$/;

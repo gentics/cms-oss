@@ -6,6 +6,7 @@ import { PermissionInfo } from '@gentics/cms-models';
     templateUrl: './permission-icon.component.html',
     styleUrls: ['./permission-icon.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class PermissionIconComponent {
 

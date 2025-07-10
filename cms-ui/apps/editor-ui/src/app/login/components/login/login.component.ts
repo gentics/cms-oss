@@ -8,6 +8,7 @@ import { ApplicationStateService, AuthActionsService } from '../../../state';
     selector: 'login',
     templateUrl: './login.tpl.html',
     styleUrls: ['./login.scss'],
+    standalone: false
 })
 export class LoginComponent implements OnInit {
     errorMessage$: Observable<string>;

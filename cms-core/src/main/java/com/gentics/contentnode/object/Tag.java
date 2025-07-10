@@ -30,6 +30,7 @@ import com.gentics.contentnode.factory.object.ValueFactory;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.render.RenderType.RemoveTopResolvable;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.etc.StringUtils;
@@ -327,30 +328,22 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 
 	public Object get(String key) {
 		if ("empty".equals(key)) {
-			RenderType renderType = null;
-			boolean poppedTag = false;
-
 			try {
-				renderType = TransactionManager.getCurrentTransaction().getRenderType();
+				RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
+
+				try (RemoveTopResolvable ac = renderType.withPopped(this)) {
 				int oldMode = renderType.getEditMode();
 
 				renderType.setEditMode(RenderType.EM_PREVIEW);
-
-				// pop the tag from the stack if it is the top element
-				poppedTag = renderType.pop(this);
-
 				String renderedContent = this.render(new RenderResult());
 
 				renderType.setEditMode(oldMode);
-				return "".equals(renderedContent) ? 1 : 0;
+					return StringUtils.isEmpty(renderedContent) ? 1 : 0;
+				}
 			} catch (NodeException e) {
 				logger.error("Error while resolving {" + key + "}", e);
 				return null;
-			} finally {
-				if (poppedTag) {
-					renderType.push(this);
 				}
-			}
 		} else if ("unique_tag_id".equals(key)) {
 			return getId() + "-" + getTType();
 		} else if ("visible".equals(key)) {

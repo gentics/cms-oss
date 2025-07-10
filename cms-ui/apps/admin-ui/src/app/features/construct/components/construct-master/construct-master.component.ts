@@ -1,5 +1,5 @@
 import { BO_PERMISSIONS, ConstructBO, EditableEntity, EntityTableActionClickEvent } from '@admin-ui/common';
-import { ConstructHandlerService, ConstructTableLoaderService, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { ConstructHandlerService, ConstructTableLoaderService, ErrorHandler, I18nNotificationService, I18nService } from '@admin-ui/core';
 import { ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION, ASSIGN_CONSTRUCT_TO_NODES_ACTION, COPY_CONSTRUCT_ACTION } from '@admin-ui/shared';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
@@ -9,6 +9,7 @@ import { GcmsPermission, TagType } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { combineLatest, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { AssignConstructsToCategoryModalComponent } from '../assign-constructs-to-category-modal/assign-constructs-to-category-modal.component';
 import { AssignConstructsToNodesModalComponent } from '../assign-constructs-to-nodes-modal/assign-constructs-to-nodes-modal.component';
 import { CopyConstructModalComponent } from '../copy-construct-modal/copy-construct-modal.component';
@@ -19,6 +20,7 @@ import { CreateConstructModalComponent } from '../create-construct-modal/create-
     templateUrl: './construct-master.component.html',
     styleUrls: ['./construct-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, ConstructBO> {
 
@@ -36,6 +38,7 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         protected handler: ConstructHandlerService,
         protected modalService: ModalService,
         protected notification: I18nNotificationService,
+        protected errorHandler: ErrorHandler,
     ) {
         super(
             changeDetector,
@@ -46,18 +49,25 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
     }
 
     async handleCreate(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(CreateConstructModalComponent, {
-            closeOnEscape: false,
-            closeOnOverlayClick: false,
-            width: '80%',
-        });
-        const created = await dialog.open();
+        try {
+            const dialog = await this.modalService.fromComponent(CreateConstructModalComponent, {
+                closeOnEscape: false,
+                closeOnOverlayClick: false,
+                width: '80%',
+            });
+            const created = await dialog.open();
 
-        if (!created) {
-            return;
+            if (!created) {
+                return;
+            }
+
+            this.loader.reload();
+        } catch (err) {
+            if (wasClosedByUser(err)) {
+                return;
+            }
+            throw err;
         }
-
-        this.loader.reload();
     }
 
     public handleAction(event: EntityTableActionClickEvent<ConstructBO>): void {
@@ -127,7 +137,7 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
             });
         });
 
-        res.valid = res.valid &&= constructs.length > 0;
+        res.valid = res.valid && constructs.length > 0;
 
         return res;
     }
@@ -139,13 +149,21 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         }
         constructs = filtered;
 
-        const dialog = await this.modalService.fromComponent(AssignConstructsToNodesModalComponent, {
-            closeOnEscape: false,
-            closeOnOverlayClick: false,
-        }, {
-            constructs,
-        });
-        await dialog.open();
+        try {
+            const dialog = await this.modalService.fromComponent(AssignConstructsToNodesModalComponent, {
+                closeOnEscape: false,
+                closeOnOverlayClick: false,
+            }, {
+                constructs,
+            });
+            const didChange = await dialog.open();
+
+            if (didChange) {
+                this.loader.reload();
+            }
+        } catch (err) {
+            this.errorHandler.catch(err);
+        }
     }
 
     protected async assignConstructsToCategories(constructs: ConstructBO[]): Promise<void> {

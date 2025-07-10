@@ -5,6 +5,7 @@ import { IDocumentation } from '../../common/docs';
 @Component({
     templateUrl: './base-component-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class BaseComponentDemoPage {
 

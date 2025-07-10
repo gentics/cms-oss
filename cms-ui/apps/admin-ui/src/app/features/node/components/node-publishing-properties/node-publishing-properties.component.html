@@ -18,48 +18,15 @@
                 formControlName="publishFs"
             ></gtx-checkbox>
 
-            <div class="linkable-fields-wrapper">
-                <div class="linkable-fields-content">
-                    <gtx-checkbox
-                        [label]="'node.pub_pages' | i18n"
-                        formControlName="publishFsPages"
-                    ></gtx-checkbox>
+            <gtx-checkbox
+                [label]="'node.pub_pages' | i18n"
+                formControlName="publishFsPages"
+            ></gtx-checkbox>
 
-                    <gtx-input
-                        type="text"
-                        maxlength="255"
-                        formControlName="publishDir"
-                        [label]="('node.pub_pages_dir' | i18n)"
-                        [placeholder]="'node.pub_pages_dir' | i18n"
-                    ></gtx-input>
-
-                    <gtx-checkbox
-                        formControlName="publishFsFiles"
-                        [label]="'node.pub_files' | i18n"
-                    ></gtx-checkbox>
-
-                    <gtx-input
-                        type="text"
-                        maxlength="255"
-                        formControlName="binaryPublishDir"
-                        [readonly]="publishDirsLinked"
-                        [label]="('node.pub_files_dir' | i18n)"
-                        [placeholder]="'node.pub_files_dir' | i18n"
-                    ></gtx-input>
-                </div>
-
-                <div
-                    class="link-inputs no-select"
-                    [title]="'editor.node_properties_share_directories' | i18n"
-                    [class.active]="publishDirsLinked"
-                >
-                    <div class="top-link-display"></div>
-                    <button class="link-button" [disabled]="disabled" (click)="togglePublishDirLink()">
-                        <icon>{{ publishDirsLinked ? 'link_off' : 'link' }}</icon>
-                    </button>
-                    <div class="bottom-link-display"></div>
-                </div>
-            </div>
+            <gtx-checkbox
+                formControlName="publishFsFiles"
+                [label]="'node.pub_files' | i18n"
+            ></gtx-checkbox>
         </div>
 
         <div class="input-container small-12 medium-6 columns">
@@ -97,6 +64,43 @@
                     [value]="cr.id"
                 >{{ cr.name }}</gtx-option>
             </gtx-select>
+        </div>
+
+        <div class="input-container small-12 medium-12 columns">
+            <div class="gtx-form-section-title">{{ 'node.title_directories' | i18n }}</div>
+
+            <div class="linkable-fields-wrapper">
+                <gtx-input
+                    class="linkable-field"
+                    type="text"
+                    maxlength="255"
+                    formControlName="publishDir"
+                    [label]="('node.pub_pages_dir' | i18n)"
+                    [placeholder]="'node.pub_pages_dir' | i18n"
+                ></gtx-input>
+
+                <div
+                    class="link-inputs no-select"
+                    [title]="'editor.node_properties_share_directories' | i18n"
+                    [class.active]="publishDirsLinked"
+                >
+                    <div class="top-link-display"></div>
+                    <button class="link-button" [disabled]="linkButtonDisabled || disabled" (click)="togglePublishDirLink()">
+                        <icon>{{ publishDirsLinked ? 'link' : 'link_off' }}</icon>
+                    </button>
+                    <div class="bottom-link-display"></div>
+                </div>
+
+                <gtx-input
+                    class="linkable-field"
+                    type="text"
+                    maxlength="255"
+                    formControlName="binaryPublishDir"
+                    [readonly]="publishDirsLinked"
+                    [label]="('node.pub_files_dir' | i18n)"
+                    [placeholder]="'node.pub_files_dir' | i18n"
+                ></gtx-input>
+            </div>
         </div>
 
         <div class="input-container small-12 medium-12 columns">

@@ -32,7 +32,7 @@
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'content_staging.info_selected_content_packages' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'content_staging.info_selected_content_packages' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
@@ -82,7 +82,7 @@
 <ng-template #progressRenderer let-row="row">
     <span class="gtx-table-cell-text">
         <ng-content *ngIf="row.item?.import?.progress?.total > 0">
-            {{ row.item?.import?.progress?.done | i18nNumber }} / {{ row.item?.import?.progress?.total | i18nNumber }}
+            {{ row.item?.import?.progress?.done | gtxI18nNumber }} / {{ row.item?.import?.progress?.total | gtxI18nNumber }}
         </ng-content>
     </span>
 </ng-template>

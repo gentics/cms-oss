@@ -15,15 +15,18 @@ import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, O
 import { NormalizableEntityType } from '@gentics/cms-models';
 import {
     BaseComponent,
+    ChangesOf,
     ModalService,
     TableAction,
     TableActionClickEvent,
     TableColumn,
     TableRow,
     TableSelectAllType,
+    TableSelection,
     TableSortOrder,
     cancelEvent,
     coerceInstance,
+    toSelectionArray,
 } from '@gentics/ui-core';
 import { Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
@@ -31,7 +34,10 @@ import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-del
 
 export const DELETE_ACTION = 'delete';
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = never> extends BaseComponent implements  OnInit, OnChanges {
 
     public readonly TableSelectAllType = TableSelectAllType;
@@ -48,7 +54,10 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public selectable = true;
 
     @Input()
-    public selected: string[] = [];
+    public selected: string[] | TableSelection = [];
+
+    @Input()
+    public useSelectionMap = false;
 
     @Input()
     public multiple = true;
@@ -69,7 +78,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public actionClick = new EventEmitter<EntityTableActionClickEvent<O>>();
 
     @Output()
-    public selectedChange = new EventEmitter<string[]>();
+    public selectedChange = new EventEmitter<string[] | TableSelection>();
 
     @Output()
     public select = new EventEmitter<TableRow<O>>();
@@ -95,6 +104,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public rows: TableRow<O>[] = [];
     public actions: TableAction<O>[] = [];
     public totalCount = 0;
+    public selectedCount = 0;
 
     // Data Settings
     public page = 0;
@@ -144,18 +154,17 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         this.actionRebuildTrigger.next();
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         coerceInstance(this, this.booleanInputs, changes);
 
         if (changes.selected) {
-            this.selected = (this.selected || []).map(value => {
-                if (value != null && typeof value === 'object') {
-                    return (value as object)[BO_ID];
-                }
-                return String(value);
-            });
+            this.updateSelectedCount();
+        }
+
+        if (changes.filters) {
+            this.onFilterChange();
         }
 
         if (changes.extraActions) {
@@ -192,17 +201,25 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         this.reload();
     }
 
+    /**
+     * Hook which is/should be called whenever the {@link filters} change.
+     */
+    protected onFilterChange(): void {}
+
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public applyFilterValue(field: string, value: any): void {
         this.filters[field] = value;
         this.query = value;
 
+        this.onFilterChange();
+
         // Reload the table with the new filter value
         this.loadTrigger.next();
     }
 
-    public updateSelection(newSelection: string[]): void {
+    public updateSelection(newSelection: string[] | TableSelection): void {
         this.selected = newSelection;
+        this.updateSelectedCount();
         this.selectedChange.emit(newSelection);
     }
 
@@ -232,6 +249,10 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
     protected applyActions(actions: TableAction<O>[]): void {
         this.actions = [...this.extraActions, ...actions];
+    }
+
+    protected updateSelectedCount(): void {
+        this.selectedCount = toSelectionArray(this.selected).length;
     }
 
     protected setupRowLoading(): void {
@@ -389,8 +410,8 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         this.actionClick.emit(event);
     }
 
-    public getEntitiesByIds(ids: string[]): O[] {
-        return (ids || [])
+    public getEntitiesByIds(ids: string[] | TableSelection): O[] {
+        return toSelectionArray(ids)
             .map(id => this.loadedRows[id]?.item)
             .filter(item => item != null);
     }
@@ -401,7 +422,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
     protected getAffectedEntityIds(event: TableActionClickEvent<O>): string[] {
         if (event.selection) {
-            return this.selected;
+            return toSelectionArray(this.selected);
         }
         return [event.item[BO_ID]];
     }
@@ -411,12 +432,18 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
             ids = [ids];
         }
 
-        const copy = this.selected.slice();
+        const copy = structuredClone(this.selected);
 
-        for (const id of ids) {
-            const idx = copy.indexOf(id);
-            if (idx > -1) {
-                copy.splice(idx, 1);
+        if (Array.isArray(copy)) {
+            for (const id of ids) {
+                const idx = copy.indexOf(id);
+                if (idx > -1) {
+                    copy.splice(idx, 1);
+                }
+            }
+        } else {
+            for (const id of ids) {
+                copy[id] = false;
             }
         }
 

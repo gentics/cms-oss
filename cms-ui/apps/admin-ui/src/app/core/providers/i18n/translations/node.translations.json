@@ -103,10 +103,6 @@
         "en": "Hostname property must be entered in format ${env:NODE_HOST_...} or ${sys:NODE_HOST...}.",
         "de": "Hostnamen Eigenschaft muss im Format ${env:NODE_HOST_...} oder ${sys:NODE_HOST_...} angegeben werden."
     },
-    "https_only": {
-        "en": "Use HTTPS protocol",
-        "de": "HTTPS Protokoll verwenden"
-    },
     "languages_updated": {
         "en": "Node languages has been updated successfully",
         "de": "Node Sprachen wurde erfolgreich geändert"
@@ -226,6 +222,10 @@
     "title_content_updating": {
         "en": "Content Updating",
         "de": "Inhalt Aktualisierung"
+    },
+    "title_directories": {
+        "en": "Directories",
+        "de": "Ordner"
     },
     "title_filesystem": {
         "en": "Filesystem",

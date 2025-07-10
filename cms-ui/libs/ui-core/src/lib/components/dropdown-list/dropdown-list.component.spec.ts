@@ -459,6 +459,7 @@ describe('DropdownListComponent', () => {
                 </gtx-dropdown-content>
             </gtx-dropdown-list>
         </div>`,
+    standalone: false,
 })
 class TestComponent {
     sticky = false;

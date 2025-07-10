@@ -22,6 +22,7 @@ let componentId = 0;
     styleUrls: ['./aloha-link-target-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaLinkTargetRendererComponent)],
+    standalone: false
 })
 export class AlohaLinkTargetRendererComponent
     extends BaseAlohaRendererComponent<AlohaLinkTargetComponent, ExtendedLinkTarget>
@@ -111,6 +112,7 @@ export class AlohaLinkTargetRendererComponent
                 internalTargetLabel: pickedItem?.name || '',
                 internalTargetId: pickedItem?.id,
                 internalTargetType: pickedItem?.type,
+                internalTargetLang: (pickedItem as any)?.language || '',
                 internalTargetNodeId: (pickedItem as any)?.nodeId,
             });
         });

@@ -23,6 +23,7 @@ const UNASSIGN_FROM_PROJECTS_ACTION = 'unassignFromProjects';
     templateUrl: './schema-table.component.html',
     styleUrls: ['./schema-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshSchemaBO> {
 

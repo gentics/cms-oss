@@ -1,6 +1,6 @@
 import { BO_ID, BO_NEW_SORT_ORDER, SortableBusinessObject, TableSortEvent } from '@admin-ui/common';
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { TableActionClickEvent, TableRow, coerceToBoolean } from '@gentics/ui-core';
+import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { ChangesOf, TableActionClickEvent, TableRow, coerceToBoolean } from '@gentics/ui-core';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 
 type MoveFn = (idx: number, total: number) => number;
@@ -10,7 +10,10 @@ export const MOVE_UP_ACTION = 'moveUp';
 export const MOVE_DOWN_ACTION = 'moveDown';
 export const MOVE_TO_BOTTOM_ACTION = 'moveToBottom';
 
-@Component({ template: '' })
+@Component({
+    template: '',
+    standalone: false
+})
 export abstract class BaseSortableEntityTableComponent<T, O = T & SortableBusinessObject, A = never>
     extends BaseEntityTableComponent<T, O, A>
     implements OnChanges {
@@ -24,7 +27,7 @@ export abstract class BaseSortableEntityTableComponent<T, O = T & SortableBusine
     @Output()
     public sort = new EventEmitter<TableSortEvent<O>>();
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.sorting) {

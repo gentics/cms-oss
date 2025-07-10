@@ -21,7 +21,7 @@ import {
     setControlsEnabled,
 } from '@gentics/ui-core';
 
-export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'https' | 'host' | 'hostProperty' |
+export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'host' | 'hostProperty' |
 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId' |
 'pubDirSegment' | 'publishImageVariants'> & {
     description?: string;
@@ -43,6 +43,7 @@ export enum NodePropertiesMode {
         generateFormProvider(NodePropertiesComponent),
         generateValidatorProvider(NodePropertiesComponent),
     ],
+    standalone: false
 })
 export class NodePropertiesComponent extends BasePropertiesComponent<NodePropertiesFormData> implements OnInit, OnChanges {
 
@@ -77,7 +78,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     public mode: NodePropertiesMode = NodePropertiesMode.CREATE;
 
     @Input()
-    public masterName: string | null = null;
+    public inheritedFromName: string | null = null;
 
     @Input()
     public isChannel = false;
@@ -167,7 +168,6 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 createPropertyPatternValidator(NODE_PREVIEW_URL_PROPERTY_PREFIX),
             ]),
 
-            https: new FormControl(this.safeValue('https')),
             insecurePreviewUrl: new FormControl(this.safeValue('insecurePreviewUrl')),
             publishImageVariants: new FormControl(this.safeValue('publishImageVariants')),
 
@@ -175,7 +175,11 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 ? NodeHostnameType.PROPERTY
                 : NodeHostnameType.VALUE,
             ),
-            host: new FormControl(this.safeValue('host'), Validators.maxLength(255)),
+            host: new FormControl(this.safeValue('host'), [
+                Validators.required,
+                Validators.maxLength(255),
+                // createRegexValidator(NODE_HOSTNAME_REGEXP),
+            ]),
             hostProperty: new FormControl(this.safeValue('hostProperty'), [
                 Validators.required,
                 Validators.maxLength(255),

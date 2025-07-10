@@ -2,6 +2,8 @@
     <h5>{{ 'modal.create_group_title' | i18n: { entityName: (parentGroup$ | async)?.name } }}</h5>
 </div>
 <div class="modal-content">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
     <form *ngIf="form" autocomplete="off" [formGroup]="form" class="gtx-create-user-modal-tab-content-body-form">
         <div class="input-container small-12 medium-12 row">
             <div class="input-container small-12 medium-12 columns">
@@ -34,7 +36,7 @@
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!isValid()"
+        [disabled]="!isValid() || loading"
         (click)="buttonCreateEntityClicked()"
         gtxActionAllowed="group.createGroup"
     >

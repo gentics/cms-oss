@@ -77,9 +77,11 @@ export class GCMSFetchDriver implements GCMSClientDriver {
 
     performMappedRequest<T>(
         request: GCMSRestClientRequestData,
-        body?: string | any,
+        body?: null | string | FormData,
     ): GCMSRestClientRequest<T> {
-        if (body != null && typeof body === 'object') {
+        // If the content is a simple object and not a form-data, then we convert it
+        // to json, since `fetch` doesn't do it automatically.
+        if (body != null && typeof body === 'object' && !(body instanceof FormData)) {
             body = JSON.stringify(body);
         }
 
@@ -109,7 +111,7 @@ export class GCMSFetchDriver implements GCMSClientDriver {
 
     performRawRequest(
         request: GCMSRestClientRequestData,
-        body?: string | FormData,
+        body?: null | any,
     ): GCMSRestClientRequest<string> {
         return this.prepareRequest(request, (fullUrl) => {
             return {
@@ -125,6 +127,12 @@ export class GCMSFetchDriver implements GCMSClientDriver {
         request: GCMSRestClientRequestData,
         body?: string | FormData,
     ): GCMSRestClientRequest<Blob> {
+        // If the content is a simple object and not a form-data, then we convert it
+        // to json, since `fetch` doesn't do it automatically.
+        if (body != null && typeof body === 'object' && !(body instanceof FormData)) {
+            body = JSON.stringify(body);
+        }
+
         return this.prepareRequest(request, (fullUrl) => {
             return {
                 method: request.method,

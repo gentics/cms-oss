@@ -8,8 +8,8 @@
         [showSearch]="true"
         [hideActions]="true"
         [disabled]="loading"
-        [selected]="selectedIds"
-        (selectedChange)="selectionChange($event)"
+        [useSelectionMap]="true"
+        [(selected)]="selected"
     ></gtx-node-table>
 </div>
 

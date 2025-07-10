@@ -4,6 +4,7 @@ import { Permission } from '@gentics/mesh-models';
 
 @Pipe({
     name: 'gtxMeshIcon',
+    standalone: false
 })
 export class MeshIconPipe implements PipeTransform {
 

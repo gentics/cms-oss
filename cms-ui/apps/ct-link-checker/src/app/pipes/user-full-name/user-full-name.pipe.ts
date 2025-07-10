@@ -5,7 +5,10 @@ import { User } from '@gentics/cms-models';
 /**
  * Transforms a `User` object or a user ID into the full name of the user.
  */
-@Pipe({ name: 'userFullName' })
+@Pipe({
+    name: 'userFullName',
+    standalone: false
+})
 export class UserFullNamePipe implements PipeTransform {
 
     constructor() { }

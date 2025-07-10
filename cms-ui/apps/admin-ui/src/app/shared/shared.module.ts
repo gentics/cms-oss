@@ -61,8 +61,7 @@ import {
     TemplateFolderLinkTrableComponent,
     TemplateTableComponent,
     UserTableComponent,
-    WidgetPublishingProcessComponent,
-    WidgetPublishingProcessTotalComponent,
+    PublishProcessSummaryComponent,
     WizardComponent,
     WizardModalComponent,
 } from './components';
@@ -76,6 +75,7 @@ import {
     CountRolesPipe,
     EntityDetailRouterLinkPipe,
     EntityNamePipe,
+    I18nDurationPipe,
     I18nNumberPipe,
     I18nRelativeDatePipe,
 } from './pipes';
@@ -161,8 +161,7 @@ const COMPONENTS: any[] = [
     TemplateFolderLinkTrableComponent,
     TemplateTableComponent,
     UserTableComponent,
-    WidgetPublishingProcessComponent,
-    WidgetPublishingProcessTotalComponent,
+    PublishProcessSummaryComponent,
     WizardComponent,
     WizardModalComponent,
 ];
@@ -177,6 +176,7 @@ const PIPES: any[] = [
     CountRolesPipe,
     EntityDetailRouterLinkPipe,
     EntityNamePipe,
+    I18nDurationPipe,
     I18nNumberPipe,
     I18nRelativeDatePipe,
 ];

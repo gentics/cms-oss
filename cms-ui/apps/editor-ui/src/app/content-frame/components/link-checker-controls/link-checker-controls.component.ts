@@ -12,6 +12,7 @@ interface DisplayItem {
     templateUrl: './link-checker-controls.component.html',
     styleUrls: ['./link-checker-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LinkCheckerControlsComponent implements OnChanges, OnDestroy {
 

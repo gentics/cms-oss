@@ -20,6 +20,7 @@ import { DetailTabLinkDirective } from './detail-tab-link.directive';
             </gtx-tab>
         </gtx-tabs>
     `,
+    standalone: false,
 })
 class TestComponent {
     activeTabId = 'tabA';

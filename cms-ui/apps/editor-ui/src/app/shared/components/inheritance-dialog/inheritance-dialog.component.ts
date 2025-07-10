@@ -24,6 +24,7 @@ import { IModalDialog } from '@gentics/ui-core';
     selector: 'gtx-inheritance-dialog',
     templateUrl: './inheritance-dialog.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class InheritanceDialog implements OnInit, IModalDialog {
 

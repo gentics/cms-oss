@@ -27,6 +27,7 @@ const CREATE_API_TOKEN_ACTION = 'createApiToken';
     templateUrl: './mesh-user-table.component.html',
     styleUrls: ['./mesh-user-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshUserBO> {
 

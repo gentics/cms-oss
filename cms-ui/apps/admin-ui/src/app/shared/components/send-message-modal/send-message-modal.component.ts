@@ -16,6 +16,7 @@ const DEFAULT_INSTANT_TIME_MINUTES = 2;
     selector: 'gtx-send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
     styleUrls: ['./send-message-modal.scss'],
+    standalone: false
 })
 export class SendMessageModalComponent implements IModalDialog, OnInit, AfterViewInit {
     users$: Observable<User[]>;

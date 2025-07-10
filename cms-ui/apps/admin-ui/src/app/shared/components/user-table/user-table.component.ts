@@ -9,9 +9,9 @@ import {
     UserTableLoaderService,
 } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { Group, NormalizableEntityType, Raw, User } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
@@ -27,6 +27,7 @@ const REMOVE_FROM_GROUP_ACTION = 'removeFromGroup';
     templateUrl: './user-table.component.html',
     styleUrls: ['./user-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, UserBO, UserTableLoaderOptions> implements OnChanges {
 
@@ -96,10 +97,10 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         );
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
-        if (changes.groupId) {
+        if (changes.group) {
             this.loadTrigger.next();
             this.actionRebuildTrigger.next();
         }
@@ -165,10 +166,13 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         switch (event.actionId) {
             case ASSIGN_TO_GROUP_ACTION:
                 this.changeUserGroups(this.getAffectedEntityIds(event).map(id => Number(id)))
-                    .then(() => {
+                    .then(didChange => {
+                        if (!didChange) {
+                            return;
+                        }
+
                         if (event.selection) {
-                            this.selected = [];
-                            this.selectedChange.emit([]);
+                            this.updateSelection([]);
                         }
                         this.loader.reload();
                     });

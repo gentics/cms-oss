@@ -10,6 +10,7 @@ import { Observable, Subscription } from 'rxjs';
     selector: 'gtx-create-construct-modal',
     templateUrl: './create-construct-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateConstructModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 

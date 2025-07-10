@@ -13,6 +13,7 @@ import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-cor
         generateFormProvider(LanguagePropertiesComponent),
         generateValidatorProvider(LanguagePropertiesComponent),
     ],
+    standalone: false
 })
 export class LanguagePropertiesComponent extends BasePropertiesComponent<Language> {
 

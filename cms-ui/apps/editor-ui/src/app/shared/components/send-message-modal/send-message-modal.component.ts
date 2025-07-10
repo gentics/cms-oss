@@ -15,6 +15,7 @@ const DEFAULT_INSTANT_TIME_MINUTES = 2;
     selector: 'send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
     styleUrls: ['./send-message-modal.scss'],
+    standalone: false
 })
 export class SendMessageModal extends BaseModal<any> implements OnInit {
 
@@ -49,15 +50,14 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
                 type: 'success',
                 delay: 5000,
             });
+            this.closeFn(true);
         }, error => {
             this.notification.show({
                 message: 'message.message_sent_error',
                 type: 'alert',
                 delay: 5000,
             });
-            this.closeFn(true);
-        }, () => this.closeFn(true),
-        );
+        });
     }
 
     transformValuesForApi(formValues: SendMessageForm): SendMessageRequest {

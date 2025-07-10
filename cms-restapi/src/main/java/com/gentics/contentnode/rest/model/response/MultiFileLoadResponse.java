@@ -11,7 +11,7 @@ import com.gentics.contentnode.rest.model.File;
  * Response containing information about multiple files.
  */
 @XmlRootElement
-public class MultiFileLoadResponse extends StagingResponse<String> {
+public class MultiFileLoadResponse extends AbstractStagingResponse<String> {
 
 	private static final long serialVersionUID = 7307279374399639967L;
 

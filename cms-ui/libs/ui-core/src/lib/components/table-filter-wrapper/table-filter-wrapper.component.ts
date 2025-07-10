@@ -5,6 +5,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
     templateUrl: './table-filter-wrapper.component.html',
     styleUrls: ['./table-filter-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class TableFilterWrapperComponent {
 

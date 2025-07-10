@@ -24,16 +24,17 @@ import { Subscription } from 'rxjs';
     templateUrl: './i18n-select.component.html',
     styleUrls: ['./i18n-select.component.scss'],
     providers: [{
-        provide: NG_VALUE_ACCESSOR, // Is an InjectionToken required by the ControlValueAccessor interface to provide a form value
-        useExisting: forwardRef(() => I18nSelectComponent), // tells Angular to use the existing instance
-        multi: true,
-    }, {
-        provide: NG_VALIDATORS, // Is an InjectionToken required by this class to be able to be used as an Validator
-        useExisting: forwardRef(() => I18nSelectComponent), // for now validation will be put into the component, but can be separated
-        multi: true,
-    }],
+            provide: NG_VALUE_ACCESSOR, // Is an InjectionToken required by the ControlValueAccessor interface to provide a form value
+            useExisting: forwardRef(() => I18nSelectComponent), // tells Angular to use the existing instance
+            multi: true,
+        }, {
+            provide: NG_VALIDATORS, // Is an InjectionToken required by this class to be able to be used as an Validator
+            useExisting: forwardRef(() => I18nSelectComponent), // for now validation will be put into the component, but can be separated
+            multi: true,
+        }],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class I18nSelectComponent implements ControlValueAccessor, Validator, OnInit, AfterViewInit, OnChanges, OnDestroy {
 

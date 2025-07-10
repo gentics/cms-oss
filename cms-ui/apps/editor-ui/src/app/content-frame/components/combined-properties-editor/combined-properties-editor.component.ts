@@ -176,6 +176,7 @@ const ACTION_DEACTIVATE = 'deactivate';
     templateUrl: './combined-properties-editor.component.html',
     styleUrls: ['./combined-properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
 
@@ -756,7 +757,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 break;
             case 'node':
             case 'channel':
-                updatePromise = this.folderActions.updateNodeProperties(itemId, formValue as EditableNodeProps);
+                updatePromise = this.folderActions.updateNodeProperties(itemId, formValue as EditableNodeProps, postUpdateBehavior);
                 break;
             default:
                 throw new Error(`Type not recognized: ${JSON.stringify(this.item, null, 2)}`);

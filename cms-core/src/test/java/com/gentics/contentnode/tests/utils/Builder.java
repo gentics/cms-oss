@@ -1,12 +1,17 @@
 package com.gentics.contentnode.tests.utils;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
+
 import java.util.Objects;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.LocalizableNodeObject;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.object.SystemUser;
 
@@ -19,6 +24,8 @@ public class Builder<T extends NodeObject> {
 	protected Class<T> clazz;
 
 	protected T object;
+
+	protected T original;
 
 	protected NodeObjectHandler<T> handler;
 
@@ -47,7 +54,7 @@ public class Builder<T extends NodeObject> {
 	 */
 	public static <T extends NodeObject> Builder<T> create(Class<T> clazz, NodeObjectHandler<T> handler) {
 		Objects.requireNonNull(clazz, "Class must not be null");
-		return new Builder<>(clazz, null, handler);
+		return new Builder<>(clazz, null, null, handler);
 	}
 
 	/**
@@ -59,20 +66,60 @@ public class Builder<T extends NodeObject> {
 	 */
 	public static <T extends NodeObject> Builder<T> update(T object, NodeObjectHandler<T> handler) {
 		Objects.requireNonNull(object, "Object must not be null");
-		return new Builder<>(null, object, handler);
+		return new Builder<>(null, object, null, handler);
+	}
+
+	/**
+	 * Localize an object
+	 * @param <S> type
+	 * @param object object to be localized
+	 * @param channel channel
+	 * @param handler update handler
+	 * @return builder instance
+	 */
+	public static <S extends LocalizableNodeObject<S>> Builder<S> localize(S object,
+			Node channel, NodeObjectHandler<S> handler) {
+		Objects.requireNonNull(object, "Object must not be null");
+		Objects.requireNonNull(channel, "Channel must not be null");
+		Objects.requireNonNull(handler, "Handler must not be null");
+		return new Builder<>(null, null, object, loc -> {
+			loc.setChannelInfo(channel.getId(), object.getChannelSetId());
+			handler.handle(loc);
+		});
+	}
+
+	/**
+	 * Translate a page
+	 * @param object object
+	 * @param languageCode code of the target language
+	 * @param handler update handler
+	 * @return translation
+	 */
+	public static Builder<Page> translate(Page object, String languageCode, NodeObjectHandler<Page> handler) {
+		Objects.requireNonNull(object, "Object must not be null");
+		Objects.requireNonNull(languageCode, "Language Code must not be null");
+		Objects.requireNonNull(handler, "Handler must not be null");
+
+		return new Builder<>(null, null, object, translation -> {
+			translation.setLanguage(getLanguage(languageCode));
+			translation.setContentsetId(object.getContentsetId());
+			handler.handle(translation);
+		});
 	}
 
 	/**
 	 * Create an instance
 	 * @param clazz object class
 	 * @param object object
+	 * @param original original object to copy
 	 * @param handler handler
 	 */
-	protected Builder(Class<T> clazz, T object, NodeObjectHandler<T> handler) {
+	protected Builder(Class<T> clazz, T object, T original, NodeObjectHandler<T> handler) {
 		Objects.requireNonNull(handler, "Handler must not be null");
 		this.clazz = clazz;
 		this.handler = handler;
 		this.object = object;
+		this.original = original;
 	}
 
 	/**
@@ -207,12 +254,15 @@ public class Builder<T extends NodeObject> {
 	 * @return created/updated object
 	 * @throws NodeException
 	 */
+	@SuppressWarnings("unchecked")
 	protected T build(Transaction t) throws NodeException {
 		T modifiedObject = null;
 		if (clazz != null) {
 			modifiedObject = t.createObject(clazz);
-		} else {
+		} else if (object != null) {
 			modifiedObject = t.getObject(object, true);
+		} else {
+			modifiedObject = (T) original.copy();
 		}
 		handler.handle(modifiedObject);
 		if (save) {

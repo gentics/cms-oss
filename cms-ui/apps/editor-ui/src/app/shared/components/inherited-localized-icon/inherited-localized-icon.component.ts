@@ -6,7 +6,8 @@ import { I18nService } from '../../../core/providers/i18n/i18n.service';
     selector: 'inherited-localized-icon',
     templateUrl: './inherited-localized-icon.tpl.html',
     styleUrls: ['./inherited-localized-icon.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class InheritedLocalizedIcon {
     @Input() item: InheritableItem;

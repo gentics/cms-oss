@@ -74,21 +74,20 @@ const getItemName = (listItem: Element): string => (listItem.querySelector('.ite
 
 @Component({
     template: `
-    <item-list-row
-        [activeNode]="activeNode"
-        [item]="item"
-        [itemInEditor]="itemInEditor"
-        [icon]="'icon'"
-        [selected]="true"
-        [itemType]="itemType"
-        [startPageId]="startPageId"
-        [linkPaths]="isSearching"
-        [nodeLanguages]="nodeLanguages"
-        [itemsInfo]="itemsInfo"
-    >
-    </item-list-row>`,
+        <item-list-row
+            [activeNode]="activeNode"
+            [item]="item"
+            [itemInEditor]="itemInEditor"
+            [icon]="'icon'"
+            [selected]="true"
+            [itemType]="itemType"
+            [startPageId]="startPageId"
+            [linkPaths]="isSearching"
+            [nodeLanguages]="nodeLanguages"
+            [itemsInfo]="itemsInfo"
+        ></item-list-row>`,
+    standalone: false,
 })
-
 class TestComponent {
     itemType = 'file';
     item: Partial<Page> | Partial<Folder> | Partial<Image> | Partial<File> = {
@@ -150,7 +149,10 @@ class MockErrorHandler {
     catch(): void {}
 }
 
-@Pipe({ name: 'permissions' })
+@Pipe({
+    name: 'permissions',
+    standalone: false,
+})
 class MockPermissionPipe implements PipeTransform {
     transform(item: any): EditorPermissions {
         const val = {

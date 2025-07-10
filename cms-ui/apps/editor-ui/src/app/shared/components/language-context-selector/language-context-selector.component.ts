@@ -6,6 +6,7 @@ import { Language } from '@gentics/cms-models';
     templateUrl: './language-context-selector.component.html',
     styleUrls: ['./language-context-selector.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LanguageContextSelectorComponent {
 

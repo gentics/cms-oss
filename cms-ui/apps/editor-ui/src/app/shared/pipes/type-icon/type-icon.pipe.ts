@@ -3,6 +3,7 @@ import { iconForItemType } from '@editor-ui/app/common/utils/icon-for-item-type'
 
 @Pipe({
     name: 'gtxTypeIcon',
+    standalone: false
 })
 export class TypeIconPipe implements PipeTransform {
     transform(value: string, fallback?: string): string {

@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms-oss</artifactId>
-		<version>6.3.0-SNAPSHOT</version>
+		<version>6.3.3-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms-oss</groupId>
@@ -44,6 +44,11 @@
 				<version>${jetty.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.eclipse.jetty.ee10</groupId>
+				<artifactId>jetty-ee10-webapp</artifactId>
+				<version>${jetty.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.eclipse.jetty</groupId>
 				<artifactId>jetty-server</artifactId>
 				<version>${jetty.version}</version>
@@ -53,16 +58,10 @@
 				<artifactId>jetty-http2-server</artifactId>
 				<version>${jetty.version}</version>
 			</dependency>
-
 			<dependency>
-				<groupId>ch.qos.logback</groupId>
-				<artifactId>logback-core</artifactId>
-				<version>${logback.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>ch.qos.logback</groupId>
-				<artifactId>logback-classic</artifactId>
-				<version>${logback.version}</version>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-security</artifactId>
+				<version>${jetty.version}</version>
 			</dependency>
 
 			<dependency>
@@ -98,7 +97,7 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
-				<artifactId>log4j-slf4j-impl</artifactId>
+				<artifactId>log4j-slf4j2-impl</artifactId>
 				<version>${log4j.version}</version>
 			</dependency>
 			<dependency>
@@ -260,7 +259,7 @@
 						<groupId>com.sun.xml.bind</groupId>
 						<artifactId>jaxb-impl</artifactId>
 					</exclusion>
-				</exclusions> 
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>com.gentics.mesh</groupId>
@@ -307,6 +306,11 @@
 				<version>${jsonpath.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>net.minidev</groupId>
+				<artifactId>json-smart</artifactId>
+				<version>${jsonsmart.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-fileupload2-jakarta-servlet6</artifactId>
 				<version>${commons.fileupload.version}</version>
@@ -315,6 +319,11 @@
 				<groupId>commons-codec</groupId>
 				<artifactId>commons-codec</artifactId>
 				<version>${commons.codec.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.sourceforge.nekohtml</groupId>
+				<artifactId>nekohtml</artifactId>
+				<version>${nekohtml.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.json</groupId>

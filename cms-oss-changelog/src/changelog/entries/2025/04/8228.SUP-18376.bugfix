@@ -1,0 +1,1 @@
+User Interface: If the option values, sent to the select control, are numeric and start with zero, the very first one is never displayed, if being picked. This has been fixed.

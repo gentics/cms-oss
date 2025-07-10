@@ -2173,7 +2173,7 @@ public class FileFactory extends AbstractFactory {
 					}
 					if (dim != null && imageSizeLimits != null && imageSizeLimits.length == 2) {
 						if (imageSizeLimits[0] < dim.x || imageSizeLimits[1] < dim.y) {
-							throw new NodeException(I18NHelper.get("image.exceeds.maxdimensions", Integer.toString(dim.x), Integer.toString(dim.y), Integer.toString(imageSizeLimits[0]), Integer.toString(imageSizeLimits[1])));
+							throw new NodeException(I18NHelper.get("image.exceeds.maxdimensions", file.getName(), file.getId().toString(), file.getGlobalId().toString(), Integer.toString(dim.x), Integer.toString(dim.y), Integer.toString(imageSizeLimits[0]), Integer.toString(imageSizeLimits[1])));
 						}
 					}
 				}
@@ -2753,9 +2753,9 @@ public class FileFactory extends AbstractFactory {
 			}
 		}
 
-		return (T) new FactoryFile(id, info, name, niceUrl, filetype, folderId, filesize, description, 
-				sizeX, sizeY, dpiX, dpiY, fpX, fpY, md5, creatorId, editorId, cDate, customCDate, eDate, customEDate, 
-				channelSetId, channelId, master, forceOnline, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs));
+		return (T) new FactoryFile(id, info, name, niceUrl, filetype, folderId, filesize, description,
+				sizeX, sizeY, dpiX, dpiY, fpX, fpY, md5, creatorId, editorId, cDate, customCDate, eDate, customEDate,
+				channelSetId, channelId, master, forceOnline, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs, "contentfile"));
 	}
 
 	/*

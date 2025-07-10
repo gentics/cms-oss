@@ -30,6 +30,7 @@ import { NodePublishingPropertiesFormData } from '../node-publishing-properties/
     templateUrl: './node-editor.component.html',
     styleUrls: ['./node-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntity.NODE> implements OnInit {
 
@@ -229,7 +230,6 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             hostType: this.entity?.hostProperty
                 ? NodeHostnameType.PROPERTY
                 : NodeHostnameType.VALUE,
-            https: this.entity?.https,
             inheritedFromId: this.entity?.inheritedFromId,
             insecurePreviewUrl: this.entity?.insecurePreviewUrl,
             meshPreviewUrl: this.entity?.meshPreviewUrl,

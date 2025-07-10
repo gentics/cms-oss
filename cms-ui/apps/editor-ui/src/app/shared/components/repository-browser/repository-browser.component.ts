@@ -44,6 +44,7 @@ import { RepositoryBrowserDataService } from '../../providers';
     styleUrls: ['./repository-browser.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [RepositoryBrowserDataService],
+    standalone: false
 })
 export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
 

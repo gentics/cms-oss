@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import com.webcohesion.enunciate.metadata.DocumentationExample;
+
 /**
  * Model of an entry in the action log
  */
@@ -48,6 +50,7 @@ public class ActionLogEntry implements Serializable {
 	 * Lastname and Firstname of the acting User
 	 * @return user name
 	 */
+	@DocumentationExample(value = "Musterfrau Maxine", value2 = "Mustermann Max")
 	public String getUser() {
 		return user;
 	}
@@ -96,6 +99,7 @@ public class ActionLogEntry implements Serializable {
 	 * ID of the object, the action was performed on
 	 * @return object ID
 	 */
+	@DocumentationExample(value = "728", value2 = "38")
 	public int getObjId() {
 		return objId;
 	}
@@ -112,6 +116,7 @@ public class ActionLogEntry implements Serializable {
 	 * Timestamp of the action
 	 * @return timestamp
 	 */
+	@DocumentationExample(value = "1742290735", value2 = "1742292072")
 	public int getTimestamp() {
 		return timestamp;
 	}

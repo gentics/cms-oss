@@ -2,6 +2,14 @@
   "version": "6.2.3",
   "date": "15.01.2025",
   "changeLogEntryFileNames": [
+    "8108.SUP-17994.bugfix",
+    "8091.SUP-17860.bugfix",
+    "8087.SUP-17881.bugfix",
+    "8084.SUP-17885.bugfix",
+    "8101.SUP-17590.bugfix",
+    "8102.SUP-17590.enhancement",
+    "8089.SUP-17877.bugfix",
+    "8086.SUP-17891.bugfix",
     "8100.SUP-17963.bugfix"
   ],
   "genericProperties": {

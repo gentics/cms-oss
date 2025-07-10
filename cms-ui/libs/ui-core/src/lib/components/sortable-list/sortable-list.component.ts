@@ -97,6 +97,7 @@ export function sortFactory(e: ISortableEvent): SortFunction<any> {
     templateUrl: './sortable-list.component.html',
     styleUrls: ['./sortable-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SortableListComponent extends BaseComponent implements OnChanges, OnInit, AfterContentInit {
 

@@ -5,7 +5,7 @@ import com.gentics.contentnode.rest.model.File;
 /**
  * Response for file and image list requests.
  */
-public class  FileListResponse extends AbstractListResponse<File> {
+public class  FileListResponse extends AbstractStagingStatusListResponse<File> {
 
 	/**
 	 * Serial Version UID

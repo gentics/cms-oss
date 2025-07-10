@@ -1523,14 +1523,18 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 	/**
 	 * Get the GlobalId from the given data row
 	 * @param rs data row
-	 * @return globalId (may be null)
+	 * @param tableName name of the table from which the data was read
+	 * @return globalId, which never will be null (but could contain an empty string)
 	 */
-	protected GlobalId getGlobalId(FactoryDataRow rs) {
+	protected GlobalId getGlobalId(FactoryDataRow rs, String tableName) {
 		String uuid = rs.getString("uuid");
 		GlobalId globalId = null;
 
 		if (!ObjectTransformer.isEmpty(uuid)) {
 			globalId = new GlobalId(uuid);
+		} else {
+			logger.warn("uuid in table %s for record ID %d is empty!".formatted(tableName, rs.getInt("id")));
+			globalId = new GlobalId("");
 		}
 		return globalId;
 	}

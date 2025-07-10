@@ -32,8 +32,31 @@ module.exports = {
                 ],
             },
         ],
+        '@angular-eslint/component-selector': [
+            'warn',
+            {
+                type: 'element',
+                prefix: 'gtx',
+                style: 'kebab-case',
+            },
+        ],
+        '@angular-eslint/directive-selector': [
+            'warn',
+            {
+                type: 'attribute',
+                prefix: 'gtx',
+                style: 'camelCase',
+            },
+        ],
+        '@angular-eslint/pipe-prefix': [
+            'warn',
+            {
+                prefixes: [
+                    'gtx',
+                ],
+            },
+        ],
         '@angular-eslint/directive-class-suffix': 'error',
-        '@angular-eslint/no-host-metadata-property': 'error',
         '@angular-eslint/no-input-rename': 'error',
         '@angular-eslint/no-inputs-metadata-property': 'error',
         '@angular-eslint/no-output-on-prefix': 'error',

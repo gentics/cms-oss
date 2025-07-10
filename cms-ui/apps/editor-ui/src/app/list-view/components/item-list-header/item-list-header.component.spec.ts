@@ -31,25 +31,25 @@ const allPermissions = (): EditorPermissions => // Sorry, but it works.
 
 @Component({
     template: `
-    <item-list-header class="list-header icon-checkbox-trigger"
-        [itemsInfo]="itemsInfo"
-        [items]="items"
-        [selectedItems]="selectedItems"
-        [icon]="icon"
-        [filterTerm]="filterTerm"
-        [nodeLanguages]="languages$ | async"
-        [itemType]="itemType"
-        [acceptUploads]="acceptUploads"
-        [folderPermissions]="folderPermissions"
-        [canCreateItem]="canCreateItem"
-        [activeNode]="activeNode"
-        [currentFolderId]="currentFolderId"
-        [showAllLanguages]="showAllLanguages$ | async"
-        [showImagesGridView]="showImagesGridView$ | async"
-        [activeLanguage]="activeLanguage"
-        [showStatusIcons]="true"
-    >
-    </item-list-header>`,
+        <item-list-header class="list-header icon-checkbox-trigger"
+            [itemsInfo]="itemsInfo"
+            [items]="items"
+            [selectedItems]="selectedItems"
+            [icon]="icon"
+            [filterTerm]="filterTerm"
+            [nodeLanguages]="languages$ | async"
+            [itemType]="itemType"
+            [acceptUploads]="acceptUploads"
+            [folderPermissions]="folderPermissions"
+            [canCreateItem]="canCreateItem"
+            [activeNode]="activeNode"
+            [currentFolderId]="currentFolderId"
+            [showAllLanguages]="showAllLanguages$ | async"
+            [showImagesGridView]="showImagesGridView$ | async"
+            [activeLanguage]="activeLanguage"
+            [showStatusIcons]="true"
+        ></item-list-header>`,
+    standalone: false,
 })
 class TestComponent {
     itemType = 'folder';

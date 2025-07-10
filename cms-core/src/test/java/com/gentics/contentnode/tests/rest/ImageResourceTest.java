@@ -210,7 +210,9 @@ public class ImageResourceTest {
 			supply(() -> createImage(node.getFolder(), "too_big_image.jpg", out.toByteArray()));
 			fail("Should not allow an uploaded image violating max dimensions configuration");
 		} catch (NodeException e) {
-			assertThat(e.getMessage()).as("Expected exception").isEqualTo("Das Bild mit den Dimensionen 311x211 überschreitet die erlaubten Dimensionen 100x100.");
+			assertThat(e.getMessage())
+				.as("Expected exception")
+				.matches("^Das Bild 'too_big_image.jpg' \\(ID #\\d+, GID = [0-9a-z.-]+\\) mit den Dimensionen 311x211 überschreitet die erlaubten Dimensionen 100x100.$");
 		} finally {
 			testContext.getContext().getNodeConfig().getDefaultPreferences().setProperty("images_maxdimensions", FileFactory.DEFAULT_MAX_DIMENSIONS);
 		}		

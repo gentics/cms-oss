@@ -34,8 +34,9 @@ import { RoleTableLoaderService } from '../../providers';
 @Component({
     selector: 'gtx-role-detail',
     templateUrl: './role-detail.component.html',
-    styleUrls: [ 'role-detail.component.scss' ],
+    styleUrls: ['role-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperations> implements OnInit {
 

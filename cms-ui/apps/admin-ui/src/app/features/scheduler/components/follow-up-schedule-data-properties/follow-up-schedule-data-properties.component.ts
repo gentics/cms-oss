@@ -17,6 +17,7 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
         generateFormProvider(FollowUpScheduleDataPropertiesComponent),
         generateValidatorProvider(FollowUpScheduleDataPropertiesComponent),
     ],
+    standalone: false
 })
 export class FollowUpScheduleDataPropertiesComponent
     extends BasePropertiesComponent<FollowUpScheduleData>

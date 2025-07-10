@@ -64,6 +64,7 @@ import com.gentics.contentnode.factory.RemovePermsTransactional;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.TrxAttribute;
 import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
 import com.gentics.contentnode.factory.Wastebin;
@@ -108,6 +109,7 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.model.request.Permission;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
@@ -6272,10 +6274,7 @@ public class FolderFactory extends AbstractFactory {
 			// if hostProperty is not empty, resolve and set host also
 			if (!org.apache.commons.lang3.StringUtils.isBlank(this.hostProperty)) {
 				String resolvedHost = substituteSingleProperty(this.hostProperty, Node.NODE_HOST_FILTER);
-				if (!StringUtils.isEqual(this.host, resolvedHost)) {
-					this.host = resolvedHost;
-					this.modified = true;
-				}
+				MiscUtils.setHostAndProtocol(resolvedHost, this::setHttps, this::setHostname);
 			}
 		}
 
@@ -6601,8 +6600,7 @@ public class FolderFactory extends AbstractFactory {
 				if (origNode != null && origNode.isPubDirSegment() != isPubDirSegment()) {
 					// we want to omit the verification checks for the pub_dir, because the folders would use the cached nodes, which do
 					// not have the property pubDirSegment changed yet (we are setting correctly clean pub_dir's anyway, so no need for another check while saving)
-					t.getAttributes().put(OMIT_PUB_DIR_SEGMENT_VERIFY, true);
-					try {
+					try (TrxAttribute omitPubDirSegmentVerifyTrx = new TrxAttribute(OMIT_PUB_DIR_SEGMENT_VERIFY, true)) {
 						// for all folders that are not inherited, clean the publish directory
 						try (ChannelTrx cTrx = new ChannelTrx(this)) {
 							doForFoldersRecursive(folder, f -> {
@@ -6621,8 +6619,6 @@ public class FolderFactory extends AbstractFactory {
 								editableChannel.save();
 							}
 						}
-					} finally {
-						t.getAttributes().remove(OMIT_PUB_DIR_SEGMENT_VERIFY);
 					}
 				}
 
@@ -7356,7 +7352,7 @@ public class FolderFactory extends AbstractFactory {
 	}
 
 	private Node loadNodeObject(Integer id, NodeObjectInfo info, FactoryDataRow rs) throws NodeException {
-		return new FactoryNode(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs));
+		return new FactoryNode(id, info, rs.getValues(), getUdate(rs), getGlobalId(rs, "node"));
 	}
 
 	private Folder loadFolderObject(Integer id, NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws NodeException {
@@ -7379,7 +7375,7 @@ public class FolderFactory extends AbstractFactory {
 		boolean disinheritDefault = rs.getBoolean("disinherit_default");
 
 		return new FactoryFolder(id, info, name, description, motherId, nodeId, pubDir, objTypeIds, cDate, eDate, creatorId, editorId, masterId, channelSetId,
-				channelId, master, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs));
+				channelId, master, excluded, disinheritDefault, rs.getInt("deleted"), rs.getInt("deletedby"), getUdate(rs), getGlobalId(rs, "folder"));
 	}
 
 	@SuppressWarnings("unchecked")

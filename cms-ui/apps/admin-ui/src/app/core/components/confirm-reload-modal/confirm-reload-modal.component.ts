@@ -2,8 +2,9 @@ import { Component } from '@angular/core';
 import { IModalDialog } from '@gentics/ui-core';
 
 @Component({
-  selector: 'gtx-confirm-reload-modal',
-  templateUrl: './confirm-reload-modal.component.html',
+    selector: 'gtx-confirm-reload-modal',
+    templateUrl: './confirm-reload-modal.component.html',
+    standalone: false
 })
 export class ConfirmReloadModalComponent implements IModalDialog {
     closeFn: (result: boolean) => void;

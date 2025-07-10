@@ -29,8 +29,8 @@ import {
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { EntityIdType, Node, Raw } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { Observable, forkJoin, of } from 'rxjs';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
@@ -45,7 +45,7 @@ export class ObjectPropertyHandlerService
 
     constructor(
         errorHandler: ErrorHandler,
-        protected api: GcmsApi,
+        protected client: GCMSRestClientService,
         protected notification: I18nNotificationService,
     ) {
         super(errorHandler);
@@ -71,7 +71,7 @@ export class ObjectPropertyHandlerService
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityCreateResponseModel<EditableEntity.OBJECT_PROPERTY>> {
-        return this.api.objectproperties.createObjectProperty(data).pipe(
+        return this.client.objectProperty.create(data).pipe(
             tap(res => {
                 const name = this.displayName(res.objectProperty);
                 this.nameMap[res.objectProperty.id] = name;
@@ -101,7 +101,7 @@ export class ObjectPropertyHandlerService
         id: string | number,
         params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityLoadResponseModel<EditableEntity.OBJECT_PROPERTY>> {
-        return this.api.objectproperties.getObjectProperty(id).pipe(
+        return this.client.objectProperty.get(id).pipe(
             tap(res => {
                 const name = this.displayName(res.objectProperty);
                 this.nameMap[res.objectProperty.id] = name;
@@ -124,7 +124,7 @@ export class ObjectPropertyHandlerService
         data: EntityUpdateRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.OBJECT_PROPERTY>> {
-        return this.api.objectproperties.updateObjectProperty(id, data).pipe(
+        return this.client.objectProperty.update(id, data).pipe(
             tap(res => {
                 const name = this.displayName(res.objectProperty);
                 this.nameMap[res.objectProperty.id] = name;
@@ -152,8 +152,8 @@ export class ObjectPropertyHandlerService
     }
 
     delete(id: string | number, params?: EntityDeleteRequestParams<EditableEntity.OBJECT_PROPERTY>): Observable<void> {
-        return this.api.objectproperties.deleteObjectProperty(id).pipe(
-            tap(() => {
+        return this.client.objectProperty.delete(id).pipe(
+            discard(() => {
                 const name = this.nameMap[id];
 
                 if (!name) {
@@ -177,7 +177,7 @@ export class ObjectPropertyHandlerService
         body?: EntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityListResponseModel<EditableEntity.OBJECT_PROPERTY>> {
-        return this.api.objectproperties.getObjectProperties(params).pipe(
+        return this.client.objectProperty.list(params).pipe(
             tap(res => {
                 res.items.forEach(objCat => {
                     const name = this.displayName(objCat);
@@ -204,8 +204,8 @@ export class ObjectPropertyHandlerService
         devtoolPackage: string,
         entityId: string | number,
     ): Observable<void> {
-        return this.api.devTools.addObjectPropertyToPackage(devtoolPackage, entityId).pipe(
-            tap(() => {
+        return this.client.devTools.assignObjectProperty(devtoolPackage, entityId).pipe(
+            discard(() => {
                 this.notification.show({
                     message: 'objectProperty.objectProperty_successfully_added_to_package',
                     type: 'success',
@@ -222,8 +222,8 @@ export class ObjectPropertyHandlerService
         devtoolPackage: string,
         entityId: string | number,
     ): Observable<void> {
-        return this.api.devTools.removeObjectPropertyFromPackage(devtoolPackage, entityId).pipe(
-            tap(() => {
+        return this.client.devTools.unassignObjectProperty(devtoolPackage, entityId).pipe(
+            discard(() => {
                 this.notification.show({
                     message: 'objectProperty.objectProperty_successfully_removed_from_package',
                     type: 'success',
@@ -241,7 +241,7 @@ export class ObjectPropertyHandlerService
         body?: DevToolEntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: DevToolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<DevToolEntityListResponseModel<EditableEntity.OBJECT_PROPERTY>> {
-        return this.api.devTools.getObjectproperties(devtoolPackage, params).pipe(
+        return this.client.devTools.listObjectProperties(devtoolPackage, params).pipe(
             tap(res => {
                 res.items.forEach(objCat => {
                     const name = this.displayName(objCat);
@@ -266,48 +266,32 @@ export class ObjectPropertyHandlerService
     }
 
     getLinkedNodes(objectPropertyId: EntityIdType): Observable<Node<Raw>[]> {
-        return this.api.objectproperties.getObjectPropertyLinkedNodes(objectPropertyId).pipe(
+        return this.client.objectProperty.listNodes(objectPropertyId).pipe(
             map(res => res.items),
         );
     }
 
-    changeNodeRestrictions(
-        objectPropertyId: EntityIdType,
-        nodeIdsToRestrict: EntityIdType[] = [],
-        nodesCurrentlyRestricted: EntityIdType[] = [],
-    ): Observable<void> {
-        const reqs = [];
-        const execute = (): Observable<void> => {
-            if (reqs.length === 0) {
-                // do nothing
-                return of();
-            }
-            return forkJoin(reqs).pipe(
-                // no need for explicit return value
-                discard(),
-                // display toast notification
-                tap(() => this.notification.show({
-                    type: 'success',
-                    message: 'objectProperty.operation_linked_to_nodes_successful',
-                })),
-                this.catchAndRethrowError(),
-            );
-        };
+    addNodeRestriction(objectPropertyIds: number[], nodeIds: number[]): Observable<void> {
+        return this.client.objectProperty.linkToNode({
+            targetIds: objectPropertyIds,
+            ids: nodeIds,
+        }).pipe(discard(() => {
+            this.notification.show({
+                type: 'success',
+                message: 'objectProperty.operation_linked_to_nodes_successful',
+            });
+        }));
+    }
 
-        if (nodeIdsToRestrict.length === 0) {
-            // if none selected
-            reqs.push(this.api.objectproperties.unlinkObjectPropertiesFromNodes([objectPropertyId], nodesCurrentlyRestricted));
-            return execute();
-        }
-        if (nodesCurrentlyRestricted.length > 0) {
-            // don't remove nodes supposed to remain linked
-            const filteredNodes = nodesCurrentlyRestricted.filter(i => nodeIdsToRestrict.some(j => i !== j));
-            reqs.push(this.api.objectproperties.unlinkObjectPropertiesFromNodes([objectPropertyId], filteredNodes));
-        }
-        if (nodeIdsToRestrict.length > 0) {
-            reqs.push(this.api.objectproperties.linkObjectPropertiesToNodes([objectPropertyId], nodeIdsToRestrict));
-        }
-
-        return execute();
+    removeNodeRestriction(objectPropertyIds: number[], nodeIds: number[]): Observable<void> {
+        return this.client.objectProperty.unlinkFromNode({
+            ids: nodeIds,
+            targetIds: objectPropertyIds,
+        }).pipe(discard(() => {
+            this.notification.show({
+                type: 'success',
+                message: 'objectProperty.operation_linked_to_nodes_successful',
+            });
+        }));
     }
 }

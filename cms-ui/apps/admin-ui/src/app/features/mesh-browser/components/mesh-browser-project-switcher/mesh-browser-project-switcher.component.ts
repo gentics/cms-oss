@@ -7,6 +7,7 @@ import { MeshBrowserLoaderService } from '../../providers';
     templateUrl: './mesh-browser-project-switcher.component.html',
     styleUrls: ['./mesh-browser-project-switcher.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshBrowserProjectSwitcherComponent {
 

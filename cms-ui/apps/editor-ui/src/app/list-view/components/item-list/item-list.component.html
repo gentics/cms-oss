@@ -30,10 +30,9 @@
         [uiMode]="uiMode"
     ></item-list-header>
 
-    <div
-        class="list-body"
-        [class.collapsed]="header.isCollapsed"
-    >
+    <gtx-progress-bar [active]="itemsInfo.fetching" />
+
+    <div class="list-body" [class.collapsed]="header.isCollapsed" [hidden]="itemsInfo.fetching">
         <div *ngIf="itemType !== 'image' || !(showImagesGridView$ | async); else imageGrid">
             <div *ngFor="let item of items | paginate: paginationConfig; trackBy: identify">
                 <item-list-row

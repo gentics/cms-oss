@@ -555,6 +555,7 @@ function openDatepickerModal(fixture: ComponentFixture<TestComponent>): { instan
     template: `
         <gtx-date-time-picker></gtx-date-time-picker>
         <gtx-overlay-host></gtx-overlay-host>`,
+    standalone: false,
 })
 class TestComponent {
     testModel: number = TEST_TIMESTAMP;
@@ -571,12 +572,14 @@ class TestComponent {
 
 @Component({
     template: '<gtx-date-time-picker></gtx-date-time-picker>',
+    standalone: false,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class OnPushTestComponent { }
 
 @Component({
     selector: 'gtx-date-time-picker-controls',
+    standalone: false,
     template: '',
 })
 class MockDateTimePickerControls {

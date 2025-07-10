@@ -5,6 +5,7 @@ import { InjectDocumentation } from '../../common/docs-loader';
 @Component({
     templateUrl: './split-view-container-demo.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SplitViewContainerDemoPage {
 

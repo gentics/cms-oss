@@ -10,6 +10,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     styleUrls: ['./aloha-toggle-split-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaToggleSplitButtonRendererComponent)],
+    standalone: false
 })
 export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererComponent<AlohaToggleSplitButtonComponent, boolean> {
 
@@ -76,7 +77,7 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
         this.aloha.restoreSelection();
     }
 
-    protected getFinalValue(): boolean {
+    protected override getFinalValue(): boolean {
         return this.settings.active;
     }
 

@@ -33,6 +33,7 @@ import { FolderActionsService } from '../../../state';
     templateUrl: './link-template.component.html',
     styleUrls: ['./link-template.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LinkTemplateComponent implements OnDestroy, OnInit {
 

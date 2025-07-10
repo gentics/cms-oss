@@ -10,15 +10,19 @@ h3. Databases
 
 h4. MariaDB
 
-|_.Major Version |_.Minor Version |_.Supported |_.Notes                   |
-| 11             | 11.0-11.6      | Yes        |                          |
-| 10             | 10.4-10.11     | Yes¹       | Since Gentics CMS 6.0.0  |
+Gentics CMS supports the Long Term Support (LTS) versions of MariaDB.
+
+|_.Major Version |_.Minor Versions |_.Supported |_.Notes                   |
+| 11             | 11.4            | Yes        |                          |
+| 10             | 10.6, 10.11     | Yes[1]     | Since Gentics CMS 6.0.0  |
+
+NOTE: For MariaDB versions 11.6 and up, the setting @innodb_snapshot_isolation@ must be disabled in the configuration.
 
 h4. Oracle MySQL
 
-|_.Major Version |_.Minor Version     |_.Supported |_.Notes                   |
-| 9              | 9.0-9.2            | Yes        |                          |
-| 8              | 8.0-8.4            | Yes        |                          |
+|_.Major Version |_.Minor Versions     |_.Supported |_.Notes                   |
+| 9              | 9.0-9.2             | Yes        |                          |
+| 8              | 8.0-8.4             | Yes        |                          |
 
 NOTE: Please note that some custom my.cnf mysqld setting must be applied. Please check the "admin installation guide":admin_install.html
 
@@ -142,10 +146,10 @@ h5. HSQLDB
 h5. Oracle Server
 
 |_.Major Version |_.Tested version |_.Supported |
-| 12             | 12.2 (12.2.0.1) | Yes¹ |
-| 11g            | 11g Release 2 (11.2.0.1.0) (1. September 2009) | Yes² |
-| 11g            | 11g Release 2 (11.1.0.6.0) (1. September 2009) | Yes² |
-| 11g            | 11g Release 1 (11.1.0.6.0) (11 July 2007)      |  ?   |
+| 12             | 12.2 (12.2.0.1) | Yes[1] |
+| 11g            | 11g Release 2 (11.2.0.1.0) (1. September 2009) | Yes[2] |
+| 11g            | 11g Release 2 (11.1.0.6.0) (1. September 2009) | Yes[2] |
+| 11g            | 11g Release 1 (11.1.0.6.0) (11 July 2007)      |  ?     |
 
 * "Oracle Databases":http://www.oracle.com/technology/software/products/database/index.html
 * "Wikipedia Oracle Server":http://en.wikipedia.org/wiki/Oracle_database
@@ -153,7 +157,7 @@ h5. Oracle Server
 h5. Microsoft SQL Server
 
 |_.Major Version |_.Tested version       |_.Supported |_.Notes                         |
-| 2008           | 2008 (Express)        | Yes¹       | Passed Microsoft Platform Test |
+| 2008           | 2008 (Express)        | Yes[1]     | Passed Microsoft Platform Test |
 | 2005           | 2005                  | No         | Passed Microsoft Platform Test |
 
 * "Microsoft Microsoft SQL Server":http://www.microsoft.com/sql/default.mspx
@@ -172,7 +176,7 @@ See: See: "MySQL JDBC Connector":#mysql-jdbc-connector
 h5. Oracle JDBC Connector
 
 |_.Minor Version |_.Tested Version |_.Supported |_.Notes |
-| 11.2           | 11.2.0.1.0      | Yes¹       | Supported for releases which were made after 20.04.2009. Only supported for JDK 1.5, JDK 1.6 - Oracle Database 11g R2  |
+| 11.2           | 11.2.0.1.0      | Yes[1]     | Supported for releases which were made after 20.04.2009. Only supported for JDK 1.5, JDK 1.6 - Oracle Database 11g R2  |
 | 11.1           | 11.1.0.7.0      | ?          | only for JDK 1.5, JDK 1.6 - Oracle Database 11g R1 |
 | 11.1           | 11.1.0.6.0      | ?          | only for JDK 1.5, JDK 1.6 |
 
@@ -184,8 +188,8 @@ h5. Oracle JDBC Connector
 h5. Microsoft SQL JDBC Connector
 
 |_.Major Version |_.Version     |_.Supported |_.Notes |
-| 4              | 4.0.2206.100 | Yes²       | MD5: 5223e4328ef17575a2739501eac9c3e1 File: sqljdbc.jar  |
-| 4              | 4.0.2206.100 | Yes¹       | MD5: a99205071acbe2709103b971662992e0 File: sqljdbc4.jar |
+| 4              | 4.0.2206.100 | Yes[2]     | MD5: 5223e4328ef17575a2739501eac9c3e1 File: sqljdbc.jar  |
+| 4              | 4.0.2206.100 | Yes[1]     | MD5: a99205071acbe2709103b971662992e0 File: sqljdbc4.jar |
 | 3              | 3.0.1301.101 | ?          | MD5: a74c2544129dad3c7fdb8ad729ffdfdb File: sqljdbc.jar  |
 | 3              | 3.0.1301.101 | ?          | MD5: 402130141d5f2cee727f4371e2e8fd8a File: sqljdbc4.jar |
 | 2              | 2.0.1803.100 | ?          | MD5: 81cc767857d85162096d16841d7d46fa File: sqljdbc.jar  |
@@ -202,8 +206,8 @@ h3. Elasticsearch
 
 h3. Footnotes
 
-fn1. Yes¹ - Tested using automatic tests.
+fn1. Tested using automatic tests.
 
-fn2. Yes² - Tested using periodic manual tests.
+fn2. Tested using periodic manual tests.
 
 -----

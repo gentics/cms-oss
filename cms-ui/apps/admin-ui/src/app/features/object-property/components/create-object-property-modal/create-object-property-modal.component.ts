@@ -1,5 +1,5 @@
 import { ObjectPropertyHandlerService } from '@admin-ui/core';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { ObjectProperty, ObjectPropertyCreateRequest } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
@@ -9,6 +9,7 @@ import { ObjectpropertyPropertiesMode } from '../object-property-properties/obje
     selector: 'gtx-create-object-property-modal',
     templateUrl: './create-object-property-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit {
 
@@ -17,7 +18,11 @@ export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit 
     /** form instance */
     form: UntypedFormControl;
 
+    /** Will be set when the create call is sent */
+    loading = false;
+
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private handler: ObjectPropertyHandlerService,
     ) { }
 
@@ -57,8 +62,18 @@ export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit 
      * If user clicks to create a new objectProperty
      */
     buttonCreateEntityClicked(): void {
+        this.form.disable({ emitEvent: false });
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
         this.createEntity()
-            .then(objectPropertyCreated => this.closeFn(objectPropertyCreated));
+            .then(objectPropertyCreated => {
+                this.closeFn(objectPropertyCreated);
+            }, () => {
+                this.form.enable({ emitEvent: false });
+                this.loading = false;
+                this.changeDetector.markForCheck();
+            });
     }
 
     private createEntity(): Promise<ObjectProperty> {

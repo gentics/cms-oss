@@ -20,6 +20,7 @@ import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/ba
     templateUrl: './node-table.component.html',
     styleUrls: ['./node-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
 

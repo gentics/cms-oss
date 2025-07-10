@@ -15,6 +15,7 @@ interface SortOption {
     templateUrl: './sorting-modal.component.html',
     styleUrls: ['./sorting-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SortingModal extends BaseModal<SortOption> implements OnInit {
 

@@ -13,7 +13,8 @@ import { NodeBranch, NodeHierarchyBuilderService } from '../../services/node-hie
     selector: 'gtxct-node-selector',
     templateUrl: './node-selector.component.html',
     styleUrls: ['./node-selector.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 
 export class NodeSelectorComponent implements OnInit {

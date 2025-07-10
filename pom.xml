@@ -5,7 +5,7 @@
 
 	<groupId>com.gentics</groupId>
 	<artifactId>cms-oss</artifactId>
-	<version>6.3.0-SNAPSHOT</version>
+	<version>6.3.3-SNAPSHOT</version>
 	<name>Gentics CMS OSS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
@@ -44,16 +44,16 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>2.1.7</alohaeditor.version>
+		<alohaeditor.version>2.1.9</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
-		<alohaeditor.date>26.03.2025</alohaeditor.date>
+		<alohaeditor.date>03.07.2025</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
-		<mesh.version>3.0.6</mesh.version>
+		<mesh.version>3.1.1</mesh.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>3.1.10</jersey.version>
-		<jetty.version>12.0.16</jetty.version>
+		<jetty.version>12.0.20</jetty.version>
 		<jackson.version>2.18.2</jackson.version>
 
 		<enunciate.version>2.15.1</enunciate.version>
@@ -62,14 +62,16 @@
 		<mockito.version>5.0.0</mockito.version>
 		<testcontainers.version>1.17.6</testcontainers.version>
 		<jsonpath.version>2.9.0</jsonpath.version>
-		<log4j.version>2.23.1</log4j.version>
+		<jsonsmart.version>2.5.2</jsonsmart.version>
+		<log4j.version>2.24.3</log4j.version>
 		<imageio.version>3.9.4</imageio.version>
 		<scrimage.webp.version>4.1.3</scrimage.webp.version>
 		<tika.version>3.0.0</tika.version>
 		<apache.poi.version>5.2.5</apache.poi.version>
-		<commons.fileupload.version>2.0.0-M2</commons.fileupload.version>
-		<commons.beanutils.version>1.9.4</commons.beanutils.version>
+		<commons.fileupload.version>2.0.0-M4</commons.fileupload.version>
+		<commons.beanutils.version>1.11.0</commons.beanutils.version>
 		<commons.codec.version>1.16.1</commons.codec.version>
+		<nekohtml.version>1.9.22</nekohtml.version>
 		<spring.version>6.2.3</spring.version>
 		<org.json.version>20240303</org.json.version>
 		<commons-text.version>1.11.0</commons-text.version>
@@ -100,7 +102,6 @@
 		<assertj.version>3.4.1</assertj.version>
 		<junit5.version>5.8.1</junit5.version>
 		<hsqldb.version>2.7.2</hsqldb.version>
-		<logback.version>1.2.13</logback.version>
 
 		<surefire.version>3.1.2</surefire.version>
 		<surefire.forkcount>16</surefire.forkcount>

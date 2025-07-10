@@ -13,8 +13,6 @@ export enum MaintenanceActionModalAction {
     DELAY_OBJECTS = 'delay_objects',
     REPUBLISH_DELAYED_OBJECTS = 'republish_delayed_objects',
     MARK_OBJECTS_AS_PUBLISHED = 'mark_objects_as_published',
-    RELOAD_CONFIGURATION = 'reload_configuration',
-    STOP_PUBLISHING = 'stop_publishing',
 }
 
 @Component({
@@ -22,6 +20,7 @@ export enum MaintenanceActionModalAction {
     templateUrl: './maintenance-action-modal.component.html',
     styleUrls: ['./maintenance-action-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MaintenanceActionModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 
@@ -157,10 +156,6 @@ export class MaintenanceActionModalComponent extends BaseModal<boolean> implemen
 
             case MaintenanceActionModalAction.MARK_OBJECTS_AS_PUBLISHED:
                 req = this.adminOperations.markObjectsAsPublished(payload);
-                break;
-
-            case MaintenanceActionModalAction.RELOAD_CONFIGURATION:
-                req = this.adminOperations.reloadConfiguration();
                 break;
 
             default:

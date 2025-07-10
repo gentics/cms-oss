@@ -5,6 +5,7 @@ type TransformFn = (value: any) => any;
 
 @Pipe({
     name: 'gtxTransform',
+    standalone: false
 })
 export class TransformPipe implements PipeTransform {
 

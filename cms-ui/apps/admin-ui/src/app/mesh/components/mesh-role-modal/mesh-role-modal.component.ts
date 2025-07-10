@@ -10,6 +10,7 @@ import { MeshRolePropertiesMode } from '../mesh-role-properties/mesh-role-proper
     templateUrl: './mesh-role-modal.component.html',
     styleUrls: ['./mesh-role-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MeshRoleModal extends BaseModal<Role> implements OnInit {
 

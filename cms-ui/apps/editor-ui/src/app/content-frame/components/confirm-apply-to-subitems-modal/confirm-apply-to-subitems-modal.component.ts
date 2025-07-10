@@ -10,6 +10,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './confirm-apply-to-subitems-modal.component.html',
     styleUrls: ['./confirm-apply-to-subitems-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ConfirmApplyToSubitemsModalComponent extends BaseModal<boolean> {
 

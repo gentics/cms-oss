@@ -9,7 +9,10 @@ import { of } from 'rxjs';
 import { LanguagePropertiesComponent } from '../language-properties/language-properties.component';
 import { CreateLanguageModalComponent } from './create-language-modal.component';
 
-@Pipe({ name: 'i18n' })
+@Pipe({
+    name: 'i18n',
+    standalone: false,
+})
 class MockI18nPipe implements PipeTransform {
     transform(key: string, params: object): string {
         return key + (params ? ':' + JSON.stringify(params) : '');

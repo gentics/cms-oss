@@ -2,6 +2,7 @@ import {
     AccessControlledType,
     AssignEntityToContentPackageOptions,
     BaseListOptionsWithPaging,
+    BulkLinkUpdateRequest,
     CancelPageEditOptions,
     ChannelSyncRequest,
     ClusterInformationResponse,
@@ -27,6 +28,8 @@ import {
     ConstructUpdateResponse,
     ContentMaintenanceActionRequest,
     ContentPackageCreateRequest,
+    ContentPackageErrorResponse,
+    ContentPackageFolderResponse,
     ContentPackageListOptions,
     ContentPackageListResponse,
     ContentPackageResponse,
@@ -63,8 +66,8 @@ import {
     DataSourceUpdateRequest,
     DataSourceUpdateResponse,
     DirtQueueListOptions,
-    DirtQueueListResponse,
-    DirtQueueSummary,
+    DirtQueueResponse,
+    DirtQueueSummaryResponse,
     ElasticSearchIndexListOptions,
     ElasticSearchIndexListResponse,
     ElasticSearchIndexRebuildOptions,
@@ -115,6 +118,7 @@ import {
     FormSaveRequest,
     FormUnpublishRequest,
     GcmsPermission,
+    GenericItemResponse,
     Group,
     GroupCreateRequest,
     GroupCreateResponse,
@@ -155,6 +159,11 @@ import {
     LanguageListResponse,
     LanguageResponse,
     LanguageUpdateRequest,
+    LicenseContentRepositoryInfoOptions,
+    LicenseContentRepositoryInfoResponse,
+    LicenseInfoResponse,
+    LicenseUpdateRequest,
+    LicenseUpdateResponse,
     LinkCheckerCheckRequest,
     LinkCheckerCheckResponse,
     LinkCheckerExternalLinkList,
@@ -206,7 +215,6 @@ import {
     NodeListOptions,
     NodeListRequestOptions,
     NodeListResponse,
-    NodeMultiLinkRequest,
     NodeResponse,
     NodeSaveRequest,
     NodeSettingsResponse,
@@ -273,6 +281,7 @@ import {
     PublishLogListOption,
     PublishQueue,
     PublishType,
+    PushLicenseRequest,
     PushToMasterRequest,
     Raw,
     Response,
@@ -334,8 +343,9 @@ import {
     TemplateTagStatusResponse,
     TemplateUsageResponse,
     TotalUsageResponse,
-    TranslationTextRequest,
+    TranslationRequestOptions,
     TranslationResponse,
+    TranslationTextRequest,
     UnlocalizeRequest,
     UpdatesInfo,
     UsageInFilesOptions,
@@ -359,14 +369,6 @@ import {
     VersionResponse,
     WastebinDeleteOptions,
     WastebinRestoreOptions,
-    TranslationRequestOptions,
-    GenericItemResponse,
-    LicenseInfoResponse,
-    LicenseUpdateRequest,
-    LicenseUpdateResponse,
-    LicenseContentRepositoryInfoOptions,
-    LicenseContentRepositoryInfoResponse,
-    PushLicenseRequest,
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -389,8 +391,8 @@ export interface AbstractAdminAPI extends BasicAPI {
 
     reloadConfiguration: () => Response;
 
-    getDirtQueue: (options?: DirtQueueListOptions) => DirtQueueListResponse;
-    getDirtQueueSummary: () => DirtQueueSummary;
+    getDirtQueue: (options?: DirtQueueListOptions) => DirtQueueResponse;
+    getDirtQueueSummary: () => DirtQueueSummaryResponse;
     redoFailedDirtQueueEntry: (actionId: string | number) => void;
     deleteFailedDirtQueueEntry: (actionId: string | number) => void;
 
@@ -490,6 +492,8 @@ export interface AbstractContentStagingAPI extends BasicAPI {
     import: (name: string, options?: ContentPackageSyncOptions) => ContentPackageSyncResponse;
     upload: (name: string, file: File | Blob) => ContentPackageResponse;
     download: (name: string) => Blob;
+    errors: (name: string) => ContentPackageErrorResponse;
+    listContents: (name: string, path: string) => ContentPackageFolderResponse;
 
     addEntity: (
         name: string,
@@ -861,8 +865,8 @@ export interface AbstractObjectPropertyAPI extends BasicAPI {
 
     constructs: (id: number | string) => ConstructListResponse;
     listNodes: (id: number | string) => NodeListResponse;
-    linkToNode: (body: NodeMultiLinkRequest) => Response;
-    unlinkFromNode: (body: NodeMultiLinkRequest) => Response;
+    linkToNode: (body: BulkLinkUpdateRequest) => Response;
+    unlinkFromNode: (body: BulkLinkUpdateRequest) => Response;
     hash: (id: number | string) => ImplementationHashResponse;
 }
 

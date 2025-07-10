@@ -12,6 +12,7 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './group-trable.component.html',
     styleUrls: ['./group-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GroupTrableComponent extends BaseEntityTrableComponent<Group, GroupBO, GroupTrableLoaderOptions> implements OnChanges {
 

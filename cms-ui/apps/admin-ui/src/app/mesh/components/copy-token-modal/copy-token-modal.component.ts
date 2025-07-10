@@ -10,6 +10,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './copy-token-modal.component.html',
     styleUrls: ['./copy-token-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CopyTokenModal extends BaseModal<void> implements OnInit {
 

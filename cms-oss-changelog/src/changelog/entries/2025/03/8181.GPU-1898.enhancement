@@ -10,14 +10,16 @@ This especially includes the following list of dependency updates:
 * Apache Commons IO 2.17.0
 * Apache Log4j 2.24.3
 * Eclipse Jersey 3.1.10
-* Eclipse Jetty 12.0.16
+* Eclipse Jetty 12.0.20
 * Jackson 2.18.2
+* AntiSamy: 1.7.8
+* Json Smart: 2.5.2
 
 The following dependencies have been removed:
 * Java Portlet API
 * JavaServer Pages API
 * Tomcat Annotations API
 * Xalan
-* Neko HTML
 * WSDL4J
 * ASM
+* Logback

@@ -14,6 +14,7 @@ import { MessageLink } from '../message-body';
     templateUrl: './message-modal.component.html',
     styleUrls: ['./message-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MessageModal extends BaseModal<MessageLink | void> implements OnInit {
 
@@ -50,6 +51,7 @@ export class MessageModal extends BaseModal<MessageLink | void> implements OnIni
                 message: 'message.message_sent',
                 type: 'success',
             });
+            this.closeFn();
         }, error => {
             this.notification.show({
                 message: 'message.message_sent_error',
@@ -57,8 +59,6 @@ export class MessageModal extends BaseModal<MessageLink | void> implements OnIni
                 delay: 5000,
             });
             console.error('Error while sending message response', error);
-        }, () => {
-            this.closeFn();
         });
     }
 

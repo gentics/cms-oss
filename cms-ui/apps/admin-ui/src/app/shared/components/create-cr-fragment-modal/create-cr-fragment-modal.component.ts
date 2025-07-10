@@ -1,6 +1,6 @@
 import { ContentRepositoryFragmentOperations } from '@admin-ui/core';
 import { EntityExistsValidator } from '@admin-ui/shared/providers';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ContentRepositoryFragmentBO, ContentRepositoryFragmentCreateRequest, Normalized } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
@@ -9,13 +9,18 @@ import { IModalDialog } from '@gentics/ui-core';
     selector: 'gtx-create-cr-fragment-modal',
     templateUrl: './create-cr-fragment-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CreateContentRepositoryFragmentModalComponent implements IModalDialog, OnInit  {
 
     /** form instance */
     form: UntypedFormGroup;
 
+    /** Will be set when the create call is sent */
+    loading = false;
+
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private entityData: ContentRepositoryFragmentOperations,
         private entityExistsValidator: EntityExistsValidator<ContentRepositoryFragmentBO<Normalized>>,
     ) {
@@ -46,8 +51,18 @@ export class CreateContentRepositoryFragmentModalComponent implements IModalDial
      * If user clicks to create a new dataSource
      */
      buttonCreateEntityClicked(): void {
+        this.form.disable({ emitEvent: false });
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
         this.createEntity()
-            .then(createdEntity => this.closeFn(createdEntity));
+            .then(createdEntity => {
+                this.closeFn(createdEntity);
+            }, () => {
+                this.form.enable({ emitEvent: false });
+                this.loading = false;
+                this.changeDetector.markForCheck();
+            });
     }
 
     private createEntity(): Promise<ContentRepositoryFragmentBO<Normalized>> {

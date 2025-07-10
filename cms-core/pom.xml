@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms-oss</artifactId>
-		<version>6.3.0-SNAPSHOT</version>
+		<version>6.3.3-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms-oss</groupId>
@@ -327,7 +327,7 @@
 							<groupId>org.mariadb.jdbc</groupId>
 							<artifactId>mariadb-java-client</artifactId>
 							<!--  Keep in sync with BOM version! -->
-							<version>2.7.12</version>
+							<version>3.5.3</version>
 							<type>jar</type>
 							<overWrite>false</overWrite>
 							<outputDirectory>${project.build.directory}/connector</outputDirectory>
@@ -443,18 +443,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<artifactId>httpunit</artifactId>
-			<groupId>httpunit</groupId>
-			<version>1.7</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>jtidy</groupId>
-					<artifactId>jtidy</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<type>jar</type>
@@ -507,7 +495,7 @@
 		<dependency>
 			<groupId>org.owasp.antisamy</groupId>
 			<artifactId>antisamy</artifactId>
-			<version>1.6.8</version>
+			<version>1.7.8</version>
 			<exclusions>
 				<exclusion>
 					<groupId>xml-apis</groupId>

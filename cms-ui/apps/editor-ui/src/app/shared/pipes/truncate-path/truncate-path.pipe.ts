@@ -11,7 +11,10 @@ const ELLIPSES = '...';
  * ->
  * my-project/.../file.ext
  */
-@Pipe({ name: 'truncatePath' })
+@Pipe({
+    name: 'truncatePath',
+    standalone: false
+})
 export class TruncatePathPipe implements PipeTransform {
     transform(value: string, maxLength: number = 50, delimiter: string = '/'): any {
         if (typeof value !== 'string' || value.length <= maxLength) {

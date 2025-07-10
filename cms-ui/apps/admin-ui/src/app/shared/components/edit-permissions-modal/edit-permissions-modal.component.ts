@@ -21,6 +21,7 @@ export type EditPermissionsCancelCallback = (val: void) => void;
     templateUrl: './edit-permissions-modal.component.html',
     styleUrls: ['./edit-permissions-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class EditPermissionsModalComponent implements OnInit, IModalDialog {
 

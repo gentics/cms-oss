@@ -376,6 +376,16 @@ export class AlohaIntegrationService {
                 return;
             }
 
+            const range = this.currentWindow.Aloha?.Selection?.getRangeObject?.();
+            if (range) {
+                let start = range.startContainer;
+                if (start.nodeType !== document.ELEMENT_NODE) {
+                    start = start.parentElement;
+                }
+                start.focus();
+                return;
+            }
+
             if (this.currentWindow.Aloha?.activeEditable?.obj?.[0]) {
                 this.currentWindow.Aloha.activeEditable.obj[0].focus();
             } else if (typeof (this.currentWindow.document.activeElement as HTMLElement)?.focus === 'function') {

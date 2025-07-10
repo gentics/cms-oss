@@ -518,6 +518,9 @@ class FakeAlohaGlobal implements AlohaGlobal {
     trigger(eventName: string, data: any): void { }
     activeEditable?: AlohaEditable;
     getEditableById(id: string | number): AlohaEditable { return null; }
+    getEditableHost($element: JQuery): AlohaEditable | null {
+        return null;
+    }
     jQuery: JQueryStatic;
     scrollToSelection(): void {}
 

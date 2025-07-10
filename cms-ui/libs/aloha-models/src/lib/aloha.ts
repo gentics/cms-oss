@@ -108,6 +108,50 @@ export interface FormatPluginSettings {
     removeFormats?: string[];
 }
 
+export interface AlohaRegistry<T = any> {
+    _entries: Record<string, T>;
+    _ids: string[];
+    register: (id: string, entry: T) => void;
+    unregister: (id: string) => void;
+    get: (id: string) => T | undefined;
+    has: (id: string) => boolean;
+    getEntries: () => Record<string, T>;
+    getIds: () => string[];
+}
+
+export interface AlohaAbstractBlock {
+    id: string;
+    title: string;
+    $element: JQuery<HTMLElement>;
+
+    confirmedDestroy: (callbackFn: () => void) => void;
+    destroy: (force: boolean) => void;
+    shouldDestroy: () => boolean;
+    unblock: () => void;
+    free: () => void;
+
+    getId: () => string;
+    getTitle: () => string;
+
+    isDraggable: () => boolean;
+    activate: (eventTarget?: HTMLElement, event?: Event) => void;
+    deactivate: () => void;
+    isActive: () => boolean;
+    update: ($element: JQuery, postProcessFn: () => void) => void;
+}
+
+export type AlohaBlockType = any;
+
+export interface AlohaBlockManager {
+    blockTypes: AlohaRegistry<AlohaBlockType>;
+    blocks: AlohaRegistry<AlohaAbstractBlock>;
+    _activeBlock: AlohaAbstractBlock | null;
+
+    getBlock: (idOrElement: string | HTMLElement) => AlohaAbstractBlock;
+    bind: (eventName: string, handler: (...args: any[]) => any) => void;
+    trigger: (eventName: string, args: any) => void;
+}
+
 export interface AlohaPlugin {
     readonly name: string;
     getEditableConfig: (editable: JQuery) => string[];
@@ -261,24 +305,6 @@ export interface AlohaDOM {
 
     setCursorInto(element: HTMLElement): void;
     selectDomNode(element: HTMLElement): void;
-}
-
-export interface AlohaBlockManager {
-    getBlock(idOrElement: string | HTMLElement): AlohaAbstractBlock;
-}
-
-export interface AlohaAbstractBlock {
-    title: string;
-    id: string;
-    $element: JQuery;
-    destroy(force: boolean): void;
-    unblock(): void;
-    free(): void;
-    isDraggable(): boolean;
-    activate(eventTarget: HTMLElement | JQuery, event?: Event): void;
-    deactivate(): void;
-    isActive(): boolean;
-    update($element: JQuery, postProcessFn: () => void): void;
 }
 
 export interface AlohaEditable {

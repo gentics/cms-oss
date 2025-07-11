@@ -9,7 +9,7 @@ export interface HelperWindow extends Window {
     updateAlohaRange: typeof updateAlohaRange;
 }
 
-const AUTH = {
+export const AUTH = {
     admin: {
         username: 'node',
         password: 'node',
@@ -42,12 +42,12 @@ export async function loginWithForm(source: Page | Locator, login: (keyof typeof
         .click();
 }
 
-export async function login(page: Page, account: string): Promise<void> {
+export async function login(page: Page, account: string, keycloak?: boolean): Promise<void> {
     const data = AUTH[account];
 
     await page.fill('input[type="text"]', data.username);
     await page.fill('input[type="password"]', data.password);
-    await page.click('button[type="submit"]');
+    await page.click(`${keycloak ? 'input' : 'button'}[type="submit"]`);
 }
 
 export async function selectNode(page: Page, nodeId: number | string): Promise<void> {
@@ -79,8 +79,12 @@ export async function itemAction(item: Locator, action: string): Promise<void> {
     await dropdown.locator(`[data-action="${action}"]`).click();
 }
 
-export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[]): Promise<Record<string, any>> {
+export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
     // Note: This is a simplified version. You'll need to implement file upload handling
+    if (options?.dragAndDrop) {
+        throw new Error('Drag and Drop is currently not implemented');
+    }
+
     const fileChooserPromise = page.waitForEvent('filechooser');
     const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
     await uploadButton.waitFor({ state: 'visible' });
@@ -144,6 +148,17 @@ export function findAlohaComponent(page: Page, options?: { slot?: string, type?:
     const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
 
     return root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector}`);
+}
+
+export function findDynamicFormModal(page: Page, ref?: string): Locator {
+    const refSelector = ref ? `[data-ref="${ref}"]` : '';
+    return page.locator('project-editor content-frame gtx-page-editor-controls').locator(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
+}
+
+export function getAlohaIFrame(page: Page): Locator {
+    const iframeSelector = 'iframe[name="master-frame"][loaded="true"]';
+    // High timeout for all of aloha to finish loading
+    return page.locator(iframeSelector).locator(`project-editor content-frame ${iframeSelector}`);
 }
 
 export async function initPage(page: Page): Promise<void> {

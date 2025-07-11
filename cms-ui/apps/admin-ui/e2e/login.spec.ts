@@ -1,7 +1,7 @@
 import { Feature, Variant } from '@gentics/cms-models';
 import { blockKeycloakConfig, EntityImporter, isVariant, matchesPath, waitForKeycloakAuthPage } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
-import { AUTH, AUTH_ADMIN, AUTH_KEYCLOAK } from './common';
+import { AUTH_ADMIN, AUTH_KEYCLOAK } from './common';
 import { loginWithForm, navigateToApp } from './helpers';
 
 test.describe.configure({ mode: 'serial' });

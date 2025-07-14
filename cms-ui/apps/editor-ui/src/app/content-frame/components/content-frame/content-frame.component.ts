@@ -481,6 +481,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.changeDetector.markForCheck();
         });
 
+        this.aloha.iframeElement = masterFrame;
         masterFrame.addEventListener('load', () => {
             // This is browser dependend. Sometimes it'll load a blank page first,
             // and then the actual aloha page.
@@ -557,6 +558,7 @@ span.diff-html-added {
         this.subscriptions.forEach(s => s.unsubscribe());
         this.cancelEditingDebounced(this.currentItem);
         this.appState.dispatch(new CloseEditorAction());
+        this.aloha.iframeElement = null;
         (window as unknown as CNParentWindow).GCMSUI_childIFrameInit = null;
         if (this.constructsSubscription != null) {
             this.constructsSubscription.unsubscribe();

@@ -79,8 +79,21 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.editorTab$.subscribe(activeEditor => {
-            this.activeTab = activeEditor;
+        this.subscriptions.push(this.aloha.editorTab$.subscribe(newTab => {
+            // Can't set the tab to a tab which isn't visible
+            if (!this.visibleTabs.some(tab => tab.id === newTab)) {
+                if (this.visibleTabs.some(tab => tab.id === this.activeTab)) {
+                    this.aloha.changeActivePageEditorTab(this.activeTab);
+                    return;
+                } else if (this.visibleTabs.length > 0) {
+                    this.aloha.changeActivePageEditorTab(this.visibleTabs[0].id);
+                    return;
+                }
+
+                // Edge case where nothing is visible to begin with, so just leave the tab as it is
+            }
+
+            this.activeTab = newTab;
             this.changeDetector.markForCheck();
         }))
     }
@@ -110,9 +123,9 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
         // In case the active tab is a tab which isn't visible anymore, we update the active tab to the first best one
         if (!this.visibleTabs.some(tab => tab.id === this.activeTab)) {
             this.forcedOffTabId = this.activeTab;
-            this.setActiveTab(this.visibleTabs[0]?.id);
+            this.aloha.changeActivePageEditorTab(this.visibleTabs[0]?.id);
         } else if (this.forcedOffTabId != null) {
-            this.setActiveTab(this.forcedOffTabId);
+            this.aloha.changeActivePageEditorTab(this.forcedOffTabId);
             this.forcedOffTabId = null;
         }
     }

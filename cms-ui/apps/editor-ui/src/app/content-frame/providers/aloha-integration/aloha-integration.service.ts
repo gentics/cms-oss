@@ -193,7 +193,9 @@ export class AlohaIntegrationService {
      * The currently selected/active editor in the page-controls.
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public readonly editorTab$ = this.editorTabSub.asObservable();
+    public readonly editorTab$ = this.editorTabSub.asObservable().pipe(
+        debounceTime(50),
+    );
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly size$ = this.activeSizeSub.asObservable();
@@ -210,6 +212,7 @@ export class AlohaIntegrationService {
     public activeTab: string;
     public registeredComponents: Record<string, AlohaComponent> = {};
     public renderedComponents: Record<string, BaseAlohaRendererComponent<any, any>> = {};
+    public iframeElement: HTMLIFrameElement | null = null;
 
     constructor(zone: NgZone) {
         zone.runOutsideAngular(() => {
@@ -371,29 +374,37 @@ export class AlohaIntegrationService {
     }
 
     public restoreSelection(): void {
-        setTimeout(() => {
-            if (!this.currentWindow) {
-                return;
-            }
+        if (!this.currentWindow) {
+            return;
+        }
 
-            const range = this.currentWindow.Aloha?.Selection?.getRangeObject?.();
+        const selection = this.currentWindow.document.getSelection();
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
             if (range) {
                 let start = range.startContainer;
                 if (start.nodeType !== document.ELEMENT_NODE) {
                     start = start.parentElement;
                 }
-                start.focus();
-                return;
+                if (start) {
+                    if (this.iframeElement != null) {
+                        this.iframeElement.focus({ preventScroll: true });
+                    }
+                    setTimeout(() => {
+                        (start as HTMLElement).focus();
+                    });
+                    return;
+                }
             }
+        }
 
-            if (this.currentWindow.Aloha?.activeEditable?.obj?.[0]) {
-                this.currentWindow.Aloha.activeEditable.obj[0].focus();
-            } else if (typeof (this.currentWindow.document.activeElement as HTMLElement)?.focus === 'function') {
-                (this.currentWindow.document.activeElement as HTMLElement).focus();
-            } else {
-                this.currentWindow.focus();
-            }
-        }, 10);
+        if (this.currentWindow.Aloha?.activeEditable?.obj?.[0]) {
+            this.currentWindow.Aloha.activeEditable.obj[0].focus();
+        } else if (typeof (this.currentWindow.document.activeElement as HTMLElement)?.focus === 'function') {
+            (this.currentWindow.document.activeElement as HTMLElement).focus();
+        } else {
+            this.currentWindow.focus();
+        }
     }
 
     public registerComponent(slot: string, component: AlohaComponent): void {

@@ -334,7 +334,7 @@ spec:
                     sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
 
                     if (!params.omitScan) {
-                        scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v /home/jenkins/agent/workspace/CMP_DEV_CMS_cms_release-6.2.x/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
+                        scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v $PWD/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
                     }
                     // Push released image
                     if (tagName != null) {

@@ -335,7 +335,8 @@ spec:
 
                     if (!params.omitScan) {
                         sh "echo $PWD"
-                        scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ./build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
+                        sh "echo ${env.WORKSPACE}"
+                        scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ${env.WORKSPACE}/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
                     }
                     // Push released image
                     if (tagName != null) {

@@ -1,0 +1,1309 @@
+h2. Resolving properties with Handlebars
+
+h3. Page properties
+
+h4. cms.page.id
+
+Type: @String@
+
+ID of the page.
+
+<shell>
+{{cms.page.id}}
+</shell>
+
+h4. cms.page.url
+
+Type: @String@
+
+The URL of the page.
+
+<shell>
+<a href="{{cms.page.url}}">Link to page</a>
+</shell>
+
+h4. cms.page.template
+
+Type: "Template":handlebars_properties.html#template
+
+Template of the page.
+
+<shell>
+{{cms.page.template.name}}
+</shell>
+
+h4. cms.page.name
+
+Type: @String@
+
+Name of the page.
+
+<shell>
+<h1>{{cms.page.name}}</h1>
+</shell>
+
+h4. cms.page.filename
+
+Type: @String@
+
+Filename of the page.
+
+<shell>
+{{cms.page.filename}}
+</shell>
+
+h4. cms.page.description
+
+Type: @String@
+
+Description of the page.
+
+<shell>
+<h2>About this site</h2>
+<p>{{cms.page.description}}</p>
+</shell>
+
+h4. cms.page.priority
+
+Type: @Number@
+
+Priority of the page.
+
+<shell>
+{{#lt cms.page.priority 1}}
+  <!-- Render priority notice -->
+{{/lt}}
+</shell>
+
+h4. cms.page.tags
+
+Type: List of "Tag":handlebars_properties.html#tag
+
+Tags of the page.
+
+<shell>
+{{#each cms.page.tags}}
+  {{{gtx_render this}}}
+{{/each}}
+</shell>
+
+h4. cms.page.publishtimestamp
+
+Type: @Number@
+
+UNIX timestamp of the last publish action.
+
+<shell>
+<p>Last updated: {{cms.page.publishtimestamp}}</p>
+</shell>
+
+h4. cms.page.publishdate
+
+Type: @Date@
+
+Date of the last publish action.
+
+<shell>
+<p>Last updated: {{cms.page.publishdate}}</p>
+</shell>
+
+h4. cms.page.creationtimestamp
+
+Type: @Number@
+
+UNIX timestamp of page creation.
+
+<shell>
+<p>Created: {{cms.page.creationtimestamp}}</p>
+</shell>
+
+h4. cms.page.creationdate 
+
+Type: @Date@
+
+Date of page creation.
+
+<shell>
+<p>Created: {{cms.page.creationdate}}</p>
+</shell>
+
+h4. cms.page.edittimestamp
+
+Type: @Number@
+
+UNIX timestamp of last page update.
+
+<shell>
+<p>Last edited: {{cms.page.edittimestamp}}</p>
+</shell>
+
+h4. cms.page.editdate
+
+Type: @Date@
+
+Date of last page update.
+
+<shell>
+<p>Last edited: {{cms.page.editdate}}</p>
+</shell>
+
+h4. cms.page.folder
+
+Type: "Folder":handlebars_properties.html#folder
+
+Reference to page's folder.
+
+<shell>
+{{cms.page.folder.name}}
+</shell>
+
+h4. cms.page.creator
+
+Type: "User":handlebars_properties.html#user
+
+Reference to page's creator.
+
+<shell>
+Created by: {{cms.page.creator.firstname}} {{cms.page.creator.lastname}}
+</shell>
+
+h4. cms.page.editor
+
+Type: "User":handlebars_properties.html#user
+
+Reference to last editor of the page.
+
+<shell>
+Last edited by: {{cms.page.editor.firstname}} {{cms.page.editor.lastname}}
+</shell>
+
+h4. cms.page.publisher
+
+Type: "User":handlebars_properties.html#user
+
+Reference to the last publisher of the page.
+
+<shell>
+Last published by: {{cms.page.publisher.firstname}} {{cms.page.publisher.lastname}}
+</shell>
+
+h4. cms.page.language
+
+Type: "Language":handlebars_properties.html#language
+
+Reference to the language of the page.
+
+<shell>
+Language: {{cms.page.language.name}} ({{cms.page.language.code}})
+</shell>
+
+h4. cms.page.languageset.id
+
+Type: @String@
+
+ID of the page's languageset. A languageset is a collection that groups pages of the same contents but with different translations together. So an English version and a German version of a page have the same languageset.id.
+
+<shell>
+{{cms.page.languageset.id}}
+</shell>
+
+h4. cms.page.languageset.pages
+
+Type: List of "Page":handlebars_properties.html#page
+
+Reference to other language layouts of the page.
+
+<shell>
+{{#each cms.page.languageset.pages}}
+  <a href="{{this.url}}">{{this.language.name}}</a>
+{{/each}}
+</shell>
+
+h4. cms.page.online
+
+Type: @Boolean@
+
+True if page is online, false otherwise.
+
+<shell>
+{{#if cms.page.online}}
+  Page is published
+{{else}}
+  Page is offline
+{{/if}}
+</shell>
+
+h4. cms.page.version
+
+Type: Object
+
+Current version information for the page.
+
+<shell>
+Version: {{cms.page.version.number}}
+Created: {{cms.page.version.date}}
+Editor: {{cms.page.version.editor.firstname}}
+Is major version: {{cms.page.version.major}}
+</shell>
+
+h4. cms.page.object
+
+Type: Object
+
+Object properties of the page.
+
+<shell>
+{{gtx_render cms.page.object.OBJECTPROPERTY}}
+</shell>
+
+h4. cms.page.ismaster
+
+Type: @Boolean@
+
+True if it's a master page, false if localized copy.
+
+<shell>
+{{#if cms.page.ismaster}}
+  Master page
+{{else}}
+  Channel page
+{{/if}}
+</shell>
+
+h4. cms.page.inherited
+
+Type: @Boolean@
+
+True if inherited from master node, false if not.
+
+<shell>
+{{#if cms.page.inherited}}
+  Inherited from master
+{{else}}
+  Local page
+{{/if}}
+</shell>
+
+h3. Node properties
+
+h4. cms.node.id
+
+Type: @String@
+
+The ID of the node.
+
+<shell>
+{{cms.node.id}}
+</shell>
+
+h4. cms.node.https
+
+Type: @Boolean@
+
+A boolean indicating whether this node uses HTTPS.
+
+<shell>
+<!-- Render link using correct protocol. -->
+{{#if cms.node.https}}
+  <a href="https://{{cms.node.host}}/">Home</a>
+{{else}}
+  <a href="http://{{cms.node.host}}/">Home</a>
+{{/if}}
+</shell>
+
+h4. cms.node.host
+
+Type: @String@
+
+The hostname of the node.
+
+<shell>
+  <a href="//{{cms.node.host}}""/>Home</a>
+</shell>
+
+h4. cms.node.folder
+
+Type: "Folder":handlebars_properties.html#folder
+
+The nodes root folder.
+
+<shell>
+  <h2>{{cms.node.folder.name}}</h2>
+</shell>
+
+h4. cms.node.path
+
+Type: @String@
+
+The path of the node (an alias for @pub_dir@).
+
+<shell>
+  <a href="{{cms.node.path}}/index.html">Home</a>
+</shell>
+
+h4. cms.node.pub_dir
+
+Type: @String@
+
+The node's publish directory for pages (an alias for @path@).
+
+<shell>
+  <a href="{{cms.node.pub_dir}}/index.html">Home</a>
+</shell>
+
+
+h4. cms.node.pub_dir_bin
+
+Type: @String@
+
+The nodes publish directory for files and images.
+
+<shell>
+  <img src="{{cms.node.pub_dir_bin}}/welcome.jpg"/>
+</shell>
+
+h4. cms.node.master
+
+Type: @Boolean@
+
+A boolean indicating whether this node a master (when set to @true@) or a channel (when set to @false@).
+
+<shell>
+{{#if cms.node.master}}
+  <!-- Rendered only for master node. -->
+{{else}}
+  <!-- Rendered only for channel. -->
+{{/if}}
+</shell>
+
+h4. cms.node.languages
+
+Type: List of "language":handlebars_properties.html#languages
+
+The languages available for this node.
+
+<shell>
+  Available languages (code and language name):
+  <dl>
+    {{#each cms.node.languages}}
+      <dt>{{this.id}}</dt>
+      <dd>{{this.name}}</dd>
+    {{/each}}
+  </dl>
+</shell>
+
+h3. Tag properties
+
+The expression @{{cms.tag}}@ will be resolved to the currently rendered tag. To access a tags properties from a rendered page use @{{cms.page.tags.TAGNAME}}@ where TAGNAME is the tags keyword.
+
+h4. cms.tag.id
+
+Type: @String@
+
+ID of the tag.
+
+<shell>
+{{cms.tag.id}}
+</shell>
+
+h4. cms.tag.name
+
+Type: @String@
+
+Name of the tag.
+
+<shell>
+{{cms.tag.name}}
+</shell>
+
+h4. cms.tag.parts
+
+Type: List of "parts":handlebars_properties.html#parts
+
+List of the tag's parts.
+
+<shell>
+{{#each cms.tag.parts}}
+  {{this.}}
+{{/each}}
+</shell>
+
+h4. cms.tag.parts.PARTNAME
+
+Type: Part
+
+References a single part of a tag.
+
+<shell>
+{{cms.tag.parts.PARTNAME.text}}
+</shell>
+
+h4. cms.tag.empty
+
+Type: @Number@
+
+@1@ in case the tag does not render any output, @0@ otherwise.
+
+<shell>
+{{#if cms.tag.empty}}
+  <!-- Fallback for empty tag. -->
+{{/if}}
+</shell>
+
+h4. cms.tag.visible
+
+Type: @Number@
+
+@1@ if the tag is active, else @0@.
+
+<shell>
+{{#if cms.tag.visible}}
+  <!-- Tag is active -->
+{{/if}}
+</shell>
+
+h3. Template properties
+
+h4. cms.template.id
+
+Type: @String@
+
+ID of the template.
+
+<shell>
+{{cms.template.id}}
+</shell>
+
+h4. cms.template.name
+
+Type: @String@
+
+Name of the template.
+
+<shell>
+{{cms.template.name}}
+</shell>
+
+h4. cms.template.tags
+
+Type: List of "Tag":handlebars_properties.html#tag
+
+List of all available tags of the template.
+
+<shell>
+{{#each cms.template.tags}}
+  {{{gtx_render this}}}
+{{/each}}
+</shell>
+
+h4. cms.template.ml
+
+Type: @String@
+
+Markup language of the template.
+
+<shell>
+{{cms.template.ml}}
+</shell>
+
+h3. Folder properties
+
+h4. cms.folder.id
+
+Type: @String@
+
+ID of the folder.
+
+<shell>
+{{cms.folder.id}}
+</shell>
+
+h4. cms.folder.name
+
+Type: @String@
+
+Name of the folder.
+
+<shell>
+{{cms.folder.name}}
+</shell>
+
+h4. cms.folder.description
+
+Type: @String@
+
+Description of the folder.
+
+<shell>
+{{cms.folder.description}}
+</shell>
+
+h4. cms.folder.node
+
+Type: "Node":handlebars_properties.html#node
+
+Reference to the folder's node.
+
+<shell>
+<a href="{{cms.folder.node.host}}">Home</a>
+</shell>
+
+h4. cms.folder.parent
+
+Type: "Folder":handlebars_properties.html#folder
+
+Reference to parent folder or null on top level.
+
+<shell>
+{{#if cms.folder.parent}}
+  Parent: {{cms.folder.parent.name}}
+{{else}}
+  Root folder
+{{/if}}
+</shell>
+
+h4. cms.folder.path
+
+Type: @String@
+
+Publish path of the folder.
+
+<shell>
+{{cms.folder.path}}
+</shell>
+
+h4. cms.folder.creator
+
+Type: "User":handlebars_properties.html#user
+
+The folder's creator.
+
+<shell>
+Created by: {{cms.folder.creator.firstname}} {{cms.folder.creator.lastname}}
+</shell>
+
+h4. cms.folder.editor
+
+Type: "User":handlebars_properties.html#user
+
+The last user who edited the folder.
+
+<shell>
+Last edited by: {{cms.folder.editor.firstname}} {{cms.folder.editor.lastname}}
+</shell>
+
+h4. cms.folder.folders
+
+Type: List of "Folder":handlebars_properties.html#folder
+
+List of all subfolders.
+
+<shell>
+{{#each cms.folder.folders}}
+  {{this.name}}
+{{/each}}
+</shell>
+
+h4. cms.folder.pages
+
+Type: List of "Page":handlebars_properties.html#page
+
+List of pages in this folder.
+
+<shell>
+{{#each cms.folder.pages}}
+  <a href="{{this.url}}">{{this.name}}</a>
+{{/each}}
+</shell>
+
+h4. cms.folder.files
+
+Type: List of "File":handlebars_properties.html#file
+
+List of files in this folder.
+
+<shell>
+{{#each cms.folder.files}}
+  {{this.name}}
+{{/each}}
+</shell>
+
+h4. cms.folder.images
+
+Type: List of "File":handlebars_properties.html#file
+
+List of images in this folder.
+
+<shell>
+{{#each cms.folder.images}}
+  <img src="{{this.url}}" alt="{{this.name}}">
+{{/each}}
+</shell>
+
+h4. cms.folder.filesandimages
+
+Type: List of "File":handlebars_properties.html#file
+
+List of all files and images in this folder.
+
+<shell>
+{{#each cms.folder.filesandimages}}
+  {{this.name}}
+{{/each}}
+</shell>
+
+h4. cms.folder.children
+
+Type: List
+
+List of all subfolders, images and files.
+
+<shell>
+{{#each cms.folder.children}}
+  {{this.name}}
+{{/each}}
+</shell>
+
+h4. cms.folder.object
+
+Type: Object
+
+Object properties of the folder.
+
+<shell>
+{{gtx_render cms.folder.object.OBJECTPROPERTY}}
+</shell>
+
+h4. cms.folder.ismaster
+
+Type: @Boolean@
+
+True if master folder, false if localized copy.
+
+<shell>
+{{#if cms.folder.ismaster}}
+  Master folder
+{{else}}
+  Channel folder
+{{/if}}
+</shell>
+
+h4. cms.folder.inherited
+
+Type: @Boolean@
+
+True if inherited from master node, false if not.
+
+<shell>
+{{#if cms.folder.inherited}}
+  Inherited from master
+{{else}}
+  Local folder
+{{/if}}
+</shell>
+
+h3. File properties
+
+h4. cms.file.id
+
+Type: @String@
+
+ID of the file.
+
+<shell>
+{{cms.file.id}}
+</shell>
+
+h4. cms.file.name
+
+Type: @String@
+
+Filename.
+
+<shell>
+{{cms.file.name}}
+</shell>
+
+h4. cms.file.description
+
+Type: @String@
+
+Description of the file.
+
+<shell>
+{{cms.file.description}}
+</shell>
+
+h4. cms.file.size
+
+Type: @Number@
+
+Size in bytes.
+
+<shell>
+{{cms.file.size}}
+</shell>
+
+h4. cms.file.sizekb
+
+Type: @Number@
+
+Size in kilobytes.
+
+<shell>
+{{cms.file.sizekb}}
+</shell>
+
+h4. cms.file.sizemb
+
+Type: @Number@
+
+Size in megabytes.
+
+<shell>
+{{cms.file.sizemb}}
+</shell>
+
+h4. cms.file.folder
+
+Type: "Folder":handlebars_properties.html#folder
+
+Reference to the file's folder.
+
+<shell>
+{{cms.file.folder.name}}
+</shell>
+
+h4. cms.file.extension
+
+Type: @String@
+
+File extension.
+
+<shell>
+{{cms.file.extension}}
+</shell>
+
+h4. cms.file.type
+
+Type: @String@
+
+MIME-type of the file.
+
+<shell>
+{{cms.file.type}}
+</shell>
+
+h4. cms.file.url
+
+Type: @String@
+
+Link to file.
+
+<shell>
+<a href="{{cms.file.url}}">Download</a>
+</shell>
+
+h4. cms.file.width
+
+Type: @Number@
+
+Image width (only for images).
+
+<shell>
+{{cms.file.width}}
+</shell>
+
+h4. cms.file.height
+
+Type: @Number@
+
+Image height (only for images).
+
+<shell>
+{{cms.file.height}}
+</shell>
+
+h4. cms.file.isfile
+
+Type: @Boolean@
+
+True if it's a file, false if it's an image.
+
+<shell>
+{{#if cms.file.isfile}}
+  Regular file
+{{else}}
+  Image file
+{{/if}}
+</shell>
+
+h4. cms.file.isimage
+
+Type: @Boolean@
+
+True if it's an image, false otherwise.
+
+<shell>
+{{#if cms.file.isimage}}
+  Image file
+{{else}}
+  Regular file
+{{/if}}
+</shell>
+
+h4. cms.file.object
+
+Type: Object
+
+Object properties of the file.
+
+<shell>
+{{cms.file.object}}
+</shell>
+
+h4. cms.file.ismaster
+
+Type: @Boolean@
+
+True if master file, false if localized copy.
+
+<shell>
+{{#if cms.file.ismaster}}
+  Master file
+{{else}}
+  Channel file
+{{/if}}
+</shell>
+
+h3. Rendermode properties
+
+h4. cms.rendermode.publish
+
+Type: @Boolean@
+
+True if page is rendered during publish process.
+
+<shell>
+{{#if cms.rendermode.publish}}
+  Publishing
+{{/if}}
+</shell>
+
+h4. cms.rendermode.live
+
+Type: @Boolean@
+
+True when using Live Preview.
+
+<shell>
+{{#if cms.rendermode.live}}
+  Live Preview
+{{/if}}
+</shell>
+
+h4. cms.rendermode.edit
+
+Type: @Boolean@
+
+True when using Edit Mode.
+
+<shell>
+{{#if cms.rendermode.edit}}
+  Edit Mode
+{{/if}}
+</shell>
+
+h4. cms.rendermode.preview
+
+Type: @Boolean@
+
+True when using Preview Mode.
+
+<shell>
+{{#if cms.rendermode.preview}}
+  Preview Mode
+{{/if}}
+</shell>
+
+h4. cms.rendermode.real
+
+Type: @Boolean@
+
+True when using Real Edit Mode.
+
+<shell>
+{{#if cms.rendermode.real}}
+  Real Edit Mode
+{{/if}}
+</shell>
+
+h4. cms.rendermode.frontend
+
+Type: @Boolean@
+
+True when rendering in frontend mode (valid in edit mode only).
+
+<shell>
+{{#if cms.rendermode.frontend}}
+  Frontend Mode
+{{/if}}
+</shell>
+
+h4. cms.rendermode.backend
+
+Type: @Boolean@
+
+True when rendering in backend mode (valid in edit mode only).
+
+<shell>
+{{#if cms.rendermode.backend}}
+  Backend Mode
+{{/if}}
+</shell>
+
+h3. Parttype properties
+
+The following properties are available in the Handlebars template of a construct containing an overview tagpart. All examples assume that the keyword word the overview tagpart is "overview", so accessing the tagpart can be done via cms.tag.parts.overview in the Handlebars template.
+
+h4. cms.tag.parts.overview.items
+
+Type: Collection
+
+This collection contains all the items of the overview, sorted according to the settings for "orderBy" and "orderDirection". When iterating over the items with the each helper, the current item is available via the variable this, and its properties are accessible via the dot notation. For example the name of an item is accessible as this.name.
+
+Every Handlebars template for an overview tag will use this property, since it is the only possibility to the get items in the overview.
+
+<shell>
+<ul>
+{{#each cms.tag.parts.overview.items}}
+  <li>this.name</li>
+{{/each}}
+</ul>
+</shell>
+
+h4. cms.tag.parts.overview.listType
+
+Type: @String@
+
+The type of objects listed by this overview tagpart. The value of this property will always be one of the following:
+
+* @FILE@
+* @FOLDER@
+* @IMAGE@
+* @PAGE@
+* @UNDEFINED@
+
+Where "UNDEFINED" is a fallback value, that will not appear normally since the editor UI does not allow leaving the "Displayed Elements" property (which defined the listed object's types) empty.
+
+If an overview construct allows different object types to be selected, the "listType" property allows to generate different markup of different object types in the Handlebars template. If an overview construct only allows one object type, this property is normally not used at all in the Handlebars template.
+
+<shell>
+<ul>
+{{#if (equals cms.tag.parts.overview.listType "FILE")}}
+  {{#each cms.tag.parts.overview.items}}
+    <!-- Render link to file and mark as download link; link text is filename and filesize. -->
+    <li><a href="{{this.url}}" download>this.name ({{this.sizekb}} kB)</a></li>
+  {{/each}}
+{{#else if (equals cms.tag.parts.overview.listType "PAGE")}}
+  {{#each cms.tag.parts.overview.items}}
+    <!-- Render link to page; link text is the page name. -->
+    <li><a href="{{this.url}}">{{this.name}}</a></li>
+  {{/each}}
+{{#else if (equals cms.tag.parts.overview.listType "FOLDER")}}
+  {{#each cms.tag.parts.overview.items}}
+    <!-- Render links to startpage of folder; link text is name of the startpage. NOTE: Check if the folder actually has a startpage should be added. -->
+    <li><a href="{{this.object.startpage.url}}">{{this.object.startpage.name}}</a></li>
+  {{/each}}
+{{/if}}
+</ul>
+</shell>
+
+h4. cms.tag.parts.overview.selectType
+
+Type: @String@
+
+The select type chosen by the editor for this tag. The value of this property will always be one of the following:
+
+* @AUTO@: The chosen select type was "Automatically from current folder" meaning that the items in the overview are taken from the same folder as the page with the tag itself.
+* @FOLDER@: The chosen select type was "Folder" meaning that the items are taken from a list of folders.
+* @MANUAL@: The chosen select type was "Individually" meaning that the editor selected the items for the overview manually.
+* @UNDEFINED@: No select type was chosen. This is a safety fallback, since the editor UI does not allow leaving the "Select Type" field empty.
+
+This information is typically not important when rendering an overview and is only included for completeness sake. It is possible that rendering the selectType is helpful information for debugging, so adding a comment in the markup with the selectType might help find problems with the overview.
+
+<shell>
+<!-- DEBUG: Overview select type: cms.tag.parts.overview.selectType -->
+<ul>
+{{#each cms.tag.parts.overview.items}}
+  <li>{{this.name}}</li>
+{{/each}}
+</ul>
+</shell>
+
+h4. cms.tag.parts.overview.orderBy
+
+Type: @String@
+
+The property by which the items of the overview are sorted. The value of this property will always be one of the following:
+
+* @ALPHABETICALLY@: The items will be ordered by their name.
+* @CDATE@: The items will be ordered by their creation date.
+* @EDATE@: The items will be ordered by their edit date.
+* @SELF@: The items will be in the same order as they were added by the editor.
+* @UNDEFINED@: No sorting will be performed. This is a safety fallback since the editor UI does not allow leaving the "Order by" field empty.
+This information is typically not important when rendering an overview and is only included for completeness sake. It is possible that rendering the orderBy is helpful information for debugging, so adding a comment in the markup with the orderBy might help find problems with the overview.
+
+<shell>
+<!-- DEBUG: Overview ordered by: cms.tag.parts.overview.orderBy -->
+<ul>
+{{#each cms.tag.parts.overview.items}}
+  <li>{{this.name}}</li>
+{{/each}}
+</ul>
+</shell>
+
+h4. cms.tag.parts.overview.orderDirection
+
+Type: @String@
+
+The property by which the items of the overview are sorted. The value of this property will always be one of the following:
+
+* @ASC@: The items will be sorted in ascending order.
+* @DESC@: The items will be sorted in descending order.
+* @UNDEFINED@: No sort direction was defined. This is a safety fallback since the editor UI does not allow leaving the "Order" field empty.
+This information is typically not important when rendering an overview and is only included for completeness sake. It is possible that rendering the orderDirection is helpful information for debugging, so adding a comment in the markup with the orderDirection might help find problems with the overview.
+
+<shell>
+<!-- DEBUG: Overview order: cms.tag.parts.overview.orderDirection -->
+<ul>
+{{#each cms.tag.parts.overview.items}}
+  <li>{{this.name}}</li>
+{{/each}}
+</ul>
+</shell>
+
+h4. cms.tag.parts.overview.maxItems
+
+Type: @Number@
+
+The maximum number of items the editor set in the tag. The overview will list not more than this number of items. When the property is not set, all items will be listed.
+
+This information is typically not important when rendering an overview and is only included for completeness sake. It is possible that rendering the maxItems is helpful information for debugging, so adding a comment in the markup with the maxItems might help find problems with the overview.
+
+<shell>
+<!-- DEBUG: Overview max items: cms.tag.parts.overview.maxItems -->
+<ul>
+{{#each cms.tag.parts.overview.items}}
+  <li>{{this.name}}</li>
+{{/each}}
+</ul>
+</shell>
+
+h4. cms.tag.parts.overview.recursive
+
+Type: @Boolean@
+
+This property indicates whether the overview also recursively lists elements of the correct type in subfolders which are in the scope of the overview.
+
+This information is typically not important when rendering an overview and is only included for completeness sake. It is possible that rendering the recursive is helpful information for debugging, so adding a comment in the markup with the recursive might help find problems with the overview.
+
+<shell>
+<!-- DEBUG: Overview is recursive: cms.tag.parts.overview.recursive -->
+<ul>
+{{#each cms.tag.parts.overview.items}}
+  <li>{{this.name}}</li>
+{{/each}}
+</ul>
+</shell>
+
+h3. Select (Single)/Select (Multiple) Properties
+
+The following properties are available for Select (Single) and Select (Multiple) parts.
+
+All examples assume that the keyword word the select tagpart is "select", so accessing the tagpart can be done via cms.tag.parts.select in the Handlebars template.
+
+h4. cms.tag.parts.select.items
+
+Type: @Collection@
+
+Collection of all entries in the database.
+
+<shell>
+{{#each cms.tag.parts.select.items}}
+  {{this.key}} - {{this.value}}
+{{/each}}
+</shell>
+
+h4. cms.tag.parts.select.selection
+
+Type: @Collection@
+
+Collection of all _selected_ entries in the database.
+
+<shell>
+{{#each cms.tag.parts.select.selection}}
+  {{this.key}} - {{this.value}}
+{{/each}}
+</shell>
+
+h4. cms.tag.parts.select.nr
+
+Type: @String@
+
+The ID of the entry.
+
+<shell>
+{{cms.tag.parts.select.nr}}
+</shell>
+
+h4. cms.tag.parts.select.keys
+
+Type: Collection
+
+The selections key set.
+
+<shell>
+{{#each cms.tag.parts.multiselect.keys}}
+  {{this}}
+{{/each}}
+</shell>
+
+h4. cms.tag.parts.PARTNAME.values
+
+Type: Collection
+
+The selections value set.
+
+<shell>
+{{#each cms.tag.parts.multiselect.values}}
+  {{this}}
+{{/each}}
+</shell>
+
+h3. URL Properties
+
+The following properties are available for PageUrl, FileUrl, ImageUrl, and FolderUrl parts. All examples assume that the keyword for the part type is "url".
+
+h4. cms.tag.parts.url.id
+
+Type: @String@
+
+ID of the URL part.
+
+<shell>
+{{cms.tag.parts.url.id}}
+</shell>
+
+h4. cms.tag.parts.url.internal
+
+Type: @Boolean@
+
+True if an internal link, false otherwise. Only available for PageUrl parts.
+
+<shell>
+{{#if cms.tag.parts.url.internal}}
+  <!-- Internal link handling -->
+{{else}}
+  <!-- External link handling -->
+{{/if}}
+</shell>
+
+h4. cms.tag.parts.url.target
+
+Type: Object
+
+Reference to the target object, either a "page":handlebars_properties.html#page, "file":handlebars_proprties.html#file (this type is also used for images) or "folder":handlebars_properties.html#folder.
+
+<shell>
+{{gtx_render cms.tag.parts.url.target}}
+</shell>
+
+h4. cms.tag.parts.url.size
+
+Type: @String@
+
+Gets the formatted size (in KB or MB) of the target file. Only available for Fileurl or Imageurl parts.
+
+<shell>
+<span class="filesize">{{cms.tag.parts.url.size}}</span>
+</shell>
+
+h4. cms.tag.parts.url.url
+
+Type: @String@
+
+URL of the target. Only available for internal links.
+
+<shell>
+<a href="{{cms.tag.parts.url.url}}">Link</a>
+</shell>
+
+h4. cms.tag.parts.url.node
+
+Type: "Node":handlebars_properties.html#node
+
+The node of the target. Only available for internal links (may be empty).
+
+<shell>
+{{#if cms.tag.parts.url.node}}
+  Node: {{cms.tag.parts.url.node.name}}
+{{/if}}
+</shell>
+
+h4. cms.tag.parts.url.nodeId
+
+Type: @String@
+
+The target's node ID. May be 0 but never empty.
+
+<shell>
+Node ID: {{cms.tag.parts.url.nodeId}}
+</shell>
+
+h3. Checkbox Properties
+
+The checkbox part type only has one property called "checked". The example assumes that the keyword for the part is "checkbox".
+
+h4. cms.tag.parts.checkbox.checked
+
+Type: @Boolean@
+
+Indicates whether the checkbox is checked.
+
+<shell>
+{{#if cms.tag.parts.checkbox.checked}}
+  Checkbox is checked
+{{else}}
+  Checkbox is not checked
+{{/if}}
+</shell>
+
+h3. Text Properties
+
+The text part type has only one property called "text". The example assumes that the keyword for the part is "text".
+
+h4. cms.tag.parts.text.text
+
+Type: @String@
+
+The text value of the part.
+
+<shell>
+Raw value: {{cms.tag.parts.text.text}}
+</shell>
+
+h3. Node Properties
+
+In addition to the properties exposed by "nodes":#node in general the parttype can resolve the
+name of the node directly. The example assumes that the keyword for the part is "node".
+
+h4. cms.tag.parts.node.name
+
+Type: @String@
+
+The nodes name.
+
+<shell>
+{{cms.tag.parts.node.name}}
+</shell>

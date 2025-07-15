@@ -60,7 +60,7 @@ export function findList(page: Page, type: string): Locator {
 }
 
 export function findItem(list: Locator, id: string | number): Locator {
-    return list.locator(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"], repository-browser-list-thumbnail[data-id="${id}"]`);
+    return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
 export async function openContext(element: Locator): Promise<Locator> {
@@ -121,7 +121,7 @@ export async function openObjectPropertyEditor(page: Page, categoryId: string | 
 }
 
 export async function editorAction(page: Page, action: string): Promise<void> {
-    await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"]`);
+    await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"] button`);
 }
 
 export async function selectOption(element: Locator, value: number | string | (string | number)[]): Promise<void> {

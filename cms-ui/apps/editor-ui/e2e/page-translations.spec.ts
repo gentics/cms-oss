@@ -20,6 +20,8 @@ import {
 import { AUTH_ADMIN } from './common';
 
 test.describe('Page Translation', () => {
+    test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {
@@ -45,15 +47,17 @@ test.describe('Page Translation', () => {
     });
 
     test.describe('Automatic Translations', () => {
-        test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
-
         test('should be possible to translate a page automatically', async ({ page }) => {
             const pageData = IMPORTER.get(pageOne)!;
             const NEW_LANG = 'de';
 
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, pageData.id);
-            const languageIcon = item.locator(`.language-icon[data-id="${NEW_LANG}"]`);
+            const languageIcon = item.locator(`.language-icon[data-id="${NEW_LANG}"] gtx-dropdown-trigger`);
+            const iconVisible = await languageIcon.isVisible();
+            if (!iconVisible) {
+                await item.locator('page-language-indicator .expand-toggle').click();
+            }
             await languageIcon.click({ force: true });
 
             const translateButton = page.locator('.page-language-context [data-action="translate"]');

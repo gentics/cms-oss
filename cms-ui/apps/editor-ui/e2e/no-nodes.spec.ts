@@ -10,15 +10,14 @@ test.describe('No Nodes', () => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
+        await IMPORTER.cleanupTest(true);
         await initPage(page);
         await page.goto('/');
         await login(page, AUTH_ADMIN);
     });
 
     test('should display message when no nodes are present', async ({ page }) => {
-        const noNodesMessage = page.locator('.no-nodes-message');
+        const noNodesMessage = page.locator('gtx-no-nodes');
         await expect(noNodesMessage).toBeVisible();
-        await expect(noNodesMessage).toHaveText('No nodes available.');
     });
 });

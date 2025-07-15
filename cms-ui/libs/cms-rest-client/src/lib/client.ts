@@ -316,7 +316,7 @@ export class GCMSRestClient implements GCMSRootAPI {
             data.append('fileBinaryData', file);
             return this.executeMappedFormRequest(POST, `/content/package/${name}/zip`, data);
         },
-        download: (name) => this.executeBlobRequest(GET, `/content/package/${name}`),
+        download: (name) => this.executeBlobRequest(GET, `/content/package/${name}/zip`),
 
         addEntity: (name, entityType, entityGlobalId, options) => this.executeMappedJsonRequest(PUT, `/content/package/${name}/${entityType}/${entityGlobalId}`, null, options),
         removeEntity: (name, entityType, entityGlobalId) => this.executeMappedJsonRequest(DELETE, `/content/package/${name}/${entityType}/${entityGlobalId}`),

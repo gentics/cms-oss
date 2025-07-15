@@ -225,6 +225,10 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
             this.triggerChange(value);
             return;
         }
+        if (value === '') {
+            this.triggerChange(null);
+            return;
+        }
 
         let parsed = parseFloat(value);
         if (!isFinite(parsed) || isNaN(parsed)) {

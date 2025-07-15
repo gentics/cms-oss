@@ -19,7 +19,7 @@ describe('InputComponent', () => {
 
     const INITIAL_VALUE = 'testValue';
 
-    it('should trigger the change accordingly', () => {
+    it('should trigger the change on an arbitrary string accordingly', () => {
         const WRITE_VALUE = 'Hello World';
 
         cy.mount(InputComponent, {
@@ -35,6 +35,42 @@ describe('InputComponent', () => {
             .should('have.been.calledWith', WRITE_VALUE);
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', WRITE_VALUE);
+    });
+
+    it('should trigger the change on a number input accordingly', () => {
+        const WRITE_VALUE = '5678';
+
+        cy.mount(InputComponent, {
+            autoSpyOutputs: true,
+            imports: [FormsModule, ReactiveFormsModule],
+            schemas: [NO_ERRORS_SCHEMA],
+        });
+
+        cy.get(QUERY_INPUT)
+            .type(WRITE_VALUE);
+
+        cy.get(OUTPUT_CHANGE)
+            .should('have.been.calledWith', WRITE_VALUE);
+        cy.get(OUTPUT_VALUE_CHANGE)
+            .should('have.been.calledWith', WRITE_VALUE);
+    });
+
+    it('should trigger the change on a value removal accordingly', () => {
+        const WRITE_VALUE = '';
+
+        cy.mount(InputComponent, {
+            autoSpyOutputs: true,
+            imports: [FormsModule, ReactiveFormsModule],
+            schemas: [NO_ERRORS_SCHEMA],
+        });
+
+        cy.get(QUERY_INPUT)
+            .type(WRITE_VALUE);
+
+        cy.get(OUTPUT_CHANGE)
+            .should('have.been.calledWith', null);
+        cy.get(OUTPUT_VALUE_CHANGE)
+            .should('have.been.calledWith', null);
     });
 
     it('should not display the label element when no label has been provided', () => {

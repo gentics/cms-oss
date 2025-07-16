@@ -51,7 +51,11 @@ test.describe('Form Management', () => {
 
         await form.locator('[formcontrolname="name"] input').fill(NEW_FORM_NAME);
         await form.locator('[formcontrolname="description"] input').fill(NEW_FORM_DESCRIPTION);
-        await form.locator('[formcontrolname="languages"] select').selectOption(LANGUAGE_DE);
+        await form.locator('[formcontrolname="languages"] gtx-dropdown-trigger').click();
+        await page.click(`gtx-dropdown-content [data-id="${LANGUAGE_DE}"]`);
+
+        // Discard the lang picker modal
+        await modal.locator('.modal-footer [data-action="confirm"]').click({ force: true });
 
         const [response] = await Promise.all([
             page.waitForResponse(resp => resp.url().includes('/rest/form') && resp.status() === 200),

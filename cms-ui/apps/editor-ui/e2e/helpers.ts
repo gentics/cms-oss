@@ -79,6 +79,22 @@ export async function itemAction(item: Locator, action: string): Promise<void> {
     await dropdown.locator(`[data-action="${action}"]`).click();
 }
 
+export async function listAction(list: Locator, action: string): Promise<void> {
+    const dropdown = await openContext(list.locator('[data-action="open-list-context"]'));
+    await dropdown.locator(`[data-action="${action}"]`).click();
+}
+
+export async function findImage(list: Locator, id: string | number): Promise<Locator> {
+	await list.locator('.list-body').waitFor();
+	const listItems = await list.locator('gtx-contents-list-item').count();
+	if (listItems < 1) {
+		await list.locator('.list-header .header-controls gtx-dropdown-trigger gtx-button').click();
+		await list.page().locator('gtx-dropdown-content gtx-dropdown-item[data-action="toggle-display-type"]').waitFor();
+		await list.page().locator('gtx-dropdown-content gtx-dropdown-item[data-action="toggle-display-type"]').click();
+	}
+    return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
+}
+
 export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
     // Note: This is a simplified version. You'll need to implement file upload handling
     if (options?.dragAndDrop) {
@@ -107,8 +123,9 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
 }
 
 export async function openPropertiesTab(page: Page): Promise<void> {
-    const hasTab = await page.locator('content-frame .content-frame-container .properties-tabs .tab-link[data-id="properties"] a').count();
-    if (hasTab > 0) {
+	await page.waitForSelector('content-frame .content-frame-container');
+    const previewActivated = await page.locator('content-frame .content-frame-container .properties-tabs .tab-link[data-id="preview"].is-active').count();
+    if (previewActivated > 0) {
         await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="properties"] a');
     }
     await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="item-properties"]');

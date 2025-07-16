@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { EntityImporter, ITEM_TYPE_FILE, ITEM_TYPE_IMAGE, TestSize, minimalNode } from '@gentics/e2e-utils';
-import { FileSaveRequest, ImageSaveRequest, SelectTagPartProperty } from '@gentics/cms-models';
 import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1, FIXTURE_TEST_IMAGE_JPG_2 } from './common';
 import {
     login,
@@ -8,10 +7,10 @@ import {
     uploadFiles,
     findList,
     findItem,
+    findImage,
     itemAction,
     openObjectPropertyEditor,
     editorAction,
-    selectOption,
     initPage,
     closeObjectPropertyEditor,
 } from './helpers';
@@ -77,7 +76,7 @@ test.describe('Media Management', () => {
 
         // Open properties
         let list = findList(page, ITEM_TYPE_IMAGE);
-        let item = findItem(list, IMAGE.id);
+        let item = await findImage(list, IMAGE.id);
         await itemAction(item, 'properties');
 
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
@@ -101,29 +100,23 @@ test.describe('Media Management', () => {
         const IMAGE = uploadedFiles[FIXTURE_TEST_IMAGE_JPG_2];
 
         // Open properties
-        const list = findList(page, ITEM_TYPE_IMAGE);
-        const item = findItem(list, IMAGE.id);
+        let list = findList(page, ITEM_TYPE_IMAGE);
+        let item = await findImage(list, IMAGE.id);
         await itemAction(item, 'properties');
 
         // Edit object property
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await selectOption(page.locator('gentics-tag-editor select-tag-property-editor gtx-select'), COLOR_ID);
-
-        // Save changes
-        const saveRequest = page.waitForRequest(request =>
-            request.method() === 'POST' &&
-            request.url().includes('/rest/image/save/'),
-        );
+        await page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger').click();
+        await page.locator(`gtx-dropdown-content li.select-option[data-id="${COLOR_ID}"]`).click();
 
         await editorAction(page, 'save');
-        await saveRequest;
-
-        // Wait for state updates
-        await page.waitForTimeout(2000);
-
+        // Reopen the editor to reload fresh values
+        await closeObjectPropertyEditor(page);
+        list = findList(page, ITEM_TYPE_IMAGE);
+        item = findItem(list, IMAGE.id);
+        await itemAction(item, 'properties');
         // Switch to another property and back
         await openObjectPropertyEditor(page, DEFAULT_CATEGORY_ID, OBJECT_PROPERTY_COPYRIGHT);
-        await page.waitForTimeout(1000);
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
 
         // Verify the value is still selected

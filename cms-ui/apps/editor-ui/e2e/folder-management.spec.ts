@@ -15,6 +15,7 @@ import {
     initPage,
     editorAction,
     openObjectPropertyEditor,
+    closeObjectPropertyEditor,
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
@@ -99,7 +100,7 @@ test.describe('Folder Management', () => {
         await editorAction(page, 'save');
 
         // Reopen the editor to reload fresh values
-        await page.locator('content-frame gtx-editor-toolbar gtx-button.close-button').click();
+        await closeObjectPropertyEditor(page);
         list = findList(page, ITEM_TYPE_FOLDER);
         item = findItem(list, folder.id);
         await itemAction(item, 'properties');

@@ -16,6 +16,7 @@ import {
     initPage,
     editorAction,
     openObjectPropertyEditor,
+    closeObjectPropertyEditor,
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
@@ -98,7 +99,7 @@ test.describe('Page Management', () => {
         await editorAction(page, 'save');
 
         // Reopen the editor to reload fresh values
-        await page.locator('content-frame gtx-editor-toolbar gtx-button.close-button').click();
+        await closeObjectPropertyEditor(page);
         list = findList(page, ITEM_TYPE_PAGE);
         item = findItem(list, PAGE.id);
         await itemAction(item, 'properties');

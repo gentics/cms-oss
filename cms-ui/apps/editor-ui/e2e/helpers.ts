@@ -107,6 +107,10 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
 }
 
 export async function openPropertiesTab(page: Page): Promise<void> {
+    const hasTab = await page.locator('content-frame .content-frame-container .properties-tabs .tab-link[data-id="properties"] a').count();
+    if (hasTab > 0) {
+        await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="properties"] a');
+    }
     await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="item-properties"]');
 }
 
@@ -120,8 +124,16 @@ export async function openObjectPropertyEditor(page: Page, categoryId: string | 
     await tab.click();
 }
 
+export async function closeObjectPropertyEditor(page: Page, force: boolean = true) {
+    await page.locator('content-frame gtx-editor-toolbar gtx-button.close-button').click();
+    const unsavedChanges = await page.locator('confirm-navigation-modal gtx-button[type="alert"] button').count();
+    if (unsavedChanges > 0 && force) {
+        await page.click('confirm-navigation-modal gtx-button[type="alert"] button');
+    }
+}
+
 export async function editorAction(page: Page, action: string): Promise<void> {
-    await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"] button`);
+    await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"] gtx-button[data-action="primary"] button`);
 }
 
 export async function selectOption(element: Locator, value: number | string | (string | number)[]): Promise<void> {

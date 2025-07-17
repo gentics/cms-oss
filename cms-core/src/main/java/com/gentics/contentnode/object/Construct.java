@@ -223,7 +223,7 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 			return;
 		}
 
-		restConstruct.setCategory(ConstructCategory.TRANSFORM2REST.apply(category));
+		restConstruct.setCategory(ConstructCategory.TRANSFORM2REST_SHALLOW.apply(category));
 	};
 
 	/**

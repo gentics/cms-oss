@@ -1,0 +1,1 @@
+REST API: When getting constructs with their construct category embedded, the category will no longer have its constructs embedded

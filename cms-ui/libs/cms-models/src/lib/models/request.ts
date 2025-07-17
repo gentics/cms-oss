@@ -1956,10 +1956,15 @@ export type ConstructUpdateRequest = ConstructCreateRequest;
 
 // CONSTRUCT/TAGTYPE CATEGORY /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+export type ConstructCategoryEmbedTypes = 'constructs';
+
 /**
  * Query parameters for `/construct/category`
  */
-export type ConstructCategoryListOptions = BaseListOptionsWithPaging<ConstructCategory>;
+export interface ConstructCategoryListOptions extends BaseListOptionsWithPaging<ConstructCategory>, EmbedListOptions<ConstructCategoryEmbedTypes> {
+    /** The node-id for which the construct categories shall be loaded. */
+    nodeId?: number;
+}
 
 /**
  * Request used for saving a `ConstructCategory`.

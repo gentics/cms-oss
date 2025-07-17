@@ -32,13 +32,17 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.collections.ListUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.exception.EntityInUseException;
 import com.gentics.contentnode.exception.MissingFieldException;
 import com.gentics.contentnode.exception.RestMappedException;
@@ -50,6 +54,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.UserLanguageFactory;
 import com.gentics.contentnode.i18n.CNDictionary;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ConstructCategory;
@@ -60,6 +65,7 @@ import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Tag;
+import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -83,6 +89,7 @@ import com.gentics.contentnode.rest.model.response.PagedConstructListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.resource.ConstructResource;
+import com.gentics.contentnode.rest.resource.parameter.ConstructCategoryParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.ConstructParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -91,6 +98,7 @@ import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.util.AbstractNodeObjectFilter;
 import com.gentics.contentnode.rest.util.AndFilter;
+import com.gentics.contentnode.rest.util.Filter;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.ModelBuilder;
@@ -128,14 +136,8 @@ public class ConstructResourceImpl implements ConstructResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			TransactionManager.getCurrentTransaction().setPublishData(new PublishData(true, false, false, true));
 
-			if (paging == null || paging.pageSize > 0) {
-				// Pre-fill the i18n dictionary with all translated names and
-				// description, so that it will not be necessary to make an
-				// additional SQL query for each a construct object is initialized
-				CNDictionary.prefillDictionary("construct", "name_id");
-				CNDictionary.prefillDictionary("part", "name_id");
-				CNDictionary.prefillDictionary("construct", "description_id");
-				CNDictionary.prefillDictionary("construct_category", "name_id");
+			if (paging == null || paging.pageSize != 0) {
+				prefillDictionaries(true, true, embeddedParameterContainsAttribute(embed, "category"));
 			}
 
 			List<com.gentics.contentnode.object.Construct> constructs;
@@ -571,13 +573,7 @@ public class ConstructResourceImpl implements ConstructResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			TransactionManager.getCurrentTransaction().setPublishData(new PublishData(true, false, false, true));
 			if (maxItems != 0) {
-				// Pre-fill the i18n dictionary with all translated names and
-				// description, so that it will not be necessary to make an
-				// additional SQL query for each a construct object is initialized
-				CNDictionary.prefillDictionary("construct", "name_id");
-				CNDictionary.prefillDictionary("part", "name_id");
-				CNDictionary.prefillDictionary("construct", "description_id");
-				CNDictionary.prefillDictionary("construct_category", "name_id");
+				prefillDictionaries(true, true, false);
 			}
 
 			List<com.gentics.contentnode.object.Construct> constructs;
@@ -826,8 +822,11 @@ public class ConstructResourceImpl implements ConstructResource {
 	@GET
 	@Path("/category")
 	public ConstructCategoryListResponse listCategories(@BeanParam SortParameterBean sorting, @BeanParam FilterParameterBean filter,
-			@BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed) throws NodeException {
+			@BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed, @BeanParam ConstructCategoryParameterBean categoryFilters) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
+			prefillDictionaries(embeddedParameterContainsAttribute(embed, "constructs"),
+					embeddedParameterContainsAttribute(embed, "constructs"), true);
+
 			Set<Integer> ids = null;
 			ids = DBUtils.select("SELECT id FROM construct_category", DBUtils.IDS);
 
@@ -839,9 +838,38 @@ public class ConstructResourceImpl implements ConstructResource {
 				sorter.setNullsAsLast("sortOrder", "sortorder");
 			}
 
-			ConstructCategoryListResponse response = ListBuilder.from(trx.getTransaction().getObjects(ConstructCategory.class, ids), ConstructCategory.TRANSFORM2REST)
+			Consumer<com.gentics.contentnode.rest.model.ConstructCategory> embedder = ConstructCategory.EMBED_CONSTRUCTS;
+			Filter<ConstructCategory> constructsFilter = null;
+			List<com.gentics.contentnode.object.Construct> constructs = null;
+			if (categoryFilters != null && categoryFilters.pageId != null) {
+				constructs = fetchPageConstructs(categoryFilters.pageId);
+			} else if (categoryFilters != null && categoryFilters.nodeId != null) {
+				constructs = fetchNodeConstructs(categoryFilters.nodeId);
+			}
+			if (constructs != null) {
+				final List<com.gentics.contentnode.object.Construct> finalList = constructs;
+				constructsFilter = o -> !ListUtils.intersection(o.getConstructs(), finalList).isEmpty();
+				embedder = restConstructCategory -> {
+					Transaction t = TransactionManager.getCurrentTransaction();
+					// set the constructs
+					Map<String, com.gentics.contentnode.rest.model.Construct> tmp = new HashMap<String, com.gentics.contentnode.rest.model.Construct>();
+
+					ConstructCategory constructCategory = t.getObject(ConstructCategory.class,
+							restConstructCategory.getId());
+					for (com.gentics.contentnode.object.Construct construct : constructCategory.getConstructs()) {
+						if (finalList.contains(construct)) {
+							tmp.put(construct.getKeyword(), ModelBuilder.getConstruct(construct));
+						}
+					}
+					restConstructCategory.setConstructs(tmp);
+				};
+			}
+
+			ConstructCategoryListResponse response = ListBuilder.from(trx.getTransaction().getObjects(ConstructCategory.class, ids), ConstructCategory.TRANSFORM2REST_SHALLOW)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
+					.filter(constructsFilter)
 					.filter(ResolvableFilter.get(filter, "id", "globalId", "name"))
+					.embed(embed, "constructs", embedder)
 					.sort(sorter)
 					.page(paging).to(new ConstructCategoryListResponse());
 
@@ -857,7 +885,7 @@ public class ConstructResourceImpl implements ConstructResource {
 		List<String> categoryIds = categoryOrder.getIds();
 
 		if (categoryIds == null || categoryIds.isEmpty()) {
-			return listCategories(new SortParameterBean(), new FilterParameterBean(), new PagingParameterBean(), new EmbedParameterBean());
+			return listCategories(new SortParameterBean(), new FilterParameterBean(), new PagingParameterBean(), new EmbedParameterBean(), new ConstructCategoryParameterBean());
 		}
 
 		List<ConstructCategory> categories = new ArrayList<>();
@@ -1108,5 +1136,31 @@ public class ConstructResourceImpl implements ConstructResource {
 			}
 		}
 		return part;
+	}
+
+	/**
+	 * Prefill the dictionaries for all languages with the translations for all constructs,parts,categories
+	 * @param construct true to prefill for all constructs
+	 * @param part true to prefill for all parts
+	 * @param category true to prefill for all categories
+	 * @throws NodeException
+	 */
+	protected void prefillDictionaries(boolean construct, boolean part, boolean category) throws NodeException {
+		for (UserLanguage language : UserLanguageFactory.getActive()) {
+			try (LangTrx langTrx = new LangTrx(language)) {
+				// Pre-fill the i18n dictionary with all translated names and
+				// description, so that it will not be necessary to make an
+				// additional SQL query for each a construct object is initialized
+				CNDictionary.prefillDictionary("construct", "name_id");
+				CNDictionary.prefillDictionary("construct", "description_id");
+
+				if (part) {
+					CNDictionary.prefillDictionary("part", "name_id");
+				}
+				if (category) {
+					CNDictionary.prefillDictionary("construct_category", "name_id");
+				}
+			}
+		}
 	}
 }

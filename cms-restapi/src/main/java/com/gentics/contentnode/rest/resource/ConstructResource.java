@@ -28,6 +28,7 @@ import com.gentics.contentnode.rest.model.response.ConstructLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.NodeList;
 import com.gentics.contentnode.rest.model.response.PagedConstructListResponse;
+import com.gentics.contentnode.rest.resource.parameter.ConstructCategoryParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.ConstructParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -300,7 +301,7 @@ public interface ConstructResource {
 		@ResponseCode(code = 200, condition = "List of construct categories is returned."),
 	})
 	ConstructCategoryListResponse listCategories(@BeanParam SortParameterBean sorting, @BeanParam FilterParameterBean filter,
-			@BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed) throws Exception;
+			@BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed, @BeanParam ConstructCategoryParameterBean categoryFilters) throws Exception;
 
 	@POST
 	@Path("/category/sortorder")

@@ -10,10 +10,13 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.devtools.model.ConstructCategoryModel;
 import com.gentics.contentnode.etc.BiFunction;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
 import com.gentics.contentnode.factory.TType;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 
@@ -44,13 +47,23 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 	/**
 	 * Consumer that transforms the node model into the given rest model
 	 */
-	public final static BiFunction<ConstructCategory, com.gentics.contentnode.rest.model.ConstructCategory, com.gentics.contentnode.rest.model.ConstructCategory> NODE2REST = (
+	public final static BiFunction<ConstructCategory, com.gentics.contentnode.rest.model.ConstructCategory, com.gentics.contentnode.rest.model.ConstructCategory> NODE2REST_SHALLOW = (
 			from, to) -> {
 		to.setId(ObjectTransformer.getInt(from.getId(), 0));
 		to.setGlobalId(from.getGlobalId() != null ? from.getGlobalId().toString() : null);
 		to.setName(from.getName().toString());
 		to.setNameI18n(I18NHelper.toI18nMap(from.getName()));
 		to.setSortOrder(from.getSortorder());
+
+		return to;
+	};
+
+	/**
+	 * Consumer that transforms the node model into the given rest model
+	 */
+	public final static BiFunction<ConstructCategory, com.gentics.contentnode.rest.model.ConstructCategory, com.gentics.contentnode.rest.model.ConstructCategory> NODE2REST = (
+			from, to) -> {
+		NODE2REST_SHALLOW.apply(from, to);
 
 		// set the constructs
 		Map<String, com.gentics.contentnode.rest.model.Construct> constructs = new HashMap<String, com.gentics.contentnode.rest.model.Construct>();
@@ -63,7 +76,14 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 	};
 
 	/**
-	 * Lambda that transforms the node model of a Construct into the rest model
+	 * Lambda that transforms the node model of a Construct into the rest model (shallow, without constructs)
+	 */
+	public final static Function<ConstructCategory, com.gentics.contentnode.rest.model.ConstructCategory> TRANSFORM2REST_SHALLOW = nodeConstruct -> {
+		return NODE2REST_SHALLOW.apply(nodeConstruct, new com.gentics.contentnode.rest.model.ConstructCategory());
+	};
+
+	/**
+	 * Lambda that transforms the node model of a Construct into the rest model (with constructs)
 	 */
 	public final static Function<ConstructCategory, com.gentics.contentnode.rest.model.ConstructCategory> TRANSFORM2REST = nodeConstruct -> {
 		return NODE2REST.apply(nodeConstruct, new com.gentics.contentnode.rest.model.ConstructCategory());
@@ -77,6 +97,21 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		to.setName(I18NHelper.toI18nMap(from.getName()));
 		to.setSortOrder(from.getSortorder());
 		return to;
+	};
+
+	/**
+	 * Lambda to embed constructs into the REST Model of a construct category
+	 */
+	public static Consumer<com.gentics.contentnode.rest.model.ConstructCategory> EMBED_CONSTRUCTS = restConstructCategory -> {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		// set the constructs
+		Map<String, com.gentics.contentnode.rest.model.Construct> constructs = new HashMap<String, com.gentics.contentnode.rest.model.Construct>();
+
+		ConstructCategory constructCategory = t.getObject(ConstructCategory.class, restConstructCategory.getId());
+		for (Construct construct : constructCategory.getConstructs()) {
+			constructs.put(construct.getKeyword(), ModelBuilder.getConstruct(construct));
+		}
+		restConstructCategory.setConstructs(constructs);
 	};
 
 	protected static Map<String, Property> resolvableProperties = new HashMap<>();

@@ -85,6 +85,7 @@ import com.gentics.contentnode.rest.resource.ConstructResource;
 import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.DatasourceResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.ConstructCategoryParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.ConstructParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -834,7 +835,7 @@ public class ConstructResourceTest {
 		}
 
 		ConstructCategoryListResponse response = supply(user,
-				() -> new ConstructResourceImpl().listCategories(null, null, null, null));
+				() -> new ConstructResourceImpl().listCategories(null, null, null, null, null));
 		assertResponseOK(response);
 		assertThat(response.getItems()).as("Object Property categories").usingElementComparatorOnFields("id").containsAll(categories);
 	}
@@ -848,7 +849,7 @@ public class ConstructResourceTest {
 
 		// check the list contents
 		ConstructCategoryListResponse opList = supply(user, () -> new ConstructResourceImpl().listCategories(
-				new SortParameterBean(), new FilterParameterBean(), new PagingParameterBean(), new EmbedParameterBean()));
+				new SortParameterBean(), new FilterParameterBean(), new PagingParameterBean(), new EmbedParameterBean(), new ConstructCategoryParameterBean()));
 		assertResponseCodeOk(opList);
 		assertThat(opList.getItems()).as("Construct categories").usingElementComparatorOnFields("id").contains(response.getConstructCategory());
 	}
@@ -866,7 +867,7 @@ public class ConstructResourceTest {
 
 		// check the list contents
 		ConstructCategoryListResponse opList = supply(user, () -> new ConstructResourceImpl().listCategories(
-				new SortParameterBean(), new FilterParameterBean(), new PagingParameterBean(), new EmbedParameterBean()));
+				new SortParameterBean(), new FilterParameterBean(), new PagingParameterBean(), new EmbedParameterBean(), new ConstructCategoryParameterBean()));
 		assertResponseCodeOk(opList);
 		assertThat(opList.getItems()).as("Construct categories").usingElementComparatorOnFields("id").doesNotContain(response.getConstructCategory());
 	}
@@ -941,7 +942,8 @@ public class ConstructResourceTest {
 			new SortParameterBean().setSort("+sortorder"),
 			new FilterParameterBean(),
 			new PagingParameterBean(),
-			new EmbedParameterBean());
+			new EmbedParameterBean(),
+			new ConstructCategoryParameterBean());
 
 		assertThat(sortedList.getItems().stream().map(category -> category.getId().toString()).collect(Collectors.toList()))
 			.as("Sorted construct categories listing")
@@ -953,7 +955,8 @@ public class ConstructResourceTest {
 			new SortParameterBean().setSort("-sortorder"),
 			new FilterParameterBean(),
 			new PagingParameterBean(),
-			new EmbedParameterBean());
+			new EmbedParameterBean(),
+			new ConstructCategoryParameterBean());
 
 		assertThat(reverseSortedList.getItems().stream().map(category -> category.getId().toString()).collect(Collectors.toList()))
 			.as("Unsorted construct categories listing")
@@ -1348,7 +1351,7 @@ public class ConstructResourceTest {
 				new PermHandler.Permission(PermHandler.PERM_VIEW, PermHandler.PERM_CONSTRUCT_UPDATE).toString()));
 
 		ConstructCategoryListResponse allCategories = supply(user,
-				() -> new ConstructResourceImpl().listCategories(null, null, null, null));
+				() -> new ConstructResourceImpl().listCategories(null, null, null, null, null));
 		assertResponseOK(allCategories);
 		assertThat(allCategories.getItems()).as("Construct categories").usingElementComparator((a, b) -> a.getId().compareTo(b.getId())).contains(response.getConstructCategory());
 

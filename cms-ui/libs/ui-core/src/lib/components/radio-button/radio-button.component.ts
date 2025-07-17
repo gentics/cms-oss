@@ -9,15 +9,13 @@ import {
     OnInit,
     Optional,
     Output,
-    SimpleChanges
+    SimpleChanges,
 } from '@angular/core';
 import { isEqual } from 'lodash-es';
 import { KeyCode } from '../../common';
 import { RadioGroupDirective } from '../../directives/radio-group/radio-group.directive';
-import { generateFormProvider } from '../../utils';
+import { generateFormProvider, randomId } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
-
-let uniqueComponentId = 0;
 
 const NO_SET = Symbol();
 
@@ -57,7 +55,7 @@ export class RadioButtonComponent
     extends BaseFormElementComponent<any>
     implements OnInit, OnChanges, OnDestroy {
 
-    public readonly UNIQUE_ID = `gtx-radio-button-${uniqueComponentId++}`;
+    public readonly UNIQUE_ID = `gtx-radio-button-${randomId()}`;
 
     /**
      * Sets the radio button to be auto-focused. Handled by `AutofocusDirective`.
@@ -116,7 +114,7 @@ export class RadioButtonComponent
 
         // Pre-set a common input name for grouped input elements
         if (group) {
-            this.name = group.uniqueName;
+            this.name = group.UNIQUE_ID;
         } else if (modelAttrib) {
             this.name = modelAttrib;
         }

@@ -82,6 +82,9 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     /** The control to which this component is bound to. */
     protected boundControl: AbstractControl<any, any>;
 
+    /** If the custom initialization after a initial value has been done yet or not. */
+    protected initialized = false;
+
     constructor(
         changeDetector: ChangeDetectorRef,
     ) {
@@ -109,6 +112,14 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
             this.onValueReset();
         }
+    }
+
+    /**
+     * Custom initialization which is called once the `value` has been set/provided.
+     */
+    protected initializeWithData(): void {
+        // TODO: Move `initializeForm` to be done in here and leave `ngOnInit` alone.
+        // Has to be done at another point, as to not cause a breaking change.
     }
 
     /**
@@ -225,18 +236,38 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      * @param property The property you want to access.
      * @returns The property-value, or null if not present.
      */
-    protected safeValue<K extends keyof T>(property: K): T[K] | null {
+    protected safeValue<K extends keyof T>(property: K | [K]): T[K] | null;
+    protected safeValue<K1 extends keyof T, K2 extends keyof T[K1]>(propertyPath: [K1, K2]): T[K1][K2] | null;
+    protected safeValue<
+        K1 extends keyof T,
+        K2 extends keyof T[K1],
+        K3 extends keyof T[K1][K2]
+    >(propertyPath: [K1, K2, K3]): T[K1][K2][K3] | null;
+    protected safeValue(paths: string | string[]): any {
         if (this.value === INITIAL_UNSET_VALUE || typeof this.value === 'symbol') {
             return null;
         }
+        if (typeof paths === 'string') {
+            return this.value?.[paths];
+        }
 
-        return this.value?.[property];
+        let out = this.value;
+        // eslint-disable-next-line @typescript-eslint/prefer-for-of
+        for (let i = 0; i < paths.length; i++) {
+            out = out?.[paths[i]];
+        }
+        return out;
     }
 
     /**
      * Basic implementation which will simply put the value into the form.
      */
     protected override onValueChange(): void {
+        if (!this.initialized && this.valueIsSet()) {
+            this.initialized = true;
+            this.initializeWithData();
+        }
+
         if (this.form) {
             const tmpObj = {};
             Object.keys(this.form.controls).forEach(controlName => {

@@ -1,5 +1,9 @@
 h2. Resolving properties with Handlebars
 
+This document describes the properties of CMS objects resolvable in Handlebars templats.
+
+endprologue.
+
 h3. Page properties
 
 h4. cms.page.id

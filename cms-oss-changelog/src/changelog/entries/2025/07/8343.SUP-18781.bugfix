@@ -1,0 +1,2 @@
+REST API: The performance of getting lists of constructs or construct categories has been improved. This also improves the performance
+of opening pages for editing in the Editor User Interface on systems with many constructs.

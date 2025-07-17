@@ -169,7 +169,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.client.constructCategory.list({ recursive: false }).subscribe(res => {
+        this.subscriptions.push(this.client.constructCategory.list({ recursive: false, nodeId: this.nodeId, embed: 'constructs' }).subscribe(res => {
             this.constructCategories = res.items;
             this.changeDetector.markForCheck();
         }));

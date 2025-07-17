@@ -18,6 +18,7 @@ import com.gentics.contentnode.rest.model.ConstructCategory;
 import com.gentics.contentnode.rest.model.response.AbstractListResponse;
 import com.gentics.contentnode.rest.resource.ConstructResource;
 import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.ConstructCategoryParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
@@ -72,6 +73,6 @@ public class ConstructResourceListCategoriesTest extends AbstractListSortAndFilt
 	@Override
 	protected AbstractListResponse<ConstructCategory> getResult(SortParameterBean sort, FilterParameterBean filter, PagingParameterBean paging)
 			throws NodeException {
-		return new ConstructResourceImpl().listCategories(sort, filter, paging, new EmbedParameterBean());
+		return new ConstructResourceImpl().listCategories(sort, filter, paging, new EmbedParameterBean(), new ConstructCategoryParameterBean());
 	}
 }

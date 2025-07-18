@@ -1,5 +1,5 @@
 import { createRange, selectRange, selectText, updateAlohaRange, isCIEnvironment, ENV_BASE_URL } from '@gentics/e2e-utils';
-import { Locator, Page } from '@playwright/test';
+import { Frame, Locator, Page } from '@playwright/test';
 import { RENDERABLE_ALOHA_COMPONENTS, LoginData } from './common';
 
 export interface HelperWindow extends Window {
@@ -85,13 +85,13 @@ export async function listAction(list: Locator, action: string): Promise<void> {
 }
 
 export async function findImage(list: Locator, id: string | number): Promise<Locator> {
-	await list.locator('.list-body').waitFor();
-	const listItems = await list.locator('gtx-contents-list-item').count();
-	if (listItems < 1) {
-		await list.locator('.list-header .header-controls gtx-dropdown-trigger gtx-button').click();
-		await list.page().locator('gtx-dropdown-content gtx-dropdown-item[data-action="toggle-display-type"]').waitFor();
-		await list.page().locator('gtx-dropdown-content gtx-dropdown-item[data-action="toggle-display-type"]').click();
-	}
+    await list.locator('.list-body').waitFor();
+    const listItems = await list.locator('gtx-contents-list-item').count();
+    if (listItems < 1) {
+        await list.locator('.list-header .header-controls gtx-dropdown-trigger gtx-button').click();
+        await list.page().locator('gtx-dropdown-content gtx-dropdown-item[data-action="toggle-display-type"]').waitFor();
+        await list.page().locator('gtx-dropdown-content gtx-dropdown-item[data-action="toggle-display-type"]').click();
+    }
     return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
@@ -123,7 +123,7 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
 }
 
 export async function openPropertiesTab(page: Page): Promise<void> {
-	await page.waitForSelector('content-frame .content-frame-container');
+    await page.waitForSelector('content-frame .content-frame-container');
     const previewActivated = await page.locator('content-frame .content-frame-container .properties-tabs .tab-link[data-id="preview"].is-active').count();
     if (previewActivated > 0) {
         await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="properties"] a');
@@ -173,21 +173,25 @@ export async function selectOption(element: Locator, value: number | string | (s
 
 export function findAlohaComponent(page: Page, options?: { slot?: string, type?: string }, subject?: Locator): Locator {
     const root = subject || page.locator('project-editor content-frame gtx-page-editor-controls');
-    const slotSelector = options?.slot ? `[data-slot="${options.slot}"]` : '';
+    const slotSelector = options?.slot ? `[slot="${options.slot}"]` : '';
     const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
 
-    return root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector}`);
+    const aloha =  root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector} button[data-action="primary"]`);
+    aloha.waitFor();
+    return aloha;
 }
 
-export function findDynamicFormModal(page: Page, ref?: string): Locator {
+export async function findDynamicFormModal(page: Page, ref?: string): Promise<Locator> {
     const refSelector = ref ? `[data-ref="${ref}"]` : '';
-    return page.locator('project-editor content-frame gtx-page-editor-controls').locator(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
+    const modal =  page.locator(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
+    await modal.waitFor();
+    return modal;
 }
 
-export function getAlohaIFrame(page: Page): Locator {
-    const iframeSelector = 'iframe[name="master-frame"][loaded="true"]';
-    // High timeout for all of aloha to finish loading
-    return page.locator(iframeSelector).locator(`project-editor content-frame ${iframeSelector}`);
+export async function getAlohaIFrame(page: Page): Promise<Frame> {
+    const iframeSelector = '[name="master-frame"][loaded="true"]';
+    await page.locator('iframe' + iframeSelector).waitFor({ timeout: 60_000 });
+    return page.frame({ name: 'master-frame' });
 }
 
 export async function initPage(page: Page): Promise<void> {

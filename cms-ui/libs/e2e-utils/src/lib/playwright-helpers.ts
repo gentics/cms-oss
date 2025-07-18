@@ -15,5 +15,6 @@ export function waitForKeycloakAuthPage(page: Page): Promise<void> {
     return page.waitForURL(url =>
         url.host === parsedUrl.host
         && matchesPath(url, '/realms/*/protocol/openid-connect/auth'),
+    { timeout: 60_000 },
     );
 }

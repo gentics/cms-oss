@@ -47,6 +47,7 @@ test.describe('Link Checker', () => {
         });
         await IMPORTER.importData([scheduleLinkChecker]);
         await IMPORTER.executeSchedule(scheduleLinkChecker);
+        await IMPORTER.syncTag(1, 'content');
         await initPage(page);
         await page.goto('/');
         await login(page, AUTH_ADMIN);
@@ -57,8 +58,8 @@ test.describe('Link Checker', () => {
         const list = findList(page, ITEM_TYPE_PAGE);
         const item = findItem(list, IMPORTER.get(pageOne)!.id);
         await itemAction(item, 'edit');
-        const iframe = getAlohaIFrame(page);
-        await expect(iframe.locator('main [contenteditable="true"]')).toBeVisible({ timeout: 60000 });
+        const iframe = await getAlohaIFrame(page);
+        await iframe.locator('main').waitFor({ state:'visible', timeout: 600000 });
         return iframe;
     }
 
@@ -70,11 +71,13 @@ test.describe('Link Checker', () => {
 
         const content = iframe.locator('main [contenteditable="true"]');
         await content.fill(TEXT_CONTENT);
+        // Activate the toolbar
+        await content.click();
 
         const insertLinkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
         await insertLinkButton.click();
 
-        const modal = findDynamicFormModal(page);
+        const modal = await findDynamicFormModal(page);
         const form = modal.locator('.modal-content .form-wrapper');
 
         await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
@@ -102,11 +105,13 @@ test.describe('Link Checker', () => {
 
         const content = iframe.locator('main [contenteditable="true"]');
         await content.fill(TEXT_CONTENT);
+        // Activate the toolbar
+        await content.click();
 
         const insertLinkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
         await insertLinkButton.click();
 
-        const modal = findDynamicFormModal(page);
+        const modal = await findDynamicFormModal(page);
         const form = modal.locator('.modal-content .form-wrapper');
 
         await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);

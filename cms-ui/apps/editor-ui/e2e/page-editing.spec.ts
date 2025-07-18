@@ -26,6 +26,7 @@ import {
     login,
     selectNode,
     selectOption,
+    getAlohaIFrame,
 } from './helpers';
 
 // Skipped until we find out why it can't find the iframe content in jenkins
@@ -49,6 +50,7 @@ test.describe('Page Editing', () => {
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
+        await IMPORTER.syncTag(1, 'content');
 
         await initPage(page);
         await page.goto('/');
@@ -67,9 +69,8 @@ test.describe('Page Editing', () => {
             await itemAction(item, 'edit');
 
             // Wait for editor to be ready
-            const iframe = page.locator('content-frame iframe.master-frame[loaded="true"]');
-            await iframe.waitFor({ timeout: 60_000 });
-            editor = iframe.contentFrame().locator('main [contenteditable="true"]');
+            const iframe = await getAlohaIFrame(page);
+            editor = iframe.locator('main [contenteditable="true"]');
             await editor.waitFor({ timeout: 60_000 });
         });
 

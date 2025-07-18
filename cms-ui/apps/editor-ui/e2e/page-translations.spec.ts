@@ -43,6 +43,7 @@ test.describe('Page Translation', () => {
         await initPage(page);
         await page.goto('/');
         await login(page, AUTH_ADMIN);
+        await page.locator('node-selector').waitFor();
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 
@@ -53,18 +54,18 @@ test.describe('Page Translation', () => {
 
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, pageData.id);
-            const languageIcon = item.locator(`.language-icon[data-id="${NEW_LANG}"] gtx-dropdown-trigger`);
+            const languageIcon = item.locator(`.language-icon[data-id="${NEW_LANG}"] gtx-dropdown-trigger a`);
             const iconVisible = await languageIcon.isVisible();
             if (!iconVisible) {
-                await item.locator('page-language-indicator .expand-toggle').click();
+                await item.locator('page-language-indicator .expand-toggle button').click();
+                await page.waitForTimeout(2000);
             }
             await languageIcon.click({ force: true });
 
-            const translateButton = page.locator('.page-language-context [data-action="translate"]');
-            await translateButton.click({ force: true });
+            await page.click('.page-language-context [data-action="translate"]');
 
             const modal = page.locator('translate-page-modal');
-            await expect(modal).toBeVisible();
+            await modal.waitFor();
 
             const autoTranslateButton = modal.locator('[data-action="auto-translate"]');
             await expect(autoTranslateButton).toBeVisible();

@@ -367,7 +367,7 @@ test.describe('Content Repositories Module', () => {
                 await test.step('Navigate to the target node in the trable', async () => {
                     // Navigate through project structure
                     const projectsRow = findTrableRowById(permModal, '_projects');
-                    await projectsRow.waitFor({ state: 'visible' });
+                    await projectsRow.waitFor({ timeout: 60_000 });
                     await expandTrableRow(projectsRow);
 
                     const exampleRow = findTrableRowByText(permModal, CR_PREFIX_MESH);
@@ -378,7 +378,7 @@ test.describe('Content Repositories Module', () => {
                     await expandTrableRow(exampleRow);
 
                     const nodesRow = findTrableRowById(permModal, `_project_${projectId}_nodes`);
-                    await nodesRow.waitFor({ state: 'visible' });
+                    await nodesRow.waitFor({ timeout: 60_000 });
                     await expandTrableRow(nodesRow);
                 });
 

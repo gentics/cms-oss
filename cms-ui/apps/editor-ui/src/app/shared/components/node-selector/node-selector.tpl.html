@@ -1,9 +1,10 @@
-<gtx-dropdown-list>
+<gtx-dropdown-list data-context-id="node-selection">
     <gtx-dropdown-trigger>
         <gtx-button
             *ngIf="!showName; else nameTpl"
             icon
             type="default"
+            data-context-trigger
             data-action="select-node"
             [title]="('common.select_node' | i18n) + '…'"
         >
@@ -17,7 +18,7 @@
         </ng-template>
     </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content>
+    <gtx-dropdown-content data-context-id="node-selection">
         <ng-content></ng-content>
 
         <list-filter

@@ -17,10 +17,13 @@ import {
     editorAction,
     openObjectPropertyEditor,
     closeObjectPropertyEditor,
+    findContextContent,
+    navigateToApp,
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
 test.describe('Page Management', () => {
+
     const IMPORTER = new EntityImporter();
     const NEW_PAGE_NAME = 'Hello World';
     const CHANGE_PAGE_NAME = 'Foo bar change';
@@ -42,7 +45,8 @@ test.describe('Page Management', () => {
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
         await initPage(page);
-        await page.goto('/');
+
+        await navigateToApp(page, '/');
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
@@ -105,5 +109,22 @@ test.describe('Page Management', () => {
         await itemAction(item, 'properties');
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY);
         await expect(page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
+    });
+
+    test('should be possible to open the context-menu in the page-properties', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-18791',
+        }],
+    }, async ({ page }) => {
+        const PAGE = IMPORTER.get(pageOne)!;
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, PAGE.id);
+
+        await itemAction(item, 'properties');
+        await editorAction(page, 'editor-context');
+        const content = findContextContent(page, 'item-editor');
+
+        await expect(content).toBeAttached();
     });
 });

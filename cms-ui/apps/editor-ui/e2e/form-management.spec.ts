@@ -51,6 +51,7 @@ test.describe('Form Management', () => {
 
         await form.locator('[formcontrolname="name"] input').fill(NEW_FORM_NAME);
         await form.locator('[formcontrolname="description"] input').fill(NEW_FORM_DESCRIPTION);
+        await form.locator('[formcontrolname="languages"] gtx-dropdown-trigger').scrollIntoViewIfNeeded();
         await form.locator('[formcontrolname="languages"] gtx-dropdown-trigger').click();
         await page.click(`gtx-dropdown-content [data-id="${LANGUAGE_DE}"]`);
 

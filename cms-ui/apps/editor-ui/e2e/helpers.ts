@@ -1,3 +1,6 @@
+/* eslint-disable import/no-nodejs-modules */
+/// <reference lib="dom"/>
+import { readFileSync } from 'fs';
 import { createRange, selectRange, selectText, updateAlohaRange, isCIEnvironment, ENV_BASE_URL } from '@gentics/e2e-utils';
 import { Frame, Locator, Page } from '@playwright/test';
 import { RENDERABLE_ALOHA_COMPONENTS, LoginData } from './common';
@@ -98,15 +101,23 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
 export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
     // Note: This is a simplified version. You'll need to implement file upload handling
     if (options?.dragAndDrop) {
-        throw new Error('Drag and Drop is currently not implemented');
+        const transfer = new DataTransfer();
+        // Put the binaries/Files into the transfer
+        for (const file of Object.values(files)) {
+            const buffer = readFileSync(`./fixtures/${file}`);
+            await page.evaluateHandle((data) => {
+                return transfer.items.add(new File([data.toString('binary')], file, { type: 'application/*' }));
+            }, buffer);
+        }
+        await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', transfer);
+    } else {
+        const fileChooserPromise = page.waitForEvent('filechooser');
+        const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
+        await uploadButton.waitFor({ state: 'visible' });
+        await uploadButton.click();
+        const fileChooser = await fileChooserPromise;
+        await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
     }
-
-    const fileChooserPromise = page.waitForEvent('filechooser');
-    const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
-    await uploadButton.waitFor({ state: 'visible' });
-    await uploadButton.click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
 
     // Wait for upload to complete and return response
     const response = await page.waitForResponse(response =>
@@ -141,7 +152,7 @@ export async function openObjectPropertyEditor(page: Page, categoryId: string | 
     await tab.click();
 }
 
-export async function closeObjectPropertyEditor(page: Page, force: boolean = true) {
+export async function closeObjectPropertyEditor(page: Page, force: boolean = true): Promise<void> {
     await page.locator('content-frame gtx-editor-toolbar gtx-button.close-button').click();
     const unsavedChanges = await page.locator('confirm-navigation-modal gtx-button[type="alert"] button').count();
     if (unsavedChanges > 0 && force) {
@@ -150,7 +161,10 @@ export async function closeObjectPropertyEditor(page: Page, force: boolean = tru
 }
 
 export async function editorAction(page: Page, action: string): Promise<void> {
-    await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"] gtx-button[data-action="primary"] button`);
+    if (await page.locator('.gtx-toast-btn_close').isVisible()) {
+        await page.locator('.gtx-toast-btn_close').click();
+    }
+    await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"] button[data-action="primary"]`);
 }
 
 export async function selectOption(element: Locator, value: number | string | (string | number)[]): Promise<void> {

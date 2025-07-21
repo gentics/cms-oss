@@ -54,7 +54,7 @@ test.describe('Media Upload', () => {
     test('should be possible to upload an image file', async ({ page }) => {
         const list = findList(page, ITEM_TYPE_IMAGE);
         await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_2]);
-        await expect(list.locator('.list-body masonry-item')).toHaveCount(1);
+        await expect(list.locator('.list-body item-list-row')).toHaveCount(1);
     });
 
     test('should be possible to upload a regular text file with drag-and-drop', async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe('Media Upload', () => {
     test('should be possible to upload an image file with drag-and-drop', async ({ page }) => {
         const list = findList(page, ITEM_TYPE_IMAGE);
         await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_2], { dragAndDrop: true });
-        await expect(list.locator('.list-body masonry-item')).toHaveCount(1);
+        await expect(list.locator('.list-body item-list-row')).toHaveCount(1);
     });
 
     test('should be possible to upload multiple text files', async ({ page }) => {
@@ -78,6 +78,6 @@ test.describe('Media Upload', () => {
     test('should be possible to upload multiple image files', async ({ page }) => {
         const list = findList(page, ITEM_TYPE_IMAGE);
         await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_PNG_1, FIXTURE_TEST_IMAGE_PNG_2]);
-        await expect(list.locator('.list-body masonry-item')).toHaveCount(2);
+        await expect(list.locator('.list-body item-list-row')).toHaveCount(2);
     });
 });

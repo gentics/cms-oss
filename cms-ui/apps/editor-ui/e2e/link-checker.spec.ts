@@ -7,6 +7,7 @@ import {
     minimalNode,
     pageOne,
     scheduleLinkChecker,
+    BASIC_TEMPLATE_ID,
 } from '@gentics/e2e-utils';
 import {
     login,
@@ -47,7 +48,7 @@ test.describe('Link Checker', () => {
         });
         await IMPORTER.importData([scheduleLinkChecker]);
         await IMPORTER.executeSchedule(scheduleLinkChecker);
-        await IMPORTER.syncTag(1, 'content');
+        await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
         await initPage(page);
         await page.goto('/');
         await login(page, AUTH_ADMIN);

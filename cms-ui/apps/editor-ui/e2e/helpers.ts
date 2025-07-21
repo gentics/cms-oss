@@ -20,6 +20,8 @@ export const AUTH = {
     },
 };
 
+const ATTR_CONTEXT_ID = 'data-context-id';
+
 export async function navigateToApp(page: Page, path: string = '/', omitSkipSSO?: boolean): Promise<void> {
     const hasBasePathOverride = !!process.env[ENV_BASE_URL];
     const isCI = isCIEnvironment();
@@ -51,8 +53,8 @@ export async function login(page: Page, account: string, keycloak?: boolean): Pr
 }
 
 export async function selectNode(page: Page, nodeId: number | string): Promise<void> {
-    await page.click('node-selector [data-action="select-node"]');
-    await page.click(`.node-selector-list [data-id="${nodeId}"], [data-global-id="${nodeId}"]`);
+    const context = await openContext(page.locator('node-selector > gtx-dropdown-list'));
+    await context.locator(`.node-selector-list [data-id="${nodeId}"], [data-global-id="${nodeId}"]`).click();
 }
 
 export function findList(page: Page, type: string): Locator {
@@ -63,15 +65,18 @@ export function findItem(list: Locator, id: string | number): Locator {
     return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
+export function findContextContent(page: Page, id: string): Locator {
+    return page.locator(`gtx-dropdown-content[${ATTR_CONTEXT_ID}="${id}"]`);
+}
+
 export async function openContext(element: Locator): Promise<Locator> {
-    const ATTR_ID = 'data-context-id';
-    const id = await element.getAttribute(ATTR_ID);
+    const id = await element.getAttribute(ATTR_CONTEXT_ID);
     if (!id) {
-        throw new Error(`Cannot open element context, since attribute "${ATTR_ID}" is missing!`);
+        throw new Error(`Cannot open element context, since attribute "${ATTR_CONTEXT_ID}" is missing!`);
     }
 
     await element.locator('gtx-dropdown-trigger gtx-button[data-context-trigger]').click();
-    return element.page().locator(`gtx-dropdown-content[${ATTR_ID}="${id}"]`);
+    return findContextContent(element.page(), id);
 }
 
 export async function itemAction(item: Locator, action: string): Promise<void> {

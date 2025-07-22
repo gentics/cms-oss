@@ -1,0 +1,11 @@
+feature:
+  asset_management: true
+
+node_settings_global:
+  asset_management:
+    - default: true
+    - custom:
+        label_i18n:
+          de: 'Custom Picker'
+          en: 'Custom Picker'
+        iframeSrcUrl: /ui-conf/asset-management.html

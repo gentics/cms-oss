@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { NodeFeature } from '@gentics/cms-models';
+import { NodeFeature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
     TestSize,
     ITEM_TYPE_FORM,
     minimalNode,
+    isVariant,
     LANGUAGE_DE,
 } from '@gentics/e2e-utils';
 import {
@@ -16,6 +17,8 @@ import {
 import { AUTH_ADMIN } from './common';
 
 test.describe('Form Management', () => {
+    test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
     const IMPORTER = new EntityImporter();
     const NEW_FORM_NAME = 'Hello World';
     const NEW_FORM_DESCRIPTION = 'This is an example text';

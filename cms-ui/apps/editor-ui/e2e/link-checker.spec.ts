@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { NodeFeature } from '@gentics/cms-models';
+import { NodeFeature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
     TestSize,
     ITEM_TYPE_PAGE,
     minimalNode,
     pageOne,
+    isVariant,
     scheduleLinkChecker,
     BASIC_TEMPLATE_ID,
 } from '@gentics/e2e-utils';
@@ -23,6 +24,8 @@ import {
 import { AUTH_ADMIN } from './common';
 
 test.describe('Link Checker', () => {
+    test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
     const IMPORTER = new EntityImporter();
     const CLASS_LINKCHECKER_ITEM = 'aloha-gcnlinkchecker-item';
     const CLASS_LINKCHECKER_UNCHECKED = 'aloha-gcnlinkchecker-unchecked';

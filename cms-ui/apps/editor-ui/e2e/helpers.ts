@@ -101,15 +101,24 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
 export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
     // Note: This is a simplified version. You'll need to implement file upload handling
     if (options?.dragAndDrop) {
-        const transfer = new DataTransfer();
-        // Put the binaries/Files into the transfer
-        for (const file of Object.values(files)) {
-            const buffer = readFileSync(`./fixtures/${file}`);
-            await page.evaluateHandle((data) => {
-                return transfer.items.add(new File([data.toString('binary')], file, { type: 'application/*' }));
-            }, buffer);
-        }
-        await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', transfer);
+        const data = files.map(f => {
+            const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
+            return {
+                bufferData: `data:application/octet-stream;base64,${buffer}`,
+                name: f,
+                type: type === 'image' ? 'application/jpg' : 'application/txt',
+            };
+        });
+        const transfer = await page.evaluateHandle(async (data) => {
+            const transfer = new DataTransfer();
+            // Put the binaries/Files into the transfer
+            for (const file of Object.values(data)) {
+                const blobData = await fetch(file.bufferData).then((res) => res.blob());
+                transfer.items.add(new File([blobData], file.name, { type: '' }))
+            }
+            return transfer;
+        }, data);
+        await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { transfer }, { strict: true, timeout: 60_000 });
     } else {
         const fileChooserPromise = page.waitForEvent('filechooser');
         const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);

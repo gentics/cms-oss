@@ -14,19 +14,27 @@
     </gtx-file-picker>
 </ng-template>
 
-<gtx-dropdown-list *ngIf="assetManagementEnabled && providers.length > 0; else defaultButton">
+<gtx-dropdown-list
+    *ngIf="assetManagementEnabled && providers.length > 0; else defaultButton"
+    data-context-id="asset-management"
+>
     <gtx-dropdown-trigger>
         <gtx-button
             flat
             [size]="btnSize"
             [type]="btnType"
+            data-context-trigger
         >
             <icon left>add</icon>{{ (btnLabel || itemType) | i18n }}
         </gtx-button>
     </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content>
-        <gtx-dropdown-item *ngFor="let singleProvider of providers">
+    <gtx-dropdown-content data-context-id="asset-management">
+        <gtx-dropdown-item
+            *ngFor="let singleProvider of providers"
+            [attr.default-provider]="singleProvider.default"
+            [attr.data-provider-id]="singleProvider.id"
+        >
             <gtx-file-picker
                 *ngIf="singleProvider.default; else externalProvider"
                 flat
@@ -40,7 +48,8 @@
                 (fileSelect)="uploadFiles($event)"
                 (fileSelectReject)="uploadFiles($event)"
             >
-                <icon left>add</icon> {{ 'editor.upload_from_harddrive' | i18n }}
+                <icon left>add</icon>
+                <span>{{ 'editor.upload_from_harddrive' | i18n }}</span>
             </gtx-file-picker>
 
             <ng-template #externalProvider>
@@ -50,7 +59,8 @@
                     type="secondary"
                     (click)="customUpload(singleProvider)"
                 >
-                    <icon left>add</icon>{{ singleProvider.label }}
+                    <icon left>add</icon>
+                    <span>{{ singleProvider.label }}</span>
                 </gtx-button>
             </ng-template>
         </gtx-dropdown-item>

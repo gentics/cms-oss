@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { ExternalAssetReference } from '@gentics/cms-integration-api-models';
 import { FileCreateRequest, FileOrImage, NodeFeature } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
@@ -6,11 +7,7 @@ import { combineLatest, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
-import {
-    ExternalAssetsModalComponent,
-    GtxExternalAssetManagementApiResponse,
-    GtxExternalAssetManagementApiRootObject,
-} from '../external-assets-modal/external-assets-modal.component';
+import { ExternalAssetsModalComponent } from '../external-assets-modal/external-assets-modal.component';
 
 interface DefaultProviderSettings {
     default: boolean;
@@ -31,6 +28,7 @@ interface DefaultProvider {
 }
 
 interface ExternalAssetManagementProvider {
+    id: string;
     label: string;
     iframeSrcUrl: string;
 }
@@ -97,7 +95,7 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
 
     /** Action emitted if node feature `asset_management` is configured on successful asset selection. */
     @Output()
-    public assetsSelected = new EventEmitter<GtxExternalAssetManagementApiRootObject[]>();
+    public assetsSelected = new EventEmitter<ExternalAssetReference[]>();
 
     @Output()
     public uploadInProgress = new EventEmitter<boolean>();
@@ -141,13 +139,14 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
             distinctUntilChanged(isEqual),
         ).subscribe((entries: (AssetProviderSettings | DefaultProviderSettings)[]) => {
             this.providers = [];
+            const providerIds = new Set<string>();
 
+            // Ignore if we don't have an array at all
             if (!Array.isArray(entries)) {
-                console.error('Asset management has invalid settings!');
                 return;
             }
 
-            entries.forEach(providerSettings => {
+            entries.forEach((providerSettings, idx) => {
                 if (providerSettings.default != null && providerSettings.default) {
                     this.providers.push({
                         default: true,
@@ -160,10 +159,16 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
 
                 // Invalid amount of properties defined
                 if (names.length !== 1) {
+                    console.error(`The asset-provider on index ${idx} has multiple keys ("${names.join('", "')}"), which is not allowed!`);
                     return;
                 }
 
                 const key = names[0];
+                if (providerIds.has(key)) {
+                    console.error(`The asset-provider "${key}" has already been registered! Use a differnt key for each provider/entry!`);
+                    return;
+                }
+
                 const value = providerSettings[key];
 
                 if (value == null || typeof value !== 'object') {
@@ -176,7 +181,9 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
                     return;
                 }
 
+                providerIds.add(key);
                 this.providers.push({
+                    id: key,
                     label: value.label_i18n[this.languageCode],
                     iframeSrcUrl: value.iframeSrcUrl,
                 });
@@ -227,16 +234,16 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
 
         this.modalService.fromComponent(ExternalAssetsModalComponent, {}, { title: config.label, iframeSrcUrl: iframeUrl })
             .then(modal => modal.open())
-            .then((response: GtxExternalAssetManagementApiResponse) => {
+            .then((assets: ExternalAssetReference[]) => {
                 // if user aborted
-                if (!response) {
+                if (!assets) {
                     this.uploadInProgress.emit(false);
                     return;
                 }
 
                 // do not upload but emit external results instead
                 if (!this.instantUpload) {
-                    this.assetsSelected.emit(response.data);
+                    this.assetsSelected.emit(assets);
                 }
 
                 // upload external selection to backend
@@ -245,7 +252,7 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
                 }
 
                 const typeMap: { [key: string]: 'image' | 'file' } = {};
-                const requestPayloads: FileCreateRequest[] = response.data.map(item => {
+                const requestPayloads: FileCreateRequest[] = assets.map(item => {
                     typeMap[item.name] = item.fileCategory === 'image' ? 'image' : 'file';
                     return {
                         overwriteExisting: false,

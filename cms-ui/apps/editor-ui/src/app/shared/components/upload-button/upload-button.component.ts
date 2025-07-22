@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { FileCreateRequest, FileOrImage, NodeFeature } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { Observable, Subject } from 'rxjs';
-import { filter, map, mergeMap, takeUntil, withLatestFrom } from 'rxjs/operators';
+import { isEqual } from 'lodash-es';
+import { combineLatest, Subscription } from 'rxjs';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import {
@@ -11,16 +12,30 @@ import {
     GtxExternalAssetManagementApiRootObject,
 } from '../external-assets-modal/external-assets-modal.component';
 
-type GtxNodeSettingsAssetManagementConfigEnvelope = { [key: string]: GtxNodeSettingsAssetManagementConfig; }
+interface DefaultProviderSettings {
+    default: boolean;
+}
 
-interface GtxNodeSettingsAssetManagementConfig {
+interface AssetProviderSettings {
+    [name: string]: AssetManagementSettings;
+}
+
+interface AssetManagementSettings {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     label_i18n: { [key: string]: string }[];
     iframeSrcUrl: string;
 }
 
-interface GtxNodeSettingsAssetManagementConfigBO extends GtxNodeSettingsAssetManagementConfig {
-    key: string;
+interface DefaultProvider {
+    default: true;
 }
+
+interface ExternalAssetManagementProvider {
+    label: string;
+    iframeSrcUrl: string;
+}
+
+type AssetManagementProvider = DefaultProvider | ExternalAssetManagementProvider;
 
 const DOCS_URL = 'https://gentics.com/Content.Node/cmp8/guides/feature_asset_management.html';
 
@@ -36,42 +51,65 @@ const DOCS_URL = 'https://gentics.com/Content.Node/cmp8/guides/feature_asset_man
 })
 export class UploadButtonComponent implements OnDestroy, OnInit {
 
-    @Input() disabled = false;
+    @Input()
+    public disabled = false;
     /**
      * If TRUE, selected external assets get uploaded directly after selection and emitted via `assetsUploaded`.
      * If FALSE, selected external assets are _not_ uploaded and emitted via `assetsSelected`.
      */
-    @Input() instantUpload = false;
-    @Input() targetNodeId: number;
-    @Input() targetFolderId: number;
-    @Input() itemType: 'file' | 'image';
-    @Input() acceptUploads = 'image/*';
-    @Input() multiple: boolean;
-    @Input() btnSize = 'medium';
-    @Input() btnType = 'secondary';
-    @Input() btnLabel: string;
-    defaultIsActive: boolean;
+    @Input()
+    public instantUpload = false;
 
+    @Input()
+    public targetNodeId: number;
+
+    @Input()
+    public targetFolderId: number;
+
+    @Input()
+    public itemType: 'file' | 'image';
+
+    @Input()
+    public acceptUploads = 'image/*';
+
+    @Input()
+    public multiple: boolean;
+
+    @Input()
+    public btnSize = 'medium';
+
+    @Input()
+    public btnType = 'secondary';
+
+    @Input()
+    public btnLabel: string;
     /**
      * Default component action on user file selection:
      * If output has _no_ observers, selected files will be uploaded by this compoenent.
      * If output has at least one observer, selected files will _not_ be uploaded by this compoenent and instead file selection emitted.
      */
-    @Output() filesSelected = new EventEmitter<File[]>();
+    @Output()
+    public filesSelected = new EventEmitter<File[]>();
+
     /** Action emitted if node feature `asset_management` is configured on successful asset upload. */
-    @Output() assetsUploaded = new EventEmitter<FileOrImage[]>();
+    @Output()
+    public assetsUploaded = new EventEmitter<FileOrImage[]>();
+
     /** Action emitted if node feature `asset_management` is configured on successful asset selection. */
-    @Output() assetsSelected = new EventEmitter<GtxExternalAssetManagementApiRootObject[]>();
-    @Output() uploadInProgress = new EventEmitter<boolean>();
+    @Output()
+    public assetsSelected = new EventEmitter<GtxExternalAssetManagementApiRootObject[]>();
 
-    featureAssetManagementIsActive$: Observable<boolean>;
-    uilanguageCode: string;
+    @Output()
+    public uploadInProgress = new EventEmitter<boolean>();
 
-    configs: ({ default: boolean; } | GtxNodeSettingsAssetManagementConfigBO)[] = [];
+    public assetManagementEnabled = false;
+    public languageCode: string;
+    public providers: AssetManagementProvider[] = [];
 
-    private destroyed$ = new Subject<void>();
+    private subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private uploadConflictService: UploadConflictService,
         private modalService: ModalService,
         private folderActions: FolderActionsService,
@@ -79,65 +117,77 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
     ) { }
 
     ngOnInit(): void {
+        // UI Language is constant and doesn't change
+        this.languageCode = this.appState.now.ui.language;
+
         const activeNode$ = this.appState.select(state => state.folder.activeNode);
 
-        this.featureAssetManagementIsActive$ = activeNode$.pipe(
-            mergeMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
-            filter(nodeFeatures => !!nodeFeatures),
-            map(nodeFeatures => nodeFeatures.includes(NodeFeature.ASSET_MANAGEMENT)),
-        );
+        this.subscriptions.push(combineLatest([
+            activeNode$,
+            this.appState.select(state => state.features.nodeFeatures),
+        ]).pipe(
+            map(([id, features]) => (features?.[id] || []).includes(NodeFeature.ASSET_MANAGEMENT)),
+            distinctUntilChanged(),
+        ).subscribe(enabled => {
+            this.assetManagementEnabled = enabled;
+            this.changeDetector.markForCheck();
+        }));
 
-        activeNode$.pipe(
-            mergeMap(nodeId => this.appState.select(state => state.nodeSettings.node[nodeId])),
-            filter(nodeSettings => nodeSettings && nodeSettings.asset_management),
-            withLatestFrom(this.featureAssetManagementIsActive$),
-            map(([nodeSettings, featureAssetManagementIsActive]) => {
-                const configData = Object.values(nodeSettings.asset_management);
-                // validate config data
-                if (featureAssetManagementIsActive && (Array.isArray(configData) && configData.length === 0)) {
-                    throw new Error(`Malformed config data configured in $NODE_SETTINGS -> "asset_management": expected config array. See ${DOCS_URL}`);
-                }
-                return configData;
-            }),
-            takeUntil(this.destroyed$),
-        ).subscribe((data: (
-            { default: boolean; } | GtxNodeSettingsAssetManagementConfigEnvelope
-        )[]) => {
-            // format config data
-            const masterObj: { default: boolean; } | GtxNodeSettingsAssetManagementConfigEnvelope
-                = data.reduce((prev, next) => Object.assign(prev, next), {});
+        this.subscriptions.push(combineLatest([
+            activeNode$,
+            this.appState.select(state => state.nodeSettings),
+        ]).pipe(
+            map(([id, settings]) => settings.node?.[id]?.asset_management),
+            distinctUntilChanged(isEqual),
+        ).subscribe((entries: (AssetProviderSettings | DefaultProviderSettings)[]) => {
+            this.providers = [];
 
-            this.configs = Object.entries(masterObj).map(([key, value]) => {
-                if (key === 'default') {
-                    return { default: value };
-                } else {
-                    return this.unwrapConfig({ [key]: value });
+            if (!Array.isArray(entries)) {
+                console.error('Asset management has invalid settings!');
+                return;
+            }
+
+            entries.forEach(providerSettings => {
+                if (providerSettings.default != null && providerSettings.default) {
+                    this.providers.push({
+                        default: true,
+                        label: '',
+                    });
+                    return;
                 }
+
+                const names = Object.getOwnPropertyNames(providerSettings) || [];
+
+                // Invalid amount of properties defined
+                if (names.length !== 1) {
+                    return;
+                }
+
+                const key = names[0];
+                const value = providerSettings[key];
+
+                if (value == null || typeof value !== 'object') {
+                    console.error(`The asset-management settings for "${key}" is invalid! Please correct them!\nSee the documentation for more information: ${DOCS_URL}`);
+                    return;
+                }
+
+                if (value.label_i18n == null || typeof value.label_i18n[this.languageCode] !== 'string') {
+                    console.error(`The asset-management settings for "${key}" do not have valid 'label_i18n' settings or is missing language "${this.languageCode}"!`);
+                    return;
+                }
+
+                this.providers.push({
+                    label: value.label_i18n[this.languageCode],
+                    iframeSrcUrl: value.iframeSrcUrl,
+                });
             });
-        });
 
-        this.appState.select(state => state.ui.language).pipe(
-            takeUntil(this.destroyed$),
-        ).subscribe(language => this.uilanguageCode = language);
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngOnDestroy(): void {
-        this.destroyed$.next();
-        this.destroyed$.complete();
-    }
-
-    isDefaultConfig(config: object): boolean {
-        return config && Object.keys(config)[0] === 'default';
-    }
-
-    getI18nLabel(config: GtxNodeSettingsAssetManagementConfigBO): string {
-        let i18nLabel: string;
-        try {
-            i18nLabel = config.label_i18n && config.label_i18n[this.uilanguageCode];
-        } catch (error) {
-            i18nLabel = `No data in config for language ${this.uilanguageCode}`;
-        }
-        return i18nLabel;
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     /**
@@ -160,10 +210,22 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
      *
      * @param config for external asset store
      */
-    customUpload(config: GtxNodeSettingsAssetManagementConfigBO): void {
+    customUpload(config: ExternalAssetManagementProvider): void {
         this.uploadInProgress.emit(true);
-        const iframeSrcUrl = `${config.iframeSrcUrl}?locale=${this.uilanguageCode}`;
-        this.modalService.fromComponent(ExternalAssetsModalComponent, {}, { title: this.getI18nLabel(config), iframeSrcUrl })
+
+        let iframeUrl: string;
+
+        // Try to parse the URL and append the query-param this way, to support query-params in the URL.
+        // Otherwise it could mangle it and cause issues. Old way stays for compatibility/fallback reasons.
+        try {
+            const target = new URL(config.iframeSrcUrl, window.location as any);
+            target.searchParams.set('locale', this.languageCode);
+            iframeUrl = target.toString();
+        } catch (err) {
+            iframeUrl = `${config.iframeSrcUrl}?locale=${this.languageCode}`;
+        }
+
+        this.modalService.fromComponent(ExternalAssetsModalComponent, {}, { title: config.label, iframeSrcUrl: iframeUrl })
             .then(modal => modal.open())
             .then((response: GtxExternalAssetManagementApiResponse) => {
                 // if user aborted
@@ -208,19 +270,4 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
             })
             .catch(() => this.uploadInProgress.emit(false));
     }
-
-    private unwrapConfig(config: GtxNodeSettingsAssetManagementConfigEnvelope): GtxNodeSettingsAssetManagementConfigBO {
-        let key: string;
-        const configKeysAmount = Object.keys(config).length;
-        if (configKeysAmount === 1) {
-            key = Object.keys(config)[0];
-        } else {
-            throw new Error(`Malformed config data configured in $NODE_SETTINGS -> "asset_management": expected one key per config but got ${configKeysAmount}. See ${DOCS_URL}`);
-        }
-        return {
-            key,
-            ...config[key],
-        };
-    }
-
 }

@@ -240,7 +240,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/construct/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/construct/${id}`),
 
-        listForEditor: (options) => this.executeMappedJsonRequest(GET, '/construct/list', null, options),
+        listForEditor: (options) => this.executeMappedJsonRequest(GET, '/construct', null, options),
 
         hash: (id) => this.executeMappedJsonRequest(GET, `/constructs/${id}/hash`),
         getLinkedNodes: (id) => this.executeMappedJsonRequest(GET, `/construct/${id}/nodes`),

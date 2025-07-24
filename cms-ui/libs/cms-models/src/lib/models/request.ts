@@ -1925,7 +1925,7 @@ export type RolePermissionsUpdateRequest = RolePermissions;
 /**
  * Query parameters for `/construct/list`
  */
-export type ConstructListOptions = BaseListOptionsWithSkipCount & {
+export interface ConstructListOptions extends BaseListOptionsWithSkipCount, EmbedListOptions<ConstructEmbedTypes> {
     category?: number;
     changable?: boolean;
     nodeId?: number;

@@ -1003,7 +1003,7 @@ export interface ConstructLoadResponse extends Response {
  * Response from the `/constructs` endpoint
  */
 export interface ConstructListResponse extends BaseListResponse {
-    constructs?: TagType[];
+    items?: TagType[];
 }
 
 /**

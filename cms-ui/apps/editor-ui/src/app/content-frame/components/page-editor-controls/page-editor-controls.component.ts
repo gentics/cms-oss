@@ -166,11 +166,20 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
             }),
         ).subscribe(constructs => {
             this.constructs = structuredClone(constructs);
-            this.changeDetector.markForCheck();
-        }));
+            // extract the categories from the constructs
+            this.constructCategories = Array.from(
+                new Map(
+                    this.constructs
+                        .filter(item => item.category)
+                        .map(item => [item.category.id, item.category])
+                    ).values()
+                ).sort((a, b) => a.sortOrder - b.sortOrder);
 
-        this.subscriptions.push(this.client.constructCategory.list({ recursive: false, nodeId: this.nodeId, embed: 'constructs' }).subscribe(res => {
-            this.constructCategories = res.items;
+            // add the constructs to their categories
+            this.constructs.filter(construct => construct.category).forEach(construct => {
+                this.constructCategories.filter(cat => cat.id === construct.categoryId).forEach(cat => cat.constructs[construct.keyword] = construct);
+            });
+
             this.changeDetector.markForCheck();
         }));
 

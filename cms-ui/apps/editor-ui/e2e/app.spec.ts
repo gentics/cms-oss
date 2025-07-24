@@ -14,6 +14,7 @@ import {
     findItem,
     itemAction,
     initPage,
+    navigateToApp,
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
@@ -36,7 +37,7 @@ test.describe('Login', () => {
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

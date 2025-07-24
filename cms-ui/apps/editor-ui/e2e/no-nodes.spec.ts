@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { EntityImporter } from '@gentics/e2e-utils';
-import { login, initPage } from './helpers';
+import { login, initPage, navigateToApp } from './helpers';
 import { AUTH_ADMIN } from './common';
 
 test.describe('No Nodes', () => {
@@ -13,7 +13,7 @@ test.describe('No Nodes', () => {
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest(true);
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
     });
 

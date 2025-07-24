@@ -4,6 +4,7 @@ import { AUTH_ADMIN } from './common';
 import { loginWithForm, navigateToApp, navigateToModule } from './helpers';
 import * as auth from './auth.json';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Mesh Browser', () => {
     const IMPORTER = new EntityImporter();
     const CR_NAME = 'Mesh CR';

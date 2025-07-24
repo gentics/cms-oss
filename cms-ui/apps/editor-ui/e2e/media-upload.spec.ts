@@ -21,6 +21,7 @@ import {
     findList,
     initPage,
     uploadFiles,
+    navigateToApp,
 } from './helpers';
 
 test.describe('Media Upload', () => {
@@ -42,7 +43,7 @@ test.describe('Media Upload', () => {
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

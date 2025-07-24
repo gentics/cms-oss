@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { ContentRepository, Variant } from '@gentics/cms-models';
 import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import {
-    BASIC_TEMPLATE_ID,
     clickTableRow,
+    CONTENT_REPOSITORY_MESH,
     CR_PREFIX_MESH,
     EntityImporter,
     expandTrableRow,
@@ -90,7 +91,7 @@ test.describe('Content Repositories Module', () => {
         await IMPORTER.syncPackages(TestSize.MINIMAL);
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
-        testCr = IMPORTER.get(BASIC_TEMPLATE_ID as any) as any;
+        testCr = IMPORTER.get(CONTENT_REPOSITORY_MESH as any) as any;
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH_ADMIN);
@@ -108,7 +109,7 @@ test.describe('Content Repositories Module', () => {
     });
 
     test('should open the details on click', async ({ page }) => {
-        const row = master.locator('gtx-table .grid-row.data-row[data-id="1"]');
+        const row = findTableRowById(master, testCr.id);
         await row.waitFor({ state: 'visible' });
         await clickTableRow(row);
         await expect(row).toHaveClass(CLASS_ACTIVE);

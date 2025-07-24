@@ -109,7 +109,7 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
                 type: type === 'image' ? 'image/jpeg' : 'text/plain',
             };
         });
-        const transfer = await page.evaluateHandle(async (data) => {
+        const dataTransfer = await page.evaluateHandle(async (data) => {
             const transfer = new DataTransfer();
             // Put the binaries/Files into the transfer
             for (const file of Object.values(data)) {
@@ -118,7 +118,7 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
             }
             return transfer;
         }, data);
-        await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { transfer }, { strict: true, timeout: 60_000 });
+        await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         await page.waitForRequest(request =>
             request.url().includes('/rest/file/create') ||
             request.url().includes('/rest/image/create'));

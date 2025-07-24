@@ -3,7 +3,6 @@ import { EntityImporter, TestSize, findTableRowById, selectTab, clickTableRow } 
 import { AUTH_ADMIN } from './common';
 import { loginWithForm, navigateToApp, navigateToModule } from './helpers';
 
-const IMPORTER = new EntityImporter();
 const NODE_NAME = 'empty node';
 const TEMPLATE_NAME = '[Test] Basic Template';
 const LINK_TO_NODE_ACTION = 'linkToNode';
@@ -11,6 +10,7 @@ const LINK_TO_NODE_MODAL = 'gtx-assign-templates-to-nodes-modal';
 const LINK_TO_FOLDER_ACTION = 'linkToFolder';
 const LINK_TO_FOLDER_MODAL = 'gtx-assign-templates-to-folders-modal';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Templates Module', () => {
     const IMPORTER = new EntityImporter();
 

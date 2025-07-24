@@ -13,9 +13,11 @@ import {
     selectNode,
     findList,
     initPage,
+    navigateToApp,
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
     test.slow();
@@ -43,7 +45,7 @@ test.describe('Form Management', () => {
             [NodeFeature.FORMS]: true,
         });
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

@@ -16,9 +16,11 @@ import {
     editorAction,
     openObjectPropertyEditor,
     closeObjectPropertyEditor,
+    navigateToApp,
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Folder Management', () => {
     const IMPORTER = new EntityImporter();
     const NEW_FOLDER_NAME = 'Hello World';
@@ -44,7 +46,7 @@ test.describe('Folder Management', () => {
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

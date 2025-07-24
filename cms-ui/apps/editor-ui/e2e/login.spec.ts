@@ -6,7 +6,7 @@ import {
     isVariant,
 } from '@gentics/e2e-utils';
 import { AUTH_ADMIN, AUTH_KEYCLOAK } from './common';
-import { AUTH, login, initPage } from './helpers';
+import { AUTH, login, initPage, navigateToApp } from './helpers';
 
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
@@ -30,7 +30,7 @@ test.describe('Login', () => {
 
         test('should be able to login', async ({ page }) => {
             await initPage(page);
-            await page.goto('/');
+            await navigateToApp(page);
             await login(page, AUTH_ADMIN);
             await expect(page.locator('project-editor')).toBeVisible();
         });

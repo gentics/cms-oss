@@ -16,6 +16,7 @@ import {
     findItem,
     itemAction,
     initPage,
+    navigateToApp,
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
@@ -43,7 +44,7 @@ test.describe('Page Translation', () => {
             [NodeFeature.AUTOMATIC_TRANSLATION]: true,
         });
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
         await page.locator('node-selector').waitFor();
         await selectNode(page, IMPORTER.get(minimalNode)!.id);

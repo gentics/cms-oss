@@ -13,6 +13,7 @@ import {
     editorAction,
     initPage,
     closeObjectPropertyEditor,
+    navigateToApp,
 } from './helpers';
 
 test.describe('Media Management', () => {
@@ -40,7 +41,7 @@ test.describe('Media Management', () => {
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

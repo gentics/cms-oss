@@ -20,9 +20,11 @@ import {
     findAlohaComponent,
     findDynamicFormModal,
     getAlohaIFrame,
+    navigateToApp,
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Link Checker', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
@@ -55,7 +57,7 @@ test.describe('Link Checker', () => {
         await IMPORTER.executeSchedule(scheduleLinkChecker);
         await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

@@ -27,6 +27,7 @@ import {
     selectNode,
     selectOption,
     getAlohaIFrame,
+    navigateToApp,
 } from './helpers';
 
 // Skipped until we find out why it can't find the iframe content in jenkins
@@ -55,7 +56,7 @@ test.describe('Page Editing', () => {
         await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
 
         await initPage(page);
-        await page.goto('/');
+        await navigateToApp(page);
         await login(page, AUTH_ADMIN);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

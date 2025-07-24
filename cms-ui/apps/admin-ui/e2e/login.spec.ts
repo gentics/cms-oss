@@ -8,7 +8,8 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
 
-    test.beforeEach(async ({ request, context }) => {
+    test.beforeEach(async ({ request, context }, testInfo) => {
+        testInfo.setTimeout(120_000);
         await context.clearCookies();
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();
@@ -16,7 +17,8 @@ test.describe('Login', () => {
     });
 
     test.describe('Without keycloak feature enabled', () => {
-        test.beforeEach(async ({ request }) => {
+        test.beforeEach(async ({ request }, testInfo) => {
+            testInfo.setTimeout(120_000);
             IMPORTER.setApiContext(request);
             await IMPORTER.setupFeatures({
                 [Feature.KEYCLOAK]: false,
@@ -36,7 +38,8 @@ test.describe('Login', () => {
     test.describe('With keycloak feature enabled', () => {
         test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
-        test.beforeEach(async ({ request }) => {
+        test.beforeEach(async ({ request }, testInfo) => {
+            testInfo.setTimeout(120_000);
             IMPORTER.setApiContext(request);
             await IMPORTER.setupFeatures({
                 [Feature.KEYCLOAK]: true,

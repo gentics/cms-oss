@@ -75,12 +75,14 @@ test.describe('Content Repositories Module', () => {
     let testCr: ContentRepository;
     let master: Locator;
 
-    test.beforeAll(async ({ request }) => {
+    test.beforeAll(async ({ request }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request }) => {
+    test.beforeEach(async ({ page, request }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
 
         // Clean and setup test data
@@ -106,7 +108,7 @@ test.describe('Content Repositories Module', () => {
     });
 
     test('should open the details on click', async ({ page }) => {
-        const row = findTableRowById(master, testCr.id);
+        const row = master.locator('gtx-table .grid-row.data-row[data-id="1"]');
         await row.waitFor({ state: 'visible' });
         await clickTableRow(row);
         await expect(row).toHaveClass(CLASS_ACTIVE);

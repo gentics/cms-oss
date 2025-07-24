@@ -106,7 +106,7 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
             return {
                 bufferData: `data:application/octet-stream;base64,${buffer}`,
                 name: f,
-                type: type === 'image' ? 'application/jpg' : 'application/txt',
+                type: type === 'image' ? 'image/jpeg' : 'text/plain',
             };
         });
         const transfer = await page.evaluateHandle(async (data) => {
@@ -114,11 +114,14 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
             // Put the binaries/Files into the transfer
             for (const file of Object.values(data)) {
                 const blobData = await fetch(file.bufferData).then((res) => res.blob());
-                transfer.items.add(new File([blobData], file.name, { type: '' }))
+                transfer.items.add(new File([blobData], file.name, { type: file.type }))
             }
             return transfer;
         }, data);
         await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { transfer }, { strict: true, timeout: 60_000 });
+        await page.waitForRequest(request =>
+            request.url().includes('/rest/file/create') ||
+            request.url().includes('/rest/image/create'));
     } else {
         const fileChooserPromise = page.waitForEvent('filechooser');
         const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);

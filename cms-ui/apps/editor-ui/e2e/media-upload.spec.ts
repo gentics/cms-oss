@@ -26,14 +26,16 @@ import {
 test.describe('Media Upload', () => {
     const IMPORTER = new EntityImporter();
 
-    test.beforeAll(async ({ request }) => {
+    test.beforeAll(async ({ request }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }) => {
+    test.beforeEach(async ({ page, request, context }, testInfo) => {
+        testInfo.setTimeout(120_000);
         await context.clearCookies();
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();

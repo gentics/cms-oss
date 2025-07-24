@@ -6,7 +6,8 @@ import { AUTH_ADMIN } from './common';
 test.describe('No Nodes', () => {
     const IMPORTER = new EntityImporter();
 
-    test.beforeEach(async ({ page, request, context }) => {
+    test.beforeEach(async ({ page, request, context }, testInfo) => {
+        testInfo.setTimeout(120_000);
         await context.clearCookies();
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();

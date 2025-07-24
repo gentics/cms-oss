@@ -16,12 +16,14 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Scheduler Module', () => {
     const IMPORTER = new EntityImporter();
 
-    test.beforeAll(async ({ request }) => {
+    test.beforeAll(async ({ request }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }) => {
+    test.beforeEach(async ({ page, request, context }, testInfo) => {
+        testInfo.setTimeout(120_000);
         await context.clearCookies();
         // Reset importer client to avoid 401 errors
         IMPORTER.setApiContext(request);

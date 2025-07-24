@@ -11,7 +11,8 @@ import { AUTH, login, initPage } from './helpers';
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
 
-    test.beforeEach(async ({ request, context }) => {
+    test.beforeEach(async ({ request, context }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();

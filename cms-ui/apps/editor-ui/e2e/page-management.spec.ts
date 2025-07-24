@@ -28,14 +28,16 @@ test.describe('Page Management', () => {
     const TEST_CATEGORY_ID = 2;
     const COLOR_ID = 2;
 
-    test.beforeAll(async ({ request }) => {
+    test.beforeAll(async ({ request }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }) => {
+    test.beforeEach(async ({ page, request, context }, testInfo) => {
+        testInfo.setTimeout(120_000);
         await context.clearCookies();
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();

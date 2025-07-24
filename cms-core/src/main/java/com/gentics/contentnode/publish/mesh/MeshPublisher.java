@@ -2033,18 +2033,26 @@ public class MeshPublisher implements AutoCloseable {
 				return;
 			}
 
+			int numFolders = 0;
+			int numFiles = 0;
+			int numForms = 0;
 			List<Scheduled> entries = new ArrayList<>();
 			if (node.doPublishContentMapFolders()) {
-				entries.addAll(Scheduled.from(nodeId, PublishQueue.getDirtedObjectsWithAttributes(Folder.class, node), reportToPublishQueue));
+				Collection<Scheduled> folders = Scheduled.from(nodeId, PublishQueue.getDirtedObjectsWithAttributes(Folder.class, node), reportToPublishQueue);
+				numFolders = folders.size();
+				entries.addAll(folders);
 			}
 			if (node.doPublishContentMapFiles()) {
-				entries.addAll(Scheduled.from(nodeId, PublishQueue.getDirtedObjectsWithAttributes(File.class, node), reportToPublishQueue));
+				Collection<Scheduled> files = Scheduled.from(nodeId, PublishQueue.getDirtedObjectsWithAttributes(File.class, node), reportToPublishQueue);
+				numFiles = files.size();
+				entries.addAll(files);
 			}
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS, node)) {
-				entries.addAll(Scheduled.from(nodeId, PublishQueue.getDirtedObjectsWithAttributes(Form.class, node), reportToPublishQueue));
+				Collection<Scheduled> forms = Scheduled.from(nodeId, PublishQueue.getDirtedObjectsWithAttributes(Form.class, node), reportToPublishQueue);
+				numForms = forms.size();
+				entries.addAll(forms);
 			}
 			if (!entries.isEmpty()) {
-				int numEntries = entries.size();
 				if (reportToPublishQueue) {
 					for (Scheduled scheduled : entries) {
 						NodeObject object = scheduled.get().getObject();
@@ -2055,7 +2063,7 @@ public class MeshPublisher implements AutoCloseable {
 				removeObjectsFromIncorrectProject(nodeId, entries, getProject(node));
 
 				processQueue(entries, node, null, null);
-				info(String.format("%d folders and files of '%s' have been queued for '%s'", numEntries, node, cr.getName()));
+				info(String.format("%d folders, %d files and %d forms of '%s' have been queued for '%s'", numFolders, numFiles, numForms, node, cr.getName()));
 			}
 		}
 	}

@@ -867,6 +867,7 @@ public class Publisher implements Runnable {
 			PublishController.setStopped();
 			publisherInfo.setRunning(false);
 			publisherInfo.setPhase(PublisherPhase.IDLE);
+			PublishQueueStats.get().refresh();
 		}
 
 		// TODO when finished, notify the php-backend, so that the scheduler can start subsequent tasks (ftp, rsync,..)

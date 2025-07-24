@@ -347,7 +347,8 @@ public class PublishQueue {
 
 			TransactionManager.execute(new TransactionManager.Executable() {
 				public void execute() throws NodeException {
-					DBUtils.executeUpdate("DELETE FROM publishqueue WHERE publish_flag = ?", new Object[] { 1});
+					DBUtils.update("DELETE FROM publishqueue WHERE publish_flag = ? AND delay = ?", 1, 0);
+					DBUtils.update("UPDATE publishqueue SET publish_flag = ?", 0);
 				}
 			});
 		} catch (NodeException | InterruptedException e) {
@@ -380,10 +381,14 @@ public class PublishQueue {
 			HandledObject.markObjectsFinished();
 
 			if (removerService != null) {
-			removerService.shutdown();
-			if (!removerService.awaitTermination(1, TimeUnit.HOURS)) {
-				throw new NodeException("Timeout when waiting for publiqueue entries to be removed");
-			}
+				removerService.shutdown();
+				try {
+					if (!removerService.awaitTermination(1, TimeUnit.HOURS)) {
+						throw new NodeException("Timeout when waiting for publiqueue entries to be removed");
+					}
+				} catch (InterruptedException e) {
+					logger.debug("Interrupted while waiting for remover service to terminate");
+				}
 			}
 
 			notPublishedCount.put(
@@ -404,10 +409,10 @@ public class PublishQueue {
 
 			TransactionManager.execute(new TransactionManager.Executable() {
 				public void execute() throws NodeException {
-					DBUtils.executeUpdate("UPDATE publishqueue SET publish_flag = ?", new Object[] { 0 });
+					DBUtils.update("UPDATE publishqueue SET publish_flag = ?", 0);
 				}
 			});
-		} catch (NodeException | InterruptedException e) {
+		} catch (NodeException e) {
 			logger.error("Error while handling a failed publish process", e);
 		} finally {
 			HandledObject.clear();
@@ -439,7 +444,7 @@ public class PublishQueue {
 				sql.append(StringUtils.repeat("?", omit.length + 4, ",")).append(")");
 
 				if (forPublish) {
-					sql.append(" AND publish_flag = ?");
+					sql.append(" AND publish_flag = ? AND delay = ?");
 				}
 				if (node != null) {
 					sql.append(" AND channel_id = ?");
@@ -462,6 +467,7 @@ public class PublishQueue {
 
 						if (forPublish) {
 							stmt.setInt(pCounter++, 1); // publish_flag = ?
+							stmt.setInt(pCounter++, 0); // delay = ?
 						}
 						if (node != null) {
 							stmt.setInt(pCounter++, ObjectTransformer.getInt(node.getId(), 0)); // channel_id = ?
@@ -549,7 +555,7 @@ public class PublishQueue {
 				sql.append(StringUtils.repeat("?", omit.length + 4, ",")).append(")");
 
 				if (forPublish) {
-					sql.append(" AND pq.publish_flag = ?");
+					sql.append(" AND pq.publish_flag = ? AND pq.delay = ?");
 				}
 				if (node != null) {
 					sql.append(" AND pq.channel_id = ?");
@@ -572,6 +578,7 @@ public class PublishQueue {
 
 						if (forPublish) {
 							stmt.setInt(pCounter++, 1); // publish_flag = ?
+							stmt.setInt(pCounter++, 0); // delay = ?
 						}
 						if (node != null) {
 							stmt.setInt(pCounter++, ObjectTransformer.getInt(node.getId(), 0)); // channel_id = ?

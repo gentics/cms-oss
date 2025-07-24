@@ -357,6 +357,7 @@ export class AlohaIntegrationService {
         this.registeredComponents = {};
         this.renderedComponents = {};
         this.componentsSub.next({});
+        this.activeEditableSub.next(null);
     }
 
     public changeActivePageEditorTab(id: string): boolean {

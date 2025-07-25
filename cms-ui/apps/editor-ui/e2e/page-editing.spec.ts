@@ -30,7 +30,7 @@ import {
     navigateToApp,
 } from './helpers';
 
-// Skipped until we find out why it can't find the iframe content in jenkins
+test.describe.configure({ mode: 'serial' });
 test.describe('Page Editing', () => {
     // Mark this suite as slow - Because it is
     test.slow();
@@ -309,11 +309,6 @@ test.describe('Page Editing', () => {
                 await page.locator('gtx-page-editor-tabs button[data-id="formatting"]').click();
                 const formatButton = findAlohaComponent(page, { slot: ACTION_FORMAT_CITE, type: 'toggle-button' });
                 await formatButton.click();
-
-                // Fill citation form
-                // const modal = page.locator('gtx-dynamic-modal');
-                // await modal.locator('input[formcontrolname="cite"]').fill(SOURCE);
-                // await modal.locator('.modal-footer [data-action="confirm"]').click();
 
                 // Verify citation
                 const cite = editor.locator('cite');

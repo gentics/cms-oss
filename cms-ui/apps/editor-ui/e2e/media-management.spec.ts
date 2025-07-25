@@ -16,6 +16,7 @@ import {
     navigateToApp,
 } from './helpers';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Media Management', () => {
     const IMPORTER = new EntityImporter();
 

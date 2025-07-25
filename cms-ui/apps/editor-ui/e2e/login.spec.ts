@@ -8,6 +8,7 @@ import {
 import { AUTH_ADMIN, AUTH_KEYCLOAK } from './common';
 import { AUTH, login, initPage, navigateToApp } from './helpers';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
 

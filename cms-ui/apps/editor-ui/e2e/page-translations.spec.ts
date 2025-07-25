@@ -85,7 +85,7 @@ test.describe('Page Translation', () => {
             //     .find('.language-icon.available')
             //     .should('have.length.at.least', 2);
 
-
+            // TODO needs a test translation environment (translateLocally?)
             // // does not work for iframe
             // cy.get('content-frame', {timeout:5000})
             //     .first()

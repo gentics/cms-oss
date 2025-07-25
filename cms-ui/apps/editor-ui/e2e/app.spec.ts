@@ -18,6 +18,7 @@ import {
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
 

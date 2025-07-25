@@ -21,6 +21,7 @@ import {
 } from './helpers';
 import { AUTH_ADMIN } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Page Management', () => {
     const IMPORTER = new EntityImporter();
     const NEW_PAGE_NAME = 'Hello World';

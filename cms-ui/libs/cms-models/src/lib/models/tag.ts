@@ -4,6 +4,7 @@ import { InstancePermissionItem } from './permissions';
 import { TagPart, TagPartProperty } from './tag-part';
 import { DefaultModelType, IndexByKey, ModelType } from './type-util';
 import { User } from './user';
+import { ConstructCategory } from './construct-category';
 
 export type TagTypeType = 'CONTENTTAG' | 'TEMPLATETAG' | 'OBJECTTAG';
 
@@ -166,8 +167,8 @@ export interface TagTypeBase<T extends ModelType> {
     edate?: number;
     /** Category id of the construct */
     categoryId?: number;
-    /** Category name of the construct */
-    category?: string;
+    /** Category of the construct */
+    category?: ConstructCategory;
     /** Order for the category that was set */
     categorySortorder?: number;
     /** True if the construct shall be visible in the menu, false if not */

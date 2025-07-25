@@ -1,0 +1,1 @@
+REST API: The endpoint to get construct categories will only have the constructs embedded when the parameter @embed=constructs@ is given.

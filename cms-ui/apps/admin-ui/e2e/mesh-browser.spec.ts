@@ -35,13 +35,13 @@ test.describe('Mesh Browser', () => {
     test.describe('Mesh Browser', () => {
         test('should have content repositories listed', async ({ page }) => {
             const rows = page.locator('gtx-table .grid-row');
-            await rows.waitFor({ timeout: 60_000 });
+            await rows.waitFor();
             await expect(rows).toHaveCount(1);
         });
 
         test('should show login gate on click', async ({ page }) => {
             const row = page.locator('gtx-table .grid-row', { hasText: CR_NAME });
-            await row.waitFor({ timeout: 60_000 });
+            await row.waitFor();
             await row.click();
             await expect(page.locator('.login-gate-wrapper')).toBeVisible();
         });
@@ -51,7 +51,7 @@ test.describe('Mesh Browser', () => {
         test.beforeEach(async ({ page }) => {
             // Click into the Mesh CR
             const row = page.locator('gtx-table .grid-row', { hasText: CR_NAME });
-            await row.waitFor({ timeout: 60_000 });
+            await row.waitFor();
             await row.click();
 
             // Fill in Mesh credentials and submit

@@ -1,0 +1,2 @@
+Editor User Interface: When opening a page for editing, sometimes some constructs were available before an editable was activated.
+This has been fixed now, so that no constructs will be available before an editable is activated by clicking into it.

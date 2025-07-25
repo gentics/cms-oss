@@ -1,7 +1,8 @@
-import { Directive, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Directive, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
+import { ChangesOf } from '../../common';
 import { RadioButtonComponent } from '../../components/radio-button/radio-button.component';
-import { generateFormProvider } from '../../utils';
+import { generateFormProvider, randomId } from '../../utils';
 
 /**
  * RadioGroup groups multiple {@link RadioButtonComponent} elements together.
@@ -13,10 +14,9 @@ import { generateFormProvider } from '../../utils';
 })
 export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
 
-    private static instanceCounter = 0;
+    public disabled = false;
 
     private radioButtons: RadioButtonComponent[] = [];
-    private groupID: number;
 
     @Input()
     public value: any;
@@ -24,15 +24,9 @@ export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
     @Output()
     public valueChange = new EventEmitter<any>();
 
-    get uniqueName(): string {
-        return `group-${this.groupID}`;
-    }
+    public readonly UNIQUE_ID = `group-${randomId()}`;
 
-    constructor() {
-        this.groupID = RadioGroupDirective.instanceCounter++;
-    }
-
-    ngOnChanges(changes: SimpleChanges): void {
+    public ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.value) {
             this.forwardValueToRadios();
         }
@@ -42,6 +36,7 @@ export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
         if (this.radioButtons.indexOf(radio) < 0) {
             this.radioButtons.push(radio);
             radio.writeValue(this.value);
+            radio.setDisabledState(this.disabled);
         }
     }
 
@@ -89,4 +84,12 @@ export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
 
     private onTouched: () => any = () => { };
     private onChange: (value?: any) => any = () => { };
+
+    setDisabledState(isDisabled: boolean): void {
+        this.disabled = isDisabled;
+
+        for (const radio of this.radioButtons) {
+            radio.setDisabledState(isDisabled);
+        }
+    }
 }

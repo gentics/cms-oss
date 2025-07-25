@@ -28,9 +28,10 @@ test.describe('Mesh Browser', () => {
         // Navigate to constructs module
         await navigateToModule(page, 'mesh-browser');
     });
+
     test.describe('Mesh Browser', () => {
         test('should have content repositories listed', async ({ page }) => {
-            const rows = page.locator('gtx-table .grid-row');
+            const rows = page.locator('gtx-table .grid-row.data-row');
             await expect(rows).toHaveCount(1);
         });
 

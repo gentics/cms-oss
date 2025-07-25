@@ -380,7 +380,7 @@ public class SortingTest {
 		// change sorting in CMS
 		List<String> ids = supply(() -> {
 			return new ConstructResourceImpl()
-					.listCategories(new SortParameterBean().setSort("sortorder"), null, null, null).getItems().stream()
+					.listCategories(new SortParameterBean().setSort("sortorder"), null, null, null, null).getItems().stream()
 					.map(com.gentics.contentnode.rest.model.ConstructCategory::getId).map(id -> Integer.toString(id)).collect(Collectors.toList());
 		});
 

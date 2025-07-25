@@ -1,0 +1,2 @@
+REST API: The endpoint to get a list of construct categories has new query parameters @pageId@ and @nodeId@
+to restrict the returned construct categories to the ones that have at least one construct which is assigned to the given node.

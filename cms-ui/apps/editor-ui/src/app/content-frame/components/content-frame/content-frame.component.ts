@@ -609,8 +609,9 @@ span.diff-html-added {
         this.constructsSubscription = this.client.construct.listForEditor({
             pageId: this.currentItem.id,
             nodeId: this.currentNode.id,
+            embed: 'category',
         }).subscribe(res => {
-            this.aloha.constructs$.next(res.constructs);
+            this.aloha.constructs$.next(res.items);
         });
     }
 

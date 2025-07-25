@@ -1,9 +1,30 @@
 # Only include the most basic features here.
 # All others should be enabled dynamically from the tests.
 feature:
+  aloha_annotate_editables: true
+  content_staging: true
+  contentfile_auto_offline: true
+  contentgroup3_pagefilename: true
+  copy_tags: true
+  customform_resolve_nodetags: true
   devtools: true
-  mesh_contentrepository: true
+  focal_point_editing: true
+  force_javaparser_post: true
   forms: true
+  link_checker: true
+  live_urls: true
+  mesh_contentrepository: true
+  nice_urls: true
+  pub_dir_segment: true
+  publish_cache: false
+  recent_items: true
+  resumable_publish_process: true
+  tagtypemigration: true
+  multichanneling: true
+  webp_conversion: true
+  automatic_translation: true
+  upload_image_properties: true
+  upload_file_properties: true
 
   # Keycloak is a bit of a special feature - It needs to be active when the server
   # starts to properly work. Since it's only available in EE, we control the initial

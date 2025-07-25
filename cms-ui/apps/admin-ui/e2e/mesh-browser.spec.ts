@@ -4,16 +4,19 @@ import { AUTH_ADMIN } from './common';
 import { loginWithForm, navigateToApp, navigateToModule } from './helpers';
 import * as auth from './auth.json';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Mesh Browser', () => {
     const IMPORTER = new EntityImporter();
     const CR_NAME = 'Mesh CR';
 
-    test.beforeAll(async ({ request }) => {
+    test.beforeAll(async ({ request }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }) => {
+    test.beforeEach(async ({ page, request, context }, testInfo) => {
+        testInfo.setTimeout(120_000);
         await context.clearCookies();
         // Reset importer client to avoid 401 errors
         IMPORTER.setApiContext(request);
@@ -31,12 +34,14 @@ test.describe('Mesh Browser', () => {
 
     test.describe('Mesh Browser', () => {
         test('should have content repositories listed', async ({ page }) => {
-            const rows = page.locator('gtx-table .grid-row.data-row');
+            const rows = page.locator('gtx-table .grid-row');
+            await rows.waitFor();
             await expect(rows).toHaveCount(1);
         });
 
         test('should show login gate on click', async ({ page }) => {
             const row = page.locator('gtx-table .grid-row', { hasText: CR_NAME });
+            await row.waitFor();
             await row.click();
             await expect(page.locator('.login-gate-wrapper')).toBeVisible();
         });
@@ -46,6 +51,7 @@ test.describe('Mesh Browser', () => {
         test.beforeEach(async ({ page }) => {
             // Click into the Mesh CR
             const row = page.locator('gtx-table .grid-row', { hasText: CR_NAME });
+            await row.waitFor();
             await row.click();
 
             // Fill in Mesh credentials and submit

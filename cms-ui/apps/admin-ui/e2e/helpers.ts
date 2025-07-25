@@ -24,6 +24,14 @@ export async function loginWithForm(source: Page | Locator, login: (keyof typeof
         .click();
 }
 
+export async function login(page: Page, account: string, keycloak?: boolean): Promise<void> {
+    const data = AUTH[account];
+
+    await page.fill('input[type="text"]', data.username);
+    await page.fill('input[type="password"]', data.password);
+    await page.click(`${keycloak ? 'input' : 'button'}[type="submit"]`);
+}
+
 export async function navigateToModule(page: Page, moduleId: string): Promise<void> {
     // Click the module item
     const moduleItem = page.locator(`gtx-dashboard-item[data-id="${moduleId}"] > .item:not(.disabled)`).locator('..');

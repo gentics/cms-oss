@@ -40,6 +40,12 @@ export const FORMAT_QUOTE = 'q';
 export const FORMAT_CITE = 'cite';
 export const FORMAT_BLOCK_QUOTE = 'blockquote';
 export const FORMAT_ABBR = 'abbr';
+export const AUTH_MESH = 'mesh';
+
+export interface LoginData {
+    username: string;
+    password: string;
+}
 
 export const ACTION_SIMPLE_FORMAT_MAPPING: Record<string, string> = {
     [ACTION_FORMAT_BOLD]: FORMAT_BOLD,

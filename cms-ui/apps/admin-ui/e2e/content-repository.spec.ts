@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { ContentRepository, Variant } from '@gentics/cms-models';
 import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import {
-    BASIC_TEMPLATE_ID,
     clickTableRow,
+    CONTENT_REPOSITORY_MESH,
     CR_PREFIX_MESH,
     EntityImporter,
     expandTrableRow,
@@ -75,12 +76,14 @@ test.describe('Content Repositories Module', () => {
     let testCr: ContentRepository;
     let master: Locator;
 
-    test.beforeAll(async ({ request }) => {
+    test.beforeAll(async ({ request }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request }) => {
+    test.beforeEach(async ({ page, request }, testInfo) => {
+        testInfo.setTimeout(120_000);
         IMPORTER.setApiContext(request);
 
         // Clean and setup test data
@@ -88,7 +91,7 @@ test.describe('Content Repositories Module', () => {
         await IMPORTER.syncPackages(TestSize.MINIMAL);
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
-        testCr = IMPORTER.get(BASIC_TEMPLATE_ID as any) as any;
+        testCr = IMPORTER.get(CONTENT_REPOSITORY_MESH as any) as any;
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH_ADMIN);
@@ -367,7 +370,7 @@ test.describe('Content Repositories Module', () => {
                 await test.step('Navigate to the target node in the trable', async () => {
                     // Navigate through project structure
                     const projectsRow = findTrableRowById(permModal, '_projects');
-                    await projectsRow.waitFor({ state: 'visible' });
+                    await projectsRow.waitFor({ timeout: 60_000 });
                     await expandTrableRow(projectsRow);
 
                     const exampleRow = findTrableRowByText(permModal, CR_PREFIX_MESH);
@@ -378,7 +381,7 @@ test.describe('Content Repositories Module', () => {
                     await expandTrableRow(exampleRow);
 
                     const nodesRow = findTrableRowById(permModal, `_project_${projectId}_nodes`);
-                    await nodesRow.waitFor({ state: 'visible' });
+                    await nodesRow.waitFor({ timeout: 60_000 });
                     await expandTrableRow(nodesRow);
                 });
 

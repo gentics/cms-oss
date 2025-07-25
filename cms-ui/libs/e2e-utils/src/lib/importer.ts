@@ -45,7 +45,7 @@ import {
     ScheduleImportData,
     ScheduleTaskImportData,
     TestSize,
-    UserImportData
+    UserImportData,
 } from './common';
 import {
     emptyNode,
@@ -391,6 +391,14 @@ export class EntityImporter {
     public clearClient(): Promise<void> {
         this.client = null;
         return Promise.resolve();
+    }
+
+    public async syncTag(id: number | string, tagName: string): Promise<void> {
+        if (!this.client) {
+            this.client = await createClient({ log: this.options?.logRequests, context: this.apiContext });
+        }
+
+        await this.client.template.update(id, { forceSync: true, sync: [tagName], syncPages: true }).send();
     }
 
     public async setupClient(): Promise<void> {

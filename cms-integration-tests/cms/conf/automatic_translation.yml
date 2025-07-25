@@ -1,0 +1,7 @@
+automatic_translation:
+  implementation: com.gentics.contentnode.translation.GoogleCloudTranslationService
+  auth: 
+    token: ${env:GC_TRANSLATION_TOKEN}
+  language:
+    en: US 
+    pt: BR 

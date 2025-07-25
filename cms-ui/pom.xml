@@ -285,29 +285,6 @@
                             </target>
                         </configuration>
                     </execution>
-
-                    <execution>
-                        <?m2e ignore?>
-                        <id>npm publish</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-
-                        <phase>deploy</phase>
-
-                        <configuration>
-                            <target name="Publish UI Modules" unless="${ui.skip.publish}">
-                                <!-- Ppublish all publishable projects -->
-                                <exec
-                                    dir="${npm.workingDirectory}"
-                                    executable="${nodejs.npm.bin}"
-                                    failonerror="true"
-                                >
-                                    <arg line="run nx -- release publish --projects=tag:publish --output-style=static" />
-                                </exec>
-                            </target>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
 

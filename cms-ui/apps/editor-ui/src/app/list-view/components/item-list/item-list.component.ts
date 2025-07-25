@@ -263,15 +263,6 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         if (changes.items) {
             this.updateItemHash();
         }
-
-        if (this.itemInEditor && this.items.length > 0 && this.items[0].type === 'page') {
-            for (let i = 1; i < this.items.length; i++) {
-                if (this.items[i].id === this.itemInEditor.id) {
-                    const page = Math.floor(i / this.paginationConfig.itemsPerPage) + 1;
-                    this.folderActions.setCurrentPage('page', page);
-                }
-            }
-        }
     }
 
     updateItemHash(): void {

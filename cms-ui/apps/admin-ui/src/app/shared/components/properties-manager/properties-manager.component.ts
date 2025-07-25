@@ -141,7 +141,7 @@ export class PropertiesManagerComponent implements OnChanges, OnInit {
             return;
         }
 
-        const groupId = `${prefix}_category_${this.toSlug(tag.construct.category?.name)}`;
+        const groupId = `${prefix}_category_${tag.construct.categoryId}`;
         let group: TabGroup;
         if (tabs[groupId]) {
             group = tabs[groupId] as TabGroup;

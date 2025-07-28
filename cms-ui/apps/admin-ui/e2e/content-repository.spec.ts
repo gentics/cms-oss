@@ -17,20 +17,20 @@ import {
     isVariant,
     matchesPath,
     minimalNode,
+    navigateToApp,
     schedulePublisher,
     selectTableRow,
     TestSize,
+    loginWithForm,
 } from '@gentics/e2e-utils';
 import { UserUpdateRequest } from '@gentics/mesh-models';
 import { expect, Locator, test } from '@playwright/test';
-import { AUTH, AUTH_ADMIN, AUTH_MESH } from './common';
+import { AUTH } from './common';
 import {
     clickModalAction,
     findEntityTableActionButton,
     loginWithCR,
-    loginWithForm,
     logoutMeshManagement,
-    navigateToApp,
     navigateToModule,
     selectTab,
 } from './helpers';
@@ -76,25 +76,25 @@ test.describe('Content Repositories Module', () => {
     let testCr: ContentRepository;
     let master: Locator;
 
-    test.beforeAll(async ({ request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeEach(async ({ page, request, context }) => {
+        await context.clearCookies();
         IMPORTER.setApiContext(request);
+        await IMPORTER.clearClient();
 
         // Clean and setup test data
         await IMPORTER.cleanupTest();
         await IMPORTER.syncPackages(TestSize.MINIMAL);
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
-        testCr = IMPORTER.get(CONTENT_REPOSITORY_MESH as any) as any;
+        testCr = IMPORTER.get(CONTENT_REPOSITORY_MESH);
 
         await navigateToApp(page);
-        await loginWithForm(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
 
         await navigateToModule(page, 'content-repositories');
 
@@ -152,7 +152,7 @@ test.describe('Content Repositories Module', () => {
         test('should be possible to login via manual credentials and to logout again', async ({ page }) => {
             expect(await managementContent.isVisible()).toBe(false);
 
-            await loginWithForm(management.locator('.login-form'), AUTH_MESH);
+            await loginWithForm(management.locator('.login-form'), AUTH.mesh);
             await managementContent.waitFor({ state: 'visible' });
 
             await logoutMeshManagement(page);
@@ -183,9 +183,9 @@ test.describe('Content Repositories Module', () => {
                     // If we need a pw-reset, then we do it with a manual login which sets the new PW
                     if (res?.i18nKey === 'auth_login_password_change_required') {
                         await IMPORTER.client.executeMappedJsonRequest(RequestMethod.POST, `/contentrepositories/${testCr.id}/proxy/api/v2/auth/login`, {
-                            username: AUTH[AUTH_MESH].username,
-                            password: AUTH[AUTH_MESH].password,
-                            newPassword: AUTH[AUTH_MESH].newPassword,
+                            username: AUTH.mesh.username,
+                            password: AUTH.mesh.password,
+                            newPassword: AUTH.mesh.newPassword,
                         }).send();
                         loggedIn = true;
                     }
@@ -201,8 +201,8 @@ test.describe('Content Repositories Module', () => {
                     if (!loggedIn) {
                         // Login with the temp password
                         await IMPORTER.client.executeMappedJsonRequest(RequestMethod.POST, `/contentrepositories/${testCr.id}/proxy/api/v2/auth/login`, {
-                            username: AUTH[AUTH_MESH].username,
-                            password: AUTH[AUTH_MESH].newPassword,
+                            username: AUTH.mesh.username,
+                            password: AUTH.mesh.newPassword,
                         }).send();
                     }
 
@@ -210,7 +210,7 @@ test.describe('Content Repositories Module', () => {
                     const me = await IMPORTER.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${testCr.id}/proxy/api/v2/auth/me`).send();
                     // Reset the password to the original
                     await IMPORTER.client.executeMappedJsonRequest(RequestMethod.POST, `/contentrepositories/${testCr.id}/proxy/api/v2/users/${me.uuid}`, {
-                        password: AUTH[AUTH_MESH].password,
+                        password: AUTH.mesh.password,
                     }).send();
                 }
             });
@@ -228,7 +228,7 @@ test.describe('Content Repositories Module', () => {
                     await usersReq;
 
                     // Edit user and force password change
-                    userRow = findTableRowByText(managementContent, AUTH[AUTH_MESH].username);
+                    userRow = findTableRowByText(managementContent, AUTH.mesh.username);
                     await findTableAction(userRow, 'edit').click();
 
                     const userModal = page.locator('gtx-mesh-user-modal');
@@ -250,9 +250,9 @@ test.describe('Content Repositories Module', () => {
                     const newPassword = loginForm.locator(SELECTORS.LOGIN_FORM.NEW_PASSWORD);
                     await newPassword.waitFor({ state: 'visible' });
 
-                    await loginForm.locator(SELECTORS.LOGIN_FORM.USERNAME).fill(AUTH[AUTH_MESH].username);
-                    await loginForm.locator(SELECTORS.LOGIN_FORM.PASSWORD).fill(AUTH[AUTH_MESH].password);
-                    await newPassword.fill(AUTH[AUTH_MESH].newPassword);
+                    await loginForm.locator(SELECTORS.LOGIN_FORM.USERNAME).fill(AUTH.mesh.username);
+                    await loginForm.locator(SELECTORS.LOGIN_FORM.PASSWORD).fill(AUTH.mesh.password);
+                    await newPassword.fill(AUTH.mesh.newPassword);
 
                     const pwResetLoginReq = page.waitForResponse(response =>
                         response.ok()
@@ -272,8 +272,8 @@ test.describe('Content Repositories Module', () => {
 
                     const userModal = page.locator('gtx-mesh-user-modal');
                     await userModal.locator(SELECTORS.FORM.PASSWORD_CHECKBOX).click();
-                    await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).first().fill(AUTH[AUTH_MESH].password);
-                    await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).last().fill(AUTH[AUTH_MESH].password);
+                    await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).first().fill(AUTH.mesh.password);
+                    await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).last().fill(AUTH.mesh.password);
 
                     const updateReq = page.waitForResponse(response =>
                         response.ok()
@@ -283,7 +283,7 @@ test.describe('Content Repositories Module', () => {
                     await clickModalAction(userModal, 'confirm');
                     const resetRes = await updateReq;
                     const resetReqData: UserUpdateRequest = resetRes.request().postDataJSON();
-                    expect(resetReqData.password).toEqual(AUTH[AUTH_MESH].password);
+                    expect(resetReqData.password).toEqual(AUTH.mesh.password);
                 });
 
                 await test.step('Login with CR data should work again', async () => {

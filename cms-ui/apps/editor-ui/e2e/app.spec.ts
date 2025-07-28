@@ -1,45 +1,44 @@
-import { test, expect } from '@playwright/test';
 import {
     EntityImporter,
     IMPORT_TYPE,
     TestSize,
     folderA,
     folderB,
+    loginWithForm,
     minimalNode,
-} from '@gentics/e2e-utils';
-import {
-    login,
-    selectNode,
-    findList,
-    findItem,
-    itemAction,
-    initPage,
     navigateToApp,
+} from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
+import {
+    findItem,
+    findList,
+    itemAction,
+    selectNode,
 } from './helpers';
-import { AUTH_ADMIN } from './common';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
 
-    test.beforeAll(async ({ request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
-        await initPage(page);
+
         await navigateToApp(page);
-        await login(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 

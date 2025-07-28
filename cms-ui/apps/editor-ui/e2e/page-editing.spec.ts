@@ -1,5 +1,16 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { EntityImporter, hasMatchingParams, matchesPath, ITEM_TYPE_PAGE, minimalNode, pageOne, TestSize, BASIC_TEMPLATE_ID } from '@gentics/e2e-utils';
+import {
+    BASIC_TEMPLATE_ID,
+    EntityImporter,
+    hasMatchingParams,
+    ITEM_TYPE_PAGE,
+    loginWithForm,
+    matchesPath,
+    minimalNode,
+    navigateToApp,
+    pageOne,
+    TestSize,
+} from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import {
     ACTION_FORMAT_ABBR,
@@ -13,21 +24,18 @@ import {
     ACTION_FORMAT_SUPERSCRIPT,
     ACTION_FORMAT_UNDERLINE,
     ACTION_REMOVE_FORMAT,
-    AUTH_ADMIN,
+    AUTH,
+    HelperWindow,
 } from './common';
 import {
     editorAction,
     findAlohaComponent,
     findItem,
     findList,
-    HelperWindow,
-    initPage,
-    itemAction,
-    login,
-    selectNode,
-    selectOption,
     getAlohaIFrame,
-    navigateToApp,
+    itemAction,
+    selectNode,
+    setupHelperWindowFunctions,
 } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
@@ -37,16 +45,15 @@ test.describe('Page Editing', () => {
 
     const IMPORTER = new EntityImporter();
 
-    test.beforeAll(async ({ request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
 
@@ -55,9 +62,9 @@ test.describe('Page Editing', () => {
         await IMPORTER.setupTest(TestSize.MINIMAL);
         await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
 
-        await initPage(page);
+        await setupHelperWindowFunctions(page);
         await navigateToApp(page);
-        await login(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 
@@ -162,8 +169,7 @@ test.describe('Page Editing', () => {
             await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
             const repoBrowser = page.locator('repository-browser');
             await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
-            await repoBrowser.locator('.modal-footer [data-action="confirm"][ng-reflect-disabled="false"]').waitFor();
-            await repoBrowser.locator('.modal-footer [data-action="confirm"][ng-reflect-disabled="false"]').click();
+            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
 
             // Fill other fields
             await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);

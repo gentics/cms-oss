@@ -1,24 +1,23 @@
-import { test, expect } from '@playwright/test';
 import {
     EntityImporter,
-    TestSize,
     ITEM_TYPE_FOLDER,
+    TestSize,
     folderA,
+    loginWithForm,
     minimalNode,
-} from '@gentics/e2e-utils';
-import {
-    login,
-    selectNode,
-    findList,
-    findItem,
-    itemAction,
-    initPage,
-    editorAction,
-    openObjectPropertyEditor,
-    closeObjectPropertyEditor,
     navigateToApp,
+} from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
+import {
+    closeObjectPropertyEditor,
+    editorAction,
+    findItem,
+    findList,
+    itemAction,
+    openObjectPropertyEditor,
+    selectNode,
 } from './helpers';
-import { AUTH_ADMIN } from './common';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Folder Management', () => {
@@ -30,24 +29,24 @@ test.describe('Folder Management', () => {
     const OBJECT_PROPERTY = 'test_color';
     const COLOR_ID = 2;
 
-    test.beforeAll(async ({ request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
-        await initPage(page);
+
         await navigateToApp(page);
-        await login(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 

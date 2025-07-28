@@ -8,12 +8,14 @@ import {
     IMPORT_TYPE_NODE,
     LANGUAGE_DE,
     LANGUAGE_EN,
+    loginWithForm,
+    navigateToApp,
     NodeImportData,
     TestSize,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
-import { AUTH_ADMIN } from './common';
-import { loginWithForm, navigateToApp, navigateToModule } from './helpers';
+import { AUTH } from './common';
+import { navigateToModule } from './helpers';
 
 const EXAMPLE_NODE_ONE: NodeImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_NODE,
@@ -21,12 +23,11 @@ const EXAMPLE_NODE_ONE: NodeImportData = {
 
     node: {
         name: 'Construct Example Node #1',
-        host: 'construct01.localhost',
+        host: 'http://construct01.localhost',
         hostProperty: '',
         publishDir: '',
         binaryPublishDir: '',
         pubDirSegment: true,
-        https: false,
         publishImageVariants: false,
         publishFs: false,
         publishFsPages: false,
@@ -52,12 +53,11 @@ const EXAMPLE_NODE_TWO: NodeImportData = {
 
     node: {
         name: 'Construct Example Node #2',
-        host: 'construct02.localhost',
+        host: 'http://construct02.localhost',
         hostProperty: '',
         publishDir: '',
         binaryPublishDir: '',
         pubDirSegment: true,
-        https: false,
         publishImageVariants: false,
         publishFs: false,
         publishFsPages: false,
@@ -82,17 +82,15 @@ test.describe('Constructs Module', () => {
     const IMPORTER = new EntityImporter();
     const TEST_CONSTRUCT_ID = '13';
 
-    test.beforeAll(async ({ request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
-        // Reset importer client to avoid 401 errors
         IMPORTER.setApiContext(request);
+        await IMPORTER.clearClient();
 
         // Clean and setup test data
         await IMPORTER.cleanupTest();
@@ -103,7 +101,7 @@ test.describe('Constructs Module', () => {
         ], TestSize.NONE);
 
         await navigateToApp(page);
-        await loginWithForm(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
 
         // Navigate to constructs module
         await navigateToModule(page, 'constructs');

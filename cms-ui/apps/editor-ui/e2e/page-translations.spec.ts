@@ -1,51 +1,48 @@
-import { test, expect } from '@playwright/test';
 import { NodeFeature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
-    TestSize,
     ITEM_TYPE_PAGE,
+    TestSize,
     isVariant,
+    loginWithForm,
     minimalNode,
-    pageOne,
-    skipableSuite,
-} from '@gentics/e2e-utils';
-import {
-    login,
-    selectNode,
-    findList,
-    findItem,
-    itemAction,
-    initPage,
     navigateToApp,
+    pageOne,
+} from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
+import {
+    findItem,
+    findList,
+    selectNode,
 } from './helpers';
-import { AUTH_ADMIN } from './common';
 
 test.describe('Page Translation', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
     const IMPORTER = new EntityImporter();
 
-    test.beforeAll(async ({ request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
         await IMPORTER.setupFeatures(TestSize.MINIMAL, {
             [NodeFeature.AUTOMATIC_TRANSLATION]: true,
         });
-        await initPage(page);
+
         await navigateToApp(page);
-        await login(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
         await page.locator('node-selector').waitFor();
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });

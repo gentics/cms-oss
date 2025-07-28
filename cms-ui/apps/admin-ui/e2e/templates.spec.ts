@@ -1,8 +1,15 @@
-import { test, expect } from '@playwright/test';
-import { EntityImporter, TestSize, findTableRowById, selectTab, clickTableRow, BASIC_TEMPLATE_ID, minimalNode } from '@gentics/e2e-utils';
 import { Template } from '@gentics/cms-models';
-import { AUTH_ADMIN } from './common';
-import { loginWithForm, navigateToApp, navigateToModule } from './helpers';
+import {
+    BASIC_TEMPLATE_ID,
+    EntityImporter,
+    TestSize,
+    findTableRowById,
+    loginWithForm,
+    navigateToApp,
+} from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
+import { navigateToModule } from './helpers';
 
 const NODE_NAME = 'empty node';
 const TEMPLATE_NAME = '[Test] Basic Template';
@@ -17,17 +24,15 @@ test.describe('Templates Module', () => {
 
     let testTemplate: Template;
 
-    test.beforeAll(async ({ request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
-        // Reset importer client to avoid 401 errors
         IMPORTER.setApiContext(request);
+        await IMPORTER.clearClient();
 
         // Clean and setup test data
         await IMPORTER.cleanupTest();
@@ -37,7 +42,7 @@ test.describe('Templates Module', () => {
 
         // Navigate to the app and log in
         await navigateToApp(page);
-        await loginWithForm(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
 
         // Navigate to the scheduler
         await navigateToModule(page, 'templates');

@@ -1,19 +1,24 @@
-import { test, expect } from '@playwright/test';
-import { EntityImporter, ITEM_TYPE_FILE, ITEM_TYPE_IMAGE, TestSize, minimalNode } from '@gentics/e2e-utils';
-import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1, FIXTURE_TEST_IMAGE_JPG_2 } from './common';
 import {
-    login,
-    selectNode,
-    uploadFiles,
-    findList,
-    findItem,
+    EntityImporter,
+    ITEM_TYPE_FILE,
+    ITEM_TYPE_IMAGE,
+    TestSize,
+    loginWithForm,
+    minimalNode,
+    navigateToApp,
+} from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1, FIXTURE_TEST_IMAGE_JPG_2 } from './common';
+import {
+    closeObjectPropertyEditor,
+    editorAction,
     findImage,
+    findItem,
+    findList,
     itemAction,
     openObjectPropertyEditor,
-    editorAction,
-    initPage,
-    closeObjectPropertyEditor,
-    navigateToApp,
+    selectNode,
+    uploadFiles,
 } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
@@ -26,24 +31,24 @@ test.describe('Media Management', () => {
     const OBJECT_PROPERTY_COPYRIGHT = 'copyright';
     const COLOR_ID = 2;
 
-    test.beforeAll(async ({ request }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }, testInfo) => {
-        testInfo.setTimeout(120_000);
+    test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
-        await initPage(page);
+
         await navigateToApp(page);
-        await login(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 

@@ -1,0 +1,2 @@
+When stopping a publish process, and delaying objects, the following publish process would sometimes
+also publish the delayed objects. This has been fixed now.

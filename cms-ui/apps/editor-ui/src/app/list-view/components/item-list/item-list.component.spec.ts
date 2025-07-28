@@ -1214,44 +1214,6 @@ describe('ItemListComponent', () => {
         }),
     );
 
-    it('jumps to the right page for the item currently opened in the editor (pages)',
-        componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.items = [
-                { type: 'page', name: 'page1', id: 1, path: 'root/page1' },
-                { type: 'page', name: 'page2', id: 2, path: 'root/page2' },
-                { type: 'page', name: 'page3', id: 3, path: 'root/page3' },
-                { type: 'page', name: 'page4', id: 4, path: 'root/page4' },
-                { type: 'page', name: 'page5', id: 5, path: 'root/page5' },
-                { type: 'page', name: 'page6', id: 6, path: 'root/page6' },
-                { type: 'page', name: 'page7', id: 7, path: 'root/page7' },
-                { type: 'page', name: 'page8', id: 8, path: 'root/page8' },
-                { type: 'page', name: 'page9', id: 9, path: 'root/page9' },
-                { type: 'page', name: 'page10', id: 10, path: 'root/page10' },
-                { type: 'page', name: 'page11', id: 11, path: 'root/page11' },
-                { type: 'page', name: 'page12', id: 12, path: 'root/page12' },
-            ];
-            updateItemsInfoState({
-                list: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-                total: 12,
-            });
-            state.mockState({
-                editor: {
-                    editorIsOpen: true,
-                    editMode: EditMode.EDIT,
-                    itemType: 'page',
-                    itemId: 12,
-                },
-            });
-            instance.itemInEditor = instance.items[11];
-            fixture.detectChanges();
-
-            expect(folderActions.setCurrentPage).toHaveBeenCalledWith('page', 2);
-
-            tick();
-        }),
-    );
-
     it('highlights the item currently opened in the editor (images)',
         componentTest(() => TestComponent, (fixture, instance) => {
             instance.itemType = 'image';

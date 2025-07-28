@@ -17,8 +17,8 @@ test.describe('Login', () => {
     test.beforeEach(async ({ request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
-        await IMPORTER.clearClient();
 
+        await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
@@ -39,7 +39,7 @@ test.describe('Login', () => {
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
 
-            await page.locator('gtx-dashboard').waitFor();
+            await page.locator('project-editor').waitFor();
         });
 
         test('should skip login if already logged in', async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe('Login', () => {
             await page.reload();
 
             // Verify that the user is logged in
-            await page.locator('gtx-dashboard').waitFor();
+            await page.locator('project-editor').waitFor();
         });
     });
 
@@ -85,13 +85,13 @@ test.describe('Login', () => {
         test('should be able to login with SSO', async ({ page }) => {
             await navigateToApp(page);
             await loginWithForm(page, AUTH.keycloak);
-            await page.locator('gtx-dashboard').waitFor();
+            await page.locator('project-editor').waitFor();
         });
 
         test('should be able to skip SSO and login directly', async ({ page }) => {
             await navigateToApp(page, '', true);
             await loginWithForm(page, AUTH.admin);
-            await page.locator('gtx-dashboard').waitFor();
+            await page.locator('project-editor').waitFor();
         });
     });
 });

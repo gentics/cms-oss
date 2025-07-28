@@ -1,6 +1,22 @@
 import { AlohaCoreComponentNames } from '@gentics/aloha-models';
+import type { createRange, selectRange, selectText, updateAlohaRange } from '@gentics/e2e-utils';
+export interface HelperWindow extends Window {
+    createRange: typeof createRange;
+    selectRange: typeof selectRange;
+    selectText: typeof selectText;
+    updateAlohaRange: typeof updateAlohaRange;
+}
 
-export const FIXTURE_AUTH = 'auth.json';
+export const AUTH = {
+    admin: {
+        username: 'node',
+        password: 'node',
+    },
+    keycloak: {
+        username: 'node',
+        password: 'node',
+    },
+};
 
 export const FIXTURE_TEST_IMAGE_JPG_1 = 'aedrian-cDe4G55k6pE-unsplash.jpg';
 export const FIXTURE_TEST_IMAGE_JPG_2 = 'ivan-tsaregorodtsev-bx0e0iHWnlI-unsplash.jpg';
@@ -12,9 +28,6 @@ export const FIXTURE_TEST_FILE_TXT_1 = 'text-file.txt';
 export const FIXTURE_TEST_FILE_TXT_2 = 'text-file_2.txt';
 export const FIXTURE_TEST_FILE_DOC_1 = 'test-document.docx';
 export const FIXTURE_TEST_FILE_PDF_1 = 'test-print.pdf';
-
-export const AUTH_ADMIN = 'admin';
-export const AUTH_KEYCLOAK = 'keycloak';
 
 export const ACTION_FORMAT_BOLD = 'bold';
 export const ACTION_FORMAT_ITALIC = 'italic';
@@ -40,6 +53,7 @@ export const FORMAT_QUOTE = 'q';
 export const FORMAT_CITE = 'cite';
 export const FORMAT_BLOCK_QUOTE = 'blockquote';
 export const FORMAT_ABBR = 'abbr';
+export const AUTH_MESH = 'mesh';
 
 export const ACTION_SIMPLE_FORMAT_MAPPING: Record<string, string> = {
     [ACTION_FORMAT_BOLD]: FORMAT_BOLD,

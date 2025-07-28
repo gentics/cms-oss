@@ -1,32 +1,8 @@
-import { createRange, selectRange, selectText, updateAlohaRange } from '@gentics/e2e-utils';
-import { Locator, Page } from '@playwright/test';
+/* eslint-disable import/no-nodejs-modules */
+/// <reference lib="dom"/>
+import { readFileSync } from 'fs';
+import { Frame, Locator, Page } from '@playwright/test';
 import { RENDERABLE_ALOHA_COMPONENTS } from './common';
-
-export interface HelperWindow extends Window {
-    createRange: typeof createRange;
-    selectRange: typeof selectRange;
-    selectText: typeof selectText;
-    updateAlohaRange: typeof updateAlohaRange;
-}
-
-const AUTH = {
-    admin: {
-        username: 'node',
-        password: 'node',
-    },
-    keycloak: {
-        username: 'node',
-        password: 'node',
-    },
-};
-
-export async function login(page: Page, account: string): Promise<void> {
-    const data = AUTH[account];
-
-    await page.fill('input[type="text"]', data.username);
-    await page.fill('input[type="password"]', data.password);
-    await page.click('button[type="submit"]');
-}
 
 export async function selectNode(page: Page, nodeId: number | string): Promise<void> {
     await page.click('node-selector [data-action="select-node"]');
@@ -38,7 +14,7 @@ export function findList(page: Page, type: string): Locator {
 }
 
 export function findItem(list: Locator, id: string | number): Locator {
-    return list.locator(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"], repository-browser-list-thumbnail[data-id="${id}"]`);
+    return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
 export async function openContext(element: Locator): Promise<Locator> {
@@ -48,7 +24,7 @@ export async function openContext(element: Locator): Promise<Locator> {
         throw new Error(`Cannot open element context, since attribute "${ATTR_ID}" is missing!`);
     }
 
-    await element.locator('gtx-dropdown-trigger [data-context-trigger]').click();
+    await element.locator('gtx-dropdown-trigger gtx-button[data-context-trigger]').click();
     return element.page().locator(`gtx-dropdown-content[${ATTR_ID}="${id}"]`);
 }
 
@@ -57,14 +33,54 @@ export async function itemAction(item: Locator, action: string): Promise<void> {
     await dropdown.locator(`[data-action="${action}"]`).click();
 }
 
-export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[]): Promise<Record<string, any>> {
+export async function listAction(list: Locator, action: string): Promise<void> {
+    const dropdown = await openContext(list.locator('[data-action="open-list-context"]'));
+    await dropdown.locator(`[data-action="${action}"]`).click();
+}
+
+export async function findImage(list: Locator, id: string | number): Promise<Locator> {
+    await list.locator('.list-body').waitFor();
+    const listItems = await list.locator('gtx-contents-list-item').count();
+    if (listItems < 1) {
+        await list.locator('.list-header .header-controls gtx-dropdown-trigger gtx-button').click();
+        await list.page().locator('gtx-dropdown-content gtx-dropdown-item[data-action="toggle-display-type"]').waitFor();
+        await list.page().locator('gtx-dropdown-content gtx-dropdown-item[data-action="toggle-display-type"]').click();
+    }
+    return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
+}
+
+export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
     // Note: This is a simplified version. You'll need to implement file upload handling
-    const fileChooserPromise = page.waitForEvent('filechooser');
-    const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
-    await uploadButton.waitFor({ state: 'visible' });
-    await uploadButton.click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
+    if (options?.dragAndDrop) {
+        const data = files.map(f => {
+            const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
+            return {
+                bufferData: `data:application/octet-stream;base64,${buffer}`,
+                name: f,
+                type: type === 'image' ? 'image/jpeg' : 'text/plain',
+            };
+        });
+        const dataTransfer = await page.evaluateHandle(async (data) => {
+            const transfer = new DataTransfer();
+            // Put the binaries/Files into the transfer
+            for (const file of Object.values(data)) {
+                const blobData = await fetch(file.bufferData).then((res) => res.blob());
+                transfer.items.add(new File([blobData], file.name, { type: file.type }))
+            }
+            return transfer;
+        }, data);
+        await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
+        await page.waitForRequest(request =>
+            request.url().includes('/rest/file/create') ||
+            request.url().includes('/rest/image/create'));
+    } else {
+        const fileChooserPromise = page.waitForEvent('filechooser');
+        const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
+        await uploadButton.waitFor({ state: 'visible' });
+        await uploadButton.click();
+        const fileChooser = await fileChooserPromise;
+        await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
+    }
 
     // Wait for upload to complete and return response
     const response = await page.waitForResponse(response =>
@@ -81,7 +97,12 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
 }
 
 export async function openPropertiesTab(page: Page): Promise<void> {
-    await page.click('content-frame .content-frame-container>.properties-tabs .tab-link[data-id="properties"]');
+    await page.waitForSelector('content-frame .content-frame-container');
+    const previewActivated = await page.locator('content-frame .content-frame-container .properties-tabs .tab-link[data-id="preview"].is-active').count();
+    if (previewActivated > 0) {
+        await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="properties"] a');
+    }
+    await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="item-properties"]');
 }
 
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {
@@ -94,8 +115,19 @@ export async function openObjectPropertyEditor(page: Page, categoryId: string | 
     await tab.click();
 }
 
+export async function closeObjectPropertyEditor(page: Page, force: boolean = true): Promise<void> {
+    await page.locator('content-frame gtx-editor-toolbar gtx-button.close-button').click();
+    const unsavedChanges = await page.locator('confirm-navigation-modal gtx-button[type="alert"] button').count();
+    if (unsavedChanges > 0 && force) {
+        await page.click('confirm-navigation-modal gtx-button[type="alert"] button');
+    }
+}
+
 export async function editorAction(page: Page, action: string): Promise<void> {
-    await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"]`);
+    if (await page.locator('.gtx-toast-btn_close').isVisible()) {
+        await page.locator('.gtx-toast-btn_close').click();
+    }
+    await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"] button[data-action="primary"]`);
 }
 
 export async function selectOption(element: Locator, value: number | string | (string | number)[]): Promise<void> {
@@ -118,13 +150,28 @@ export async function selectOption(element: Locator, value: number | string | (s
 
 export function findAlohaComponent(page: Page, options?: { slot?: string, type?: string }, subject?: Locator): Locator {
     const root = subject || page.locator('project-editor content-frame gtx-page-editor-controls');
-    const slotSelector = options?.slot ? `[data-slot="${options.slot}"]` : '';
+    const slotSelector = options?.slot ? `[slot="${options.slot}"]` : '';
     const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
 
-    return root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector}`);
+    const aloha =  root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector} button[data-action="primary"]`);
+    aloha.waitFor();
+    return aloha;
 }
 
-export async function initPage(page: Page): Promise<void> {
+export async function findDynamicFormModal(page: Page, ref?: string): Promise<Locator> {
+    const refSelector = ref ? `[data-ref="${ref}"]` : '';
+    const modal =  page.locator(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
+    await modal.waitFor();
+    return modal;
+}
+
+export async function getAlohaIFrame(page: Page): Promise<Frame> {
+    const iframeSelector = '[name="master-frame"][loaded="true"]';
+    await page.locator('iframe' + iframeSelector).waitFor({ timeout: 60_000 });
+    return page.frame({ name: 'master-frame' });
+}
+
+export async function setupHelperWindowFunctions(page: Page): Promise<void> {
     // annoying copy paste from e2e-utils, as context is mounted into the runtime
     // from playwright, where only serializable objects can be passed.
     // since functions are not serializable, we have to define them here.

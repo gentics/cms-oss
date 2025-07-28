@@ -1,8 +1,25 @@
-import { test, expect } from '@playwright/test';
-import { EntityImporter, ITEM_TYPE_FILE, ITEM_TYPE_IMAGE, TestSize, minimalNode } from '@gentics/e2e-utils';
-import { FileSaveRequest, ImageSaveRequest, SelectTagPartProperty } from '@gentics/cms-models';
-import { AUTH_ADMIN, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1, FIXTURE_TEST_IMAGE_JPG_2 } from './common';
-import { login, selectNode, uploadFiles, findList, findItem, itemAction, openObjectPropertyEditor, editorAction, selectOption } from './helpers';
+import {
+    EntityImporter,
+    ITEM_TYPE_FILE,
+    ITEM_TYPE_IMAGE,
+    TestSize,
+    loginWithForm,
+    minimalNode,
+    navigateToApp,
+} from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1, FIXTURE_TEST_IMAGE_JPG_2 } from './common';
+import {
+    closeObjectPropertyEditor,
+    editorAction,
+    findImage,
+    findItem,
+    findList,
+    itemAction,
+    openObjectPropertyEditor,
+    selectNode,
+    uploadFiles,
+} from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Media Management', () => {
@@ -16,6 +33,7 @@ test.describe('Media Management', () => {
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
@@ -24,13 +42,13 @@ test.describe('Media Management', () => {
     test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
-        // Navigate and login
-        await page.goto('/', { timeout: 60_000 });
-        await login(page, AUTH_ADMIN);
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 
@@ -40,29 +58,23 @@ test.describe('Media Management', () => {
         const FILE = uploadedFiles[FIXTURE_TEST_FILE_TXT_1];
 
         // Open properties
-        const list = findList(page, ITEM_TYPE_FILE);
-        const item = findItem(list, FILE.id);
+        let list = findList(page, ITEM_TYPE_FILE);
+        let item = findItem(list, FILE.id);
         await itemAction(item, 'properties');
 
-        // Edit object property
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await selectOption(page.locator('gentics-tag-editor select-tag-property-editor gtx-select'), COLOR_ID);
-
-        // Save and verify request
-        const saveRequest = page.waitForRequest(request =>
-            request.method() === 'POST' &&
-            request.url().includes('/rest/file/save/'),
-        );
+        await page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger').click();
+        await page.locator(`gtx-dropdown-content li.select-option[data-id="${COLOR_ID}"]`).click();
 
         await editorAction(page, 'save');
 
-        const request = await saveRequest;
-        const requestBody = await request.postDataJSON() as FileSaveRequest;
-        const tag = requestBody.file.tags?.[`object.${OBJECT_PROPERTY_COLOR}`];
-        const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;
-
-        expect(options).toHaveLength(1);
-        expect(options![0].id).toBe(COLOR_ID);
+        // Reopen the editor to reload fresh values
+        await closeObjectPropertyEditor(page);
+        list = findList(page, ITEM_TYPE_FILE);
+        item = findItem(list, FILE.id);
+        await itemAction(item, 'properties');
+        await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
+        await expect(page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
     });
 
     test('should be possible to create a new image and edit the object-properties', async ({ page }) => {
@@ -71,29 +83,23 @@ test.describe('Media Management', () => {
         const IMAGE = uploadedFiles[FIXTURE_TEST_IMAGE_JPG_1];
 
         // Open properties
-        const list = findList(page, ITEM_TYPE_IMAGE);
-        const item = findItem(list, IMAGE.id);
+        let list = findList(page, ITEM_TYPE_IMAGE);
+        let item = await findImage(list, IMAGE.id);
         await itemAction(item, 'properties');
 
-        // Edit object property
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await selectOption(page.locator('gentics-tag-editor select-tag-property-editor gtx-select'), COLOR_ID);
-
-        // Save and verify request
-        const saveRequest = page.waitForRequest(request =>
-            request.method() === 'POST' &&
-            request.url().includes('/rest/image/save/'),
-        );
+        await page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger').click();
+        await page.locator(`gtx-dropdown-content li.select-option[data-id="${COLOR_ID}"]`).click();
 
         await editorAction(page, 'save');
 
-        const request = await saveRequest;
-        const requestBody = await request.postDataJSON() as ImageSaveRequest;
-        const tag = requestBody.image.tags?.[`object.${OBJECT_PROPERTY_COLOR}`];
-        const options = (tag?.properties['select'] as SelectTagPartProperty).selectedOptions;
-
-        expect(options).toHaveLength(1);
-        expect(options![0].id).toBe(COLOR_ID);
+        // Reopen the editor to reload fresh values
+        await closeObjectPropertyEditor(page);
+        list = findList(page, ITEM_TYPE_IMAGE);
+        item = findItem(list, IMAGE.id);
+        await itemAction(item, 'properties');
+        await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
+        await expect(page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
     });
 
     test('should display the updated value even after switching object-properties', async ({ page }) => {
@@ -102,29 +108,23 @@ test.describe('Media Management', () => {
         const IMAGE = uploadedFiles[FIXTURE_TEST_IMAGE_JPG_2];
 
         // Open properties
-        const list = findList(page, ITEM_TYPE_IMAGE);
-        const item = findItem(list, IMAGE.id);
+        let list = findList(page, ITEM_TYPE_IMAGE);
+        let item = await findImage(list, IMAGE.id);
         await itemAction(item, 'properties');
 
         // Edit object property
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await selectOption(page.locator('gentics-tag-editor select-tag-property-editor gtx-select'), COLOR_ID);
-
-        // Save changes
-        const saveRequest = page.waitForRequest(request =>
-            request.method() === 'POST' &&
-            request.url().includes('/rest/image/save/'),
-        );
+        await page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger').click();
+        await page.locator(`gtx-dropdown-content li.select-option[data-id="${COLOR_ID}"]`).click();
 
         await editorAction(page, 'save');
-        await saveRequest;
-
-        // Wait for state updates
-        await page.waitForTimeout(2000);
-
+        // Reopen the editor to reload fresh values
+        await closeObjectPropertyEditor(page);
+        list = findList(page, ITEM_TYPE_IMAGE);
+        item = findItem(list, IMAGE.id);
+        await itemAction(item, 'properties');
         // Switch to another property and back
         await openObjectPropertyEditor(page, DEFAULT_CATEGORY_ID, OBJECT_PROPERTY_COPYRIGHT);
-        await page.waitForTimeout(1000);
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
 
         // Verify the value is still selected

@@ -197,4 +197,4 @@ velocity.log
 !cms-integration-tests/test/resources/cms/conf
 .vscode
 logs/
-
+*.zip

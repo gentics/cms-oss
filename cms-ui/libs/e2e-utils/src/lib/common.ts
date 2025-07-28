@@ -64,8 +64,6 @@ export const IMPORT_TYPE_GROUP = 'group';
 export const IMPORT_TYPE_TASK = 'task';
 export const IMPORT_TYPE_SCHEDULE = 'schedule';
 
-export const ENV_CMS_REST_PATH = 'CMS_REST_PATH';
-export const ENV_CMS_ADMIN_PATH = 'CMS_ADMIN_PATH';
 export const ENV_CMS_USERNAME = 'CMS_USERNAME';
 export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
@@ -73,7 +71,9 @@ export const ENV_CI = 'CI';
 export const ENV_BASE_URL = 'BASE_URL';
 export const ENV_KEYCLOAK_URL = 'KEYCLOAK_URL';
 export const ENV_FORCE_REPEATS = 'FORCE_REPEATS';
-export const ENV_REUSE_LOCAL_SERVE = 'REUSE_LOCAL_SERVE';
+export const ENV_LOCAL_PLAYWRIGHT = 'LOCAL_PLAYWRIGHT';
+export const ENV_LOCAL_APP = 'LOCAL_APP';
+export const ENV_SKIP_LOCAL_APP_LAUNCH = 'SKIP_LOCAL_APP_LAUNCH';
 
 export const DEFAULT_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
 
@@ -81,6 +81,10 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace NodeJS {
         interface ProcessEnv {
+            /** Username override for setup rest calls */
+            [ENV_CMS_USERNAME]?: string;
+            /** Password override for setup rest calls */
+            [ENV_CMS_PASSWORD]?: string;
             /** The CMS Variant that is being tested. */
             [ENV_CMS_VARIANT]: Variant;
             /** Flag which determines if we're running in a CI context. */
@@ -91,8 +95,12 @@ declare global {
             [ENV_KEYCLOAK_URL]?: string;
             /** If it should force repeats of intergration tests. */
             [ENV_FORCE_REPEATS]?: boolean | string | number;
-            /** If it should reuse an already running local serve. */
-            [ENV_REUSE_LOCAL_SERVE]?: boolean | string | number;
+            /** If it should use the local playwright server instead of the container. */
+            [ENV_LOCAL_PLAYWRIGHT]?: boolean | string | number;
+            /** If it should use the local application instead of the application in the container. */
+            [ENV_LOCAL_APP]?: boolean | string | number;
+            /** If it should not automatically launch the local application. */
+            [ENV_SKIP_LOCAL_APP_LAUNCH]?: boolean | string | number;
         }
     }
 }

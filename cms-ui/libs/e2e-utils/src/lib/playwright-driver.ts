@@ -97,7 +97,7 @@ export class GCMSPlaywrightDriver implements GCMSClientDriver {
      * of the client or when no regular cookie management exists on the platform.
      */
     constructor(
-        private context: APIRequestContext,
+        public context: APIRequestContext,
     ) {}
 
     performMappedRequest<T>(

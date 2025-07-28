@@ -1,11 +1,23 @@
 /* eslint-disable import/no-nodejs-modules,import/order */
-import { ENV_BASE_URL, ENV_FORCE_REPEATS, ENV_REUSE_LOCAL_SERVE, isCIEnvironment, isEnvBool } from '@gentics/e2e-utils';
+import {
+    ENV_BASE_URL,
+    ENV_FORCE_REPEATS,
+    ENV_LOCAL_APP,
+    ENV_LOCAL_PLAYWRIGHT,
+    ENV_SKIP_LOCAL_APP_LAUNCH,
+    isCIEnvironment,
+    isEnvBool,
+} from '@gentics/e2e-utils';
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { defineConfig, devices, PlaywrightTestConfig } from '@playwright/test';
 import { config } from 'dotenv';
 import { dirname, resolve } from 'path';
 
-export function createConfiguration(originalConfig: string, appName: string, ciBaseUrl: string): PlaywrightTestConfig {
+export function createConfiguration(
+    originalConfig: string,
+    appName: string,
+    serviceBaseUrl: string,
+): PlaywrightTestConfig {
     const projectRoot = dirname(originalConfig);
     const workspaceRoot = __dirname;
 
@@ -19,7 +31,11 @@ export function createConfiguration(originalConfig: string, appName: string, ciB
 
     const isCI = isCIEnvironment();
     const forceRepeats = isEnvBool(process.env[ENV_FORCE_REPEATS]);
-    const reuseLocalServe = isEnvBool(process.env[ENV_REUSE_LOCAL_SERVE]);
+    /** If we want to use the local app, but don't actually start it */
+    const useLocalApp = isEnvBool(process.env[ENV_LOCAL_APP]);
+    const startLocalApp = !isEnvBool(process.env[ENV_SKIP_LOCAL_APP_LAUNCH]);
+    /** If we want to use thr playwright server locally instead of from the container */
+    const useLocalPlaywright = isEnvBool(process.env[ENV_LOCAL_PLAYWRIGHT]);
 
     // Usually never defined, but allow overrides
     let baseUrl = process.env[ENV_BASE_URL];
@@ -32,10 +48,18 @@ export function createConfiguration(originalConfig: string, appName: string, ciB
      * container/service to access that webserver.
      */
     if (!baseUrl) {
-        if (isCI && !reuseLocalServe) {
-            baseUrl = ciBaseUrl;
+        if (isCI && !useLocalPlaywright) {
+            if (!useLocalApp) {
+                baseUrl = `http://cms:8080${serviceBaseUrl}/`;
+            } else {
+                baseUrl = 'http://hostmachine:4200';
+            }
         } else {
-            baseUrl = 'http://hostmachine:4200';
+            if (!useLocalApp) {
+                baseUrl = `http://localhost:8080${serviceBaseUrl}/`;
+            } else {
+                baseUrl = 'http://localhost:4200';
+            }
         }
     }
 
@@ -57,9 +81,9 @@ export function createConfiguration(originalConfig: string, appName: string, ciB
              * For consistency (and the only way for us right now to run the tests stable in Jenkins),
              * the actual playwright server is being run as container/service in the integration-tests setup.
              */
-            connectOptions: {
+            connectOptions: isCI || !useLocalPlaywright ? {
                 wsEndpoint: 'ws://127.0.0.1:3000/',
-            },
+            } : null,
             bypassCSP: true,
         },
         /*
@@ -73,7 +97,7 @@ export function createConfiguration(originalConfig: string, appName: string, ciB
          * Also allow retries to see if they are entirely broken or just flaky.
          */
         retries: 2,
-        repeatEach: forceRepeats || isCI ? 3 : 0,
+        repeatEach: isCI || forceRepeats ? 3 : 0,
         /*
          * Making sure no accidental `only` runs are being run on CI which would skip all
          * other tests, potentially marking it successful.
@@ -89,7 +113,7 @@ export function createConfiguration(originalConfig: string, appName: string, ciB
          * Useful for local debugging and/or creating new tests, so you don't have to create
          * a new docker image for every single change.
          */
-        webServer: isCI || reuseLocalServe ? undefined : {
+        webServer: isCI || !useLocalApp || !startLocalApp ? undefined : {
             command: `npm start ${appName}`,
             url: 'http://127.0.0.1:4200',
             reuseExistingServer: true,

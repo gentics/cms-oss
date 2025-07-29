@@ -376,37 +376,57 @@ export class AlohaIntegrationService {
         this.windowSub.next(window);
     }
 
-    public restoreSelection(): void {
+    public restoreSelection(scrollToElement: boolean = false): void {
         if (!this.currentWindow) {
             return;
         }
+        let range: Range | AlohaRangeObject;
 
         const selection = this.currentWindow.document.getSelection();
         if (selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            if (range) {
-                let start = range.startContainer;
-                if (start.nodeType !== document.ELEMENT_NODE) {
-                    start = start.parentElement;
-                }
-                if (start) {
+            range = selection.getRangeAt(0);
+        } else if (this.currentWindow.Aloha?.Selection) {
+            // Aloha selection fallback, which usually keeps the selection alive when clicking out of the iframe
+            range = this.currentWindow.Aloha.Selection.getRangeObject();
+        }
+
+        if (range) {
+            let start = range.startContainer as HTMLElement;
+            if (start.nodeType !== document.ELEMENT_NODE) {
+                start = start.parentElement;
+            }
+
+            if (start) {
+                const editable = this.currentWindow.Aloha.getEditableHost(this.currentWindow.Aloha.jQuery(start) as any);
+
+                if (editable) {
+                    // We have to focus the editable itself, so the user can edit the content again without clicking into it manually
+                    editable.obj[0].focus({ preventScroll: true });
+
+                    if (scrollToElement) {
+                        const visible = this.currentWindow.visualViewport;
+                        const rect = start.getBoundingClientRect();
+
+                        // The element is not visible due to scroll, so we have to scroll to the element
+                        if (!(rect.top <= visible.height && rect.bottom >= 0)) {
+                            start.scrollIntoView();
+                        }
+                    }
+                } else {
                     if (this.iframeElement != null) {
                         this.iframeElement.focus({ preventScroll: true });
                     }
                     setTimeout(() => {
-                        (start as HTMLElement).focus();
+                        start.focus();
                     });
-                    return;
                 }
+                return;
             }
         }
 
-        if (this.currentWindow.Aloha?.activeEditable?.obj?.[0]) {
-            this.currentWindow.Aloha.activeEditable.obj[0].focus();
-        } else if (typeof (this.currentWindow.document.activeElement as HTMLElement)?.focus === 'function') {
-            (this.currentWindow.document.activeElement as HTMLElement).focus();
-        } else {
-            this.currentWindow.focus();
+        // Fall back to simply try to focus the iframe element
+        if (this.iframeElement != null) {
+            this.iframeElement.focus();
         }
     }
 

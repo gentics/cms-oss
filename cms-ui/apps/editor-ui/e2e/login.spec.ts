@@ -43,9 +43,18 @@ test.describe('Login', () => {
         });
 
         test('should skip login if already logged in', async ({ page }) => {
-            // Setup client for login
+            await navigateToApp(page);
+
+            // Verify we aren't logged in
+            await page.locator('login').waitFor();
+
+            // // Setup client for login
             const client = await createClient({
                 context: page.request,
+                connection: {
+                    absolute: false,
+                    basePath: '/rest',
+                },
             });
 
             // Perform login via API
@@ -57,7 +66,6 @@ test.describe('Login', () => {
             const sid = authData.sid;
 
             // Set session ID in local storage
-            await navigateToApp(page);
             await page.evaluate((sid) => {
                 localStorage.setItem('GCMSUI_sid', `${sid}`);
             }, sid);

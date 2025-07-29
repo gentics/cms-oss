@@ -48,7 +48,7 @@ export function createConfiguration(
      * container/service to access that webserver.
      */
     if (!baseUrl) {
-        if (isCI && !useLocalPlaywright) {
+        if (isCI || !useLocalPlaywright) {
             if (!useLocalApp) {
                 baseUrl = `http://cms:8080${serviceBaseUrl}/`;
             } else {

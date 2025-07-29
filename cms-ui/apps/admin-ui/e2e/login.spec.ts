@@ -43,9 +43,18 @@ test.describe('Login', () => {
         });
 
         test('should skip login if already logged in', async ({ page }) => {
-            // Setup client for login
+            await navigateToApp(page);
+
+            // Verify we aren't logged in
+            await page.locator('gtx-login').waitFor();
+
+            // // Setup client for login
             const client = await createClient({
                 context: page.request,
+                connection: {
+                    absolute: false,
+                    basePath: '/rest',
+                },
             });
 
             // Perform login via API

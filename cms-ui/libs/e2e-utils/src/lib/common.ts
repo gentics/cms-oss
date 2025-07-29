@@ -64,13 +64,15 @@ export const IMPORT_TYPE_GROUP = 'group';
 export const IMPORT_TYPE_TASK = 'task';
 export const IMPORT_TYPE_SCHEDULE = 'schedule';
 
-export const ENV_CMS_USERNAME = 'CMS_USERNAME';
-export const ENV_CMS_PASSWORD = 'CMS_PASSWORD';
+export const ENV_CMS_IMPORTER_USERNAME = 'CMS_IMPORTER_USERNAME';
+export const ENV_CMS_IMPORTER_PASSWORD = 'CMS_IMPORTER_PASSWORD';
+
 export const ENV_CMS_VARIANT = 'CMS_VARIANT';
 export const ENV_CI = 'CI';
 export const ENV_BASE_URL = 'BASE_URL';
 export const ENV_KEYCLOAK_URL = 'KEYCLOAK_URL';
 export const ENV_FORCE_REPEATS = 'FORCE_REPEATS';
+
 export const ENV_LOCAL_PLAYWRIGHT = 'LOCAL_PLAYWRIGHT';
 export const ENV_LOCAL_APP = 'LOCAL_APP';
 export const ENV_SKIP_LOCAL_APP_LAUNCH = 'SKIP_LOCAL_APP_LAUNCH';
@@ -82,9 +84,9 @@ declare global {
     namespace NodeJS {
         interface ProcessEnv {
             /** Username override for setup rest calls */
-            [ENV_CMS_USERNAME]?: string;
+            [ENV_CMS_IMPORTER_USERNAME]?: string;
             /** Password override for setup rest calls */
-            [ENV_CMS_PASSWORD]?: string;
+            [ENV_CMS_IMPORTER_PASSWORD]?: string;
             /** The CMS Variant that is being tested. */
             [ENV_CMS_VARIANT]: Variant;
             /** Flag which determines if we're running in a CI context. */

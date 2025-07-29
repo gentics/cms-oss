@@ -18,7 +18,7 @@ import {
     Template,
     User,
 } from '@gentics/cms-models';
-import { GCMSRestClient, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
+import { GCMSRestClient, GCMSRestClientConfig, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import { APIRequestContext } from '@playwright/test';
 import {
     BinaryMap,
@@ -74,7 +74,7 @@ export interface ImporterOptions {
     logImports?: boolean;
 }
 
-export interface ClientOptions {
+export interface ClientOptions extends Partial<GCMSRestClientConfig> {
     /**
      * If it sohuld log all requests from the `CypressDriver`.
      * Passes it along to `cy.request` -> `{ log: options.logRequests }`
@@ -938,9 +938,20 @@ export class EntityImporter {
 }
 
 export async function createClient(options: ClientOptions): Promise<GCMSRestClient> {
+    if (options.connection == null) {
+        options.connection = {
+            absolute: true,
+            ssl: false,
+            host: 'localhost',
+            port: 8080,
+            basePath: '/rest',
+        };
+    }
+
     // The baseUrl (aka. protocol/host/port) has to be already setup when started
     const client = new GCMSRestClient(
         new GCMSPlaywrightDriver(options.context),
+        options as GCMSRestClientConfig,
     );
 
     if (!options?.autoLogin) {

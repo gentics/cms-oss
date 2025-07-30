@@ -535,6 +535,42 @@ NOTE: These are examples - you can and should adapt these configurations to your
                         "en": "Max. allowed Filesize (MB)",
                         "de": "Max. erlaubte Dateigröße (MB)"
                     }
+                },
+                {
+                    "name": "allowedFiletypes",
+                    "type": "SELECT",
+                    "label_i18n_ui": {
+                        "en": "Allowed filetypes",
+                        "de": "Erlaubte Dateitypen"
+                    },
+                    "description_i18n_ui": {
+                        "en": "Allowed filetypes",
+                        "de": "Erlaubte Dateitypen"
+                    },
+                    "multiple": true,
+                    "options": [
+                        {
+                            "key": "image",
+                            "value_i18n_ui": {
+                                "en": "Images",
+                                "de": "Bilder"
+                            }
+                        },
+                        {
+                            "key": "video",
+                            "value_i18n_ui": {
+                                "en": "Videos",
+                                "de": "Videos"
+                            }
+                        },
+                        {
+                            "key": "documents",
+                            "value_i18n_ui": {
+                                "en": "Documents",
+                                "de": "Dokumente"
+                            }
+                        }
+                    ]
                 }
             ]
         },

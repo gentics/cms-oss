@@ -426,7 +426,7 @@ export class AlohaIntegrationService {
 
         // Fall back to simply try to focus the iframe element
         if (this.iframeElement != null) {
-            this.iframeElement.focus();
+            this.iframeElement.focus({ preventScroll: true });
         }
     }
 

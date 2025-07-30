@@ -96,7 +96,6 @@ test.describe('Page Editing', () => {
             const saveRequest = page.waitForRequest(request => {
                 const matches = request.method() === 'POST'
                     && matchesPath(request.url(), `/rest/page/save/${IMPORTER.get(pageOne).id}`);
-                console.log('is save request', request.url(), matches);
                 return matches;
             });
 
@@ -341,7 +340,7 @@ test.describe('Page Editing', () => {
         // Regular endpoint which should be used
         const constructLoadRequest = page.waitForRequest(request =>
             request.method() === 'GET'
-                && matchesPath(request.url(), '/rest/construct/list')
+                && matchesPath(request.url(), '/rest/construct')
                 && hasMatchingParams(request.url(), {
                     nodeId: IMPORTER.get(minimalNode).id.toString(),
                     pageId: IMPORTER.get(pageOne).id.toString(),

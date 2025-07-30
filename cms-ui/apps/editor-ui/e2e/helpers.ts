@@ -1,13 +1,10 @@
 /* eslint-disable import/no-nodejs-modules */
 /// <reference lib="dom"/>
 import { readFileSync } from 'fs';
-import { Frame, Locator, Page } from '@playwright/test';
-import { RENDERABLE_ALOHA_COMPONENTS } from './common';
+import { expect, Frame, Locator, Page } from '@playwright/test';
+import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
-export async function selectNode(page: Page, nodeId: number | string): Promise<void> {
-    await page.click('node-selector [data-action="select-node"]');
-    await page.click(`.node-selector-list [data-id="${nodeId}"], [data-global-id="${nodeId}"]`);
-}
+const ATTR_CONTEXT_ID = 'data-context-id';
 
 export function findList(page: Page, type: string): Locator {
     return page.locator(`item-list .content-list[data-item-type="${type}"]`);
@@ -17,15 +14,22 @@ export function findItem(list: Locator, id: string | number): Locator {
     return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
-export async function openContext(element: Locator): Promise<Locator> {
-    const ATTR_ID = 'data-context-id';
-    const id = await element.getAttribute(ATTR_ID);
-    if (!id) {
-        throw new Error(`Cannot open element context, since attribute "${ATTR_ID}" is missing!`);
-    }
+export function findContextContent(page: Page, id: string): Locator {
+    return page.locator(`gtx-dropdown-content[${ATTR_CONTEXT_ID}="${id}"]`);
+}
 
+export async function openContext(element: Locator): Promise<Locator> {
+    await expect(element).toHaveAttribute(ATTR_CONTEXT_ID);
+
+    const id = await element.getAttribute(ATTR_CONTEXT_ID);
     await element.locator('gtx-dropdown-trigger gtx-button[data-context-trigger]').click();
-    return element.page().locator(`gtx-dropdown-content[${ATTR_ID}="${id}"]`);
+
+    return findContextContent(element.page(), id);
+}
+
+export async function selectNode(page: Page, nodeId: number | string): Promise<void> {
+    const context = await openContext(page.locator('node-selector > gtx-dropdown-list'));
+    await context.locator(`.node-selector-list [data-id="${nodeId}"], [data-global-id="${nodeId}"]`).click();
 }
 
 export async function itemAction(item: Locator, action: string): Promise<void> {

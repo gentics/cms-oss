@@ -380,14 +380,17 @@ export class AlohaIntegrationService {
         if (!this.currentWindow) {
             return;
         }
-        let range: Range | AlohaRangeObject;
+        let range: Range;
 
         const selection = this.currentWindow.document.getSelection();
         if (selection.rangeCount > 0) {
             range = selection.getRangeAt(0);
         } else if (this.currentWindow.Aloha?.Selection) {
             // Aloha selection fallback, which usually keeps the selection alive when clicking out of the iframe
-            range = this.currentWindow.Aloha.Selection.getRangeObject();
+            const alohaRange = this.currentWindow.Aloha.Selection.getRangeObject();
+            range = this.currentWindow.document.createRange();
+            range.setStart(alohaRange.startContainer, alohaRange.startOffset);
+            range.setEnd(alohaRange.endContainer, alohaRange.endOffset);
         }
 
         if (range) {
@@ -402,24 +405,27 @@ export class AlohaIntegrationService {
                 if (editable) {
                     // We have to focus the editable itself, so the user can edit the content again without clicking into it manually
                     editable.obj[0].focus({ preventScroll: true });
-
-                    if (scrollToElement) {
-                        const visible = this.currentWindow.visualViewport;
-                        const rect = start.getBoundingClientRect();
-
-                        // The element is not visible due to scroll, so we have to scroll to the element
-                        if (!(rect.top <= visible.height && rect.bottom >= 0)) {
-                            start.scrollIntoView();
-                        }
-                    }
                 } else {
                     if (this.iframeElement != null) {
                         this.iframeElement.focus({ preventScroll: true });
                     }
-                    setTimeout(() => {
-                        start.focus();
-                    });
                 }
+                start.focus({ preventScroll: true });
+                if (selection) {
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+
+                if (scrollToElement) {
+                    const visible = this.currentWindow.visualViewport;
+                    const rect = start.getBoundingClientRect();
+
+                    // The element is not visible due to scroll, so we have to scroll to the element
+                    if (!(rect.top <= visible.height && rect.bottom >= 0)) {
+                        start.scrollIntoView();
+                    }
+                }
+
                 return;
             }
         }

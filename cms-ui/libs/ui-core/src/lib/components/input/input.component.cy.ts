@@ -35,6 +35,16 @@ describe('InputComponent', () => {
             .should('have.been.calledWith', WRITE_VALUE);
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', WRITE_VALUE);
+
+        // Clearing the content should yield an empty string
+
+        cy.get(QUERY_INPUT)
+            .type('{selectAll}{backspace}');
+
+        cy.get(OUTPUT_CHANGE)
+            .should('have.been.calledWith', '');
+        cy.get(OUTPUT_VALUE_CHANGE)
+            .should('have.been.calledWith', '');
     });
 
     it('should trigger the change on a number input accordingly', () => {
@@ -53,24 +63,78 @@ describe('InputComponent', () => {
             .should('have.been.calledWith', WRITE_VALUE);
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', WRITE_VALUE);
+
+        // Clearing the content should yield an empty string
+
+        cy.get(QUERY_INPUT)
+            .type('{selectAll}{backspace}');
+
+        cy.get(OUTPUT_CHANGE)
+            .should('have.been.calledWith', '');
+        cy.get(OUTPUT_VALUE_CHANGE)
+            .should('have.been.calledWith', '');
     });
 
-    it('should trigger the change on a value removal accordingly', () => {
-        const WRITE_VALUE = '';
+    it('should handle valid numbers with number type correctly', () => {
+        const WRITE_VALUE = 12345;
 
         cy.mount(InputComponent, {
             autoSpyOutputs: true,
             imports: [FormsModule, ReactiveFormsModule],
             schemas: [NO_ERRORS_SCHEMA],
+            componentProperties: {
+                type: 'number',
+            },
+        });
+
+        cy.get(QUERY_INPUT)
+            .type(`${WRITE_VALUE}`);
+
+        cy.get(OUTPUT_CHANGE)
+            .should('have.been.calledWith', WRITE_VALUE);
+        cy.get(OUTPUT_VALUE_CHANGE)
+            .should('have.been.calledWith', WRITE_VALUE);
+
+        // An empty value should not return 0 or a "default" value, but `null`
+
+        cy.get(QUERY_INPUT)
+            .type('{selectAll}{backspace}');
+
+        cy.get(OUTPUT_CHANGE)
+            .should('have.been.calledWith', null);
+        cy.get(OUTPUT_VALUE_CHANGE)
+            .should('have.been.calledWith', null);
+    });
+
+    it('should handle invalid numbers with the number type correctly', () => {
+        const WRITE_VALUE = 'Hello World';
+
+        cy.mount(InputComponent, {
+            autoSpyOutputs: true,
+            imports: [FormsModule, ReactiveFormsModule],
+            schemas: [NO_ERRORS_SCHEMA],
+            componentProperties: {
+                type: 'number',
+            },
         });
 
         cy.get(QUERY_INPUT)
             .type(WRITE_VALUE);
 
         cy.get(OUTPUT_CHANGE)
-            .should('have.been.calledWith', null);
+            .should('not.have.been.called');
         cy.get(OUTPUT_VALUE_CHANGE)
-            .should('have.been.calledWith', null);
+            .should('not.have.been.called');
+
+        // Switch to a valid value should trigger a valid change
+
+        cy.get(QUERY_INPUT)
+            .type('{selectAll}{backspace}8');
+
+        cy.get(OUTPUT_CHANGE)
+            .should('have.been.calledWith', 8);
+        cy.get(OUTPUT_VALUE_CHANGE)
+            .should('have.been.calledWith', 8);
     });
 
     it('should not display the label element when no label has been provided', () => {

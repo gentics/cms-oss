@@ -14,62 +14,56 @@
     </gtx-file-picker>
 </ng-template>
 
-<ng-container *ngIf="(featureAssetManagementIsActive$ | async); else defaultButton">
-    <ng-container *ngTemplateOutlet="configs.length > 1 ? multiple : single; context: { data: configs.length > 1 ? configs : configs[0] }">
-    </ng-container>
-
-    <ng-template #single let-data="data">
-        <gtx-file-picker
-            *ngIf="isDefaultConfig(data) && data.default"
-            flat
-            size="medium"
-            type="secondary"
-            [multiple]="multiple"
-            [disabled]="disabled"
-            [overrideSlot]="itemType === 'file' ? 'newFileButton' : 'newImageButton'"
-            [overrideParams]="{ FOLDERID: targetFolderId, NODEID: targetNodeId }"
-            [accept]="acceptUploads"
-            (fileSelect)="uploadFiles($event)"
-            (fileSelectReject)="uploadFiles($event)"
-        >
-            <icon left>add</icon> {{ 'editor.upload_from_harddrive' | i18n }}
-        </gtx-file-picker>
-
+<gtx-dropdown-list
+    *ngIf="assetManagementEnabled && providers.length > 0; else defaultButton"
+    data-context-id="asset-management"
+>
+    <gtx-dropdown-trigger>
         <gtx-button
-            *ngIf="!isDefaultConfig(data)"
             flat
-            size="medium"
-            type="secondary"
-            (click)="customUpload(data)"
+            [size]="btnSize"
+            [type]="btnType"
+            data-context-trigger
         >
-            <icon *ngIf="data" left>add</icon>{{ getI18nLabel(data) }}
+            <icon left>add</icon>{{ (btnLabel || itemType) | i18n }}
         </gtx-button>
+    </gtx-dropdown-trigger>
 
-        <div *ngIf="!data">
-            <icon left>report_problem</icon> Malformed configuration for Asset Management
-        </div>
-    </ng-template>
+    <gtx-dropdown-content data-context-id="asset-management">
+        <gtx-dropdown-item
+            *ngFor="let singleProvider of providers"
+            [attr.default-provider]="singleProvider.default"
+            [attr.data-provider-id]="singleProvider.id"
+        >
+            <gtx-file-picker
+                *ngIf="singleProvider.default; else externalProvider"
+                flat
+                size="medium"
+                type="secondary"
+                [multiple]="multiple"
+                [disabled]="disabled"
+                [overrideSlot]="itemType === 'file' ? 'newFileButton' : 'newImageButton'"
+                [overrideParams]="{ FOLDERID: targetFolderId, NODEID: targetNodeId }"
+                [accept]="acceptUploads"
+                (fileSelect)="uploadFiles($event)"
+                (fileSelectReject)="uploadFiles($event)"
+            >
+                <icon left>add</icon>
+                <span>{{ 'editor.upload_from_harddrive' | i18n }}</span>
+            </gtx-file-picker>
 
-    <ng-template #multiple let-data="data">
-        <gtx-dropdown-list>
-            <gtx-dropdown-trigger>
+            <ng-template #externalProvider>
                 <gtx-button
                     flat
-                    [size]="btnSize"
-                    [type]="btnType"
+                    size="medium"
+                    type="secondary"
+                    (click)="customUpload(singleProvider)"
                 >
-                    <icon left>add</icon>{{ (btnLabel || itemType) | i18n }}
+                    <icon left>add</icon>
+                    <span>{{ singleProvider.label }}</span>
                 </gtx-button>
-            </gtx-dropdown-trigger>
+            </ng-template>
+        </gtx-dropdown-item>
+    </gtx-dropdown-content>
 
-            <gtx-dropdown-content>
-                <gtx-dropdown-item *ngFor="let config of data">
-                    <ng-container *ngTemplateOutlet="single; context: { data: config }">
-                    </ng-container>
-                </gtx-dropdown-item>
-            </gtx-dropdown-content>
-
-        </gtx-dropdown-list>
-    </ng-template>
-
-</ng-container>
+</gtx-dropdown-list>

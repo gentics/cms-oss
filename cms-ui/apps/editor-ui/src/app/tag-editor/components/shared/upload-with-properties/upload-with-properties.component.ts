@@ -11,13 +11,13 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { UploadResponse } from '@editor-ui/app/common/models';
+import { ExternalAssetReference } from '@gentics/cms-integration-api-models';
 import { EditableFileProps, FileCreateRequest, FileOrImage, FileUpload, Folder, Raw } from '@gentics/cms-models';
 import { IFileDropAreaOptions, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, from, of } from 'rxjs';
 import { finalize, switchMap, tap } from 'rxjs/operators';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
-import { GtxExternalAssetManagementApiRootObject } from '../../../../shared/components/external-assets-modal/external-assets-modal.component';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { FolderActionsService } from '../../../../state';
 
@@ -76,7 +76,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
     fileDropAreaOptions: IFileDropAreaOptions = {};
 
     fileToUpload: File;
-    selectionToUpload: GtxExternalAssetManagementApiRootObject;
+    selectionToUpload: ExternalAssetReference;
 
     fileProperties: EditableFileProps;
 
@@ -139,7 +139,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
     }
 
     /** Triggered if previoulsy uploaded files available in CMS have been selected. */
-    onAssetsSelected(data: GtxExternalAssetManagementApiRootObject[]): void {
+    onAssetsSelected(data: ExternalAssetReference[]): void {
         // response can have more than one selections.
         // Since it is not possible to limit selection to single in a generic way, extract first selection.
         this.selectionToUpload = data[0];

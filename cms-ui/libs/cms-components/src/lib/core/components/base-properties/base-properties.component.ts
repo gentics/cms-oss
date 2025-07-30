@@ -99,6 +99,10 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
     public ngOnInit(): void {
         this.initializeForm();
+
+        if (this.valueIsSet()) {
+            this.initializeWithData();
+        }
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
@@ -266,7 +270,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      * Basic implementation which will simply put the value into the form.
      */
     protected override onValueChange(): void {
-        if (!this.initialized && this.valueIsSet()) {
+        if (!this.initialized && this.valueIsSet() && this.form) {
             this.initialized = true;
             this.initializeWithData();
         }

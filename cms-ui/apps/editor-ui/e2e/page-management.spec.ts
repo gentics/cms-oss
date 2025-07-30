@@ -12,6 +12,7 @@ import { AUTH } from './common';
 import {
     closeObjectPropertyEditor,
     editorAction,
+    findContextContent,
     findItem,
     findList,
     itemAction,

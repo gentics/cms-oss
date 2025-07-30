@@ -1,27 +1,25 @@
-import { test, expect } from '@playwright/test';
 import {
     EntityImporter,
-    TestSize,
     ITEM_TYPE_PAGE,
-    folderA,
+    TestSize,
+    loginWithForm,
     minimalNode,
+    navigateToApp,
     pageOne,
 } from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
 import {
-    login,
-    selectNode,
-    findList,
-    findItem,
-    itemAction,
-    initPage,
-    editorAction,
-    openObjectPropertyEditor,
     closeObjectPropertyEditor,
-    findContextContent,
-    navigateToApp,
+    editorAction,
+    findItem,
+    findList,
+    itemAction,
+    openObjectPropertyEditor,
+    selectNode,
 } from './helpers';
-import { AUTH_ADMIN } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Page Management', () => {
 
     const IMPORTER = new EntityImporter();
@@ -33,6 +31,7 @@ test.describe('Page Management', () => {
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
@@ -41,19 +40,19 @@ test.describe('Page Management', () => {
     test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
-        await initPage(page);
 
-        await navigateToApp(page, '/');
-        await login(page, AUTH_ADMIN);
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 
     test('should be possible to create a new page', async ({ page }) => {
         const list = findList(page, ITEM_TYPE_PAGE);
-        await list.locator('.header-controls [data-action="create-new-item"]').click({ force: true });
+        await list.locator('.header-controls [data-action="create-new-item"] button').click();
 
         const modal = page.locator('create-page-modal');
         const form = modal.locator('gtx-page-properties');
@@ -62,7 +61,7 @@ test.describe('Page Management', () => {
 
         const [response] = await Promise.all([
             page.waitForResponse(resp => resp.url().includes('/rest/page/create') && resp.status() === 200),
-            modal.locator('.modal-footer [data-action="confirm"]').click({ force: true }),
+            modal.locator('.modal-footer [data-action="confirm"] button').click(),
         ]);
 
         const responseBody = await response.json();

@@ -1,27 +1,32 @@
-import { test, expect } from '@playwright/test';
-import { NodeFeature } from '@gentics/cms-models';
+import { NodeFeature, Variant } from '@gentics/cms-models';
 import {
+    BASIC_TEMPLATE_ID,
     EntityImporter,
-    TestSize,
+    isVariant,
     ITEM_TYPE_PAGE,
+    loginWithForm,
     minimalNode,
+    navigateToApp,
     pageOne,
     scheduleLinkChecker,
+    TestSize,
 } from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
 import {
-    login,
-    selectNode,
-    findList,
-    findItem,
-    itemAction,
-    initPage,
     findAlohaComponent,
     findDynamicFormModal,
+    findItem,
+    findList,
     getAlohaIFrame,
+    itemAction,
+    selectNode,
 } from './helpers';
-import { AUTH_ADMIN } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Link Checker', () => {
+    test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
     const IMPORTER = new EntityImporter();
     const CLASS_LINKCHECKER_ITEM = 'aloha-gcnlinkchecker-item';
     const CLASS_LINKCHECKER_UNCHECKED = 'aloha-gcnlinkchecker-unchecked';
@@ -31,6 +36,7 @@ test.describe('Link Checker', () => {
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
@@ -39,6 +45,7 @@ test.describe('Link Checker', () => {
     test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
@@ -47,10 +54,10 @@ test.describe('Link Checker', () => {
         });
         await IMPORTER.importData([scheduleLinkChecker]);
         await IMPORTER.executeSchedule(scheduleLinkChecker);
-        await IMPORTER.syncTag(1, 'content');
-        await initPage(page);
-        await page.goto('/');
-        await login(page, AUTH_ADMIN);
+        await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
+
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 
@@ -83,7 +90,7 @@ test.describe('Link Checker', () => {
         await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
         await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
 
-        const [checkResponse] = await Promise.all([
+        await Promise.all([
             page.waitForResponse(resp => resp.url().includes('/rest/linkChecker/check') && resp.status() === 200),
             modal.locator('.modal-footer [data-action="confirm"]').click(),
         ]);
@@ -117,7 +124,7 @@ test.describe('Link Checker', () => {
         await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
         await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
 
-        const [checkResponse] = await Promise.all([
+        await Promise.all([
             page.waitForResponse(resp => resp.url().includes('/rest/linkChecker/check') && resp.status() === 200),
             modal.locator('.modal-footer [data-action="confirm"]').click(),
         ]);

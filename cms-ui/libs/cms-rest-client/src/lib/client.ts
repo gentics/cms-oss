@@ -244,7 +244,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (id, body) => this.executeMappedJsonRequest(PUT, `/construct/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/construct/${id}`),
 
-        listForEditor: (options) => this.executeMappedJsonRequest(GET, '/construct/list', null, options),
+        listForEditor: (options) => this.executeMappedJsonRequest(GET, '/construct', null, options),
 
         hash: (id) => this.executeMappedJsonRequest(GET, `/constructs/${id}/hash`),
         getLinkedNodes: (id) => this.executeMappedJsonRequest(GET, `/construct/${id}/nodes`),
@@ -320,7 +320,7 @@ export class GCMSRestClient implements GCMSRootAPI {
             data.append('fileBinaryData', file);
             return this.executeMappedFormRequest(POST, `/content/package/${name}/zip`, data);
         },
-        download: (name) => this.executeBlobRequest(GET, `/content/package/${name}`),
+        download: (name) => this.executeBlobRequest(GET, `/content/package/${name}/zip`),
         errors: (name) => this.executeMappedJsonRequest(GET, `/content/package/${name}/import/errors`),
         listContents: (name, path) => this.executeMappedJsonRequest(GET, `/content/package/${name}/list/${path}`),
 

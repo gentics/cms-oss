@@ -91,6 +91,7 @@
         "component-test": {
             "inputs": ["default", "^production"],
             "cache": true,
+            "parallelism": false,
             "configurations": {
                 "watch": {
                     "watch": true

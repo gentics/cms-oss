@@ -1,10 +1,8 @@
-<ng-container *ngIf="formPropertiesConfiguration$ | async as formPropertiesConfiguration else errorNoFormData">
+<ng-container *ngIf="(form && formConfigLoaded && formConfig) else errorNoFormData">
     <form [formGroup]="form">
         <gtx-input
             [label]="('editor.item_name_label' | i18n) + '*'"
             formControlName="name"
-            [gtxDisabled]="disabled"
-            required
             [autofocus]="mode === 'create'"
         ></gtx-input>
 
@@ -12,8 +10,6 @@
             <gtx-select
                 [label]="('editor.item_type_label' | i18n) + '*'"
                 formControlName="type"
-                [gtxDisabled]="disabled"
-                required
                 [multiple]="false"
             >
                 <gtx-option
@@ -28,20 +24,18 @@
         <gtx-input
             [label]="'editor.item_description_label' | i18n"
             formControlName="description"
-            [gtxDisabled]="disabled"
         ></gtx-input>
 
         <ng-container formGroupName="data">
-            <ng-container *ngIf="formPropertiesConfiguration.template_context_options; else noTemplateContextOptions">
+            <ng-container *ngIf="formConfig?.form_properties?.template_context_options; else noTemplateContextOptions">
                 <gtx-select
                     [label]="('editor.item_template_context_label' | i18n) + '*'"
                     formControlName="templateContext"
-                    [gtxDisabled]="disabled"
                     [multiple]="false"
                     [required]="true"
                 >
                     <gtx-option
-                        *ngFor="let option of formPropertiesConfiguration.template_context_options"
+                        *ngFor="let option of formConfig?.form_properties?.template_context_options"
                         [value]="option.key"
                     >
                         {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
@@ -53,14 +47,12 @@
                 <gtx-input
                     [label]="'editor.item_template_context_label' | i18n"
                     formControlName="templateContext"
-                    [gtxDisabled]="disabled"
                 ></gtx-input>
             </ng-template>
 
             <gtx-input
                 [label]="'editor.item_email_label' | i18n"
                 formControlName="email"
-                [gtxDisabled]="disabled"
             ></gtx-input>
         </ng-container>
 
@@ -68,14 +60,12 @@
             class="hidden-input"
             type="number"
             formControlName="successPageId"
-            [gtxDisabled]="disabled"
         ></gtx-input>
 
         <gtx-input
             class="hidden-input"
             type="number"
             formControlName="successNodeId"
-            [gtxDisabled]="disabled"
         ></gtx-input>
 
         <ng-container formGroupName="data">
@@ -83,14 +73,12 @@
                 class="hidden-input"
                 type="number"
                 formControlName="mailsource_pageid"
-                [gtxDisabled]="disabled"
             ></gtx-input>
 
             <gtx-input
                 class="hidden-input"
                 type="number"
                 formControlName="mailsource_nodeid"
-                [gtxDisabled]="disabled"
             ></gtx-input>
         </ng-container>
 
@@ -99,7 +87,6 @@
             *ngIf="isMultiLang"
             [label]="('editor.item_language_label' | i18n) + '*'"
             formControlName="languages"
-            [gtxDisabled]="disabled || disableLanguageSelect"
             required
             [multiple]="true"
         >
@@ -121,19 +108,17 @@
             <gtx-i18n-input
                 [label]="'editor.item_localized_mail_subject' | i18n"
                 formControlName="mailsubject_i18n"
-                [gtxDisabled]="disabled"
-                [language]="activeFormLanguageCode$ | async"
-                [availableLanguages]="properties.languages"
+                [language]="activeFormLanguageCode"
+                [availableLanguages]="languages"
             ></gtx-i18n-input>
 
-            <ng-container *ngIf="formPropertiesConfiguration.admin_mail_options; else noAdminMailOptions">
+            <ng-container *ngIf="formConfig?.form_properties?.admin_mail_options; else noAdminMailOptions">
                 <gtx-radio-group
                     [value]="useEmailPageTemplate"
                     (valueChange)="updateEmailTemplate($event)"
                 >
                     <gtx-radio-button
                         [label]="'editor.item_localized_mail_custom' | i18n"
-                        [disabled]="disabled"
                         [value]="true"
                     ></gtx-radio-button>
 
@@ -146,20 +131,19 @@
                     >
                         <browse-box
                             [label]="'editor.item_mail_custom_description' | i18n"
-                            [displayValue]="emailTemplatePageDisplayValue$ | async"
+                            [displayValue]="loadedMailTemplate ? loadedMailTemplate.name : ('editor.page_no_selection' | i18n)"
                             [disabled]="disabled || !useEmailPageTemplate"
                             (clear)="setEmailTemplatePage(null)"
                             (browse)="browseForEmailTemplatePage()"
                         ></browse-box>
 
-                        <div class="browse-box__breadcrumbs" *ngIf="breadcrumbs.emailTemplatePage">
-                            {{ 'tag_editor.selected_folder' | i18n }}: {{ breadcrumbs.emailTemplatePage }}
+                        <div class="browse-box__breadcrumbs" *ngIf="mailTemplateBreadcrubs">
+                            {{ 'tag_editor.selected_folder' | i18n }}: {{ mailTemplateBreadcrubs }}
                         </div>
                     </div>
 
                     <gtx-radio-button
                         [label]="'editor.item_localized_mail_temp' | i18n"
-                        [disabled]="disabled"
                         [value]="false"
                     ></gtx-radio-button>
 
@@ -171,13 +155,13 @@
                         }"
                     >
                         <gtx-i18n-select
-                            [language]="activeFormLanguageCode$ | async"
-                            [availableLanguages]="properties.languages"
+                            [language]="activeFormLanguageCode"
+                            [availableLanguages]="languages"
                             (change)="setEmailTemplateOption($event)"
                             formControlName="mailtemp_i18n"
                         >
                             <gtx-option
-                                *ngFor="let option of formPropertiesConfiguration.admin_mail_options"
+                                *ngFor="let option of formConfig?.form_properties?.admin_mail_options"
                                 [value]="option.key"
                             >
                                 {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
@@ -191,9 +175,8 @@
                 <gtx-i18n-input
                     [label]="'editor.item_localized_mail_temp' | i18n"
                     formControlName="mailtemp_i18n"
-                    [gtxDisabled]="disabled"
-                    [language]="activeFormLanguageCode$ | async"
-                    [availableLanguages]="properties.languages"
+                    [language]="activeFormLanguageCode"
+                    [availableLanguages]="languages"
                 ></gtx-i18n-input>
             </ng-template>
         </ng-container>
@@ -207,7 +190,6 @@
         >
             <gtx-radio-button
                 [label]="'editor.internal_page' | i18n"
-                [disabled]="disabled"
                 [value]="true"
             ></gtx-radio-button>
 
@@ -220,20 +202,19 @@
             >
                 <browse-box
                     [label]="'editor.item_success_page' | i18n"
-                    [displayValue]="successPageDisplayValue$ | async"
+                    [displayValue]="loadedSuccessPage ? loadedSuccessPage.name : ('editor.page_no_selection' | i18n)"
                     [disabled]="disabled || !useInternalSuccessPage"
                     (clear)="setSuccessPage(null)"
                     (browse)="browseForPage()">
                 </browse-box>
 
-                <div class="browse-box__breadcrumbs" *ngIf="breadcrumbs.internalSuccessPage">
-                    {{ 'tag_editor.selected_folder' | i18n }}: {{ breadcrumbs.internalSuccessPage }}
+                <div class="browse-box__breadcrumbs" *ngIf="loadedSuccessPage">
+                    {{ 'tag_editor.selected_folder' | i18n }}: {{ successPageBreadcrumbs }}
                 </div>
             </div>
 
             <gtx-radio-button
                 [label]="'editor.external_url' | i18n"
-                [disabled]="disabled"
                 [value]="false"
             ></gtx-radio-button>
 
@@ -248,10 +229,8 @@
                 <gtx-i18n-input
                     [label]="'editor.item_success_url' | i18n"
                     formControlName="successurl_i18n"
-                    [gtxDisabled]="disabled || !!useInternalSuccessPage"
-                    [language]="activeFormLanguageCode$ | async"
-                    [availableLanguages]="properties.languages"
-                    ngDefaultControl
+                    [language]="activeFormLanguageCode"
+                    [availableLanguages]="languages"
                 ></gtx-i18n-input>
             </div>
         </ng-container>
@@ -259,5 +238,5 @@
 </ng-container>
 
 <ng-template #errorNoFormData>
-    <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_or_invalid_formdata' | i18n }}</p>
+    <p *ngIf="formConfigLoaded" class="form-editor-error">{{ 'gtxFormGenerator.error_no_or_invalid_formdata' | i18n }}</p>
 </ng-template>

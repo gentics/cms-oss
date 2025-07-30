@@ -1,23 +1,21 @@
-import { test, expect } from '@playwright/test';
 import { NodeFeature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
-    TestSize,
     ITEM_TYPE_PAGE,
+    TestSize,
     isVariant,
+    loginWithForm,
     minimalNode,
+    navigateToApp,
     pageOne,
-    skipableSuite,
 } from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
 import {
-    login,
-    selectNode,
-    findList,
     findItem,
-    itemAction,
-    initPage,
+    findList,
+    selectNode,
 } from './helpers';
-import { AUTH_ADMIN } from './common';
 
 test.describe('Page Translation', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -26,6 +24,7 @@ test.describe('Page Translation', () => {
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
@@ -34,15 +33,16 @@ test.describe('Page Translation', () => {
     test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
         await IMPORTER.setupFeatures(TestSize.MINIMAL, {
             [NodeFeature.AUTOMATIC_TRANSLATION]: true,
         });
-        await initPage(page);
-        await page.goto('/');
-        await login(page, AUTH_ADMIN);
+
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await page.locator('node-selector').waitFor();
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
@@ -82,7 +82,7 @@ test.describe('Page Translation', () => {
             //     .find('.language-icon.available')
             //     .should('have.length.at.least', 2);
 
-
+            // TODO needs a test translation environment (translateLocally?)
             // // does not work for iframe
             // cy.get('content-frame', {timeout:5000})
             //     .first()

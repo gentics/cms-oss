@@ -462,5 +462,22 @@ spec:
                 }
             }
         }
+
+        stage("Publish NPM Packages") {
+            when {
+                expression {
+                    return params.runReleaseBuild && params.deploy
+                }
+            }
+
+            steps {
+                script {
+                    dir(path: 'cms-ui') {
+                        // Publish the pacakges to npm repository
+                        sh "npm run nx -- release publish --projects=tag:publish --output-style=static"
+                    }
+                }
+            }
+        }
     }
 }

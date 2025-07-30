@@ -1,24 +1,25 @@
-import { test, expect } from '@playwright/test';
 import {
     EntityImporter,
-    TestSize,
     ITEM_TYPE_FOLDER,
+    TestSize,
     folderA,
+    loginWithForm,
     minimalNode,
+    navigateToApp,
 } from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
 import {
-    login,
-    selectNode,
-    findList,
-    findItem,
-    itemAction,
-    initPage,
-    editorAction,
-    openObjectPropertyEditor,
     closeObjectPropertyEditor,
+    editorAction,
+    findItem,
+    findList,
+    itemAction,
+    openObjectPropertyEditor,
+    selectNode,
 } from './helpers';
-import { AUTH_ADMIN } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Folder Management', () => {
     const IMPORTER = new EntityImporter();
     const NEW_FOLDER_NAME = 'Hello World';
@@ -30,6 +31,7 @@ test.describe('Folder Management', () => {
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
@@ -38,12 +40,13 @@ test.describe('Folder Management', () => {
     test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
+
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
-        await initPage(page);
-        await page.goto('/');
-        await login(page, AUTH_ADMIN);
+
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 

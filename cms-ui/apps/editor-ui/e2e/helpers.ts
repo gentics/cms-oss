@@ -11,7 +11,7 @@ export function findList(page: Page, type: string): Locator {
 }
 
 export function findItem(list: Locator, id: string | number): Locator {
-    return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
+    return list.locator(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
 }
 
 export function findContextContent(page: Page, id: string): Locator {

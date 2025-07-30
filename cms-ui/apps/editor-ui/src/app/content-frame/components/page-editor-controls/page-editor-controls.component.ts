@@ -165,15 +165,15 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
                 return raw.filter(construct => whitelist.includes(construct.keyword));
             }),
         ).subscribe(constructs => {
-            this.constructs = structuredClone(constructs);
+            this.constructs = structuredClone(constructs) || [];
             // extract the categories from the constructs
             this.constructCategories = Array.from(
                 new Map(
                     this.constructs
                         .filter(item => item.category)
-                        .map(item => [item.category.id, item.category])
-                    ).values()
-                ).sort((a, b) => a.sortOrder - b.sortOrder);
+                        .map(item => [item.category.id, item.category]),
+                ).values(),
+            ).sort((a, b) => a.sortOrder - b.sortOrder);
 
             // add the constructs to their categories
             this.constructs.filter(construct => construct.category).forEach(construct => {

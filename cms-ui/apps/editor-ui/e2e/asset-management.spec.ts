@@ -1,8 +1,8 @@
 import { FileUploadResponse, NodeFeature } from '@gentics/cms-models';
-import { EntityImporter, fullNode, matchesPath, minimalNode, TestSize } from '@gentics/e2e-utils';
-import { test, expect } from '@playwright/test';
-import { findItem, findList, initPage, login, openContext, selectNode } from './helpers';
-import { AUTH_ADMIN } from './common';
+import { EntityImporter, fullNode, loginWithForm, matchesPath, minimalNode, navigateToApp, TestSize } from '@gentics/e2e-utils';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
+import { findItem, findList, openContext, selectNode } from './helpers';
 
 test.describe('Asset Management', () => {
     const IMPORTER = new EntityImporter();
@@ -31,9 +31,8 @@ test.describe('Asset Management', () => {
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.MINIMAL);
-        await initPage(page);
-        await page.goto('/');
-        await login(page, AUTH_ADMIN);
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
     });
 
     test('should have asset-management available in both nodes', {

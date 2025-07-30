@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Custom Picker</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script>
+        function sendSampleToParent() {
+            window.parent.postMessage(JSON.stringify([
+                {
+                    name: 'test.jpg',
+                    fileCategory: 'image',
+                    '@odata.mediaReadLink': 'http://localhost:8080/ui-conf/tersius-van-rhyn-4sLX9bIoZeQ-unsplash.jpg',
+                    alternatveUrls: [],
+                    properties: {
+                        copyright: 'Sample text 123'
+                    }
+                }
+            ]), window.opener);
+        }
+    </script>
+</head>
+<body>
+    <button onclick="sendSampleToParent()">Click me</button>
+</body>
+</html>

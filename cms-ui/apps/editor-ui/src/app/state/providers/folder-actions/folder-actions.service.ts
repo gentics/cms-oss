@@ -668,7 +668,7 @@ export class FolderActionsService {
         const languages = this.appState.now.entities.language;
         const itemInfo: ItemsInfo = folderState[`${type}s` as FolderItemTypePlural];
         const fetchAll = itemInfo.fetchAll;
-        const maxItems = fetchAll ? -1 : 10;
+        const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const search = folderState.searchTerm;
         const recursive = search !== '';
         const parentId = folderState.activeFolder;

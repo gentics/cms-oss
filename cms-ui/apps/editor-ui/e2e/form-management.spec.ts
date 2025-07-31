@@ -5,9 +5,10 @@ import {
     ITEM_TYPE_FORM,
     LANGUAGE_DE,
     loginWithForm,
-    matchesPath,
+    matchRequest,
     minimalNode,
     navigateToApp,
+    pickSelectValue,
     TestSize,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
@@ -17,7 +18,6 @@ import { findList, selectNode } from './helpers';
 test.describe.configure({ mode: 'serial' });
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
-    test.slow();
 
     const IMPORTER = new EntityImporter();
     const NEW_FORM_NAME = 'Hello World';
@@ -55,15 +55,9 @@ test.describe('Form Management', () => {
 
         await form.locator('[formcontrolname="name"] input').fill(NEW_FORM_NAME);
         await form.locator('[formcontrolname="description"] input').fill(NEW_FORM_DESCRIPTION);
-        await form.locator('[formcontrolname="languages"] gtx-dropdown-trigger').scrollIntoViewIfNeeded();
-        await form.locator('[formcontrolname="languages"] gtx-dropdown-trigger').click();
-        await page.click(`gtx-dropdown-content [data-id="${LANGUAGE_DE}"]`);
-        // Close the dropdown
-        await page.click('gtx-scroll-mask');
+        await pickSelectValue(form.locator('[formcontrolname="languages"]'), [LANGUAGE_DE]);
 
-        const formUpdate = page.waitForResponse(resp => resp.request().method() === 'POST'
-            && matchesPath(resp.request().url(), '/rest/form')
-            && resp.ok());
+        const formUpdate = page.waitForResponse(matchRequest('POST', '/rest/form'));
 
         await modal.locator('.modal-footer [data-action="confirm"] button').click();
 

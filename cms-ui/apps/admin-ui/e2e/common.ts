@@ -1,22 +1,13 @@
-export const AUTH_ADMIN = 'admin';
-export const AUTH_KEYCLOAK = 'keycloak';
-export const AUTH_MESH = 'mesh';
-
-export interface LoginData {
-    username: string;
-    password: string;
-}
-
 export const AUTH = {
-    [AUTH_ADMIN]: {
+    admin: {
         username: 'node',
         password: 'node',
     },
-    [AUTH_KEYCLOAK]: {
+    keycloak: {
         username: 'node',
         password: 'node',
     },
-    [AUTH_MESH]: {
+    mesh: {
         username: 'admin',
         password: 'admin',
         newPassword: 'admin-test',

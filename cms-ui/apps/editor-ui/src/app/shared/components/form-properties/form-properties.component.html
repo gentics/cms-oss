@@ -1,4 +1,4 @@
-<ng-container *ngIf="(formConfigLoaded && formConfig) else errorNoFormData">
+<ng-container *ngIf="(form && formConfigLoaded && formConfig) else errorNoFormData">
     <form [formGroup]="form">
         <gtx-input
             [label]="('editor.item_name_label' | i18n) + '*'"

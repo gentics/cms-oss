@@ -1,9 +1,19 @@
-import { test, expect } from '@playwright/test';
 import {
-    EntityImporter, IMPORT_ID, IMPORT_TYPE, IMPORT_TYPE_TASK, ScheduleTaskImportData, TestSize, findTableRowById, selectTab, clickTableRow,
+    EntityImporter,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_TASK,
+    ScheduleTaskImportData,
+    TestSize,
+    clickTableRow,
+    findTableRowById,
+    loginWithForm,
+    navigateToApp,
+    selectTab,
 } from '@gentics/e2e-utils';
-import { AUTH_ADMIN } from './common';
-import { loginWithForm, navigateToModule, navigateToApp } from './helpers';
+import { expect, test } from '@playwright/test';
+import { AUTH } from './common';
+import { navigateToModule } from './helpers';
 
 const EXAMPLE_TASK_ONE: ScheduleTaskImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_TASK,
@@ -23,8 +33,8 @@ test.describe('Scheduler Module', () => {
 
     test.beforeEach(async ({ page, request, context }) => {
         await context.clearCookies();
-        // Reset importer client to avoid 401 errors
         IMPORTER.setApiContext(request);
+        await IMPORTER.clearClient();
 
         // Clean and setup test data
         await IMPORTER.cleanupTest();
@@ -33,7 +43,7 @@ test.describe('Scheduler Module', () => {
 
         // Navigate to the app and log in
         await navigateToApp(page);
-        await loginWithForm(page, AUTH_ADMIN);
+        await loginWithForm(page, AUTH.admin);
 
         // Navigate to the scheduler
         await navigateToModule(page, 'scheduler');

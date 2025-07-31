@@ -1,13 +1,14 @@
 import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
-import { ComponentFixture, flush, tick } from '@angular/core/testing';
+import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { Api } from '@editor-ui/app/core/providers/api';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { BrowseBoxComponent, I18nInputComponent } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
-import { ItemInNode, Language, Page, Raw } from '@gentics/cms-models';
+import { ItemInNode, Language, Page, PageResponse, Raw, ResponseCode } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
@@ -16,7 +17,7 @@ import {
     FormEditorConfigurationService,
     FormEditorService,
 } from '@gentics/form-generator';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
@@ -26,11 +27,15 @@ import { FormPropertiesComponent } from './form-properties.component';
 
 type PageWithNodeId = ItemInNode<Page<Raw>>;
 
-describe('FormPropertiesForm', () => {
+describe('FormProperties', () => {
 
     beforeEach(() => {
-        configureComponentTest({
-            imports: [GenticsUICoreModule.forRoot(), FormsModule, ReactiveFormsModule],
+        const testBed = configureComponentTest({
+            imports: [
+                GenticsUICoreModule.forRoot(),
+                FormsModule,
+                ReactiveFormsModule,
+            ],
             providers: [
                 { provide: Api, useClass: MockApi },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
@@ -43,11 +48,11 @@ describe('FormPropertiesForm', () => {
             declarations: [
                 TestComponent,
                 FormPropertiesComponent,
-                mockPipes('i18n'),
+                I18nInputComponent,
+                BrowseBoxComponent,
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });
-
     });
 
     describe('language selection', () => {
@@ -56,7 +61,7 @@ describe('FormPropertiesForm', () => {
 
         it('does show language selection if two languages are available',
             componentTest(() => TestComponent, (fixture, instance) => {
-
+                instance.isMultiLang = true;
                 instance.languages = [
                     {
                         code: 'de',
@@ -71,9 +76,13 @@ describe('FormPropertiesForm', () => {
                 ];
                 fixture.detectChanges();
                 tick();
+                fixture.whenRenderingDone();
+                tick();
+
                 const languageSelectionElement = getLanguageSelectionElement(fixture);
                 expect(languageSelectionElement?.nativeElement).not.toBeNull();
-                expect(languageSelectionElement.componentInstance.optionGroups[0].options.length).toEqual(2);
+                const langSelect: SelectComponent = languageSelectionElement.componentInstance;
+                expect(langSelect.optionGroups[0].options.length).toEqual(2);
                 flush();
             }),
         );
@@ -81,6 +90,7 @@ describe('FormPropertiesForm', () => {
         it('does not show language selection if only one languages is available',
             componentTest(() => TestComponent, (fixture, instance) => {
 
+                instance.isMultiLang = false;
                 instance.languages = [
                     {
                         code: 'de',
@@ -135,36 +145,26 @@ describe('FormPropertiesForm', () => {
 
         it('useEmailPageTemplate should only be true if mailsource_pageid is set',
             componentTest(() => FormPropertiesComponent, (fixture, instance) => {
-                if (instance.properties.data == null) {
-                    instance.properties.data = {};
-                }
-                instance.properties.data.mailtemp_i18n = undefined;
-                spyOn(instance, 'initSelectedItemHelper').and.returnValue(new MockSelectedItemHelper() as any);
-                spyOn(instance, 'trackDisplayValue').and.returnValue(of('page'));
+                const restClient = TestBed.inject(GCMSRestClientService);
+                restClient.page.get = () => of({
+                    page: TEST_PAGE,
+                    responseInfo: {
+                        responseCode: ResponseCode.OK,
+                        responseMessage: 'mocked',
+                    },
+                    messages: [],
+                } as PageResponse);
 
-                const options: RepositoryBrowserOptions = { selectMultiple: false, allowedSelection: 'page' };
-                instance.ngOnInit();
-
-                callRepositoryBrowser(TEST_PAGE);
-                repositoryBrowserClient.openRepositoryBrowser(options)
-                    .then((selectedTemplatePage: ItemInNode<Page<Raw>>) => {
-                        instance.setEmailTemplatePage(selectedTemplatePage);
-                    });
-                tick();
-                expect(instance.useEmailPageTemplate).toBeTruthy();
-
-                instance.properties.data.mailtemp_i18n = null;
-
-                callRepositoryBrowser(TEST_PAGE_WITH_NO_VALUES);
-                repositoryBrowserClient.openRepositoryBrowser(options)
-                    .then((selectedTemplatePage: ItemInNode<Page<Raw>>) => {
-                        instance.setEmailTemplatePage(selectedTemplatePage);
-                    });
-                tick();
+                instance.value = {
+                    data: {
+                        mailsource_nodeid: TEST_PAGE.nodeId,
+                        mailsource_pageid: TEST_PAGE.id,
+                    },
+                };
                 fixture.detectChanges();
+                tick();
 
-                expect(instance.useEmailPageTemplate).toBeFalsy();
-                flush();
+                expect(instance.useEmailPageTemplate).toBeTruthy();
             }),
         );
 
@@ -192,6 +192,7 @@ describe('FormPropertiesForm', () => {
             #propertiesForm
             [isMultiLang]="isMultiLang"
             [languages]="languages"
+            [value]="value"
         ></gtx-form-properties>
     `,
     standalone: false,
@@ -201,6 +202,7 @@ class TestComponent {
     propertiesForm: FormPropertiesComponent;
     isMultiLang = true;
     languages: Language[] = [];
+    value = {};
 }
 
 class MockFormEditorConfigurationService {

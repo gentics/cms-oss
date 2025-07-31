@@ -2,6 +2,8 @@ import { File as CMSFile, Folder, Group, Image, Node, Page, ScheduleTask, User, 
 import type { Suite } from 'mocha';
 import {
     ENV_CI,
+    ENV_CMS_IMPORTER_PASSWORD,
+    ENV_CMS_IMPORTER_USERNAME,
     ENV_CMS_VARIANT,
     FileImportData,
     FolderImportData,
@@ -11,6 +13,7 @@ import {
     ImageImportData,
     IMPORT_ID,
     ImportData,
+    LoginInformation,
     NodeImportData,
     PageImportData,
     ScheduleTaskImportData,
@@ -471,4 +474,11 @@ export function isEnvBool(value: string | number | boolean): boolean {
 
 export function isCIEnvironment(): boolean {
     return isEnvBool(process.env[ENV_CI]);
+}
+
+export function getDefaultSystemLogin(): LoginInformation {
+    return {
+        username: process.env[ENV_CMS_IMPORTER_USERNAME] || 'node',
+        password: process.env[ENV_CMS_IMPORTER_PASSWORD] || 'node',
+    };
 }

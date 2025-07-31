@@ -1,10 +1,9 @@
 /* eslint-disable import/no-nodejs-modules */
 /// <reference lib="dom"/>
 import { readFileSync } from 'fs';
-import { expect, Frame, Locator, Page } from '@playwright/test';
+import { openContext } from '@gentics/e2e-utils';
+import { Frame, Locator, Page } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
-
-const ATTR_CONTEXT_ID = 'data-context-id';
 
 export function findList(page: Page, type: string): Locator {
     return page.locator(`item-list .content-list[data-item-type="${type}"]`);
@@ -12,19 +11,6 @@ export function findList(page: Page, type: string): Locator {
 
 export function findItem(list: Locator, id: string | number): Locator {
     return list.locator(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
-}
-
-export function findContextContent(page: Page, id: string): Locator {
-    return page.locator(`gtx-dropdown-content[${ATTR_CONTEXT_ID}="${id}"]`);
-}
-
-export async function openContext(element: Locator): Promise<Locator> {
-    await expect(element).toHaveAttribute(ATTR_CONTEXT_ID);
-
-    const id = await element.getAttribute(ATTR_CONTEXT_ID);
-    await element.locator('gtx-dropdown-trigger gtx-button[data-context-trigger]').click();
-
-    return findContextContent(element.page(), id);
 }
 
 export async function selectNode(page: Page, nodeId: number | string): Promise<void> {
@@ -157,14 +143,14 @@ export function findAlohaComponent(page: Page, options?: { slot?: string, type?:
     const slotSelector = options?.slot ? `[slot="${options.slot}"]` : '';
     const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
 
-    const aloha =  root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector} button[data-action="primary"]`);
+    const aloha = root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector} button[data-action="primary"]`);
     aloha.waitFor();
     return aloha;
 }
 
 export async function findDynamicFormModal(page: Page, ref?: string): Promise<Locator> {
     const refSelector = ref ? `[data-ref="${ref}"]` : '';
-    const modal =  page.locator(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
+    const modal = page.locator(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
     await modal.waitFor();
     return modal;
 }

@@ -198,3 +198,4 @@ velocity.log
 .vscode
 logs/
 *.zip
+dist/

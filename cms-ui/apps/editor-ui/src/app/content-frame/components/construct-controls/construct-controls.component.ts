@@ -146,7 +146,7 @@ export class ConstructControlsComponent implements OnChanges {
                 console.error(err);
             });
 
-        this.aloha.restoreSelection();
+        this.aloha.restoreSelection(true);
     }
 
     protected safeRequire(dependency: string): any {

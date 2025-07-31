@@ -1,8 +1,8 @@
 import { FileUploadResponse, NodeFeature } from '@gentics/cms-models';
-import { EntityImporter, fullNode, loginWithForm, matchesPath, minimalNode, navigateToApp, TestSize } from '@gentics/e2e-utils';
+import { EntityImporter, fullNode, loginWithForm, matchesPath, minimalNode, navigateToApp, openContext, TestSize } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
-import { findItem, findList, openContext, selectNode } from './helpers';
+import { findItem, findList, selectNode } from './helpers';
 
 test.describe('Asset Management', () => {
     const IMPORTER = new EntityImporter();

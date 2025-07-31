@@ -97,7 +97,7 @@ export function createConfiguration(
          * Also allow retries to see if they are entirely broken or just flaky.
          */
         retries: 2,
-        repeatEach: isCI || forceRepeats ? 3 : 0,
+        repeatEach: forceRepeats ? 3 : 0,
         /*
          * Making sure no accidental `only` runs are being run on CI which would skip all
          * other tests, potentially marking it successful.

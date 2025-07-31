@@ -52,7 +52,7 @@ export class AlohaSplitButtonRendererComponent extends BaseAlohaRendererComponen
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
-        this.aloha.restoreSelection();
+        this.aloha.restoreSelection(true);
     }
 
     public handleSecondaryClick(): void {
@@ -62,7 +62,7 @@ export class AlohaSplitButtonRendererComponent extends BaseAlohaRendererComponen
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.secondaryClick?.();
-        this.aloha.restoreSelection();
+        this.aloha.restoreSelection(true);
     }
 
 }

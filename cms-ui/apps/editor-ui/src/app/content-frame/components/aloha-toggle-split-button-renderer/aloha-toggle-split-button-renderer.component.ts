@@ -64,7 +64,7 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.onToggle?.(switched);
-        this.aloha.restoreSelection();
+        this.aloha.restoreSelection(true);
     }
 
     public handleSecondaryClick(): void {
@@ -74,7 +74,7 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.secondaryClick?.();
-        this.aloha.restoreSelection();
+        this.aloha.restoreSelection(true);
     }
 
     protected override getFinalValue(): boolean {

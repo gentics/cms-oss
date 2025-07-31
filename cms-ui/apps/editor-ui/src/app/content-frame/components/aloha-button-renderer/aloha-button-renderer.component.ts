@@ -47,6 +47,6 @@ export class AlohaButtonRendererComponent extends BaseAlohaRendererComponent<Alo
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
-        this.aloha.restoreSelection();
+        this.aloha.restoreSelection(true);
     }
 }

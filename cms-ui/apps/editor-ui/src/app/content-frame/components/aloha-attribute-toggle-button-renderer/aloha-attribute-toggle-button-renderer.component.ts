@@ -44,7 +44,7 @@ export class AlohaAttributeToggleButtonRendererComponent extends AlohaAttributeB
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.onToggle?.(switched);
-        this.aloha.restoreSelection();
+        this.aloha.restoreSelection(true);
     }
 
 }

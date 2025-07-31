@@ -62,7 +62,7 @@ export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererCompone
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.onToggle?.(switched);
-        this.aloha.restoreSelection();
+        this.aloha.restoreSelection(true);
     }
 
     protected override getFinalValue(): boolean {

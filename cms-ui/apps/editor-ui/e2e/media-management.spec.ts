@@ -6,6 +6,7 @@ import {
     loginWithForm,
     minimalNode,
     navigateToApp,
+    pickSelectValue,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1, FIXTURE_TEST_IMAGE_JPG_2 } from './common';
@@ -63,8 +64,8 @@ test.describe('Media Management', () => {
         await itemAction(item, 'properties');
 
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger').click();
-        await page.locator(`gtx-dropdown-content li.select-option[data-id="${COLOR_ID}"]`).click();
+        const colorSelect = page.locator('gentics-tag-editor select-tag-property-editor gtx-select');
+        await pickSelectValue(colorSelect, `${COLOR_ID}`);
 
         await editorAction(page, 'save');
 
@@ -88,8 +89,8 @@ test.describe('Media Management', () => {
         await itemAction(item, 'properties');
 
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger').click();
-        await page.locator(`gtx-dropdown-content li.select-option[data-id="${COLOR_ID}"]`).click();
+        const colorSelect = page.locator('gentics-tag-editor select-tag-property-editor gtx-select');
+        await pickSelectValue(colorSelect, `${COLOR_ID}`);
 
         await editorAction(page, 'save');
 
@@ -114,8 +115,8 @@ test.describe('Media Management', () => {
 
         // Edit object property
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger').click();
-        await page.locator(`gtx-dropdown-content li.select-option[data-id="${COLOR_ID}"]`).click();
+        const colorSelect = page.locator('gentics-tag-editor select-tag-property-editor gtx-select');
+        await pickSelectValue(colorSelect, `${COLOR_ID}`);
 
         await editorAction(page, 'save');
         // Reopen the editor to reload fresh values

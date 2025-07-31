@@ -80,7 +80,13 @@ export async function pickSelectValue(select: Locator, values: string | string[]
 
     // If we have a multi-select, we need to close the dropdown by clicking the scroll mask
     if (multi) {
-        await select.page().locator('gtx-scroll-mask').click()
+        const page = select.page();
+        const scrollMask = page.locator('gtx-scroll-mask');
+        // Click has to contain the position, as on default it'ld try to click into the center.
+        // In the center there's however usually the content of the dropdown, which prevents the
+        // scroll-mask to be actually clicked, which prevents it from actually closing.
+        await scrollMask.click({ position: { x: 0, y: 0 } });
+        await scrollMask.waitFor({ state: 'detached' });
     }
 }
 

@@ -2,6 +2,7 @@ import {
     EntityImporter,
     ITEM_TYPE_PAGE,
     TestSize,
+    findContextContent,
     loginWithForm,
     minimalNode,
     navigateToApp,
@@ -12,7 +13,6 @@ import { AUTH } from './common';
 import {
     closeObjectPropertyEditor,
     editorAction,
-    findContextContent,
     findItem,
     findList,
     itemAction,

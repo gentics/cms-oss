@@ -114,9 +114,6 @@ export async function closeObjectPropertyEditor(page: Page, force: boolean = tru
 }
 
 export async function editorAction(page: Page, action: string): Promise<void> {
-    if (await page.locator('.gtx-toast-btn_close').isVisible()) {
-        await page.locator('.gtx-toast-btn_close').click();
-    }
     await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"] button[data-action="primary"]`);
 }
 

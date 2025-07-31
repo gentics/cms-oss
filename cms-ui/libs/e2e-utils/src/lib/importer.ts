@@ -856,6 +856,7 @@ export class EntityImporter {
     private async cleanupEntities(): Promise<void> {
         await this.cleanupScheduleTasks();
         await this.cleanupSchedules();
+        await this.cleanupContentRepositories();
     }
 
     private async cleanupScheduleTasks(): Promise<void> {
@@ -873,6 +874,13 @@ export class EntityImporter {
         const schedules = (await this.client.scheduler.list().send()).items;
         for (const schedule of schedules) {
             await this.client.scheduler.delete(schedule.id).send();
+        }
+    }
+
+    private async cleanupContentRepositories(): Promise<void> {
+        const crs = (await this.client.contentRepository.list().send()).items;
+        for (const cr of crs) {
+            await this.client.contentRepository.delete(cr.id).send();
         }
     }
 

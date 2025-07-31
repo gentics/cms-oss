@@ -1,0 +1,1 @@
+Editor User Interface: Fixed the selection handling when interacting with the toolbar in the edit mode. After interacting with a toolbar element, it'll no longer scroll, unless the edited or inserted element is not visible.

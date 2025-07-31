@@ -79,6 +79,8 @@ export const ENV_SKIP_LOCAL_APP_LAUNCH = 'SKIP_LOCAL_APP_LAUNCH';
 
 export const DEFAULT_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
 
+export const ATTR_CONTEXT_ID = 'data-context-id';
+
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace NodeJS {

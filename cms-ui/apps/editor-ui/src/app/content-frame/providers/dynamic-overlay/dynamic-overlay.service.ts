@@ -73,7 +73,7 @@ export class DynamicOverlayService {
                 // Rest will be handled by the on-destroy handler above
                 dropdownRef.destroy();
             }
-            this.aloha.restoreSelection();
+            this.aloha.restoreSelection(true);
         };
 
         const ctl: OverlayElementControl<T> = {
@@ -119,7 +119,7 @@ export class DynamicOverlayService {
             closeOnOverlayClick: configuration.closeOnOverlayClick,
             onClose: () => {
                 open = false;
-                this.aloha.restoreSelection();
+                this.aloha.restoreSelection(true);
             },
         }, {
             configuration,

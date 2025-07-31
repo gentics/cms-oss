@@ -230,7 +230,7 @@ export class CustomerScriptService implements OnDestroy {
             this.aloha.constructs$.subscribe({
                 next(value) {
                     const dict: Record<string, Construct> = {};
-                    value.forEach(c => {
+                    (value || []).forEach(c => {
                         dict[c.keyword] = c;
                     });
                     resolve(dict);

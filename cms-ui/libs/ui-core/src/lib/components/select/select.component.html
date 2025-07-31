@@ -7,6 +7,7 @@
     [class.clearable]="clearable"
     [class.select-all]="selectAll"
     [class.has-addon]="clearable || selectAll"
+    [attr.data-multiple]="multiple"
     data-context-id="select-values"
     (open)="dropdownOpened()"
     (keydown)="handleKeydown($event)"

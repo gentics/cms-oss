@@ -2,8 +2,7 @@ FROM eclipse-temurin:17-jdk-alpine AS eclipse-temurin-upgraded
 
 RUN apk upgrade --no-cache
 
-FROM scratch
-COPY --from=eclipse-temurin-upgraded / /
+FROM eclipse-temurin-upgraded
 
 ENV CONF_FILES="" \
     KEYS_PATH="keys" \

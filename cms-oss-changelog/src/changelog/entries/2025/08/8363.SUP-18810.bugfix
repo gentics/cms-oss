@@ -1,0 +1,1 @@
+Content Staging: Now the item selection is cleared each time the Content Staging is (de)activated, to avoid misusage of the selected items.

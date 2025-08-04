@@ -322,8 +322,8 @@ export class FormPropertiesComponent
         this.loadedMailTemplate = page;
         this.mailTemplateBreadcrubs = this.generateBreadcrumbsPath(page);
 
-        const pageId = Number.isInteger(page.id) ? page.id : 0;
-        const nodeId = Number.isInteger(page.nodeId) ? page.nodeId : 0;
+        const pageId = Number.isInteger(page?.id) ? page.id : 0;
+        const nodeId = Number.isInteger(page?.nodeId) ? page.nodeId : 0;
 
         this.dataGroup.controls.mailsource_pageid.setValue(pageId, { emitEvent: false });
         this.dataGroup.controls.mailsource_pageid.markAsTouched({ emitEvent: false });

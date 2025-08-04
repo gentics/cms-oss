@@ -743,9 +743,30 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             case 'folder':
                 updatePromise = this.folderActions.updateFolderProperties(itemId, formValue as EditableFolderProps, postUpdateBehavior);
                 break;
-            case 'form':
-                updatePromise = this.folderActions.updateFormProperties(itemId, formValue as EditableFormProps, postUpdateBehavior);
+            case 'form':{
+                const props = formValue as EditableFormProps;
+                /*
+                 * A bit ugly to do so here, but other places don't work that well for this case.
+                 * When the selection for a internal page is not enabled (can only choose either),
+                 * then the entire property is absent.
+                 * To properly clear it on the server as well however, we need to send a not `null`
+                 * value, so for IDs a 0, otherwise the server thinks we don't want to update the
+                 * property at all (partial update).
+                 */
+                updatePromise = this.folderActions.updateFormProperties(itemId, {
+                    ...props,
+                    successNodeId: props.successNodeId ?? 0,
+                    successPageId: props.successPageId ?? 0,
+                    data: {
+                        ...props.data,
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        mailsource_nodeid: props.data?.mailsource_nodeid ?? 0,
+                        // eslint-disable-next-line @typescript-eslint/naming-convention
+                        mailsource_pageid: props.data?.mailsource_pageid ?? 0,
+                    },
+                }, postUpdateBehavior);
                 break;
+            }
             case 'page':
                 updatePromise = this.folderActions.updatePageProperties(itemId, formValue as EditablePageProps, postUpdateBehavior);
                 break;

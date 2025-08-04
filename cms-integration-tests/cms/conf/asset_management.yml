@@ -8,4 +8,4 @@ node_settings_global:
         label_i18n:
           de: 'Custom Picker'
           en: 'Custom Picker'
-        iframeSrcUrl: /ui-conf/asset-management.html
+        iframeSrcUrl: /internal/minimal/files/asset-management.html

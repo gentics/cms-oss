@@ -1,6 +1,6 @@
 {
   "name": "@gentics/ui-core",
-  "version": "6.2.16",
+  "version": "6.2.17",
   "license": "Apache-2.0",
   "dependencies": {
     "tslib": "^2.5.0"
@@ -30,7 +30,7 @@
     "@angular/core": ">=18.0.0",
     "@angular/forms": ">=18.0.0",
     "@bevacqua/rome": "^3.0.4",
-    "@gentics/cms-integration-api-models": "^6.2.16",
+    "@gentics/cms-integration-api-models": "^6.2.17",
     "@types/sortablejs": "^1.15.8",
     "foundation-sites": "~6.5.3",
     "hammerjs": "^2.0.8",

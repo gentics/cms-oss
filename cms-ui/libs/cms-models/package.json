@@ -1,6 +1,6 @@
 {
   "name": "@gentics/cms-models",
-  "version": "6.1.35",
+  "version": "6.1.36",
   "license": "Apache-2.0",
   "dependencies": {
     "@gentics/mesh-models": "^2.1.0",

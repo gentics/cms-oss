@@ -1,6 +1,6 @@
 {
   "name": "@gentics/image-editor",
-  "version": "6.1.35",
+  "version": "6.1.36",
   "license": "Apache-2.0",
   "dependencies": {
     "cropperjs": "^1.5.13"

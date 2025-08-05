@@ -1,3 +1,4 @@
+import { Page as CmsPage } from '@gentics/cms-models';
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
 import {
     BASIC_TEMPLATE_ID,
@@ -6,12 +7,13 @@ import {
     ITEM_TYPE_PAGE,
     loginWithForm,
     matchesPath,
+    matchRequest,
     minimalNode,
     navigateToApp,
     pageOne,
     TestSize,
 } from '@gentics/e2e-utils';
-import { expect, Locator, test } from '@playwright/test';
+import { expect, Frame, Locator, test } from '@playwright/test';
 import {
     ACTION_FORMAT_ABBR,
     ACTION_FORMAT_BOLD,
@@ -34,7 +36,10 @@ import {
     findList,
     getAlohaIFrame,
     itemAction,
+    selectEditorTab,
     selectNode,
+    selectRangeIn,
+    selectTextIn,
     setupHelperWindowFunctions,
 } from './helpers';
 
@@ -70,34 +75,35 @@ test.describe('Page Editing', () => {
 
     test.describe('Edit Mode', () => {
 
-        let editor: Locator;
+        let editingPage: CmsPage;
+        let itemRow: Locator;
+        let iframe: Frame;
+        let mainEditable: Locator;
 
         test.beforeEach(async ({ page }) => {
+            editingPage = IMPORTER.get(pageOne);
+
             // Setup page for editing
             const list = findList(page, ITEM_TYPE_PAGE);
-            const item = findItem(list, IMPORTER.get(pageOne).id);
-            await itemAction(item, 'edit');
+            itemRow = findItem(list, editingPage.id);
+            await itemAction(itemRow, 'edit');
 
             // Wait for editor to be ready
-            const iframe = await getAlohaIFrame(page);
-            editor = iframe.locator('main [contenteditable="true"]');
-            await editor.waitFor({ timeout: 60_000 });
+            iframe = await getAlohaIFrame(page);
+            mainEditable = iframe.locator('main .container [contenteditable="true"]');
+            await mainEditable.waitFor({ timeout: 60_000 });
         });
 
         test('should be able to add new text to the content-editable', async ({ page }) => {
             const TEXT_CONTENT = 'Foo bar hello world';
 
             // Type content into editor
-            await editor.click();
-            await editor.clear();
-            await editor.fill(TEXT_CONTENT);
+            await mainEditable.click();
+            await mainEditable.clear();
+            await mainEditable.fill(TEXT_CONTENT);
 
             // Save and verify request
-            const saveRequest = page.waitForRequest(request => {
-                const matches = request.method() === 'POST'
-                    && matchesPath(request.url(), `/rest/page/save/${IMPORTER.get(pageOne).id}`);
-                return matches;
-            });
+            const saveRequest = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
 
             // TODO: Investigate why we need this timeout/why save isn't executed immediately.
             // Possible reason being angular event bindings.
@@ -105,8 +111,8 @@ test.describe('Page Editing', () => {
 
             await editorAction(page, 'save');
 
-            const request = await saveRequest;
-            const data = await request.postDataJSON();
+            const response = await saveRequest;
+            const data = await response.request().postDataJSON();
 
             // Verify content was saved correctly
             const contentText = data?.page?.tags?.content?.properties?.text?.stringValue || '';
@@ -115,10 +121,7 @@ test.describe('Page Editing', () => {
         });
 
         test('should cancel editing when the edit view is closed', async ({ page }) => {
-            const cancelRequest = page.waitForRequest(request =>
-                request.url().includes('/rest/page/cancel/') &&
-                request.method() === 'POST',
-            );
+            const cancelRequest = page.waitForResponse(matchRequest('POST', `/rest/page/cancel/${editingPage.id}`));
 
             await editorAction(page, 'close');
 
@@ -136,26 +139,13 @@ test.describe('Page Editing', () => {
             const LINK_LANGUAGE = 'en';
 
             // Type content and select text for link
-            await editor.click();
-            await editor.clear();
-            await editor.fill(TEXT_CONTENT + LINK_TEXT);
+            await mainEditable.click();
+            await mainEditable.clear();
+            await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
 
             // Select text to make into link
-            expect(await editor.evaluate((el, context) => {
-                window.getSelection().removeAllRanges();
-                const applied = (window as unknown as HelperWindow).selectRange(
-                    el as HTMLElement,
-                    context.TEXT_CONTENT.length,
-                    context.TEXT_CONTENT.length + context.LINK_TEXT.length,
-                );
-
-                if (applied) {
-                    (window as unknown as HelperWindow).updateAlohaRange(window, window.getSelection().getRangeAt(0));
-                }
-
-                return applied;
-            }, { TEXT_CONTENT, LINK_TEXT })).toBe(true);
-            await page.locator('gtx-page-editor-tabs button[data-id="formatting"]').click();
+            expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+            await selectEditorTab(page, 'formatting');
 
             const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
             await linkButton.click();
@@ -182,7 +172,7 @@ test.describe('Page Editing', () => {
             await modal.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]').click();
 
             // Verify link was created
-            const linkElement = editor.locator('a');
+            const linkElement = mainEditable.locator('a');
             await expect(linkElement).toHaveAttribute('href', `/alohapage?real=newview&realid=${LINK_ITEM.id}&nodeid=${ITEM_NODE.id}`);
             await expect(linkElement).toHaveAttribute('hreflang', LINK_LANGUAGE);
             await expect(linkElement).toHaveAttribute('target', LINK_TARGET);
@@ -192,6 +182,53 @@ test.describe('Page Editing', () => {
             await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_ITEM.id}`);
             await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
             await expect(linkElement).toHaveText(LINK_TEXT);
+        });
+
+        test('should be able to edit inline-editables with simple formatting', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-18800',
+            }],
+        }, async ({ page }) => {
+            let inlineEditable = iframe.locator('main p[contenteditable="true"]');
+
+            // Enter some sample text in multiple lines
+            const LINES = ['test content', 'foo bar', 'final text'];
+            await inlineEditable.click();
+            await inlineEditable.fill(LINES[0]);
+            await inlineEditable.press('Enter');
+            await inlineEditable.type(LINES[1]);
+            await inlineEditable.press('Enter');
+            await inlineEditable.type(LINES[2]);
+
+            // Select some text
+            await selectTextIn(inlineEditable, LINES[0]);
+
+            // Certain formatting should not be available
+            await selectEditorTab(page, 'formatting');
+            await expect(findAlohaComponent(page, { slot: 'typography' })).not.toBeVisible();
+            await expect(findAlohaComponent(page, { slot: 'listOrdered' })).not.toBeVisible();
+            await expect(findAlohaComponent(page, { slot: 'listUnordered' })).not.toBeVisible();
+            await expect(findAlohaComponent(page, { slot: 'listDefinition' })).not.toBeVisible();
+
+            // Format selected text as bold
+            await findAlohaComponent(page, { slot: 'bold' }).click();
+
+            // Save the page and re-open the page in edit-mode
+            const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+            await editorAction(page, 'save');
+            await saveReq;
+            await editorAction(page, 'close');
+
+            // Wait until content-frame is actually closed before trying to go to edit-mode
+            await page.locator('content-frame').waitFor({ state: 'detached' });
+
+            await itemAction(itemRow, 'edit');
+            iframe = await getAlohaIFrame(page);
+            inlineEditable = iframe.locator('main p[contenteditable="true"]');
+            await inlineEditable.waitFor({ timeout: 60_000 });
+
+            expect(await inlineEditable.innerHTML()).toEqual([`<b>${LINES[0]}</b>`, ...LINES.slice(1)].join('<br>'));
         });
 
         test.describe('Formatting', () => {
@@ -210,9 +247,9 @@ test.describe('Page Editing', () => {
                 for (const format of FORMAT_ACTIONS) {
                     test(`should add and remove ${format.action} formatting`, async ({ page }) => {
                         // Type and select text
-                        await editor.click();
-                        await editor.clear();
-                        await editor.fill(TEXT);
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill(TEXT);
                         await page.keyboard.down('ControlOrMeta');
                         await page.keyboard.press('a');
                         await page.keyboard.up('ControlOrMeta');
@@ -224,9 +261,9 @@ test.describe('Page Editing', () => {
                         await formatButton.click();
 
                         // Verify format is applied
-                        const formattedText = await editor.locator(format.tag).textContent();
+                        const formattedText = await mainEditable.locator(format.tag).textContent();
                         expect(formattedText).toBe(TEXT);
-                        await editor.click();
+                        await mainEditable.click();
 
                         // Remove format
                         await page.keyboard.down('ControlOrMeta');
@@ -239,7 +276,7 @@ test.describe('Page Editing', () => {
                         await formatButton.click();
 
                         // Verify format is removed
-                        const hasFormat = await editor.locator(format.tag).count();
+                        const hasFormat = await mainEditable.locator(format.tag).count();
                         expect(hasFormat).toBe(0);
                     });
                 }
@@ -248,9 +285,9 @@ test.describe('Page Editing', () => {
             test('should add and remove quote formatting', async ({ page }) => {
                 const TEXT = 'Hello World';
 
-                await editor.click();
-                await editor.clear();
-                await editor.fill(TEXT);
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT);
                 await page.keyboard.down('ControlOrMeta');
                 await page.keyboard.press('a');
                 await page.keyboard.up('ControlOrMeta');
@@ -259,7 +296,7 @@ test.describe('Page Editing', () => {
                 let formatButton = findAlohaComponent(page, { slot: ACTION_FORMAT_QUOTE, type: 'toggle-button' });
                 await formatButton.click();
 
-                const quote = editor.locator('q');
+                const quote = mainEditable.locator('q');
                 await expect(quote).toContainText(TEXT);
 
                 await page.keyboard.down('ControlOrMeta');
@@ -270,7 +307,7 @@ test.describe('Page Editing', () => {
                 formatButton = findAlohaComponent(page, { slot: ACTION_REMOVE_FORMAT, type: 'button' });
                 await formatButton.click();
 
-                const hasQuote = await editor.locator('q').count();
+                const hasQuote = await mainEditable.locator('q').count();
                 expect(hasQuote).toBe(0);
             });
 
@@ -278,9 +315,9 @@ test.describe('Page Editing', () => {
                 const TEXT = 'HTML';
                 const TITLE = 'HyperText Markup Language';
 
-                await editor.click();
-                await editor.clear();
-                await editor.fill(TEXT);
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT);
                 await page.keyboard.down('ControlOrMeta');
                 await page.keyboard.press('a');
                 await page.keyboard.up('ControlOrMeta');
@@ -295,7 +332,7 @@ test.describe('Page Editing', () => {
                 await modal.locator('.modal-footer [data-action="confirm"]').click();
 
                 // Verify abbreviation
-                const abbr = editor.locator('abbr');
+                const abbr = mainEditable.locator('abbr');
                 await expect(abbr).toHaveAttribute('title', TITLE);
                 await expect(abbr).toContainText(TEXT);
             });
@@ -304,9 +341,9 @@ test.describe('Page Editing', () => {
                 const TEXT = 'The quote';
                 const SOURCE = 'Famous Author';
 
-                await editor.click();
-                await editor.clear();
-                await editor.fill(TEXT);
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT);
                 await page.keyboard.down('ControlOrMeta');
                 await page.keyboard.press('a');
                 await page.keyboard.up('ControlOrMeta');
@@ -316,7 +353,7 @@ test.describe('Page Editing', () => {
                 await formatButton.click();
 
                 // Verify citation
-                const cite = editor.locator('cite');
+                const cite = mainEditable.locator('cite');
                 // await expect(cite).toHaveAttribute('title', SOURCE);
                 await expect(cite).toContainText(TEXT);
             });

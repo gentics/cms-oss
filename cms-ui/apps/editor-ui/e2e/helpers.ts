@@ -141,8 +141,42 @@ export function findAlohaComponent(page: Page, options?: { slot?: string, type?:
     const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
 
     const aloha = root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector} button[data-action="primary"]`);
-    aloha.waitFor();
     return aloha;
+}
+
+export function selectRangeIn(element: Locator, start: number, end?: number): Promise<boolean> {
+    return element.evaluate((el, context) => {
+        window.getSelection().removeAllRanges();
+        const applied = (window as unknown as HelperWindow).selectRange(
+            el as HTMLElement,
+            context.start,
+            context.end,
+        );
+
+        if (applied) {
+            (window as unknown as HelperWindow).updateAlohaRange(window, window.getSelection().getRangeAt(0));
+        }
+
+        return applied;
+    }, { start, end })
+}
+
+export function selectTextIn(element: Locator, textToSelect: string): Promise<boolean> {
+    return element.evaluate((el, context) => {
+        window.getSelection().removeAllRanges();
+        const win = (window as any as HelperWindow);
+        const applied = win.selectText(el as HTMLElement, context.textToSelect);
+
+        if (applied) {
+            win.updateAlohaRange(win, win.getSelection().getRangeAt(0));
+        }
+
+        return applied;
+    }, { textToSelect });
+}
+
+export function selectEditorTab(page: Page, id: string): Promise<void> {
+    return page.locator(`gtx-page-editor-tabs button[data-id="${id}"]`).click();
 }
 
 export async function findDynamicFormModal(page: Page, ref?: string): Promise<Locator> {

@@ -22,6 +22,7 @@ import { PublishableStateUtil } from '@editor-ui/app/shared/util/entity-states';
 import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '@editor-ui/app/state';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
+    CmsFormType,
     File,
     Folder,
     Form,
@@ -62,13 +63,14 @@ interface AvailableButtons {
     templateUrl: './editor-toolbar.component.html',
     styleUrls: ['./editor-toolbar.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     public readonly SaveBehaviour = SaveBehaviour;
     public readonly EditMode = EditMode;
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
+    public readonly CmsFormType = CmsFormType;
 
     @Input()
     public nodeInherited: boolean;

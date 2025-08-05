@@ -3778,6 +3778,7 @@ export class FolderActionsService {
 
     private nodeFeatureIsActive(nodeId: number, nodeFeature: keyof NodeFeatures): Observable<boolean> {
         return this.appState.select(state => state.features.nodeFeatures).pipe(
+            filter(state => state[nodeId] != null),
             map(nodeFeatures => {
                 const activeNodeFeatures: (keyof NodeFeatures)[] = nodeFeatures[nodeId];
                 return Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(nodeFeature);

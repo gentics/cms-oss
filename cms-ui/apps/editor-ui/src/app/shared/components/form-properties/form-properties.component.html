@@ -133,6 +133,9 @@
                             [label]="'editor.item_mail_custom_description' | i18n"
                             [displayValue]="loadedMailTemplate ? loadedMailTemplate.name : ('editor.page_no_selection' | i18n)"
                             [disabled]="disabled || !useEmailPageTemplate"
+                            data-action="pick-mail-page"
+                            [attr.data-target-id]="loadedMailTemplate?.id"
+                            [attr.data-target-node-id]="loadedMailTemplate?.nodeId"
                             (clear)="setEmailTemplatePage(null)"
                             (browse)="browseForEmailTemplatePage()"
                         ></browse-box>
@@ -189,6 +192,7 @@
             (valueChange)="updateInternalSuccessPage($event)"
         >
             <gtx-radio-button
+                data-id="success-page"
                 [label]="'editor.internal_page' | i18n"
                 [value]="true"
             ></gtx-radio-button>
@@ -204,6 +208,9 @@
                     [label]="'editor.item_success_page' | i18n"
                     [displayValue]="loadedSuccessPage ? loadedSuccessPage.name : ('editor.page_no_selection' | i18n)"
                     [disabled]="disabled || !useInternalSuccessPage"
+                    data-action="pick-success-page"
+                    [attr.data-target-id]="loadedSuccessPage?.id"
+                    [attr.data-target-node-id]="loadedSuccessPage?.nodeId"
                     (clear)="setSuccessPage(null)"
                     (browse)="browseForPage()">
                 </browse-box>
@@ -214,6 +221,7 @@
             </div>
 
             <gtx-radio-button
+                data-id="success-url"
                 [label]="'editor.external_url' | i18n"
                 [value]="false"
             ></gtx-radio-button>

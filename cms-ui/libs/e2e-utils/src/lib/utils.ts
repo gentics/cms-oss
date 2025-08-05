@@ -459,7 +459,7 @@ export function matchesPath(url: string | URL, path: string | RegExp): boolean {
 
 export function hasMatchingParams(url: string, params: Record<string, string>): boolean {
     const urlObj = new URL(url);
-    return Object.entries(params).every(([key, value]) => urlObj.searchParams.get(key) === value);
+    return Object.entries(params || {}).every(([key, value]) => urlObj.searchParams.get(key) === value);
 }
 
 /**

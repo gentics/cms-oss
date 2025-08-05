@@ -82,19 +82,26 @@ npm run test <app-name/lib-name> -- --configuration=watch
 
 **NX Command**: `e2e`
 
-Starts the Cypress E2E/Integration tests with the specific e2e application (`{application-name}-e2e`).
+Starts the Playwright E2E/Integration tests for the specified application.
 
 ```bash
-# Runs the e2e-tests for a single e2e application
-npm run e2e <e2e-app-name>
-# Runs the e2e-tests for all e2e applications
-npm run many -- --target=e2e --project=tag:e2e
+# Runs the e2e-tests for a single application
+npm run e2e <app-name>
+# Runs the e2e-tests for all applications
+npm run many -- --target=e2e
+# Runs the e2e-tests with a development window for easier creation/debugging of tests
+npm run e2e <app-name> -- --ui
 ```
 
-**Available Configurations**:
+#### Setup
 
-* `watch`: To start the cypress UI and re-running the tests when source- or test-file have been edited/saved.
-* `ci`: To start the tests in CI mode, which will use the actual served UI from the CMS.
+The E2E/Integration tests require a bit of setup however.
+
+First, you need the required services running locally to run the tests against.
+For this, there's already a pre-configured setup via `docker compose` available, in the [cms-integration-tests](../cms-integration-tests/README.md) Module.
+
+For local development/settings, there's the `.env` file, where you should create a copy of, named `.env.local` for local changes.
+It contains all settings and a description in it, so please read it carefully.
 
 ### Components Tests
 
@@ -163,8 +170,8 @@ Tags that are used in this Repository:
 * `publish`: Project which can be published
 * `app`: An application
 * `ui`: Main User-Interface/Standalone application
-* `ct`: Custom-Tool which only works with/in the `editor-ui`
-* `e2e`: End-to-End/Integration Test project
+* `ct`: Custom-Tool which is either standalone or only works with/in the `editor-ui`
+* `e2e`: Apps with End-to-End/Integration Tests
 * `docs`: Documentation project to document one or more libraries/projects
 * `demo`: Demo application to showcase the functionality of a library/project
 

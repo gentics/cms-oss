@@ -47,5 +47,3 @@ as only test data should be used in the first place.
 Please see the [Documentation in the UI Module](../cms-ui/README.md#e2eintegration-tests) for how to run/execute the tests.
 Otherwise you can also check the [Jenkinsfile](./Jenkinsfile), how they are executed in the CI.
 
-If you want to execute the Tests for EE, you also need to set the ENV Variable `CMS_VARIANT` to `EE` in either your shell before executing the tests,
-set it temporarily in the appropiate `cypress.env.json` file, or pass them as argument: `--env.CMS_VARIANT="EE"`.

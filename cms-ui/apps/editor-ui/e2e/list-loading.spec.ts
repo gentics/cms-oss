@@ -15,7 +15,7 @@ import { AUTH } from './common';
 import { findItem, findList, itemAction, selectNode } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
-test.describe.only('List Loading', () => {
+test.describe('List Loading', () => {
 
     const IMPORTER = new EntityImporter();
     let ACTIVE_NODE: Node<Raw>;

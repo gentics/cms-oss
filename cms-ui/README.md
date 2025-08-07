@@ -103,6 +103,11 @@ For this, there's already a pre-configured setup via `docker compose` available,
 For local development/settings, there's the `.env` file, where you should create a copy of, named `.env.local` for local changes.
 It contains all settings and a description in it, so please read it carefully.
 
+Please also note, when you want to run the local application for the tests `LOCAL_APP=true`,
+you'll also need to setup the `proxy.conf.json` of the application `apps/<app-name>/proxy.conf.json`,
+and have it point to the locally running CMS container.
+The example config `proxy.conf.example.json` should already be prepared for this.
+
 ### Components Tests
 
 **NX Command**: `component-test`

@@ -140,8 +140,8 @@
                             (browse)="browseForEmailTemplatePage()"
                         ></browse-box>
 
-                        <div class="browse-box__breadcrumbs" *ngIf="mailTemplateBreadcrubs">
-                            {{ 'tag_editor.selected_folder' | i18n }}: {{ mailTemplateBreadcrubs }}
+                        <div class="browse-box__breadcrumbs mail-page-breadcrumbs" *ngIf="mailTemplateBreadcrubs">
+                            {{ 'tag_editor.selected_folder' | i18n }}: <span class="breadcrumb-path">{{ mailTemplateBreadcrubs }}</span>
                         </div>
                     </div>
 
@@ -215,8 +215,8 @@
                     (browse)="browseForPage()">
                 </browse-box>
 
-                <div class="browse-box__breadcrumbs" *ngIf="loadedSuccessPage">
-                    {{ 'tag_editor.selected_folder' | i18n }}: {{ successPageBreadcrumbs }}
+                <div class="browse-box__breadcrumbs success-page-breadcrumbs" *ngIf="loadedSuccessPage">
+                    {{ 'tag_editor.selected_folder' | i18n }}: <span class="breadcrumb-path">{{ successPageBreadcrumbs }}</span>
                 </div>
             </div>
 

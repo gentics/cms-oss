@@ -105,6 +105,7 @@ test.describe('Form Management', () => {
 
         const form = page.locator('gtx-form-properties');
         const successPicker = form.locator('[data-action="pick-success-page"]');
+        const breadcrumbs = form.locator('.success-page-breadcrumbs .breadcrumb-path');
 
         // Select page
         await successPicker.locator('[data-action="browse"]').click();
@@ -116,25 +117,34 @@ test.describe('Form Management', () => {
         await page.waitForTimeout(3_000);
         expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
         expect(successPicker.locator('.value-display input')).toHaveValue(SUCCESS_PAGE.name);
-        expect(successPicker.locator('+ .box__breadcrumbs')).toHaveText(SUCCESS_FOLDER.name);
+        expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
 
         // Save and validate the request
         let saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
         await editorAction(page, 'save');
         let saveRes = await saveReq;
-        let saveData: FormSaveRequest = await saveRes.json();
+        let saveData: FormSaveRequest = await saveRes.request().postDataJSON();
 
         expect(saveData.successPageId).toEqual(SUCCESS_PAGE.id);
         expect(saveData.successNodeId).toEqual(SUCCESS_PAGE.masterNodeId);
 
         // Open the properties again and validate that the item has properly loaded the page
         const pageLoadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${SUCCESS_PAGE.id}`));
+        await page.waitForTimeout(2_000);
+        await editorAction(page, 'close');
+
+        // FIXME: Temporary fix for the item changed warning, even tho we saved it.
+        const hasModal = await page.evaluate(() => window.document.querySelector('confirm-navigation-modal') != null);
+        if (hasModal) {
+            await page.click('confirm-navigation-modal gtx-button[type="alert"] button');
+        }
+
         await itemAction(item, 'properties');
         await pageLoadReq;
 
         // Validate that the picker has the correct values loaded again
         expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
-        expect(successPicker.locator('+ .box__breadcrumbs')).toHaveText(SUCCESS_PAGE.name);
+        expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
 
         // Change it to use a success url instead
         await form.locator('gtx-radio-button[data-id="success-url"] label').click();
@@ -144,7 +154,7 @@ test.describe('Form Management', () => {
         saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
         await editorAction(page, 'save');
         saveRes = await saveReq;
-        saveData = await saveRes.json();
+        saveData = await saveRes.request().postDataJSON();
 
         expect(saveData.successPageId).toEqual(0);
         expect(saveData.successNodeId).toEqual(0);

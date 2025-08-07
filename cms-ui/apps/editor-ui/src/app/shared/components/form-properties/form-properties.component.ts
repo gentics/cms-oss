@@ -153,6 +153,7 @@ export class FormPropertiesComponent
             this.dataGroup.controls.type.valueChanges,
         ]).pipe(
             switchMap(type => type),
+            filter(type => type != null),
             distinctUntilChanged(isEqual),
             filter(type => type !== this.previousFormType),
             tap(type => {

@@ -4,11 +4,12 @@
  * Importing them via JSON would work as well, but here we have proper type
  * checks to all entities without having to jump through hoops.
  */
-import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
+import { AccessControlledType, CmsFormType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     FileImportData,
     FolderImportData,
+    FormImportData,
     GroupImportData,
     ImageImportData,
     IMPORT_ID,
@@ -20,6 +21,7 @@ import {
     ImportData,
     ITEM_TYPE_FILE,
     ITEM_TYPE_FOLDER,
+    ITEM_TYPE_FORM,
     ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
     LANGUAGE_DE,
@@ -269,6 +271,23 @@ export const imageOne: ImageImportData = {
 
     name: 'Image #1',
     description: 'First image',
+};
+
+/** Has to be imported manually/per test, as forms are a EE feature */
+export const formOne: FormImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FORM,
+    [IMPORT_ID]: 'formOne',
+
+    nodeId: minimalNode[IMPORT_ID],
+    folderId: minimalNode[IMPORT_ID],
+
+    languages: [LANGUAGE_EN],
+
+    name: 'Form One',
+    description: 'Test Form one',
+    data: {
+        type: CmsFormType.GENERIC,
+    },
 };
 
 /*

@@ -1,20 +1,35 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
-import { expect, Locator, Page, Response } from '@playwright/test';
-import { ATTR_CONTEXT_ID, DEFAULT_KEYCLOAK_URL, ENV_KEYCLOAK_URL, LoginInformation } from './common';
-import { matchesPath } from './utils';
+import { expect, Locator, Page, Request, Response } from '@playwright/test';
+import { ATTR_CONTEXT_ID, ATTR_MULTIPLE, DEFAULT_KEYCLOAK_URL, ENV_KEYCLOAK_URL, LoginInformation } from './common';
+import { hasMatchingParams, matchesPath } from './utils';
 
-export function matchRequest(method: string, path: string, skipStatus: boolean = false): (response: Response) => boolean {
-    return (response: Response) => {
-        return (skipStatus || response.ok())
-            && response.request().method() === method
-            && matchesPath(response.request().url(), path);
-    };
+function isResponse(input: any): input is Response {
+    return typeof (input as Response).request === 'function';
 }
 
-export function blockKeycloakConfig(page: Page): Promise<void> {
-    return page.route('/ui-conf/keycloak.json', route => {
-        return route.abort('failed');
-    });
+interface RequestMatchOptions {
+    skipStatus?: boolean;
+    params?: Record<string, string>;
+}
+
+export function matchRequest(method: string, path: string | RegExp, options?: RequestMatchOptions): (response: Response | Request) => boolean {
+    return (input: Request | Response) => {
+        let request: Request;
+        // If we're matching against a request, we have to assume for now that it's valid
+        let isOk = true;
+
+        if (isResponse(input)) {
+            request = input.request();
+            isOk = input.ok();
+        } else {
+            request = input;
+        }
+
+        return (options?.skipStatus || isOk)
+            && request.method() === method
+            && matchesPath(request.url(), path)
+            && (!options?.params || hasMatchingParams(request.url(), options.params));
+    };
 }
 
 export function waitForKeycloakAuthPage(page: Page): Promise<void> {
@@ -53,6 +68,7 @@ export function findContextContent(page: Page, id: string): Locator {
 }
 
 export async function openContext(element: Locator): Promise<Locator> {
+    await element.waitFor({ state: 'visible' });
     await expect(element).toHaveAttribute(ATTR_CONTEXT_ID);
 
     const id = await element.getAttribute(ATTR_CONTEXT_ID);
@@ -66,7 +82,7 @@ export async function pickSelectValue(select: Locator, values: string | string[]
 
     let multi = false;
     if (Array.isArray(values)) {
-        await expect(dropdown).toHaveAttribute('data-multiple');
+        await expect(dropdown).toHaveAttribute(ATTR_MULTIPLE);
         multi = true;
     } else {
         values = [values];
@@ -99,7 +115,7 @@ export async function pickSelectValue(select: Locator, values: string | string[]
  * @returns Promise from `page.route`.
  */
 export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Promise<void> {
-    return page.route('/rest/user/me/data**', (route, req) => {
+    return page.route(url => matchesPath(url, '/rest/user/me/data'), (route, req) => {
         // Only re-route requests to load user-data
         if (req.method() !== 'GET') {
             return route.continue();

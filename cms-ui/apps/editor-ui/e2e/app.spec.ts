@@ -18,7 +18,7 @@ import {
 } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
-test.describe('Login', () => {
+test.describe('App', () => {
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {

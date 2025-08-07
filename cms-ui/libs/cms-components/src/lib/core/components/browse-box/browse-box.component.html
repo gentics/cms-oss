@@ -10,6 +10,7 @@
     icon
     class="browse-box__button browse-box__button--clear"
     type="secondary"
+    data-action="clear"
     [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | i18n"
     [disabled]="disabled"
     (click)="clear.emit()"
@@ -21,6 +22,7 @@
     icon
     class="browse-box__button browse-box__button--browse"
     type="secondary"
+    data-action="browse"
     [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | i18n"
     [disabled]="disabled"
     (click)="browse.emit()"
@@ -33,6 +35,7 @@
     icon
     class="browse-box__button browse-box__button--upload"
     type="secondary"
+    data-action="upload"
     [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | i18n"
     [disabled]="disabled"
     (click)="upload.emit()"

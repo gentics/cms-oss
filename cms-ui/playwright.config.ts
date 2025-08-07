@@ -34,8 +34,8 @@ export function createConfiguration(
     /** If we want to use the local app, but don't actually start it */
     const useLocalApp = isEnvBool(process.env[ENV_LOCAL_APP]);
     const startLocalApp = !isEnvBool(process.env[ENV_SKIP_LOCAL_APP_LAUNCH]);
-    /** If we want to use thr playwright server locally instead of from the container */
-    const useLocalPlaywright = isEnvBool(process.env[ENV_LOCAL_PLAYWRIGHT]);
+    /** If we want to use the playwright server locally instead of from the container */
+    const useLocalPlaywright = useLocalApp || isEnvBool(process.env[ENV_LOCAL_PLAYWRIGHT]);
 
     // Usually never defined, but allow overrides
     let baseUrl = process.env[ENV_BASE_URL];
@@ -48,18 +48,12 @@ export function createConfiguration(
      * container/service to access that webserver.
      */
     if (!baseUrl) {
-        if (isCI || !useLocalPlaywright) {
-            if (!useLocalApp) {
-                baseUrl = `http://cms:8080${serviceBaseUrl}/`;
-            } else {
-                baseUrl = 'http://hostmachine:4200';
-            }
+        if (useLocalApp) {
+            baseUrl = 'http://localhost:4200';
+        } else if (isCI || !useLocalPlaywright) {
+            baseUrl = `http://cms:8080${serviceBaseUrl}/`;
         } else {
-            if (!useLocalApp) {
-                baseUrl = `http://localhost:8080${serviceBaseUrl}/`;
-            } else {
-                baseUrl = 'http://localhost:4200';
-            }
+            baseUrl = `http://localhost:8080${serviceBaseUrl}/`;
         }
     }
 

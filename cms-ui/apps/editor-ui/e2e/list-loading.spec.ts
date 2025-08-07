@@ -107,7 +107,7 @@ test.describe('List Loading', () => {
         await itemAction(findItem(list, PAGE_TO_COPY.id), 'copy');
         const copyReq = page.waitForResponse(matchRequest('POST', '/rest/page/copy'));
         const listReq = page.waitForResponse(matchRequest('GET', `/rest/folder/getPages/${PAGE_TO_COPY.folderId}`));
-        await page.click('repository-browser .modal-footer [data-action="confirm"]');
+        await page.click('repository-browser .modal-footer [data-action="confirm"] button');
 
         const [copyRes, listRes] = await Promise.all([
             copyReq,

@@ -393,7 +393,7 @@ test.describe('Page Editing', () => {
         // Wait for editor to be ready
         const iframe = page.locator('content-frame iframe.master-frame[loaded="true"]');
         await iframe.waitFor({ timeout: 60_000 });
-        const editor = iframe.contentFrame().locator('main [contenteditable="true"]');
+        const editor = iframe.contentFrame().locator('main .container [contenteditable="true"]');
         await editor.waitFor({ timeout: 60_000 });
 
         // Wait for subscriptions to be set up

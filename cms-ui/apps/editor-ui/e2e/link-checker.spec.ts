@@ -76,7 +76,7 @@ test.describe('Link Checker', () => {
         const LINK_URL = 'https://gentics.com';
         const LINK_TITLE = 'This is a title!';
 
-        const content = iframe.locator('main [contenteditable="true"]');
+        const content = iframe.locator('main .container [contenteditable="true"]');
         await content.fill(TEXT_CONTENT);
         // Activate the toolbar
         await content.click();
@@ -110,7 +110,7 @@ test.describe('Link Checker', () => {
         const LINK_URL = `https://${LINK_DOMAIN}`;
         const LINK_TITLE = 'This is a title!';
 
-        const content = iframe.locator('main [contenteditable="true"]');
+        const content = iframe.locator('main .container [contenteditable="true"]');
         await content.fill(TEXT_CONTENT);
         // Activate the toolbar
         await content.click();

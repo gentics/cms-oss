@@ -2,7 +2,7 @@
 /// <reference lib="dom"/>
 import { readFileSync } from 'fs';
 import { openContext } from '@gentics/e2e-utils';
-import { Frame, Locator, Page } from '@playwright/test';
+import { expect, Frame, Locator, Page } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
 export function findList(page: Page, type: string): Locator {
@@ -343,4 +343,14 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
         (window as any as HelperWindow).selectText = selectText;
         (window as any as HelperWindow).updateAlohaRange = updateAlohaRange;
     });
+}
+
+export async function expectItemOffline(item: Locator): Promise<void> {
+    // TODO it would be better not to test on the icon
+    await expect(item.locator('icon.main-icon')).toHaveText('cloud_off');
+}
+
+export async function expectItemPublished(item: Locator): Promise<void> {
+    // TODO it would be better not to test on the icon
+    await expect(item.locator('icon.main-icon')).toHaveText('cloud_upload');
 }

@@ -15,7 +15,7 @@ import {
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
-import { editorAction, findItem, findList, itemAction, selectNode } from './helpers';
+import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Form Management', () => {
@@ -23,7 +23,10 @@ test.describe('Form Management', () => {
 
     const IMPORTER = new EntityImporter();
     const NEW_FORM_NAME = 'Hello World';
+    const CHANGE_FORM_NAME = 'Hello World again';
     const NEW_FORM_DESCRIPTION = 'This is an example text';
+    // TODO: find a solution to not depend on the translated text
+    const PUBLISH_BUTTON_TEXT = 'Veröffentlichen';
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
@@ -159,5 +162,43 @@ test.describe('Form Management', () => {
         expect(saveData.successPageId).toEqual(0);
         expect(saveData.successNodeId).toEqual(0);
         expect(saveData.data.successurl_i18n[EDITING_FORM.languages[0]]).toEqual(SUCCESS_URL);
+    });
+
+    test('should be possible to publish the form after saving properties', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-18802',
+        }],
+    }, async ({page}) => {
+        const EDITING_FORM = IMPORTER.get(formOne);
+
+        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, EDITING_FORM.id);
+
+        // expect the form to be offline
+        await expectItemOffline(item);
+
+        await itemAction(item, 'properties');
+
+        const propertiesform = page.locator('content-frame combined-properties-editor .properties-content gtx-form-properties');
+
+        await propertiesform.locator('[formcontrolname="name"] input').fill(CHANGE_FORM_NAME);
+
+        await editorAction(page, 'save');
+
+        // toast with success notification should have the "publish" action
+        const publishButton = page.locator('.gtx-toast .action');
+
+        await expect(publishButton).toHaveText(PUBLISH_BUTTON_TEXT);
+
+        // click the "publish" button
+        await publishButton.click();
+
+        // properties form should be closed
+        await expect(propertiesform).toBeHidden();
+
+        // form should be published now
+        await expectItemPublished(item);
     });
 });

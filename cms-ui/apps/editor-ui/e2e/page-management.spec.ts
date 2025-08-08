@@ -13,6 +13,8 @@ import { AUTH } from './common';
 import {
     closeObjectPropertyEditor,
     editorAction,
+    expectItemOffline,
+    expectItemPublished,
     findItem,
     findList,
     itemAction,
@@ -29,6 +31,8 @@ test.describe('Page Management', () => {
     const OBJECT_PROPERTY = 'test_color';
     const TEST_CATEGORY_ID = 2;
     const COLOR_ID = 2;
+    // TODO: find a solution to not depend on the translated text
+    const PUBLISH_BUTTON_TEXT = 'Veröffentlichen';
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
@@ -87,6 +91,42 @@ test.describe('Page Management', () => {
         await editorAction(page, 'save');
 
         await expect(item.locator('.item-name .item-name-only')).toHaveText(CHANGE_PAGE_NAME);
+    });
+
+    test('should be possible to publish the page after saving properties', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-18802',
+        }],
+    }, async ({page}) => {
+        const PAGE = IMPORTER.get(pageOne);
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, PAGE.id);
+
+        // expect the page to be offline
+        await expectItemOffline(item);
+
+        await itemAction(item, 'properties');
+
+        const form = page.locator('content-frame combined-properties-editor .properties-content gtx-page-properties');
+
+        await form.locator('[formcontrolname="name"] input').fill(CHANGE_PAGE_NAME);
+
+        await editorAction(page, 'save');
+
+        // toast with success notification should have the "publish" action
+        const publishButton = page.locator('.gtx-toast .action');
+
+        await expect(publishButton).toHaveText(PUBLISH_BUTTON_TEXT);
+
+        // click the "publish" button
+        await publishButton.click();
+
+        // properties form should be closed
+        await expect(form).toBeHidden();
+
+        // page should be published now
+        await expectItemPublished(item);
     });
 
     test('should be possible to edit the page object-properties', async ({ page }) => {

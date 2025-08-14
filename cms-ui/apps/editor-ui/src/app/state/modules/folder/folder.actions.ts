@@ -35,6 +35,10 @@ export class UpdateSearchFilterAction {
     }) {}
 }
 
+
+@ActionDeclaration(FOLDER_STATE_KEY)
+export class FolderStateLoadedAction {}
+
 @ActionDeclaration(FOLDER_STATE_KEY)
 export class AddEditedEntityToRecentItemsAction {}
 

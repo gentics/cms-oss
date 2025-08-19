@@ -47,9 +47,6 @@ type ZoneType = any;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const Zone: ZoneType;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const gcmsui_debugTool = (window as any).gcmsui_debugTool;
-
 /**
  * Checks for the existence of a customer-defined JavaScript file which can be run in all iframes after the post-load.ts scripts
  * have run.
@@ -269,7 +266,6 @@ export class CustomerScriptService implements OnDestroy {
             editImage: (nodeId: number, imageId: number) => {
                 return this.editorOverlayService.editImage({ nodeId: nodeId, itemId: imageId });
             },
-            callDebugTool: gcmsui_debugTool,
             openTagEditor,
             openDynamicDropdown: (configuration, slot) => {
                 return this.overlays.openDynamicDropdown(configuration, slot);

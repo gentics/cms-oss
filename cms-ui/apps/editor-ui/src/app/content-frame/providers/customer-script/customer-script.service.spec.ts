@@ -17,7 +17,6 @@ import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
-import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { AlohaGlobal, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
@@ -94,13 +93,11 @@ describe('CustomerScriptService', () => {
         console.warn = jasmine.createSpy('console.warn');
         mockScriptHost.setContentModified = jasmine.createSpy('setContentModified');
 
-        originalPreLoadScriptRun = PreLoadScript.prototype.run;
         originalPostLoadScriptRun = PostLoadScript.prototype.run;
     });
 
     afterEach(() => {
         console.warn = originalConsoleWarn;
-        PreLoadScript.prototype.run = originalPreLoadScriptRun;
         PostLoadScript.prototype.run = originalPostLoadScriptRun;
     });
 
@@ -173,26 +170,6 @@ describe('CustomerScriptService', () => {
             expect(result).toBeTruthy();
             expect(mockWindow.GCMSUI).toBe(result);
             expect(mockWindow.GCMSUI_childIFrameInit).toBe(initFn);
-        });
-
-        it('runPreLoadScript() runs the pre-load script', () => {
-            const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const preLoadScriptSpy = spyOn(PreLoadScript.prototype, 'run').and.stub();
-
-            result.runPreLoadScript();
-            expect(preLoadScriptSpy).toHaveBeenCalledTimes(1);
-        });
-
-        it('runPreLoadScript() catches errors in the pre-load script', () => {
-            const errorMsg = 'Error in pre-load script';
-            PreLoadScript.prototype.run = () => { throw new Error(errorMsg); }
-            const errorHandler = TestBed.get(ErrorHandler);
-            const catchErrorSpy = spyOn(errorHandler, 'catch');
-
-            const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            expect(() => result.runPreLoadScript()).not.toThrow();
-            expect(catchErrorSpy).toHaveBeenCalledTimes(1);
-            expect(catchErrorSpy).toHaveBeenCalledWith(jasmine.objectContaining({ message: errorMsg }), { notification: false });
         });
 
         it('runPostLoadScript() runs the post-load script and the customer script', () => {

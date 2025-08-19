@@ -85,8 +85,6 @@ setContentModified: (modified: boolean) => void;
  */
 editImage: (nodeId: number, imageId: number) => Promise<Image | void>;
 
-callDebugTool: () => void;
-
 /**
  * Opens a tag editor for the specified tag.
  * Based on the configuration of the TagType, either the GenticsTagEditor or

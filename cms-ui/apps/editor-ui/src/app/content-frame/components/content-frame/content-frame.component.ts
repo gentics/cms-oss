@@ -50,6 +50,7 @@ import {
     Subscription,
     combineLatest,
     forkJoin,
+    fromEvent,
     of,
 } from 'rxjs';
 import {
@@ -193,6 +194,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private childFrameInitTimer: any;
     private childFrameInitialized = false;
     private constructsSubscription: Subscription;
+    private windowMessageSubscription: Subscription;
 
     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
@@ -227,13 +229,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
     ngOnInit(): void {
         this.customScriptHostService.initialize(this);
-        (window as unknown as CNParentWindow).GCMSUI_childIFrameInit = (iFrameWindow, iFrameDocument) => {
-            if (this.childFrameInitTimer != null) {
-                window.clearTimeout(this.childFrameInitTimer);
-            }
-            this.childFrameInitialized = true;
-            return this.customerScriptService.createGCMSUIObject(this.customScriptHostService, iFrameWindow, iFrameDocument);
-        };
 
         this.subscriptions.push(
             this.appState.select(state => state.editor.contentModified).subscribe(modified => {
@@ -459,14 +454,39 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             mergeMap(activeLanguageId => this.appState.select(state => state.entities.language[activeLanguageId])),
             map(activeLanguage => activeLanguage && activeLanguage.code),
         );
+
+        this.windowMessageSubscription = fromEvent(window, 'message').subscribe((event: MessageEvent) => {
+            // Ignore events from untrusted sources
+            if (event.source !== this.iframe.nativeElement?.contentWindow) {
+                return;
+            }
+
+            const data = event.data;
+    
+            // Ignore events where the type isn't correct
+            if (data == null || data.type !== 'gcmsui.request-init') {
+                return;
+            }
+
+            if (this.childFrameInitTimer != null) {
+                window.clearTimeout(this.childFrameInitTimer);
+            }
+            this.childFrameInitialized = true;
+            this.customerScriptService.createGCMSUIObject(
+                this.customScriptHostService,
+                this.iframe.nativeElement.contentWindow as any,
+                this.iframe.nativeElement.contentDocument as any,
+            );
+        });
     }
 
     ngAfterViewInit(): void {
         const masterFrame = this.iframe.nativeElement;
         this.updateDiffFrame();
 
+        // This shouldn't really be called, due to security, but is here just to be safe
         masterFrame.addEventListener('error', error => {
-            console.log('Error while loading Aloha-Page', error);
+            console.error('Error while loading Aloha-Page', error);
             this.windowLoaded = true;
             // We also have to set this one here manually, because the window is never getting initialized
             this.alohaWindowLoaded = true;
@@ -474,22 +494,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         });
 
         this.aloha.iframeElement = masterFrame;
-        masterFrame.addEventListener('load', () => {
-            // This is browser dependend. Sometimes it'll load a blank page first,
-            // and then the actual aloha page.
-            if (
-                masterFrame.contentWindow.location.toString() === BLANK_PAGE
-                || masterFrame.contentDocument.readyState !== 'complete'
-            ) {
-                return;
-            }
-
+        this.subscriptions.push(this.aloha.ready$.pipe(
+            filter(isReady => isReady),
+        ).subscribe(() => {
             this.masterFrameLoaded = true;
             this.windowLoaded = true;
-
-            if (this.currentItem?.type === 'page') {
-                this.reloadPageConstructs();
-            }
 
             // We only need to wait/check for Aloha, if we're in the edit-mode.
             if (!this.childFrameInitialized && this.editMode === EditMode.EDIT && this.currentItem?.type === 'page') {
@@ -510,16 +519,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
             const styleElem = masterFrame.contentDocument.createElement('style');
             styleElem.textContent = `
-del.gtx-diff {
-  background: rgba(255, 0, 0, 0.2);
-}
-ins.gtx-diff {
-  background: rgba(0, 255, 0, 0.2);
-}
+del.gtx-diff,
 span.diff-html-removed {
-  text-decoration: line-through;
   background: rgba(255, 0, 0, 0.2);
 }
+ins.gtx-diff,
 span.diff-html-added {
   background: rgba(0, 255, 0, 0.2);
 }`;
@@ -538,7 +542,7 @@ span.diff-html-added {
                 this.ignoreNextDiffScroll = true;
                 this.diffFrame.nativeElement.contentWindow.scroll({ top: masterFrame.contentWindow.scrollY });
             });
-        });
+        }));
     }
 
     /**
@@ -555,6 +559,10 @@ span.diff-html-added {
         if (this.constructsSubscription != null) {
             this.constructsSubscription.unsubscribe();
             this.constructsSubscription = null;
+        }
+        if (this.windowMessageSubscription != null) {
+            this.windowMessageSubscription.unsubscribe();
+            this.windowMessageSubscription = null;
         }
     }
 
@@ -1310,12 +1318,24 @@ span.diff-html-added {
 
     private updateIframeUrl(state: EditorState): void {
         const newUrl = this.urlBuilder.stateToUrl(state, this.currentItem);
-        if (newUrl !== this.iframeUrl) {
-            this.iframeUrl = newUrl;
+        if (newUrl === this.iframeUrl) {
+            return;
+        }
+        this.iframeUrl = newUrl;
 
-            if (this.iframe?.nativeElement?.contentWindow?.location) {
-                this.iframe.nativeElement.contentWindow.location.replace(newUrl);
-            }
+        if (!this.iframe?.nativeElement?.contentWindow?.location) {
+            return;
+        }
+
+        this.iframe.nativeElement.contentWindow.location.replace(newUrl);
+
+        // We don't need to add listeners on a blank page
+        if (newUrl === BLANK_PAGE) {
+            return;
+        }
+        
+        if (this.currentItem?.type === 'page') {
+            this.reloadPageConstructs();
         }
     }
 

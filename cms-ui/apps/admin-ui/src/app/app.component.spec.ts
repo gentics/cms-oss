@@ -102,8 +102,6 @@ class MockUserSettingsService implements Partial<InterfaceOf<UserSettingsService
 
 class MockUsersnapService extends InitializableService {}
 
-class MockDebugToolService extends InitializableService {}
-
 class MockNodeOperations implements Partial<InterfaceOf<NodeOperations>> {
     getAll(options?: NodeListRequestOptions): Observable<Node<ModelType.Raw>[]> {
         return of([]);

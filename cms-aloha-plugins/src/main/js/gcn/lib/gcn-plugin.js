@@ -482,7 +482,18 @@ define([
 		init: function () {
 			var that = this;
 
+			// This requests the initialization of the GCMSUI object from the parent
+			let messageTarget = window;
+			if (window.parent) {
+				messageTarget = window.parent;
+			}
+			messageTarget.postMessage({
+				type: 'gcmsui.request-init',
+			}, '*');
+
 			Util.withinCMS(function () {
+				window.GCMSUI.runPostLoadScript();
+
 				// Create the GCMSUI Surface and set it as active.
 				// This forces the UI to be rendered in the GCMS UI instead of the Aloha Page/context.
 				var gcmsuiSurface = new GCMSUISurface(UiPlugin.getContext(), UiPlugin.getToolbarSettings());

@@ -174,7 +174,7 @@ export class AlohaIntegrationService {
     /**
      * An array of constructs which are available in the current page.
      */
-    public constructs$ = new Subject<Construct[]>();
+    public constructs$ = new BehaviorSubject<Construct[]>(null);
 
     public gcnPlugin$: Observable<GCNAlohaPlugin>;
     public uiPlugin$: Observable<AlohaUiPlugin>;

@@ -19,7 +19,6 @@ import {
 } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { PostLoadScript } from './post-load';
-import { PreLoadScript } from './pre-load';
 
 describe('custom scripts', () => {
 
@@ -28,11 +27,6 @@ describe('custom scripts', () => {
 
     it('can create a CustomScriptsTestFixture', () => {
         fixture = new CustomScriptsTestFixture();
-    });
-
-    it('can run pre-load scripts', () => {
-        fixture = new CustomScriptsTestFixture();
-        fixture.runPreLoadScript();
     });
 
     it('can run post-load scripts', () => {
@@ -285,14 +279,6 @@ class CustomScriptsTestFixture {
         this.subscription.unsubscribe();
     }
 
-    runPreLoadScript(): void {
-        const script = new PreLoadScript(
-            this.window as any as CNWindow,
-            this.document as any as CNIFrameDocument,
-        );
-        script.run();
-    }
-
     runPostLoadScript(): void {
         const script = new PostLoadScript(
             this.window as any as CNWindow,
@@ -376,7 +362,6 @@ class CustomScriptsTestFixture {
 
     private attachToBodyAndRunPreAndPostLoadScripts(): void {
         this.attachTestDocumentToRealBody();
-        this.runPreLoadScript();
         this.runPostLoadScript();
         this.preventLinkClicksFromNavigating();
     }

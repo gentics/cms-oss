@@ -36,12 +36,10 @@ import { ModalService } from '@gentics/ui-core';
 import { Subscription, of } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
-import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
 import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
-
 
 type ZoneType = any;
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -163,23 +161,16 @@ export class CustomerScriptService implements OnDestroy {
     /**
      * Create an instance of the GCMSUI object for use by customer scripts.
      */
-    createGCMSUIObject(scriptHost: CustomScriptHostService, iFrameWindow: CNWindow, document: CNIFrameDocument): GcmsUiBridge {
+    createGCMSUIObject(scriptHost: CustomScriptHostService, iFrameWindow: CNWindow, cnDoc: CNIFrameDocument): GcmsUiBridge {
         if (iFrameWindow.GCMSUI) {
             return iFrameWindow.GCMSUI;
         }
 
-        let preLoadScriptExecuted = false;
         let postLoadScriptExecuted = false;
 
-        const executePreLoadScript = () => {
-            if (!preLoadScriptExecuted) {
-                this.runPreLoadScript(iFrameWindow, document);
-                preLoadScriptExecuted = true;
-            }
-        };
         const executePostLoadScript = () => {
             if (!postLoadScriptExecuted) {
-                this.runPostLoadScript(iFrameWindow, document, scriptHost);
+                this.runPostLoadScript(iFrameWindow, cnDoc, scriptHost);
                 postLoadScriptExecuted = true;
             }
         };
@@ -221,11 +212,14 @@ export class CustomerScriptService implements OnDestroy {
             }
         });
 
-        // Make sure that child IFrames also have access to the GCMSUI init method.
-        iFrameWindow.GCMSUI_childIFrameInit = (iFrameWindow.parent as CNParentWindow).GCMSUI_childIFrameInit;
         const loadedConstructs = new Promise<Record<string, Construct>>((resolve, reject) => {
             this.aloha.constructs$.subscribe({
                 next(value) {
+                    // value may be `null` initially, when no constructs have been loaded yet.
+                    if (value == null) {
+                        return;
+                    }
+
                     const dict: Record<string, Construct> = {};
                     (value || []).forEach(c => {
                         dict[c.keyword] = c;
@@ -239,7 +233,7 @@ export class CustomerScriptService implements OnDestroy {
         });
 
         const gcmsUi: GcmsUiBridge = {
-            runPreLoadScript: executePreLoadScript,
+            runPreLoadScript: () => {},
             runPostLoadScript: executePostLoadScript,
             openRepositoryBrowser,
             gcmsUiStylesUrl: this.gcmsUiStylesForIFrameBlobUrl,
@@ -326,27 +320,17 @@ export class CustomerScriptService implements OnDestroy {
         };
     }
 
-    /** Runs the pre-load script */
-    private runPreLoadScript(window: CNWindow, document: CNIFrameDocument): void {
-        try {
-            const script = new PreLoadScript(window, document);
-            script.run();
-        } catch (error) {
-            this.errorHandlerService.catch(error, { notification: false });
-        }
-    }
-
     /** Runs the post-load script and the customer script, if it exists. */
-    private runPostLoadScript(window: CNWindow, document: CNIFrameDocument, scriptHost: CustomScriptHostService): void {
+    private runPostLoadScript(cnWindow: CNWindow, cnDoc: CNIFrameDocument, scriptHost: CustomScriptHostService): void {
         try {
-            const script = new PostLoadScript(window, document, scriptHost, this.aloha);
+            const script = new PostLoadScript(cnWindow, cnDoc, scriptHost, this.aloha);
             script.run();
         } catch (error) {
             this.errorHandlerService.catch(error, { notification: false });
         }
 
         try {
-            this.invokeCustomerScript(window, document, scriptHost);
+            this.invokeCustomerScript(cnWindow, cnDoc, scriptHost);
         } catch (error) {
             this.errorHandlerService.catch(error, { notification: false });
         }

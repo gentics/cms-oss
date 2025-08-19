@@ -20,7 +20,7 @@ import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ChangesOf } from '@gentics/ui-core';
 import { Subscription, combineLatest, merge, of } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
     AlohaIntegrationService,
@@ -137,7 +137,9 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         this.activeTab = this.aloha.activeTab;
 
         this.subscriptions.push(combineLatest([
-            this.aloha.constructs$.asObservable(),
+            this.aloha.constructs$.asObservable().pipe(
+                filter(constructs => constructs != null),
+            ),
             this.aloha.activeEditable$.pipe(
                 tap(editable => {
                     this.editable = editable;

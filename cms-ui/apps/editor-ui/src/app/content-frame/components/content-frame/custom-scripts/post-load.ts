@@ -43,10 +43,19 @@ export class PostLoadScript {
     ) { }
 
     run(): void {
+        this.removeAlohaUnloadLogic();
         this.setupAlohaHooks(this.iFrameWindow);
         this.handleClickEventsOnLinks();
         this.notifyWhenContentsChange();
         this.scriptHost.runChangeDetection();
+    }
+
+    /**
+     * Override the Alohapage onbeforeunload handler, our method of
+     * checking whether a confirmation needs to be displayed is superior.
+     */
+    removeAlohaUnloadLogic(): void {
+        this.iFrameWindow.onbeforeunload = () => { /* Noop */};
     }
 
     private setupAlohaHooks(iFrameWindow: CNWindow): void {

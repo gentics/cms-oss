@@ -109,7 +109,7 @@ export function createConfiguration(
          */
         webServer: isCI || !useLocalApp || !startLocalApp ? undefined : {
             command: `npm start ${appName}`,
-            url: 'http://127.0.0.1:4200',
+            url: 'http://localhost:4200',
             reuseExistingServer: true,
             cwd: workspaceRoot,
             stdout: 'pipe',

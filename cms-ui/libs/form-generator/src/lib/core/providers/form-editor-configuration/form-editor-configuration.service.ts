@@ -31,7 +31,7 @@ export class FormEditorConfigurationService {
 
     private fetchFormEditorConfiguration = (type: FormEditorConfigurationType): Observable<FormEditorConfiguration>  => {
         let formEditorConfigurationPath = `${CUSTOMER_CONFIG_PATH}form-editor.json`;
-        if (type !== 'GENERIC') {
+        if (type != null && type !== 'GENERIC') {
             formEditorConfigurationPath = `${CUSTOMER_CONFIG_PATH}form-${type.toLowerCase()}-editor.json`;
         }
 

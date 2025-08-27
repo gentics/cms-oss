@@ -1,6 +1,7 @@
 import { Node, PageCopyResponse } from '@gentics/cms-models';
 import {
     EntityImporter,
+    folderT,
     fullNode,
     loginWithForm,
     matchRequest,
@@ -47,9 +48,12 @@ test.describe('List Loading', () => {
     });
 
     async function waitForListItems(page: Page, list: Locator, actor?: () => Promise<any>): Promise<Locator> {
+        let listType = await list.getAttribute('data-item-type');
+        listType = listType[0].toUpperCase() + listType.slice(1);
+
         let req: Promise<any> = Promise.resolve();
         if (actor) {
-            req = page.waitForResponse(matchRequest('GET', `/rest/folder/getPages/${ACTIVE_NODE.folderId}`));
+            req = page.waitForResponse(matchRequest('GET', `/rest/folder/get${listType}s/${ACTIVE_NODE.folderId}`));
             await actor();
         }
 
@@ -124,5 +128,36 @@ test.describe('List Loading', () => {
 
         // Verify that the pagination hasn't been reset and is still displaying all items
         expect(list.locator('item-list-row')).toHaveCount(31, { timeout: 10_000 });
+    });
+
+    test('should load the saved page-size on reload', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-18850',
+        }],
+    }, async ({ page }) => {
+        const FOLDER_TO_FIND = IMPORTER.get(folderT);
+
+        const list = findList(page, 'folder');
+
+        await waitForListItems(page, list);
+
+        // Shouldn't be here yet
+        await expect(findItem(list, FOLDER_TO_FIND.id)).not.toBeAttached();
+
+        // Update the page size to 100
+        const pageSize = list.locator('gtx-page-size-selector gtx-select');
+        await waitForListItems(page, list, async () => {
+            await pickSelectValue(pageSize, '100');
+        });
+
+        // Now it should be visible
+        await expect(findItem(list, FOLDER_TO_FIND.id)).toBeAttached();
+
+        // Reload the whole app and verify that the state has properly restored and the
+        // folder is still visible.
+        page.reload();
+        await waitForListItems(page, list);
+        await expect(findItem(list, FOLDER_TO_FIND.id)).toBeAttached();
     });
 });

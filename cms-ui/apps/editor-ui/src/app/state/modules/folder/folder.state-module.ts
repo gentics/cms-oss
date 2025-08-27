@@ -49,6 +49,7 @@ import {
     CreateItemSuccessAction,
     EditImageSuccessAction,
     FOLDER_STATE_KEY,
+    FolderStateLoadedAction,
     InheritanceFetchingSuccessAction,
     ItemFetchingSuccessAction,
     LanguageFetchingSuccessAction,
@@ -141,6 +142,8 @@ const INITIAL_FOLDER_STATE: FolderState = {
     searchFiltersValid: false,
     searchFiltersVisible: false,
     templates: { ...emptyItemInfo },
+    userSettingsLoaded: false,
+    folderStateLoaded: false,
 };
 
 @AppStateBranch<FolderState>({
@@ -259,6 +262,13 @@ export class FolderStateModule {
                 }),
             ),
         }));
+    }
+
+    @ActionDefinition(FolderStateLoadedAction)
+    handleFolderStateLoadedAction(ctx: StateContext<FolderState>, action: FolderStateLoadedAction): void {
+        ctx.patchState({
+            folderStateLoaded: true,
+        });
     }
 
     /** Generic method when an item list was fetched from the server. */
@@ -682,6 +692,7 @@ export class FolderStateModule {
         }
 
         ctx.patchState({
+            userSettingsLoaded: true,
             recentItems: action.items.filter(item => {
                 if (item == null || typeof item !== 'object') {
                     return false;

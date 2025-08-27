@@ -54,6 +54,8 @@ export interface FolderState {
     breadcrumbs: ItemsInfo;
     lastError?: string;
     channelSyncReport: ChannelSyncReport;
+    userSettingsLoaded: boolean;
+    folderStateLoaded: boolean;
 }
 
 export interface RecentItem {

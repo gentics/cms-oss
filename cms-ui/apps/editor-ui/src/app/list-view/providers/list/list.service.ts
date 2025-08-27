@@ -237,7 +237,9 @@ export class ListService implements OnDestroy {
             skip(1),
         ).subscribe(() => {
             const folderState = this.state.now.folder;
-            this.folderActions.getPages(folderState.activeFolder, false, folderState.searchTerm);
+            if (folderState.folderStateLoaded) {
+                this.folderActions.getPages(folderState.activeFolder, false, folderState.searchTerm);
+            }
         }));
     }
 
@@ -268,7 +270,9 @@ export class ListService implements OnDestroy {
 
         this.subscriptions.push(sortingStreams$.subscribe(({ handler, itemsInfo }) => {
             const folderState = this.state.now.folder;
-            handler(folderState.activeFolder, false, folderState.searchTerm);
+            if (folderState.folderStateLoaded) {
+                handler(folderState.activeFolder, false, folderState.searchTerm);
+            }
         }));
     }
 

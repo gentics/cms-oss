@@ -917,10 +917,11 @@ span.diff-html-added {
                                 });
                             });
                     default:
-                        return this.combinedPropertiesEditor.saveChanges().then(() => {
-                            this.currentItemClean = true;
-                            this.changeDetector.markForCheck();
-                        });
+                        return this.combinedPropertiesEditor.saveChanges()
+                            .then(() => {
+                                this.currentItemClean = true;
+                                this.changeDetector.markForCheck();
+                            });
                 }
             }
 

@@ -6,7 +6,7 @@ import { componentTest } from '../../testing';
 import { ButtonComponent } from '../button/button.component';
 import { FilePickerComponent } from './file-picker.component';
 
-fdescribe('FilePickerComponent', () => {
+describe('FilePickerComponent', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         providers: [

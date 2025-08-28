@@ -120,6 +120,8 @@ describe('FolderStateModule', () => {
                 templates: [],
                 fetching: false,
             },
+            userSettingsLoaded: false,
+            folderStateLoaded: false,
         };
         expect(state.now.folder).toEqual(expectedState);
     });

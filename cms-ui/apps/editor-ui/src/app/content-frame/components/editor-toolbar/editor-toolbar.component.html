@@ -295,7 +295,7 @@
             </div>
 
             <div class="form-type" *ngIf="currentItem && currentItem.type === 'form'">
-                {{ 'editor.item_type_label' | i18n }}: {{ 'gtxFormGenerator.form_type_' + ((!!currentItem['data']?.type ? currentItem['data']?.type : CMS_FORM_TYPE.GENERIC) | lowercase) | i18n }}
+                {{ 'editor.item_type_label' | i18n }}: {{ 'gtxFormGenerator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | i18n }}
             </div>
         </div>
     </div>

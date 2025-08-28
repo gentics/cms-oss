@@ -663,10 +663,10 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     /**
      * Saves the changes in the current tab.
      */
-    saveChanges(options: SaveChangesOptions = { }): Promise<void> {
+    saveChanges(options: SaveChangesOptions = { }, postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true }): Promise<void> {
         let updatePromise: Promise<any>;
         if (this.activeTabId === ITEM_PROPERTIES_TAB) {
-            updatePromise = this.saveItemProperties();
+            updatePromise = this.saveItemProperties(postUpdateBehavior);
         } else if (this.activeTabId === ITEM_TAG_LIST_TAB) {
             // No-op, because its saved on changes
             updatePromise = Promise.resolve();

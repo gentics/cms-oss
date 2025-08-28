@@ -112,6 +112,7 @@ describe('ListService', () => {
                 images: emptyItemInfo,
                 files: emptyItemInfo,
                 pages: emptyItemInfo,
+                folderStateLoaded: true,
             },
         };
         state.mockState(initialState);

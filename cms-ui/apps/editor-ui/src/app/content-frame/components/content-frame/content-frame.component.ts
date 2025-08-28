@@ -870,10 +870,58 @@ span.diff-html-added {
         const itemId = this.currentItem.id;
         if (this.editMode === EditMode.EDIT_PROPERTIES) {
             if (this.appState.now.editor.modifiedObjectPropertiesValid) {
-                return this.combinedPropertiesEditor.saveChanges().then(() => {
-                    this.currentItemClean = true;
-                    this.changeDetector.markForCheck();
-                });
+                // for pages and forms, we suppress the general save notification
+                // and show a save notification containing a "publish" button
+                switch (this.currentItem.type) {
+                    case 'page':
+                        return this.combinedPropertiesEditor.saveChanges({}, {
+                            fetchForConstruct: true,
+                            fetchForUpdate: true,
+                            showNotification: false,
+                        })
+                            .then(() => {
+                                this.currentItemClean = true;
+                                this.changeDetector.markForCheck();
+
+                                this.notification.show({
+                                    message: 'message.page_saved',
+                                    type: 'success',
+                                    action: {
+                                        label: 'common.publish_button',
+                                        onClick: () => {
+                                            this.publishPage(true);
+                                        },
+                                    },
+                                });
+                            });
+                    case 'form':
+                        return this.combinedPropertiesEditor.saveChanges({}, {
+                            fetchForConstruct: true,
+                            fetchForUpdate: true,
+                            showNotification: false,
+                        })
+                            .then(() => {
+                                this.currentItemClean = true;
+                                this.changeDetector.markForCheck();
+
+                                this.notification.show({
+                                    message: 'message.form_saved',
+                                    type: 'success',
+                                    action: {
+                                        label: 'common.publish_button',
+                                        onClick: () => {
+                                            this.publishForm(true);
+                                        },
+                                    },
+                                });
+                            });
+                    default:
+                        return this.combinedPropertiesEditor.saveChanges()
+                            .then(() => {
+                                this.currentItemClean = true;
+                                this.changeDetector.markForCheck();
+                            });
+                }
             }
 
             this.notification.show({

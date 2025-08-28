@@ -1,11 +1,14 @@
-import { NodeFeature, Variant } from '@gentics/cms-models';
+import { LinkCheckerCheckResponse, NodeFeature, ResponseCode, Variant } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     EntityImporter,
     isVariant,
     ITEM_TYPE_PAGE,
     loginWithForm,
+    matchesUrl,
+    matchRequest,
     minimalNode,
+    mockResponse,
     navigateToApp,
     pageOne,
     scheduleLinkChecker,
@@ -76,7 +79,7 @@ test.describe('Link Checker', () => {
         const LINK_URL = 'https://gentics.com';
         const LINK_TITLE = 'This is a title!';
 
-        const content = iframe.locator('main [contenteditable="true"]');
+        const content = iframe.locator('main .container [contenteditable="true"]');
         await content.fill(TEXT_CONTENT);
         // Activate the toolbar
         await content.click();
@@ -90,8 +93,17 @@ test.describe('Link Checker', () => {
         await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
         await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
 
+        /* Always make sure that the request succeeds */
+        await page.route(url => matchesUrl(url, '/rest/linkChecker/check'), mockResponse<LinkCheckerCheckResponse>('POST', {
+            messages: [],
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+            },
+            valid: true,
+        }));
+
         await Promise.all([
-            page.waitForResponse(resp => resp.url().includes('/rest/linkChecker/check') && resp.status() === 200),
+            page.waitForResponse(matchRequest('POST', '/rest/linkChecker/check')),
             modal.locator('.modal-footer [data-action="confirm"]').click(),
         ]);
 
@@ -110,7 +122,7 @@ test.describe('Link Checker', () => {
         const LINK_URL = `https://${LINK_DOMAIN}`;
         const LINK_TITLE = 'This is a title!';
 
-        const content = iframe.locator('main [contenteditable="true"]');
+        const content = iframe.locator('main .container [contenteditable="true"]');
         await content.fill(TEXT_CONTENT);
         // Activate the toolbar
         await content.click();
@@ -124,8 +136,18 @@ test.describe('Link Checker', () => {
         await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
         await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
 
+        /* Always make sure that the request fails */
+        await page.route(url => matchesUrl(url, '/rest/linkChecker/check'), mockResponse<LinkCheckerCheckResponse>('POST', {
+            messages: [],
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+            },
+            valid: false,
+            reason: 'mocked error',
+        }));
+
         await Promise.all([
-            page.waitForResponse(resp => resp.url().includes('/rest/linkChecker/check') && resp.status() === 200),
+            page.waitForResponse(matchRequest('POST', '/rest/linkChecker/check')),
             modal.locator('.modal-footer [data-action="confirm"]').click(),
         ]);
 

@@ -24,6 +24,20 @@
     "constructId" : "3821.45da0ed4-3244-11ef-872a-0242ac110002",
     "editableInPage" : false,
     "mandatory" : false
+  }, {
+    "globalId" : "6363.ce964828-71cf-11f0-9546-faef0389dd20",
+    "name" : "title",
+    "active" : true,
+    "constructId" : "A547.75403",
+    "editableInPage" : true,
+    "mandatory" : false
+  }, {
+    "globalId" : "6363.d302498b-71cf-11f0-9546-faef0389dd20",
+    "name" : "inlinecontent",
+    "active" : true,
+    "constructId" : "A547.75403",
+    "editableInPage" : true,
+    "mandatory" : false
   } ],
   "objectTags" : [ {
     "globalId" : "57a5.5db580d4-3224-11ef-862c-0242ac110002",

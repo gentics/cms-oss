@@ -5,6 +5,8 @@ import {
     FileUploadOptions,
     Folder,
     FolderCreateRequest,
+    Form,
+    FormCreateRequest,
     Group,
     Image,
     Node,
@@ -26,6 +28,7 @@ import {
     EntityMap,
     FileImportData,
     FolderImportData,
+    FormImportData,
     GroupImportData,
     ImageImportData,
     IMPORT_ID,
@@ -38,6 +41,7 @@ import {
     ImportData,
     ITEM_TYPE_FILE,
     ITEM_TYPE_FOLDER,
+    ITEM_TYPE_FORM,
     ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
     LoginInformation,
@@ -425,6 +429,7 @@ export class EntityImporter {
     public get(data: PageImportData): Page | null;
     public get(data: ImageImportData): Image | null;
     public get(data: FileImportData): File | null;
+    public get(data: FormImportData): Form | null;
     public get(data: GroupImportData): Group | null;
     public get(data: UserImportData): User | null;
     public get(data: ScheduleTaskImportData): ScheduleTask | null;
@@ -643,6 +648,31 @@ export class EntityImporter {
         return created;
     }
 
+    private async importForm(
+        data: FormImportData,
+    ): Promise<Form | null> {
+        const { nodeId, folderId, ...reqData } = data;
+
+        const parentEntity = this.entityMap[folderId];
+        const parentId = (parentEntity as Node).folderId ?? (parentEntity as (Node | Folder)).id;
+        const body: FormCreateRequest = {
+            ...reqData,
+
+            folderId: parentId,
+            nodeId: (this.entityMap[nodeId] as Node).id,
+        };
+
+        if (this.options?.logImports) {
+            console.log(`Importing form ${data[IMPORT_ID]}`, data);
+        }
+        const created = (await this.client.form.create(body).send()).item;
+        if (this.options?.logImports) {
+            console.log(`Imported form ${data[IMPORT_ID]} -> ${created.id}`);
+        }
+
+        return created;
+    }
+
     private async importGroup(
         data: GroupImportData,
     ): Promise<Group | null> {
@@ -835,6 +865,9 @@ export class EntityImporter {
 
             case ITEM_TYPE_IMAGE:
                 return this.importImage(entity as ImageImportData);
+
+            case ITEM_TYPE_FORM:
+                return this.importForm(entity as FormImportData);
 
             case IMPORT_TYPE_GROUP:
                 return this.importGroup(entity as GroupImportData);

@@ -2,6 +2,7 @@ import { AlohaCoreComponentNames } from '@gentics/aloha-models';
 import {
     AccessControlledType,
     EditableFileProps,
+    EditableFormProps,
     FolderCreateRequest,
     GroupCreateRequest,
     GroupUserCreateRequest,
@@ -80,6 +81,7 @@ export const ENV_SKIP_LOCAL_APP_LAUNCH = 'SKIP_LOCAL_APP_LAUNCH';
 export const DEFAULT_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
 
 export const ATTR_CONTEXT_ID = 'data-context-id';
+export const ATTR_MULTIPLE = 'data-multiple';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -345,7 +347,7 @@ export interface PageImportData
 
     [IMPORT_TYPE]: typeof ITEM_TYPE_PAGE,
 
-    /** The nodes `IMPROT_ID` value */
+    /** The nodes `IMPORT_ID` value */
     nodeId: string;
     /** The folders/nodes `IMPORT_ID` value */
     folderId: string;
@@ -356,7 +358,7 @@ export interface PageImportData
 export interface FileImportData extends EditableFileProps, ImportData {
     [IMPORT_TYPE]: typeof ITEM_TYPE_FILE,
 
-    /** The nodes `IMPROT_ID` value */
+    /** The nodes `IMPORT_ID` value */
     nodeId: string;
     /** The folders/nodes `IMPORT_ID` value */
     folderId: string;
@@ -365,10 +367,22 @@ export interface FileImportData extends EditableFileProps, ImportData {
 export interface ImageImportData extends EditableFileProps, ImportData {
     [IMPORT_TYPE]: typeof ITEM_TYPE_IMAGE,
 
-    /** The nodes `IMPROT_ID` value */
+    /** The nodes `IMPORT_ID` value */
     nodeId: string;
     /** The folders/nodes `IMPORT_ID` value */
     folderId: string;
+}
+
+export interface FormImportData extends EditableFormProps, ImportData {
+    [IMPORT_TYPE]: typeof ITEM_TYPE_FORM;
+
+    /** The nodes `IMPORT_ID` value */
+    nodeId: string;
+    /** The folders/nodes `IMPORT_ID` value */
+    folderId: string;
+
+    /** The languages of the Form */
+    languages: string[];
 }
 
 export interface GroupImportData extends GroupCreateRequest, ImportData {

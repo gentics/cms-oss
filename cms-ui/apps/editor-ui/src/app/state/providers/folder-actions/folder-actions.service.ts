@@ -154,6 +154,7 @@ import {
     ChannelSyncReportFetchingSuccessAction,
     CreateItemSuccessAction,
     EditImageSuccessAction,
+    FolderStateLoadedAction,
     InheritanceFetchingSuccessAction,
     ItemFetchingSuccessAction,
     LanguageFetchingSuccessAction,
@@ -646,6 +647,10 @@ export class FolderActionsService {
      * Get all items as well as templates and breadcrumbs for a given folder.
      */
     async getAllFolderContents(parentId: number, search: string = '', fetchAll: boolean = false, searchInItemsOnly: boolean = false): Promise<void> {
+        await this.appState.select(state => state.folder.userSettingsLoaded).pipe(
+            // Basically waits for the user settings to be loaded
+            first(loaded => loaded),
+        ).toPromise();
         await Promise.all([
             this.getAllItemsInFolder(parentId, search, fetchAll),
             this.getTemplates(parentId, true, (searchInItemsOnly ? '' : search)),
@@ -658,6 +663,7 @@ export class FolderActionsService {
         if (!parentFolder || !(parentFolder.privilegeMap || parentFolder.privilegeBits)) {
             await this.getFolder(parentId);
         }
+        await this.appState.dispatch(new FolderStateLoadedAction()).toPromise();
     }
 
     /**
@@ -3013,7 +3019,7 @@ export class FolderActionsService {
                 nodeId,
             }))).pipe(
                 map(
-                    responses => responses.flatMap(a => a.messages)
+                    responses => responses.flatMap(a => a.messages),
                 ),
             );
         } else {
@@ -3778,6 +3784,7 @@ export class FolderActionsService {
 
     private nodeFeatureIsActive(nodeId: number, nodeFeature: keyof NodeFeatures): Observable<boolean> {
         return this.appState.select(state => state.features.nodeFeatures).pipe(
+            filter(state => state[nodeId] != null),
             map(nodeFeatures => {
                 const activeNodeFeatures: (keyof NodeFeatures)[] = nodeFeatures[nodeId];
                 return Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(nodeFeature);

@@ -1,0 +1,2 @@
+Editor User Interface: When saving objects with a "published" state (like pages and forms) from the properties dialog,
+the save notification will now also show a "Publish" button to immediately publish the modified object.

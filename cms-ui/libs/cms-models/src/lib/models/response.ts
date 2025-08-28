@@ -1319,7 +1319,7 @@ export interface LinkCheckerUpdateResponse extends Response {
  */
 export interface LinkCheckerCheckResponse extends LinkCheckerUpdateResponse {
     valid: boolean;
-    reason: string;
+    reason?: string;
 }
 
 /**

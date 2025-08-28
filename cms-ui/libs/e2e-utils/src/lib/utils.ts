@@ -457,9 +457,21 @@ export function matchesPath(url: string | URL, path: string | RegExp): boolean {
     }
 }
 
-export function hasMatchingParams(url: string, params: Record<string, string>): boolean {
-    const urlObj = new URL(url);
-    return Object.entries(params).every(([key, value]) => urlObj.searchParams.get(key) === value);
+export function hasMatchingParams(input: URLSearchParams | URL | string, params: Record<string, string>): boolean {
+    let store: URLSearchParams;
+    if (input instanceof URLSearchParams) {
+        store = input;
+    } else if (input instanceof URL) {
+        store = input.searchParams;
+    } else {
+        store = new URL(input).searchParams;
+    }
+
+    return Object.entries(params || {}).every(([key, value]) => store.get(key) === value);
+}
+
+export function matchesUrl(url: URL | string, path: string | RegExp, params?: Record<string, string>): boolean {
+    return matchesPath(url, path) && (!params || hasMatchingParams(url, params));
 }
 
 /**

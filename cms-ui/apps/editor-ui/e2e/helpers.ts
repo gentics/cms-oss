@@ -2,7 +2,7 @@
 /// <reference lib="dom"/>
 import { readFileSync } from 'fs';
 import { openContext } from '@gentics/e2e-utils';
-import { Frame, Locator, Page } from '@playwright/test';
+import { expect, Frame, Locator, Page } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
 export function findList(page: Page, type: string): Locator {
@@ -141,8 +141,42 @@ export function findAlohaComponent(page: Page, options?: { slot?: string, type?:
     const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
 
     const aloha = root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector} button[data-action="primary"]`);
-    aloha.waitFor();
     return aloha;
+}
+
+export function selectRangeIn(element: Locator, start: number, end?: number): Promise<boolean> {
+    return element.evaluate((el, context) => {
+        window.getSelection().removeAllRanges();
+        const applied = (window as unknown as HelperWindow).selectRange(
+            el as HTMLElement,
+            context.start,
+            context.end,
+        );
+
+        if (applied) {
+            (window as unknown as HelperWindow).updateAlohaRange(window, window.getSelection().getRangeAt(0));
+        }
+
+        return applied;
+    }, { start, end })
+}
+
+export function selectTextIn(element: Locator, textToSelect: string): Promise<boolean> {
+    return element.evaluate((el, context) => {
+        window.getSelection().removeAllRanges();
+        const win = (window as any as HelperWindow);
+        const applied = win.selectText(el as HTMLElement, context.textToSelect);
+
+        if (applied) {
+            win.updateAlohaRange(win, win.getSelection().getRangeAt(0));
+        }
+
+        return applied;
+    }, { textToSelect });
+}
+
+export function selectEditorTab(page: Page, id: string): Promise<void> {
+    return page.locator(`gtx-page-editor-tabs button[data-id="${id}"]`).click();
 }
 
 export async function findDynamicFormModal(page: Page, ref?: string): Promise<Locator> {
@@ -309,4 +343,14 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
         (window as any as HelperWindow).selectText = selectText;
         (window as any as HelperWindow).updateAlohaRange = updateAlohaRange;
     });
+}
+
+export async function expectItemOffline(item: Locator): Promise<void> {
+    // TODO it would be better not to test on the icon
+    await expect(item.locator('icon.main-icon')).toHaveText('cloud_off');
+}
+
+export async function expectItemPublished(item: Locator): Promise<void> {
+    // TODO it would be better not to test on the icon
+    await expect(item.locator('icon.main-icon')).toHaveText('cloud_upload');
 }

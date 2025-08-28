@@ -87,7 +87,7 @@ test.describe('Form Management', () => {
 
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
-        expect(item).toBeVisible();
+        await expect(item).toBeVisible();
     });
 
     test('should be able to change success-page correctly', {

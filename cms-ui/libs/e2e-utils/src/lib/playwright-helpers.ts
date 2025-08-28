@@ -1,5 +1,5 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
-import { expect, Locator, Page, Request, Response } from '@playwright/test';
+import { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import { ATTR_CONTEXT_ID, ATTR_MULTIPLE, DEFAULT_KEYCLOAK_URL, ENV_KEYCLOAK_URL, LoginInformation } from './common';
 import { hasMatchingParams, matchesPath } from './utils';
 
@@ -10,6 +10,43 @@ function isResponse(input: any): input is Response {
 interface RequestMatchOptions {
     skipStatus?: boolean;
     params?: Record<string, string>;
+}
+
+type GenericObject<T> = T extends object ? T : never;
+export function mockResponse<T>(data: GenericObject<T>, responseCode?: number): (route: Route) => Promise<void>;
+export function mockResponse<T>(method: string, data: GenericObject<T>, responseCode?: number): (route: Route) => Promise<void>;
+export function mockResponse<T>(
+    methodOrData: string | T,
+    dataOrRes?: T | number,
+    responseCode?: number,
+): (route: Route) => Promise<void> {
+    let method: string;
+    let data: T;
+
+    if (typeof methodOrData === 'string') {
+        method = methodOrData;
+        data = dataOrRes as T;
+    } else {
+        data = methodOrData;
+        if (typeof dataOrRes === 'number') {
+            responseCode = dataOrRes;
+        }
+    }
+
+    if (!responseCode) {
+        responseCode = 200;
+    }
+
+    return route => {
+        if (typeof method === 'string' && route.request().method() !== method) {
+            return route.continue();
+        }
+
+        return route.fulfill({
+            status: responseCode,
+            json: data,
+        });
+    };
 }
 
 export function matchRequest(method: string, path: string | RegExp, options?: RequestMatchOptions): (response: Response | Request) => boolean {

@@ -257,6 +257,7 @@ spec:
                         sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
                     }
 
+                    // Set custom mesh version (if configured)
                     if (params.meshVersion?.trim() != "") {
                         echo "Setting Mesh version to " + params.meshVersion.trim()
                         mvnArguments += " -Dmesh.version=" + params.meshVersion.trim()

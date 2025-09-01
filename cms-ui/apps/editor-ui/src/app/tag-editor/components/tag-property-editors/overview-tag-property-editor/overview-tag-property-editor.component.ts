@@ -38,7 +38,15 @@ import { Observable, Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 /** All item types that can be selected by the overview. */
-export type OverviewItem = ItemInNode<Page<Raw> | Folder<Raw> | File<Raw> | Image<Raw>>;
+export type OverviewItem = (ItemInNode<Page<Raw> | Folder<Raw> | File<Raw> | Image<Raw>>) & {
+    /**
+     * Hacky fix to add the node ID when reloading items.
+     * @deprecated Do not use, unless you know what you are doing.
+     */
+    _checkedNodeId: number
+};
+
+type PickedObject = { id:number, origId: number, item: Item<Raw> & { _checkedNodeId: number }, nodeId: number, origIndex: number };
 
 /** Used for easily getting the label of an object in the template. */
 export interface LabeledObject<T> {
@@ -437,7 +445,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
      */
     private loadItems(itemsToLoad: Map<number, ItemsForNode>, itemType: FolderItemType): Observable<OverviewItem[]> {
         // Create API requests to load the items from each node.
-        const requests$: Observable<{ id:number, origId: number, item: Item<Raw>, nodeId: number, origIndex: number }[]>[] = [];
+        const requests$: Observable<PickedObject[]>[] = [];
         itemsToLoad.forEach((itemsFromNode, nodeId) => {
             if (nodeId === -1) {
                 nodeId = undefined;
@@ -482,7 +490,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
 
         // Combine the results to an array of items, which have the same order as in the selection in the overview.
         return forkJoin(requests$).pipe(
-            map(results => {
+            map((results: PickedObject[][]) => {
                 if (this.isStickyChannelEnabled) {
                     itemsToLoad = this.updateItems(results);
                 }
@@ -491,7 +499,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
 
                 Array.from(itemsToLoad).forEach(([nodeId, itemsForNode]: [number, ItemsForNode]) => {
                     itemsForNode.itemIds.forEach(itemId => {
-                        const itemsForNodeItems: { id:number, origId: number, item: Item, nodeId: number, origIndex: number }[] = results.find(resultNodes => {
+                        const itemsForNodeItems = results.find(resultNodes => {
                             return resultNodes.some(resultNode => resultNode.id === itemId || resultNode.origId === itemId);
                         });
                         // if item is not existing, insert error object to be displayed instead
@@ -511,6 +519,8 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                              * after selecting items from the repository browser works as expected. (See browseForItems method).
                              */
                             itemLoaded.nodeId = undefined;
+                        } else {
+                            itemLoaded.nodeId = itemLoaded._checkedNodeId || nodeId;
                         }
 
                         loadedItemsInOrder[itemsForNode.origIndices[itemId]] = itemLoaded;

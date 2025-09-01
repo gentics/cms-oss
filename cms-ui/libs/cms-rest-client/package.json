@@ -1,9 +1,9 @@
 {
   "name": "@gentics/cms-rest-client",
-  "version": "6.1.36",
+  "version": "6.1.37",
   "license": "Apache-2.0",
   "dependencies": {
-    "@gentics/cms-models": "6.1.36",
+    "@gentics/cms-models": "6.1.37",
     "@gentics/mesh-models": "^2.1.0"
   },
   "publishConfig": {

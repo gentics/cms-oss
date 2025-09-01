@@ -96,6 +96,7 @@ spec:
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
+        string(name:       'meshVersion',               defaultValue: "",  description: "Optional version of mesh (rest client)")
     }
 
     options {
@@ -272,6 +273,12 @@ spec:
                     sh "echo @gentics:registry=https://repo.gentics.com/repository/npm-products/> ~/.npmrc"
                     withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
                         sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
+                    }
+
+                    // Set custom mesh version (if configured)
+                    if (params.meshVersion?.trim() != "") {
+                        echo "Setting Mesh version to " + params.meshVersion.trim()
+                        mvnArguments += " -Dmesh.version=" + params.meshVersion.trim()
                     }
 
                     // Login to docker.gentics.com so that the tests can pull all Mesh images

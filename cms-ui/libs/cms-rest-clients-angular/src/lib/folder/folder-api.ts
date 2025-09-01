@@ -309,7 +309,13 @@ export class FolderApi {
         nodeId: number,
         type: ItemType,
         options?: any,
-    ): Observable<Item<Raw>[]> {
+    ): Observable<(Item<Raw> & {
+        /**
+         * Hacky fix to add the node ID when reloading items.
+         * @deprecated Do not use, unless you know what you are doing.
+         */
+        _checkedNodeId: number
+    })[]> {
         return this.apiBase
             .post(`${type}/load`, { ids: ids, nodeId: nodeId }, options)
             .pipe(
@@ -324,8 +330,8 @@ export class FolderApi {
                         )[0]
                         .toString();
 
-                    return (<any> Object).values(
-                        (<any> res)[itemKey].map((item: any) => {
+                    return Object.values(
+                        res[itemKey].map((item) => {
                             if (item !== null) {
                                 item._checkedNodeId = nodeId; // Add previous nodeId for reference
                             }

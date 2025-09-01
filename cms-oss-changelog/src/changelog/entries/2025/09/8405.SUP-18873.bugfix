@@ -1,0 +1,1 @@
+Editor User Interface: Selecting elements in an Overview with sticky channel enabled did not correctly save the channel elements were selected from. This has been fixed.

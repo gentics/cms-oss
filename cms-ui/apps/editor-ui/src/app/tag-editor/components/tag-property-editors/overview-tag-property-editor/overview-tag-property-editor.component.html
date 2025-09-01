@@ -5,6 +5,7 @@
     <div class="options-row">
         <gtx-select
             class="overview-property"
+            data-control="listType"
             [label]="'tag_editor.list_type_selector' | i18n"
             [required]="true"
             [disabled]="allowedListTypes.length < 2 || context.readOnly"
@@ -18,6 +19,7 @@
 
         <gtx-select
             class="overview-property"
+            data-control="selectType"
             [label]="'tag_editor.select_type_selector' | i18n"
             [required]="true"
             [disabled]="allowedSelectTypes.length < 2 || context.readOnly"
@@ -32,6 +34,7 @@
         <ng-container *ngIf="!tagPart.overviewSettings.hideSortOptions">
             <gtx-select
                 class="overview-property"
+                data-control="orderBy"
                 [disabled]="allowedOrderByTypes.length < 2 || context.readOnly"
                 [label]="'tag_editor.order_by_type_selector' | i18n"
                 [required]="true"
@@ -45,6 +48,7 @@
 
             <gtx-select
                 class="overview-property"
+                data-control="orderDirection"
                 [label]="'tag_editor.order_direction_selector' | i18n"
                 [required]="true"
                 [disabled]="allowedOrderDirections.length < 2 || context.readOnly"
@@ -94,6 +98,7 @@
     <ng-container *ngIf="areSelectedItemsVisible(tagProperty.overview)">
         <div class="browse-button-cell">
             <gtx-button
+                data-action="browse-items"
                 type="secondary"
                 [disabled]="context.readOnly"
                 (click)="browseForItems()"
@@ -104,6 +109,7 @@
 
         <sortable-array-list
             *ngIf="selectedItems.length > 0; else noItemsSelected"
+            class="overview-items"
             [allowDrag]="tagProperty.overview.orderBy === 'SELF' && !context.readOnly"
             [allowRemoval]="!context.readOnly"
             [(ngModel)]="selectedItems"
@@ -111,36 +117,43 @@
             (itemRemove)="onUserChange()"
         >
             <ng-template let-item="item" let-index="index">
-                <span *ngIf="item.type" class="item-icon" [ngClass]="item.type || ''">
-                    <icon>{{ item.type | gtxTypeIcon }}</icon>
-                </span>
+                <div
+                    class="overview-item"
+                    [attr.data-type]="item.type"
+                    [attr.data-id]="item.id"
+                    [attr.data-node-id]="item._checkedNodeId || item.nodeId"
+                >
+                    <span *ngIf="item.type" class="item-icon" [ngClass]="item.type || ''">
+                        <icon>{{ item.type | gtxTypeIcon }}</icon>
+                    </span>
 
-                <ng-template #itemPathTpl let-path="path">
-                    <span class="item-path" [title]="path">{{ path }}</span>
-                </ng-template>
+                    <ng-template #itemPathTpl let-path="path">
+                        <span class="item-path" [title]="path">{{ path }}</span>
+                    </ng-template>
 
-                <ng-container [ngSwitch]="item.type">
-                    <ng-container
-                        *ngSwitchCase="'folder'"
-                        [ngTemplateOutlet]="itemPathTpl"
-                        [ngTemplateOutletContext]="{ path: item.path }"
-                    ></ng-container>
-                    <ng-container
-                        *ngSwitchCase="'channel'"
-                        [ngTemplateOutlet]="itemPathTpl"
-                        [ngTemplateOutletContext]="{ path: item.name}"
-                    ></ng-container>
-                    <ng-container
-                        *ngSwitchCase="'node'"
-                        [ngTemplateOutlet]="itemPathTpl"
-                        [ngTemplateOutletContext]="{ path: item.name }"
-                    ></ng-container>
-                    <ng-container
-                        *ngSwitchDefault
-                        [ngTemplateOutlet]="itemPathTpl"
-                        [ngTemplateOutletContext]="{ path: (item.path || '') + item.name }"
-                    ></ng-container>
-                </ng-container>
+                    <ng-container [ngSwitch]="item.type">
+                        <ng-container
+                            *ngSwitchCase="'folder'"
+                            [ngTemplateOutlet]="itemPathTpl"
+                            [ngTemplateOutletContext]="{ path: item.path }"
+                        ></ng-container>
+                        <ng-container
+                            *ngSwitchCase="'channel'"
+                            [ngTemplateOutlet]="itemPathTpl"
+                            [ngTemplateOutletContext]="{ path: item.name}"
+                        ></ng-container>
+                        <ng-container
+                            *ngSwitchCase="'node'"
+                            [ngTemplateOutlet]="itemPathTpl"
+                            [ngTemplateOutletContext]="{ path: item.name }"
+                        ></ng-container>
+                        <ng-container
+                            *ngSwitchDefault
+                            [ngTemplateOutlet]="itemPathTpl"
+                            [ngTemplateOutletContext]="{ path: (item.path || '') + item.name }"
+                        ></ng-container>
+                    </ng-container>
+                </div>
             </ng-template>
         </sortable-array-list>
 

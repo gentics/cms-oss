@@ -324,12 +324,15 @@ export interface ImportData {
     [IMPORT_ID]: string;
 }
 
-export interface NodeImportData extends NodeCreateRequest, ImportData {
+export interface NodeImportData extends Omit<NodeCreateRequest, "node">, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_NODE;
     /** Language codes which will be assigned */
     languages: string[];
     /** Templates which will be assigned */
     templates?: string[];
+    node: Omit<NodeCreateRequest["node"], "masterId"> & {
+        masterId?: string;
+    }
 }
 
 export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | 'motherId'>, ImportData {

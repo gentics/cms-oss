@@ -14,7 +14,7 @@ The following guidelines can be used to enhance your ticket with additional and 
 * Write a clear subject:
     ** Good: "Cancelling a File Copy dialog crashes File Manager"
     ** Bad: "Software crashes"
-* Add information about used software. (e.g: Firefox 134, Gentics CMS Version 6.2.0)
+* Add information about used software. (e.g: Firefox 134, Gentics CMS Version 6.3.5)
 * Write precise steps to reproduce the problem.
     ** What happened and what did you expect to happen?
     ** Add Screenshots/Screencasts if possible.
@@ -23,4 +23,4 @@ The following guidelines can be used to enhance your ticket with additional and 
 * License key of the installation.
 * __[Optional]__ Add a regression window. When did the bug first appear?
 
-The ticket can be send via email to __support [at] gentics [dot] com__ or created via our "ticket tracker system":https://support.gentics.com.
+The ticket can be send via email to __servicedesk [at] jira-gentics [dot] atlassian [dot] net__ or created via our "ticket tracker system":https://support.gentics.com.

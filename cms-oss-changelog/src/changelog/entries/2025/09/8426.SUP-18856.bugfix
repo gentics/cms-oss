@@ -1,0 +1,1 @@
+Editor UI: The Rich Text feature ignores text input changes, if there are no rich test elements added or removed, This has been fixed.

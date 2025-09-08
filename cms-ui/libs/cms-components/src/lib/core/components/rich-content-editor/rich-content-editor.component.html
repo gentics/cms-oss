@@ -50,6 +50,7 @@
         [attr.contenteditable]="!disabled"
         [innerHTML]="rawHtml"
         (keydown)="handleKeyDown($event)"
+        (keyup)="handleKeyUp($event)"
     ></div>
 </div>
 

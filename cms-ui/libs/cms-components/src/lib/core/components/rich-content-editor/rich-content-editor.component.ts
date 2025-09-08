@@ -138,7 +138,9 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
             str = removeNewLines(str);
         }
 
-        this.triggerChange(str);
+        if (str !== this.value) {
+            this.triggerChange(str);
+        }
         this.queuedUpdate = UpdateQueue.NONE;
     }
 
@@ -222,6 +224,10 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         if (event.key === 'Enter' && !event.ctrlKey) {
             cancelEvent(event);
         }
+    }
+
+    public handleKeyUp(event: KeyboardEvent): void {
+        this.handleContentChange();
     }
 
     public handleContentChange(): void {

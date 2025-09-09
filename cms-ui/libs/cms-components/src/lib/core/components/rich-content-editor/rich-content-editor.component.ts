@@ -226,10 +226,6 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         }
     }
 
-    public handleKeyUp(event: KeyboardEvent): void {
-        this.handleContentChange();
-    }
-
     public handleContentChange(): void {
         this.queuedUpdate = UpdateQueue.FROM_DOM;
     }

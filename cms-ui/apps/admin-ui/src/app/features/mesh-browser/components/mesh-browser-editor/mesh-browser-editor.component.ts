@@ -99,7 +99,7 @@ export class MeshBrowserEditorComponent  implements OnChanges {
         }
 
         this.loadRequest = this.mesh.nodes.get(this.project, this.node, {
-            lang: this.language,
+            lang: this.availableLanguages.join(','),
             branch: this.branch,
             // FIXME: Has to fixed in the Mesh JS Client; Ticket SUP-17656
             fields: [['uuid', 'fields', 'version', 'displayName', 'schema', 'breadcrumb'].join(',') as any],

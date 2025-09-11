@@ -4,6 +4,7 @@ import {
     loginWithForm,
     navigateToApp,
     pageOne,
+    pageOneDE,
     schedulePublisher,
     TestSize,
 } from '@gentics/e2e-utils';
@@ -93,7 +94,10 @@ test.describe('Mesh Browser', () => {
             await container.click();
         });
 
-        test('should be able to open detail view', async ({ page }) => {
+        test('should be able to open detail view in a current language', async ({ page }) => {
+            const langIndicatorContext = page.locator('.dropdown-language .selector .item-name');
+            await langIndicatorContext.waitFor();
+
             const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
 
             // Navigate into the first folder
@@ -101,13 +105,102 @@ test.describe('Mesh Browser', () => {
 
             // Find the published page and click it to open the editor
             const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
-            const element = contents.locator('.schema-content .schema-element');
+            const element = contents.locator('.schema-content .schema-element').first();
             await element.waitFor();
             await element.locator('.title').click();
 
             // Wait for the editor to open up
             const editor = page.locator('gtx-mesh-browser-editor');
             await editor.waitFor();
+
+            const langIndicatorPage = editor.locator('.language-indicator');
+            await langIndicatorPage.waitFor();
+            await expect(langIndicatorPage).toHaveText(await langIndicatorContext.textContent());
+        });
+
+        test('should be able to open detail view in an alternative language', async ({ page }) => {
+            const langIndicator = page.locator('.dropdown-language button');
+            await langIndicator.waitFor();
+            await langIndicator.click();
+            const langDropdown = page.locator('gtx-dropdown-content gtx-dropdown-item');
+            await expect(langDropdown).toHaveCount(2);
+            await langDropdown.nth(1).click();
+
+            const langIndicatorContext = page.locator('.dropdown-language .selector .item-name');
+            await langIndicatorContext.waitFor();
+
+            const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
+
+            // Navigate into the first folder
+            await folders.locator('.schema-content .schema-element .title').click();
+
+            // Find the published page and click it to open the editor
+            const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
+            const element = contents.locator('.schema-content .schema-element').first();
+            await element.waitFor();
+            await element.locator('.title').click();
+
+            // Wait for the editor to open up
+            const editor = page.locator('gtx-mesh-browser-editor');
+            await editor.waitFor();
+
+            const langIndicatorPage = editor.locator('.language-indicator');
+            await langIndicatorPage.waitFor();
+            await expect(langIndicatorPage).toHaveText(await langIndicatorContext.textContent());
+        });
+    });
+
+
+    test.describe('Mesh Browser multilingual (authenticated)', () => {
+
+        test.beforeEach(async ({ page }) => {
+            // Setup Data which should be published to mesh in order to be visible in the mesh-browser
+            await IMPORTER.setupTest(TestSize.MINIMAL);
+            await IMPORTER.client.page.publish(IMPORTER.get(pageOneDE).id, { alllang: true }).send();
+
+            // Import and execute the publisher to have the content be published
+            await IMPORTER.importData([
+                schedulePublisher,
+            ]);
+            await IMPORTER.executeSchedule(schedulePublisher);
+
+            // Click into the Mesh CR
+            const row = findTableRowByText(page, CR_NAME);
+            await row.waitFor();
+            await row.click();
+
+            // Fill in Mesh credentials and submit
+            await page.locator('.login-form input[type="text"]').fill(AUTH.mesh.username);
+            await page.locator('.login-form input[type="password"]').fill(AUTH.mesh.password);
+            await page.locator('.login-form button[type="submit"]').click();
+
+            // Now the schema list should appear
+            page.locator('.schema-list-wrapper').waitFor();
+            // await expect().toBeVisible();
+        });
+
+        test('should be able to open detail view in a different language', async ({ page }) => {
+            const langIndicatorContext = page.locator('.dropdown-language .selector .item-name');
+            await langIndicatorContext.waitFor();
+
+            const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
+
+            // Navigate into the first folder
+            await folders.locator('.schema-content .schema-element .title').click();
+
+            // Find the published page and click it to open the editor
+            const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
+            const element = contents.locator('.schema-content .schema-element').first();
+            await element.waitFor();
+            await element.locator('.title').click();
+
+            // Wait for the editor to open up
+            const editor = page.locator('gtx-mesh-browser-editor');
+            await editor.waitFor();
+
+            const langIndicatorPage = editor.locator('.language-indicator');
+            await langIndicatorPage.waitFor();
+            await expect(langIndicatorPage).not.toHaveText(await langIndicatorContext.textContent());
         });
     });
 });

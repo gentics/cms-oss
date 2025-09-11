@@ -324,6 +324,10 @@ export interface ImportData {
     [IMPORT_ID]: string;
 }
 
+export interface ImportTranslation {
+    translations?: string[]
+}
+
 export interface NodeImportData extends NodeCreateRequest, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_NODE;
     /** Language codes which will be assigned */
@@ -343,7 +347,7 @@ export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | '
 
 export interface PageImportData
     extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId' | 'language'>,
-    Partial<Pick<Page, 'tags' | 'language'>>, ImportData {
+    Partial<Pick<Page, 'tags' | 'language'>>, ImportData, ImportTranslation {
 
     [IMPORT_TYPE]: typeof ITEM_TYPE_PAGE,
 

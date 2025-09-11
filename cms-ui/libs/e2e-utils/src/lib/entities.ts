@@ -202,6 +202,7 @@ function createPage(
     folder: NodeImportData | FolderImportData,
     templateId: string,
     id: string,
+    language: string = LANGUAGE_EN,
 ): PageImportData {
     return {
         [IMPORT_TYPE]: ITEM_TYPE_PAGE,
@@ -214,7 +215,7 @@ function createPage(
         pageName: `Page Nr. ${id}`,
         fileName: `page-${id.toLowerCase()}`,
         description: `Example Page number ${id}`,
-        language: LANGUAGE_EN,
+        language: language,
         priority: 1,
     };
 }
@@ -224,6 +225,7 @@ export const folderB = createRootFolder(minimalNode, 'B');
 
 export const pageOne: PageImportData = {
     ...createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'One'),
+    translations: [LANGUAGE_DE],
     tags: {
         content: {
             id: null,
@@ -249,7 +251,33 @@ Feugiat ac integer viverra fermentum auctor ipsum tristique rutrum.`,
             },
         },
     },
-}
+};
+
+export const pageOneDE: PageImportData = {
+    ...createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'Eins', LANGUAGE_DE),
+    tags: {
+        content: {
+            id: null,
+            constructId: 7,
+            name: 'content',
+            active: true,
+            type: 'CONTENTTAG',
+            properties: {
+                text: {
+                    type: TagPropertyType.RICHTEXT,
+                    stringValue: `
+Integer iaculis consectetur nulla id pulvinar. Vestibulum dictum congue ligula, eget commodo eros vestibulum rutrum. 
+Sed finibus purus at tortor rutrum maximus. Praesent urna arcu, laoreet ac egestas lacinia, sodales vel turpis. 
+Donec orci mi, ultricies sit amet nisl vitae, efficitur malesuada nunc. Nunc et felis iaculis, fermentum quam in, vulputate risus. 
+<br>
+<br>
+Donec dictum enim eu velit sodales, non eleifend est venenatis. C
+ras condimentum, elit in facilisis sodales, risus urna consectetur justo, eget facilisis diam purus eu elit. `,
+                },
+            },
+        },
+    },
+};
 
 export const fileOne: FileImportData = {
     [IMPORT_TYPE]: ITEM_TYPE_FILE,
@@ -429,6 +457,7 @@ export const PACKAGE_MAP: Record<TestSize, ImportData[]> = {
         folderA,
         folderB,
         pageOne,
+        pageOneDE,
         fileOne,
         imageOne,
     ],

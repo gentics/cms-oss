@@ -89,6 +89,11 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
     }
 
     protected onValueChange(): void {
+        // DOM is already updated, no need to refresh it
+        if (this.queuedUpdate === UpdateQueue.FROM_DOM) {
+            return;
+        }
+
         if (this.focused) {
             this.queuedUpdate = UpdateQueue.FROM_VALUE;
             return;

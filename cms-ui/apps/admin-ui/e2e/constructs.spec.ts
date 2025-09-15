@@ -113,7 +113,7 @@ test.describe('Constructs Module', () => {
             await navigateToModule(page, 'constructs');
         });
 
-        test.only('should properly remove and assign the constructs to the node', async ({ page }) => {
+        test('should properly remove and assign the constructs to the node', async ({ page }) => {
             const row = findTableRowById(page, TEST_CONSTRUCT_ID)
             await findTableAction(row, 'assignConstructToNodes').click();
 
@@ -196,7 +196,7 @@ test.describe('Constructs Module', () => {
             await selectTab(page.locator('gtx-construct-module-master > gtx-tabs'), 'categories');
         });
 
-        test.only('should be possible to re-order the categories', {
+        test('should be possible to re-order the categories', {
             annotation: [{
                 type: 'ticket',
                 description: 'SUP-18765',

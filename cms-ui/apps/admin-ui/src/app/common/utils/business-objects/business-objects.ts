@@ -56,13 +56,13 @@ export function resetEntitySorting<T extends SortableBusinessObject>(rows: Table
 }
 
 export function sortEntityRow<T extends SortableBusinessObject>(rows: TableRow<T>[], from: number, to: number): TableRow<T>[] {
-    const copy = [...rows];
+    const copy = rows.slice();
     const removed = copy.splice(from, 1);
     copy.splice(to, 0, ...removed);
 
     return copy.map((row, idx) => {
         row.item[BO_NEW_SORT_ORDER] = idx;
-        row.hash = idx;
+        row.hash = `${idx}`;
         return row;
     });
 }

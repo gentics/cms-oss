@@ -5,6 +5,7 @@ import {
     FormGroupTabHandle,
     LanguageBO,
     NULL_FORM_TAB_HANDLE,
+    resetEntitySorting,
     sortEntityRow,
     TableLoadEndEvent,
     TableSortEvent,
@@ -162,6 +163,11 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             save: () => this.updateLanguages(),
             isDirty: () => this.isLanguagesChanged,
             isValid: () => true,
+            reset: () => {
+                this.languageRows = resetEntitySorting(this.languageRows);
+                this.isLanguagesChanged = false;
+                return Promise.resolve();
+            },
         };
 
         this.tabHandles[this.Tabs.PACKAGES] = NULL_FORM_TAB_HANDLE;

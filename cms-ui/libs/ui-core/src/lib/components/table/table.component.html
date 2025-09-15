@@ -124,8 +124,9 @@
             (click)="handleCellClick(row, column, $event)"
         >
             <ng-container
-                *ngIf="renderers[column.id]; else fallbackCellRenderer"
-                [ngTemplateOutlet]="renderers[column.id]"
+                [ngTemplateOutlet]="renderers[column.id]
+                    ?? renderers[FALLBACK_TABLE_COLUMN_RENDERER]
+                    ?? defaultCellRenderer"
                 [ngTemplateOutletContext]="{
                     row: row,
                     column: column,
@@ -133,21 +134,9 @@
                 }"
             ></ng-container>
 
-            <ng-template #fallbackCellRenderer>
-                <ng-container
-                    *ngIf="renderers[FALLBACK_TABLE_COLUMN_RENDERER]; else defaultCellRenderer"
-                    [ngTemplateOutlet]="renderers[FALLBACK_TABLE_COLUMN_RENDERER]"
-                    [ngTemplateOutletContext]="{
-                        row: row,
-                        column: column,
-                        value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
-                    }"
-                ></ng-container>
-            </ng-template>
-
-            <ng-template #defaultCellRenderer>
+            <ng-template #defaultCellRenderer let-value="value">
                 <div class="cell-content-wrapper">
-                    {{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}
+                    {{ value }}
                 </div>
             </ng-template>
         </div>

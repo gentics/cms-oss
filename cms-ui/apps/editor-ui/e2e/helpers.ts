@@ -13,8 +13,8 @@ export function findItem(list: Locator, id: string | number): Locator {
     return list.locator(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
 }
 
-export async function selectNode(page: Page, nodeId: number | string): Promise<void> {
-    const context = await openContext(page.locator('node-selector > gtx-dropdown-list'));
+export async function selectNode(element: Page | Locator, nodeId: number | string): Promise<void> {
+    const context = await openContext(element.locator('node-selector > gtx-dropdown-list'));
     await context.locator(`.node-selector-list [data-id="${nodeId}"], [data-global-id="${nodeId}"]`).click();
 }
 

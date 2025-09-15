@@ -456,13 +456,21 @@ export class EntityImporter {
         const {
             languages,
             templates,
-            ...req
+            ...reqData
         } = data;
+
+        const {masterId, ...req} = reqData.node;
 
         if (this.options?.logImports) {
             console.log(`Importing node ${data[IMPORT_ID]}`, req);
         }
-        const created = (await this.client.node.create(req).send()).node;
+        const created = (await this.client.node.create({
+            ...reqData,
+            node: {
+                ...req,
+                masterId: masterId ?  (this.entityMap[masterId] as Node).folderId : 0,
+            }
+        }).send()).node;
         if (this.options?.logImports) {
             console.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
         }
@@ -485,8 +493,11 @@ export class EntityImporter {
             // If no package is provided, it'll aggregate all of them and assign those
             packages = Array.from(new Set(Object.values(PACKAGE_IMPORTS).flatMap(v => v)));
         }
-        for (const pkg of packages) {
-            await this.client.devTools.assignToNode(pkg, created.id).send();
+
+        if (created.type !== 'channel') {
+            for (const pkg of packages) {
+                await this.client.devTools.assignToNode(pkg, created.id).send();
+            }
         }
 
         // We need the local template-ids for page references, so load all referenced templates via global id
@@ -996,6 +1007,10 @@ export class EntityImporter {
     }
 
     private async clearEmptyNodeForDeletion(node: Node): Promise<void> {
+        if (node.type === 'channel') {
+            return;
+        }
+
         const constructsRes = await this.client.node.listConstructs(node.id).send();
         const packagesRes = await this.client.devTools.listFromNodes(node.id).send();
         const objPropRes = await this.client.node.listObjectProperties(node.id).send();

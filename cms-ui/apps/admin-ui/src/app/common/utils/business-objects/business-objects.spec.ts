@@ -2,7 +2,7 @@ import { TableRow } from '@gentics/ui-core';
 import { BO_DISPLAY_NAME, BO_ID, BO_NEW_SORT_ORDER, BO_ORIGINAL_SORT_ORDER, BO_PERMISSIONS, SortableBusinessObject } from '../../models';
 import { sortEntityRow } from './business-objects';
 
-fdescribe('Business Objects', () => {
+describe('Business Objects', () => {
     let counter = 0;
     const makeTestRow: () => TableRow<SortableBusinessObject> = () => {
         const id = counter++;
@@ -34,15 +34,31 @@ fdescribe('Business Objects', () => {
             items[2].id,
             items[4].id,
         ]);
+
+        expect(sortEntityRow(items, 0, 2).map(row => row.id)).toEqual([
+            items[1].id,
+            items[2].id,
+            items[0].id,
+            items[3].id,
+            items[4].id,
+        ]);
     });
 
-    fit('should move from back to front correctly', () => {
+    it('should move from back to front correctly', () => {
         expect(sortEntityRow(items, 3, 1).map(row => row.id)).toEqual([
             items[0].id,
             items[3].id,
             items[1].id,
             items[2].id,
             items[4].id,
+        ]);
+
+        expect(sortEntityRow(items, 4, 0).map(row => row.id)).toEqual([
+            items[4].id,
+            items[0].id,
+            items[1].id,
+            items[2].id,
+            items[3].id,
         ]);
     });
 });

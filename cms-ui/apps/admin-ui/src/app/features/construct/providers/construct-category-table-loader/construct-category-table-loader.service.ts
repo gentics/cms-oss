@@ -41,7 +41,7 @@ export class ConstructCategoryTableLoaderService extends BaseTableLoaderService<
 
         return this.handler.list(null as never, loadOptions).pipe(
             map(response => {
-                const entities = response.items.map((category, index) => this.handler.mapToBusinessObject(category, sortingByOrder ? index : null));
+                const entities = response.items.map((category, index) => this.handler.mapToBusinessObject(category, index));
 
                 return {
                     entities,

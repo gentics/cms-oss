@@ -53,23 +53,13 @@ export class ConstructCategoryHandlerService
         category: EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY],
         index?: number,
     ): EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY] {
-        // This is a workaround for setting a proper sort order initially.
-        // Categories from existing setups have it all set to 0, which would screw
-        // up the sorting fields initially (until sorting is performed once).
-        let order = category.sortOrder;
-        if (index != null) {
-            if (order === 0 && index !== 0) {
-                order = index;
-            }
-        }
-
         return {
             ...category,
             [BO_ID]: String(category.id),
             [BO_PERMISSIONS]: [],
             [BO_DISPLAY_NAME]: this.displayName(category),
-            [BO_ORIGINAL_SORT_ORDER]: order,
-            [BO_NEW_SORT_ORDER]: order,
+            [BO_ORIGINAL_SORT_ORDER]: index,
+            [BO_NEW_SORT_ORDER]: index,
         };
     }
 

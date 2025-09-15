@@ -1,8 +1,9 @@
-import { BO_NEW_SORT_ORDER, ConstructCategoryBO, EditableEntity, createMoveActions } from '@admin-ui/common';
+import { BO_NEW_SORT_ORDER, BO_ORIGINAL_SORT_ORDER, ConstructCategoryBO, EditableEntity, createMoveActions } from '@admin-ui/common';
 import { I18nService, PermissionsService } from '@admin-ui/core';
 import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { AnyModelType, ConstructCategory, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
@@ -29,7 +30,10 @@ export class ConstructCategoryTableComponent extends BaseSortableEntityTableComp
         {
             id: 'sortorder',
             label: 'construct.categorySortorder',
-            fieldPath: BO_NEW_SORT_ORDER,
+            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+            mapper: (category: ConstructCategoryBO) => this.sorting
+                ? category[BO_NEW_SORT_ORDER] + 1
+                : (category.sortOrder ?? (category[BO_ORIGINAL_SORT_ORDER] + 1)),
             sortable: true,
             align: 'right',
         },
@@ -86,14 +90,20 @@ export class ConstructCategoryTableComponent extends BaseSortableEntityTableComp
     }
 
     public async openSortModal(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(ConstructCategorySortModal, {
-            closeOnEscape: false,
-            closeOnOverlayClick: false,
-        });
-        const didSort = await dialog.open();
+        try {
+            const dialog = await this.modalService.fromComponent(ConstructCategorySortModal, {
+                closeOnEscape: false,
+                closeOnOverlayClick: false,
+            });
+            const didSort = await dialog.open();
 
-        if (didSort) {
-            this.reload();
+            if (didSort) {
+                this.reload();
+            }
+        } catch (err) {
+            if (!wasClosedByUser(err)) {
+                throw err;
+            }
         }
     }
 }

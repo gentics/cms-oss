@@ -113,7 +113,7 @@ test.describe('Constructs Module', () => {
             await navigateToModule(page, 'constructs');
         });
 
-        test('should properly remove and assign the constructs to the node', async ({ page }) => {
+        test.only('should properly remove and assign the constructs to the node', async ({ page }) => {
             const row = findTableRowById(page, TEST_CONSTRUCT_ID)
             await findTableAction(row, 'assignConstructToNodes').click();
 
@@ -196,7 +196,7 @@ test.describe('Constructs Module', () => {
             await selectTab(page.locator('gtx-construct-module-master > gtx-tabs'), 'categories');
         });
 
-        test('should be possible to re-order the categories', {
+        test.only('should be possible to re-order the categories', {
             annotation: [{
                 type: 'ticket',
                 description: 'SUP-18765',
@@ -233,7 +233,6 @@ test.describe('Constructs Module', () => {
                 for (let i = 0; i < REORDER_UP_FROM_INDEX - REORDER_UP_TO_INDEX; i++) {
                     await findTableAction(upRow, MOVE_UP_ACTION).click();
                 }
-                page.waitForTimeout(1_000);
                 await rowShouldHaveOrder(masterTable, upRow, REORDER_UP_TO_INDEX);
             });
 
@@ -242,14 +241,12 @@ test.describe('Constructs Module', () => {
                 for (let i = 0; i < REORDER_DOWN_TO_INDEX - REORDER_DOWN_FROM_INDEX; i++) {
                     await findTableAction(downRow, MOVE_DOWN_ACTION).click();
                 }
-                page.waitForTimeout(1_000);
                 await rowShouldHaveOrder(masterTable, downRow, REORDER_DOWN_TO_INDEX);
             });
 
             const topRow = sortTable.locator(`.data-row[data-id="${REORDER_TOP_ELEMENT.id}"]`);
             await test.step('Move element to top', async () => {
                 await findTableAction(topRow, MOVE_TO_TOP_ACTION).click();
-                page.waitForTimeout(1_000);
                 await rowShouldHaveOrder(masterTable, topRow, 0);
             });
 

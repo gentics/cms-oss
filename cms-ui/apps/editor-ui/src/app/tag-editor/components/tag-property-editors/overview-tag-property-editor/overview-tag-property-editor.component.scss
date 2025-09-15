@@ -6,6 +6,13 @@
     min-height: 1px;
 }
 
+.overview-items {
+    .overview-item {
+        display: flex;
+        flex-direction: row;
+    }
+}
+
 .tag-part-editor {
     height: 100%;
     width: 100%;

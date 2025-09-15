@@ -1,18 +1,22 @@
-import { BO_ID, BO_NEW_SORT_ORDER, SortableBusinessObject, TableLoadOptions, TableSortEvent } from '@admin-ui/common';
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ChangesOf, TableActionClickEvent, TableRow, coerceToBoolean } from '@gentics/ui-core';
+import {
+    BO_ID, BO_NEW_SORT_ORDER,
+    MOVE_DOWN_ACTION,
+    MOVE_TO_BOTTOM_ACTION,
+    MOVE_TO_TOP_ACTION,
+    MOVE_UP_ACTION,
+    SortableBusinessObject,
+    TableLoadOptions,
+    TableSortEvent,
+} from '../../../common';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 
 type MoveFn = (idx: number, total: number) => number;
 
-export const MOVE_TO_TOP_ACTION = 'moveToTop';
-export const MOVE_UP_ACTION = 'moveUp';
-export const MOVE_DOWN_ACTION = 'moveDown';
-export const MOVE_TO_BOTTOM_ACTION = 'moveToBottom';
-
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
 export abstract class BaseSortableEntityTableComponent<T, O = T & SortableBusinessObject, A = never>
     extends BaseEntityTableComponent<T, O, A>

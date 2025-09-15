@@ -1955,7 +1955,7 @@ export interface ConstructCategoryListOptions extends BaseListOptionsWithPaging<
 /**
  * Request used for saving a `ConstructCategory`.
  */
-export type ConstructCategoryCreateRequest = Partial<ConstructCategory<Raw>>;
+export type ConstructCategoryCreateRequest = Omit<Partial<ConstructCategory<Raw>>, 'globalId' | 'name'>;
 
 export type ConstructCategoryUpdateRequest = ConstructCategoryCreateRequest;
 

@@ -16,6 +16,7 @@
 <div class="modal-footer">
     <gtx-button
         type="primary"
+        data-action="confirm"
         [disabled]="disabled"
         (click)="updateSorting()"
     >
@@ -25,6 +26,7 @@
     <gtx-button
         type="secondary"
         flat
+        data-action="cancel"
         (click)="closeFn(false)"
     >
         {{ 'common.cancel_button' | i18n }}

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import {
+    ConstructCategory,
     Feature,
     File,
     FileUploadOptions,
@@ -24,6 +25,9 @@ import { GCMSRestClient, GCMSRestClientConfig, GCMSRestClientRequestError, Reque
 import { APIRequestContext } from '@playwright/test';
 import {
     BinaryMap,
+    CONSTRUCT_CATEGORY_CORE,
+    CONSTRUCT_CATEGORY_TESTS,
+    ConstructCategoryImportData,
     CORE_CONSTRUCTS,
     EntityMap,
     FileImportData,
@@ -33,6 +37,7 @@ import {
     ImageImportData,
     IMPORT_ID,
     IMPORT_TYPE,
+    IMPORT_TYPE_CONSTRUCT_CATEGORY,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
     IMPORT_TYPE_SCHEDULE,
@@ -434,6 +439,7 @@ export class EntityImporter {
     public get(data: UserImportData): User | null;
     public get(data: ScheduleTaskImportData): ScheduleTask | null;
     public get(data: ScheduleImportData): Schedule | null;
+    public get(data: ConstructCategoryImportData): ConstructCategory | null;
     public get(id: string): any;
     /**
      * Gets the resolved/imported entity based on the Import-ID.
@@ -823,6 +829,18 @@ export class EntityImporter {
         }
     }
 
+    private async importConstructCategory(data: ConstructCategoryImportData): Promise<ConstructCategory | null> {
+        if (this.options?.logImports) {
+            console.log(`Importing construct-category task ${data[IMPORT_ID]}`, data);
+        }
+        const created = (await this.client.constructCategory.create(data).send()).constructCategory;
+        if (this.options?.logImports) {
+            console.log(`Imported construct-category task ${data[IMPORT_ID]} -> ${created.id}`);
+        }
+
+        return created;
+    }
+
     private async getLanguageMapping(): Promise<Record<string, number>> {
         const res = await this.client.language.list().send();
         const mapping: Record<string, number> = {};
@@ -881,6 +899,9 @@ export class EntityImporter {
             case IMPORT_TYPE_SCHEDULE:
                 return this.importSchedule(entity as ScheduleImportData);
 
+            case IMPORT_TYPE_CONSTRUCT_CATEGORY:
+                return this.importConstructCategory(entity as ConstructCategoryImportData);
+
             default:
                 return Promise.resolve(null);
         }
@@ -890,6 +911,7 @@ export class EntityImporter {
         await this.cleanupScheduleTasks();
         await this.cleanupSchedules();
         await this.cleanupContentRepositories();
+        await this.cleanupConstructCategories();
     }
 
     private async cleanupScheduleTasks(): Promise<void> {
@@ -914,6 +936,20 @@ export class EntityImporter {
         const crs = (await this.client.contentRepository.list().send()).items;
         for (const cr of crs) {
             await this.client.contentRepository.delete(cr.id).send();
+        }
+    }
+
+    private async cleanupConstructCategories(): Promise<void> {
+        const categories = (await this.client.constructCategory.list().send()).items;
+        for (const cat of categories) {
+            // Don't delete the essential categories
+            if (
+                cat.globalId === CONSTRUCT_CATEGORY_CORE
+                || cat.globalId === CONSTRUCT_CATEGORY_TESTS
+            ) {
+                continue;
+            }
+            await this.client.constructCategory.delete(cat.id).send();
         }
     }
 

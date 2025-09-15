@@ -13,6 +13,7 @@
         flat
         size="small"
         type="primary"
+        data-action="create"
         [disabled]="disabled"
         [gtxActionAllowed]="'constructCategory.createCategory'"
         (click)="handleCreateButton()"
@@ -25,6 +26,7 @@
         flat
         size="small"
         type="primary"
+        data-action="reorder"
         [disabled]="disabled"
         [gtxActionAllowed]="'constructCategory.updateCategoryInstance'"
         (click)="openSortModal()"
@@ -37,6 +39,7 @@
         flat
         size="small"
         type="primary"
+        data-action="reload"
         [disabled]="disabled || loading"
         (click)="reload()"
     >

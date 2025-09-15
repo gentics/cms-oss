@@ -1,18 +1,22 @@
-import { BO_ID, BO_NEW_SORT_ORDER, SortableBusinessObject, TableSortEvent } from '@admin-ui/common';
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ChangesOf, TableActionClickEvent, TableRow, coerceToBoolean } from '@gentics/ui-core';
+import {
+    BO_ID, BO_NEW_SORT_ORDER,
+    MOVE_DOWN_ACTION,
+    MOVE_TO_BOTTOM_ACTION,
+    MOVE_TO_TOP_ACTION,
+    MOVE_UP_ACTION,
+    SortableBusinessObject,
+    TableLoadOptions,
+    TableSortEvent,
+} from '../../../common';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 
 type MoveFn = (idx: number, total: number) => number;
 
-export const MOVE_TO_TOP_ACTION = 'moveToTop';
-export const MOVE_UP_ACTION = 'moveUp';
-export const MOVE_DOWN_ACTION = 'moveDown';
-export const MOVE_TO_BOTTOM_ACTION = 'moveToBottom';
-
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
 export abstract class BaseSortableEntityTableComponent<T, O = T & SortableBusinessObject, A = never>
     extends BaseEntityTableComponent<T, O, A>
@@ -34,6 +38,19 @@ export abstract class BaseSortableEntityTableComponent<T, O = T & SortableBusine
             this.sorting = coerceToBoolean(this.sorting);
             this.actionRebuildTrigger.next();
         }
+    }
+
+    protected override createTableLoadOptions(): TableLoadOptions {
+        const options = super.createTableLoadOptions();
+
+        // If we have sorting enabled, then we have to disable pagination,
+        // since sorting over various pages is just unintuitive in all cases.
+        if (this.sorting) {
+            options.page = 1;
+            options.perPage = -1;
+        }
+
+        return options;
     }
 
     protected findRowById(boId: string): TableRow<O> {

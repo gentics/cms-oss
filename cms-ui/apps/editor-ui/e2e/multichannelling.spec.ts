@@ -1,5 +1,5 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { Feature, Node, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
+import { Feature, Node, NodePageLanguageCode, NodeUrlMode, Variant } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     EntityImporter,
@@ -7,6 +7,7 @@ import {
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_NODE,
+    isVariant,
     ITEM_TYPE_PAGE,
     loginWithForm,
     navigateToApp,
@@ -25,8 +26,7 @@ import { findItem, findList, getAlohaIFrame, itemAction, selectNode, setupHelper
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Multichannelling', () => {
-    // Mark this suite as slow - Because it is
-    // test.slow();
+    test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
     const IMPORTER = new EntityImporter();
     const CHANNEL_IMPORT_DATA: NodeImportData = {

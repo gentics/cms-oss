@@ -1,8 +1,11 @@
 import {
     EntityImporter,
     findTableRowByText,
+    LANGUAGE_DE,
+    LANGUAGE_EN,
     loginWithForm,
     navigateToApp,
+    openContext,
     pageOne,
     pageOneDE,
     schedulePublisher,
@@ -175,32 +178,49 @@ test.describe('Mesh Browser', () => {
             await page.locator('.login-form button[type="submit"]').click();
 
             // Now the schema list should appear
-            page.locator('.schema-list-wrapper').waitFor();
+            await page.locator('.schema-list-wrapper').waitFor();
             // await expect().toBeVisible();
         });
 
-        test('should be able to open detail view in a different language', async ({ page }) => {
-            const langIndicatorContext = page.locator('.dropdown-language .selector .item-name');
-            await langIndicatorContext.waitFor();
+        test('should be able to open detail view in a different language', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-18877',
+            }],
+        }, async ({ page }) => {
+            const languageSelector = page.locator('.dropdown-language');
 
             const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
 
             // Navigate into the first folder
             await folders.locator('.schema-content .schema-element .title').click();
 
+            // Select german first
+            let languageSelectorContext = await openContext(languageSelector);
+            await languageSelectorContext.locator(`[data-id="${LANGUAGE_DE}"]`).click();
+
             // Find the published page and click it to open the editor
             const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
             const element = contents.locator('.schema-content .schema-element').first();
-            await element.waitFor();
             await element.locator('.title').click();
 
             // Wait for the editor to open up
             const editor = page.locator('gtx-mesh-browser-editor');
-            await editor.waitFor();
 
-            const langIndicatorPage = editor.locator('.language-indicator');
-            await langIndicatorPage.waitFor();
-            await expect(langIndicatorPage).not.toHaveText(await langIndicatorContext.textContent());
+            const langIndicatorPage = editor.locator('gtx-entity-detail-header .language-indicator');
+            await expect(langIndicatorPage).toHaveText(LANGUAGE_DE);
+
+            // Close the editor
+            await editor.locator('gtx-entity-detail-header .gtx-cancel-button button').click();
+
+            // Select english language
+            languageSelectorContext = await openContext(languageSelector);
+            await languageSelectorContext.locator(`[data-id="${LANGUAGE_EN}"]`).click();
+
+            // Open the page in english now
+            await element.locator('.title').click();
+            // Should be in correct language
+            await expect(langIndicatorPage).toHaveText(LANGUAGE_EN);
         });
     });
 });

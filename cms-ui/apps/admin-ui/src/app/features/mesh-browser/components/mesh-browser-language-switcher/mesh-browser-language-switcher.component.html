@@ -1,6 +1,6 @@
-<gtx-dropdown-list class="dropdown-language">
+<gtx-dropdown-list class="dropdown-language" data-context-id="select-language">
     <gtx-dropdown-trigger>
-        <button class="selector">
+        <button class="selector" data-context-trigger>
             <icon
                 *ngIf="availableLanguages?.length > 1"
                 class="collapse-icon"
@@ -9,9 +9,10 @@
         </button>
     </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content>
+    <gtx-dropdown-content data-context-id="select-language">
         <gtx-dropdown-item
             *ngFor="let language of availableLanguages"
+            [attr.data-id]="language"
             (click)="languageChangeHandler(language)"
         >
             {{ language }}

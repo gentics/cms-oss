@@ -89,6 +89,11 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
     }
 
     protected onValueChange(): void {
+        // DOM is already updated, no need to refresh it
+        if (this.queuedUpdate === UpdateQueue.FROM_DOM) {
+            return;
+        }
+
         if (this.focused) {
             this.queuedUpdate = UpdateQueue.FROM_VALUE;
             return;
@@ -138,7 +143,9 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
             str = removeNewLines(str);
         }
 
-        this.triggerChange(str);
+        if (str !== this.value) {
+            this.triggerChange(str);
+        }
         this.queuedUpdate = UpdateQueue.NONE;
     }
 

@@ -93,7 +93,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
                 project: this.project,
                 branch: this.branch,
                 node: element.uuid,
-                language: element.language,
+                language: element.availableLanguages[0],
             },
             this.contentRepository,
         );

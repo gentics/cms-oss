@@ -30,7 +30,7 @@ import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.util.Operator;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;

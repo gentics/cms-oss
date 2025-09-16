@@ -2302,7 +2302,7 @@ public class ModelBuilder {
 		OverviewPartType overviewPartType = (OverviewPartType) value.getPartType();
 		com.gentics.contentnode.object.Overview overview = overviewPartType.getOverview();
 
-		if (org.apache.commons.lang.StringUtils.isNotBlank(restOverview.getGlobalId())) {
+		if (org.apache.commons.lang3.StringUtils.isNotBlank(restOverview.getGlobalId())) {
 			overview.setGlobalId(new GlobalId(restOverview.getGlobalId()));
 		}
 

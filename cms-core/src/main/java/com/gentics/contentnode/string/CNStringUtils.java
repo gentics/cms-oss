@@ -179,7 +179,7 @@ public class CNStringUtils extends StringUtils {
 			String cdata = str.substring(off, end);
 
 			end += "]]>".length();
-			builder.append(org.apache.commons.lang.StringEscapeUtils.escapeXml(cdata));
+			builder.append(org.apache.commons.lang3.StringEscapeUtils.escapeXml(cdata));
 		}
 		builder.append(str.substring(end));
 		return builder.toString();

@@ -3402,7 +3402,7 @@ public class MeshPublisher implements AutoCloseable {
 				}
 				matches.addLast(String.format("<a href='%s' %s>%s</a>", 
 						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(url)), 
-						maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang.StringUtils.EMPTY), 
+						maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang3.StringUtils.EMPTY), 
 						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(displayText))
 					));
 			}

@@ -4,8 +4,9 @@
 
 <div class="modal-content">
     <gtx-message-properties
-        [users]="users$ | async"
-        [groups]="groups$ | async"
+        *ngIf="users && groups"
+        [users]="users"
+        [groups]="groups"
         [formControl]="form"
     />
 </div>

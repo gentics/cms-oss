@@ -1,0 +1,5 @@
+In cases where a scheduler execution finished (successful or with an error) during unavailability of the
+backend database the execution could not be marked as finished. This caused the scheduler to no start any
+more executions until the CMS was restartet.
+The behaviour has been improved so that the scheduler will no mark the execution as finished as soon as the
+backend database is available.

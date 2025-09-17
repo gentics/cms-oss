@@ -431,14 +431,14 @@ export const pageTwentyeight = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID,
 export const pageTwentynine = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentynine');
 export const pageThirty = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Thirty');
 
-export const pageA_B_One = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'One');
-export const pageA_B_Two = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Two');
-export const pageA_B_Three = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Three');
-export const pageA_B_Four = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Four');
-export const pageA_B_Five = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Five');
+export const pageA_B_One = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'One_A-B');
+export const pageA_B_Two = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Two_A-B');
+export const pageA_B_Three = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Three_A-B');
+export const pageA_B_Four = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Four_A-B');
+export const pageA_B_Five = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Five_A-B');
 
-export const pageA_B_E_One = createPage(fullNode, folderA_B_E, BASIC_TEMPLATE_ID, 'One');
-export const pageA_B_E_Two = createPage(fullNode, folderA_B_E, BASIC_TEMPLATE_ID, 'Two');
+export const pageA_B_E_One = createPage(fullNode, folderA_B_E, BASIC_TEMPLATE_ID, 'One_A-B-E');
+export const pageA_B_E_Two = createPage(fullNode, folderA_B_E, BASIC_TEMPLATE_ID, 'Two_A-B-E');
 
 /*
  * PACKAGES

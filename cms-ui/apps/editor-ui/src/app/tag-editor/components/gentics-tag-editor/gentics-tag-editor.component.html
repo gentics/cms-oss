@@ -22,17 +22,20 @@
             *ngIf="context?.withDelete"
             class="delete-button"
             type="alert"
+            data-action="delete"
             (click)="onDeleteClick()"
         >{{ 'common.delete_button' | i18n }}</gtx-button>
 
         <gtx-button
             class="cancel-button"
             type="secondary"
+            data-action="cancel"
             (click)="onCancelClick()"
         >{{ 'common.cancel_button' | i18n }}</gtx-button>
 
         <gtx-button
             class="ok-button"
+            data-action="confirm"
             [disabled]="!allPropertiesValid"
             (click)="onOkClick()"
         >{{ 'common.okay_button' | i18n }}</gtx-button>

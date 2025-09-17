@@ -1,6 +1,7 @@
 import { AlohaCoreComponentNames } from '@gentics/aloha-models';
 import {
     AccessControlledType,
+    ConstructCategoryCreateRequest,
     EditableFileProps,
     EditableFormProps,
     FolderCreateRequest,
@@ -65,6 +66,8 @@ export const IMPORT_TYPE_GROUP = 'group';
 export const IMPORT_TYPE_TASK = 'task';
 export const IMPORT_TYPE_SCHEDULE = 'schedule';
 
+export const IMPORT_TYPE_CONSTRUCT_CATEGORY = 'construct-category';
+
 export const ENV_CMS_IMPORTER_USERNAME = 'CMS_IMPORTER_USERNAME';
 export const ENV_CMS_IMPORTER_PASSWORD = 'CMS_IMPORTER_PASSWORD';
 
@@ -119,7 +122,8 @@ export type ImportType = ItemType
 | typeof IMPORT_TYPE_USER
 | typeof IMPORT_TYPE_GROUP
 | typeof IMPORT_TYPE_TASK
-| typeof IMPORT_TYPE_SCHEDULE;
+| typeof IMPORT_TYPE_SCHEDULE
+| typeof IMPORT_TYPE_CONSTRUCT_CATEGORY;
 
 /** Type to determine how to import/delete the entity */
 export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
@@ -155,6 +159,11 @@ export const CORE_CONSTRUCTS = [
 
 export const OBJECT_PROPERTY_PAGE_COLOR = '994d.ff379678-37b9-11ef-a38e-0242ac110002';
 export const OBJECT_PROPERTY_FOLDER_COLOR = 'a986.40be20e1-4318-11ef-bf28-0242ac110002';
+
+// "Gentics CMP Default" category
+export const CONSTRUCT_CATEGORY_CORE = '3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5';
+// "Integration Tests" category
+export const CONSTRUCT_CATEGORY_TESTS = '57a5.00407459-3223-11ef-862c-0242ac110002';
 
 // Internal tasks, which are defined by their internal commands
 export const TASK_CONVERT_IMAGES = 'convertimages';
@@ -328,12 +337,15 @@ export interface ImportTranslation {
     translations?: string[]
 }
 
-export interface NodeImportData extends NodeCreateRequest, ImportData {
+export interface NodeImportData extends Omit<NodeCreateRequest, 'node'>, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_NODE;
     /** Language codes which will be assigned */
     languages: string[];
     /** Templates which will be assigned */
     templates?: string[];
+    node: Omit<NodeCreateRequest['node'], 'masterId'> & {
+        masterId?: string;
+    }
 }
 
 export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | 'motherId'>, ImportData {
@@ -415,3 +427,10 @@ export interface ScheduleImportData extends Omit<ScheduleCreateReqeust, 'taskId'
     /** The task import-id or internal command to be executed */
     task: string;
 }
+
+export interface ConstructCategoryImportData
+    extends Omit<ConstructCategoryCreateRequest, 'nameI18n'>, Required<Pick<ConstructCategoryCreateRequest, 'nameI18n'>>, ImportData
+{
+    [IMPORT_TYPE]: typeof IMPORT_TYPE_CONSTRUCT_CATEGORY;
+}
+

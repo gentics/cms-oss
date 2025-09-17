@@ -823,7 +823,7 @@ public class Publisher implements Runnable {
 
 			renderResult.info(Publisher.class, "Finished publish. Total duration: {" + (System.currentTimeMillis() - startPublish) + " ms}");
 
-		} catch (NodeException e) {
+		} catch (Throwable e) {
 			// remember error for invoker and scheduler
 			myPublishInfo.setError(e);
 			myPublishInfo.setReturnCode(PublishInfo.RETURN_CODE_ERROR);
@@ -1000,7 +1000,9 @@ public class Publisher implements Runnable {
 			}
 
 		} finally {
-			t.commit();
+			if (t != null) {
+				t.commit();
+			}
 			timeManagementPhase.done();
 		}
 	}

@@ -100,7 +100,6 @@ export class MeshBrowserEditorComponent  implements OnChanges {
         }
 
         this.loadRequest = this.mesh.nodes.get(this.project, this.node, {
-            // Provide multiple languages, so the breadcrumb properly resolves
             lang: this.availableLanguages.join(','),
             branch: this.branch,
             // FIXME: Has to fixed in the Mesh JS Client; Ticket SUP-17656

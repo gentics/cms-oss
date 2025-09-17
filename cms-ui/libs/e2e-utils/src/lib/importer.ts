@@ -561,6 +561,7 @@ export class EntityImporter {
             nodeId,
             templateId,
             tags,
+            translations,
             ...req
         } = data;
 
@@ -593,7 +594,12 @@ export class EntityImporter {
         if (this.options?.logImports) {
             console.log(`Imported page ${data[IMPORT_ID]} -> ${created.id}`);
         }
-
+        const languages = translations || []
+        for (const language of languages) {
+            await this.client.page.translate(created.id, {
+                language: language,
+            }).send();
+        }
         return created;
     }
 

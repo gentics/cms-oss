@@ -333,13 +333,17 @@ export interface ImportData {
     [IMPORT_ID]: string;
 }
 
-export interface NodeImportData extends Omit<NodeCreateRequest, "node">, ImportData {
+export interface ImportTranslation {
+    translations?: string[]
+}
+
+export interface NodeImportData extends Omit<NodeCreateRequest, 'node'>, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_NODE;
     /** Language codes which will be assigned */
     languages: string[];
     /** Templates which will be assigned */
     templates?: string[];
-    node: Omit<NodeCreateRequest["node"], "masterId"> & {
+    node: Omit<NodeCreateRequest['node'], 'masterId'> & {
         masterId?: string;
     }
 }
@@ -355,7 +359,7 @@ export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | '
 
 export interface PageImportData
     extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId' | 'language'>,
-    Partial<Pick<Page, 'tags' | 'language'>>, ImportData {
+    Partial<Pick<Page, 'tags' | 'language'>>, ImportData, ImportTranslation {
 
     [IMPORT_TYPE]: typeof ITEM_TYPE_PAGE,
 

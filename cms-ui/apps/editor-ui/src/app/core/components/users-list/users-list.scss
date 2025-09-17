@@ -1,7 +1,7 @@
 @import "variables";
 
 .list-header {
-    padding-left: 10px;
+    padding: 10px 10px 10px 0;
     display: flex;
 
     > gtx-checkbox {
@@ -20,4 +20,8 @@
 
 .list-body {
     overflow: auto;
+
+    > gtx-contents-list-item {
+        padding-left: 0;
+    }
 }

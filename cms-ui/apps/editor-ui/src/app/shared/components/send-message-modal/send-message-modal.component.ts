@@ -1,49 +1,79 @@
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { SendMessageForm } from '@editor-ui/app/common/models';
 import { Group, SendMessageRequest, User } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseModal } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Api } from '../../../core/providers/api/api.service';
+import { Subscription } from 'rxjs';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-
 
 const DEFAULT_INSTANT_TIME_MINUTES = 2;
 
 @Component({
-    selector: 'send-message-modal',
+    selector: 'gtx-send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
     styleUrls: ['./send-message-modal.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SendMessageModal extends BaseModal<any> implements OnInit {
+export class SendMessageModal extends BaseModal<boolean> implements OnInit, OnDestroy {
 
-    users$: Observable<User[]>;
-    groups$: Observable<Group[]>;
+    public users: User[] | null = null;
+    public groups: Group[] | null = null;
 
-    form: UntypedFormControl;
+    public form: FormControl<SendMessageForm>;
+
+    private subscriptions: Subscription[] = [];
 
     constructor(
-        private api: Api,
+        private changeDetector: ChangeDetectorRef,
+        private client: GCMSRestClientService,
         private notification: I18nNotification,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.users$ = this.api.user.getUsers().pipe(
-            map(response => response.items),
-        );
-        this.groups$ = this.api.group.getGroupsTree().pipe(
-            map(response => response.groups),
-        );
-        this.form = new UntypedFormControl({});
+        this.subscriptions.push(this.client.user.list().subscribe({
+            next: res => {
+                this.users = res.items;
+                this.changeDetector.markForCheck();
+            },
+            error: error => {
+                this.notification.show({
+                    type: 'alert',
+                    message: 'Could not load Users',
+                });
+                // TODO: Close modal?
+            },
+        }));
+        this.subscriptions.push(this.client.group.tree().subscribe({
+            next: res => {
+                this.groups = res.groups;
+                this.changeDetector.markForCheck();
+            },
+            error: error => {
+                this.notification.show({
+                    type: 'alert',
+                    message: 'Could not load Groups',
+                });
+            },
+        }));
+
+        this.form = new FormControl<SendMessageForm>({
+            isInstant: false,
+            recipientIds: [],
+            message: [],
+        });
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     okayClicked(): void {
         const messageRequest = this.transformValuesForApi(this.form.value);
 
-        this.api.messages.sendMessage(messageRequest).subscribe(() => {
+        this.client.message.send(messageRequest).subscribe(() => {
             this.notification.show({
                 message: 'message.message_sent',
                 type: 'success',

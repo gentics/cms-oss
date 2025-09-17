@@ -14,6 +14,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.gentics.mesh</groupId>
+				<artifactId>mesh-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${mesh.version}</version>
+			</dependency>
 			<!-- Jersey dependencies-->
 			<dependency>
 				<groupId>org.glassfish.jersey</groupId>
@@ -311,6 +318,11 @@
 				<artifactId>commons-beanutils</artifactId>
 				<version>${commons.beanutils.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>${commons.lang.version}</version>
+			</dependency>
 
 			<!-- XML -->
 			<dependency>
@@ -415,6 +427,11 @@
 				<groupId>com.gentics</groupId>
 				<artifactId>generic-testutils</artifactId>
 				<version>${generic-testutils.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>commons-lang</groupId>
+				<artifactId>commons-lang</artifactId>
 				<scope>test</scope>
 			</dependency>
 			<dependency>

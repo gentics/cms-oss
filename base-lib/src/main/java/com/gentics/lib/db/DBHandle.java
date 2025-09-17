@@ -5,7 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.gentics.api.lib.datasource.DatasourceException;
 import com.gentics.api.lib.etc.ObjectTransformer;

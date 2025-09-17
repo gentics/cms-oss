@@ -58,7 +58,7 @@
 
 		<enunciate.version>2.15.1</enunciate.version>
 		<jjwt.version>0.11.0</jjwt.version>
-		<nimbus-jose-jwt.version>9.37.3</nimbus-jose-jwt.version>
+		<nimbus-jose-jwt.version>9.37.4</nimbus-jose-jwt.version>
 		<mockito.version>5.0.0</mockito.version>
 		<powermock.version>2.0.9</powermock.version>
 		<testcontainers.version>1.17.6</testcontainers.version>
@@ -75,6 +75,7 @@
 		<commons.fileupload.version>1.6.0</commons.fileupload.version>
 		<commons.beanutils.version>1.11.0</commons.beanutils.version>
 		<commons.codec.version>1.16.1</commons.codec.version>
+		<commons.lang.version>3.18.0</commons.lang.version>
 		<nekohtml.version>1.9.22</nekohtml.version>
 		<spring.version>6.2.3</spring.version>
 		<org.json.version>20240303</org.json.version>

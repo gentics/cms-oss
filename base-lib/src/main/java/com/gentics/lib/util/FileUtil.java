@@ -487,7 +487,7 @@ public class FileUtil {
 
 		String allowedCharactersRegEx = null;
 		if (!ObjectTransformer.isEmpty(preservedCharacters)) {
-			String preservedCharactersRegex = Pattern.quote(org.apache.commons.lang.StringUtils.join(preservedCharacters));
+			String preservedCharactersRegex = Pattern.quote(org.apache.commons.lang3.StringUtils.join(preservedCharacters));
 			allowedCharactersRegEx = allowedCharactersRegularExpression.replace("#insert#", preservedCharactersRegex);
 		} else {
 			allowedCharactersRegEx = allowedCharactersRegularExpression.replace("#insert#", "");
@@ -569,7 +569,7 @@ public class FileUtil {
 			for (int i = 0; i < extensionParts.length; i++) {
 				extensionParts[i] = extensionParts[i].replaceAll(allowedCharactersRegEx, replacementCharacter);
 			}
-			extensionToPreserve = org.apache.commons.lang.StringUtils.join(extensionParts, ".");
+			extensionToPreserve = org.apache.commons.lang3.StringUtils.join(extensionParts, ".");
 		} else {
 			if (!ObjectTransformer.isEmpty(extensionToPreserve)) {
 				extensionToPreserve = extensionToPreserve.replaceAll(allowedCharactersRegEx, replacementCharacter);
@@ -643,7 +643,7 @@ public class FileUtil {
 		// If we got something starting with application/x-tika-, do the same
 		// - this means Tika could not parse the file contents
 		if (DEFAULT_MIME_TYPE.equals(mimeType) 
-				|| (org.apache.commons.lang.StringUtils.isNotBlank(mimeType) 
+				|| (org.apache.commons.lang3.StringUtils.isNotBlank(mimeType) 
 						&& mimeType.startsWith("application/x-tika-"))) {
 			mimeType = FileUtil.getMimeTypeByExtension(fileName);
 		}

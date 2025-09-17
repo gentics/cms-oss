@@ -230,15 +230,6 @@
 			options = {constructId: args[0]};
 			break;
 		case 'object':
-			if (!isValidCreateTagOptions(args[0])) {
-				return {
-					error: 'createTag() requires exactly one of the ' +
-					       'following, mutually exclusive, settings to be' +
-					       'used: either `keyword\', `constructId\' or a ' +
-					       'combination of `sourcePageId\' and ' +
-					       '`sourceTagname\'.'
-				};
-			}
 			options = args[0];
 			break;
 		default:

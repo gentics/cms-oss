@@ -1,0 +1,1 @@
+Administrator UI: Mesh browser opens the editor for the multilingual item (page/image/file) inconsistently, so that its particular language variant could have never been reached. This has been fixed.

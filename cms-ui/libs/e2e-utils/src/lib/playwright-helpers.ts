@@ -114,7 +114,7 @@ export async function openContext(element: Locator): Promise<Locator> {
     return findContextContent(element.page(), id);
 }
 
-export async function pickSelectValue(select: Locator, values: string | string[]): Promise<void> {
+export async function pickSelectValue(select: Locator, values: string | number | (string | number)[]): Promise<void> {
     const dropdown = select.locator('gtx-dropdown-list');
 
     let multi = false;
@@ -174,4 +174,17 @@ export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Pr
             json: res,
         });
     });
+}
+
+export async function selectTab(source: Page | Locator, id: number | string): Promise<Locator> {
+    if (
+        typeof (source as Page).reload === 'function'
+        || await (source as Locator).evaluate((el: any) => typeof el !== 'object' || el.nodeName !== 'GTX-TABS')
+    ) {
+        source = source.locator('gtx-tabs');
+    }
+
+    await source.locator(`.tab-link[data-id="${id}"]`).click();
+
+    return source.locator(`gtx-tab[data-id="${id}"]`);
 }

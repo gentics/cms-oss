@@ -1,6 +1,14 @@
 import { MOVE_DOWN_ACTION, MOVE_TO_TOP_ACTION, MOVE_UP_ACTION } from '@admin-ui/common/models/tables';
-import { ConstructCategoryListResponse, ConstructCategorySortRequest, NodeMultiLinkRequest, NodePageLanguageCode, NodeUrlMode } from '@gentics/cms-models';
 import {
+    Construct,
+    ConstructCategoryListResponse,
+    ConstructCategorySortRequest,
+    NodeMultiLinkRequest,
+    NodePageLanguageCode,
+    NodeUrlMode,
+} from '@gentics/cms-models';
+import {
+    CONSTRUCT_TEST_SELECT_COLOR,
     ConstructCategoryImportData,
     EntityImporter,
     findTableAction,
@@ -84,6 +92,7 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Constructs Module', () => {
 
     const IMPORTER = new EntityImporter();
+    let testConstruct: Construct;
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
@@ -91,8 +100,6 @@ test.describe('Constructs Module', () => {
     });
 
     test.describe('Constructs', () => {
-        const TEST_CONSTRUCT_ID = '13';
-
         test.beforeEach(async ({ page, request, context }) => {
             await context.clearCookies();
             IMPORTER.setApiContext(request);
@@ -106,6 +113,8 @@ test.describe('Constructs Module', () => {
                 EXAMPLE_NODE_TWO,
             ], TestSize.NONE);
 
+            testConstruct = IMPORTER.get(CONSTRUCT_TEST_SELECT_COLOR);
+
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
 
@@ -114,7 +123,7 @@ test.describe('Constructs Module', () => {
         });
 
         test('should properly remove and assign the constructs to the node', async ({ page }) => {
-            const row = findTableRowById(page, TEST_CONSTRUCT_ID)
+            const row = findTableRowById(page, testConstruct.id)
             await findTableAction(row, 'assignConstructToNodes').click();
 
             // Wait for modal and find the node table

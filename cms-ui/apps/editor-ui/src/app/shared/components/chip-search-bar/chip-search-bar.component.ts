@@ -39,9 +39,9 @@ import { ListSearchService } from '@editor-ui/app/core/providers/list-search/lis
 import { PresentationService } from '@editor-ui/app/shared/providers/presentation/presentation.service';
 import {
     ApplicationStateService,
-    FocusEditorAction, FocusListAction,
+    FocusEditorAction,
+    FocusListAction,
     FolderActionsService,
-    PublishQueueActionsService,
 } from '@editor-ui/app/state';
 import { Node } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
@@ -161,7 +161,6 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
 
     constructor(
         private folderActions: FolderActionsService,
-        private publishQueueActions: PublishQueueActionsService,
         private state: ApplicationStateService,
         private formBuilder: UntypedFormBuilder,
         private changeDetectorRef: ChangeDetectorRef,
@@ -212,9 +211,6 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         ).subscribe(() => {
             this.updatePresentation();
         });
-
-        // request data
-        this.publishQueueActions.getUsersForRevision();
 
         this.initFormGroup();
     }

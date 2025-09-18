@@ -1,34 +1,54 @@
 <div class="modal-title">
-    <gtx-progress-bar [active]="loading$ | async"></gtx-progress-bar>
+    <gtx-progress-bar [active]="loading"></gtx-progress-bar>
     <h5>{{ 'modal.assign_page_title' | i18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <publish-queue-list [pages]="pages" [readOnly]="true"></publish-queue-list>
+    <publish-queue-list
+        [pages]="pages"
+        [readOnly]="true"
+    ></publish-queue-list>
 
-    <div class="row">
-        <div class="column">
-            <h6>{{ 'modal.assign_page_select_users_title' | i18n }}</h6>
-
-            <gtx-input [placeholder]="'modal.filter_users_label' | i18n" [formControl]="filterTerm"></gtx-input>
-
-            <users-list
-                [users]="users$ | async"
-                maxHeight="300px"
-                [selected]="selected"
-                (selectionChange)="selected = $event"
-            ></users-list>
-        </div>
-
-        <div class="column">
-            <h6>{{ 'modal.message_title' | i18n }}</h6>
-            <gtx-textarea [(ngModel)]="message"></gtx-textarea>
-        </div>
+    <gtx-textarea
+        class="message-control"
+        data-control="message"
+        [label]="'modal.message_title' | i18n"
+        [(ngModel)]="message"
+    ></gtx-textarea>
+    
+    <div class="user-list">
+        <gtx-input
+            class="filter-control"
+            data-control="filterTerm"
+            [label]="'modal.assign_page_select_users_title' | i18n"
+            [placeholder]="'modal.filter_users_label' | i18n"
+            [class.ng-invalid]="loadError"
+            [disabled]="!loadedUsers"
+            [ngModel]="filterTerm"
+            (ngModelChange)="updateFilterTerm($event)"
+        ></gtx-input>
+    
+        <users-list
+            *ngIf="loadedUsers"
+            [users]="filteredUsers"
+            maxHeight="300px"
+            [(selected)]="selected"
+        ></users-list>
     </div>
 
 </div>
 
 <div class="modal-footer">
-    <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button (click)="assign()" [disabled]="selected.length === 0">{{ 'modal.assign_for_revision_button' | i18n }}</gtx-button>
+    <gtx-button
+        flat
+        type="secondary"
+        data-action="cancel"
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        data-action="confirm"
+        [disabled]="selected.length === 0"
+        (click)="assign()"
+    >{{ 'modal.assign_for_revision_button' | i18n }}</gtx-button>
 </div>

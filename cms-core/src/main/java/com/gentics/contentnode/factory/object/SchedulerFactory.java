@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,6 +47,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.distributed.DistributionUtil;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
@@ -122,6 +124,12 @@ public class SchedulerFactory extends AbstractFactory {
 	 * Set of IDs of currently running schedules (only used on master).
 	 */
 	private final Set<Integer> runningSchedules = Collections.synchronizedSet(new HashSet<>());
+
+	/**
+	 * List containing instances of {@link Consumer} for executions which should be finished, but could not
+	 * (due to an error when creating a transaction, which is most likely caused by an unavailable database)
+	 */
+	private final List<Consumer<Transaction>> pendingFinishes = new ArrayList<>();
 
 	/**
 	 * Set of IDs of Schedules waiting to be executed.
@@ -543,6 +551,23 @@ public class SchedulerFactory extends AbstractFactory {
 			return;
 		}
 
+		// first check whether there are pending finishes
+		if (!pendingFinishes.isEmpty()) {
+			synchronized (pendingFinishes) {
+				for (Iterator<Consumer<Transaction>> i = pendingFinishes.iterator(); i.hasNext();) {
+					Consumer<Transaction> consumer = i.next();
+
+					try (Trx trx = new Trx()) {
+						consumer.accept(trx.getTransaction());
+						trx.success();
+						i.remove();
+					} catch (Throwable e) {
+						logger.warn("Pending execution finish could not be performed");
+					}
+				}
+			}
+		}
+
 		try (Trx trx = new Trx()) {
 			for (SchedulerSchedule schedule : getDueSchedules(forTesting)) {
 				executeNow(schedule);
@@ -673,6 +698,12 @@ public class SchedulerFactory extends AbstractFactory {
 				} catch (Throwable e) {
 					// Can't really do anything here.
 					logger.error(String.format("Could update execution for  schedule %d (%s): %s", scheduleId, schedule.getName(), e.getMessage()), e);
+
+					int finalResultStatus = resultStatus;
+					pendingFinishes.add(t -> {
+						finishExecution(schedule, executionId, startTimestamp, t.getUnixTimestamp(), output, execution, finalResultStatus);
+						logger.info(String.format("Finished schedule %d (%s)", scheduleId, schedule.getName()));
+					});
 				}
 			}
 

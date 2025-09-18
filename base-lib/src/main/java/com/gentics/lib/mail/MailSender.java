@@ -2,7 +2,7 @@ package com.gentics.lib.mail;
 
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.angus.mail.smtp.SMTPMessage;
 
 import com.gentics.api.lib.exception.NodeException;

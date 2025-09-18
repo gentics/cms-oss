@@ -1,0 +1,1 @@
+The default configuration for @aloha_settings.plugins.block.rootTags@ was changed to include @a@ tags. If this setting is overwritten in your setup and copy & paste of links does not work, add the @a@ tag to the list of allowed root tags.

@@ -66,6 +66,36 @@ describe('RichContentEditorComponent', () => {
         });
     });
 
+    it('should trigger changes for simple text correctly', () => {
+        const VALUE = 'Hello World!';
+
+        mount(RichContentEditorComponent, {
+            componentProperties: {
+                value: '',
+            },
+            autoSpyOutputs: true,
+            schemas: [NO_ERRORS_SCHEMA],
+            imports: [GenticsUICoreModule.forRoot()],
+        }).then(async mounted => {
+            mounted.fixture.detectChanges();
+            await mounted.fixture.whenRenderingDone();
+
+            cy.get('.content-wrapper .text-container')
+                .as('container')
+                .type(VALUE)
+                .blur();
+
+            cy.get('@valueChangeSpy')
+                .should('have.been.calledOnceWith', VALUE);
+
+            cy.get('.content-wrapper .text-container')
+                .then($container => {
+                    expect(normalizeWhitespaces($container.text())).to.equal('Hello World!');
+                    return $container;
+                });
+        });
+    });
+
     it('should be able to create a new link and emit a properly encoded valueChange', () => {
         const FINAL_VALUE = 'Hello World {{LINK|URL:https&col;//www.example.com|Example|_top}}';
 
@@ -308,5 +338,4 @@ describe('RichContentEditorComponent', () => {
                 .should('have.been.calledWith', 'Hello World Example');
         });
     });
-
 });

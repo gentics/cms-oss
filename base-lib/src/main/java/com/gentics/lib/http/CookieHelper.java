@@ -2,7 +2,7 @@ package com.gentics.lib.http;
 
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Utility class for secure Cookies. Used to work around Servlet 2.5 limitations concerning the "HttpOnly" cookie attribute

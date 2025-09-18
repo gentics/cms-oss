@@ -17,7 +17,7 @@ import javax.media.jai.PlanarImage;
 
 import org.apache.commons.imaging.ImageInfo;
 import org.apache.commons.imaging.Imaging;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jmage.filter.FilterException;
 
 import com.gentics.api.lib.etc.ObjectTransformer;

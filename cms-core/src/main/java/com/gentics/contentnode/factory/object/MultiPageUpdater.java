@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
 
-import org.apache.commons.lang.time.DurationFormatUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Level;
 
 import com.gentics.api.lib.exception.NodeException;

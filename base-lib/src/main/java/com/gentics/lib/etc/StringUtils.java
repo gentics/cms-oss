@@ -150,7 +150,7 @@ public class StringUtils {
 	 * @return
 	 */
 	public static String joinWithComma(List<?> list) {
-		return org.apache.commons.lang.StringUtils.join(list, ",");
+		return org.apache.commons.lang3.StringUtils.join(list, ",");
 	}
 
 	/**

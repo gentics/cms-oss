@@ -61,7 +61,8 @@
             "@gentics/image-editor": ["libs/image-editor/src/public-api"],
             "@gentics/ui-core": ["libs/ui-core/src/public-api"],
             "@gentics/ui-core/testing": ["libs/ui-core/src/lib/testing"],
-            "@gentics/ui-core/testing/*": ["libs/ui-core/src/lib/testing/*"]
+            "@gentics/ui-core/testing/*": ["libs/ui-core/src/lib/testing/*"],
+            "@gentics/ui-core/*": ["libs/ui-core/src/lib/*"]
         }
     },
     "exclude": ["node_modules", "tmp", "dist"]

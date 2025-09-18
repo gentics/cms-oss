@@ -18,6 +18,7 @@ export class TabComponent implements OnChanges {
     @Input()
     public icon: string;
 
+    @HostBinding('attr.data-id')
     @Input()
     public id: string;
 

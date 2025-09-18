@@ -33,6 +33,7 @@
         *ngIf="!displayReplyInput && message.sender !== 1"
         flat
         type="primary"
+        data-action="reply"
         (click)="displayReplyInput = true"
     >{{ 'common.reply_button' | i18n }}</gtx-button>
 
@@ -40,12 +41,14 @@
         *ngIf="displayReplyInput"
         flat
         type="primary"
+        data-action="confirm"
         (click)="sendMessage()"
     >{{ 'common.send_button' | i18n }}</gtx-button>
 
     <gtx-button
         flat
         type="secondary"
+        data-action="cancel"
         (click)="closeFn()"
     >{{ 'common.close_button' | i18n }}</gtx-button>
 </div>

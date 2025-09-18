@@ -21,11 +21,13 @@
     <div class="message-actions">
         <icon
             *ngIf="msg?.unread"
+            data-action="archive"
             [title]="'user.archive_message_title' | i18n"
             (click)="messageArchive.emit(msg)"
         >move_to_inbox</icon>
 
         <icon
+            data-action="delete"
             [title]="'user.delete_message_title' | i18n"
             [attr.data-msg-id]="msg.id"
             [class.confirm]="msg === waitsForDeleteConfirmation"

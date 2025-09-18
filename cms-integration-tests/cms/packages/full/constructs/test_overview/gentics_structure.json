@@ -1,0 +1,45 @@
+{
+  "globalId" : "a1f6.c849b53a-8413-11f0-b405-621fd600b3e6",
+  "keyword" : "test_overview",
+  "name" : {
+    "de" : "[Test] Overviewtag",
+    "en" : "[Test] Overviewtag"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : false,
+  "autoEnable" : false,
+  "externalEditorUrl" : "",
+  "parts" : [ {
+    "globalId" : "a1f6.ded2f95b-8413-11f0-b405-621fd600b3e6",
+    "name" : {
+      "de" : "Overview",
+      "en" : "Overview"
+    },
+    "keyword" : "overview",
+    "editable" : true,
+    "typeId" : 13,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

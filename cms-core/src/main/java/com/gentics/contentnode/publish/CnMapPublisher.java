@@ -28,7 +28,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.contentnode.publish.CnMapPublishException;
 import com.gentics.api.contentnode.publish.CnMapPublishHandler;

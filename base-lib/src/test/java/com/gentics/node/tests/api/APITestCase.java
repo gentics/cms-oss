@@ -27,7 +27,7 @@ import java.util.zip.ZipEntry;
 import com.gentics.contentnode.tests.category.BaseLibTest;
 import junit.framework.TestCase;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 import com.gentics.lib.datasource.simple.SimpleAttribute;
 import com.gentics.lib.datasource.simple.SimpleObject;

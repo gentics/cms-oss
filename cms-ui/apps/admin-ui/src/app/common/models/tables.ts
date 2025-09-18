@@ -1,6 +1,11 @@
 import { TableActionClickEvent, TableRow, TableSortOrder } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 
+export const MOVE_TO_TOP_ACTION = 'moveToTop';
+export const MOVE_UP_ACTION = 'moveUp';
+export const MOVE_DOWN_ACTION = 'moveDown';
+export const MOVE_TO_BOTTOM_ACTION = 'moveToBottom';
+
 export interface TableLoadOptions {
     /** The page to load */
     page: number;

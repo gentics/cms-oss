@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jcs.engine.control.CompositeCacheManager;
 

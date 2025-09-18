@@ -127,7 +127,7 @@ test.describe('List Loading', () => {
         await findItem(list, copyResData.pages[0].id).waitFor();
 
         // Verify that the pagination hasn't been reset and is still displaying all items
-        expect(list.locator('item-list-row')).toHaveCount(31, { timeout: 10_000 });
+        await expect(list.locator('item-list-row')).toHaveCount(31, { timeout: 10_000 });
     });
 
     test('should load the saved page-size on reload', {

@@ -238,7 +238,7 @@ public class StagingModelBuilder {
 	 */
 	public static com.gentics.contentnode.rest.model.Overview getOverview(Path ownerPath, String ownerId,
 			StagedOverview stagedOverview, Set<StagingError> mismatches, Operator onReferenceNotFound) throws NodeException {
-		if (stagedOverview == null || org.apache.commons.lang.StringUtils.isBlank(stagedOverview.getId())) {
+		if (stagedOverview == null || org.apache.commons.lang3.StringUtils.isBlank(stagedOverview.getId())) {
 			return null;
 		}
 
@@ -294,7 +294,7 @@ public class StagingModelBuilder {
 			for (StagedNodeIdObjectId entry : overviewEntries) {
 				Integer localId = t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound);
 				if (localId != null) {
-					if (org.apache.commons.lang.StringUtils.isNotBlank(entry.getNodeId())) {
+					if (org.apache.commons.lang3.StringUtils.isNotBlank(entry.getNodeId())) {
 						selectedObjects.add(new NodeIdObjectId(t.getLocalId(Node.class, entry.getNodeId()), localId));
 					} else {
 						selectedItemIds.add(localId);
@@ -1269,10 +1269,10 @@ public class StagingModelBuilder {
 	public static Form getForm(StagedForm restModel, Form form, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
-		if (!org.apache.commons.lang.StringUtils.isBlank(restModel.getName())) {
+		if (!org.apache.commons.lang3.StringUtils.isBlank(restModel.getName())) {
 			form.setName(restModel.getName());
 		}
-		if (!org.apache.commons.lang.StringUtils.isBlank(restModel.getDescription())) {
+		if (!org.apache.commons.lang3.StringUtils.isBlank(restModel.getDescription())) {
 			form.setDescription(restModel.getDescription());
 		}
 		if (restModel.getSuccessPageId() != null) {

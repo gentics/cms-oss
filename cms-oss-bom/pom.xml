@@ -321,7 +321,7 @@
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
-				<version>${commons.lang.version}</version>
+				<version>${commons.lang3.version}</version>
 			</dependency>
 
 			<!-- XML -->
@@ -429,10 +429,12 @@
 				<version>${generic-testutils.version}</version>
 				<scope>test</scope>
 			</dependency>
+			<!-- This is required by velocity 1.6.4 -->
 			<dependency>
 				<groupId>commons-lang</groupId>
 				<artifactId>commons-lang</artifactId>
-				<scope>test</scope>
+				<version>${commons.lang.version}</version>
+				<scope>runtime</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.mockito</groupId>

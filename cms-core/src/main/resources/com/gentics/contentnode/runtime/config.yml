@@ -58,6 +58,10 @@ aloha_settings:
         - "website"
     block:
       dragdrop: "true"
+      rootTags:
+        - div
+        - span
+        - a
     list: {}
   contentHandler:
     initEditable:

@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import {
     ConstructCategory,
+    ContentRepository,
+    ContentRepositoryType,
     Feature,
     File,
     FileUploadOptions,
@@ -22,6 +24,7 @@ import {
     User,
 } from '@gentics/cms-models';
 import { GCMSRestClient, GCMSRestClientConfig, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
+import { MeshRestClient } from '@gentics/mesh-rest-client';
 import { APIRequestContext } from '@playwright/test';
 import {
     BinaryMap,
@@ -40,10 +43,12 @@ import {
     IMPORT_TYPE_CONSTRUCT_CATEGORY,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
+    IMPORT_TYPE_PAGE_TRANSLATION,
     IMPORT_TYPE_SCHEDULE,
     IMPORT_TYPE_TASK,
     IMPORT_TYPE_USER,
     ImportData,
+    ImportType,
     ITEM_TYPE_FILE,
     ITEM_TYPE_FOLDER,
     ITEM_TYPE_FORM,
@@ -52,6 +57,7 @@ import {
     LoginInformation,
     NodeImportData,
     PageImportData,
+    PageTranslationImportData,
     ScheduleImportData,
     ScheduleTaskImportData,
     TestSize,
@@ -63,6 +69,8 @@ import {
     PACKAGE_MAP,
     schedulePublisher,
 } from './entities';
+import { MeshPlaywrightDriver } from './mesh-playwright-driver';
+import { createMeshProxy } from './mesh-proxy';
 import { GCMSPlaywrightDriver } from './playwright-driver';
 import { getDefaultSystemLogin, getItem } from './utils';
 
@@ -71,31 +79,18 @@ import { getDefaultSystemLogin, getItem } from './utils';
  */
 export interface ImporterOptions {
     /**
-     * If it sohuld log all requests from the `CypressDriver`.
-     * @see ClientOptions.log
-     */
-    logRequests?: boolean;
-    /**
      * If it should log out when a entity is getting imported and what the result of it is.
-     * Useful for debugging the test-data import, as usually error messages/stack traces
-     * are quite bad from cypress.
+     * Useful for debugging the test-data import.
      */
     logImports?: boolean;
 }
 
 export interface ClientOptions extends Partial<GCMSRestClientConfig> {
-    /**
-     * If it sohuld log all requests from the `CypressDriver`.
-     * Passes it along to `cy.request` -> `{ log: options.logRequests }`
-     * @see https://docs.cypress.io/api/commands/request#Arguments
-     */
-    log?: boolean;
     context: APIRequestContext;
     autoLogin?: LoginInformation;
 }
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
-    logRequests: false,
     logImports: false,
 }
 
@@ -105,8 +100,8 @@ const NODE_FEATURES = Object.values(NodeFeature);
 /**
  * This Importer imports entities defined in [`./entities.ts`](./entities.ts) into a running CMS
  * instance, by using a dedicated GCMS REST Client.
- * The client uses the [`cypress-driver`](./cypress-driver.ts), as requests are being sent from the
- * cypress `node` process in the background, rather than the page where the e2e tests are executed.
+ * The client uses the [`playwright-driver`](./playwright-driver.ts), as requests are being sent from the
+ * playwright `node` process in the background, rather than the page where the e2e tests are executed.
  *
  * All imported or resolved entities are stored in this entity importer and can be accessed for tests.
  *
@@ -171,6 +166,7 @@ export class EntityImporter {
             if (!entity) {
                 continue;
             }
+            // TODO: Save with compound ID (type + id) instead, to avoid potential id collission.
             this.entityMap[importData[IMPORT_ID]] = entity;
         }
 
@@ -242,22 +238,6 @@ export class EntityImporter {
                 console.log(`Waiting for the schedule "${schedule.name}" execution to finish`);
             }
             await new Promise(resolve => setTimeout(resolve, 1_000));
-        }
-    }
-
-    /**
-     * Delete all mesh projects for all contentrepositories
-     */
-    public async deleteMeshProjects(): Promise<void> {
-        await this.setupClient();
-
-        const crListResponse = await this.client.contentRepository.list().send();
-        for (const cr of crListResponse.items) {
-            await this.client.contentRepository.proxyLogin(cr.id).send();
-            const projectsList = await this.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${cr.id}/proxy/api/v2/projects`).send();
-            for (const project of projectsList.data) {
-                await this.client.executeMappedJsonRequest(RequestMethod.DELETE, `/contentrepositories/${cr.id}/proxy/api/v2/projects/${project.uuid}`).send();
-            }
         }
     }
 
@@ -335,12 +315,6 @@ export class EntityImporter {
 
             // If it's a global feature
             if (GLOBAL_FEATURES.includes(feature as any)) {
-                // Cypress.log({
-                //     type: 'parent',
-                //     name: `${enabled ? 'enable' : 'disable'} global feature`,
-                //     message: feature,
-                // });
-
                 try {
                     // Undocumented, internal, testing endpoint, to dynamically en-/disable features.
                     // Should not be used aside from e2e tests, as these might have weird side-effects.
@@ -368,12 +342,6 @@ export class EntityImporter {
             // If it's a node specific feature
             if (NODE_FEATURES.includes(feature as any)) {
                 for (const id of nodeIds) {
-                    // Cypress.log({
-                    //     type: 'parent',
-                    //     name: `${enabled ? 'enable' : 'disable'} feature`,
-                    //     message: `${feature} on ${id}`,
-                    // });
-
                     if (enabled) {
                         await this.client.node.activateFeature(id, feature as NodeFeature).send();
                     } else {
@@ -406,7 +374,6 @@ export class EntityImporter {
     public async setupClient(): Promise<void> {
         if (!this.client) {
             this.client = await createClient({
-                log: this.options?.logRequests,
                 context: this.apiContext,
                 autoLogin: getDefaultSystemLogin(),
             });
@@ -427,11 +394,20 @@ export class EntityImporter {
         for (const devtoolPkg of devtoolPackages) {
             await this.client.devTools.syncFromFileSystem(devtoolPkg).send();
         }
+
+        // Just for safety
+        if (!this.entityMap) {
+            return;
+        }
+        const constructs = (await this.client.construct.list().send()).items;
+        for (const con of constructs) {
+            this.entityMap[con.globalId] = con;
+        }
     }
 
     public get(data: NodeImportData): Node | null;
     public get(data: FolderImportData): Folder | null;
-    public get(data: PageImportData): Page | null;
+    public get(data: PageImportData | PageTranslationImportData): Page | null;
     public get(data: ImageImportData): Image | null;
     public get(data: FileImportData): File | null;
     public get(data: FormImportData): Form | null;
@@ -449,6 +425,83 @@ export class EntityImporter {
         return getItem(data as any, this.entityMap);
     }
 
+    private getDependency(type: typeof IMPORT_TYPE_NODE, id: string, optional?: boolean): Node;
+    private getDependency(type: typeof IMPORT_TYPE_NODE, id: string, optional: true): Node | null;
+    private getDependency(type: typeof ITEM_TYPE_FOLDER, id: string, optional?: boolean): Folder;
+    private getDependency(type: typeof ITEM_TYPE_FOLDER, id: string, optional: true): Folder | null;
+    private getDependency(type: typeof ITEM_TYPE_PAGE | typeof IMPORT_TYPE_PAGE_TRANSLATION, id: string, optional?: boolean): Page;
+    private getDependency(type: typeof ITEM_TYPE_PAGE | typeof IMPORT_TYPE_PAGE_TRANSLATION, id: string, optional: true): Page | null;
+    private getDependency(type: typeof ITEM_TYPE_IMAGE, id: string, optional?: boolean): Image;
+    private getDependency(type: typeof ITEM_TYPE_IMAGE, id: string, optional: true): Image | null;
+    private getDependency(type: typeof ITEM_TYPE_FILE, id: string, optional?: boolean): File;
+    private getDependency(type: typeof ITEM_TYPE_FILE, id: string, optional: true): File | null;
+    private getDependency(type: typeof ITEM_TYPE_FORM, id: string, optional?: boolean): Form;
+    private getDependency(type: typeof ITEM_TYPE_FORM, id: string, optional: true): Form | null;
+    private getDependency(type: typeof IMPORT_TYPE_GROUP, id: string, optional?: boolean): Group;
+    private getDependency(type: typeof IMPORT_TYPE_GROUP, id: string, optional: true): Group | null;
+    private getDependency(type: typeof IMPORT_TYPE_USER, id: string, optional?: boolean): User;
+    private getDependency(type: typeof IMPORT_TYPE_USER, id: string, optional: true): User | null;
+    private getDependency(type: typeof IMPORT_TYPE_TASK, id: string, optional?: boolean): ScheduleTask;
+    private getDependency(type: typeof IMPORT_TYPE_TASK, id: string, optional: true): ScheduleTask | null;
+    private getDependency(type: typeof IMPORT_TYPE_SCHEDULE, id: string, optional?: boolean): Schedule;
+    private getDependency(type: typeof IMPORT_TYPE_SCHEDULE, id: string, optional: true): Schedule | null;
+    private getDependency(type: typeof IMPORT_TYPE_CONSTRUCT_CATEGORY, id: string, optional?: boolean): ConstructCategory;
+    private getDependency(type: typeof IMPORT_TYPE_CONSTRUCT_CATEGORY, id: string, optional: true): ConstructCategory | null;
+    private getDependency(type: ImportType, id: string, optional: boolean = false): any {
+        const item = this.get({
+            [IMPORT_TYPE]: type,
+            [IMPORT_ID]: id,
+        } as any);
+
+        if (item == null && !optional) {
+            const msg = `Missing item depdency ${type}:${id}!`;
+            console.error(msg);
+            throw new Error(msg);
+        }
+
+        return item;
+    }
+
+    private getBinaryDependency(id: string, optiona?: boolean): globalThis.File;
+    private getBinaryDependency(id: string, optional: true): globalThis.File | null {
+        const bin = this.binaryMap[id];
+
+        if (bin) {
+            return bin;
+        }
+
+        const msg = `Missing binary dependency ${id}!`;
+        if (optional) {
+            console.warn(msg);
+            return null;
+        }
+
+        console.error(msg);
+        throw new Error(msg);
+    }
+
+    private getParentEntity(id: string, optional?: boolean): Node | Folder;
+    private getParentEntity(id: string, optional: true): Node | Folder | null {
+        const node = this.getDependency(IMPORT_TYPE_NODE, id, true);
+        if (node != null) {
+            return node;
+        }
+        return this.getDependency(ITEM_TYPE_FOLDER, id, optional);
+    }
+
+    private getParentId(parent: Node | Folder): number {
+        return (parent as Node)?.folderId ?? parent.id;
+    }
+
+    private getScheduleTaskDependency(id: string): ScheduleTask {
+        const internal = this.tasks[id];
+        if (internal) {
+            return internal;
+        }
+
+        return this.getDependency(IMPORT_TYPE_TASK, id);
+    }
+
     private async importNode(
         pkgName: TestSize | null,
         data: NodeImportData,
@@ -461,19 +514,19 @@ export class EntityImporter {
 
         const {masterId, ...req} = reqData.node;
 
-        if (this.options?.logImports) {
-            console.log(`Importing node ${data[IMPORT_ID]}`, req);
+        let actualMasterId = 0;
+        if (masterId) {
+            const master = this.getDependency(IMPORT_TYPE_NODE, masterId);
+            actualMasterId = master.folderId;
         }
+
         const created = (await this.client.node.create({
             ...reqData,
             node: {
                 ...req,
-                masterId: masterId ?  (this.entityMap[masterId] as Node).folderId : 0,
-            }
+                masterId: actualMasterId,
+            },
         }).send()).node;
-        if (this.options?.logImports) {
-            console.log(`Imported node ${data[IMPORT_ID]} -> ${created.id} (${created.folderId})`);
-        }
 
         // Assign all the languages it has defined in the import data
         for (const lang of languages) {
@@ -530,26 +583,18 @@ export class EntityImporter {
             ...req
         } = data;
 
-        const parentEntity = this.entityMap[motherId];
-        if (!parentEntity) {
-            return null;
-        }
-        const parentId = (parentEntity as Node).folderId ?? (parentEntity as (Node | Folder)).id;
+        const node = this.getDependency(IMPORT_TYPE_NODE, nodeId);
+        const parentEntity = this.getParentEntity(motherId);
+        const parentId = this.getParentId(parentEntity);
+
         const body: FolderCreateRequest = {
             ...req,
 
             motherId: parentId,
-            nodeId: (this.entityMap[nodeId] as Node).id,
+            nodeId: node.id,
         };
 
-        if (this.options?.logImports) {
-            console.log(`Importing folder ${data[IMPORT_ID]}`, body);
-        }
         const created = (await this.client.folder.create(body).send()).folder;
-        if (this.options?.logImports) {
-            console.log(`Imported folder ${data[IMPORT_ID]} -> ${created.id}`);
-        }
-
         return created;
     }
 
@@ -561,77 +606,58 @@ export class EntityImporter {
             nodeId,
             templateId,
             tags,
-            translations,
             ...req
         } = data;
 
-        const folderEntity = this.entityMap[folderId];
-        if (!folderEntity) {
-            return null;
-        }
+        const node = this.getDependency(IMPORT_TYPE_NODE, nodeId);
+        const parentEntity = this.getParentEntity(folderId);
+        const parentId = this.getParentId(parentEntity);
 
-        const parentId = (folderEntity as Node).folderId ?? (folderEntity as (Node | Folder)).id;
         const tplId = (this.entityMap[templateId] as Template).id;
         const body: PageCreateRequest = {
             ...req,
 
             folderId: parentId,
-            nodeId: (this.entityMap[nodeId] as Node).id,
+            nodeId: node.id,
             templateId: tplId,
         };
 
-        if (this.options?.logImports) {
-            console.log(`Importing page ${data[IMPORT_ID]}`, body);
-        }
-        const created = (await this.client.page.create(body).send()).page;
+        let created = (await this.client.page.create(body).send()).page;
+
         if (tags) {
             await this.client.page.update(created.id, {
                 page: {
                     tags,
                 },
             }).send();
+
+            // Reload the page data, as it has the tags in it now
+            created = (await this.client.page.get(created.id).send()).page;
         }
-        if (this.options?.logImports) {
-            console.log(`Imported page ${data[IMPORT_ID]} -> ${created.id}`);
-        }
-        const languages = translations || []
-        for (const language of languages) {
-            await this.client.page.translate(created.id, {
-                language: language,
-            }).send();
-        }
+
         return created;
     }
 
     private async importFile(
         data: FileImportData,
-    ): Promise<File | null> {
+    ): Promise<File | false | null> {
         const { folderId, nodeId, ...updateData } = data;
 
-        const bin = this.binaryMap[data[IMPORT_ID]];
+        const node = this.getDependency(IMPORT_TYPE_NODE, nodeId);
+        const bin = this.getBinaryDependency(data[IMPORT_ID], true);
+        const parentEntity = this.getParentEntity(folderId);
+        const parentId = this.getParentId(parentEntity);
 
         if (!bin) {
-            if (this.options?.logImports) {
-                console.log(`No binary for ${data[IMPORT_ID]} defined!`);
-            }
-            return;
+            return false;
         }
 
-        const parentEntity = this.entityMap[folderId];
-        const parentId = (parentEntity as Node).folderId ?? (parentEntity as (Node | Folder)).id;
         const body: FileUploadOptions = {
             folderId: parentId,
-            nodeId: (this.entityMap[nodeId] as Node).id,
+            nodeId: node.id,
         };
 
-        if (this.options?.logImports) {
-            console.log(`Importing file ${data[IMPORT_ID]}`, body);
-        }
         const created = (await this.client.file.upload(new Blob([bin]), body).send())?.file;
-        if (this.options?.logImports) {
-            console.log(`Imported file ${data[IMPORT_ID]} ->`, created);
-        }
-
         await this.client.file.update(created.id, { file: updateData }).send();
 
         return created;
@@ -639,33 +665,24 @@ export class EntityImporter {
 
     private async importImage(
         data: ImageImportData,
-    ): Promise<File | null> {
+    ): Promise<File | false | null> {
         const { folderId, nodeId, ...updateData } = data;
 
-        const bin = this.binaryMap[data[IMPORT_ID]];
+        const node = this.getDependency(IMPORT_TYPE_NODE, nodeId);
+        const bin = this.getBinaryDependency(data[IMPORT_ID], true);
+        const parentEntity = this.getParentEntity(folderId);
+        const parentId = this.getParentId(parentEntity);
 
         if (!bin) {
-            if (this.options?.logImports) {
-                console.log(`No binary for ${data[IMPORT_ID]} defined!`);
-            }
-            return;
+            return false;
         }
 
-        const parentEntity = this.entityMap[folderId];
-        const parentId = (parentEntity as Node).folderId ?? (parentEntity as (Node | Folder)).id;
         const body: FileUploadOptions = {
             folderId: parentId,
-            nodeId: (this.entityMap[nodeId] as Node).id,
+            nodeId: node.id,
         };
 
-        if (this.options?.logImports) {
-            console.log(`Importing image ${data[IMPORT_ID]}`, data);
-        }
         const created = (await this.client.file.upload(new Blob([bin]), body).send()).file;
-        if (this.options?.logImports) {
-            console.log(`Imported image ${data[IMPORT_ID]} -> ${created.id}`);
-        }
-
         await this.client.image.update(created.id, { image: updateData }).send();
 
         return created;
@@ -676,54 +693,43 @@ export class EntityImporter {
     ): Promise<Form | null> {
         const { nodeId, folderId, ...reqData } = data;
 
-        const parentEntity = this.entityMap[folderId];
-        const parentId = (parentEntity as Node).folderId ?? (parentEntity as (Node | Folder)).id;
+        const node = this.getDependency(IMPORT_TYPE_NODE, nodeId);
+        const parentEntity = this.getParentEntity(folderId);
+        const parentId = this.getParentId(parentEntity);
+
         const body: FormCreateRequest = {
             ...reqData,
 
             folderId: parentId,
-            nodeId: (this.entityMap[nodeId] as Node).id,
+            nodeId: node.id,
         };
 
-        if (this.options?.logImports) {
-            console.log(`Importing form ${data[IMPORT_ID]}`, data);
-        }
         const created = (await this.client.form.create(body).send()).item;
-        if (this.options?.logImports) {
-            console.log(`Imported form ${data[IMPORT_ID]} -> ${created.id}`);
-        }
-
         return created;
     }
 
     private async importGroup(
         data: GroupImportData,
     ): Promise<Group | null> {
-        const { parent, permissions, ...reqData } = data;
+        const { parentId, permissions, ...reqData } = data;
 
-        let parentId: number | null = null;
+        let parentGroup: Group | null = null;
 
-        if (parent != null) {
-            parentId = (this.entityMap[parent] as Group)?.id;
+        if (parentId != null) {
+            parentGroup = this.getDependency(IMPORT_TYPE_GROUP, parentId, true);
         }
 
-        if (parentId == null) {
-            parentId = (await this.client.group.list({
+        if (parentGroup == null) {
+            parentGroup = (await this.client.group.list({
                 pageSize: 1,
                 sort: [{ attribute: 'id', sortOrder: PagingSortOrder.Asc }],
-            }).send())?.items?.[0]?.id;
+            }).send())?.items?.[0];
         }
 
         let importedGroup: Group;
 
         try {
-            if (this.options?.logImports) {
-                console.log(`Importing group ${data[IMPORT_ID]}`, data);
-            }
-            importedGroup = (await this.client.group.create(parentId, reqData).send()).group;
-            if (this.options?.logImports) {
-                console.log(`Imported group ${data[IMPORT_ID]} -> ${importedGroup.id}`);
-            }
+            importedGroup = (await this.client.group.create(parentGroup.id, reqData).send()).group;
         } catch (err) {
             // If the group already exists, ignore it
             if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
@@ -731,7 +737,7 @@ export class EntityImporter {
             }
 
             if (this.options?.logImports) {
-                console.log(`Group ${data[IMPORT_ID]} already exists`);
+                console.log(`${data[IMPORT_TYPE]}:${data[IMPORT_ID]} already exists`);
             }
             const foundGroups = (await this.client.group.list({ q: reqData.name }).send()).items || [];
             importedGroup = foundGroups.find(group => group.name === reqData.name);
@@ -764,17 +770,12 @@ export class EntityImporter {
     private async importUser(
         data: UserImportData,
     ): Promise<User | null> {
-        const { group, ...reqData } = data;
+        const { groupId, ...reqData } = data;
+
+        const group = this.getDependency(IMPORT_TYPE_GROUP, groupId);
 
         try {
-            if (this.options?.logImports) {
-                console.log(`Importing user ${data[IMPORT_ID]}`, data);
-            }
-            const created = (await this.client.group.createUser((this.entityMap[group] as Group).id, reqData).send()).user;
-            if (this.options?.logImports) {
-                console.log(`Imported user ${data[IMPORT_ID]} -> ${created.id}`);
-            }
-
+            const created = (await this.client.group.createUser(group.id, reqData).send()).user;
             return created;
         } catch (err) {
             // If the user already exists, ignore it
@@ -783,7 +784,7 @@ export class EntityImporter {
             }
 
             if (this.options?.logImports) {
-                console.log(`User ${data[IMPORT_ID]} already exists`);
+                console.log(`${data[IMPORT_TYPE]}:${data[IMPORT_ID]} already exists`);
             }
             const foundUsers = (await this.client.user.list({ q: data.login }).send()).items || [];
             const found = foundUsers.find(user => user.login === data.login);
@@ -795,38 +796,22 @@ export class EntityImporter {
     private async importTask(
         data: ScheduleTaskImportData,
     ): Promise<ScheduleTask | null> {
-        const { ...reqData } = data;
-
-        if (this.options?.logImports) {
-            console.log(`Importing scheduler task ${data[IMPORT_ID]}`, data);
-        }
-        const created = (await this.client.schedulerTask.create(reqData).send()).item;
-        if (this.options?.logImports) {
-            console.log(`Imported scheduler task ${data[IMPORT_ID]} -> ${created.id}`);
-        }
-
+        const created = (await this.client.schedulerTask.create(data).send()).item;
         return created;
     }
 
     private async importSchedule(
         data: ScheduleImportData,
     ): Promise<Schedule | null> {
-        const { task, ...reqData } = data;
+        const { taskId, ...reqData } = data;
+
+        const task = this.getScheduleTaskDependency(taskId);
 
         try {
-            if (this.options?.logImports) {
-                console.log(`Importing schedule ${data[IMPORT_ID]}`, data);
-            }
-
-            const taskId = this.tasks[task]?.id;
             const created = (await this.client.scheduler.create({
                 ...reqData,
-                taskId,
+                taskId: task.id,
             }).send())?.item;
-
-            if (this.options?.logImports) {
-                console.log(`Imported schedule ${data[IMPORT_ID]} -> ${created.id}`);
-            }
 
             return created;
         } catch (err) {
@@ -836,7 +821,7 @@ export class EntityImporter {
             }
 
             if (this.options?.logImports) {
-                console.log(`Schedule ${data[IMPORT_ID]} already exists`);
+                console.log(`${data[IMPORT_TYPE]}:${data[IMPORT_ID]} already exists`);
             }
 
             const foundSchedules = (await this.client.scheduler.list().send()).items || [];
@@ -847,13 +832,27 @@ export class EntityImporter {
     }
 
     private async importConstructCategory(data: ConstructCategoryImportData): Promise<ConstructCategory | null> {
-        if (this.options?.logImports) {
-            console.log(`Importing construct-category task ${data[IMPORT_ID]}`, data);
-        }
         const created = (await this.client.constructCategory.create(data).send()).constructCategory;
-        if (this.options?.logImports) {
-            console.log(`Imported construct-category task ${data[IMPORT_ID]} -> ${created.id}`);
-        }
+        return created;
+    }
+
+    private async importPageTranslation(data: PageTranslationImportData): Promise<Page | null> {
+        const { pageId, language, ...req } = data;
+        const page = this.getDependency(ITEM_TYPE_PAGE, pageId);
+
+        let created = (await this.client.page.translate(page.id, {
+            language,
+        }).send()).page;
+
+        await this.client.page.update(created.id, {
+            page: {
+                language,
+                ...req,
+            },
+        }).send();
+
+        // Reload the page as it has the tags now
+        created = (await this.client.page.get(created.id).send()).page;
 
         return created;
     }
@@ -880,48 +879,84 @@ export class EntityImporter {
         return mapping;
     }
 
-    private importEntity(
+    private async importEntity(
         pkgName: TestSize,
         type: string,
         entity: ImportData,
     ): Promise<any> {
+        if (this.options?.logImports) {
+            console.log(`Importing ${entity[IMPORT_TYPE]}:${entity[IMPORT_ID]} ...`);
+        }
+
+        let imported: any;
+
         switch (type) {
             case IMPORT_TYPE_NODE:
-                return this.importNode(pkgName, entity as NodeImportData);
+                imported = await this.importNode(pkgName, entity as NodeImportData);
+                break;
 
             case ITEM_TYPE_FOLDER:
-                return this.importFolder(entity as FolderImportData);
+                imported = await this.importFolder(entity as FolderImportData);
+                break;
 
             case ITEM_TYPE_PAGE:
-                return this.importPage(entity as PageImportData);
+                imported = await this.importPage(entity as PageImportData);
+                break;
+
+            case IMPORT_TYPE_PAGE_TRANSLATION:
+                imported = await this.importPageTranslation(entity as PageTranslationImportData);
+                break;
 
             case ITEM_TYPE_FILE:
-                return this.importFile(entity as FileImportData);
+                imported = await this.importFile(entity as FileImportData);
+                break;
 
             case ITEM_TYPE_IMAGE:
-                return this.importImage(entity as ImageImportData);
+                imported = await this.importImage(entity as ImageImportData);
+                break;
 
             case ITEM_TYPE_FORM:
-                return this.importForm(entity as FormImportData);
+                imported = await this.importForm(entity as FormImportData);
+                break;
 
             case IMPORT_TYPE_GROUP:
-                return this.importGroup(entity as GroupImportData);
+                imported = await this.importGroup(entity as GroupImportData);
+                break;
 
             case IMPORT_TYPE_USER:
-                return this.importUser(entity as UserImportData);
+                imported = await this.importUser(entity as UserImportData);
+                break;
 
             case IMPORT_TYPE_TASK:
-                return this.importTask(entity as ScheduleTaskImportData);
+                imported = await this.importTask(entity as ScheduleTaskImportData);
+                break;
 
             case IMPORT_TYPE_SCHEDULE:
-                return this.importSchedule(entity as ScheduleImportData);
+                imported = await this.importSchedule(entity as ScheduleImportData);
+                break;
 
             case IMPORT_TYPE_CONSTRUCT_CATEGORY:
-                return this.importConstructCategory(entity as ConstructCategoryImportData);
+                imported = await this.importConstructCategory(entity as ConstructCategoryImportData);
+                break;
 
             default:
+                if (this.options?.logImports) {
+                    console.log(`Could not find a importer for import type ${entity[IMPORT_TYPE]}!`);
+                }
                 return Promise.resolve(null);
         }
+
+        if (this.options?.logImports) {
+            if (imported != null && typeof imported === 'object') {
+                console.log(`Imported ${entity[IMPORT_TYPE]}:${entity[IMPORT_ID]} -> ${imported.id}`);
+            } else if (imported === false) {
+                console.log(`Skipped import of ${entity[IMPORT_TYPE]}:${entity[IMPORT_ID]}`);
+            } else {
+                console.log(`Imported ${entity[IMPORT_TYPE]}:${entity[IMPORT_ID]}`);
+            }
+        }
+
+        return imported;
     }
 
     private async cleanupEntities(): Promise<void> {
@@ -952,7 +987,40 @@ export class EntityImporter {
     private async cleanupContentRepositories(): Promise<void> {
         const crs = (await this.client.contentRepository.list().send()).items;
         for (const cr of crs) {
+            await this.cleanupMeshData(cr);
             await this.client.contentRepository.delete(cr.id).send();
+        }
+    }
+
+    public async createMeshClient(cr: ContentRepository): Promise<MeshRestClient> {
+        const login = await this.client.contentRepository.proxyLogin(cr.id).send();
+
+        const mesh: MeshRestClient = createMeshProxy(this.client, cr.id);
+        mesh.driver = new MeshPlaywrightDriver(this.apiContext);
+        mesh.apiKey = login.token;
+
+        return mesh;
+    }
+
+    private async cleanupMeshData(cr: ContentRepository): Promise<void> {
+        if (cr.crType !== ContentRepositoryType.MESH) {
+            return;
+        }
+        const mesh = await this.createMeshClient(cr);
+
+        const projects = (await mesh.projects.list().send()).data;
+        for (const project of projects) {
+            await mesh.projects.delete(project.uuid).send();
+        }
+
+        const micros = (await mesh.microschemas.list().send()).data;
+        for (const micro of micros) {
+            await mesh.microschemas.delete(micro.uuid).send();
+        }
+
+        const schemas = (await mesh.schemas.list().send()).data;
+        for (const schema of schemas) {
+            await mesh.schemas.delete(schema.uuid).send();
         }
     }
 
@@ -988,6 +1056,7 @@ export class EntityImporter {
             if (!entity) {
                 continue;
             }
+            // TODO: Save with compound ID (type + id) instead, to avoid potential id collission.
             this.entityMap[importData[IMPORT_ID]] = entity;
         }
 
@@ -1068,3 +1137,4 @@ export async function createClient(options: ClientOptions): Promise<GCMSRestClie
         return client;
     }
 }
+

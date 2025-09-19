@@ -43,7 +43,6 @@ test.describe('Page Translation', () => {
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await page.locator('node-selector').waitFor();
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
     });
 

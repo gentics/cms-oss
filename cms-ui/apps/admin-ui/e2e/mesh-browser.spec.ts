@@ -1,11 +1,20 @@
+import { ContentRepository } from '@gentics/cms-models';
 import {
+    BASIC_TEMPLATE_ID,
+    CONTENT_REPOSITORY_MESH,
     EntityImporter,
-    findTableRowByText,
+    findTableRowById,
+    folderA,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    ITEM_TYPE_PAGE,
     LANGUAGE_DE,
     LANGUAGE_EN,
     loginWithForm,
+    minimalNode,
     navigateToApp,
     openContext,
+    PageImportData,
     pageOne,
     pageOneDE,
     schedulePublisher,
@@ -17,30 +26,37 @@ import { navigateToModule } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Mesh Browser', () => {
-    const IMPORTER = new EntityImporter();
-    const CR_NAME = 'Mesh CR';
 
-    test.beforeAll(async ({ request }) => {
+    const IMPORTER = new EntityImporter();
+    let testCr: ContentRepository;
+
+    test.beforeAll('Test bootstrapping', async ({ request }) => {
         IMPORTER.setApiContext(request);
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }) => {
+    test.beforeEach('General Test setup', async ({ request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
         await IMPORTER.clearClient();
 
         await IMPORTER.cleanupTest();
         await IMPORTER.syncPackages(TestSize.MINIMAL);
-
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-
-        // Navigate to constructs module
-        await navigateToModule(page, 'mesh-browser');
+        await IMPORTER.setupTest(TestSize.MINIMAL);
+        testCr = IMPORTER.get(CONTENT_REPOSITORY_MESH);
+        // Make sure that mesh is properly setup
+        await IMPORTER.client.contentRepository.repairStructure(testCr.id).send();
     });
 
     test.describe('Mesh Browser', () => {
+        test.beforeEach(async ({ page }) => {
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+
+            // Navigate to constructs module
+            await navigateToModule(page, 'mesh-browser');
+        });
+
         test('should have content repositories listed', async ({ page }) => {
             const rows = page.locator('gtx-table .grid-row.data-row');
             await rows.waitFor();
@@ -48,7 +64,7 @@ test.describe('Mesh Browser', () => {
         });
 
         test('should show login gate on click', async ({ page }) => {
-            const row = findTableRowByText(page, CR_NAME);
+            const row = findTableRowById(page, testCr.id);
             await row.waitFor();
             await row.click();
             await expect(page.locator('.login-gate-wrapper')).toBeVisible();
@@ -56,20 +72,40 @@ test.describe('Mesh Browser', () => {
     });
 
     test.describe('Mesh Browser (authenticated)', () => {
+        test.slow();
+
+        // Simple "empty" page in german, as we need to publish this page
+        // in order for mesh to create an additional language.
+        const PAGE_GERMAN: PageImportData = {
+            [IMPORT_TYPE]: ITEM_TYPE_PAGE,
+            [IMPORT_ID]: 'germanMeshPage1',
+            folderId: folderA[IMPORT_ID],
+            nodeId: minimalNode[IMPORT_ID],
+            pageName: 'xSomethingGerman',
+            templateId: BASIC_TEMPLATE_ID,
+            language: LANGUAGE_DE,
+        };
 
         test.beforeEach(async ({ page }) => {
-            // Setup Data which should be published to mesh in order to be visible in the mesh-browser
-            await IMPORTER.setupTest(TestSize.MINIMAL);
-            await IMPORTER.client.page.publish(IMPORTER.get(pageOne).id, { alllang: true }).send();
-
-            // Import and execute the publisher to have the content be published
+            // Import publisher and our datq
             await IMPORTER.importData([
                 schedulePublisher,
+                PAGE_GERMAN,
             ]);
+
+            // Publish the pages
+            await IMPORTER.client.page.publish(IMPORTER.get(pageOne).id, { alllang: true }).send();
+            await IMPORTER.client.page.publish(IMPORTER.get(PAGE_GERMAN).id, { alllang: true }).send();
             await IMPORTER.executeSchedule(schedulePublisher);
 
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+
+            // Navigate to constructs module
+            await navigateToModule(page, 'mesh-browser');
+
             // Click into the Mesh CR
-            const row = findTableRowByText(page, CR_NAME);
+            const row = findTableRowById(page, testCr.id);
             await row.waitFor();
             await row.click();
 
@@ -97,30 +133,7 @@ test.describe('Mesh Browser', () => {
             await container.click();
         });
 
-        test('should be able to open detail view in a current language', async ({ page }) => {
-            // Select the language
-            const languageSelector = page.locator('.dropdown-language');
-            const languageSelectorContext = await openContext(languageSelector);
-            await languageSelectorContext.locator(`[data-id="${LANGUAGE_DE}"]`).click();
-
-            const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
-
-            // Navigate into the first folder
-            await folders.locator('.schema-content .schema-element .title').click();
-
-            // Find the published page and click it to open the editor
-            const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
-            const element = contents.locator('.schema-content .schema-element').first();
-            await element.locator('.title').click();
-
-            // Wait for the editor to open up
-            const editor = page.locator('gtx-mesh-browser-editor');
-
-            const langIndicatorPage = editor.locator('.language-indicator');
-            await expect(langIndicatorPage).toHaveText(LANGUAGE_DE);
-        });
-
-        test('should be able to open detail view in an alternative language', async ({ page }) => {
+        test('should be able to open detail view in the current language', async ({ page }) => {
             // Select the language
             const languageSelector = page.locator('.dropdown-language');
             const languageSelectorContext = await openContext(languageSelector);
@@ -133,7 +146,34 @@ test.describe('Mesh Browser', () => {
 
             // Find the published page and click it to open the editor
             const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
-            const element = contents.locator('.schema-content .schema-element').first();
+            const element = contents.locator('.schema-content .schema-element').filter({
+                hasText: IMPORTER.get(pageOne).name,
+            });
+            await element.locator('.title').click();
+
+            // Wait for the editor to open up
+            const editor = page.locator('gtx-mesh-browser-editor');
+
+            const langIndicatorPage = editor.locator('.language-indicator');
+            await expect(langIndicatorPage).toHaveText(LANGUAGE_EN);
+        });
+
+        test('should be able to open detail view in an alternative language', async ({ page }) => {
+            // Select the language
+            const languageSelector = page.locator('.dropdown-language');
+            const languageSelectorContext = await openContext(languageSelector);
+            await languageSelectorContext.locator(`[data-id="${LANGUAGE_DE}"]`).click();
+
+            const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
+
+            // Navigate into the first folder
+            await folders.locator('.schema-content .schema-element .title').click();
+
+            // Find the published page and click it to open the editor
+            const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
+            const element = contents.locator('.schema-content .schema-element').filter({
+                hasText: IMPORTER.get(pageOne).name,
+            });
             await element.locator('.title').click();
 
             // Wait for the editor to open up
@@ -146,20 +186,27 @@ test.describe('Mesh Browser', () => {
 
 
     test.describe('Mesh Browser multilingual (authenticated)', () => {
+        test.slow();
 
-        test.beforeEach(async ({ page }) => {
+        test.beforeEach('Multilingual setup', async ({ page }) => {
             // Setup Data which should be published to mesh in order to be visible in the mesh-browser
-            await IMPORTER.setupTest(TestSize.MINIMAL);
-            await IMPORTER.client.page.publish(IMPORTER.get(pageOneDE).id, { alllang: true }).send();
+            await IMPORTER.importData([
+                pageOneDE,
+                schedulePublisher,
+            ], TestSize.MINIMAL);
+            await IMPORTER.client.page.publish(IMPORTER.get(pageOne).id, { alllang: true }).send();
 
             // Import and execute the publisher to have the content be published
-            await IMPORTER.importData([
-                schedulePublisher,
-            ]);
             await IMPORTER.executeSchedule(schedulePublisher);
 
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+
+            // Navigate to constructs module
+            await navigateToModule(page, 'mesh-browser');
+
             // Click into the Mesh CR
-            const row = findTableRowByText(page, CR_NAME);
+            const row = findTableRowById(page, testCr.id);
             await row.waitFor();
             await row.click();
 

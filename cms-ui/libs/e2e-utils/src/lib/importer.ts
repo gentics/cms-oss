@@ -636,6 +636,7 @@ export class EntityImporter {
                 page: {
                     tags,
                 },
+                unlock: true,
             }).send();
 
             // Reload the page data, as it has the tags in it now
@@ -777,13 +778,13 @@ export class EntityImporter {
     private async importUser(
         data: UserImportData,
     ): Promise<User | null> {
-        const { groupId, ...reqData } = data;
+        const { groupId, extraGroups, ...reqData } = data;
 
         const group = this.getDependency(IMPORT_TYPE_GROUP, groupId);
+        let user: User;
 
         try {
-            const created = (await this.client.group.createUser(group.id, reqData).send()).user;
-            return created;
+            user = (await this.client.group.createUser(group.id, reqData).send()).user;
         } catch (err) {
             // If the user already exists, ignore it
             if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
@@ -794,10 +795,17 @@ export class EntityImporter {
                 console.log(`${data[IMPORT_TYPE]}:${data[IMPORT_ID]} already exists`);
             }
             const foundUsers = (await this.client.user.list({ q: data.login }).send()).items || [];
-            const found = foundUsers.find(user => user.login === data.login);
-
-            return found;
+            user = foundUsers.find(user => user.login === data.login);
         }
+
+        if (extraGroups) {
+            for (const extraGroupId of extraGroups) {
+                const extraGroup = this.getDependency(IMPORT_TYPE_GROUP, extraGroupId);
+                await this.client.user.assignToGroup(user.id, extraGroup.id).send();
+            }
+        }
+
+        return user;
     }
 
     private async importTask(

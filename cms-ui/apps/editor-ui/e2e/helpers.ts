@@ -418,3 +418,9 @@ export async function expectItemPublished(item: Locator): Promise<void> {
     // TODO it would be better not to test on the icon
     await expect(item.locator('icon.main-icon')).toHaveText('cloud_upload');
 }
+
+export async function openToolOrAction(page: Page, id: string): Promise<void> {
+    const context = await openContext(page.locator('gtx-top-bar gtx-actions-selector gtx-dropdown-list'));
+    const btn = context.locator(`.action-button[data-tool-id="${id}"], .action-button[data-action-id="${id}"]`);
+    await btn.click();
+}

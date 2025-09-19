@@ -330,12 +330,14 @@ export interface ImportBinary {
     type: string;
 }
 
+export type ImportSinglePermission = Pick<PermissionInfo, 'type' | 'value'>;
+
 export interface ImportPermissions {
     type: AccessControlledType;
     instanceId?: string;
     subGroups?: boolean;
     subObjects?: boolean;
-    perms: Pick<PermissionInfo, 'type' | 'value'>[];
+    perms: ImportSinglePermission[];
 }
 
 export interface ImportData {
@@ -431,6 +433,8 @@ export interface UserImportData extends GroupUserCreateRequest, ImportData {
 
     /** The groups `IMPORT_ID` value */
     groupId: string;
+
+    extraGroups?: string[];
 }
 
 export interface ScheduleTaskImportData extends ScheduleTaskCreateRequest, ImportData {

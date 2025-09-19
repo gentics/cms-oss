@@ -1,6 +1,15 @@
 import { ColorThemes } from './colors';
 
 export interface INotificationOptions {
+    /**
+     * ID for this notification.
+     * Mainly used for e2e tests.
+     */
+    /*
+     * TODO: Turn into feature to only allow one notif/toast with the same ID?
+     * Would close the old notif to only display one?
+     */
+    id?: string;
     message: string;
     type?: ColorThemes | 'default';
     /**

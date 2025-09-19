@@ -32,18 +32,21 @@
     <gtx-button
         flat
         type="secondary"
+        data-action="cancel"
         (click)="cancelFn()"
     >{{ 'common.cancel_button' | i18n }}</gtx-button>
 
     <gtx-button
-        (click)="assign()"
+        data-action="assign"
         [disabled]="selectedPages.length === 0"
+        (click)="assign()"
     >
         <icon left>assignment_ind</icon> {{ 'modal.assign_to_button' | i18n }}
     </gtx-button>
 
     <gtx-button
         type="success"
+        data-action="confirm"
         [disabled]="!approveBtnIsVisible()"
         (click)="approve()"
     >

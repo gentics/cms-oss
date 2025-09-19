@@ -1,7 +1,22 @@
-import { LoginResponse, User } from '@gentics/cms-models';
-import { createClient, EntityImporter, loginWithForm, matchRequest, navigateToApp, pickSelectValue, selectTab, TestSize } from '@gentics/e2e-utils';
+import { AccessControlledType, GcmsPermission, LoginResponse } from '@gentics/cms-models';
+import {
+    createClient,
+    EntityImporter,
+    GroupImportData,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_GROUP,
+    IMPORT_TYPE_USER,
+    loginWithForm,
+    matchRequest,
+    navigateToApp,
+    pickSelectValue,
+    selectTab,
+    TestSize,
+    UserImportData,
+} from '@gentics/e2e-utils';
 import { randomId } from '@gentics/ui-core/utils/random-id';
-import { Locator, test } from '@playwright/test';
+import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 
 test.describe('Messages', () => {
@@ -112,12 +127,83 @@ test.describe('Messages', () => {
         });
     });
 
-    test.skip('should not be see users, therefore can not send messages', {
-        annotation: [{
-            type: 'ticket',
-            description: 'SUP-18935',
-        }],
-    }, async ({ page }) => {
+    test.describe('No users permissions', () => {
 
+        const TEST_GROUP: GroupImportData = {
+            [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
+            [IMPORT_ID]: 'groupNoPerms',
+
+            description: 'No perms',
+            name: 'No perms',
+            permissions: [
+                {
+                    type: AccessControlledType.USER_ADMIN,
+                    perms: [
+                        { type: GcmsPermission.READ, value: false },
+                    ],
+                },
+            ],
+        };
+
+        const TEST_USER: UserImportData = {
+            [IMPORT_TYPE]: IMPORT_TYPE_USER,
+            [IMPORT_ID]: 'userNoPerms',
+
+            groupId: TEST_GROUP[IMPORT_ID],
+
+            email: 'something@example.com',
+            firstName: 'Test',
+            lastName: 'User',
+            login: 'noperms',
+            password: 'test',
+        };
+
+        // We need to setup a new user without permissions to see other users
+        test.beforeEach(async () => {
+            await IMPORTER.importData([
+                TEST_GROUP,
+                TEST_USER,
+            ]);
+        });
+
+        test('should not be see users, therefore can not send messages', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-18935',
+            }],
+        }, async ({ page }) => {
+            let checkInvalidUser = true;
+            let didLoadUsers = false;
+
+            page.waitForRequest(req => checkInvalidUser && matchRequest('GET', '/rest/user')(req)).then(() => {
+                didLoadUsers = true;
+            });
+
+            await test.step('Login', async () => {
+                await navigateToApp(page);
+                await loginWithForm(page, {
+                    username: TEST_USER.login,
+                    password: TEST_USER.password,
+                });
+            });
+
+            await test.step('Open new message modal', async () => {
+                const userMenuToggle = page.locator('gtx-user-menu gtx-side-menu gtx-side-menu-toggle');
+                const userMenu = page.locator('gtx-user-menu gtx-side-menu .menu .menu-content');
+
+                await userMenuToggle.click();
+
+                const tabs = userMenu.locator('gtx-tabs');
+                const messagesTab = await selectTab(tabs, 'messages');
+
+                checkInvalidUser = false;
+                const userLoad = page.waitForResponse(matchRequest('GET', '/rest/user', { skipStatus: true }));
+                await messagesTab.locator('.new-message-button button').click();
+                const res = await userLoad;
+                expect(res.ok()).not.toEqual(true);
+            });
+
+            expect(didLoadUsers).toEqual(false);
+        });
     });
 });

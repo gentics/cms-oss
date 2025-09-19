@@ -280,6 +280,7 @@ import {
     PublishLogEntry,
     PublishLogListOption,
     PublishQueue,
+    PublishQueueOptions,
     PublishType,
     PushLicenseRequest,
     PushToMasterRequest,
@@ -904,6 +905,7 @@ export interface AbstractPageAPI extends BasicAPI {
     publish: (id: number | string, body: PagePublishRequest, options?: PagePublishOptions) => Response;
     publishMultiple: (body: MultiPagePublishRequest, options?: PagePublishOptions) => Response;
     takeOffline: (id: number | string, body: PageOfflineRequest, options?: PageOfflineOptions) => Response;
+    publishQueue: (options?: PublishQueueOptions) => PageListResponse;
     publishQueueApprove: (body: IdSetRequest) => Response,
 
     listTags: (id: number | string, options?: PageTagListOptions) => PageTagListResponse;

@@ -796,8 +796,8 @@ export interface PublishQueueOptions {
     skipCount?: number;
     maxItems?: number;
     search?: string;
-    sortBy?: CommonSortFields | PageSortFields;
-    sortOrder?: 'asc' | 'desc';
+    sortby?: CommonSortFields | PageSortFields;
+    sortorder?: 'asc' | 'desc';
 }
 
 export type UserEmbedTypes = 'group';

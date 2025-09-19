@@ -568,7 +568,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         getPermission: (id, perm) => this.executeMappedJsonRequest(GET, `/group/${id}/perms/${perm}`),
         setPermission: (id, perm, body) => this.executeMappedJsonRequest(POST, `/group/${id}/perms/${perm}`, body),
         getInstancePermission: (id, perm, instanceId) => this.executeMappedJsonRequest(GET, `/group/${id}/perms/${perm}/${instanceId}`),
-        setInstancePermission: (id, perm, instanceId, body) => this.executeMappedJsonRequest(GET, `/group/${id}/perms/${perm}/${instanceId}`, body),
+        setInstancePermission: (id, perm, instanceId, body) => this.executeMappedJsonRequest(POST, `/group/${id}/perms/${perm}/${instanceId}`, body),
     } as const;
 
     public i18n: GCMSI18nAPI = {

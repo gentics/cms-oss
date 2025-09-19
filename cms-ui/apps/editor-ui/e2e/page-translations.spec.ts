@@ -23,22 +23,33 @@ test.describe('Page Translation', () => {
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {
-        IMPORTER.setApiContext(request);
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
 
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        await test.step('Test Bootstrapping', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
     });
 
     test.beforeEach(async ({ page, request, context }) => {
-        await context.clearCookies();
-        IMPORTER.setApiContext(request);
+        await test.step('Client Setup', async () => {
+            await context.clearCookies();
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
 
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
-        await IMPORTER.setupFeatures(TestSize.MINIMAL, {
-            [NodeFeature.AUTOMATIC_TRANSLATION]: true,
+        await test.step('Common Test Setup', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
+        });
+
+        await test.step('Specialized Test Setup', async () => {
+            await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.AUTOMATIC_TRANSLATION]: true,
+            });
         });
 
         await navigateToApp(page);

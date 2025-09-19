@@ -885,6 +885,7 @@ span.diff-html-added {
                                 this.changeDetector.markForCheck();
 
                                 this.notification.show({
+                                    id: `page-save-success-with-publish:${this.currentItem.id}`,
                                     message: 'message.page_saved',
                                     type: 'success',
                                     action: {
@@ -1208,6 +1209,7 @@ span.diff-html-added {
                     this.folderActions.refreshList('page');
 
                     this.notification.show({
+                        id: `page-save-success-with-publish:${this.currentItem.id}`,
                         message: 'message.page_saved',
                         type: 'success',
                         action: {

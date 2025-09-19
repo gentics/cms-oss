@@ -10,7 +10,9 @@ import {
     loginWithForm,
     matchRequest,
     navigateToApp,
+    openSidebar,
     pickSelectValue,
+    rootGroup,
     selectTab,
     TestSize,
     UserImportData,
@@ -25,22 +27,28 @@ test.describe('Messages', () => {
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {
-        IMPORTER.setApiContext(request);
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
 
-        // We need multiple nodes for the tests with the management setup
-
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        await test.step('Test Bootstrapping', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
     });
 
     test.beforeEach(async ({ request, context }) => {
-        IMPORTER.setApiContext(request);
-        await context.clearCookies();
-        await IMPORTER.clearClient();
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await context.clearCookies();
+            await IMPORTER.clearClient();
+        });
 
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
+        await test.step('Common Test Setup', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
+        });
     });
 
     test('should be able to send, receive, and delete messages', {
@@ -88,10 +96,7 @@ test.describe('Messages', () => {
         });
 
         await test.step('Open new message modal', async () => {
-            const userMenuToggle = page.locator('gtx-user-menu gtx-side-menu gtx-side-menu-toggle');
-            const userMenu = page.locator('gtx-user-menu gtx-side-menu .menu .menu-content');
-
-            await userMenuToggle.click();
+            const userMenu = await openSidebar(page);
 
             const tabs = userMenu.locator('gtx-tabs');
             messagesTab = await selectTab(tabs, 'messages');
@@ -141,11 +146,19 @@ test.describe('Messages', () => {
 
         const TEST_GROUP: GroupImportData = {
             [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
-            [IMPORT_ID]: 'groupNoPerms',
+            [IMPORT_ID]: 'group_msg_noperms',
 
-            description: 'msg: No perms',
-            name: 'msg: No perms',
+            parentId: rootGroup[IMPORT_ID],
+
+            description: 'Messages: No Perms',
+            name: 'msg_noperms',
             permissions: [
+                {
+                    type: AccessControlledType.INBOX,
+                    perms: [
+                        { type: GcmsPermission.READ, value: true },
+                    ],
+                },
                 {
                     type: AccessControlledType.USER_ADMIN,
                     perms: [
@@ -157,23 +170,25 @@ test.describe('Messages', () => {
 
         const TEST_USER: UserImportData = {
             [IMPORT_TYPE]: IMPORT_TYPE_USER,
-            [IMPORT_ID]: 'msgUserNoPerms',
+            [IMPORT_ID]: 'user_msg_noperms',
 
             groupId: TEST_GROUP[IMPORT_ID],
 
             email: 'something@example.com',
-            firstName: 'Test',
-            lastName: 'User',
+            firstName: 'Messages',
+            lastName: 'No Perms',
             login: 'msg_noperms',
             password: 'test',
         };
 
         // We need to setup a new user without permissions to see other users
         test.beforeEach(async () => {
-            await IMPORTER.importData([
-                TEST_GROUP,
-                TEST_USER,
-            ]);
+            await test.step('Specialized Test Setup', async () => {
+                await IMPORTER.importData([
+                    TEST_GROUP,
+                    TEST_USER,
+                ]);
+            });
         });
 
         test('should not be see users, therefore can not send messages', {

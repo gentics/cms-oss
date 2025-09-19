@@ -1,13 +1,23 @@
 <div class="list-header">
-    <gtx-checkbox [checked]="areAllSelected()"
-                  (change)="toggleSelectall()"
-                  [label]="'common.select_all_label' | i18n"></gtx-checkbox>
+    <gtx-checkbox
+        [checked]="areAllSelected()"
+        [label]="'common.select_all_label' | i18n"
+        (change)="toggleSelectall()"
+    ></gtx-checkbox>
 </div>
+
 <div class="list-body" [style.maxHeight]="maxHeight">
-    <gtx-contents-list-item *ngFor="let user of users">
-        <gtx-checkbox class="row-checkbox"
-                      [checked]="selectedMap[user.id]"
-                      (change)="toggleSelect(user.id)"></gtx-checkbox>
+    <gtx-contents-list-item
+        *ngFor="let user of users"
+        class="user-entry"
+        [attr.data-id]="user.id"
+    >
+        <gtx-checkbox
+            class="row-checkbox"
+            [checked]="selectedMap[user.id]"
+            (change)="toggleSelect(user.id)"
+        ></gtx-checkbox>
+
         <div class="item-primary">
             {{ user.firstName }} {{ user.lastName }}
         </div>

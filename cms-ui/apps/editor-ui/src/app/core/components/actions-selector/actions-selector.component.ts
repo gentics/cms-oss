@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, Ev
 import { ADMIN_UI_LINK } from '@editor-ui/app/common/config/config';
 import { EmbeddedToolsService } from '@editor-ui/app/embedded-tools/providers/embedded-tools/embedded-tools.service';
 import { ApplicationStateService, ContentStagingActionsService } from '@editor-ui/app/state';
+import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
 import { AccessControlledType, EmbeddedTool, GcmsPermission } from '@gentics/cms-models';
 import { DropdownListComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
@@ -17,7 +18,6 @@ import {
 } from '../../../common/models/actions';
 import { I18nService } from '../../providers/i18n/i18n.service';
 import { PermissionService } from '../../providers/permissions/permission.service';
-import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
 
 @Component({
     selector: 'gtx-actions-selector',

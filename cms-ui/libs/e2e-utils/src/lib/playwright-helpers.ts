@@ -188,3 +188,33 @@ export async function selectTab(source: Page | Locator, id: number | string): Pr
 
     return source.locator(`gtx-tab[data-id="${id}"]`);
 }
+
+export function findNotification(page: Page, id?: string): Locator {
+    if (id) {
+        return page.locator(`gtx-toast .gtx-toast[data-id="${id}"]`)
+    } else {
+        return page.locator('gtx-toast .gtx-toast');
+    }
+}
+
+export async function openSidebar(page: Page): Promise<Locator> {
+    const userMenuToggle = page.locator('gtx-user-menu gtx-side-menu gtx-user-menu-toggle');
+    const userMenu = page.locator('gtx-user-menu gtx-side-menu .menu .menu-content');
+
+    const isOpen = await userMenu.isVisible();
+    if (!isOpen) {
+        await userMenuToggle.click();
+    }
+
+    return userMenu;
+}
+
+export async function logout(page: Page): Promise<void> {
+    const userMenu = await openSidebar(page);
+
+    const logoutButton = userMenu.locator('.user-details [data-action="logout"] button');
+    await logoutButton.click();
+
+    await page.context().clearCookies();
+}
+

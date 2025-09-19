@@ -20,6 +20,8 @@ import {
     IMPORT_TYPE_SCHEDULE,
     IMPORT_TYPE_USER,
     ImportData,
+    ImportPermissions,
+    ImportSinglePermission,
     ITEM_TYPE_FILE,
     ITEM_TYPE_FOLDER,
     ITEM_TYPE_FORM,
@@ -72,21 +74,165 @@ export const emptyNode: NodeImportData = {
     templates: [BASIC_TEMPLATE_ID],
 };
 
+export const CLEAR_ALL_CONTENT_PERMISSIONS: ImportSinglePermission[] = [
+    { type: GcmsPermission.READ, value: false },
+    { type: GcmsPermission.SET_PERMISSION, value: false },
+
+    // Folder
+    { type: GcmsPermission.CREATE, value: false }, // No idea why it isn't createfolder
+    { type: GcmsPermission.UPDATE_FOLDER, value: false },
+    { type: GcmsPermission.DELETE_FOLDER, value: false },
+
+    // Items
+    { type: GcmsPermission.READ_ITEMS, value: false },
+    { type: GcmsPermission.CREATE_ITEMS, value: false },
+    { type: GcmsPermission.UPDATE_ITEMS, value: false },
+    { type: GcmsPermission.DELETE_ITEMS, value: false },
+    { type: GcmsPermission.IMPORT_ITEMS, value: false },
+
+    // Pages
+    { type: GcmsPermission.PUBLISH_PAGES, value: false },
+
+    // Templates
+    { type: GcmsPermission.READ_TEMPLATES, value: false },
+    { type: GcmsPermission.CREATE_TEMPLATES, value: false },
+    { type: GcmsPermission.UPDATE_TEMPLATES, value: false },
+    { type: GcmsPermission.DELETE_TEMPLATES, value: false },
+    { type: GcmsPermission.LINK_TEMPLATES, value: false },
+
+    // Misc
+    { type: GcmsPermission.UPDATE_CONSTRUCTS, value: false },
+    { type: GcmsPermission.WASTE_BIN, value: false },
+];
+
 export const rootGroup: GroupImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
-    [IMPORT_ID]: 'rootGroup',
+    [IMPORT_ID]: 'group_root',
 
-    name: 'Root-Group',
+    name: 'group_test_root',
     description: 'Integration Tests Root Group',
 
+    // Remove all permissions from this group
     permissions: [
-        // Remove Admin permissions for this group
         {
-            type: AccessControlledType.ADMIN,
-            subGroups: true,
+            type: AccessControlledType.SETTING,
             perms: [
                 { type: GcmsPermission.READ, value: false },
+                { type: GcmsPermission.SET_PERMISSION, value: false },
             ],
+        },
+        {
+            type: AccessControlledType.INBOX,
+            perms: [
+                { type: GcmsPermission.READ, value: false },
+                { type: GcmsPermission.SET_PERMISSION, value: false },
+                { type: GcmsPermission.INSTANT_MESSAGES, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.PUBLISH_QUEUE,
+            perms: [
+                { type: GcmsPermission.READ, value: false },
+                { type: GcmsPermission.SET_PERMISSION, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.ADMIN,
+            subObjects: true,
+            perms: [
+                { type: GcmsPermission.READ, value: false },
+                { type: GcmsPermission.SET_PERMISSION, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.USER_ADMIN,
+            perms: [
+                { type: GcmsPermission.CREATE_USER, value: false },
+                { type: GcmsPermission.UPDATE_USER, value: false },
+                { type: GcmsPermission.DELETE_USER, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.GROUP_ADMIN,
+            perms: [
+                { type: GcmsPermission.CREATE_GROUP, value: false },
+                { type: GcmsPermission.UPDATE_GROUP, value: false },
+                { type: GcmsPermission.DELETE_GROUP, value: false },
+                { type: GcmsPermission.USER_ASSIGNMENT, value: false },
+                { type: GcmsPermission.UPDATE_GROUP_USER, value: false },
+                { type: GcmsPermission.SET_USER_PERMISSIONS, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.ROLE,
+            perms: [
+                { type: GcmsPermission.ASSIGN_ROLES, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.LICENSING,
+            perms: [
+                { type: GcmsPermission.UPDATE, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.CONTENT_ADMIN,
+            perms: [
+                { type: GcmsPermission.SYSTEM_INFORMATION, value: false },
+            ],
+        },
+        ...[10002, 10006, 10007, 10011, 10008].map(id => ({
+            type: AccessControlledType.OBJECT_PROPERTY_TYPE,
+            instanceId: `${id}`,
+            subObjects: true,
+            perms: [
+                { type: GcmsPermission.UPDATE, value: false },
+            ],
+        } as ImportPermissions)),
+        {
+            type: AccessControlledType.CONSTRUCT_ADMIN,
+            perms: [
+                { type: GcmsPermission.UPDATE, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.MAINTENANCE,
+            perms: [
+                { type: GcmsPermission.UPDATE, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
+            perms: [
+                { type: GcmsPermission.CREATE, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.CR_FRAGMENT_ADMIN,
+            perms: [
+                { type: GcmsPermission.CREATE, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.ERROR_LOG,
+            perms: [
+                { type: GcmsPermission.DELETE_ERROR_LOG, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.SCHEDULER,
+            perms: [
+                { type: GcmsPermission.SUSPEND_SCHEDULER, value: false },
+                { type: GcmsPermission.READ_TASKS, value: false },
+                { type: GcmsPermission.UPDATE_TASKS, value: false },
+                { type: GcmsPermission.READ_SCHEDULES, value: false },
+                { type: GcmsPermission.UPDATE_SCHEDULES, value: false },
+            ],
+        },
+        {
+            type: AccessControlledType.CONTENT,
+            subObjects: true,
+            perms: CLEAR_ALL_CONTENT_PERMISSIONS,
         },
     ],
 };

@@ -1,6 +1,7 @@
 <div
     #toast
     class="gtx-toast z-depth-3"
+    [attr.data-id]="id"
     [ngClass]="type || 'default'"
     [class.dismissing]="dismissing"
     [style.transform]="getTransform()"

@@ -50,7 +50,7 @@
                 </div>
                 <div *ngIf="user" class="description">{{ user?.description }}</div>
             </div>
-            <gtx-button (click)="logout.emit()" flat size="small" type="secondary">
+            <gtx-button flat size="small" type="secondary" data-action="logout" (click)="logout.emit()">
                 {{ 'user.log_out' | i18n }}
             </gtx-button>
         </div>

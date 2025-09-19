@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ColorThemes } from '../../common';
 
 /**
@@ -9,25 +9,48 @@ import { ColorThemes } from '../../common';
     selector: 'gtx-toast',
     templateUrl: './toast.component.html',
     styleUrls: ['./toast.component.scss'],
-    standalone: false
+    standalone: false,
 })
 export class ToastComponent implements OnInit, AfterViewInit, OnDestroy {
 
     @ViewChild('toast', { static: true })
-    toastRef: ElementRef<HTMLElement>;
+    public toastRef: ElementRef<HTMLElement>;
 
-    message: string;
-    messageLines: string[];
-    type: ColorThemes | string;
-    position = {
+    @Input()
+    public id: string;
+
+    @Input()
+    public message: string;
+
+    @Input()
+    public type: ColorThemes | string;
+
+    @Input()
+    public dismissOnClick = true;
+
+    @Input()
+    public actionLabel: string;
+
+    // TODO: Turn this into an output
+    @Input()
+    public actionOnClick: () => void;
+
+    // TODO: Positionining should be done via a container, instead of this hack.
+    // Would also allow to easily change positons of notifications (for example top center, or bottom left).
+    @Input()
+    public position = {
         top: 10,
         right: 10,
     };
-    actionLabel: string;
-    actionOnClick: () => void;
-    dismissFn: () => void;
-    dismissOnClick = true;
-    dismissing = false;
+
+    // TODO: Turn into an output
+    @Input()
+    public dismissFn: () => void;
+
+    @Input()
+    public dismissing = false;
+
+    public messageLines: string[];
 
     private hammerManager: HammerManager;
 

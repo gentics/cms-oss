@@ -3,14 +3,15 @@
     [hidden]="buttonGroups.length < 1"
     [align]="'right'"
     [belowTrigger]="true"
+    data-context-id="actions-menu"
 >
     <gtx-dropdown-trigger>
-        <gtx-button data-action="open-actions-menu" icon type="secondary">
+        <gtx-button data-context-trigger data-action="open-actions-menu" icon type="secondary">
             <icon>apps</icon>
         </gtx-button>
     </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content>
+    <gtx-dropdown-content data-context-id="actions-menu">
         <div class="action-buttons-dropdown-content">
             <div *ngFor="let group of buttonGroups" class="action-button-group">
                 <div class="action-button-group-label">
@@ -51,14 +52,15 @@
                         </ng-template>
 
                         <ng-template #regularButton>
-                            <div
+                            <button
                                 class="action-button"
                                 [ngClass]="[btn.type + '-' + btn.id, 'action-button-' + btn.type]"
+                                [attr.data-action-id]="btn.id"
                                 [title]="btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label"
                                 (click)="triggerClick(btn, $event)"
                             >
                                 <ng-container [ngTemplateOutlet]="buttonContent"></ng-container>
-                            </div>
+                            </button>
                         </ng-template>
 
                         <ng-template #buttonContent>

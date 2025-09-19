@@ -477,7 +477,9 @@ export class EntityImporter {
 
         const msg = `Missing binary dependency ${id}!`;
         if (optional) {
-            console.warn(msg);
+            if (this.options?.logImports) {
+                console.warn(msg);
+            }
             return null;
         }
 
@@ -736,7 +738,7 @@ export class EntityImporter {
         try {
             importedGroup = (await this.client.group.create(parentGroup.id, reqData).send()).group;
         } catch (err) {
-            // If the group already exists, ignore it
+            // If a non-recoverable error occurs
             if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
                 throw err;
             }

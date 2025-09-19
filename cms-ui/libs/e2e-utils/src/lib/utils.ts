@@ -397,6 +397,8 @@ export function globMatch(globPattern: string, str: string): boolean {
     const matchParts = str.split('/').filter(part => part !== '');
 
     let matchIdx = 0;
+    let hadDeepWildcard = false;
+
     for (let i = 0; i < globParts.length; i++) {
         // If it isn't a glob part, then we continue
         if (globParts[i][0] !== '*') {
@@ -417,6 +419,8 @@ export function globMatch(globPattern: string, str: string): boolean {
             throw new Error(`Unknown glob pattern part "${globParts[i]}"`);
         }
 
+        hadDeepWildcard = true;
+
         // We don't need to check, as this is the last entry
         if (i + 1 >= globParts.length) {
             break;
@@ -433,7 +437,7 @@ export function globMatch(globPattern: string, str: string): boolean {
         return false;
     }
 
-    return true;
+    return hadDeepWildcard ? true : globParts.length === matchParts.length;
 }
 
 export function matchesPath(url: string | URL, path: string | RegExp): boolean {

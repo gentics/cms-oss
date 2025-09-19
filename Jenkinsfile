@@ -151,7 +151,7 @@ spec:
                             version = MavenHelper.transformSnapshotToReleaseVersion(version)
                         }
 
-                        MavenHelper.setVersion(version)
+                        MavenHelper.setVersion(version, mvnArguments)
                         currentBuild.description = version
                     }
 

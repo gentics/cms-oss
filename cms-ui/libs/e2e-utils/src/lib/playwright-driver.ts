@@ -36,29 +36,30 @@ export async function parseFetchErrorFromAPI(request: GCMSRestClientRequestData,
 }
 
 export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequestData, res: APIResponse): Promise<T> {
-    if (res.ok) {
-        return res.json()
-            .catch(err => {
-                if (err instanceof SyntaxError) {
-                    return res.text().then(data => {
-                        if (!data) {
-                            return {};
-                        }
-                        throw err;
-                    })
-                }
-                throw err;
-            })
-            .then(json => {
-                const err = validateResponseObject(request, json);
-                if (err) {
-                    throw err;
-                }
-                return json;
-            });
+    if (!res.ok) {
+        await parseFetchErrorFromAPI(request, res);
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    try {
+        const json = await res.json();
+        const err = validateResponseObject(request, json, res.status());
+        if (err) {
+            throw err;
+        }
+        return json;
+    } catch (err) {
+        if (!(err instanceof SyntaxError)) {
+            throw err;
+        }
+        return res.text().then(data => {
+            // Edge-case when the API responds in non-json.
+            // Either old endpoint (see `auth/ssologin`), or some kind of proxy error
+            if (!data) {
+                return {} as T;
+            }
+            throw err;
+        });
+    }
 }
 
 export async function textFetchResponseHandler(request: GCMSRestClientRequestData, res: APIResponse): Promise<string> {

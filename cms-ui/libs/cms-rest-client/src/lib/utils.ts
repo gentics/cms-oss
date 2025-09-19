@@ -68,18 +68,6 @@ export function stringifyEmbedOptions<T>(options: EmbedListOptions<T>): void {
     (options as any).embed = options.embed.join(',');
 }
 
-const codeToHttpCode: Record<ResponseCode, number> = {
-    [ResponseCode.OK]: 200,
-    [ResponseCode.NOT_FOUND]: 404,
-    [ResponseCode.INVALID_DATA]: 400,
-    [ResponseCode.FAILURE]: 500,
-    [ResponseCode.PERMISSION]: 403,
-    [ResponseCode.AUTH_REQUIRED]: 401,
-    [ResponseCode.MAINTENANCE_MODE]: 503,
-    [ResponseCode.NOT_LICENSED]: 501,
-    [ResponseCode.LOCKED]: 503,
-};
-
 function isResponseObject(value: any): value is Response {
     return value != null
         && typeof value === 'object'
@@ -88,7 +76,11 @@ function isResponseObject(value: any): value is Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function validateResponseObject(request: GCMSRestClientRequestData, response: any): null | GCMSRestClientRequestError {
+export function validateResponseObject(
+    request: GCMSRestClientRequestData,
+    response: any,
+    statusCode: number,
+): null | GCMSRestClientRequestError {
     if (!isResponseObject(response)) {
         return null;
     }
@@ -102,7 +94,7 @@ export function validateResponseObject(request: GCMSRestClientRequestData, respo
     throw new GCMSRestClientRequestError(
         response?.messages[0]?.message || response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
         request,
-        codeToHttpCode[response.responseInfo.responseCode],
+        statusCode,
         null,
         response,
         null,

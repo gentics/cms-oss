@@ -19,6 +19,7 @@ import { randomId } from '@gentics/ui-core/utils/random-id';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Messages', () => {
 
     const IMPORTER = new EntityImporter();
@@ -55,6 +56,14 @@ test.describe('Messages', () => {
         let login: LoginResponse;
         let messagesTab: Locator;
         let receivedMessage: Locator;
+        let checkInvalidUser = true;
+
+        await page.route('/rest/user', (route, req) => {
+            if (checkInvalidUser && req.method() === 'GET') {
+                throw new Error('Users should not be loaded on app start!');
+            }
+            return route.continue();
+        });
 
         await test.step('Login', async () => {
             await navigateToApp(page);
@@ -87,6 +96,7 @@ test.describe('Messages', () => {
             const tabs = userMenu.locator('gtx-tabs');
             messagesTab = await selectTab(tabs, 'messages');
 
+            checkInvalidUser = false;
             const userLoad = page.waitForResponse(matchRequest('GET', '/rest/user'));
             await messagesTab.locator('.new-message-button button').click();
             await userLoad;
@@ -133,8 +143,8 @@ test.describe('Messages', () => {
             [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
             [IMPORT_ID]: 'groupNoPerms',
 
-            description: 'No perms',
-            name: 'No perms',
+            description: 'msg: No perms',
+            name: 'msg: No perms',
             permissions: [
                 {
                     type: AccessControlledType.USER_ADMIN,
@@ -147,14 +157,14 @@ test.describe('Messages', () => {
 
         const TEST_USER: UserImportData = {
             [IMPORT_TYPE]: IMPORT_TYPE_USER,
-            [IMPORT_ID]: 'userNoPerms',
+            [IMPORT_ID]: 'msgUserNoPerms',
 
             groupId: TEST_GROUP[IMPORT_ID],
 
             email: 'something@example.com',
             firstName: 'Test',
             lastName: 'User',
-            login: 'noperms',
+            login: 'msg_noperms',
             password: 'test',
         };
 
@@ -173,10 +183,12 @@ test.describe('Messages', () => {
             }],
         }, async ({ page }) => {
             let checkInvalidUser = true;
-            let didLoadUsers = false;
 
-            page.waitForRequest(req => checkInvalidUser && matchRequest('GET', '/rest/user')(req)).then(() => {
-                didLoadUsers = true;
+            await page.route('/rest/user', (route, req) => {
+                if (checkInvalidUser && req.method() === 'GET') {
+                    throw new Error('Users should not be loaded on app start!');
+                }
+                return route.continue();
             });
 
             await test.step('Login', async () => {
@@ -202,8 +214,6 @@ test.describe('Messages', () => {
                 const res = await userLoad;
                 expect(res.ok()).not.toEqual(true);
             });
-
-            expect(didLoadUsers).toEqual(false);
         });
     });
 });

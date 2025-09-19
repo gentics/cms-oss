@@ -62,6 +62,7 @@ export const ITEM_TYPE_FORM = 'form';
 export const IMPORT_TYPE_NODE = 'node';
 export const IMPORT_TYPE_USER = 'user';
 export const IMPORT_TYPE_GROUP = 'group';
+export const IMPORT_TYPE_PAGE_TRANSLATION = 'page-translation';
 
 export const IMPORT_TYPE_TASK = 'task';
 export const IMPORT_TYPE_SCHEDULE = 'schedule';
@@ -123,7 +124,8 @@ export type ImportType = ItemType
 | typeof IMPORT_TYPE_GROUP
 | typeof IMPORT_TYPE_TASK
 | typeof IMPORT_TYPE_SCHEDULE
-| typeof IMPORT_TYPE_CONSTRUCT_CATEGORY;
+| typeof IMPORT_TYPE_CONSTRUCT_CATEGORY
+| typeof IMPORT_TYPE_PAGE_TRANSLATION;
 
 /** Type to determine how to import/delete the entity */
 export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
@@ -144,6 +146,14 @@ export const CONSTRUCT_URL_IMAGE = 'A547.69940';
 export const CONSTRUCT_URL_FILE = 'A547.14546';
 export const CONSTRUCT_URL_FOLDER = 'B230.93539';
 export const CONSTRUCT_URL_PAGE = 'A547.69527';
+
+// IDs from the devtools
+export const CONSTRUCT_TEST_SELECT_COLOR = '994d.d84f0a55-37ad-11ef-a38e-0242ac110002';
+export const CONSTRUCT_TEST_FOOTER = '3821.45da0ed4-3244-11ef-872a-0242ac110002';
+export const CONSTRUCT_TEST_HEADER = '3821.37c733c5-3244-11ef-872a-0242ac110002';
+export const CONSTRUCT_TEST_IMAGE = '994d.5be00ab6-37b8-11ef-a38e-0242ac110002';
+export const CONSTRUCT_TEST_OVERVIEW = 'a1f6.c849b53a-8413-11f0-b405-621fd600b3e6';
+export const CONSTRUCT_TEST_TEXT = '3821.174e1f5c-3244-11ef-872a-0242ac110002';
 
 export const CORE_CONSTRUCTS = [
     CONSTRUCT_ALOHA_LINK,
@@ -333,10 +343,6 @@ export interface ImportData {
     [IMPORT_ID]: string;
 }
 
-export interface ImportTranslation {
-    translations?: string[]
-}
-
 export interface NodeImportData extends Omit<NodeCreateRequest, 'node'>, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_NODE;
     /** Language codes which will be assigned */
@@ -359,7 +365,7 @@ export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | '
 
 export interface PageImportData
     extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId' | 'language'>,
-    Partial<Pick<Page, 'tags' | 'language'>>, ImportData, ImportTranslation {
+    Partial<Pick<Page, 'tags' | 'language'>>, ImportData {
 
     [IMPORT_TYPE]: typeof ITEM_TYPE_PAGE,
 
@@ -369,6 +375,16 @@ export interface PageImportData
     folderId: string;
     /** The Global-ID of the template from the Dev-Tool Package */
     templateId: string;
+}
+
+export interface PageTranslationImportData
+    extends Omit<PageImportData, typeof IMPORT_TYPE | 'nodeId' | 'folderId' | 'templateId' | 'translations' | 'language'>,
+    Required<Pick<Page, 'language'>> {
+
+    [IMPORT_TYPE]: typeof IMPORT_TYPE_PAGE_TRANSLATION;
+
+    /** The `IMPORT_ID` of the page */
+    pageId: string;
 }
 
 export interface FileImportData extends EditableFileProps, ImportData {
@@ -405,7 +421,7 @@ export interface GroupImportData extends GroupCreateRequest, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_GROUP,
 
     /** The parent `IMPORT_ID` value */
-    parent?: string;
+    parentId?: string;
 
     permissions?: ImportPermissions[];
 }
@@ -414,7 +430,7 @@ export interface UserImportData extends GroupUserCreateRequest, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_USER,
 
     /** The groups `IMPORT_ID` value */
-    group: string;
+    groupId: string;
 }
 
 export interface ScheduleTaskImportData extends ScheduleTaskCreateRequest, ImportData {
@@ -425,7 +441,7 @@ export interface ScheduleImportData extends Omit<ScheduleCreateReqeust, 'taskId'
     [IMPORT_TYPE]: typeof IMPORT_TYPE_SCHEDULE;
 
     /** The task import-id or internal command to be executed */
-    task: string;
+    taskId: string;
 }
 
 export interface ConstructCategoryImportData

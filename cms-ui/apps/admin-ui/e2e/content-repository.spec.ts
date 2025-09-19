@@ -22,6 +22,7 @@ import {
     selectTableRow,
     TestSize,
     loginWithForm,
+    matchRequest,
 } from '@gentics/e2e-utils';
 import { UserUpdateRequest } from '@gentics/mesh-models';
 import { expect, Locator, test } from '@playwright/test';
@@ -69,7 +70,6 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Content Repositories Module', () => {
 
     const IMPORTER = new EntityImporter({
-        logRequests: false,
         logImports: false,
     });
 
@@ -139,6 +139,12 @@ test.describe('Content Repositories Module', () => {
         test.beforeEach(async ({ page }) => {
             const row = findTableRowById(master, testCr.id);
             await row.waitFor({ state: 'visible' });
+
+            // Repair the CR to have everything properly setup
+            const repairReq = page.waitForResponse(matchRequest('PUT', `/rest/contentrepositories/${testCr.id}/structure/repair`));
+            await findTableAction(row, 'structureRepair').click();
+            await repairReq;
+
             await clickTableRow(row);
 
             const tabs = page.locator(`${SELECTORS.EDITOR} ${SELECTORS.TABS.CONTAINER}`);
@@ -299,14 +305,9 @@ test.describe('Content Repositories Module', () => {
             test.slow();
 
             test.beforeEach(async ({ page }) => {
-                await IMPORTER.deleteMeshProjects();
                 await IMPORTER.importData([schedulePublisher]);
                 await IMPORTER.executeSchedule(schedulePublisher);
                 await loginWithCR(page);
-            });
-
-            test.afterEach(async () => {
-                await IMPORTER.deleteMeshProjects();
             });
 
             test('should be possible to create a new project', async ({ page }) => {
@@ -326,7 +327,7 @@ test.describe('Content Repositories Module', () => {
                         .click();
 
                     const schemaSelectModal = page.locator(SELECTORS.PROJECT.SCHEMA_MODAL);
-                    const schemaRow = findTableRowByText(schemaSelectModal, 'folder', true);
+                    const schemaRow = findTableRowByText(schemaSelectModal, 'example_folder', true);
                     await schemaRow.waitFor({ state: 'visible' });
                     await selectTableRow(schemaRow);
                     await clickModalAction(schemaSelectModal, 'confirm');
@@ -349,14 +350,9 @@ test.describe('Content Repositories Module', () => {
             test.slow();
 
             test.beforeEach(async ({ page }) => {
-                await IMPORTER.deleteMeshProjects();
                 await IMPORTER.importData([schedulePublisher]);
                 await IMPORTER.executeSchedule(schedulePublisher);
                 await loginWithCR(page);
-            });
-
-            test.afterEach(async () => {
-                await IMPORTER.deleteMeshProjects();
             });
 
             test('should be possible to read and modify role permissions on projects', async ({ page }) => {

@@ -16,6 +16,7 @@ import {
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
+    IMPORT_TYPE_PAGE_TRANSLATION,
     IMPORT_TYPE_SCHEDULE,
     IMPORT_TYPE_USER,
     ImportData,
@@ -28,6 +29,7 @@ import {
     LANGUAGE_EN,
     NodeImportData,
     PageImportData,
+    PageTranslationImportData,
     ScheduleImportData,
     TASK_LINK_CHECKER,
     TASK_PUBLISH,
@@ -93,7 +95,7 @@ export const userAlpha: UserImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_USER,
     [IMPORT_ID]: 'userAlpha',
 
-    group: rootGroup[IMPORT_ID],
+    groupId: rootGroup[IMPORT_ID],
 
     email: 'alpha-test-user@localhost',
     firstName: 'Test User',
@@ -107,7 +109,7 @@ export const userBeta: UserImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_USER,
     [IMPORT_ID]: 'userBeta',
 
-    group: rootGroup[IMPORT_ID],
+    groupId: rootGroup[IMPORT_ID],
 
     email: 'beta-test-user@localhost',
     firstName: 'Test User',
@@ -124,7 +126,7 @@ export const schedulePublisher: ScheduleImportData = {
     active: true,
     parallel: false,
     name: 'Run Publish Process',
-    task: TASK_PUBLISH,
+    taskId: TASK_PUBLISH,
     scheduleData: {
         type: ScheduleType.MANUAL,
     },
@@ -137,7 +139,7 @@ export const scheduleLinkChecker: ScheduleImportData = {
     active: true,
     parallel: false,
     name: 'Run Link Checker',
-    task: TASK_LINK_CHECKER,
+    taskId: TASK_LINK_CHECKER,
     scheduleData: {
         type: ScheduleType.MANUAL,
     },
@@ -220,12 +222,26 @@ function createPage(
     };
 }
 
+function createPageTranslation(
+    page: PageImportData,
+    id: string,
+    language: string,
+    data: Omit<PageTranslationImportData, typeof IMPORT_ID | typeof IMPORT_TYPE | 'pageId' | 'language'>,
+): PageTranslationImportData {
+    return {
+        ...data,
+        [IMPORT_TYPE]: IMPORT_TYPE_PAGE_TRANSLATION,
+        [IMPORT_ID]: id,
+        pageId: page[IMPORT_ID],
+        language: language,
+    };
+}
+
 export const folderA = createRootFolder(minimalNode, 'A');
 export const folderB = createRootFolder(minimalNode, 'B');
 
 export const pageOne: PageImportData = {
     ...createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'One'),
-    translations: [LANGUAGE_DE],
     tags: {
         content: {
             id: null,
@@ -253,8 +269,8 @@ Feugiat ac integer viverra fermentum auctor ipsum tristique rutrum.`,
     },
 };
 
-export const pageOneDE: PageImportData = {
-    ...createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'Eins', LANGUAGE_DE),
+export const pageOneDE = createPageTranslation(pageOne, 'Eins', LANGUAGE_DE, {
+    pageName: 'Seite Eins',
     tags: {
         content: {
             id: null,
@@ -277,7 +293,7 @@ ras condimentum, elit in facilisis sodales, risus urna consectetur justo, eget f
             },
         },
     },
-};
+});
 
 export const fileOne: FileImportData = {
     [IMPORT_TYPE]: ITEM_TYPE_FILE,
@@ -457,7 +473,6 @@ export const PACKAGE_MAP: Record<TestSize, ImportData[]> = {
         folderA,
         folderB,
         pageOne,
-        pageOneDE,
         fileOne,
         imageOne,
     ],

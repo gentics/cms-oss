@@ -180,6 +180,25 @@ export function selectEditorTab(page: Page, id: string): Promise<void> {
     return page.locator(`gtx-page-editor-tabs button[data-id="${id}"]`).click();
 }
 
+export async function createExternalLink(
+    page: Page,
+    formHandler: (form: Locator) => Promise<void>,
+): Promise<void> {
+    await selectEditorTab(page, 'formatting');
+
+    const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
+    await linkButton.click();
+
+    // Fill link form
+    const modal = page.locator('gtx-dynamic-form-modal');
+    const form = modal.locator('.form-wrapper');
+
+    // Fill out rest of the form
+    await formHandler(form);
+
+    await modal.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]').click();
+}
+
 export async function createInternalLink(
     page: Page,
     repoHandler: (repoBrowser: Locator) => Promise<void>,

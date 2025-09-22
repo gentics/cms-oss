@@ -44,6 +44,7 @@ import {
     selectTextIn,
     setupHelperWindowFunctions,
     openPageForEditing,
+    createExternalLink,
 } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
@@ -281,6 +282,91 @@ test.describe('Page Editing', () => {
                 expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
 
                 await mainEditable.press('ControlOrMeta+c');
+                await mainEditable.press('ArrowRight');
+                await mainEditable.press('Enter');
+                await mainEditable.press('ControlOrMeta+v');
+
+                // Wait for the content to be loaded
+                await mainEditable.locator('img').waitFor({ state: 'detached' });
+
+                const linkIds = await mainEditable.evaluate(el => {
+                    return Array.from(el.querySelectorAll('a'))
+                        .map(link => link.getAttribute('data-gcn-tagid'))
+                        .filter(id => id != null);
+                });
+
+                expect(linkIds).toHaveLength(2);
+                expect(linkIds[0]).not.toEqual(linkIds[1]);
+
+                const saveReq = page.waitForRequest(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                await editorAction(page, 'save');
+                const req = await saveReq;
+                const pageUpdate = await req.postDataJSON() as PageSaveRequest;
+
+                const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
+                // Remove template tags
+                TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
+
+                // Make sure we actually save 2 different tags
+                expect(tags.size).toEqual(2);
+            });
+        });
+
+        test('should be possible to copy an external link', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-18537',
+            }],
+        }, async ({ page }) => {
+            const TEXT_CONTENT = 'Example Link';
+            const TEMPLATE = IMPORTER.get(BASIC_TEMPLATE_ID) as Template;
+            const TEMPLATE_TAGS = Object.keys(TEMPLATE.templateTags);
+
+            await test.step('Create internal link', async () => {
+                // Type content
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT_CONTENT);
+
+                // Select text to make into link
+                expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
+                await createExternalLink(page, async form => {
+                    await form.locator('[data-slot="url"] .target-input input').fill('https://example.com');
+                    await form.locator('[data-slot="title"] input').fill('A very interesting site');
+                });
+            });
+
+            // We need to save the page first and re-open it,
+            // as otherwise the links are not created as actual tags yet.
+            await test.step('Save and re-open the page', async () => {
+                // Wait till properly saved
+                const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                await editorAction(page, 'save');
+                const req = await saveReq;
+                const pageUpdate = await req.request().postDataJSON() as PageSaveRequest;
+
+                const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
+                // Remove template tags
+                TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
+
+                // Make sure we actually save only one link tag
+                expect(tags.size).toEqual(1);
+
+                // Wait till properly closed
+                await editorAction(page, 'close');
+                await page.locator('content-frame').waitFor({ state: 'detached' });
+
+                // Now open the page again
+                await openEditingPageInEditmode(page);
+            });
+
+            await test.step('Copy and paste the link', async () => {
+                // Select the text again
+                expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
+
+                await mainEditable.press('ControlOrMeta+c');
+                await mainEditable.press('ArrowRight');
+                await mainEditable.press('Enter');
                 await mainEditable.press('ControlOrMeta+v');
 
                 // Wait for the content to be loaded

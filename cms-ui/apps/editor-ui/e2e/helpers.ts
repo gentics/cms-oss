@@ -1,7 +1,8 @@
 /* eslint-disable import/no-nodejs-modules */
 /// <reference lib="dom"/>
 import { readFileSync } from 'fs';
-import { openContext } from '@gentics/e2e-utils';
+import { ITEM_TYPE_PAGE, openContext } from '@gentics/e2e-utils';
+import { Page as CmsPage } from '@gentics/cms-models';
 import { expect, Frame, Locator, Page } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
@@ -179,6 +180,32 @@ export function selectEditorTab(page: Page, id: string): Promise<void> {
     return page.locator(`gtx-page-editor-tabs button[data-id="${id}"]`).click();
 }
 
+export async function createInternalLink(
+    page: Page,
+    repoHandler: (repoBrowser: Locator) => Promise<void>,
+    formHandler: (form: Locator) => Promise<void>,
+): Promise<void> {
+    await selectEditorTab(page, 'formatting');
+
+    const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
+    await linkButton.click();
+
+    // Fill link form
+    const modal = page.locator('gtx-dynamic-form-modal');
+    const form = modal.locator('.form-wrapper');
+
+    // Select internal page
+    await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
+    const repoBrowser = page.locator('repository-browser');
+    await repoHandler(repoBrowser);
+    await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+
+    // Fill out rest of the form
+    await formHandler(form);
+
+    await modal.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]').click();
+}
+
 export async function findDynamicFormModal(page: Page, ref?: string): Promise<Locator> {
     const refSelector = ref ? `[data-ref="${ref}"]` : '';
     const modal = page.locator(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
@@ -190,6 +217,28 @@ export async function getAlohaIFrame(page: Page): Promise<Frame> {
     const iframeSelector = '[name="master-frame"][loaded="true"]';
     await page.locator('iframe' + iframeSelector).waitFor({ timeout: 60_000 });
     return page.frame({ name: 'master-frame' });
+}
+
+export async function openPageForEditing(page: Page, pageToEdit: CmsPage): Promise<{
+    row: Locator,
+    iframe: Frame,
+    editable: Locator,
+}> {
+    // Setup page for editing
+    const list = findList(page, ITEM_TYPE_PAGE);
+    const row = findItem(list, pageToEdit.id);
+    await itemAction(row, 'edit');
+
+    // Wait for editor to be ready
+    const iframe = await getAlohaIFrame(page);
+    const editable = iframe.locator('main .container [contenteditable="true"]');
+    await editable.waitFor({ timeout: 60_000 });
+
+    return {
+        row,
+        iframe,
+        editable,
+    }
 }
 
 export async function setupHelperWindowFunctions(page: Page): Promise<void> {

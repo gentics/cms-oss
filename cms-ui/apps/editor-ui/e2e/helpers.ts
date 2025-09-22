@@ -180,10 +180,7 @@ export function selectEditorTab(page: Page, id: string): Promise<void> {
     return page.locator(`gtx-page-editor-tabs button[data-id="${id}"]`).click();
 }
 
-export async function createExternalLink(
-    page: Page,
-    formHandler: (form: Locator) => Promise<void>,
-): Promise<void> {
+async function createLink(page: Page, handler: (form: Locator) => Promise<void>): Promise<void> {
     await selectEditorTab(page, 'formatting');
 
     const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
@@ -193,10 +190,19 @@ export async function createExternalLink(
     const modal = page.locator('gtx-dynamic-form-modal');
     const form = modal.locator('.form-wrapper');
 
-    // Fill out rest of the form
-    await formHandler(form);
+    await handler(form);
 
     await modal.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]').click();
+}
+
+export async function createExternalLink(
+    page: Page,
+    formHandler: (form: Locator) => Promise<void>,
+): Promise<void> {
+    return createLink(page, async form => {
+        // Fill out rest of the form
+        await formHandler(form);
+    });
 }
 
 export async function createInternalLink(
@@ -204,25 +210,16 @@ export async function createInternalLink(
     repoHandler: (repoBrowser: Locator) => Promise<void>,
     formHandler: (form: Locator) => Promise<void>,
 ): Promise<void> {
-    await selectEditorTab(page, 'formatting');
+    return createLink(page, async form => {
+        // Select internal page
+        await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
+        const repoBrowser = page.locator('repository-browser');
+        await repoHandler(repoBrowser);
+        await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
 
-    const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
-    await linkButton.click();
-
-    // Fill link form
-    const modal = page.locator('gtx-dynamic-form-modal');
-    const form = modal.locator('.form-wrapper');
-
-    // Select internal page
-    await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
-    const repoBrowser = page.locator('repository-browser');
-    await repoHandler(repoBrowser);
-    await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
-
-    // Fill out rest of the form
-    await formHandler(form);
-
-    await modal.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]').click();
+        // Fill out rest of the form
+        await formHandler(form);
+    });
 }
 
 export async function findDynamicFormModal(page: Page, ref?: string): Promise<Locator> {
@@ -369,7 +366,6 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
                 return false;
             }
 
-            console.log('selected range', range, range.startContainer, range.endContainer, range.startOffset, range.endOffset);
             element.ownerDocument.defaultView.getSelection().addRange(range);
             return true;
         }

@@ -1,16 +1,16 @@
 import { FormSaveRequest, NodeFeature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
-    formOne,
+    FORM_ONE,
     isVariant,
     ITEM_TYPE_FORM,
     LANGUAGE_DE,
     loginWithForm,
     matchesUrl,
     matchRequest,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
-    pageOne,
+    PAGE_ONE,
     pickSelectValue,
     TestSize,
 } from '@gentics/e2e-utils';
@@ -36,7 +36,7 @@ test.describe('Form Management', () => {
         await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
     });
 
-    test.beforeEach(async ({ page, request, context }) => {
+    test.beforeEach(async ({ request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
 
@@ -46,14 +46,24 @@ test.describe('Form Management', () => {
         await IMPORTER.setupFeatures(TestSize.MINIMAL, {
             [NodeFeature.FORMS]: true,
         });
-        await IMPORTER.importData([formOne]);
+        await IMPORTER.importData([FORM_ONE]);
     });
 
     test('should be possible to create a new form', async ({ page }) => {
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
 
+        await IMPORTER.importData([FORM_ONE]);
+
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
+    });
+
+    test('should be possible to create a new form', async ({ page }) => {
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
         const list = findList(page, ITEM_TYPE_FORM);
         await list.locator('.header-controls [data-action="create-new-item"] button').click();
 
@@ -76,7 +86,7 @@ test.describe('Form Management', () => {
     });
 
     test('should load forms on initial navigation', async ({ page }) => {
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         const loadReq = page.waitForResponse(matchRequest('GET', '/rest/form', {
             params: {
@@ -85,7 +95,7 @@ test.describe('Form Management', () => {
         }));
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
         await loadReq;
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -99,14 +109,14 @@ test.describe('Form Management', () => {
             description: 'SUP-18694',
         }],
     }, async ({ page }) => {
-        const SUCCESS_PAGE = IMPORTER.get(pageOne);
-        const SUCCESS_FOLDER = IMPORTER.get(minimalNode);
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const SUCCESS_PAGE = IMPORTER.get(PAGE_ONE);
+        const SUCCESS_FOLDER = IMPORTER.get(NODE_MINIMAL);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
         const SUCCESS_URL = 'https://gentics.com';
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
 
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
@@ -176,11 +186,11 @@ test.describe('Form Management', () => {
             description: 'SUP-18802',
         }],
     }, async ({page}) => {
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
 
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
@@ -217,7 +227,7 @@ test.describe('Form Management', () => {
             description: 'SUP-18932',
         }],
     }, async ({ page }) => {
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         await test.step('Specialized Setup', async () => {
             // Block requests to the config
@@ -227,7 +237,7 @@ test.describe('Form Management', () => {
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(minimalNode)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
         });
 
         const list = findList(page, ITEM_TYPE_FORM);

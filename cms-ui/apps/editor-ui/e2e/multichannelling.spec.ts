@@ -3,7 +3,6 @@ import { Feature, Node, NodePageLanguageCode, NodeUrlMode, Variant } from '@gent
 import {
     BASIC_TEMPLATE_ID,
     EntityImporter,
-    fullNode,
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_NODE,
@@ -11,12 +10,14 @@ import {
     ITEM_TYPE_PAGE,
     loginWithForm,
     navigateToApp,
+    NODE_FULL,
     NodeImportData,
     openContext,
-    pageEight,
-    pageEleven,
-    pageFive,
-    pageNine, pageOne,
+    PAGE_EIGHT,
+    PAGE_ELEVEN,
+    PAGE_FIVE,
+    PAGE_FOUR,
+    PAGE_NINE,
     pickSelectValue,
     TestSize,
 } from '@gentics/e2e-utils';
@@ -36,7 +37,7 @@ test.describe('Multichannelling', () => {
 
         node: {
             name : 'Channel',
-            masterId: fullNode[IMPORT_ID],
+            masterId: NODE_FULL[IMPORT_ID],
             publishDir : '',
             binaryPublishDir : '',
             pubDirSegment : true,
@@ -88,7 +89,7 @@ test.describe('Multichannelling', () => {
         await setupHelperWindowFunctions(page);
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(fullNode).id);
+        await selectNode(page, IMPORTER.get(NODE_FULL).id);
     });
 
     test.describe('Edit Mode', () => {
@@ -97,7 +98,7 @@ test.describe('Multichannelling', () => {
         test.beforeEach(async ({page}) => {
             // Setup page for editing
             const list = findList(page, ITEM_TYPE_PAGE);
-            const item = findItem(list, IMPORTER.get(pageFive).id);
+            const item = findItem(list, IMPORTER.get(PAGE_FIVE).id);
             await itemAction(item, 'edit');
 
             // Wait for editor to be ready
@@ -112,9 +113,9 @@ test.describe('Multichannelling', () => {
                 description: 'SUP-18873',
             }],
         }, async ({ page }) => {
-            const MASTER_PAGE = IMPORTER.get(pageEight);
-            const CHANNEL_PAGE = IMPORTER.get(pageEleven);
-            const EXTRA_CHANNEL_PAGE = IMPORTER.get(pageNine);
+            const MASTER_PAGE = IMPORTER.get(PAGE_EIGHT);
+            const CHANNEL_PAGE = IMPORTER.get(PAGE_ELEVEN);
+            const EXTRA_CHANNEL_PAGE = IMPORTER.get(PAGE_NINE);
 
             let editButton: Locator;
 
@@ -174,7 +175,7 @@ test.describe('Multichannelling', () => {
                 const masterItem = overview.locator(`.overview-items .overview-item[data-type="page"][data-id="${MASTER_PAGE.id}"]`);
                 const channelItem = overview.locator(`.overview-items .overview-item[data-type="page"][data-id="${CHANNEL_PAGE.id}"]`);
 
-                await expect(masterItem).toHaveAttribute('data-node-id', `${IMPORTER.get(fullNode).id}`);
+                await expect(masterItem).toHaveAttribute('data-node-id', `${IMPORTER.get(NODE_FULL).id}`);
                 await expect(masterItem.locator('.item-path')).toHaveText(`${MASTER_PAGE.path}${MASTER_PAGE.name}`);
 
                 await expect(channelItem).toHaveAttribute('data-node-id', `${channelNode.id}`);
@@ -203,7 +204,7 @@ test.describe('Multichannelling', () => {
                 const channelItem = overview.locator(`.overview-items .overview-item[data-type="page"][data-id="${CHANNEL_PAGE.id}"]`);
                 const extraItem = overview.locator(`.overview-items .overview-item[data-type="page"][data-id="${EXTRA_CHANNEL_PAGE.id}"]`);
 
-                await expect(masterItem).toHaveAttribute('data-node-id', `${IMPORTER.get(fullNode).id}`);
+                await expect(masterItem).toHaveAttribute('data-node-id', `${IMPORTER.get(NODE_FULL).id}`);
                 await expect(masterItem.locator('.item-path')).toHaveText(`${MASTER_PAGE.path}${MASTER_PAGE.name}`);
 
                 await expect(channelItem).toHaveAttribute('data-node-id', `${channelNode.id}`);
@@ -227,11 +228,11 @@ test.describe('Multichannelling', () => {
             }],
         }, async ({ page }) => {
             const list = findList(page, ITEM_TYPE_PAGE);
-            const item = findItem(list, IMPORTER.get(pageOne).id);
+            const item = findItem(list, IMPORTER.get(PAGE_FOUR).id);
             const context = await openContext(item.locator('[data-action="item-context"]'));
 
             await expect(context.locator('[data-action="publish"]')).toBeHidden();
-            await expect(context.locator('[data-action="publish-variants "]')).toBeHidden();
+            await expect(context.locator('[data-action="publish-variants"]')).toBeHidden();
         });
     });
 });

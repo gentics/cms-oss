@@ -1,37 +1,13 @@
-import { File as CMSFile, Folder, Group, Image, Node, Page, ScheduleTask, User, Variant } from '@gentics/cms-models';
-import type { Suite } from 'mocha';
+import { Variant } from '@gentics/cms-models';
 import {
     ENV_CI,
     ENV_CMS_IMPORTER_PASSWORD,
     ENV_CMS_IMPORTER_USERNAME,
     ENV_CMS_VARIANT,
-    FileImportData,
-    FolderImportData,
     FormattedText,
     FORMATTING_NODES,
-    GroupImportData,
-    ImageImportData,
-    IMPORT_ID,
-    ImportData,
     LoginInformation,
-    NodeImportData,
-    PageImportData,
-    ScheduleTaskImportData,
-    UserImportData,
 } from './common';
-
-export function getItem(data: NodeImportData, entities: Record<string, any>): Node | null;
-export function getItem(data: FolderImportData, entities: Record<string, any>): Folder | null;
-export function getItem(data: PageImportData, entities: Record<string, any>): Page | null;
-export function getItem(data: ImageImportData, entities: Record<string, any>): Image | null;
-export function getItem(data: FileImportData, entities: Record<string, any>): CMSFile | null;
-export function getItem(data: GroupImportData, entities: Record<string, any>): Group | null;
-export function getItem(data: UserImportData, entities: Record<string, any>): User | null;
-export function getItem(data: ScheduleTaskImportData, entities: Record<string, any>): ScheduleTask | null;
-export function getItem(data: ImportData | string, entities: Record<string, any>): any {
-    const importId = typeof data === 'string' ? data : data[IMPORT_ID];
-    return entities[importId] || null;
-}
 
 export function envAll(env: string | string[]): boolean;
 export function envAll(...vars: string[]): boolean {
@@ -60,10 +36,6 @@ export function isJQueryElement($subject: any): $subject is JQuery {
         || typeof $subject.length !== 'number'
         || typeof $subject.jquery !== 'string'
     );
-}
-
-export function skipableSuite(doExecute: boolean, title: string, fn: (this: Suite) => void): Suite | void {
-    return (doExecute ? describe : describe.skip)(title, fn);
 }
 
 /**

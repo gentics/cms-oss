@@ -11,7 +11,6 @@ import {
     Form,
     FormCreateRequest,
     Group,
-    Image,
     Node,
     NodeFeature,
     Page,
@@ -48,6 +47,8 @@ import {
     IMPORT_TYPE_TASK,
     IMPORT_TYPE_USER,
     ImportData,
+    ImportEntityType,
+    ImportReference,
     ImportType,
     ITEM_TYPE_FILE,
     ITEM_TYPE_FOLDER,
@@ -67,12 +68,13 @@ import {
     emptyNode,
     PACKAGE_IMPORTS,
     PACKAGE_MAP,
-    schedulePublisher,
+    GROUP_ROOT,
+    SCHEDULE_PUBLISHER,
 } from './entities';
 import { MeshPlaywrightDriver } from './mesh-playwright-driver';
 import { createMeshProxy } from './mesh-proxy';
 import { GCMSPlaywrightDriver } from './playwright-driver';
-import { getDefaultSystemLogin, getItem } from './utils';
+import { getDefaultSystemLogin } from './utils';
 
 /**
  * Options to configure the behaviour of the importer
@@ -131,6 +133,8 @@ export class EntityImporter {
     public templates: Record<string, Template> = {};
     /** Mapping of schedule-task command to task instance. Only contains internal commands. */
     public tasks: Record<string, ScheduleTask> = {};
+    /** The root of all test groups, which is imported via the {@link GROUP_ROOT} import data.*/
+    public rootGroup: Group;
     /** If the `bootstrapSuite` has been successfully run through. */
     public bootstrapped = false;
 
@@ -185,6 +189,8 @@ export class EntityImporter {
         this.templates = await this.getTemplateMapping();
         this.languages = await this.getLanguageMapping();
         this.dummyNode = await this.setupDummyNode();
+        // Make sure root group is present
+        this.rootGroup = await this.importGroup(GROUP_ROOT);
 
         // Store all Tasks in the entity map
         const tasks = (await this.client.schedulerTask.list().send()).items || [];
@@ -195,7 +201,7 @@ export class EntityImporter {
         }
 
         // Import default schedules
-        await this.importSchedule(schedulePublisher);
+        await this.importSchedule(SCHEDULE_PUBLISHER);
 
         this.bootstrapped = true;
     }
@@ -311,8 +317,8 @@ export class EntityImporter {
         // Get all the required node-ids from the package, if present
         if (size) {
             nodeIds = PACKAGE_MAP[size]
-                .map(data => data[IMPORT_TYPE] === IMPORT_TYPE_NODE ? (this.get(data as NodeImportData))?.id : null)
-                .filter(id => id != null);
+                .filter(data => data[IMPORT_TYPE] === IMPORT_TYPE_NODE)
+                .map((data: NodeImportData) => this.getDependency(data)?.id);
         }
 
         for (const entry of Object.entries(features || {})) {
@@ -410,56 +416,43 @@ export class EntityImporter {
         }
     }
 
-    public get(data: NodeImportData): Node | null;
-    public get(data: FolderImportData): Folder | null;
-    public get(data: PageImportData | PageTranslationImportData): Page | null;
-    public get(data: ImageImportData): Image | null;
-    public get(data: FileImportData): File | null;
-    public get(data: FormImportData): Form | null;
-    public get(data: GroupImportData): Group | null;
-    public get(data: UserImportData): User | null;
-    public get(data: ScheduleTaskImportData): ScheduleTask | null;
-    public get(data: ScheduleImportData): Schedule | null;
-    public get(data: ConstructCategoryImportData): ConstructCategory | null;
+    public get<T extends ImportType>(ref: ImportReference<T>): ImportEntityType<T> | null;
     public get(id: string): any;
     /**
      * Gets the resolved/imported entity based on the Import-ID.
      * Overloads are to get the correct CMS item type based on the import-data type.
      */
     public get(data: ImportData | string): any {
-        return getItem(data as any, this.entityMap);
+        // TODO: Load with compound ID (type + id) instead, to avoid potential id collission.
+        const id = typeof data === 'object' ? data[IMPORT_ID] : data;
+        return this.entityMap[id];
     }
 
-    private getDependency(type: typeof IMPORT_TYPE_NODE, id: string, optional?: boolean): Node;
-    private getDependency(type: typeof IMPORT_TYPE_NODE, id: string, optional: true): Node | null;
-    private getDependency(type: typeof ITEM_TYPE_FOLDER, id: string, optional?: boolean): Folder;
-    private getDependency(type: typeof ITEM_TYPE_FOLDER, id: string, optional: true): Folder | null;
-    private getDependency(type: typeof ITEM_TYPE_PAGE | typeof IMPORT_TYPE_PAGE_TRANSLATION, id: string, optional?: boolean): Page;
-    private getDependency(type: typeof ITEM_TYPE_PAGE | typeof IMPORT_TYPE_PAGE_TRANSLATION, id: string, optional: true): Page | null;
-    private getDependency(type: typeof ITEM_TYPE_IMAGE, id: string, optional?: boolean): Image;
-    private getDependency(type: typeof ITEM_TYPE_IMAGE, id: string, optional: true): Image | null;
-    private getDependency(type: typeof ITEM_TYPE_FILE, id: string, optional?: boolean): File;
-    private getDependency(type: typeof ITEM_TYPE_FILE, id: string, optional: true): File | null;
-    private getDependency(type: typeof ITEM_TYPE_FORM, id: string, optional?: boolean): Form;
-    private getDependency(type: typeof ITEM_TYPE_FORM, id: string, optional: true): Form | null;
-    private getDependency(type: typeof IMPORT_TYPE_GROUP, id: string, optional?: boolean): Group;
-    private getDependency(type: typeof IMPORT_TYPE_GROUP, id: string, optional: true): Group | null;
-    private getDependency(type: typeof IMPORT_TYPE_USER, id: string, optional?: boolean): User;
-    private getDependency(type: typeof IMPORT_TYPE_USER, id: string, optional: true): User | null;
-    private getDependency(type: typeof IMPORT_TYPE_TASK, id: string, optional?: boolean): ScheduleTask;
-    private getDependency(type: typeof IMPORT_TYPE_TASK, id: string, optional: true): ScheduleTask | null;
-    private getDependency(type: typeof IMPORT_TYPE_SCHEDULE, id: string, optional?: boolean): Schedule;
-    private getDependency(type: typeof IMPORT_TYPE_SCHEDULE, id: string, optional: true): Schedule | null;
-    private getDependency(type: typeof IMPORT_TYPE_CONSTRUCT_CATEGORY, id: string, optional?: boolean): ConstructCategory;
-    private getDependency(type: typeof IMPORT_TYPE_CONSTRUCT_CATEGORY, id: string, optional: true): ConstructCategory | null;
-    private getDependency(type: ImportType, id: string, optional: boolean = false): any {
-        const item = this.get({
-            [IMPORT_TYPE]: type,
-            [IMPORT_ID]: id,
-        } as any);
+    private getDependency<T extends ImportType>(ref: ImportReference<T>, optional?: boolean): ImportEntityType<T>;
+    private getDependency<T extends ImportType>(ref: ImportReference<T>, optional: true): ImportEntityType<T> | null;
+    private getDependency<T extends ImportType>(type: T, id: string, optional?: boolean): ImportEntityType<T>;
+    private getDependency<T extends ImportType>(type: T, id: string, optional: true): ImportEntityType<T> | null;
+    private getDependency<T extends ImportType>(
+        typeOrRef: T | ImportReference<T>,
+        idOrOptional?: string | boolean,
+        optional: boolean = false,
+    ): ImportEntityType<T> {
+        let ref: ImportReference<T>;
+
+        if (typeof typeOrRef === 'object') {
+            ref = typeOrRef;
+            optional = !!idOrOptional;
+        } else {
+            ref = {
+                [IMPORT_TYPE]: typeOrRef,
+                [IMPORT_ID]: idOrOptional as string,
+            };
+        }
+
+        const item = this.get(ref);
 
         if (item == null && !optional) {
-            const msg = `Missing item depdency ${type}:${id}!`;
+            const msg = `Missing item depdency ${ref[IMPORT_TYPE]}:${ref[IMPORT_ID]}!`;
             console.error(msg);
             throw new Error(msg);
         }
@@ -719,12 +712,12 @@ export class EntityImporter {
     private async importGroup(
         data: GroupImportData,
     ): Promise<Group | null> {
-        const { parentId, permissions, ...reqData } = data;
+        const { parent, permissions, ...reqData } = data;
 
         let parentGroup: Group | null = null;
 
-        if (parentId != null) {
-            parentGroup = this.getDependency(IMPORT_TYPE_GROUP, parentId, true);
+        if (parent != null) {
+            parentGroup = this.getDependency(parent, true);
         }
 
         if (parentGroup == null) {
@@ -778,13 +771,13 @@ export class EntityImporter {
     private async importUser(
         data: UserImportData,
     ): Promise<User | null> {
-        const { groupId, extraGroups, ...reqData } = data;
+        const { group, extraGroups, ...reqData } = data;
 
-        const group = this.getDependency(IMPORT_TYPE_GROUP, groupId);
+        const groupEntity = this.getDependency(group);
         let user: User;
 
         try {
-            user = (await this.client.group.createUser(group.id, reqData).send()).user;
+            user = (await this.client.group.createUser(groupEntity.id, reqData).send()).user;
         } catch (err) {
             // If the user already exists, ignore it
             if (!(err instanceof GCMSRestClientRequestError && err.responseCode === 409)) {
@@ -800,7 +793,7 @@ export class EntityImporter {
 
         if (extraGroups) {
             for (const extraGroupId of extraGroups) {
-                const extraGroup = this.getDependency(IMPORT_TYPE_GROUP, extraGroupId);
+                const extraGroup = this.getDependency(extraGroupId);
                 await this.client.user.assignToGroup(user.id, extraGroup.id).send();
             }
         }
@@ -1061,6 +1054,9 @@ export class EntityImporter {
         if (!importList) {
             return {};
         }
+
+        // Make sure root group is present
+        this.rootGroup = await this.importGroup(GROUP_ROOT);
 
         // Then attempt to import all
         for (const importData of importList) {

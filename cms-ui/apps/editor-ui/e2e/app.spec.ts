@@ -2,10 +2,10 @@ import {
     EntityImporter,
     IMPORT_TYPE,
     TestSize,
-    folderA,
-    folderB,
+    FOLDER_A,
+    FOLDER_B,
     loginWithForm,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
@@ -39,22 +39,22 @@ test.describe('App', () => {
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     test('should have the minimal node present', async ({ page }) => {
         const title = page.locator('folder-contents > .title .title-name');
-        await expect(title).toHaveText(minimalNode.node.name);
+        await expect(title).toHaveText(NODE_MINIMAL.node.name);
 
-        const folders = [folderA, folderB];
+        const folders = [FOLDER_A, FOLDER_B];
         for (const folder of folders) {
             const list = findList(page, folder[IMPORT_TYPE]);
             const item = findItem(list, IMPORTER.get(folder)!.id);
             await expect(item).toBeVisible();
         }
 
-        const folderAList = findList(page, folderA[IMPORT_TYPE]);
-        const folderAItem = findItem(folderAList, IMPORTER.get(folderA)!.id);
+        const folderAList = findList(page, FOLDER_A[IMPORT_TYPE]);
+        const folderAItem = findItem(folderAList, IMPORTER.get(FOLDER_A)!.id);
         await itemAction(folderAItem, 'properties');
 
         const contentFrame = page.locator('content-frame');

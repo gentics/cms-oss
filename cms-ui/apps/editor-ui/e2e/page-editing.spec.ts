@@ -1,5 +1,5 @@
-import { Page as CmsPage, PageSaveRequest, Template } from '@gentics/cms-models';
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
+import { Page as CmsPage, PageSaveRequest, Template } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     EntityImporter,
@@ -8,9 +8,9 @@ import {
     loginWithForm,
     matchesPath,
     matchRequest,
-    minimalNode,
     navigateToApp,
-    pageOne,
+    NODE_MINIMAL,
+    PAGE_ONE,
     pickSelectValue,
     TestSize,
 } from '@gentics/e2e-utils';
@@ -28,9 +28,9 @@ import {
     ACTION_FORMAT_UNDERLINE,
     ACTION_REMOVE_FORMAT,
     AUTH,
-    HelperWindow,
 } from './common';
 import {
+    createExternalLink,
     createInternalLink,
     editorAction,
     findAlohaComponent,
@@ -38,13 +38,12 @@ import {
     findList,
     getAlohaIFrame,
     itemAction,
+    openPageForEditing,
     selectEditorTab,
     selectNode,
     selectRangeIn,
     selectTextIn,
     setupHelperWindowFunctions,
-    openPageForEditing,
-    createExternalLink,
 } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
@@ -85,7 +84,7 @@ test.describe('Page Editing', () => {
         await setupHelperWindowFunctions(page);
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     test.describe('Edit Mode', () => {
@@ -142,11 +141,11 @@ test.describe('Page Editing', () => {
                 await cancelRequest;
             });
 
-            test('should be able to select an internal page as link', async ({page}) => {
+            test('should be able to select an internal page as link', async ({ page }) => {
                 const TEXT_CONTENT = 'Hello ';
                 const LINK_TEXT = 'World';
-                const LINK_ITEM = IMPORTER.get(pageOne);
-                const ITEM_NODE = IMPORTER.get(minimalNode)!;
+                const LINK_ITEM = IMPORTER.get(PAGE_ONE);
+                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL)!;
                 const LINK_TITLE = 'My Link Title';
                 const LINK_TARGET = '_blank';
                 const LINK_ANCHOR = 'test-anchor';
@@ -309,7 +308,7 @@ test.describe('Page Editing', () => {
                     description: 'SUP-18537',
                 }],
             }, async ({page}) => {
-                const LINK_ITEM = IMPORTER.get(pageOne);
+                const LINK_ITEM = IMPORTER.get(PAGE_ONE);
                 await createLinkCopyPasteTest(page, async () => {
                     await createInternalLink(page, async repoBrowser => {
                         await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
@@ -336,7 +335,7 @@ test.describe('Page Editing', () => {
 
         test.describe('Formatting', () => {
             test.beforeEach(async ({page}) => {
-                editingPage = IMPORTER.get(pageOne);
+                editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
             });
 
@@ -485,7 +484,7 @@ test.describe('Page Editing', () => {
 
                 await topLeftCell.click();
 
-                const styleToggle = await findAlohaComponent(page, {slot: 'tableCellStyle'});
+                const styleToggle = findAlohaComponent(page, {slot: 'tableCellStyle'});
 
                 await expect(styleToggle).toBeDisabled();
             });
@@ -506,7 +505,7 @@ test.describe('Page Editing', () => {
 
                 await topLeftCell.click();
 
-                const styleToggle = await findAlohaComponent(page, {slot: 'tableCellStyle'});
+                const styleToggle = findAlohaComponent(page, {slot: 'tableCellStyle'});
 
                 await expect(styleToggle).toBeEnabled();
                 await styleToggle.click();
@@ -532,11 +531,11 @@ test.describe('Page Editing', () => {
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
-                const firstColumn = await table.locator('.aloha-table-selectcolumn td:nth-child(2)');
+                const firstColumn = table.locator('.aloha-table-selectcolumn td:nth-child(2)');
 
                 await firstColumn.click();
 
-                const styleToggle = await findAlohaComponent(page, {slot: 'tableCellStyle'});
+                const styleToggle = findAlohaComponent(page, {slot: 'tableCellStyle'});
 
                 await styleToggle.click();
 
@@ -553,7 +552,7 @@ test.describe('Page Editing', () => {
 
                 const cells = await mainEditable.locator('table tr:not(.aloha-table-selectcolumn) td:not(.aloha-table-selectrow):nth-child(2)').all();
 
-                await expect(cells).toHaveLength(3);
+                expect(cells).toHaveLength(3);
                 await expect(cells[0]).toContainClass(styleName);
                 await expect(cells[1]).toContainClass(styleName);
                 await expect(cells[2]).toContainClass(styleName);
@@ -567,11 +566,11 @@ test.describe('Page Editing', () => {
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
-                const firstRow = await table.locator('tr:nth-child(2) .aloha-table-selectrow');
+                const firstRow = table.locator('tr:nth-child(2) .aloha-table-selectrow');
 
                 await firstRow.click();
 
-                const styleToggle = await findAlohaComponent(page, {slot: 'tableCellStyle'});
+                const styleToggle = findAlohaComponent(page, {slot: 'tableCellStyle'});
 
                 await styleToggle.click();
 
@@ -588,9 +587,7 @@ test.describe('Page Editing', () => {
 
                 const cells = await mainEditable.locator('table tr:not(.aloha-table-selectcolumn):nth-child(2) td:not(.aloha-table-selectrow)').all();
 
-                console.log(cells);
-
-                await expect(cells).toHaveLength(3);
+                expect(cells).toHaveLength(3);
                 await expect(cells[0]).toContainClass(styleName);
                 await expect(cells[1]).toContainClass(styleName);
                 await expect(cells[2]).toContainClass(styleName);
@@ -600,15 +597,15 @@ test.describe('Page Editing', () => {
                 return page.route('/internal/minimal/files/js/aloha-config.js', route => {
                     return route.fulfill({
                         headers: {
-                            location: `/internal/minimal/files/js/${configFilename}`
+                            location: `/internal/minimal/files/js/${configFilename}`,
                         },
-                        status: 301
+                        status: 301,
                     })
                 });
             }
 
             async function editPageAndCreateTable(page) {
-                editingPage = IMPORTER.get(pageOne);
+                editingPage = IMPORTER.get(PAGE_ONE);
 
                 await openEditingPageInEditmode(page);
 
@@ -642,14 +639,14 @@ test.describe('Page Editing', () => {
             request.method() === 'GET'
                 && matchesPath(request.url(), '/rest/construct')
                 && hasMatchingParams(request.url(), {
-                    nodeId: IMPORTER.get(minimalNode).id.toString(),
-                    pageId: IMPORTER.get(pageOne).id.toString(),
+                    nodeId: IMPORTER.get(NODE_MINIMAL).id.toString(),
+                    pageId: IMPORTER.get(PAGE_ONE).id.toString(),
                 }),
         );
 
         // Setup page for editing
         const list = findList(page, ITEM_TYPE_PAGE);
-        const item = findItem(list, IMPORTER.get(pageOne).id);
+        const item = findItem(list, IMPORTER.get(PAGE_ONE).id);
         await itemAction(item, 'edit');
 
         // Switch to preview mode first

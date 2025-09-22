@@ -10,11 +10,11 @@ import {
     loginWithForm,
     logout,
     matchRequest,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
     openSidebar,
-    pageOne,
-    rootGroup,
+    PAGE_ONE,
+    GROUP_ROOT,
     selectTab,
     TestSize,
     UserImportData,
@@ -32,8 +32,6 @@ test.describe('Publish Queue', () => {
         [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
         [IMPORT_ID]: 'group_pubqueue_editor',
 
-        parentId: rootGroup[IMPORT_ID],
-
         description: 'PubQueue: Editor',
         name: 'pubqueue_editor',
         permissions: [],
@@ -42,8 +40,6 @@ test.describe('Publish Queue', () => {
     const TEST_GROUP_ASSIGNER_BASE: GroupImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
         [IMPORT_ID]: 'group_pubqueue_assigner',
-
-        parentId: rootGroup[IMPORT_ID],
 
         description: 'PubQueue: Assigner',
         name: 'pubqueue_assigner',
@@ -54,8 +50,6 @@ test.describe('Publish Queue', () => {
         [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
         [IMPORT_ID]: 'group_pubqueue_publisher',
 
-        parentId: rootGroup[IMPORT_ID],
-
         description: 'PubQueue: Publisher',
         name: 'pubqueue_publisher',
         permissions: [],
@@ -65,7 +59,7 @@ test.describe('Publish Queue', () => {
         [IMPORT_TYPE]: IMPORT_TYPE_USER,
         [IMPORT_ID]: 'user_pubqueue_editor',
 
-        groupId: TEST_GROUP_EDITOR_BASE[IMPORT_ID],
+        group: TEST_GROUP_EDITOR_BASE,
 
         email: 'something@example.com',
         firstName: 'PubQueue',
@@ -78,13 +72,11 @@ test.describe('Publish Queue', () => {
         [IMPORT_TYPE]: IMPORT_TYPE_USER,
         [IMPORT_ID]: 'user_pubqueue_assigner',
 
-        groupId: TEST_GROUP_ASSIGNER_BASE[IMPORT_ID],
+        group: TEST_GROUP_ASSIGNER_BASE,
         // Has to be in a higher or same group as others to see them
         // Therefore we put them into the root group, so they can see
         // the publisher user.
-        extraGroups: [
-            rootGroup[IMPORT_ID],
-        ],
+        extraGroups: [GROUP_ROOT],
 
         email: 'something@example.com',
         firstName: 'PubQueue',
@@ -97,7 +89,7 @@ test.describe('Publish Queue', () => {
         [IMPORT_TYPE]: IMPORT_TYPE_USER,
         [IMPORT_ID]: 'user_pubqueue_publisher',
 
-        groupId: TEST_GROUP_PUBLISHER_BASE[IMPORT_ID],
+        group: TEST_GROUP_PUBLISHER_BASE,
 
         email: 'something@example.com',
         firstName: 'PubQueue',
@@ -133,7 +125,7 @@ test.describe('Publish Queue', () => {
         await test.step('Specialized Test Setup', async () => {
             // We have to assemble the group permissions here, because we
             // need the imported data refs.
-            const NODE = IMPORTER.get(minimalNode);
+            const NODE = IMPORTER.get(NODE_MINIMAL);
             // Create a copy, so we have a clean base object
             const TEST_GROUP_EDITOR = {...TEST_GROUP_EDITOR_BASE};
             const TEST_GROUP_PUBLISHER = {...TEST_GROUP_PUBLISHER_BASE};
@@ -212,7 +204,7 @@ test.describe('Publish Queue', () => {
             ];
 
             await IMPORTER.importData([
-                rootGroup,
+                GROUP_ROOT,
                 TEST_GROUP_EDITOR,
                 TEST_GROUP_ASSIGNER,
                 TEST_GROUP_PUBLISHER,
@@ -226,7 +218,7 @@ test.describe('Publish Queue', () => {
     test('should put page in publish queue, assign it back', async ({ page }) => {
         test.slow();
 
-        const PAGE_TO_PUBLISH = IMPORTER.get(pageOne);
+        const PAGE_TO_PUBLISH = IMPORTER.get(PAGE_ONE);
         const TEST_MESSAGE = `Publish ${randomId()}`;
         const EDITOR_USER = IMPORTER.get(TEST_USER_EDITOR);
 
@@ -237,7 +229,7 @@ test.describe('Publish Queue', () => {
                 username: TEST_USER_EDITOR.login,
                 password: TEST_USER_EDITOR.password,
             });
-            await selectNode(page, IMPORTER.get(minimalNode).id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
 
             // Open the properties
             const pageList = findList(page, 'page');

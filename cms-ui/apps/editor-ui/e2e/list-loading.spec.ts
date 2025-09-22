@@ -1,12 +1,12 @@
 import { Node, PageCopyResponse } from '@gentics/cms-models';
 import {
     EntityImporter,
-    folderT,
-    fullNode,
+    FOLDER_V,
+    NODE_FULL,
     loginWithForm,
     matchRequest,
     navigateToApp,
-    pageTwentyfour,
+    PAGE_TWENTYFOUR,
     pickSelectValue,
     setupUserDataRerouting,
     TestSize,
@@ -19,7 +19,7 @@ test.describe.configure({ mode: 'serial' });
 test.describe('List Loading', () => {
 
     const IMPORTER = new EntityImporter();
-    let ACTIVE_NODE: Node<Raw>;
+    let activeNode: Node;
 
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
@@ -36,7 +36,7 @@ test.describe('List Loading', () => {
         await IMPORTER.clearClient();
         await IMPORTER.cleanupTest();
         await IMPORTER.setupTest(TestSize.FULL);
-        ACTIVE_NODE = IMPORTER.get(fullNode);
+        activeNode = IMPORTER.get(NODE_FULL);
 
         // Pagination data may be loaded from the server stored user-data
         // This will simply return empty data for the user
@@ -44,7 +44,7 @@ test.describe('List Loading', () => {
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(fullNode)!.id);
+        await selectNode(page, activeNode.id);
     });
 
     async function waitForListItems(page: Page, list: Locator, actor?: () => Promise<any>): Promise<Locator> {
@@ -53,7 +53,7 @@ test.describe('List Loading', () => {
 
         let req: Promise<any> = Promise.resolve();
         if (actor) {
-            req = page.waitForResponse(matchRequest('GET', `/rest/folder/get${listType}s/${ACTIVE_NODE.folderId}`));
+            req = page.waitForResponse(matchRequest('GET', `/rest/folder/get${listType}s/${activeNode.folderId}`));
             await actor();
         }
 
@@ -96,7 +96,7 @@ test.describe('List Loading', () => {
             description: 'SUP-18792',
         }],
     }, async ({ page }) => {
-        const PAGE_TO_COPY = IMPORTER.get(pageTwentyfour)!;
+        const PAGE_TO_COPY = IMPORTER.get(PAGE_TWENTYFOUR)!;
         const list = findList(page, 'page');
 
         await waitForListItems(page, list);
@@ -136,7 +136,7 @@ test.describe('List Loading', () => {
             description: 'SUP-18850',
         }],
     }, async ({ page }) => {
-        const FOLDER_TO_FIND = IMPORTER.get(folderT);
+        const FOLDER_TO_FIND = IMPORTER.get(FOLDER_V);
 
         const list = findList(page, 'folder');
 

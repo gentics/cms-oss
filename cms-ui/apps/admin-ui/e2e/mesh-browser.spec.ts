@@ -4,20 +4,20 @@ import {
     CONTENT_REPOSITORY_MESH,
     EntityImporter,
     findTableRowById,
-    folderA,
+    FOLDER_A,
     IMPORT_ID,
     IMPORT_TYPE,
     ITEM_TYPE_PAGE,
     LANGUAGE_DE,
     LANGUAGE_EN,
     loginWithForm,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
     openContext,
     PageImportData,
-    pageOne,
-    pageOneDE,
-    schedulePublisher,
+    PAGE_ONE,
+    PAGE_ONE_DE,
+    SCHEDULE_PUBLISHER,
     TestSize,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
@@ -79,8 +79,8 @@ test.describe('Mesh Browser', () => {
         const PAGE_GERMAN: PageImportData = {
             [IMPORT_TYPE]: ITEM_TYPE_PAGE,
             [IMPORT_ID]: 'germanMeshPage1',
-            folderId: folderA[IMPORT_ID],
-            nodeId: minimalNode[IMPORT_ID],
+            folderId: FOLDER_A[IMPORT_ID],
+            nodeId: NODE_MINIMAL[IMPORT_ID],
             pageName: 'xSomethingGerman',
             templateId: BASIC_TEMPLATE_ID,
             language: LANGUAGE_DE,
@@ -89,14 +89,14 @@ test.describe('Mesh Browser', () => {
         test.beforeEach(async ({ page }) => {
             // Import publisher and our datq
             await IMPORTER.importData([
-                schedulePublisher,
+                SCHEDULE_PUBLISHER,
                 PAGE_GERMAN,
             ]);
 
             // Publish the pages
-            await IMPORTER.client.page.publish(IMPORTER.get(pageOne).id, { alllang: true }).send();
+            await IMPORTER.client.page.publish(IMPORTER.get(PAGE_ONE).id, { alllang: true }).send();
             await IMPORTER.client.page.publish(IMPORTER.get(PAGE_GERMAN).id, { alllang: true }).send();
-            await IMPORTER.executeSchedule(schedulePublisher);
+            await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
@@ -147,7 +147,7 @@ test.describe('Mesh Browser', () => {
             // Find the published page and click it to open the editor
             const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
             const element = contents.locator('.schema-content .schema-element').filter({
-                hasText: IMPORTER.get(pageOne).name,
+                hasText: IMPORTER.get(PAGE_ONE).name,
             });
             await element.locator('.title').click();
 
@@ -172,7 +172,7 @@ test.describe('Mesh Browser', () => {
             // Find the published page and click it to open the editor
             const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
             const element = contents.locator('.schema-content .schema-element').filter({
-                hasText: IMPORTER.get(pageOne).name,
+                hasText: IMPORTER.get(PAGE_ONE).name,
             });
             await element.locator('.title').click();
 
@@ -191,13 +191,13 @@ test.describe('Mesh Browser', () => {
         test.beforeEach('Multilingual setup', async ({ page }) => {
             // Setup Data which should be published to mesh in order to be visible in the mesh-browser
             await IMPORTER.importData([
-                pageOneDE,
-                schedulePublisher,
+                PAGE_ONE_DE,
+                SCHEDULE_PUBLISHER,
             ], TestSize.MINIMAL);
-            await IMPORTER.client.page.publish(IMPORTER.get(pageOne).id, { alllang: true }).send();
+            await IMPORTER.client.page.publish(IMPORTER.get(PAGE_ONE).id, { alllang: true }).send();
 
             // Import and execute the publisher to have the content be published
-            await IMPORTER.executeSchedule(schedulePublisher);
+            await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);

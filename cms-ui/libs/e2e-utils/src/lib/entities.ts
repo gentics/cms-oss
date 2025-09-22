@@ -18,7 +18,6 @@ import {
     IMPORT_TYPE_NODE,
     IMPORT_TYPE_PAGE_TRANSLATION,
     IMPORT_TYPE_SCHEDULE,
-    IMPORT_TYPE_USER,
     ImportData,
     ImportPermissions,
     ImportSinglePermission,
@@ -36,7 +35,6 @@ import {
     TASK_LINK_CHECKER,
     TASK_PUBLISH,
     TestSize,
-    UserImportData,
 } from './common';
 
 /*
@@ -105,7 +103,7 @@ export const CLEAR_ALL_CONTENT_PERMISSIONS: ImportSinglePermission[] = [
     { type: GcmsPermission.WASTE_BIN, value: false },
 ];
 
-export const rootGroup: GroupImportData = {
+export const GROUP_ROOT: GroupImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
     [IMPORT_ID]: 'group_root',
 
@@ -237,35 +235,7 @@ export const rootGroup: GroupImportData = {
     ],
 };
 
-export const userAlpha: UserImportData = {
-    [IMPORT_TYPE]: IMPORT_TYPE_USER,
-    [IMPORT_ID]: 'userAlpha',
-
-    groupId: rootGroup[IMPORT_ID],
-
-    email: 'alpha-test-user@localhost',
-    firstName: 'Test User',
-    lastName: 'Alpha',
-    password: 'alpha',
-    login: 'alpha',
-    description: 'Test User Alpha',
-};
-
-export const userBeta: UserImportData = {
-    [IMPORT_TYPE]: IMPORT_TYPE_USER,
-    [IMPORT_ID]: 'userBeta',
-
-    groupId: rootGroup[IMPORT_ID],
-
-    email: 'beta-test-user@localhost',
-    firstName: 'Test User',
-    lastName: 'beta',
-    password: 'beta',
-    login: 'beta',
-    description: 'Test User Beta',
-};
-
-export const schedulePublisher: ScheduleImportData = {
+export const SCHEDULE_PUBLISHER: ScheduleImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_SCHEDULE,
     [IMPORT_ID]: 'schedulePublish',
 
@@ -278,7 +248,7 @@ export const schedulePublisher: ScheduleImportData = {
     },
 };
 
-export const scheduleLinkChecker: ScheduleImportData = {
+export const SCHEDULE_LINK_CHECKER: ScheduleImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_SCHEDULE,
     [IMPORT_ID]: 'scheduleLinkChecker',
 
@@ -295,7 +265,7 @@ export const scheduleLinkChecker: ScheduleImportData = {
  * MINIMAL SETUP
  * ---------------------------------------------------------------- */
 
-export const minimalNode: NodeImportData = {
+export const NODE_MINIMAL: NodeImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_NODE,
     [IMPORT_ID]: 'minimalNode',
 
@@ -383,11 +353,11 @@ function createPageTranslation(
     };
 }
 
-export const folderA = createRootFolder(minimalNode, 'A');
-export const folderB = createRootFolder(minimalNode, 'B');
+export const FOLDER_A = createRootFolder(NODE_MINIMAL, 'A');
+export const FOLDER_B = createRootFolder(NODE_MINIMAL, 'B');
 
-export const pageOne: PageImportData = {
-    ...createPage(minimalNode, minimalNode, BASIC_TEMPLATE_ID, 'One'),
+export const PAGE_ONE: PageImportData = {
+    ...createPage(NODE_MINIMAL, NODE_MINIMAL, BASIC_TEMPLATE_ID, 'One'),
     tags: {
         content: {
             id: null,
@@ -415,7 +385,7 @@ Feugiat ac integer viverra fermentum auctor ipsum tristique rutrum.`,
     },
 };
 
-export const pageOneDE = createPageTranslation(pageOne, 'Eins', LANGUAGE_DE, {
+export const PAGE_ONE_DE = createPageTranslation(PAGE_ONE, 'Eins', LANGUAGE_DE, {
     pageName: 'Seite Eins',
     tags: {
         content: {
@@ -441,35 +411,35 @@ ras condimentum, elit in facilisis sodales, risus urna consectetur justo, eget f
     },
 });
 
-export const fileOne: FileImportData = {
+export const FILE_ONE: FileImportData = {
     [IMPORT_TYPE]: ITEM_TYPE_FILE,
     [IMPORT_ID]: 'fileOne',
 
-    nodeId: minimalNode[IMPORT_ID],
-    folderId: minimalNode[IMPORT_ID],
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
 
     name: 'File #1',
     description: 'First file',
 };
 
-export const imageOne: ImageImportData = {
+export const IMAGE_ONE: ImageImportData = {
     [IMPORT_TYPE]: ITEM_TYPE_IMAGE,
     [IMPORT_ID]: 'imageOne',
 
-    nodeId: minimalNode[IMPORT_ID],
-    folderId: minimalNode[IMPORT_ID],
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
 
     name: 'Image #1',
     description: 'First image',
 };
 
 /** Has to be imported manually/per test, as forms are a EE feature */
-export const formOne: FormImportData = {
+export const FORM_ONE: FormImportData = {
     [IMPORT_TYPE]: ITEM_TYPE_FORM,
     [IMPORT_ID]: 'formOne',
 
-    nodeId: minimalNode[IMPORT_ID],
-    folderId: minimalNode[IMPORT_ID],
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
 
     languages: [LANGUAGE_EN],
 
@@ -484,7 +454,7 @@ export const formOne: FormImportData = {
  * FULL SETUP
  * ---------------------------------------------------------------- */
 
-export const fullNode: NodeImportData = {
+export const NODE_FULL: NodeImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_NODE,
     [IMPORT_ID]: 'fullNode',
 
@@ -516,91 +486,93 @@ export const fullNode: NodeImportData = {
     ],
 };
 
-export const folderFullA = createRootFolder(fullNode, 'A');
-export const folderFullB = createRootFolder(fullNode, 'B');
-export const folderC = createRootFolder(fullNode, 'C');
-export const folderD = createRootFolder(fullNode, 'D');
-export const folderE = createRootFolder(fullNode, 'E');
-export const folderF = createRootFolder(fullNode, 'F');
-export const folderG = createRootFolder(fullNode, 'G');
-export const folderH = createRootFolder(fullNode, 'H');
-export const folderI = createRootFolder(fullNode, 'I');
-export const folderJ = createRootFolder(fullNode, 'J');
-export const folderK = createRootFolder(fullNode, 'K');
-export const folderL = createRootFolder(fullNode, 'L');
-export const folderM = createRootFolder(fullNode, 'M');
-export const folderN = createRootFolder(fullNode, 'N');
-export const folderO = createRootFolder(fullNode, 'O');
-export const folderP = createRootFolder(fullNode, 'P');
-export const folderQ = createRootFolder(fullNode, 'Q');
-export const folderR = createRootFolder(fullNode, 'R');
-export const folderS = createRootFolder(fullNode, 'S');
-export const folderT = createRootFolder(fullNode, 'T');
-export const folderU = createRootFolder(fullNode, 'U');
+export const FOLDER_C = createRootFolder(NODE_FULL, 'C');
+export const FOLDER_D = createRootFolder(NODE_FULL, 'D');
+export const FOLDER_E = createRootFolder(NODE_FULL, 'E');
+export const FOLDER_F = createRootFolder(NODE_FULL, 'F');
+export const FOLDER_G = createRootFolder(NODE_FULL, 'G');
+export const FOLDER_H = createRootFolder(NODE_FULL, 'H');
+export const FOLDER_I = createRootFolder(NODE_FULL, 'I');
+export const FOLDER_J = createRootFolder(NODE_FULL, 'J');
+export const FOLDER_K = createRootFolder(NODE_FULL, 'K');
+export const FOLDER_L = createRootFolder(NODE_FULL, 'L');
+export const FOLDER_M = createRootFolder(NODE_FULL, 'M');
+export const FOLDER_N = createRootFolder(NODE_FULL, 'N');
+export const FOLDER_O = createRootFolder(NODE_FULL, 'O');
+export const FOLDER_P = createRootFolder(NODE_FULL, 'P');
+export const FOLDER_Q = createRootFolder(NODE_FULL, 'Q');
+export const FOLDER_R = createRootFolder(NODE_FULL, 'R');
+export const FOLDER_S = createRootFolder(NODE_FULL, 'S');
+export const FOLDER_T = createRootFolder(NODE_FULL, 'T');
+export const FOLDER_U = createRootFolder(NODE_FULL, 'U');
+export const FOLDER_V = createRootFolder(NODE_FULL, 'V');
+export const FOLDER_W = createRootFolder(NODE_FULL, 'W');
+export const FOLDER_X = createRootFolder(NODE_FULL, 'X');
+export const FOLDER_Y = createRootFolder(NODE_FULL, 'Y');
+export const FOLDER_Z = createRootFolder(NODE_FULL, 'Z');
 
-export const folderA_A = createFolder(fullNode, folderFullA, 'A-A');
-export const folderA_B = createFolder(fullNode, folderFullA, 'A-B');
-export const folderA_C = createFolder(fullNode, folderFullA, 'A-C');
+export const FOLDER_C_A = createFolder(NODE_FULL, FOLDER_C, 'C-A');
+export const FOLDER_C_B = createFolder(NODE_FULL, FOLDER_C, 'C-B');
+export const FOLDER_C_C = createFolder(NODE_FULL, FOLDER_C, 'C-C');
 
-export const folderA_B_A = createFolder(fullNode, folderA_A, 'A-B-A');
-export const folderA_B_B = createFolder(fullNode, folderA_A, 'A-B-B');
-export const folderA_B_C = createFolder(fullNode, folderA_A, 'A-B-C');
-export const folderA_B_D = createFolder(fullNode, folderA_A, 'A-B-D');
-export const folderA_B_E = createFolder(fullNode, folderA_A, 'A-B-E');
-export const folderA_B_F = createFolder(fullNode, folderA_A, 'A-B-F');
-export const folderA_B_G = createFolder(fullNode, folderA_A, 'A-B-G');
-export const folderA_B_H = createFolder(fullNode, folderA_A, 'A-B-H');
+export const FOLDER_C_B_A = createFolder(NODE_FULL, FOLDER_C_A, 'C-B-A');
+export const FOLDER_C_B_B = createFolder(NODE_FULL, FOLDER_C_A, 'C-B-B');
+export const FOLDER_C_B_C = createFolder(NODE_FULL, FOLDER_C_A, 'C-B-C');
+export const FOLDER_C_B_D = createFolder(NODE_FULL, FOLDER_C_A, 'C-B-D');
+export const FOLDER_C_B_E = createFolder(NODE_FULL, FOLDER_C_A, 'C-B-E');
+export const FOLDER_C_B_F = createFolder(NODE_FULL, FOLDER_C_A, 'C-B-F');
+export const FOLDER_C_B_G = createFolder(NODE_FULL, FOLDER_C_A, 'C-B-G');
+export const FOLDER_C_B_H = createFolder(NODE_FULL, FOLDER_C_A, 'C-B-H');
 
-export const folderA_B_E_A = createFolder(fullNode, folderA_B_E, 'A-B-E-A');
+export const FOLDER_C_B_E_A = createFolder(NODE_FULL, FOLDER_C_B_E, 'C-B-E-A');
 
-export const folderF_A = createFolder(fullNode, folderF, 'F-A');
-export const folderF_B = createFolder(fullNode, folderF, 'F-B');
-export const folderF_C = createFolder(fullNode, folderF, 'F-C');
-export const folderF_D = createFolder(fullNode, folderF, 'F-D');
-export const folderF_E = createFolder(fullNode, folderF, 'F-E');
-export const folderF_F = createFolder(fullNode, folderF, 'F-F');
-export const folderF_G = createFolder(fullNode, folderF, 'F-G');
-export const folderF_H = createFolder(fullNode, folderF, 'F-H');
+export const FOLDER_F_A = createFolder(NODE_FULL, FOLDER_F, 'F-A');
+export const FOLDER_F_B = createFolder(NODE_FULL, FOLDER_F, 'F-B');
+export const FOLDER_F_C = createFolder(NODE_FULL, FOLDER_F, 'F-C');
+export const FOLDER_F_D = createFolder(NODE_FULL, FOLDER_F, 'F-D');
+export const FOLDER_F_E = createFolder(NODE_FULL, FOLDER_F, 'F-E');
+export const FOLDER_F_F = createFolder(NODE_FULL, FOLDER_F, 'F-F');
+export const FOLDER_F_G = createFolder(NODE_FULL, FOLDER_F, 'F-G');
+export const FOLDER_F_H = createFolder(NODE_FULL, FOLDER_F, 'F-H');
 
-export const pageFullOne = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'One');
-export const pageTwo = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Two');
-export const pageThree = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Three');
-export const pageFour = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Four');
-export const pageFive = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Five');
-export const pageSix = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Six');
-export const pageSeven = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Seven');
-export const pageEight = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Eight');
-export const pageNine = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Nine');
-export const pageTen = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Ten');
-export const pageEleven = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Eleven');
-export const pageTwelve = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twelve');
-export const pageThirteen = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Thirteen');
-export const pageFourteen = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Fourteen');
-export const pageFiveteen = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Fiveteen');
-export const pageSixteen = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Sixteen');
-export const pageSeventeen = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Seventeen');
-export const pageEighteen = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Eighteen');
-export const pageNineteen = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Nineteen');
-export const pageTwenty = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twenty');
-export const pageTwentyone = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentyone');
-export const pageTwentytwo = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentytwo');
-export const pageTwentythree = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentythree');
-export const pageTwentyfour = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentyfour');
-export const pageTwentyfive = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentyfive');
-export const pageTwentysix = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentysix');
-export const pageTwentyseven = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentyseven');
-export const pageTwentyeight = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentyeight');
-export const pageTwentynine = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Twentynine');
-export const pageThirty = createPage(fullNode, fullNode, BASIC_TEMPLATE_ID, 'Thirty');
+export const PAGE_TWO = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Two');
+export const PAGE_THREE = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Three');
+export const PAGE_FOUR = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Four');
+export const PAGE_FIVE = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Five');
+export const PAGE_SIX = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Six');
+export const PAGE_SEVEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Seven');
+export const PAGE_EIGHT = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Eight');
+export const PAGE_NINE = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Nine');
+export const PAGE_TEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Ten');
+export const PAGE_ELEVEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Eleven');
+export const PAGE_TWELVE = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twelve');
+export const PAGE_THIRTEEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Thirteen');
+export const PAGE_FOURTEEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Fourteen');
+export const PAGE_FIVETEEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Fiveteen');
+export const PAGE_SIXTEEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Sixteen');
+export const PAGE_SEVENTEEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Seventeen');
+export const PAGE_EIGHTEEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Eighteen');
+export const PAGE_NINETEEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Nineteen');
+export const PAGE_TWENTY = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twenty');
+export const PAGE_TWNETYONE = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentyone');
+export const PAGE_TWENTYTWO = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentytwo');
+export const PAGE_TWENTYTHREE = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentythree');
+export const PAGE_TWENTYFOUR = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentyfour');
+export const PAGE_TWENTYFIVE = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentyfive');
+export const PAGE_TWENTYSIX = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentysix');
+export const PAGE_TWENTYSEVEN = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentyseven');
+export const PAGE_TWENTYEIGHT = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentyeight');
+export const PAGE_TWENTYNINE = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Twentynine');
+export const PAGE_THIRTY = createPage(NODE_FULL, NODE_FULL, BASIC_TEMPLATE_ID, 'Thirty');
 
-export const pageA_B_One = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'One_A-B');
-export const pageA_B_Two = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Two_A-B');
-export const pageA_B_Three = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Three_A-B');
-export const pageA_B_Four = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Four_A-B');
-export const pageA_B_Five = createPage(fullNode, folderA_B, BASIC_TEMPLATE_ID, 'Five_A-B');
+export const PAGE_C_B_ONE = createPage(NODE_FULL, FOLDER_C_B, BASIC_TEMPLATE_ID, 'One_C-B');
+export const PAGE_C_B_TWO = createPage(NODE_FULL, FOLDER_C_B, BASIC_TEMPLATE_ID, 'Two_C-B');
+export const PAGE_C_B_THREE = createPage(NODE_FULL, FOLDER_C_B, BASIC_TEMPLATE_ID, 'Three_C-B');
+export const PAGE_C_B_FOUR = createPage(NODE_FULL, FOLDER_C_B, BASIC_TEMPLATE_ID, 'Four_C-B');
+export const PAGE_C_B_FIVE = createPage(NODE_FULL, FOLDER_C_B, BASIC_TEMPLATE_ID, 'Five_C-B');
 
-export const pageA_B_E_One = createPage(fullNode, folderA_B_E, BASIC_TEMPLATE_ID, 'One_A-B-E');
-export const pageA_B_E_Two = createPage(fullNode, folderA_B_E, BASIC_TEMPLATE_ID, 'Two_A-B-E');
+export const PAGE_C_B_E_ONE = createPage(NODE_FULL, FOLDER_C_B_E, BASIC_TEMPLATE_ID, 'One_C-B-E');
+export const PAGE_C_B_E_TWO = createPage(NODE_FULL, FOLDER_C_B_E, BASIC_TEMPLATE_ID, 'Two_C-B-E');
 
 /*
  * PACKAGES
@@ -615,92 +587,92 @@ export const PACKAGE_IMPORTS: Record<TestSize, string[]> = {
 export const PACKAGE_MAP: Record<TestSize, ImportData[]> = {
     [TestSize.NONE]: [],
     [TestSize.MINIMAL]: [
-        minimalNode,
-        folderA,
-        folderB,
-        pageOne,
-        fileOne,
-        imageOne,
+        NODE_MINIMAL,
+        FOLDER_A,
+        FOLDER_B,
+        PAGE_ONE,
+        FILE_ONE,
+        IMAGE_ONE,
     ],
     [TestSize.FULL]: [
-        fullNode,
-        folderFullA,
-        folderFullB,
-        folderC,
-        folderD,
-        folderE,
-        folderF,
-        folderG,
-        folderH,
-        folderI,
-        folderJ,
-        folderK,
-        folderL,
-        folderM,
-        folderN,
-        folderO,
-        folderP,
-        folderQ,
-        folderR,
-        folderS,
-        folderT,
-        folderU,
-        folderA_A,
-        folderA_B,
-        folderA_C,
-        folderA_B_A,
-        folderA_B_B,
-        folderA_B_C,
-        folderA_B_D,
-        folderA_B_E,
-        folderA_B_F,
-        folderA_B_G,
-        folderA_B_H,
-        folderA_B_E_A,
-        folderF_A,
-        folderF_B,
-        folderF_C,
-        folderF_D,
-        folderF_E,
-        folderF_F,
-        folderF_G,
-        folderF_H,
-        pageFullOne,
-        pageTwo,
-        pageThree,
-        pageFour,
-        pageFive,
-        pageSix,
-        pageSeven,
-        pageEight,
-        pageNine,
-        pageTen,
-        pageEleven,
-        pageTwelve,
-        pageThirteen,
-        pageFourteen,
-        pageFiveteen,
-        pageSixteen,
-        pageSeventeen,
-        pageEighteen,
-        pageNineteen,
-        pageTwenty,
-        pageTwentyone,
-        pageTwentytwo,
-        pageTwentythree,
-        pageTwentyfour,
-        pageTwentyfive,
-        pageTwentysix,
-        pageTwentyseven,
-        pageTwentyeight,
-        pageTwentynine,
-        pageThirty,
-        pageA_B_One,
-        pageA_B_Two,
-        pageA_B_Three,
-        pageA_B_Four,
-        pageA_B_Five,
-        pageA_B_E_One,
-        pageA_B_E_Two,
+        NODE_FULL,
+        FOLDER_C,
+        FOLDER_D,
+        FOLDER_C,
+        FOLDER_D,
+        FOLDER_E,
+        FOLDER_F,
+        FOLDER_G,
+        FOLDER_H,
+        FOLDER_I,
+        FOLDER_J,
+        FOLDER_K,
+        FOLDER_L,
+        FOLDER_M,
+        FOLDER_N,
+        FOLDER_O,
+        FOLDER_P,
+        FOLDER_Q,
+        FOLDER_R,
+        FOLDER_U,
+        FOLDER_V,
+        FOLDER_W,
+        FOLDER_C_A,
+        FOLDER_C_B,
+        FOLDER_C_C,
+        FOLDER_C_B_A,
+        FOLDER_C_B_B,
+        FOLDER_C_B_C,
+        FOLDER_C_B_D,
+        FOLDER_C_B_E,
+        FOLDER_C_B_F,
+        FOLDER_C_B_G,
+        FOLDER_C_B_H,
+        FOLDER_C_B_E_A,
+        FOLDER_F_A,
+        FOLDER_F_B,
+        FOLDER_F_C,
+        FOLDER_F_D,
+        FOLDER_F_E,
+        FOLDER_F_F,
+        FOLDER_F_G,
+        FOLDER_F_H,
+        PAGE_TWO,
+        PAGE_THREE,
+        PAGE_THREE,
+        PAGE_FOUR,
+        PAGE_FIVE,
+        PAGE_SIX,
+        PAGE_SEVEN,
+        PAGE_EIGHT,
+        PAGE_NINE,
+        PAGE_TEN,
+        PAGE_ELEVEN,
+        PAGE_TWELVE,
+        PAGE_THIRTEEN,
+        PAGE_FOURTEEN,
+        PAGE_FIVETEEN,
+        PAGE_SIXTEEN,
+        PAGE_SEVENTEEN,
+        PAGE_EIGHTEEN,
+        PAGE_NINETEEN,
+        PAGE_TWENTY,
+        PAGE_TWNETYONE,
+        PAGE_TWENTYTWO,
+        PAGE_TWENTYTHREE,
+        PAGE_TWENTYFOUR,
+        PAGE_TWENTYFIVE,
+        PAGE_TWENTYSIX,
+        PAGE_TWENTYSEVEN,
+        PAGE_TWENTYEIGHT,
+        PAGE_TWENTYNINE,
+        PAGE_THIRTY,
+        PAGE_C_B_ONE,
+        PAGE_C_B_TWO,
+        PAGE_C_B_THREE,
+        PAGE_C_B_FOUR,
+        PAGE_C_B_FIVE,
+        PAGE_C_B_E_ONE,
+        PAGE_C_B_E_TWO,
     ],
 };

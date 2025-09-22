@@ -5,9 +5,9 @@ import {
     TestSize,
     isVariant,
     loginWithForm,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
-    pageOne,
+    PAGE_ONE,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -54,12 +54,12 @@ test.describe('Page Translation', () => {
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     test.describe('Automatic Translations', () => {
         test('should be possible to translate a page automatically', async ({ page }) => {
-            const pageData = IMPORTER.get(pageOne)!;
+            const pageData = IMPORTER.get(PAGE_ONE)!;
             const NEW_LANG = 'de';
 
             const list = findList(page, ITEM_TYPE_PAGE);

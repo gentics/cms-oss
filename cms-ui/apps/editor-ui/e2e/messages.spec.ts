@@ -12,7 +12,6 @@ import {
     navigateToApp,
     openSidebar,
     pickSelectValue,
-    rootGroup,
     selectTab,
     TestSize,
     UserImportData,
@@ -108,7 +107,7 @@ test.describe('Messages', () => {
         });
 
         await test.step('Send Message to myself', async () => {
-            const modal = page.locator('send-message-modal');
+            const modal = page.locator('gtx-send-message-modal');
             const form = modal.locator('.modal-content gtx-message-properties');
 
             await pickSelectValue(form.locator('[formcontrolname="recipientIds"]'), [`toUserId_${login.user.id}`]);
@@ -148,8 +147,6 @@ test.describe('Messages', () => {
             [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
             [IMPORT_ID]: 'group_msg_noperms',
 
-            parentId: rootGroup[IMPORT_ID],
-
             description: 'Messages: No Perms',
             name: 'msg_noperms',
             permissions: [
@@ -172,7 +169,7 @@ test.describe('Messages', () => {
             [IMPORT_TYPE]: IMPORT_TYPE_USER,
             [IMPORT_ID]: 'user_msg_noperms',
 
-            groupId: TEST_GROUP[IMPORT_ID],
+            group: TEST_GROUP,
 
             email: 'something@example.com',
             firstName: 'Messages',

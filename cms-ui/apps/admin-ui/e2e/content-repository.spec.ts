@@ -12,13 +12,13 @@ import {
     findTableRowByText,
     findTrableRowById,
     findTrableRowByText,
-    folderA,
-    folderB,
+    FOLDER_A,
+    FOLDER_B,
     isVariant,
     matchesPath,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
-    schedulePublisher,
+    SCHEDULE_PUBLISHER,
     selectTableRow,
     TestSize,
     loginWithForm,
@@ -305,8 +305,8 @@ test.describe('Content Repositories Module', () => {
             test.slow();
 
             test.beforeEach(async ({ page }) => {
-                await IMPORTER.importData([schedulePublisher]);
-                await IMPORTER.executeSchedule(schedulePublisher);
+                await IMPORTER.importData([SCHEDULE_PUBLISHER]);
+                await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
                 await loginWithCR(page);
             });
 
@@ -350,8 +350,8 @@ test.describe('Content Repositories Module', () => {
             test.slow();
 
             test.beforeEach(async ({ page }) => {
-                await IMPORTER.importData([schedulePublisher]);
-                await IMPORTER.executeSchedule(schedulePublisher);
+                await IMPORTER.importData([SCHEDULE_PUBLISHER]);
+                await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
                 await loginWithCR(page);
             });
 
@@ -382,7 +382,7 @@ test.describe('Content Repositories Module', () => {
                 });
 
                 // Verify initial state
-                const minimalRow = findTrableRowByText(permModal, IMPORTER.get(minimalNode).name);
+                const minimalRow = findTrableRowByText(permModal, IMPORTER.get(NODE_MINIMAL).name);
                 await minimalRow.waitFor({ state: 'visible' });
                 await expect(minimalRow.locator('.permission-icon[data-id="readPublished"]')).not.toHaveClass(CLASS_GRANTED);
 
@@ -423,8 +423,8 @@ test.describe('Content Repositories Module', () => {
                     await childLoad;
 
                     // Verify permissions have been set
-                    const folderARow = findTrableRowByText(permModal, IMPORTER.get(folderA).name);
-                    const folderBRow = findTrableRowByText(permModal, IMPORTER.get(folderB).name);
+                    const folderARow = findTrableRowByText(permModal, IMPORTER.get(FOLDER_A).name);
+                    const folderBRow = findTrableRowByText(permModal, IMPORTER.get(FOLDER_B).name);
                     await expect(folderARow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(CLASS_GRANTED);
                     await expect(folderBRow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(CLASS_GRANTED);
                 });

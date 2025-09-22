@@ -1,3 +1,5 @@
 Some dependencies have been updated:
 * Nimbus JOSE+JWT: 9.37.4
 * Apache Commons Lang: 3.18.0
+* Apache Commons IO: 2.20.0
+* Apache Commons Compress: 1.28.0

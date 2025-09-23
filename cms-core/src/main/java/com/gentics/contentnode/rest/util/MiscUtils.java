@@ -1978,7 +1978,7 @@ public class MiscUtils {
 
 			switch (kind) {
 			case TAG:
-				sql.append("SELECT page.id, page.channelset_id, page.channel_id, page.mc_exclude, page_disinherit.channel_id disinherited_node ")
+				sql.append("SELECT distinct page.id, page.channelset_id, page.channel_id, page.mc_exclude, page_disinherit.channel_id disinherited_node ")
 					.append("FROM page ")
 					.append("LEFT JOIN page_disinherit on page.id=page_disinherit.page_id ")
 					.append("INNER JOIN contenttag c1 ON page.content_id = c1.content_id ")
@@ -1986,7 +1986,7 @@ public class MiscUtils {
 					.append("AND v1.value_text = 'p' AND v1.info IN (")
 					.append(idPlaceholders)
 					.append(")")
-					.append(" WHERE page.deleted = 0");
+					.append(" WHERE page.deleted = 0 AND c1.enabled = 1");
 				params.addAll(objId);
 				break;
 

@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -47,6 +48,7 @@ import com.gentics.contentnode.object.parttype.FileURLPartType;
 import com.gentics.contentnode.object.parttype.FolderURLPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
+import com.gentics.contentnode.object.parttype.PageTagPartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.object.parttype.UrlPartType;
 import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
@@ -77,6 +79,8 @@ public class PageUsageTest {
 
 	protected static Integer overviewConstructId;
 
+	protected static Integer pageTagConstructId;
+
 	protected static Function<Page, Tag> PAGEURL_CONTENTTAG = page -> page.getContent().addContentTag(pageUrlConstructId);
 	protected static Function<Page, Tag> PAGEURL_OBJECTTAG = page -> page.getObjectTag("pageurl");
 	protected static Function<Page, Tag> FILEURL_CONTENTTAG = page -> page.getContent().addContentTag(fileUrlConstructId);
@@ -87,6 +91,7 @@ public class PageUsageTest {
 	protected static Function<Page, Tag> FOLDERURL_OBJECTTAG = page -> page.getObjectTag("folderurl");
 	protected static Function<Page, Tag> OVERVIEW_CONTENTTAG = page -> page.getContent().addContentTag(overviewConstructId);
 	protected static Function<Page, Tag> OVERVIEW_OBJECTTAG = page -> page.getObjectTag("overview");
+	protected static Function<Page, Tag> PAGETAG_CONTENTTAG = page -> page.getContent().addContentTag(pageTagConstructId);
 
 	protected static Function<Template, TemplateTag> OVERVIEW_TEMPLATETAG = template -> {
 		Map<String, TemplateTag> tags = template.getTags();
@@ -151,6 +156,14 @@ public class PageUsageTest {
 		addOverviewEntriesToOverview(overview, Arrays.asList(page.getId()));
 	};
 
+	protected static BiConsumer<Page, Tag> REFERENCING_PAGETAG = (page, tag) -> {
+		PageTagPartType partType = getPartType(PageTagPartType.class, tag, "tag");
+		Optional<Tag> optPageTag = page.getTags().values().stream().findFirst();
+		if (optPageTag.isPresent()) {
+			partType.setPageTag(page, optPageTag.get());
+		}
+	};
+
 	protected static BiConsumer<Page, Tag> ENABLED = (page, tag) -> tag.setEnabled(true);
 
 	protected static BiConsumer<Page, Tag> DISABLED = (page, tag) -> tag.setEnabled(false);
@@ -191,6 +204,9 @@ public class PageUsageTest {
 		// object property for overview
 		supply(() -> createObjectPropertyDefinition(Page.TYPE_PAGE, overviewConstructId, "Overview", "overview"));
 
+		// construct for pagetag
+		pageTagConstructId = supply(() -> createConstruct(node, PageTagPartType.class, "pagetag", "tag"));
+
 		for (Object[] test : data()) {
 			TestCaseKey key = TestCaseKey.class.cast(test[0]);
 			testCases.put(key, new TestCase(key));
@@ -201,21 +217,22 @@ public class PageUsageTest {
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<Object[]>();
 
-		for (Boolean pageInTag : Arrays.asList(true, false)) {
-			for (Boolean pageInObjectTag : Arrays.asList(true, false)) {
-				for (Boolean overviewInTag : Arrays.asList(true, false)) {
-					for (Boolean overviewInObjectTag : Arrays.asList(true, false)) {
-						for (Boolean overviewInTemplateTag : Arrays.asList(true, false)) {
-							for (Boolean variant : Arrays.asList(true, false)) {
-								data.add(new Object[] { new TestCaseKey(pageInTag, pageInObjectTag, overviewInTag,
-										overviewInObjectTag, overviewInTemplateTag, variant) });
+		for (boolean pageInTag : Arrays.asList(true, false)) {
+			for (boolean pageInObjectTag : Arrays.asList(true, false)) {
+				for (boolean overviewInTag : Arrays.asList(true, false)) {
+					for (boolean overviewInObjectTag : Arrays.asList(true, false)) {
+						for (boolean overviewInTemplateTag : Arrays.asList(true, false)) {
+							for (boolean variant : Arrays.asList(true, false)) {
+								for (boolean pageTag : Arrays.asList(true, false)) {
+									data.add(new Object[] { new TestCaseKey(pageInTag, pageInObjectTag, overviewInTag,
+											overviewInObjectTag, overviewInTemplateTag, variant, pageTag) });
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-
 		return data;
 	}
 
@@ -229,6 +246,10 @@ public class PageUsageTest {
 		testCase = testCases.get(key);
 	}
 
+	/**
+	 * Test getting the total page usage
+	 * @throws NodeException
+	 */
 	@Test
 	public void testTotalUsage() throws NodeException {
 		TotalUsageResponse totalUsageResponse = supply(
@@ -239,6 +260,10 @@ public class PageUsageTest {
 				new TotalUsageInfo().setTotal(testCase.expectedTotalUsage).setPages(testCase.expectedTotalUsage)));
 	}
 
+	/**
+	 * Test getting the page usage
+	 * @throws NodeException
+	 */
 	@Test
 	public void testPageUsage() throws NodeException {
 		PageUsageListResponse pageListResponse = supply(() -> getPageResource().getPageUsageInfo(0, -1, null, null, Arrays.asList(testCase.testPage.getId()), null, true,
@@ -248,6 +273,10 @@ public class PageUsageTest {
 		.as("Page IDs").containsOnlyElementsOf(testCase.expectedPageUsage);
 	}
 
+	/**
+	 * Test getting the variants usage
+	 * @throws NodeException
+	 */
 	@Test
 	public void testVariantsUsage() throws NodeException {
 		PageUsageListResponse pageListResponse = supply(() -> getPageResource().getVariantsUsageInfo(0, -1, null, null, Arrays.asList(testCase.testPage.getId()), null,
@@ -257,10 +286,29 @@ public class PageUsageTest {
 			.as("Page IDs").containsOnlyElementsOf(testCase.expectedVariantUsage);
 	}
 
-	protected static record TestCaseKey(boolean pageInTag, boolean pageInObjectTag, boolean overviewInTag,
-			boolean overviewInObjectTag, boolean overviewInTemplateTag, boolean variant) {
+	/**
+	 * Test using the tag usage
+	 * @throws NodeException
+	 */
+	@Test
+	public void testTagUsage() throws NodeException {
+		PageUsageListResponse pageListResponse = supply(() -> getPageResource().getPagetagUsageInfo(0, -1, null, null, Arrays.asList(testCase.testPage.getId()),
+				null, true, new PageModelParameterBean()));
+		assertResponseOK(pageListResponse);
+		assertThat(pageListResponse.getPages().stream().map(com.gentics.contentnode.rest.model.Page::getId))
+			.as("Page IDs").containsOnlyElementsOf(testCase.expectedTagUsage);
 	}
 
+	/**
+	 * TestCase Key
+	 */
+	protected static record TestCaseKey(boolean pageInTag, boolean pageInObjectTag, boolean overviewInTag,
+			boolean overviewInObjectTag, boolean overviewInTemplateTag, boolean variant, boolean pageTag) {
+	}
+
+	/**
+	 * TestCase
+	 */
 	protected static class TestCase {
 		protected TestCaseKey key;
 
@@ -269,8 +317,14 @@ public class PageUsageTest {
 		protected Page testPage;
 		protected Set<Integer> expectedPageUsage = new HashSet<>();
 		protected Set<Integer> expectedVariantUsage = new HashSet<>();
+		protected Set<Integer> expectedTagUsage = new HashSet<>();
 		protected int expectedTotalUsage = 0;
 
+		/**
+		 * Create the TestCase for the given key
+		 * @param key key
+		 * @throws NodeException
+		 */
 		public TestCase(TestCaseKey key) throws NodeException {
 			this.key = key;
 
@@ -284,6 +338,9 @@ public class PageUsageTest {
 			testPage = create(Page.class, create -> {
 				create.setFolder(node, testFolder);
 				create.setTemplateId(template.getId());
+
+				Tag tag = PAGEURL_CONTENTTAG.apply(create);
+				ENABLED.accept(create, tag);
 			}).build();
 
 			if (key.pageInTag) {
@@ -376,8 +433,24 @@ public class PageUsageTest {
 				// we expect one more page using the test page
 				expectedTotalUsage++;
 			}
+			if (key.pageTag) {
+				// create a page using a tag of the testpage via pagetag
+				expectedTagUsage.add(createPage(testPage, PAGETAG_CONTENTTAG, REFERENCING_PAGETAG, ENABLED));
+
+				createPage(testPage, PAGETAG_CONTENTTAG, REFERENCING_PAGETAG, DISABLED);
+
+				expectedTotalUsage++;
+			}
 		}
 
+		/**
+		 * Create a page using the test page in a way
+		 * @param testPage test page
+		 * @param tagFunction function to create a tag
+		 * @param tagConsumers consumers that will modify the tag
+		 * @return id of the generated page
+		 * @throws NodeException
+		 */
 		@SafeVarargs
 		protected final int createPage(Page testPage, Function<Page, Tag> tagFunction, BiConsumer<Page, Tag>... tagConsumers) throws NodeException {
 			return create(Page.class, create -> {
@@ -391,6 +464,14 @@ public class PageUsageTest {
 			}).build().getId();
 		}
 
+		/**
+		 * Create a template and a page using the test page in a way
+		 * @param testPage test page
+		 * @param tagFunction function to create a tag in the template
+		 * @param tagConsumers consumer that will modify the tag
+		 * @return id of the generated page
+		 * @throws NodeException
+		 */
 		@SafeVarargs
 		protected final int createTemplateWithPage(Page testPage, Function<Template, TemplateTag> tagFunction, BiConsumer<Page, Tag>...tagConsumers) throws NodeException {
 			Template tmpl = create(Template.class, create -> {

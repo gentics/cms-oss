@@ -1,5 +1,5 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { Feature, Node, NodePageLanguageCode, NodeUrlMode, Variant } from '@gentics/cms-models';
+import { Feature, MultiUnlocalizeRequest, Node, NodePageLanguageCode, NodeUrlMode, Page, PageListResponse, Variant } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     EntityImporter,
@@ -9,6 +9,7 @@ import {
     isVariant,
     ITEM_TYPE_PAGE,
     loginWithForm,
+    matchRequest,
     navigateToApp,
     NODE_FULL,
     NodeImportData,
@@ -23,7 +24,16 @@ import {
 } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { findItem, findList, getAlohaIFrame, itemAction, selectNode, setupHelperWindowFunctions } from './helpers';
+import {
+    expectItemInherited,
+    expectItemLocalized,
+    findItem,
+    findList,
+    getAlohaIFrame,
+    itemAction,
+    selectNode,
+    setupHelperWindowFunctions,
+} from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Multichannelling', () => {
@@ -64,39 +74,50 @@ test.describe('Multichannelling', () => {
     let channelNode: Node;
 
     test.beforeAll(async ({request}) => {
-        IMPORTER.setApiContext(request);
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
 
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.FULL);
+        await test.step('Test Bootstrapping', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.bootstrapSuite(TestSize.FULL);
+        });
     });
 
     test.beforeEach(async ({page, request, context}) => {
-        await context.clearCookies();
-        IMPORTER.setApiContext(request);
-
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupFeatures({
-            [Feature.MULTICHANNELLING]: true,
+        await test.step('Client Setup', async () => {
+            await context.clearCookies();
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
         });
-        await IMPORTER.setupTest(TestSize.FULL);
-        await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
-        await IMPORTER.importData([CHANNEL_IMPORT_DATA]);
+
+        await test.step('Common Test Setup', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupFeatures({
+                [Feature.MULTICHANNELLING]: true,
+            });
+            await IMPORTER.setupTest(TestSize.FULL);
+        });
+
+        await test.step('Specialized Test Setup', async () => {
+            await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
+            await IMPORTER.importData([CHANNEL_IMPORT_DATA]);
+            await setupHelperWindowFunctions(page);
+        });
 
         channelNode = IMPORTER.get(CHANNEL_IMPORT_DATA);
 
-        await setupHelperWindowFunctions(page);
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(NODE_FULL).id);
     });
 
     test.describe('Edit Mode', () => {
         let editor: Locator;
 
-        test.beforeEach(async ({page}) => {
+        test.beforeEach(async ({ page }) => {
             // Setup page for editing
+            await selectNode(page, IMPORTER.get(NODE_FULL).id);
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, IMPORTER.get(PAGE_FIVE).id);
             await itemAction(item, 'edit');
@@ -216,7 +237,7 @@ test.describe('Multichannelling', () => {
         });
     });
 
-    test.describe('Publishing', () => {
+    test.describe('List', () => {
         test.beforeEach(async ({page}) => {
             await selectNode(page, channelNode.id);
         });
@@ -233,6 +254,53 @@ test.describe('Multichannelling', () => {
 
             await expect(context.locator('[data-action="publish"]')).toBeHidden();
             await expect(context.locator('[data-action="publish-variants"]')).toBeHidden();
+        });
+
+        test('Localizing and delocalizing should update the list correctly', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19201',
+            }],
+        }, async ({ page }) => {
+            const TEST_PAGE = IMPORTER.get(PAGE_FOUR);
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const row = findItem(list, TEST_PAGE.id);
+
+            let channelPage: Page;
+            let channelRow: Locator;
+
+            await test.step('Localize a page', async () => {
+                const localizeReq = page.waitForResponse(matchRequest('POST', `/rest/page/localize/${TEST_PAGE.id}`));
+
+                await expectItemInherited(row);
+                await itemAction(row, 'localize');
+                await localizeReq;
+            });
+
+            await test.step('Verify localization', async () => {
+                const loadReq = page.waitForResponse(matchRequest('GET', `/rest/folder/getPages/${channelNode.folderId}`));
+                const loadRes = await (await loadReq).json() as PageListResponse;
+                channelPage = loadRes.pages.find(loadedPage => {
+                    return loadedPage.channelSetId === TEST_PAGE.channelSetId
+                        && loadedPage.contentSetId === TEST_PAGE.contentSetId;
+                });
+                channelRow = findItem(list, channelPage.id);
+
+                await expectItemLocalized(channelRow);
+            });
+
+            await test.step('Delocalizing the page', async () => {
+                await itemAction(channelRow, 'delete-localized');
+
+                const modal = page.locator('multi-delete-modal-modal');
+                const delocalizeReq = page.waitForResponse(matchRequest('POST', '/rest/page/unlocalize'));
+                await modal.locator('.modal-footer [data-action="confirm"] button').click();
+                const delocalizeData = (await delocalizeReq).request().postDataJSON() as MultiUnlocalizeRequest;
+                expect(delocalizeData.ids).toEqual([channelPage.id]);
+                await page.waitForResponse(matchRequest('GET', `/rest/folder/getPages/${channelNode.folderId}`));
+
+                await expectItemInherited(row);
+            });
         });
     });
 });

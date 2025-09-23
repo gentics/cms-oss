@@ -7,6 +7,13 @@
     [attr.data-item-type]="itemType"
     [attr.data-id]="item.id"
     [attr.data-global-id]="item.globalId"
+
+    [attr.data-locked]="item.locked"
+    [attr.data-modified]="item.modified"
+    [attr.data-inherited]="item.inherited"
+    [attr.data-disinherited]="item.disinherited"
+    [attr.data-master]="item.master"
+    [attr.data-online]="item.online"
 >
     <icon-checkbox
         *ngIf="itemType !== 'image'; else imageCheckbox"

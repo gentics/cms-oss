@@ -248,6 +248,7 @@ public class PageUsageTest {
 
 	/**
 	 * Test getting the total page usage
+	 * 
 	 * @throws NodeException
 	 */
 	@Test
@@ -256,21 +257,23 @@ public class PageUsageTest {
 				() -> getPageResource().getTotalPageUsage(Arrays.asList(testCase.testPage.getId()), null));
 		assertResponseOK(totalUsageResponse);
 
-		assertThat(totalUsageResponse.getInfos()).as("Total usage infos").containsOnly(Map.entry(testCase.testPage.getId(),
+		assertThat(totalUsageResponse.getInfos()).as("Total usage infos").containsOnly(Map.entry(
+				testCase.testPage.getId(),
 				new TotalUsageInfo().setTotal(testCase.expectedTotalUsage).setPages(testCase.expectedTotalUsage)));
 	}
 
 	/**
 	 * Test getting the page usage
+	 * 
 	 * @throws NodeException
 	 */
 	@Test
 	public void testPageUsage() throws NodeException {
-		PageUsageListResponse pageListResponse = supply(() -> getPageResource().getPageUsageInfo(0, -1, null, null, Arrays.asList(testCase.testPage.getId()), null, true,
-				new PageModelParameterBean()));
+		PageUsageListResponse pageListResponse = supply(() -> getPageResource().getPageUsageInfo(0, -1, null, null,
+				Arrays.asList(testCase.testPage.getId()), null, true, new PageModelParameterBean()));
 		assertResponseOK(pageListResponse);
 		assertThat(pageListResponse.getPages().stream().map(com.gentics.contentnode.rest.model.Page::getId))
-		.as("Page IDs").containsOnlyElementsOf(testCase.expectedPageUsage);
+				.as("Page IDs").containsOnlyElementsOf(testCase.expectedPageUsage);
 	}
 
 	/**

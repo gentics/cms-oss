@@ -1,4 +1,4 @@
-import { Page as CmsPage } from '@gentics/cms-models';
+import { Page as CmsPage, PageSaveRequest, Template } from '@gentics/cms-models';
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
 import {
     BASIC_TEMPLATE_ID,
@@ -11,9 +11,10 @@ import {
     minimalNode,
     navigateToApp,
     pageOne,
+    pickSelectValue,
     TestSize,
 } from '@gentics/e2e-utils';
-import { expect, Frame, Locator, test } from '@playwright/test';
+import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
     ACTION_FORMAT_ABBR,
     ACTION_FORMAT_BOLD,
@@ -30,6 +31,7 @@ import {
     HelperWindow,
 } from './common';
 import {
+    createInternalLink,
     editorAction,
     findAlohaComponent,
     findItem,
@@ -41,6 +43,8 @@ import {
     selectRangeIn,
     selectTextIn,
     setupHelperWindowFunctions,
+    openPageForEditing,
+    createExternalLink,
 } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
@@ -51,21 +55,32 @@ test.describe('Page Editing', () => {
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {
-        IMPORTER.setApiContext(request);
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
 
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        await test.step('Test Bootstrapping', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
     });
 
     test.beforeEach(async ({ page, request, context }) => {
-        await context.clearCookies();
-        IMPORTER.setApiContext(request);
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await context.clearCookies();
+            await IMPORTER.clearClient();
+        });
 
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
-        await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
+        await test.step('Common Test Setup', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
+        });
+
+        await test.step('Specialized Test Setup', async () => {
+            await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
+        });
 
         await setupHelperWindowFunctions(page);
         await navigateToApp(page);
@@ -80,18 +95,16 @@ test.describe('Page Editing', () => {
         let iframe: Frame;
         let mainEditable: Locator;
 
+        async function openEditingPageInEditmode(page: Page) {
+            const { row, iframe: pageIFrame, editable } = await openPageForEditing(page, editingPage);
+            itemRow = row;
+            iframe = pageIFrame;
+            mainEditable = editable;
+        }
+
         test.beforeEach(async ({ page }) => {
             editingPage = IMPORTER.get(pageOne);
-
-            // Setup page for editing
-            const list = findList(page, ITEM_TYPE_PAGE);
-            itemRow = findItem(list, editingPage.id);
-            await itemAction(itemRow, 'edit');
-
-            // Wait for editor to be ready
-            iframe = await getAlohaIFrame(page);
-            mainEditable = iframe.locator('main .container [contenteditable="true"]');
-            await mainEditable.waitFor({ timeout: 60_000 });
+            await openEditingPageInEditmode(page);
         });
 
         test('should be able to add new text to the content-editable', async ({ page }) => {
@@ -145,31 +158,14 @@ test.describe('Page Editing', () => {
 
             // Select text to make into link
             expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
-            await selectEditorTab(page, 'formatting');
-
-            const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
-            await linkButton.click();
-
-            // Fill link form
-            const modal = page.locator('gtx-dynamic-form-modal');
-            const form = modal.locator('.form-wrapper');
-
-            // Select internal page
-            await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
-            const repoBrowser = page.locator('repository-browser');
-            await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
-            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
-
-            // Fill other fields
-            await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
-            await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
-            await form.locator('[data-slot="target"] gtx-dropdown-list gtx-dropdown-trigger').scrollIntoViewIfNeeded();
-            await form.locator('[data-slot="target"] gtx-dropdown-list gtx-dropdown-trigger').click();
-            await page.locator(`gtx-dropdown-content [data-id="${LINK_TARGET}"]`).click();
-            await form.locator('[data-slot="lang"] input').fill(LINK_LANGUAGE);
-
-            // Confirm link creation
-            await modal.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]').click();
+            await createInternalLink(page, async repoBrowser => {
+                await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
+            }, async form => {
+                await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
+                await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
+                await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
+                await form.locator('[data-slot="lang"] input').fill(LINK_LANGUAGE);
+            });
 
             // Verify link was created
             const linkElement = mainEditable.locator('a');
@@ -229,6 +225,111 @@ test.describe('Page Editing', () => {
             await inlineEditable.waitFor({ timeout: 60_000 });
 
             expect(await inlineEditable.innerHTML()).toEqual([`<b>${LINES[0]}</b>`, ...LINES.slice(1)].join('<br>'));
+        });
+
+        async function createLinkCopyPasteTest(page: Page, handler: () => Promise<void>): Promise<void> {
+            const TEXT_CONTENT = 'Example Link';
+            const TEMPLATE = IMPORTER.get(BASIC_TEMPLATE_ID) as Template;
+            const TEMPLATE_TAGS = Object.keys(TEMPLATE.templateTags);
+
+            await test.step('Create internal link', async () => {
+                // Type content
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT_CONTENT);
+
+                // Select text to make into link
+                expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
+                await handler();
+            });
+
+            // We need to save the page first and re-open it,
+            // as otherwise the links are not created as actual tags yet.
+            await test.step('Save and re-open the page', async () => {
+                // Wait till properly saved
+                const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                await editorAction(page, 'save');
+                const req = await saveReq;
+                const pageUpdate = await req.request().postDataJSON() as PageSaveRequest;
+
+                const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
+                // Remove template tags
+                TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
+
+                // Make sure we actually save only one link tag
+                expect(tags.size).toEqual(1);
+
+                // Wait till properly closed
+                await editorAction(page, 'close');
+                await page.locator('content-frame').waitFor({ state: 'detached' });
+
+                // Now open the page again
+                await openEditingPageInEditmode(page);
+            });
+
+            await test.step('Copy and paste the link', async () => {
+                // Select the text again
+                expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
+
+                await mainEditable.press('ControlOrMeta+c');
+                await mainEditable.press('ArrowRight');
+                await mainEditable.press('Enter');
+                await mainEditable.press('ControlOrMeta+v');
+
+                // Wait for the content to be loaded
+                await mainEditable.locator('img').waitFor({ state: 'detached' });
+
+                const linkIds = await mainEditable.evaluate(el => {
+                    return Array.from(el.querySelectorAll('a'))
+                        .map(link => link.getAttribute('data-gcn-tagid'))
+                        .filter(id => id != null);
+                });
+
+                expect(linkIds).toHaveLength(2);
+                expect(linkIds[0]).not.toEqual(linkIds[1]);
+
+                const saveReq = page.waitForRequest(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                await editorAction(page, 'save');
+                const req = await saveReq;
+                const pageUpdate = await req.postDataJSON() as PageSaveRequest;
+
+                const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
+                // Remove template tags
+                TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
+
+                // Make sure we actually save 2 different tags
+                expect(tags.size).toEqual(2);
+            });
+        }
+
+        test('should be possible to copy an internal link', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-18537',
+            }],
+        }, async ({ page }) => {
+            const LINK_ITEM = IMPORTER.get(pageOne);
+            await createLinkCopyPasteTest(page, async () => {
+                await createInternalLink(page, async repoBrowser => {
+                    await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
+                }, async () => {
+                    // nop
+                });
+            })
+        });
+
+        test('should be possible to copy an external link', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-18537',
+            }],
+        }, async ({ page }) => {
+            await createLinkCopyPasteTest(page, async () => {
+                await createExternalLink(page, async form => {
+                    await form.locator('[data-slot="url"] .target-input input').fill('https://example.com');
+                    await form.locator('[data-slot="title"] input').fill('A very interesting site');
+                });
+            });
         });
 
         test.describe('Formatting', () => {

@@ -45,39 +45,39 @@ describe('UsersList', () => {
         expect(checkboxes.map(checkbox => checkbox.checked)).toEqual([true, true, true, true]);
     }));
 
-    it('emits selectionChange with new selection', componentTest(() => TestComponent, (fixture, instance) => {
+    it('emits selectedChange with new selection', componentTest(() => TestComponent, (fixture, instance) => {
         fixture.detectChanges();
-        spyOn(instance, 'selectionChange').and.callThrough();
+        spyOn(instance, 'selectedChange').and.callThrough();
 
         clickCheckbox(fixture, 1);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([1]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(1);
+        expect(instance.selectedChange).toHaveBeenCalledWith([1]);
+        expect((<any>instance.selectedChange).calls.count()).toBe(1);
 
         clickCheckbox(fixture, 3);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([1, 3]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(2);
+        expect(instance.selectedChange).toHaveBeenCalledWith([1, 3]);
+        expect((<any>instance.selectedChange).calls.count()).toBe(2);
 
         clickCheckbox(fixture, 1);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([3]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(3);
+        expect(instance.selectedChange).toHaveBeenCalledWith([3]);
+        expect((<any>instance.selectedChange).calls.count()).toBe(3);
     }));
 
-    it('emits selectionChange when selectAll clicked', componentTest(() => TestComponent, (fixture, instance) => {
+    it('emits selectedChange when selectAll clicked', componentTest(() => TestComponent, (fixture, instance) => {
         fixture.detectChanges();
-        spyOn(instance, 'selectionChange').and.callThrough();
+        spyOn(instance, 'selectedChange').and.callThrough();
 
         clickCheckbox(fixture, 0);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([1, 2, 3, 4]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(1);
+        expect(instance.selectedChange).toHaveBeenCalledWith([1, 2, 3, 4]);
+        expect((<any>instance.selectedChange).calls.count()).toBe(1);
 
         clickCheckbox(fixture, 0);
         fixture.detectChanges();
-        expect(instance.selectionChange).toHaveBeenCalledWith([]);
-        expect((<any> instance.selectionChange).calls.count()).toBe(2);
+        expect(instance.selectedChange).toHaveBeenCalledWith([]);
+        expect((<any>instance.selectedChange).calls.count()).toBe(2);
     }));
 
     it('allows toggling', componentTest(() => TestComponent, (fixture) => {
@@ -110,11 +110,11 @@ function clickCheckbox(fixture: ComponentFixture<TestComponent>, index: number):
 @Component({
     selector: 'test-component',
     template: `
-        <users-list [users]="users"
-                    [selected]="selected"
-                    (selectionChange)="selectionChange($event)">
-        </users-list>`,
-    standalone: false,
+        <users-list\
+            [users]="users"
+            [selected]="selected"
+            (selectedChange)="selectedChange($event)"
+        ></users-list>`,
 })
 class TestComponent {
     users: any[] = [];
@@ -130,7 +130,7 @@ class TestComponent {
         }
     }
 
-    selectionChange(newSelection: number[]): void {
+    selectedChange(newSelection: number[]): void {
         this.selected = newSelection;
     }
 }

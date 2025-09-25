@@ -115,6 +115,7 @@ function clickCheckbox(fixture: ComponentFixture<TestComponent>, index: number):
             [selected]="selected"
             (selectedChange)="selectedChange($event)"
         ></users-list>`,
+    standalone: false,
 })
 class TestComponent {
     users: any[] = [];

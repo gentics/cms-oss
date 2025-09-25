@@ -3482,7 +3482,7 @@ export class FolderActionsService {
         }
 
         try {
-            await this.client.page.publishQueueApprove({ ids }).toPromise();
+            await this.client.page.approvePublishQueue({ ids }).toPromise();
 
             if (ids.length === 1) {
                 this.notification.show({

@@ -14,10 +14,7 @@ import { NGGCMSRestClientRequest } from './models';
 
 function asSafeJSON(request: GCMSRestClientRequestData, str: string | null, status: number) {
     const value = typeof str !== 'string' || str.trim().length === 0 ? str : JSON.parse(str);
-    const err = validateResponseObject(request, value, status);
-    if (err) {
-        throw err;
-    }
+    validateResponseObject(request, value, status);
     return value;
 }
 
@@ -178,14 +175,6 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         body?: string,
     ): NGGCMSRestClientRequest<T> {
         const obs = this.createStringRequest(request, body, (res, status) => asSafeJSON(request, res, status));
-        return this.createClientResponse(obs, request);
-    }
-
-    performFormRequest<T>(
-        request: GCMSRestClientRequestData,
-        form: FormData,
-    ): NGGCMSRestClientRequest<T> {
-        const obs = this.createStringRequest(request, form, (res, status) => asSafeJSON(request, res, status));
         return this.createClientResponse(obs, request);
     }
 

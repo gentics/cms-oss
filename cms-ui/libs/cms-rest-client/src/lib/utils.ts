@@ -80,13 +80,13 @@ export function validateResponseObject(
     request: GCMSRestClientRequestData,
     response: any,
     statusCode: number,
-): null | GCMSRestClientRequestError {
+): boolean {
     if (!isResponseObject(response)) {
-        return null;
+        return false;
     }
 
     if (response.responseInfo.responseCode === ResponseCode.OK) {
-        return;
+        return true;
     }
 
     // some responses contain no messages

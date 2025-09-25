@@ -732,8 +732,9 @@ export class GCMSRestClient implements GCMSRootAPI {
         publish: (id, body, options) => this.executeMappedJsonRequest(POST, `/page/publish/${id}`, body, options),
         publishMultiple: (body, options) => this.executeMappedJsonRequest(POST, '/page/publish', body, options),
         takeOffline: (id, body, options) => this.executeMappedJsonRequest(POST, `/page/takeOffline/${id}`, body, options),
-        publishQueue: (options) => this.executeMappedJsonRequest(GET, '/page/pubqueue', null, options),
-        publishQueueApprove: (body) => this.executeMappedJsonRequest(POST, '/page/pubqueue/approve', body),
+
+        listPublishQueue: (options) => this.executeMappedJsonRequest(GET, '/page/pubqueue', null, options),
+        approvePublishQueue: (body) => this.executeMappedJsonRequest(POST, '/page/pubqueue/approve', body),
 
         listTags: (id, options) => this.executeMappedJsonRequest(GET, `/page/getTags/${id}`, null, options),
         createTag: (id, body) => this.executeMappedJsonRequest(POST, `/page/newtag/${id}`, body),

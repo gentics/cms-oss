@@ -110,7 +110,7 @@ function clickCheckbox(fixture: ComponentFixture<TestComponent>, index: number):
 @Component({
     selector: 'test-component',
     template: `
-        <users-list\
+        <users-list
             [users]="users"
             [selected]="selected"
             (selectedChange)="selectedChange($event)"

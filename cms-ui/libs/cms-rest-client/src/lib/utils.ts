@@ -73,24 +73,27 @@ function isResponseObject(value: any): value is Response {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function validateResponseObject(request: GCMSRestClientRequestData, response: any, status: number): void {
+export function validateResponseObject(
+    request: GCMSRestClientRequestData,
+    response: any,
+    statusCode: number,
+): null | GCMSRestClientRequestError {
     if (!isResponseObject(response)) {
+        return null;
+    }
+
+    if (response.responseInfo.responseCode === ResponseCode.OK) {
         return;
     }
 
-    if (response.responseInfo.responseCode !== 'OK') {
-        // some responses contain no messages
-        response.messages = response.messages || [];
-
-        throw new GCMSRestClientRequestError(
-            response?.messages[0]?.message || response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
-            request,
-            status,
-            null,
-            response,
-            null,
-        );
-    }
+    // some responses contain no messages
+    response.messages = response.messages || [];
+    throw new GCMSRestClientRequestError(
+        response?.messages[0]?.message || response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
+        request,
+        statusCode,
+        null,
+        response,
+        null,
+    );
 }
-
-

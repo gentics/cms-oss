@@ -16,7 +16,7 @@ import {
     pageEight,
     pageEleven,
     pageFive,
-    pageNine,
+    pageNine, pageOne,
     pickSelectValue,
     TestSize,
 } from '@gentics/e2e-utils';
@@ -212,6 +212,26 @@ test.describe('Multichannelling', () => {
                 await expect(extraItem).toHaveAttribute('data-node-id', `${channelNode.id}`);
                 await expect(extraItem.locator('.item-path')).toHaveText(`/${channelNode.name}/${EXTRA_CHANNEL_PAGE.name}`);
             });
+        });
+    });
+
+    test.describe('Publishing', () => {
+        test.beforeEach(async ({page}) => {
+            await selectNode(page, channelNode.id);
+        });
+
+        test('should not show publish actions for inherited objects', {
+            annotation: [{
+                type: 'issue',
+                description: 'SUP-19051',
+            }],
+        }, async ({ page }) => {
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, IMPORTER.get(pageOne).id);
+            const context = await openContext(item.locator('[data-action="item-context"]'));
+
+            await expect(context.locator('[data-action="publish"]')).toBeHidden();
+            await expect(context.locator('[data-action="publish-variants "]')).toBeHidden();
         });
     });
 });

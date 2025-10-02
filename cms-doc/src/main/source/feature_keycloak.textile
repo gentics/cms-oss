@@ -42,6 +42,9 @@ keycloak:
   show_sso_button: true
 </shell>
 
+NOTE: Changes in the configuration, especially activation/deactivation of the feature itself, will only become
+effective when the CMS server is restarted.
+
 h4. Configuration options
 
 The following configuration entries define how SSO login via Keycloak is handled.

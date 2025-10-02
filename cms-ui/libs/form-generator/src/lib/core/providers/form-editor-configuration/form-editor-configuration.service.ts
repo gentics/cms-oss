@@ -3,7 +3,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { catchError, filter, switchMap, take } from 'rxjs/operators';
+import { filter, switchMap, take } from 'rxjs/operators';
 import {
     FormConfigurationI18nString,
     FormEditorConfiguration,
@@ -73,7 +73,6 @@ export class FormEditorConfigurationService {
             });
         }
         return this.configurationSubjects[type].asObservable().pipe(
-            catchError(() => of(null)),
             filter(configuration => configuration !== null),
             take(1),
         );

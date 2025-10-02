@@ -1978,7 +1978,7 @@ public class MiscUtils {
 
 			switch (kind) {
 			case TAG:
-				sql.append("SELECT page.id, page.channelset_id, page.channel_id, page.mc_exclude, page_disinherit.channel_id disinherited_node ")
+				sql.append("SELECT distinct page.id, page.channelset_id, page.channel_id, page.mc_exclude, page_disinherit.channel_id disinherited_node ")
 					.append("FROM page ")
 					.append("LEFT JOIN page_disinherit on page.id=page_disinherit.page_id ")
 					.append("INNER JOIN contenttag c1 ON page.content_id = c1.content_id ")
@@ -1986,7 +1986,7 @@ public class MiscUtils {
 					.append("AND v1.value_text = 'p' AND v1.info IN (")
 					.append(idPlaceholders)
 					.append(")")
-					.append(" WHERE page.deleted = 0");
+					.append(" WHERE page.deleted = 0 AND c1.enabled = 1");
 				params.addAll(objId);
 				break;
 
@@ -2031,7 +2031,7 @@ public class MiscUtils {
 					.append("select distinct page.id, page.channelset_id, page.channel_id, page.mc_exclude, page_disinherit.channel_id disinherited_node from page left join contenttag on page.content_id = contenttag.content_id ")
 					.append("left join ds on contenttag.id = ds.contenttag_id right join ds_obj on contenttag.id = ds_obj.contenttag_id ")
 					.append("LEFT JOIN page_disinherit on page.id=page_disinherit.page_id ")
-					.append("where ds_obj.o_id in (").append(idPlaceholders).append(") and ds.o_type in (").append(dsTypes).append(") ")
+					.append("where contenttag.enabled = 1 and ds_obj.o_id in (").append(idPlaceholders).append(") and ds.o_type in (").append(dsTypes).append(") and ds.is_folder = 2 ")
 					.append("AND page.deleted = 0");
 
 				// next: objects directly selected for overviews in templatetags
@@ -2040,7 +2040,7 @@ public class MiscUtils {
 					.append("page.template_id = templatetag.template_id ")
 					.append("LEFT JOIN page_disinherit on page.id=page_disinherit.page_id ")
 					.append("left join ds on templatetag.id = ds.templatetag_id right join ds_obj on templatetag.id = ds_obj.templatetag_id ")
-					.append("where ds_obj.o_id in (").append(idPlaceholders).append(") and ds.o_type in (").append(dsTypes).append(") ")
+					.append("where templatetag.enabled = 1 and ds_obj.o_id in (").append(idPlaceholders).append(") and ds.o_type in (").append(dsTypes).append(") and ds.is_folder = 2 ")
 					.append("AND page.deleted = 0");
 
 				// next: objects directly selected for overviews in objecttags
@@ -2048,7 +2048,7 @@ public class MiscUtils {
 					.append("select distinct page.id, page.channelset_id, page.channel_id, page.mc_exclude, page_disinherit.channel_id disinherited_node from page left join objtag on obj_type = 10007 ")
 					.append("and obj_id = page.id ").append("left join ds on objtag.id = ds.objtag_id right join ds_obj on objtag.id = ds_obj.objtag_id ")
 					.append("LEFT JOIN page_disinherit on page.id=page_disinherit.page_id ")
-					.append("where ds_obj.o_id in (").append(idPlaceholders).append(") and ds.o_type in (").append(dsTypes).append(") ")
+					.append("where objtag.enabled = 1 and ds_obj.o_id in (").append(idPlaceholders).append(") and ds.o_type in (").append(dsTypes).append(") and ds.is_folder = 2 ")
 					.append("AND page.deleted = 0");
 
 				// fill in the ids 5 times

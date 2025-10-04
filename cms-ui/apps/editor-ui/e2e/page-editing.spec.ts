@@ -459,6 +459,15 @@ test.describe('Page Editing', () => {
                 await expect(cite).toContainText(TEXT);
             });
         });
+
+        test.describe('Inserting', () => {
+            test('should be able to insert a table', async ({ page }) => {
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                selectNode()
+            });
+        });
     });
 
     test('should load constructs correctly when switching to edit mode', {

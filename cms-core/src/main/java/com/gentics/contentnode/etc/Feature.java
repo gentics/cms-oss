@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.StringUtils;
 
@@ -86,19 +88,20 @@ public enum Feature {
 	CHANNELSYNC(false),
 	CONSTRUCT_CATEGORIES(false),
 	USERSNAP(false),
-	LINK_CHECKER(true, true, 0),
+	LINK_CHECKER(true, true, null, 0),
 	OBJTAG_SYNC(false),
 	HIDE_MANUAL(false),
 	FORMS(true),
 	ASSET_MANAGEMENT(true),
 	FOLDER_BASED_TEMPLATE_SELECTION(false),
-	CONTENT_STAGING(false, false, 0),
+	CONTENT_STAGING(false, false, null, 0),
 	KEYCLOAK(false),
 	TAGTYPEMIGRATION(false),
 	WEBP_CONVERSION(true),
 	UPLOAD_FILE_PROPERTIES(true),
 	UPLOAD_IMAGE_PROPERTIES(true),
-	AUTOMATIC_TRANSLATION(true);
+	AUTOMATIC_TRANSLATION(true),
+	PARTIAL_MULTICHANNELLING(true, Collections.singleton(MULTICHANNELLING));
 
 	/**
 	 * Service loader for implementations of {@link FeatureService}
@@ -116,6 +119,11 @@ public enum Feature {
 	private boolean inheritable;
 
 	/**
+	 * Dependencies for this feature which must also be active.
+	 */
+	private Set<Feature> dependencies;
+
+	/**
 	 * Object Type on which the permission needs to be set (0 for no permission bit setting)
 	 */
 	private int permObjType;
@@ -130,7 +138,7 @@ public enum Feature {
 	 * @param perNode true if the feature can be activated per node, false if not
 	 */
 	Feature(boolean perNode) {
-		this(perNode, false, 0);
+		this(perNode, false, null, 0);
 	}
 
 	/**
@@ -139,7 +147,16 @@ public enum Feature {
 	 * @param inheritable true if the feature is inherited from master to channel
 	 */
 	Feature(boolean perNode, boolean inheritable) {
-		this(perNode, inheritable, 0);
+		this(perNode, inheritable, null, 0);
+	}
+
+	/**
+	 * Create a Feature with dependencies
+	 * @param perNode true if the feature can be activated per node, false if not
+	 * @param dependencies dependencies for this feature which must also be active
+	 */
+	Feature(boolean perNode, Set<Feature> dependencies) {
+		this(perNode, false, dependencies, 0);
 	}
 
 	/**
@@ -149,19 +166,21 @@ public enum Feature {
 	 * @param permBits required permission bits
 	 */
 	Feature(boolean perNode, int permObjType, int...permBits) {
-		this(perNode, false, permObjType, permBits);
+		this(perNode, false, null, permObjType, permBits);
 	}
 
 	/**
 	 * Create a Feature with required permission bits set on objects of specified type
 	 * @param perNode true if the feature can be activated per node, false if not
 	 * @param inheritable true if the feature is inherited from master to channel
+	 * @param dependencies dependencies for this feature which must also be active
 	 * @param permObjType object type for permission setting
 	 * @param permBits required permission bits
 	 */
-	 Feature(boolean perNode, boolean inheritable, int permObjType, int...permBits) {
+	 Feature(boolean perNode, boolean inheritable, Set<Feature> dependencies, int permObjType, int...permBits) {
 		this.perNode = perNode;
 		this.inheritable = inheritable;
+		this.dependencies = dependencies == null ? Collections.emptySet() : dependencies;
 		this.permObjType = permObjType;
 		this.perm = new Permission(permBits);
 	}
@@ -281,19 +300,39 @@ public enum Feature {
 	}
 
 	/**
-	 * Check whether the feature is activated and the license is sufficient
-	 * @return true iff feature is activated
+	 * Check whether the feature and its dependencies are activated and the license is sufficient
+	 * @return true iff feature and its dependencies are activated
 	 */
 	public boolean isActivated() {
-		return NodeConfigRuntimeConfiguration.isFeature(this) &&  isAvailable();
+		if (!NodeConfigRuntimeConfiguration.isFeature(this) || !isAvailable()) {
+			return false;
+		}
+
+		for (var dependency : dependencies) {
+			if (!dependency.isActivated()) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
-	 * Check whether the feature is activated for the node and the license is sufficient
-	 * @return true iff feature is activated
+	 * Check whether the feature and its dependencies are activated for the node and the license is sufficient
+	 * @return true iff feature and its dependencies are activated
 	 */
 	public boolean isActivated(Node node) {
-		return NodeConfigRuntimeConfiguration.isFeature(this, node) && isAvailable();
+		if (!NodeConfigRuntimeConfiguration.isFeature(this, node) || !isAvailable()) {
+			return false;
+		}
+
+		for (var dependency : dependencies) {
+			if (!dependency.isActivated(node)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

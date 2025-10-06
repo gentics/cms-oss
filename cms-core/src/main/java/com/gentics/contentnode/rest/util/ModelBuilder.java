@@ -1193,6 +1193,8 @@ public class ModelBuilder {
 
 		restPage.setPublishPath(renderPublishPath(nodePage));
 
+		restPage.setPartiallyLocalized(nodePage.getContent().isPartiallyLocalized());
+
 		// eventually fill references
 		if (fillRefs != null) {
 			for (Reference reference : fillRefs) {

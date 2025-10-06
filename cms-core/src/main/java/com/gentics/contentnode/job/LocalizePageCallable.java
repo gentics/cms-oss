@@ -22,16 +22,32 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 	 */
 	protected int pageId;
 
+	/** Whether to use partial localization */
+	protected boolean partial;
+
 	/**
-	 * Create an instance for the given page and channel
-	 * 
+	 * Create an instance for the given page and channel and no partial localization
+	 *
 	 * @param pageId page ID
 	 * @param channelId channel ID
 	 * @param disableInstantPublish true if instant publishing shall be disabled
 	 */
 	public LocalizePageCallable(int pageId, int channelId, boolean disableInstantPublish) {
+		this(pageId, channelId, disableInstantPublish, false);
+	}
+
+	/**
+	 * Create an instance for the given page and channel
+	 *
+	 * @param pageId page ID
+	 * @param channelId channel ID
+	 * @param disableInstantPublish true if instant publishing shall be disabled
+	 * @param partial whether to use partial localization
+	 */
+	public LocalizePageCallable(int pageId, int channelId, boolean disableInstantPublish, boolean partial) {
 		super(channelId, disableInstantPublish);
 		this.pageId = pageId;
+		this.partial = partial;
 	}
 
 	@Override
@@ -65,6 +81,7 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 
 				// set the channel information (master pages and their local copies are grouped together with their common channelset id)
 				localCopy.setChannelInfo(channelId, channelSetId);
+				localCopy.getContent().setPartiallyLocalized(partial);
 
 				// save and publish the local copy
 				localCopy.save();
@@ -92,6 +109,7 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 
 				// set the channel information (master pages and their local copies are grouped together with their common channelset id)
 				localCopy.setChannelInfo(channelId, channelSetId);
+				localCopy.getContent().setPartiallyLocalized(partial);
 
 				// save and unlock the local copy
 				localCopy.save();

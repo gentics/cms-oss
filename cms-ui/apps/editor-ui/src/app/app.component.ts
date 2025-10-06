@@ -192,7 +192,10 @@ export class AppComponent implements OnInit {
             this.appState.select(state => state.editor.editorIsOpen),
             this.appState.select(state => state.editor.editorIsFocused),
         ]).subscribe(([active, editMode, open, focused]) => {
-            this.focusMode = active && editMode === EditMode.EDIT && open && focused;
+            this.focusMode = active
+                && (editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE)
+                && open
+                && focused;
             this.changeDetector.markForCheck();
         });
 

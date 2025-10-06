@@ -69,6 +69,14 @@
             </gtx-dropdown-item>
 
             <gtx-dropdown-item
+                *ngIf="buttons.editInheritance"
+                (click)="editInheritance(item)"
+            >
+                <icon left>rule_settings</icon>
+                Lokalisierung verwalten
+            </gtx-dropdown-item>
+
+            <gtx-dropdown-item
                 *ngIf="buttons.editInParent"
                 class="edit-parent"
                 data-action="edit-parent"

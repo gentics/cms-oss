@@ -1,5 +1,8 @@
-<div *ngIf="editorState" class="editor-toolbar">
-    <div class="element-toolbar" [class.regular]="currentItem?.type !== 'page' || editorState?.editMode !== EditMode.EDIT">
+<div *ngIf="editorState" class="editor-toolbar" [ngClass]="'mode-' + editorState?.editMode">
+    <div
+        class="element-toolbar"
+        [class.regular]="currentItem?.type !== 'page' || (editorState?.editMode !== EditMode.EDIT && editorState?.editMode !== EditMode.EDIT_INHERITANCE)"
+    >
         <a
             *ngIf="focusMode"
             class="gentics-logo"
@@ -133,6 +136,15 @@
                         (click)="editItem()"
                     >
                         <icon left>edit</icon> {{ 'editor.edit_label' | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item
+                        *ngIf="buttons.editInheritance"
+                        data-action="edit-inheritance"
+                        (click)="editInheritance()"
+                    >
+                        <icon left>rule_settings</icon>
+                        Lokalisierung verwalten
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item

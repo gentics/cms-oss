@@ -109,7 +109,8 @@
                     [(selected)]="contentTagSelection"
 
                     [renderers]="{
-                        active: boolIconRenderer
+                        active: boolIconRenderer,
+                        inherited: boolIconRenderer
                     }"
 
                     (rowClick)="handleContentTagClick($event)"

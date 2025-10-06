@@ -715,19 +715,18 @@ export class EntityImporter {
         const { parent, permissions, ...reqData } = data;
 
         let parentGroup: Group | null = null;
+        let importedGroup: Group;
 
-        if (parent != null) {
-            parentGroup = this.getDependency(parent, true);
-        }
-
-        if (parentGroup == null) {
+        if (parent === null) {
             parentGroup = (await this.client.group.list({
                 pageSize: 1,
                 sort: [{ attribute: 'id', sortOrder: PagingSortOrder.Asc }],
             }).send())?.items?.[0];
+        } else if (parent != null) {
+            parentGroup = this.getDependency(parent, true);
+        } else {
+            parentGroup = this.rootGroup;
         }
-
-        let importedGroup: Group;
 
         try {
             importedGroup = (await this.client.group.create(parentGroup.id, reqData).send()).group;
@@ -973,6 +972,8 @@ export class EntityImporter {
         await this.cleanupContentRepositories();
         await this.cleanupConstructCategories();
         await this.cleanupPackages();
+        await this.cleanupUsers();
+        await this.cleanupGroups();
     }
 
     private async cleanupScheduleTasks(): Promise<void> {
@@ -1044,6 +1045,36 @@ export class EntityImporter {
                 continue;
             }
             await this.client.constructCategory.delete(cat.id).send();
+        }
+    }
+
+    private async cleanupUsers(): Promise<void> {
+        const users = (await this.client.user.list().send()).items;
+        for (const user of users) {
+            // Can't delete reserved/default users
+            if (user.login === 'node' || user.login === 'gentics') {
+                continue;
+            }
+            await this.client.user.delete(user.id).send();
+        }
+    }
+
+    private async cleanupGroups(): Promise<void> {
+        const groups = (await this.client.group.list().send()).items;
+        for (const group of groups) {
+            // Can't delete the root groups
+            if (group.id <= 2) {
+                continue;
+            }
+            try {
+                await this.client.group.delete(group.id).send();
+            } catch (err) {
+                // Ignore deletion notices of groups which have already been deleted
+                if (err instanceof GCMSRestClientRequestError && err.responseCode === 404) {
+                    continue;
+                }
+                throw err;
+            }
         }
     }
 

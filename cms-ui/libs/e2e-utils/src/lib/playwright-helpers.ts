@@ -197,6 +197,23 @@ export function findNotification(page: Page, id?: string): Locator {
     }
 }
 
+const SIMPLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing) .gtx-toast-btn_close:not([hidden])';
+const ACTION_TOAST = 'gtx-toast .gtx-toast:not(.dismissing) .gtx-toast-btn_close[hidden] + .action > button';
+export async function dismissNotifications(page: Page): Promise<void> {
+    function getNotifications(): Promise<Locator[]> {
+        return page.locator(`${SIMPLE_TOAST}, ${ACTION_TOAST}`).all();
+    }
+
+    let notifs = await getNotifications();
+    while (notifs.length > 0) {
+        for (const toast of notifs) {
+            await toast.click();
+        }
+        await page.waitForTimeout(300);
+        notifs = await getNotifications();
+    }
+}
+
 export async function openSidebar(page: Page): Promise<Locator> {
     const userMenuToggle = page.locator('gtx-user-menu gtx-side-menu gtx-user-menu-toggle');
     const userMenu = page.locator('gtx-user-menu gtx-side-menu .menu .menu-content');

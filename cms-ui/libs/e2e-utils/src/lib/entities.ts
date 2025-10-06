@@ -107,6 +107,8 @@ export const GROUP_ROOT: GroupImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
     [IMPORT_ID]: 'group_root',
 
+    parent: null,
+
     name: 'group_test_root',
     description: 'Integration Tests Root Group',
 
@@ -398,9 +400,9 @@ export const PAGE_ONE_DE = createPageTranslation(PAGE_ONE, 'Eins', LANGUAGE_DE, 
                 text: {
                     type: TagPropertyType.RICHTEXT,
                     stringValue: `
-Integer iaculis consectetur nulla id pulvinar. Vestibulum dictum congue ligula, eget commodo eros vestibulum rutrum. 
-Sed finibus purus at tortor rutrum maximus. Praesent urna arcu, laoreet ac egestas lacinia, sodales vel turpis. 
-Donec orci mi, ultricies sit amet nisl vitae, efficitur malesuada nunc. Nunc et felis iaculis, fermentum quam in, vulputate risus. 
+Integer iaculis consectetur nulla id pulvinar. Vestibulum dictum congue ligula, eget commodo eros vestibulum rutrum.
+Sed finibus purus at tortor rutrum maximus. Praesent urna arcu, laoreet ac egestas lacinia, sodales vel turpis.
+Donec orci mi, ultricies sit amet nisl vitae, efficitur malesuada nunc. Nunc et felis iaculis, fermentum quam in, vulputate risus.
 <br>
 <br>
 Donec dictum enim eu velit sodales, non eleifend est venenatis. C

@@ -1,8 +1,8 @@
 /* eslint-disable import/no-nodejs-modules */
 /// <reference lib="dom"/>
 import { readFileSync } from 'fs';
-import { ITEM_TYPE_PAGE, openContext } from '@gentics/e2e-utils';
 import { Page as CmsPage } from '@gentics/cms-models';
+import { dismissNotifications, ITEM_TYPE_PAGE, openContext } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
@@ -115,6 +115,8 @@ export async function closeObjectPropertyEditor(page: Page, force: boolean = tru
 }
 
 export async function editorAction(page: Page, action: string): Promise<void> {
+    // Some fantastic notifications are blocking the buttons, causing everything to lock up
+    await dismissNotifications(page);
     await page.click(`content-frame gtx-editor-toolbar [data-action="${action}"] button[data-action="primary"]`);
 }
 

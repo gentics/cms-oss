@@ -160,6 +160,7 @@ export class ResourceUrlBuilder {
         switch (editorState.editMode) {
             case EditMode.PREVIEW:
             case EditMode.EDIT:
+            case EditMode.EDIT_INHERITANCE:
                 if (editorState.itemType !== 'page') {
                     break;
                 }

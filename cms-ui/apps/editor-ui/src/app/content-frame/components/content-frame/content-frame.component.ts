@@ -109,7 +109,7 @@ import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navi
     templateUrl: './content-frame.component.html',
     styleUrls: ['./content-frame.component.scss'],
     providers: [CustomScriptHostService],
-    standalone: false
+    standalone: false,
 })
 export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -276,9 +276,15 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     return of(false);
                 }
 
-                const requireLoadForUpdate = (params.type as FolderItemOrNodeType) !== 'node' &&
-                    (prevEditMode !== params.editMode || prevItemID !== reqItemId || prevItemType !== params.type) &&
-                    (params.editMode === EditMode.EDIT || params.editMode === EditMode.EDIT_PROPERTIES);
+                const requireLoadForUpdate = (params.type as FolderItemOrNodeType) !== 'node'
+                    && (
+                        prevEditMode !== params.editMode
+                        || prevItemID !== reqItemId
+                        || prevItemType !== params.type
+                    ) && (params.editMode === EditMode.EDIT
+                        || params.editMode === EditMode.EDIT_INHERITANCE
+                        || params.editMode === EditMode.EDIT_PROPERTIES
+                );
                 prevEditMode = params.editMode;
                 prevItemID = reqItemId;
                 prevItemType = params.type;
@@ -498,8 +504,15 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.reloadPageConstructs();
             }
 
+            if (this.editMode === EditMode.EDIT_INHERITANCE) {
+                masterFrame.contentDocument.body.classList.add('gcms-edit-inheritance');
+            }
+
             // We only need to wait/check for Aloha, if we're in the edit-mode.
-            if (!this.childFrameInitialized && this.editMode === EditMode.EDIT && this.currentItem?.type === 'page') {
+            if (!this.childFrameInitialized
+                && (this.editMode === EditMode.EDIT || this.editMode === EditMode.EDIT_INHERITANCE)
+                && this.currentItem?.type === 'page'
+            ) {
                 // Similiar to the error handler above, but with a timeout instead
                 this.childFrameInitTimer = window.setTimeout(() => {
                     console.warn('UI was not properly initialized in the Aloha-Page!');
@@ -529,7 +542,47 @@ span.diff-html-removed {
 }
 span.diff-html-added {
   background: rgba(0, 255, 0, 0.2);
-}`;
+}
+
+.gcms-edit-inheritance .aloha-editable {
+  position: relative;
+  margin-top: 1.7rem;
+  outline-style: solid;
+  background-color: #0096dc2b;
+
+  .aloha-block.GENTICS_block {
+    outline: none;
+    .aloha-construct-buttons-container {
+      display: none !important;
+    }
+  }
+
+  &::before {
+    content: 'bearbeitbar';
+    display: block;
+    position: absolute;
+    top: 0;
+    font-size: 0.8rem;
+    margin-top: -1.4rem;
+    left: -2px;
+    background: #0096dc;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    padding: 2px 7px;
+  }
+
+  &.inherited {
+    outline-color: #d6d6d6;
+    background: #d6d6d669;
+
+    &::before {
+      content: 'vererbt';
+      background: #d6d6d6;
+    }
+  }
+}
+
+`;
             masterFrame.contentDocument.head.appendChild(styleElem);
 
             this.changeDetector.markForCheck();
@@ -710,7 +763,11 @@ span.diff-html-added {
      * script from within the iframe via the GCMSUI.setContentModified() method.
      */
     setContentModified(modified: boolean, modifiedByExternalScript: boolean = false): void {
-        if (this.editMode === EditMode.EDIT || this.editMode === EditMode.EDIT_PROPERTIES) {
+        if (
+            this.editMode === EditMode.EDIT
+            || this.editMode === EditMode.EDIT_INHERITANCE
+            || this.editMode === EditMode.EDIT_PROPERTIES
+        ) {
             if (modified && modifiedByExternalScript) {
                 this.contentModifiedByExternalScript = true;
             }
@@ -865,76 +922,115 @@ span.diff-html-added {
     /**
      * Use the GCN JavaScript API to save the current page, or the CombinedPropertiesEditor for simple properties and object properties.
      */
-    saveChanges(): Promise<void> | undefined {
-        const itemId = this.currentItem.id;
-        if (this.editMode === EditMode.EDIT_PROPERTIES) {
-            if (this.appState.now.editor.modifiedObjectPropertiesValid) {
-                // for pages and forms, we suppress the general save notification
-                // and show a save notification containing a "publish" button
-                switch (this.currentItem.type) {
-                    case 'page':
-                        return this.combinedPropertiesEditor.saveChanges({}, {
-                            fetchForConstruct: true,
-                            fetchForUpdate: true,
-                            showNotification: false,
-                        })
-                            .then(() => {
-                                this.currentItemClean = true;
-                                this.changeDetector.markForCheck();
+    saveChanges(): Promise<void> {
+        switch (this.editMode) {
+            case EditMode.EDIT_PROPERTIES:
+                return this.savePropertiesChanges();
+            case EditMode.EDIT:
+                return this.saveEditModeChanges();
+            case EditMode.EDIT_INHERITANCE:
+                return this.modalService.dialog({
+                    title: 'Lokaliserungen speichern',
+                    body: `
+Möchten Sie die Änderungen an der Lokalisierung speichern?<br>
+Vorhandene Inhalte werden <b>gegebenenfalls gelöscht</b>!
+                    `,
+                    buttons: [{
+                        id: 'cancel',
+                        type: 'secondary',
+                        label: 'Abbrechen',
+                        returnValue: null,
+                    }, {
+                        id: 'discard',
+                        type: 'alert',
+                        label: 'Änderungen verwerfen',
+                        returnValue: false,
+                    },{
+                        id: 'confirm',
+                        type: 'default',
+                        label: 'Einstellungen Speichern',
+                        returnValue: true,
+                    }],
+                })
+                    .then(dialog => dialog.open())
+                    .then(accept => {
+                        // TODO: Implement me
 
-                                this.notification.show({
-                                    id: `page-save-success-with-publish:${this.currentItem.id}`,
-                                    message: 'message.page_saved',
-                                    type: 'success',
-                                    action: {
-                                        label: 'common.publish_button',
-                                        onClick: () => {
-                                            this.publishPage(true);
-                                        },
-                                    },
-                                });
-                            });
-                    case 'form':
-                        return this.combinedPropertiesEditor.saveChanges({}, {
-                            fetchForConstruct: true,
-                            fetchForUpdate: true,
-                            showNotification: false,
-                        })
-                            .then(() => {
-                                this.currentItemClean = true;
-                                this.changeDetector.markForCheck();
+                    });
+            default:
+                return Promise.resolve();
+        }
+    }
 
-                                this.notification.show({
-                                    id: `form-save-success-with-publish:${this.currentItem.id}`,
-                                    message: 'message.form_saved',
-                                    type: 'success',
-                                    action: {
-                                        label: 'common.publish_button',
-                                        onClick: () => {
-                                            this.publishForm(true);
-                                        },
-                                    },
-                                });
-                            });
-                    default:
-                        return this.combinedPropertiesEditor.saveChanges()
-                            .then(() => {
-                                this.currentItemClean = true;
-                                this.changeDetector.markForCheck();
-                            });
-                }
-            }
-
+    savePropertiesChanges(): Promise<void> {
+        // Do nothing if there's no changes
+        if (!this.appState.now.editor.modifiedObjectPropertiesValid) {
+            // No idea why this message is supposed to be displayed
             this.notification.show({
                 type: 'alert',
                 message: 'message.invalid_image_property',
             });
 
             return;
-        } else if (this.editMode !== EditMode.EDIT) {
-            return;
         }
 
+        // for pages and forms, we suppress the general save notification
+        // and show a save notification containing a "publish" button
+        switch (this.currentItem.type) {
+            case 'page':
+                return this.combinedPropertiesEditor.saveChanges({}, {
+                    fetchForConstruct: true,
+                    fetchForUpdate: true,
+                    showNotification: false,
+                })
+                    .then(() => {
+                        this.currentItemClean = true;
+                        this.changeDetector.markForCheck();
+
+                        this.notification.show({
+                            id: `page-save-success-with-publish:${this.currentItem.id}`,
+                            message: 'message.page_saved',
+                            type: 'success',
+                            action: {
+                                label: 'common.publish_button',
+                                onClick: () => {
+                                    this.publishPage(true);
+                                },
+                            },
+                        });
+                    });
+            case 'form':
+                return this.combinedPropertiesEditor.saveChanges({}, {
+                    fetchForConstruct: true,
+                    fetchForUpdate: true,
+                    showNotification: false,
+                })
+                    .then(() => {
+                        this.currentItemClean = true;
+                        this.changeDetector.markForCheck();
+
+                        this.notification.show({
+                            id: `form-save-success-with-publish:${this.currentItem.id}`,
+                            message: 'message.form_saved',
+                            type: 'success',
+                            action: {
+                                label: 'common.publish_button',
+                                onClick: () => {
+                                    this.publishForm(true);
+                                },
+                            },
+                        });
+                    });
+            default:
+                return this.combinedPropertiesEditor.saveChanges()
+                    .then(() => {
+                        this.currentItemClean = true;
+                        this.changeDetector.markForCheck();
+                    });
+        }
+    }
+
+    saveEditModeChanges(): Promise<void> {
         switch (this.currentItem.type) {
             case 'page':
                 return this.savePage().then(() => {
@@ -959,7 +1055,7 @@ span.diff-html-added {
                 this.appState.dispatch(new StartSavingAction());
                 const focalPoint = this.customScriptHostService.getFocalPoint();
 
-                return this.folderActions.updateImageProperties(itemId, focalPoint, { showNotification: true, fetchForUpdate: false })
+                return this.folderActions.updateImageProperties(this.currentItem.id, focalPoint, { showNotification: true, fetchForUpdate: false })
                     .then(() => {
                         this.appState.dispatch(new SaveSuccessAction());
                         this.markContentAsModifiedInState(false);
@@ -967,7 +1063,7 @@ span.diff-html-added {
             }
 
             default:
-                break;
+                return Promise.reject('Invalid mode to save');
         }
     }
 
@@ -1016,7 +1112,14 @@ span.diff-html-added {
     saveAndPublishItem(): void {
         switch (this.currentItem.type) {
             case 'page':
-                if (this.editMode === EditMode.EDIT || (this.editMode === EditMode.EDIT_PROPERTIES && this.contentModified === true)) {
+                if (
+                    this.editMode === EditMode.EDIT
+                    || this.editMode === EditMode.EDIT_INHERITANCE
+                    || (
+                        this.editMode === EditMode.EDIT_PROPERTIES
+                        && this.contentModified === true
+                    )
+                ) {
                     this.saveChanges()
                         .then<Page>(() => {
                         if (this.contentModifiedByExternalScript) {
@@ -1172,6 +1275,10 @@ span.diff-html-added {
                     default:
                         throw new Error(`Type "${type}" does not support content frame action "${editMode}".`);
                 }
+                break;
+
+            case EditMode.EDIT_INHERITANCE:
+                this.editorActions.editPageInheritance(itemId, nodeId);
                 break;
 
             default:
@@ -1358,6 +1465,7 @@ span.diff-html-added {
         this.saveAsCopyButtonIsDisabled = this.determineSaveAsCopyButtonIsDisabled();
         this.saveButtonIsDisabled = this.determineSaveButtonIsDisabled();
         this.saveButtonVisible = this.editMode === EditMode.EDIT
+            || this.editMode === EditMode.EDIT_INHERITANCE
             || (this.editMode === EditMode.EDIT_PROPERTIES
                 && state.openTab === 'properties'
                 && state.openPropertiesTab !== ITEM_TAG_LIST_TAB

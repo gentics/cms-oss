@@ -48,6 +48,7 @@ interface AvailableButtons {
     compareSources?: boolean;
     editItem?: boolean;
     edit?: boolean;
+    editInheritance?: boolean;
     editProperties?: boolean;
     lockedEdit?: boolean;
     previewPage?: boolean;
@@ -351,7 +352,13 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     previewPage(): void {
         this.navigationService
-            .detailOrModal(this.currentNode && this.currentNode.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
+            .detailOrModal(this.currentNode?.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
+            .navigate();
+    }
+
+    editInheritance(): void {
+        this.navigationService
+            .detailOrModal(this.currentNode?.id, this.currentItem.type, this.currentItem.id, EditMode.EDIT_INHERITANCE)
             .navigate();
     }
 
@@ -406,8 +413,13 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         return {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
             compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
-            editItem: editMode === EditMode.EDIT_PROPERTIES && (isPage || isForm) && userCan.edit && !this.locked,
+            editItem: (editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE)
+                && (isPage || isForm)
+                && userCan.edit
+                && !this.locked,
             edit: (isPage || isForm) && previewing && userCan.edit && !this.locked,
+            // TODO: Check for partial inheritance
+            editInheritance: isPage && userCan.edit && editMode !== EditMode.EDIT_INHERITANCE && !isInherited,
             editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
             lockedEdit: (isPage || isForm) && this.locked && userCan.edit && !this.showSave,
             previewPage: (isPage || isForm) && !previewing && userCan.view,

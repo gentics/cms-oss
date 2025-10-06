@@ -294,6 +294,17 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 clickable: true,
             },
         ];
+        // TODO: Check if page is partially inherited
+        if (true) {
+            this.contentTagColumns.push({
+                id: 'inherited',
+                fieldPath: 'inherited',
+                mapper: () => Math.random() > 0.5,
+                label: 'Vererbt',
+                align: 'center',
+                clickable: true,
+            });
+        }
         this.rebuildContentTagActions();
 
         this.subscriptions.push(editorState$.subscribe(state => {
@@ -535,6 +546,27 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 icon: 'cancel',
                 label: this.i18n.instant('editor.tagtype_deactivate_label'),
                 type: 'warning',
+                single: true,
+                multiple: true,
+            });
+        }
+
+        // TODO: Make check if page is partially inherited
+        if (true) {
+            this.contentTagActions.unshift({
+                id: 'localize',
+                enabled: true,
+                icon: 'insert_drive_file',
+                type: 'primary',
+                label: 'Lokalisieren',
+                single: true,
+                multiple: true,
+            }, {
+                id: 'delete-localization',
+                enabled: true,
+                icon: 'restore_page',
+                type: 'alert',
+                label: 'Lokalizierung löschen',
                 single: true,
                 multiple: true,
             });

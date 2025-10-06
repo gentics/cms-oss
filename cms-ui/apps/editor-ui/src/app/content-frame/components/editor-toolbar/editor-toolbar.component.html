@@ -1,308 +1,339 @@
 @if (editorState) {
-  <div class="editor-toolbar">
-    <div class="element-toolbar" [class.regular]="currentItem?.type !== 'page' || editorState?.editMode !== EditMode.EDIT">
-      @if (focusMode) {
-        <a
-          class="gentics-logo"
-          [routerLink]="['/editor', { outlets: { list: ['node', currentNode.id, 'folder', currentNode.folderId] } } ]"
-          (click)="logoClick()"
-          >
-          <img src="assets/images/gentics-logo-60px.png">
-        </a>
-      }
-      @if (currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT) {
-        <div class="page-editor-tabs">
-          <gtx-page-editor-tabs
-            [brokenLinkCount]="brokenLinkCount"
-          ></gtx-page-editor-tabs>
-        </div>
-      } @else {
-        <div class="breadcrumb-info">
-          <gtx-breadcrumbs
-            [routerLinks]="breadcrumbs"
-            [multiline]="true"
-            [multilineExpanded]="multilineExpanded"
-            [class.is-inherited]="nodeInherited"
-            [class.not-inherited]="!nodeInherited"
-            (linkClick)="changeFocus()"
-            (multilineExpandedChange)="expandedChanged($event)"
-            >
-            @if (nodeInherited) {
-              <icon class="iconChannel">input</icon>
+    <div class="editor-toolbar">
+        <div
+            class="element-toolbar"
+            [class.regular]="currentItem?.type !== 'page' || (editorState?.editMode !== EditMode.EDIT && editorState?.editMode !== EditMode.EDIT_INHERITANCE)"
+        >
+            @if (focusMode) {
+                <a
+                    class="gentics-logo"
+                    [routerLink]="['/editor', { outlets: { list: ['node', currentNode.id, 'folder', currentNode.folderId] } } ]"
+                    (click)="logoClick()"
+                >
+                    <img src="assets/images/gentics-logo-60px.png">
+                </a>
             }
-          </gtx-breadcrumbs>
-          <div class="item-info">
-            <div
-              class="title-name"
-              [class.is-node]="currentItem?.type === 'node' || currentItem?.type === 'channel'"
-              [title]="currentItem?.name | replaceEscapedCharacters"
-              >
-              @if (currentItem?.type !== 'node') {
-                <inherited-localized-icon
-                  [item]="currentItem"
-                  [editorNodeId]="editorNodeId"
-                ></inherited-localized-icon>
-              }
-              <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
+
+            @if (currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT) {
+                <div class="page-editor-tabs">
+                    <gtx-page-editor-tabs
+                        [brokenLinkCount]="brokenLinkCount"
+                    ></gtx-page-editor-tabs>
+                </div>
+            } @else {
+                <div class="breadcrumb-info">
+                    <gtx-breadcrumbs
+                        [routerLinks]="breadcrumbs"
+                        [multiline]="true"
+                        [multilineExpanded]="multilineExpanded"
+                        [class.is-inherited]="nodeInherited"
+                        [class.not-inherited]="!nodeInherited"
+                        (linkClick)="changeFocus()"
+                        (multilineExpandedChange)="expandedChanged($event)"
+                    >
+                        @if (nodeInherited) {
+                            <icon class="iconChannel">input</icon>
+                        }
+                    </gtx-breadcrumbs>
+
+                    <div class="item-info">
+                        <div
+                            class="title-name"
+                            [class.is-node]="currentItem?.type === 'node' || currentItem?.type === 'channel'"
+                            [title]="currentItem?.name | replaceEscapedCharacters"
+                        >
+                            @if (currentItem?.type !== 'node') {
+                                <inherited-localized-icon
+                                    [item]="currentItem"
+                                    [editorNodeId]="editorNodeId"
+                                ></inherited-localized-icon>
+                            }
+                            <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
+                        </div>
+
+                        @if ((currentItem?.type === 'page' || currentItem?.type === 'form') && editorState.version) {
+                            <div class="item-version">
+                                @if (editorState.oldVersion) {
+                                    <span>
+                                        v{{ editorState.oldVersion.number }}
+                                        <icon class="comparison-icon">compare_arrows</icon>
+                                        v{{ editorState.version?.number }}
+                                    </span>
+                                } @else {
+                                    <span>v{{ editorState.version.number }}</span>
+                                }
+                            </div>
+                        }
+
+                        @if (currentItem?.type === 'form' || (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId)) {
+                            <div class="item-language">
+                                @if (itemLanguage) {
+                                    <div>{{ itemLanguage?.code | gtxI18n }}</div>
+                                }
+                                @if (editorState.compareWithId) {
+                                    <div>
+                                        <icon class="comparison-icon">compare_arrows</icon>
+                                    </div>
+                                    <div>{{ pageComparisonLanguage?.code | gtxI18n }}</div>
+                                }
+                            </div>
+                        }
+
+                        @if (currentItem && currentItem?.type === 'form') {
+                            <div class="form-type">
+                                {{ 'editor.item_type_label' | gtxI18n }}: {{ 'gtxFormGenerator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | gtxI18n }}
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="toolbar-actions">
+                <div class="item-status">
+                    <item-status-label
+                        class="full-size"
+                        [item]="currentItem"
+                        [nodeLanguages]="activeNodeLanguages"
+                        [activeNodeId]="currentNode?.id"
+                    ></item-status-label>
+                </div>
+
+                @if (buttons.saveAsCopy) {
+                    <gtx-button
+                        class="primary-action"
+                        size="small"
+                        flat
+                        data-action="save-copy"
+                        [disabled]="copyDisabled"
+                        [title]="'editor.content_frame_save_copy_tooltip' | gtxI18n"
+                        (click)="saveChanges(SaveBehaviour.SAVE_AS_COPY)"
+                    >
+                        <icon left>file_copy</icon>
+                        <span [innerHTML]="'editor.content_frame_save_copy_button' | gtxI18n"></span>
+                    </gtx-button>
+                }
+
+                @if (buttons.edit) {
+                    <gtx-button
+                        class="primary-action edit-button"
+                        size="small"
+                        flat
+                        data-action="edit"
+                        (click)="editItem()"
+                        [title]="'editor.edit_tooltip' | gtxI18n"
+                    >
+                        <icon left>edit</icon>
+                        <span class="edit-button-label">{{ 'editor.edit_label' | gtxI18n }}</span>
+                    </gtx-button>
+                }
+
+                @if (buttons.lockedEdit) {
+                    <gtx-button
+                        class="primary-action"
+                        size="small"
+                        type="secondary"
+                        flat
+                        [disabled]="true"
+                        [title]="'editor.content_frame_page_locked_tooltip' | gtxI18n"
+                    >
+                        <icon>lock</icon>
+                    </gtx-button>
+                }
+
+                @if (showSave) {
+                    <gtx-split-button
+                        class="primary-action save-button"
+                        size="small"
+                        data-action="save"
+                        [disabled]="saveDisabled || isSaving"
+                        [title]="'editor.content_frame_save_changes_tooltip' | gtxI18n"
+                    >
+                        <gtx-split-button-primary-action (click)="saveChanges(SaveBehaviour.REGULAR)">
+                            <div class="save-button-primary-action">
+                                <icon class="save-button-icon" left>save</icon>
+                                <span class="save-button-label" [innerHTML]="'editor.content_frame_save_changes_button' | gtxI18n"></span>
+                            </div>
+                        </gtx-split-button-primary-action>
+
+                        @if (currentItem?.type === 'folder' && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB) {
+                            <gtx-dropdown-item
+                                data-action="save-recursive"
+                                (click)="saveChanges(SaveBehaviour.APPLY_TO_SUBFOLDERS)"
+                                >
+                                <icon left>save</icon>
+                                <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_subfolders_button' | gtxI18n"></span>
+                            </gtx-dropdown-item>
+                        }
+
+                        @if (
+                            editorState.editMode === EditMode.EDIT_PROPERTIES
+                            && currentItem?.type === 'page'
+                            && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB
+                        ) {
+                            <gtx-dropdown-item
+                                data-action="save-variants"
+                                (click)="saveChanges(SaveBehaviour.APPLY_TO_LANGUAGE_VARIANTS)"
+                                >
+                                <icon left>save</icon>
+                                <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_language_variants_button' | gtxI18n"></span>
+                            </gtx-dropdown-item>
+                        }
+                    </gtx-split-button>
+                }
+
+                @if (currentItem?.type === 'page' || currentItem?.type === 'form') {
+                    <gtx-dropdown-list
+                        data-action="editor-context"
+                        data-context-id="item-editor"
+                        class="content-frame-context-menu"
+                    >
+                        <gtx-dropdown-trigger>
+                            <gtx-button
+                                icon
+                                type="secondary"
+                                data-context-trigger
+                            >
+                                <icon>more_vert</icon>
+                            </gtx-button>
+                        </gtx-dropdown-trigger>
+
+                        <gtx-dropdown-content data-context-id="item-editor" class="content-frame-context">
+                            @if (buttons.editProperties) {
+                                <gtx-dropdown-item
+                                    data-action="edit-properties"
+                                    (click)="editProperties()"
+                                >
+                                    <icon left>settings</icon> {{ 'editor.properties_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (buttons.editItem) {
+                                <gtx-dropdown-item
+                                    data-action="edit"
+                                    (click)="editItem()"
+                                >
+                                    <icon left>edit</icon> {{ 'editor.edit_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (buttons.previewPage) {
+                                <gtx-dropdown-item
+                                    data-action="preview"
+                                    (click)="previewPage()"
+                                >
+                                    @if (!editorState.version) {
+                                        <icon left>pageview</icon> {{ 'editor.preview_label' | gtxI18n }}
+                                    } @else {
+                                        <icon left>update</icon> {{ 'editor.preview_current_version_label' | gtxI18n }}
+                                    }
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (buttons.compareSources) {
+                                <gtx-dropdown-item
+                                    data-action="compare-sources"
+                                    (click)="switchToCompareSources()"
+                                >
+                                    <icon left>code</icon> {{ 'editor.compare_version_sources_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (buttons.compareContents) {
+                                <gtx-dropdown-item
+                                    data-action="compare-contents"
+                                    (click)="switchToCompareContents()"
+                                >
+                                    <icon left>pageview</icon> {{ 'editor.compare_version_contents_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (buttons.versionHistory) {
+                                <gtx-dropdown-item
+                                    data-action="versions"
+                                    (click)="showPageVersionsModal()"
+                                >
+                                    <icon left>history</icon> {{ 'editor.version_history_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (buttons.timeManagement) {
+                                <gtx-dropdown-item
+                                    data-action="time-management"
+                                    (click)="showTimeManagement()"
+                                >
+                                    <icon left>date_range</icon> {{ 'editor.time_management_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (inQueue) {
+                                <gtx-dropdown-item
+                                    class="success"
+                                    data-action="approve"
+                                    (click)="approve()"
+                                >
+                                    <icon left>playlist_add_check</icon> {{ 'editor.publish_queue_btn_approve' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (buttons.publish) {
+                                <gtx-dropdown-item
+                                    class="success"
+                                    data-action="publish"
+                                    (click)="saveChanges(SaveBehaviour.SAVE_AND_PUBLISH)"
+                                >
+                                    <icon left>cloud_upload</icon> {{ 'editor.publish_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (buttons.takeOffline) {
+                                <gtx-dropdown-item
+                                    class="alert"
+                                    data-action="take-offline"
+                                    (click)="takeItemOffline()"
+                                >
+                                    <icon left>cloud_off</icon> {{ 'editor.take_offline_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+                        </gtx-dropdown-content>
+                    </gtx-dropdown-list>
+                }
+
+                @if (currentItem?.type === 'page' || currentItem?.type === 'form') {
+                    <gtx-button
+                        icon
+                        class="focus-mode-button"
+                        type="secondary"
+                        data-action="toggle-focus-mode"
+                        [attr.data-active]="editorState.focusMode"
+                        [title]="('editor.' + (editorState.focusMode ? 'disable' : 'enable') + '_focus_mode_label') | gtxI18n"
+                        (click)="setFocusMode(!editorState.focusMode)"
+                    >
+                        <icon>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>
+                    </gtx-button>
+                }
+
+                <gtx-button
+                    class="close-button"
+                    icon
+                    type="secondary"
+                    data-action="close"
+                    (click)="closeEditor()"
+                >
+                    <icon>close</icon>
+                </gtx-button>
             </div>
-            @if ((currentItem?.type === 'page' || currentItem?.type === 'form') && editorState.version) {
-              <div class="item-version">
-                @if (editorState.oldVersion) {
-                  <span>
-                    v{{ editorState.oldVersion.number }}
-                    <icon class="comparison-icon">compare_arrows</icon>
-                    v{{ editorState.version?.number }}
-                  </span>
-                }
-                @if (!editorState.oldVersion) {
-                  <span>v{{ editorState.version.number }}</span>
-                }
-              </div>
-            }
-            @if (currentItem?.type === 'form' || (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId)) {
-              <div class="item-language">
-                @if (itemLanguage) {
-                  <div>{{ itemLanguage?.code | gtxI18n }}</div>
-                }
-                @if (editorState.compareWithId) {
-                  <div>
-                    <icon class="comparison-icon">compare_arrows</icon>
-                  </div>
-                  <div>{{ pageComparisonLanguage?.code | gtxI18n }}</div>
-                }
-              </div>
-            }
-            @if (currentItem && currentItem?.type === 'form') {
-              <div class="form-type">
-                {{ 'editor.item_type_label' | gtxI18n }}: {{ 'gtxFormGenerator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | gtxI18n }}
-              </div>
-            }
-          </div>
         </div>
-      }
-      <div class="toolbar-actions">
-        <div class="item-status">
-          <item-status-label
-            class="full-size"
-            [item]="currentItem"
-            [nodeLanguages]="activeNodeLanguages"
-            [activeNodeId]="currentNode?.id"
-          ></item-status-label>
-        </div>
-        @if (buttons.saveAsCopy) {
-          <gtx-button
-            class="primary-action"
-            size="small"
-            flat
-            data-action="save-copy"
-            [disabled]="copyDisabled"
-            [title]="'editor.content_frame_save_copy_tooltip' | gtxI18n"
-            (click)="saveChanges(SaveBehaviour.SAVE_AS_COPY)"
-            >
-            <icon left>file_copy</icon>
-            <span [innerHTML]="'editor.content_frame_save_copy_button' | gtxI18n"></span>
-          </gtx-button>
+
+        @if (currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT) {
+            <gtx-page-editor-controls
+                class="page-editor-controls"
+                [nodeId]="currentNode.id"
+                [pageId]="currentItem.id"
+                (brokenLinkCountChange)="updateBrokenLinkCount($event)"
+            ></gtx-page-editor-controls>
         }
-        @if (buttons.edit) {
-          <gtx-button
-            class="primary-action edit-button"
-            size="small"
-            flat
-            data-action="edit"
-            (click)="editItem()"
-            [title]="'editor.edit_tooltip' | gtxI18n"
-            >
-            <icon left>edit</icon>
-            <span class="edit-button-label">{{ 'editor.edit_label' | gtxI18n }}</span>
-          </gtx-button>
-        }
-        @if (buttons.lockedEdit) {
-          <gtx-button
-            class="primary-action"
-            size="small"
-            type="secondary"
-            flat
-            [disabled]="true"
-            [title]="'editor.content_frame_page_locked_tooltip' | gtxI18n"
-            >
-            <icon>lock</icon>
-          </gtx-button>
-        }
-        @if (showSave) {
-          <gtx-split-button
-            class="primary-action save-button"
-            size="small"
-            data-action="save"
-            [disabled]="saveDisabled || isSaving"
-            [title]="'editor.content_frame_save_changes_tooltip' | gtxI18n"
-            >
-            <gtx-split-button-primary-action (click)="saveChanges(SaveBehaviour.REGULAR)">
-              <div class="save-button-primary-action">
-                <icon class="save-button-icon" left>save</icon>
-                <span class="save-button-label" [innerHTML]="'editor.content_frame_save_changes_button' | gtxI18n"></span>
-              </div>
-            </gtx-split-button-primary-action>
-            @if (currentItem?.type === 'folder' && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB) {
-              <gtx-dropdown-item
-                data-action="save-recursive"
-                (click)="saveChanges(SaveBehaviour.APPLY_TO_SUBFOLDERS)"
-                >
-                <icon left>save</icon>
-                <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_subfolders_button' | gtxI18n"></span>
-              </gtx-dropdown-item>
-            }
-            @if (editorState.editMode === EditMode.EDIT_PROPERTIES
-              && currentItem?.type === 'page'
-              && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB) {
-              <gtx-dropdown-item
-                data-action="save-variants"
-                (click)="saveChanges(SaveBehaviour.APPLY_TO_LANGUAGE_VARIANTS)"
-                >
-                <icon left>save</icon>
-                <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_language_variants_button' | gtxI18n"></span>
-              </gtx-dropdown-item>
-            }
-          </gtx-split-button>
-        }
-        @if (currentItem?.type === 'page' || currentItem?.type === 'form') {
-          <gtx-dropdown-list
-            data-action="editor-context"
-            data-context-id="item-editor"
-            class="content-frame-context-menu"
-            >
-            <gtx-dropdown-trigger>
-              <gtx-button
-                icon
-                type="secondary"
-                data-context-trigger
-                >
-                <icon>more_vert</icon>
-              </gtx-button>
-            </gtx-dropdown-trigger>
-            <gtx-dropdown-content data-context-id="item-editor" class="content-frame-context">
-              @if (buttons.editProperties) {
-                <gtx-dropdown-item
-                  data-action="edit-properties"
-                  (click)="editProperties()"
-                  >
-                  <icon left>settings</icon> {{ 'editor.properties_label' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-              @if (buttons.editItem) {
-                <gtx-dropdown-item
-                  data-action="edit"
-                  (click)="editItem()"
-                  >
-                  <icon left>edit</icon> {{ 'editor.edit_label' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-              @if (buttons.previewPage) {
-                <gtx-dropdown-item
-                  data-action="preview"
-                  (click)="previewPage()"
-                  >
-                  @if (!editorState.version) {
-                    <icon left>pageview</icon> {{ 'editor.preview_label' | gtxI18n }}
-                  } @else {
-                    <icon left>update</icon> {{ 'editor.preview_current_version_label' | gtxI18n }}
-                  }
-                </gtx-dropdown-item>
-              }
-              @if (buttons.compareSources) {
-                <gtx-dropdown-item
-                  data-action="compare-sources"
-                  (click)="switchToCompareSources()"
-                  >
-                  <icon left>code</icon> {{ 'editor.compare_version_sources_label' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-              @if (buttons.compareContents) {
-                <gtx-dropdown-item
-                  data-action="compare-contents"
-                  (click)="switchToCompareContents()"
-                  >
-                  <icon left>pageview</icon> {{ 'editor.compare_version_contents_label' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-              @if (buttons.versionHistory) {
-                <gtx-dropdown-item
-                  data-action="versions"
-                  (click)="showPageVersionsModal()"
-                  >
-                  <icon left>history</icon> {{ 'editor.version_history_label' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-              @if (buttons.timeManagement) {
-                <gtx-dropdown-item
-                  data-action="time-management"
-                  (click)="showTimeManagement()"
-                  >
-                  <icon left>date_range</icon> {{ 'editor.time_management_label' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-              @if (inQueue) {
-                <gtx-dropdown-item
-                  class="success"
-                  data-action="approve"
-                  (click)="approve()"
-                  >
-                  <icon left>playlist_add_check</icon> {{ 'editor.publish_queue_btn_approve' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-              @if (buttons.publish) {
-                <gtx-dropdown-item
-                  class="success"
-                  data-action="publish"
-                  (click)="saveChanges(SaveBehaviour.SAVE_AND_PUBLISH)"
-                  >
-                  <icon left>cloud_upload</icon> {{ 'editor.publish_label' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-              @if (buttons.takeOffline) {
-                <gtx-dropdown-item
-                  class="alert"
-                  data-action="take-offline"
-                  (click)="takeItemOffline()"
-                  >
-                  <icon left>cloud_off</icon> {{ 'editor.take_offline_label' | gtxI18n }}
-                </gtx-dropdown-item>
-              }
-            </gtx-dropdown-content>
-          </gtx-dropdown-list>
-        }
-        @if (currentItem?.type === 'page' || currentItem?.type === 'form') {
-          <gtx-button
-            icon
-            class="focus-mode-button"
-            type="secondary"
-            data-action="toggle-focus-mode"
-            [attr.data-active]="editorState.focusMode"
-            [title]="('editor.' + (editorState.focusMode ? 'disable' : 'enable') + '_focus_mode_label') | gtxI18n"
-            (click)="setFocusMode(!editorState.focusMode)"
-            >
-            <icon>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>
-          </gtx-button>
-        }
-        <gtx-button
-          class="close-button"
-          icon
-          type="secondary"
-          data-action="close"
-          (click)="closeEditor()"
-          >
-          <icon>close</icon>
-        </gtx-button>
-      </div>
+
+        <gtx-progress-bar class="image-loading" [for]="uploadInProgress$"></gtx-progress-bar>
     </div>
-    @if (currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT) {
-      <gtx-page-editor-controls
-        class="page-editor-controls"
-        [nodeId]="currentNode.id"
-        [pageId]="currentItem.id"
-        (brokenLinkCountChange)="updateBrokenLinkCount($event)"
-      ></gtx-page-editor-controls>
-    }
-    <gtx-progress-bar class="image-loading" [for]="uploadInProgress$"></gtx-progress-bar>
-  </div>
 }
 

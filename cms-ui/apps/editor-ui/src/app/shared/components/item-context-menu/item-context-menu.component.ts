@@ -28,6 +28,7 @@ export interface ContextMenuButtonsMap {
     publishProtocol: boolean;
     setAsStartpage: boolean;
     localize: boolean;
+    editInheritance: boolean;
     editInParent: boolean;
     move: boolean;
     inheritanceSettings: boolean;
@@ -169,6 +170,10 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
     localizeClicked(item: InheritableItem): void {
         this.contextMenuOperations.localize(item, this.activeNode.id);
+    }
+
+    editInheritance(item: Page): void {
+        this.contextMenuOperations.editInheritance(item, this.activeNode.id);
     }
 
     editInParentNode(item: InheritableItem): void {
@@ -363,6 +368,8 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
             publishProtocol: isPage || isForm && !this.isDeleted && userCan.view,
             setAsStartpage: isPage && !this.isDeleted && isPage && !this.isFolderStartPage && this.permissions.folder.edit,
             localize: this.multiChannelingEnabled && !isForm && !this.isDeleted && inherited && userCan.localize,
+            // TODO: Check for partial inheritance
+            editInheritance: this.multiChannelingEnabled && isPage && !this.isDeleted && isLocalized && userCan.edit,
             editInParent: this.multiChannelingEnabled && !isForm && !this.isDeleted && showEditButton && (inherited || isLocalized),
             move: !this.isDeleted && (isForm || (isMaster && !inherited)) && userCan.delete,
             inheritanceSettings: this.multiChannelingEnabled && !isForm && !this.isDeleted && isMaster && !inherited && userCan.inherit,

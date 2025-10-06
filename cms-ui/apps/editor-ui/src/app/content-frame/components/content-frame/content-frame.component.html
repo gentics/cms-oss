@@ -79,12 +79,22 @@
   <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || currentItem?.type === 'form'">
     <gtx-progress-bar
       class="frame-requesting"
-      [active]="!windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
+      [active]="!windowLoaded
+        || (
+            (editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE)
+            && pageComparisonLanguage == null
+            && !alohaWindowLoaded
+        )"
     ></gtx-progress-bar>
 
     <gtx-loading-spinner
-      [visible]="!windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
-      [message]="(editMode === EditMode.EDIT ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| gtxI18n"
+      [visible]="!windowLoaded
+        || (
+            (editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE)
+            && pageComparisonLanguage == null
+            && !alohaWindowLoaded
+        )"
+      [message]="((editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE) ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| gtxI18n"
       [longerMessage]="'editor.loading_takes_more_time' | gtxI18n"
     ></gtx-loading-spinner>
 
@@ -103,7 +113,12 @@
         class="frame master-frame"
         [attr.data-item-type]="currentItem?.type"
         [attr.data-edit-mode]="editMode"
-        [attr.loaded]="windowLoaded && !(editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
+        [attr.loaded]="windowLoaded
+            && !(
+                (editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE)
+                && pageComparisonLanguage == null
+                && !alohaWindowLoaded
+            )"
         name="master-frame"
         aria-hidden="false"
       ></iframe>

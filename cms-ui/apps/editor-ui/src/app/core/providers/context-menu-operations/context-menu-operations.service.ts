@@ -118,6 +118,10 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, EditMode.EDIT).navigate());
     }
 
+    editInheritance(page: Page, activeNodeId: number): void {
+        this.navigationService.detailOrModal(activeNodeId, page.type, page.id, EditMode.EDIT_INHERITANCE).navigate();
+    }
+
     editProperties(item: InheritableItem, activeNodeId: number): void {
         this.decisionModals.showInheritedDialog(item, activeNodeId)
             .then(({ item, nodeId }) => {
@@ -616,7 +620,31 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     localize(item: InheritableItem, activeNodeId: number): void {
         const localizingEditedItem: boolean = item.id === this.state.now.editor.itemId;
-        this.folderActions.localizeItem(item.type, item.id, activeNodeId)
+        this.modalService.dialog({
+            title: 'Lokalisierung wählen',
+            body: `Bitte wählen Sie eine Art der Lokaliserung.<br>
+Eine Volle Lokaliserung erstellt eine lokale Seite des Originals in den Channel,<br>
+in dem änderungen gänzlich angegeben werden müssen.<br><br>
+Bei einer Teil Lokalisierung, werden nur bestimmte Teile einer Seite lokalisiert,<br>
+wodurch man nur diesen teil bearbeiten muss.
+`,
+            buttons: [
+                {
+                    label: 'Volle Lokalisierung',
+                    type: 'default',
+                },
+                {
+                    label: 'Teils Lokalisieren',
+                    type: 'default',
+                },
+                {
+                    label: 'Abbrechen',
+                    type: 'secondary',
+                },
+            ],
+        })
+            .then(dialog => dialog.open())
+            .then(() => this.folderActions.localizeItem(item.type, item.id, activeNodeId))
             .then((item: InheritableItem) => {
                 this.folderActions.refreshList(item.type);
                 if (this.state.now.editor.editorIsOpen && localizingEditedItem) {

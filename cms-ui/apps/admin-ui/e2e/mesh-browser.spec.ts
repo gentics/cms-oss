@@ -2,6 +2,8 @@ import { ContentRepository } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     CONTENT_REPOSITORY_MESH,
+    MESH_SCHEMA_CONTENT,
+    MESH_SCHEMA_FOLDER,
     EntityImporter,
     findTableRowById,
     FOLDER_A,
@@ -11,15 +13,18 @@ import {
     LANGUAGE_DE,
     LANGUAGE_EN,
     loginWithForm,
-    NODE_MINIMAL,
+    matchRequest,
     navigateToApp,
+    NODE_MINIMAL,
     openContext,
-    PageImportData,
     PAGE_ONE,
     PAGE_ONE_DE,
+    PageImportData,
     SCHEDULE_PUBLISHER,
     TestSize,
+    waitForPublishDone,
 } from '@gentics/e2e-utils';
+import { GraphQLRequest } from '@gentics/mesh-models';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { navigateToModule } from './helpers';
@@ -48,7 +53,7 @@ test.describe('Mesh Browser', () => {
         await IMPORTER.client.contentRepository.repairStructure(testCr.id).send();
     });
 
-    test.describe('Mesh Browser', () => {
+    test.describe('Overview', () => {
         test.beforeEach(async ({ page }) => {
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
@@ -71,7 +76,7 @@ test.describe('Mesh Browser', () => {
         });
     });
 
-    test.describe('Mesh Browser (authenticated)', () => {
+    test.describe('Browsing', () => {
         test.slow();
 
         // Simple "empty" page in german, as we need to publish this page
@@ -97,6 +102,7 @@ test.describe('Mesh Browser', () => {
             await IMPORTER.client.page.publish(IMPORTER.get(PAGE_ONE).id, { alllang: true }).send();
             await IMPORTER.client.page.publish(IMPORTER.get(PAGE_GERMAN).id, { alllang: true }).send();
             await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
+            await waitForPublishDone(page, IMPORTER.client);
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
@@ -110,13 +116,10 @@ test.describe('Mesh Browser', () => {
             await row.click();
 
             // Fill in Mesh credentials and submit
-            await page.locator('.login-form input[type="text"]').fill(AUTH.mesh.username);
-            await page.locator('.login-form input[type="password"]').fill(AUTH.mesh.password);
-            await page.locator('.login-form button[type="submit"]').click();
+            await loginWithForm(page.locator('.login-form'), AUTH.mesh);
 
             // Now the schema list should appear
             page.locator('.schema-list-wrapper').waitFor();
-            // await expect().toBeVisible();
         });
 
         test('should list content', async ({ page }) => {
@@ -139,13 +142,13 @@ test.describe('Mesh Browser', () => {
             const languageSelectorContext = await openContext(languageSelector);
             await languageSelectorContext.locator(`[data-id="${LANGUAGE_EN}"]`).click();
 
-            const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
+            const folders = page.locator(`gtx-mesh-browser-schema-items[data-id="${MESH_SCHEMA_FOLDER}"]`);
 
             // Navigate into the first folder
             await folders.locator('.schema-content .schema-element .title').click();
 
             // Find the published page and click it to open the editor
-            const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
+            const contents = page.locator(`gtx-mesh-browser-schema-items[data-id="${MESH_SCHEMA_CONTENT}"]`);
             const element = contents.locator('.schema-content .schema-element').filter({
                 hasText: IMPORTER.get(PAGE_ONE).name,
             });
@@ -164,13 +167,13 @@ test.describe('Mesh Browser', () => {
             const languageSelectorContext = await openContext(languageSelector);
             await languageSelectorContext.locator(`[data-id="${LANGUAGE_DE}"]`).click();
 
-            const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
+            const folders = page.locator(`gtx-mesh-browser-schema-items[data-id="${MESH_SCHEMA_FOLDER}"]`);
 
             // Navigate into the first folder
             await folders.locator('.schema-content .schema-element .title').click();
 
             // Find the published page and click it to open the editor
-            const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
+            const contents = page.locator(`gtx-mesh-browser-schema-items[data-id="${MESH_SCHEMA_CONTENT}"]`);
             const element = contents.locator('.schema-content .schema-element').filter({
                 hasText: IMPORTER.get(PAGE_ONE).name,
             });
@@ -184,8 +187,7 @@ test.describe('Mesh Browser', () => {
         });
     });
 
-
-    test.describe('Mesh Browser multilingual (authenticated)', () => {
+    test.describe('Browsing multilingual', () => {
         test.slow();
 
         test.beforeEach('Multilingual setup', async ({ page }) => {
@@ -210,14 +212,22 @@ test.describe('Mesh Browser', () => {
             await row.waitFor();
             await row.click();
 
+            // Wait for folders to be loaded
+            const folderLoad = page.waitForResponse(request => {
+                if (!matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/*/graphql')(request)) {
+                    return false;
+                }
+                const gqlReq: GraphQLRequest = request.request().postDataJSON();
+                return gqlReq.variables?.schemaName === `${MESH_SCHEMA_FOLDER}`;
+            });
+
             // Fill in Mesh credentials and submit
-            await page.locator('.login-form input[type="text"]').fill(AUTH.mesh.username);
-            await page.locator('.login-form input[type="password"]').fill(AUTH.mesh.password);
-            await page.locator('.login-form button[type="submit"]').click();
+            await loginWithForm(page.locator('.login-form'), AUTH.mesh);
 
             // Now the schema list should appear
+            await folderLoad;
+
             await page.locator('.schema-list-wrapper').waitFor();
-            // await expect().toBeVisible();
         });
 
         test('should be able to open detail view in a different language', {
@@ -227,8 +237,7 @@ test.describe('Mesh Browser', () => {
             }],
         }, async ({ page }) => {
             const languageSelector = page.locator('.dropdown-language');
-
-            const folders = page.locator('gtx-mesh-browser-schema-items[data-id="example_folder"]');
+            const folders = page.locator(`gtx-mesh-browser-schema-items[data-id="${MESH_SCHEMA_FOLDER}"]`);
 
             // Navigate into the first folder
             await folders.locator('.schema-content .schema-element .title').click();
@@ -238,7 +247,7 @@ test.describe('Mesh Browser', () => {
             await languageSelectorContext.locator(`[data-id="${LANGUAGE_DE}"]`).click();
 
             // Find the published page and click it to open the editor
-            const contents = page.locator('gtx-mesh-browser-schema-items[data-id="example_content"]');
+            const contents = page.locator(`gtx-mesh-browser-schema-items[data-id="${MESH_SCHEMA_CONTENT}"]`);
             const element = contents.locator('.schema-content .schema-element').first();
             await element.locator('.title').click();
 

@@ -144,7 +144,10 @@ export const IMPORT_ID = Symbol('gtx-e2e-import-id');
 export const BASIC_TEMPLATE_ID = '57a5.5db4acfa-3224-11ef-862c-0242ac110002';
 
 export const CONTENT_REPOSITORY_MESH = '7f25.8f630a60-355e-11ef-8e0a-0242ac110002';
-export const CR_PREFIX_MESH = 'example';
+export const MESH_SCHEMA_PREFIX = 'example';
+export const MESH_SCHEMA_FOLDER = `${MESH_SCHEMA_PREFIX}_folder`;
+export const MESH_SCHEMA_CONTENT = `${MESH_SCHEMA_PREFIX}_content`;
+export const MESH_SCHEMA_BIN_CONTENT = `${MESH_SCHEMA_PREFIX}_binary_content`;
 
 export const CONSTRUCT_ALOHA_LINK = 'A547.70950';
 export const CONSTRUCT_ALOHA_TEXT = 'A547.75403';

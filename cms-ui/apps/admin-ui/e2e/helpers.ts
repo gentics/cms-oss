@@ -44,9 +44,8 @@ export async function loginWithCR(page: Page, shouldBeLoggedIn: boolean = true):
 /**
  * Clicks a modal button by its action
  */
-export async function clickModalAction(source: Page | Locator, action: 'confirm' | 'cancel'): Promise<void> {
-    const selector = action === 'confirm' ? '.modal-footer [data-action="confirm"]' : '.modal-footer [data-action="cancel"]';
-    await source.locator(selector).click();
+export async function clickModalAction(source: Locator, action: string): Promise<void> {
+    await source.locator(`.modal-footer [data-action="${action}"] button`).click();
 }
 
 export function findEntityTableActionButton(source: Page | Locator, action: string): Locator {

@@ -4,7 +4,7 @@ import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-cli
 import {
     clickTableRow,
     CONTENT_REPOSITORY_MESH,
-    CR_PREFIX_MESH,
+    MESH_SCHEMA_PREFIX,
     EntityImporter,
     expandTrableRow,
     findTableAction,
@@ -225,13 +225,11 @@ test.describe('Content Repositories Module', () => {
                 let userRow: Locator;
 
                 await test.step('Login and force PW reset', async () => {
-                    const usersReq = page.waitForResponse(response =>
-                        response.ok() && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/users'),
-                    );
+                    const usersLoad = page.waitForResponse(matchRequest('GET', '/rest/contentrepositories/*/proxy/api/v2/users'));
 
                     await loginWithCR(page, true);
                     await selectTab(page, 'users');
-                    await usersReq;
+                    await usersLoad;
 
                     // Edit user and force password change
                     userRow = findTableRowByText(managementContent, AUTH.mesh.username);
@@ -260,11 +258,7 @@ test.describe('Content Repositories Module', () => {
                     await loginForm.locator(SELECTORS.LOGIN_FORM.PASSWORD).fill(AUTH.mesh.password);
                     await newPassword.fill(AUTH.mesh.newPassword);
 
-                    const pwResetLoginReq = page.waitForResponse(response =>
-                        response.ok()
-                            && response.request().method() === 'POST'
-                            && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/auth/login'),
-                    );
+                    const pwResetLoginReq = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/auth/login'));
                     await loginForm.locator(SELECTORS.LOGIN_FORM.SUBMIT).click();
                     await pwResetLoginReq;
 
@@ -281,11 +275,7 @@ test.describe('Content Repositories Module', () => {
                     await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).first().fill(AUTH.mesh.password);
                     await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).last().fill(AUTH.mesh.password);
 
-                    const updateReq = page.waitForResponse(response =>
-                        response.ok()
-                        && response.request().method() === 'POST'
-                        && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/users/*'),
-                    );
+                    const updateReq = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/users/*'));
                     await clickModalAction(userModal, 'confirm');
                     const resetRes = await updateReq;
                     const resetReqData: UserUpdateRequest = resetRes.request().postDataJSON();
@@ -317,12 +307,12 @@ test.describe('Content Repositories Module', () => {
 
                 await findEntityTableActionButton(managementContent, 'create').click();
 
-                const createModal = page.locator(SELECTORS.PROJECT.MODAL);
+                await test.step('Create a new Project', async () => {
+                    const createModal = page.locator(SELECTORS.PROJECT.MODAL);
 
-                await createModal.locator(SELECTORS.PROJECT.NAME_INPUT)
-                    .fill(NEW_PROJECT_NAME);
+                    await createModal.locator(SELECTORS.PROJECT.NAME_INPUT)
+                        .fill(NEW_PROJECT_NAME);
 
-                await test.step('Select the schema "folder" as root schema', async () => {
                     await createModal.locator(SELECTORS.PROJECT.SCHEMA_PICKER)
                         .click();
 
@@ -331,9 +321,9 @@ test.describe('Content Repositories Module', () => {
                     await schemaRow.waitFor({ state: 'visible' });
                     await selectTableRow(schemaRow);
                     await clickModalAction(schemaSelectModal, 'confirm');
-                });
 
-                await clickModalAction(createModal, 'confirm');
+                    await clickModalAction(createModal, 'confirm');
+                });
 
                 await test.step('Delete the newly created Project', async () => {
                     const projectRow = findTableRowByText(managementContent, NEW_PROJECT_NAME);
@@ -341,7 +331,7 @@ test.describe('Content Repositories Module', () => {
 
                     await findTableAction(projectRow, 'delete').click();
 
-                    await clickModalAction(page, 'confirm');
+                    await clickModalAction(page.locator('gtx-confirm-delete-modal'), 'confirm');
                 });
             });
         });
@@ -369,7 +359,7 @@ test.describe('Content Repositories Module', () => {
                     await projectsRow.waitFor({ timeout: 60_000 });
                     await expandTrableRow(projectsRow);
 
-                    const exampleRow = findTrableRowByText(permModal, CR_PREFIX_MESH);
+                    const exampleRow = findTrableRowByText(permModal, MESH_SCHEMA_PREFIX);
                     await exampleRow.waitFor({ state: 'visible' });
                     const projectId = await exampleRow.evaluate((el) => {
                         return el.getAttribute('data-id');
@@ -391,11 +381,7 @@ test.describe('Content Repositories Module', () => {
                     const editModal = page.locator('gtx-mesh-role-permissions-edit-modal');
                     await editModal.locator('gtx-checkbox[formcontrolname="readPublished"] label').click();
 
-                    const loadRequest = page.waitForResponse(response =>
-                        response.ok()
-                        && matchesPath(response.url(), '/rest/contentrepositories/'),
-                    );
-
+                    const loadRequest = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*'));
                     await clickModalAction(editModal, 'confirm');
                     await loadRequest;
                 });
@@ -405,20 +391,13 @@ test.describe('Content Repositories Module', () => {
 
                 await test.step('Apply permissions recursively to child nodes', async () => {
                     // Apply permissions recursively
-                    const recursiveLoadReq = page.waitForResponse(response =>
-                        response.ok()
-                            && response.request().method() === 'GET'
-                            && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*'),
-                    );
+                    const recursiveLoadReq = page.waitForResponse(matchRequest('GET', '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*'));
                     await findTableAction(minimalRow, 'applyRecursive').click();
-                    await clickModalAction(page, 'confirm');
+                    await clickModalAction(page.locator('gtx-modal-dialog'), 'confirm');
                     await recursiveLoadReq;
 
                     // Load/Open child elements first
-                    const childLoad = page.waitForResponse(response =>
-                        response.ok()
-                        && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/*/graphql'),
-                    );
+                    const childLoad = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/*/graphql'));
                     await expandTrableRow(minimalRow);
                     await childLoad;
 
@@ -430,7 +409,7 @@ test.describe('Content Repositories Module', () => {
                 });
 
                 // Close modal
-                await clickModalAction(page, 'cancel');
+                await clickModalAction(permModal, 'cancel');
             });
         });
     });

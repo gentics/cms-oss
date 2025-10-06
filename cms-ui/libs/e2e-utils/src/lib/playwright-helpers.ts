@@ -1,4 +1,5 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
+import { GCMSRestClient } from '@gentics/cms-rest-client';
 import { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import { ATTR_CONTEXT_ID, ATTR_MULTIPLE, DEFAULT_KEYCLOAK_URL, ENV_KEYCLOAK_URL, LoginInformation } from './common';
 import { hasMatchingParams, matchesPath } from './utils';
@@ -233,5 +234,13 @@ export async function logout(page: Page): Promise<void> {
     await logoutButton.click();
 
     await page.context().clearCookies();
+}
+
+export async function waitForPublishDone(page: Page, client: GCMSRestClient): Promise<void> {
+    let info = await client.admin.getPublishInfo().send();
+    while (info.totalWork !== info.totalWorkDone) {
+        await page.waitForTimeout(1_000);
+        info = await client.admin.getPublishInfo().send();
+    }
 }
 

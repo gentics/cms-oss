@@ -1050,6 +1050,18 @@ public class PublishablePage extends AbstractPage {
 		}
 
 		@Override
+		public boolean isPartiallyLocalized() {
+			return false;
+		}
+
+		@Override
+		public Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException {
+			failReadOnly();
+
+			return null;
+		}
+
+		@Override
 		public boolean isLocked() throws NodeException {
 			return false;
 		}

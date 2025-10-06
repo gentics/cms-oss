@@ -2,6 +2,18 @@ package com.gentics.contentnode.rest.resource;
 
 import java.util.List;
 
+import com.gentics.contentnode.rest.model.request.DisinheritRequest;
+import com.gentics.contentnode.rest.model.request.MultiPushToMasterRequest;
+import com.gentics.contentnode.rest.model.request.MultiUnlocalizeRequest;
+import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
+import com.gentics.contentnode.rest.model.request.PushToMasterRequest;
+import com.gentics.contentnode.rest.model.request.UnlocalizeRequest;
+import com.gentics.contentnode.rest.model.response.DisinheritResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.LocalizationInfo;
+import com.gentics.contentnode.rest.model.response.LocalizationsResponse;
+import com.gentics.contentnode.rest.model.response.MultiDisinheritResponse;
+import com.gentics.contentnode.rest.model.response.ReferencedSyncableObjectsListResponse;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -11,19 +23,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
-
-import com.gentics.contentnode.rest.model.request.DisinheritRequest;
-import com.gentics.contentnode.rest.model.request.LocalizeRequest;
-import com.gentics.contentnode.rest.model.request.MultiPushToMasterRequest;
-import com.gentics.contentnode.rest.model.request.MultiUnlocalizeRequest;
-import com.gentics.contentnode.rest.model.request.PushToMasterRequest;
-import com.gentics.contentnode.rest.model.request.UnlocalizeRequest;
-import com.gentics.contentnode.rest.model.response.DisinheritResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.LocalizationInfo;
-import com.gentics.contentnode.rest.model.response.LocalizationsResponse;
-import com.gentics.contentnode.rest.model.response.MultiDisinheritResponse;
-import com.gentics.contentnode.rest.model.response.ReferencedSyncableObjectsListResponse;
 
 /**
  * Resource for handling multichannelling aspects of pages.
@@ -87,7 +86,7 @@ public interface MCPageResource {
 	 */
 	@POST
 	@Path("/localize/{id}")
-	GenericResponse localize(@PathParam("id") Integer id, LocalizeRequest request) throws Exception;
+	GenericResponse localize(@PathParam("id") Integer id, PageLocalizeRequest request) throws Exception;
 
 	/**
 	 * Get localization info for a list of pages for a given channel and all master channels

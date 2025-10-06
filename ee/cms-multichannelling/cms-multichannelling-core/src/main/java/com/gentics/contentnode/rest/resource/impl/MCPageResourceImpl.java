@@ -1,8 +1,5 @@
 package com.gentics.contentnode.rest.resource.impl;
 
-import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
-import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,20 +8,11 @@ import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.MultichannellingFactory;
@@ -42,9 +30,9 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.request.DisinheritRequest;
-import com.gentics.contentnode.rest.model.request.LocalizeRequest;
 import com.gentics.contentnode.rest.model.request.MultiPushToMasterRequest;
 import com.gentics.contentnode.rest.model.request.MultiUnlocalizeRequest;
+import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
 import com.gentics.contentnode.rest.model.request.PushToMasterRequest;
 import com.gentics.contentnode.rest.model.request.UnlocalizeRequest;
 import com.gentics.contentnode.rest.model.response.DisinheritResponse;
@@ -65,8 +53,19 @@ import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.Operator.LockType;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
-
 import io.reactivex.Observable;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+
+import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
+import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
 
 @Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ MediaType.APPLICATION_JSON })
@@ -174,7 +173,7 @@ public class MCPageResourceImpl implements MCPageResource {
 	@POST
 	@Path("/localize/{id}")
 	@Override
-	public GenericResponse localize(@PathParam("id") Integer id, LocalizeRequest request) throws NodeException {
+	public GenericResponse localize(@PathParam("id") Integer id, PageLocalizeRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			if (request == null) {
 				logger.error("Error while localizing page: no data provided");
@@ -209,6 +208,13 @@ public class MCPageResourceImpl implements MCPageResource {
 								"Error while localizing page {" + id
 								+ "} in channel {" + request.getChannelId() + "}: " +
 										"the specified page does not exist"));
+			}
+
+			var partial = Boolean.TRUE.equals(request.getPartial());
+
+			if (partial && !Feature.PARTIAL_MULTICHANNELLING.isActivated(page.getNode())) {
+				logger.error("Ignoring flag for partial localization of page {" + id + "} in channel {" + request.getChannelId() + "}: Feature PARTIAL_MULTICHANNELLING not available");
+				partial = false;
 			}
 
 			Node channel = t.getObject(Node.class, request.getChannelId());
@@ -250,7 +256,7 @@ public class MCPageResourceImpl implements MCPageResource {
 			}
 
 			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000,
-					Operator.lock(LockType.channelSet, page.getChannelSetId()), new LocalizePageCallable(id, request.getChannelId(), false));
+					Operator.lock(LockType.channelSet, page.getChannelSetId()), new LocalizePageCallable(id, request.getChannelId(), false, partial));
 		}
 	}
 

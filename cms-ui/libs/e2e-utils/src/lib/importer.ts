@@ -216,6 +216,11 @@ export class EntityImporter {
             this.entityMap[singleCr.globalId] = singleCr;
         }
 
+        const objectProperties = (await this.client.objectProperty.list().send()).items || [];
+        for (const singleObjectProperty of objectProperties) {
+            this.entityMap[singleObjectProperty.globalId] = singleObjectProperty;
+        }
+
         return map;
     }
 
@@ -964,6 +969,7 @@ export class EntityImporter {
         await this.cleanupSchedules();
         await this.cleanupContentRepositories();
         await this.cleanupConstructCategories();
+        await this.cleanupPackages();
     }
 
     private async cleanupScheduleTasks(): Promise<void> {
@@ -1061,6 +1067,17 @@ export class EntityImporter {
         }
 
         return this.entityMap;
+    }
+
+    private async cleanupPackages(): Promise<void> {
+        const packages = (await this.client.devTools.list().send()).items;
+        const defaults = Object.values(TestSize);
+
+        for (const pkg of packages) {
+            if (!defaults.includes(pkg.name as TestSize)) {
+                await this.client.devTools.delete(pkg.name).send();
+            }
+        }
     }
 
     private async setupDummyNode(): Promise<number> {

@@ -13,7 +13,7 @@ import { catchError, map } from 'rxjs/operators';
 import { NGGCMSRestClientRequest } from './models';
 
 function asSafeJSON(request: GCMSRestClientRequestData, str: string | null) {
-    const value = typeof str !== 'string' ? str : JSON.parse(str);
+    const value = typeof str !== 'string' || str.trim().length === 0 ? str : JSON.parse(str);
     const err = validateResponseObject(request, value);
     if (err) {
         throw err;

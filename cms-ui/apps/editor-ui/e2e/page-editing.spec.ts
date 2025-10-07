@@ -102,237 +102,244 @@ test.describe('Page Editing', () => {
             mainEditable = editable;
         }
 
-        test.beforeEach(async ({ page }) => {
-            editingPage = IMPORTER.get(pageOne);
-            await openEditingPageInEditmode(page);
-        });
-
-        test('should be able to add new text to the content-editable', async ({ page }) => {
-            const TEXT_CONTENT = 'Foo bar hello world';
-
-            // Type content into editor
-            await mainEditable.click();
-            await mainEditable.clear();
-            await mainEditable.fill(TEXT_CONTENT);
-
-            // Save and verify request
-            const saveRequest = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
-
-            // TODO: Investigate why we need this timeout/why save isn't executed immediately.
-            // Possible reason being angular event bindings.
-            await page.waitForTimeout(2000);
-
-            await editorAction(page, 'save');
-
-            const response = await saveRequest;
-            const data = await response.request().postDataJSON();
-
-            // Verify content was saved correctly
-            const contentText = data?.page?.tags?.content?.properties?.text?.stringValue || '';
-            const trimmedContent = contentText.replace(/<\/?p>/g, '').trim();
-            expect(trimmedContent).toBe(TEXT_CONTENT);
-        });
-
-        test('should cancel editing when the edit view is closed', async ({ page }) => {
-            const cancelRequest = page.waitForResponse(matchRequest('POST', `/rest/page/cancel/${editingPage.id}`));
-
-            await editorAction(page, 'close');
-
-            await cancelRequest;
-        });
-
-        test('should be able to select an internal page as link', async ({ page }) => {
-            const TEXT_CONTENT = 'Hello ';
-            const LINK_TEXT = 'World';
-            const LINK_ITEM = IMPORTER.get(pageOne);
-            const ITEM_NODE = IMPORTER.get(minimalNode)!;
-            const LINK_TITLE = 'My Link Title';
-            const LINK_TARGET = '_blank';
-            const LINK_ANCHOR = 'test-anchor';
-            const LINK_LANGUAGE = 'en';
-
-            // Type content and select text for link
-            await mainEditable.click();
-            await mainEditable.clear();
-            await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
-
-            // Select text to make into link
-            expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
-            await createInternalLink(page, async repoBrowser => {
-                await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
-            }, async form => {
-                await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
-                await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
-                await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
-                await form.locator('[data-slot="lang"] input').fill(LINK_LANGUAGE);
+        test.describe('Basic Editing', () => {
+            test.beforeEach(async ({page}) => {
+                editingPage = IMPORTER.get(pageOne);
+                await openEditingPageInEditmode(page);
             });
 
-            // Verify link was created
-            const linkElement = mainEditable.locator('a');
-            await expect(linkElement).toHaveAttribute('href', `/alohapage?real=newview&realid=${LINK_ITEM.id}&nodeid=${ITEM_NODE.id}`);
-            await expect(linkElement).toHaveAttribute('hreflang', LINK_LANGUAGE);
-            await expect(linkElement).toHaveAttribute('target', LINK_TARGET);
-            await expect(linkElement).toHaveAttribute('title', LINK_TITLE);
-            await expect(linkElement).toHaveAttribute('data-gentics-aloha-repository', 'com.gentics.aloha.GCN.Page');
-            await expect(linkElement).toHaveAttribute('data-gcn-target-label', LINK_ITEM.name);
-            await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_ITEM.id}`);
-            await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
-            await expect(linkElement).toHaveText(LINK_TEXT);
-        });
+            test('should be able to add new text to the content-editable', async ({page}) => {
+                const TEXT_CONTENT = 'Foo bar hello world';
 
-        test('should be able to edit inline-editables with simple formatting', {
-            annotation: [{
-                type: 'ticket',
-                description: 'SUP-18800',
-            }],
-        }, async ({ page }) => {
-            let inlineEditable = iframe.locator('main p[contenteditable="true"]');
-
-            // Enter some sample text in multiple lines
-            const LINES = ['test content', 'foo bar', 'final text'];
-            await inlineEditable.click();
-            await inlineEditable.fill(LINES[0]);
-            await inlineEditable.press('Enter');
-            await inlineEditable.type(LINES[1]);
-            await inlineEditable.press('Enter');
-            await inlineEditable.type(LINES[2]);
-
-            // Select some text
-            await selectTextIn(inlineEditable, LINES[0]);
-
-            // Certain formatting should not be available
-            await selectEditorTab(page, 'formatting');
-            await expect(findAlohaComponent(page, { slot: 'typography' })).not.toBeVisible();
-            await expect(findAlohaComponent(page, { slot: 'listOrdered' })).not.toBeVisible();
-            await expect(findAlohaComponent(page, { slot: 'listUnordered' })).not.toBeVisible();
-            await expect(findAlohaComponent(page, { slot: 'listDefinition' })).not.toBeVisible();
-
-            // Format selected text as bold
-            await findAlohaComponent(page, { slot: 'bold' }).click();
-
-            // Save the page and re-open the page in edit-mode
-            const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
-            await editorAction(page, 'save');
-            await saveReq;
-            await editorAction(page, 'close');
-
-            // Wait until content-frame is actually closed before trying to go to edit-mode
-            await page.locator('content-frame').waitFor({ state: 'detached' });
-
-            await itemAction(itemRow, 'edit');
-            iframe = await getAlohaIFrame(page);
-            inlineEditable = iframe.locator('main p[contenteditable="true"]');
-            await inlineEditable.waitFor({ timeout: 60_000 });
-
-            expect(await inlineEditable.innerHTML()).toEqual([`<b>${LINES[0]}</b>`, ...LINES.slice(1)].join('<br>'));
-        });
-
-        async function createLinkCopyPasteTest(page: Page, handler: () => Promise<void>): Promise<void> {
-            const TEXT_CONTENT = 'Example Link';
-            const TEMPLATE = IMPORTER.get(BASIC_TEMPLATE_ID) as Template;
-            const TEMPLATE_TAGS = Object.keys(TEMPLATE.templateTags);
-
-            await test.step('Create internal link', async () => {
-                // Type content
+                // Type content into editor
                 await mainEditable.click();
                 await mainEditable.clear();
                 await mainEditable.fill(TEXT_CONTENT);
 
-                // Select text to make into link
-                expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
-                await handler();
+                // Save and verify request
+                const saveRequest = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+
+                // TODO: Investigate why we need this timeout/why save isn't executed immediately.
+                // Possible reason being angular event bindings.
+                await page.waitForTimeout(2000);
+
+                await editorAction(page, 'save');
+
+                const response = await saveRequest;
+                const data = await response.request().postDataJSON();
+
+                // Verify content was saved correctly
+                const contentText = data?.page?.tags?.content?.properties?.text?.stringValue || '';
+                const trimmedContent = contentText.replace(/<\/?p>/g, '').trim();
+                expect(trimmedContent).toBe(TEXT_CONTENT);
             });
 
-            // We need to save the page first and re-open it,
-            // as otherwise the links are not created as actual tags yet.
-            await test.step('Save and re-open the page', async () => {
-                // Wait till properly saved
-                const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
-                await editorAction(page, 'save');
-                const req = await saveReq;
-                const pageUpdate = await req.request().postDataJSON() as PageSaveRequest;
+            test('should cancel editing when the edit view is closed', async ({page}) => {
+                const cancelRequest = page.waitForResponse(matchRequest('POST', `/rest/page/cancel/${editingPage.id}`));
 
-                const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
-                // Remove template tags
-                TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
-
-                // Make sure we actually save only one link tag
-                expect(tags.size).toEqual(1);
-
-                // Wait till properly closed
                 await editorAction(page, 'close');
-                await page.locator('content-frame').waitFor({ state: 'detached' });
 
-                // Now open the page again
-                await openEditingPageInEditmode(page);
+                await cancelRequest;
             });
 
-            await test.step('Copy and paste the link', async () => {
-                // Select the text again
-                expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
+            test('should be able to select an internal page as link', async ({page}) => {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+                const LINK_ITEM = IMPORTER.get(pageOne);
+                const ITEM_NODE = IMPORTER.get(minimalNode)!;
+                const LINK_TITLE = 'My Link Title';
+                const LINK_TARGET = '_blank';
+                const LINK_ANCHOR = 'test-anchor';
+                const LINK_LANGUAGE = 'en';
 
-                await mainEditable.press('ControlOrMeta+c');
-                await mainEditable.press('ArrowRight');
-                await mainEditable.press('Enter');
-                await mainEditable.press('ControlOrMeta+v');
+                // Type content and select text for link
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
 
-                // Wait for the content to be loaded
-                await mainEditable.locator('img').waitFor({ state: 'detached' });
-
-                const linkIds = await mainEditable.evaluate(el => {
-                    return Array.from(el.querySelectorAll('a'))
-                        .map(link => link.getAttribute('data-gcn-tagid'))
-                        .filter(id => id != null);
-                });
-
-                expect(linkIds).toHaveLength(2);
-                expect(linkIds[0]).not.toEqual(linkIds[1]);
-
-                const saveReq = page.waitForRequest(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
-                await editorAction(page, 'save');
-                const req = await saveReq;
-                const pageUpdate = await req.postDataJSON() as PageSaveRequest;
-
-                const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
-                // Remove template tags
-                TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
-
-                // Make sure we actually save 2 different tags
-                expect(tags.size).toEqual(2);
-            });
-        }
-
-        test('should be possible to copy an internal link', {
-            annotation: [{
-                type: 'ticket',
-                description: 'SUP-18537',
-            }],
-        }, async ({ page }) => {
-            const LINK_ITEM = IMPORTER.get(pageOne);
-            await createLinkCopyPasteTest(page, async () => {
+                // Select text to make into link
+                expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
                 await createInternalLink(page, async repoBrowser => {
                     await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
-                }, async () => {
-                    // nop
+                }, async form => {
+                    await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
+                    await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
+                    await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
+                    await form.locator('[data-slot="lang"] input').fill(LINK_LANGUAGE);
                 });
-            })
-        });
 
-        test('should be possible to copy an external link', {
-            annotation: [{
-                type: 'ticket',
-                description: 'SUP-18537',
-            }],
-        }, async ({ page }) => {
-            await createLinkCopyPasteTest(page, async () => {
-                await createExternalLink(page, async form => {
-                    await form.locator('[data-slot="url"] .target-input input').fill('https://example.com');
-                    await form.locator('[data-slot="title"] input').fill('A very interesting site');
+                // Verify link was created
+                const linkElement = mainEditable.locator('a');
+                await expect(linkElement).toHaveAttribute('href', `/alohapage?real=newview&realid=${LINK_ITEM.id}&nodeid=${ITEM_NODE.id}`);
+                await expect(linkElement).toHaveAttribute('hreflang', LINK_LANGUAGE);
+                await expect(linkElement).toHaveAttribute('target', LINK_TARGET);
+                await expect(linkElement).toHaveAttribute('title', LINK_TITLE);
+                await expect(linkElement).toHaveAttribute('data-gentics-aloha-repository', 'com.gentics.aloha.GCN.Page');
+                await expect(linkElement).toHaveAttribute('data-gcn-target-label', LINK_ITEM.name);
+                await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_ITEM.id}`);
+                await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
+                await expect(linkElement).toHaveText(LINK_TEXT);
+            });
+
+            test('should be able to edit inline-editables with simple formatting', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-18800',
+                }],
+            }, async ({page}) => {
+                let inlineEditable = iframe.locator('main p[contenteditable="true"]');
+
+                // Enter some sample text in multiple lines
+                const LINES = ['test content', 'foo bar', 'final text'];
+                await inlineEditable.click();
+                await inlineEditable.fill(LINES[0]);
+                await inlineEditable.press('Enter');
+                await inlineEditable.type(LINES[1]);
+                await inlineEditable.press('Enter');
+                await inlineEditable.type(LINES[2]);
+
+                // Select some text
+                await selectTextIn(inlineEditable, LINES[0]);
+
+                // Certain formatting should not be available
+                await selectEditorTab(page, 'formatting');
+                await expect(findAlohaComponent(page, {slot: 'typography'})).not.toBeVisible();
+                await expect(findAlohaComponent(page, {slot: 'listOrdered'})).not.toBeVisible();
+                await expect(findAlohaComponent(page, {slot: 'listUnordered'})).not.toBeVisible();
+                await expect(findAlohaComponent(page, {slot: 'listDefinition'})).not.toBeVisible();
+
+                // Format selected text as bold
+                await findAlohaComponent(page, {slot: 'bold'}).click();
+
+                // Save the page and re-open the page in edit-mode
+                const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                await editorAction(page, 'save');
+                await saveReq;
+                await editorAction(page, 'close');
+
+                // Wait until content-frame is actually closed before trying to go to edit-mode
+                await page.locator('content-frame').waitFor({state: 'detached'});
+
+                await itemAction(itemRow, 'edit');
+                iframe = await getAlohaIFrame(page);
+                inlineEditable = iframe.locator('main p[contenteditable="true"]');
+                await inlineEditable.waitFor({timeout: 60_000});
+
+                expect(await inlineEditable.innerHTML()).toEqual([`<b>${LINES[0]}</b>`, ...LINES.slice(1)].join('<br>'));
+            });
+
+            async function createLinkCopyPasteTest(page: Page, handler: () => Promise<void>): Promise<void> {
+                const TEXT_CONTENT = 'Example Link';
+                const TEMPLATE = IMPORTER.get(BASIC_TEMPLATE_ID) as Template;
+                const TEMPLATE_TAGS = Object.keys(TEMPLATE.templateTags);
+
+                await test.step('Create internal link', async () => {
+                    // Type content
+                    await mainEditable.click();
+                    await mainEditable.clear();
+                    await mainEditable.fill(TEXT_CONTENT);
+
+                    // Select text to make into link
+                    expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
+                    await handler();
+                });
+
+                // We need to save the page first and re-open it,
+                // as otherwise the links are not created as actual tags yet.
+                await test.step('Save and re-open the page', async () => {
+                    // Wait till properly saved
+                    const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                    await editorAction(page, 'save');
+                    const req = await saveReq;
+                    const pageUpdate = await req.request().postDataJSON() as PageSaveRequest;
+
+                    const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
+                    // Remove template tags
+                    TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
+
+                    // Make sure we actually save only one link tag
+                    expect(tags.size).toEqual(1);
+
+                    // Wait till properly closed
+                    await editorAction(page, 'close');
+                    await page.locator('content-frame').waitFor({state: 'detached'});
+
+                    // Now open the page again
+                    await openEditingPageInEditmode(page);
+                });
+
+                await test.step('Copy and paste the link', async () => {
+                    // Select the text again
+                    expect(await selectTextIn(mainEditable, TEXT_CONTENT)).toBe(true);
+
+                    await mainEditable.press('ControlOrMeta+c');
+                    await mainEditable.press('ArrowRight');
+                    await mainEditable.press('Enter');
+                    await mainEditable.press('ControlOrMeta+v');
+
+                    // Wait for the content to be loaded
+                    await mainEditable.locator('img').waitFor({state: 'detached'});
+
+                    const linkIds = await mainEditable.evaluate(el => {
+                        return Array.from(el.querySelectorAll('a'))
+                            .map(link => link.getAttribute('data-gcn-tagid'))
+                            .filter(id => id != null);
+                    });
+
+                    expect(linkIds).toHaveLength(2);
+                    expect(linkIds[0]).not.toEqual(linkIds[1]);
+
+                    const saveReq = page.waitForRequest(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                    await editorAction(page, 'save');
+                    const req = await saveReq;
+                    const pageUpdate = await req.postDataJSON() as PageSaveRequest;
+
+                    const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
+                    // Remove template tags
+                    TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
+
+                    // Make sure we actually save 2 different tags
+                    expect(tags.size).toEqual(2);
+                });
+            }
+
+            test('should be possible to copy an internal link', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-18537',
+                }],
+            }, async ({page}) => {
+                const LINK_ITEM = IMPORTER.get(pageOne);
+                await createLinkCopyPasteTest(page, async () => {
+                    await createInternalLink(page, async repoBrowser => {
+                        await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
+                    }, async () => {
+                        // nop
+                    });
+                })
+            });
+
+            test('should be possible to copy an external link', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-18537',
+                }],
+            }, async ({page}) => {
+                await createLinkCopyPasteTest(page, async () => {
+                    await createExternalLink(page, async form => {
+                        await form.locator('[data-slot="url"] .target-input input').fill('https://example.com');
+                        await form.locator('[data-slot="title"] input').fill('A very interesting site');
+                    });
                 });
             });
         });
 
         test.describe('Formatting', () => {
+            test.beforeEach(async ({page}) => {
+                editingPage = IMPORTER.get(pageOne);
+                await openEditingPageInEditmode(page);
+            });
+
             test.describe('add and remove basic formats', () => {
                 const TEXT = 'Hello World';
                 const FORMAT_ACTIONS = [
@@ -462,11 +469,150 @@ test.describe('Page Editing', () => {
 
         test.describe('Inserting', () => {
             test('should be able to insert a table', async ({ page }) => {
+                await editPageAndCreateTable(page);
+
+                await expect(mainEditable.locator('table')).toBeVisible();
+            });
+
+            test('should not be able to style table without config', async ({ page }) => {
+                await editPageAndCreateTable(page);
+
+                const table = mainEditable.locator('table');
+
+                await expect(table).toBeVisible();
+
+                const topLeftCell = table.locator('.aloha-table-leftuppercorner');
+
+                await topLeftCell.click();
+
+                const styleToggle = await findAlohaComponent(page, {slot: 'tableCellStyle'});
+
+                await expect(styleToggle).toBeDisabled();
+            });
+
+            test('should be able to style table with config', async ({ page }) => {
+                overrideAlohaConfig(page, 'aloha-config-table-test.js');
+
+                await editPageAndCreateTable(page);
+
+                const table = mainEditable.locator('table');
+
+                await expect(table).toBeVisible();
+
+                const topLeftCell = table.locator('.aloha-table-leftuppercorner');
+
+                await topLeftCell.click();
+
+                const styleToggle = await findAlohaComponent(page, {slot: 'tableCellStyle'});
+
+                await expect(styleToggle).toBeEnabled();
+                await styleToggle.click();
+
+                const styleOptionsContainer = page.locator('gtx-dynamic-dropdown [data-ref="tableCellStyle"]');
+                const styleOptions = styleOptionsContainer.locator('.select-menu-entry');
+
+                await expect(styleOptions).toHaveCount(6);
+
+                // TODO: Set and check table CSS class.
+            });
+
+            test('should be able to style column with config', async ({ page }) => {
+                const styleName = 'column-style-1';
+                const styleLabel = 'Column style 1';
+                overrideAlohaConfig(page, 'aloha-config-table-test.js');
+
+                await editPageAndCreateTable(page);
+
+                const table = mainEditable.locator('table');
+                const firstColumn = await table.locator('.aloha-table-selectcolumn td:nth-child(2)');
+
+                await firstColumn.click();
+
+                const styleToggle = await findAlohaComponent(page, {slot: 'tableCellStyle'});
+
+                await styleToggle.click();
+
+                const styleOptionsContainer = page.locator('gtx-dynamic-dropdown [data-ref="tableCellStyle"]');
+                const styleOptions = styleOptionsContainer.locator('.select-menu-entry');
+
+                await expect(styleOptions).toHaveCount(4);
+
+                const columnStyle = styleOptions.filter({hasText: styleLabel});
+
+                await expect(columnStyle).toHaveId(styleName);
+
+                await columnStyle.click();
+
+                const cells = await mainEditable.locator('table tr:not(.aloha-table-selectcolumn) td:not(.aloha-table-selectrow):nth-child(2)').all();
+
+                await expect(cells).toHaveLength(3);
+                await expect(cells[0]).toContainClass(styleName);
+                await expect(cells[1]).toContainClass(styleName);
+                await expect(cells[2]).toContainClass(styleName);
+            });
+
+            test('should be able to style row with config', async ({ page }) => {
+                const styleName = 'row-style-1';
+                const styleLabel = 'Row style 1';
+                overrideAlohaConfig(page, 'aloha-config-table-test.js');
+
+                await editPageAndCreateTable(page);
+
+                const table = mainEditable.locator('table');
+                const firstRow = await table.locator('tr:nth-child(2) .aloha-table-selectrow');
+
+                await firstRow.click();
+
+                const styleToggle = await findAlohaComponent(page, {slot: 'tableCellStyle'});
+
+                await styleToggle.click();
+
+                const styleOptionsContainer = page.locator('gtx-dynamic-dropdown [data-ref="tableCellStyle"]');
+                const styleOptions = styleOptionsContainer.locator('.select-menu-entry');
+
+                await expect(styleOptions).toHaveCount(4);
+
+                const rowStyle = styleOptions.filter({hasText: styleLabel});
+
+                await expect(rowStyle).toHaveId(styleName);
+
+                await rowStyle.click();
+
+                const cells = await mainEditable.locator('table tr:not(.aloha-table-selectcolumn):nth-child(2) td:not(.aloha-table-selectrow)').all();
+
+                console.log(cells);
+
+                await expect(cells).toHaveLength(3);
+                await expect(cells[0]).toContainClass(styleName);
+                await expect(cells[1]).toContainClass(styleName);
+                await expect(cells[2]).toContainClass(styleName);
+            });
+
+            function overrideAlohaConfig(page, configFilename) {
+                page.route('/internal/minimal/files/js/aloha-config.js', route => {
+                    route.fulfill({
+                        headers: {
+                            location: `/internal/minimal/files/js/${configFilename}`
+                        },
+                        status: 301
+                    })
+                });
+
+            }
+
+            async function editPageAndCreateTable(page) {
+                editingPage = IMPORTER.get(pageOne);
+
+                await openEditingPageInEditmode(page);
+
                 await mainEditable.click();
                 await mainEditable.clear();
 
-                selectNode()
-            });
+                await selectEditorTab(page, 'insert');
+                await findAlohaComponent(page, {slot: 'createTable'}).click();
+
+                await page.locator('gtx-table-size-select .grid-row:nth-child(3) .cell:nth-child(3)').click();
+            }
         });
     });
 

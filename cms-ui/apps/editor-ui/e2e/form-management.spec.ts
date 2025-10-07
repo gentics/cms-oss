@@ -6,6 +6,7 @@ import {
     ITEM_TYPE_FORM,
     LANGUAGE_DE,
     loginWithForm,
+    matchesUrl,
     matchRequest,
     minimalNode,
     navigateToApp,
@@ -46,13 +47,13 @@ test.describe('Form Management', () => {
             [NodeFeature.FORMS]: true,
         });
         await IMPORTER.importData([formOne]);
-
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
     });
 
     test('should be possible to create a new form', async ({ page }) => {
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
+
         const list = findList(page, ITEM_TYPE_FORM);
         await list.locator('.header-controls [data-action="create-new-item"] button').click();
 
@@ -82,6 +83,8 @@ test.describe('Form Management', () => {
                 folderId: `${EDITING_FORM.folderId}`,
             },
         }));
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
         await loadReq;
 
@@ -101,7 +104,10 @@ test.describe('Form Management', () => {
         const EDITING_FORM = IMPORTER.get(formOne);
         const SUCCESS_URL = 'https://gentics.com';
 
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
+
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
         await itemAction(item, 'properties');
@@ -172,7 +178,10 @@ test.describe('Form Management', () => {
     }, async ({page}) => {
         const EDITING_FORM = IMPORTER.get(formOne);
 
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(minimalNode)!.id);
+
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
 
@@ -200,5 +209,56 @@ test.describe('Form Management', () => {
 
         // form should be published now
         await expectItemPublished(item);
+    });
+
+    test('should display an error message when form config is missing', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-18932',
+        }],
+    }, async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(formOne);
+
+        await test.step('Specialized Setup', async () => {
+            // Block requests to the config
+            await page.route(url => matchesUrl(url, '/ui-conf/form-editor.json'), route => {
+                return route.abort('failed');
+            });
+
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+            await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        });
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, EDITING_FORM.id);
+
+        await test.step('Diplay when creating new form', async () => {
+            await list.locator('.header-controls [data-action="create-new-item"] button').click();
+
+            const modal = page.locator('create-form-modal');
+            const form = modal.locator('gtx-form-properties');
+
+            await expect(form.locator('form')).not.toBeVisible();
+            await expect(form.locator('.form-editor-error')).toBeVisible();
+
+            await modal.locator('.modal-footer [data-action="cancel"] button').click();
+        });
+
+        await test.step('Display in Form Edit-Mode', async () => {
+            await itemAction(item, 'edit');
+
+            await expect(page.locator('content-frame gtx-form-editor .form-editor-error')).toBeVisible();
+            await expect(page.locator('content-frame gtx-form-editor .form-editor-menu-container > *')).not.toBeAttached();
+
+            await editorAction(page, 'close');
+        });
+
+        await test.step('Display in Form Properties', async () => {
+            await itemAction(item, 'properties');
+
+            await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor form')).not.toBeVisible();
+            await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor .form-editor-error')).toBeVisible();
+        });
     });
 });

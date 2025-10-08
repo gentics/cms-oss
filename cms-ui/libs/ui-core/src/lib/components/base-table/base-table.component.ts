@@ -189,9 +189,9 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
     public updateRowSelection(row: R, event?: MouseEvent): void {
         cancelEvent(event);
 
-        if (!this.multiple) {
-            if (this.selected[row.id] === true) {
-                this.deselect.emit(row);
+        if (this.selected[row.id] === true) {
+            this.deselect.emit(row);
+            if (!this.multiple) {
                 if (this.useSelectionMap) {
                     this.selectedChange.emit({ [row.id]: false });
                 } else {
@@ -199,14 +199,16 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
                 }
                 return;
             }
-
+        } else {
             this.select.emit(row);
-            if (this.useSelectionMap) {
-                this.selectedChange.emit({ [row.id]: true });
-            } else {
-                this.selectedChange.emit([row.id]);
+            if (!this.multiple) {
+                if (this.useSelectionMap) {
+                    this.selectedChange.emit({ [row.id]: true });
+                } else {
+                    this.selectedChange.emit([row.id]);
+                }
+                return;
             }
-            return;
         }
 
         const copy = structuredClone(this.selected) as TableSelection;

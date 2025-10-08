@@ -30,23 +30,35 @@ test.describe('Form Management', () => {
     const PUBLISH_BUTTON_TEXT = 'Veröffentlichen';
 
     test.beforeAll(async ({ request }) => {
-        IMPORTER.setApiContext(request);
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
+
+        await test.step('Test Bootstrapping', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
     });
 
     test.beforeEach(async ({ request, context }) => {
-        await context.clearCookies();
-        IMPORTER.setApiContext(request);
-
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
-        await IMPORTER.setupFeatures(TestSize.MINIMAL, {
-            [NodeFeature.FORMS]: true,
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await context.clearCookies();
+            await IMPORTER.clearClient();
         });
-        await IMPORTER.importData([FORM_ONE]);
+
+        await test.step('Common Test Setup', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
+        });
+
+        await test.step('Specialized Test Setup', async () => {
+            await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.FORMS]: true,
+            });
+            await IMPORTER.importData([FORM_ONE]);
+        });
     });
 
     test('should be possible to create a new form', async ({ page }) => {
@@ -54,16 +66,6 @@ test.describe('Form Management', () => {
         await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
 
-        await IMPORTER.importData([FORM_ONE]);
-
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-    });
-
-    test('should be possible to create a new form', async ({ page }) => {
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
         const list = findList(page, ITEM_TYPE_FORM);
         await list.locator('.header-controls [data-action="create-new-item"] button').click();
 

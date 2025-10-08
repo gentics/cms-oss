@@ -2,15 +2,14 @@ import { Node, Template } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     clickTableRow,
-    emptyNode,
     EntityImporter,
     findTableAction,
     findTableRowById,
     findTrableRowById,
     loginWithForm,
     matchRequest,
-    minimalNode,
     navigateToApp,
+    NODE_MINIMAL,
     selectTableRow,
     selectTrableRow,
     TestSize,
@@ -47,7 +46,7 @@ test.describe('Templates Module', () => {
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
         testTemplate = IMPORTER.get(BASIC_TEMPLATE_ID as any) as any;
-        testNode = IMPORTER.get(minimalNode);
+        testNode = IMPORTER.get(NODE_MINIMAL);
 
         // Navigate to the app and log in
         await navigateToApp(page);

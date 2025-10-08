@@ -103,7 +103,7 @@ test.describe('Page Editing', () => {
 
         test.describe('Basic Editing', () => {
             test.beforeEach(async ({page}) => {
-                editingPage = IMPORTER.get(pageOne);
+                editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
             });
 

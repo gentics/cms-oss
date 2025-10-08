@@ -42,10 +42,7 @@ export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequest
 
     try {
         const json = await res.json();
-        const err = validateResponseObject(request, json, res.status());
-        if (err) {
-            throw err;
-        }
+        validateResponseObject(request, json, res.status());
         return json;
     } catch (err) {
         if (!(err instanceof SyntaxError)) {

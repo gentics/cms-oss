@@ -491,6 +491,9 @@ test.describe('Page Editing', () => {
             });
 
             test('should be able to style table with config', async ({ page }) => {
+                const styleName = 'table-style-1';
+                const styleLabel = 'Table style 1';
+
                 overrideAlohaConfig(page, 'aloha-config-table-test.js');
 
                 await editPageAndCreateTable(page);
@@ -513,7 +516,12 @@ test.describe('Page Editing', () => {
 
                 await expect(styleOptions).toHaveCount(6);
 
-                // TODO: Set and check table CSS class.
+                const tableStyle = styleOptions.filter({hasText: styleLabel});
+
+                await expect(tableStyle).toHaveId(styleName);
+                await tableStyle.click();
+
+                await expect(table).toContainClass(styleName);
             });
 
             test('should be able to style column with config', async ({ page }) => {
@@ -588,16 +596,15 @@ test.describe('Page Editing', () => {
                 await expect(cells[2]).toContainClass(styleName);
             });
 
-            function overrideAlohaConfig(page, configFilename) {
-                page.route('/internal/minimal/files/js/aloha-config.js', route => {
-                    route.fulfill({
+            function overrideAlohaConfig(page, configFilename): Promise<void> {
+                return page.route('/internal/minimal/files/js/aloha-config.js', route => {
+                    return route.fulfill({
                         headers: {
                             location: `/internal/minimal/files/js/${configFilename}`
                         },
                         status: 301
                     })
                 });
-
             }
 
             async function editPageAndCreateTable(page) {

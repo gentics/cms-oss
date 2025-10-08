@@ -57,3 +57,7 @@ export function findTrableRowByText(source: Page | Locator, text: string, exact:
         hasText: exact ? new RegExp(`^[\\s]*${text}[\\s]*$`) : text,
     }).locator('..');
 }
+
+export async function selectTrableRow(row: Locator): Promise<void> {
+    return row.locator('.select-column .selection-checkbox  label, .inline-selection .selection-checkbox label').click();
+}

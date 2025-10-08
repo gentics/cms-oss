@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { discard } from '@admin-ui/common';
 import { FolderOperations, I18nNotificationService, TemplateOperations } from '@admin-ui/core';
 import { FolderLinkEvent } from '@admin-ui/shared';

@@ -132,9 +132,6 @@ h4. 8 GB
   innodb_log_file_size=819M
   query_cache_size=64M
   max_connections=200
-
-  # gtx_gcn_custom.ini
-  apc.shm_size=128M
 </shell>
 
 h4. 16 GB
@@ -151,9 +148,6 @@ h4. 16 GB
   innodb_log_file_size=1664M
   query_cache_size=128M
   max_connections=250
-
-  # gtx_gcn_custom.ini
-  apc.shm_size=256M
 </shell>
 
 h4. 32 GB
@@ -170,9 +164,6 @@ h4. 32 GB
   innodb_log_file_size=3328M
   query_cache_size=128M
   max_connections=300
-
-  # gtx_gcn_custom.ini
-  apc.shm_size=512M
 </shell>
 
 h3. Memory Formula

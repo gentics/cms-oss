@@ -124,86 +124,86 @@ export class FormEditorMappingService {
         return Object.assign(mappedFormElement, valuesI18n);
     };
 
-    mapFormToFormBO = (
+    public mapFormToFormBO(
         form: Form<Raw | Normalized>,
         formEditorConfiguration: FormEditorConfiguration,
         ignoreMissingElementTypes: boolean = true,
         ignoreMissingElementPropertyTypes: boolean = true,
-    ): FormBO<Raw | Normalized> => {
-        form = cloneDeep(form);
-        if (form && formEditorConfiguration) {
-            const mappedForm: FormBO<Raw | Normalized> = {
-                id: form.id,
-                globalId: form.globalId,
-                name: form.name,
-                masterNodeId: form.masterNodeId,
-                creator: form.creator,
-                cdate: form.cdate,
-                editor: form.editor,
-                edate: form.edate,
-                type: form.type,
-                deleted: form.deleted,
-                masterDeleted: form.masterDeleted,
-                folderDeleted: form.folderDeleted,
-                usage: form.usage,
-                excluded: form.excluded,
-                inherited: form.inherited,
-                inheritedFrom: form.inheritedFrom,
-                inheritedFromId: form.inheritedFromId,
-                masterNode: form.masterNode,
-                disinheritDefault: form.disinheritDefault,
-                disinherited: form.disinherited,
-                disinherit: form.disinherit,
-                inheritable: form.inheritable,
-                fileName: form.fileName,
-                description: form.description,
-                folderId: form.folderId,
-                modified: form.modified,
-                publisher: form.publisher,
-                pdate: form.pdate,
-                timeManagement: form.timeManagement,
-                planned: form.planned,
-                queued: form.queued,
-                languages: form.languages,
-                online: form.online,
-                folder: form.folder,
-                master: form.master,
-                locked: form.locked,
-                lockedSince: form.lockedSince,
-                lockedBy: form.lockedBy,
-                successPageId: form.successPageId,
-                successNodeId: form.successNodeId,
-                version: form.version,
-                data: {
-                    type: CmsFormType.GENERIC,
-                    templateContext: '',
-                    elements: [],
-                },
-            };
-            if (form.data) {
-                mappedForm.data.email = form.data.email;
-                mappedForm.data.successurl = form.data.successurl; /* old property that must not be removed or altered */
-                mappedForm.data.successurl_i18n = form.data.successurl_i18n;
-                mappedForm.data.mailsubject_i18n = form.data.mailsubject_i18n;
-                mappedForm.data.mailsource_pageid = form.data.mailsource_pageid;
-                mappedForm.data.mailsource_nodeid = form.data.mailsource_nodeid;
-                mappedForm.data.mailtemp_i18n = form.data.mailtemp_i18n;
-                mappedForm.data.type = form.data.type ? form.data.type : CmsFormType.GENERIC;
-                mappedForm.data.templateContext = form.data.templateContext ? form.data.templateContext : '';
-            }
-            if (form.data && form.data.elements) {
-                mappedForm.data.elements = form.data.elements.map(element => this.mapFormElementToFormElementBO(
-                    element,
-                    formEditorConfiguration,
-                    ignoreMissingElementTypes,
-                    ignoreMissingElementPropertyTypes,
-                ));
-            }
-            return mappedForm;
-        } else {
-            return undefined;
+    ): FormBO<Raw | Normalized> {
+        if (!form || !formEditorConfiguration) {
+            return null;
         }
-    };
+
+        form = cloneDeep(form);
+        const mappedForm: FormBO<Raw | Normalized> = {
+            id: form.id,
+            globalId: form.globalId,
+            name: form.name,
+            masterNodeId: form.masterNodeId,
+            creator: form.creator,
+            cdate: form.cdate,
+            editor: form.editor,
+            edate: form.edate,
+            type: form.type,
+            deleted: form.deleted,
+            masterDeleted: form.masterDeleted,
+            folderDeleted: form.folderDeleted,
+            usage: form.usage,
+            excluded: form.excluded,
+            inherited: form.inherited,
+            inheritedFrom: form.inheritedFrom,
+            inheritedFromId: form.inheritedFromId,
+            masterNode: form.masterNode,
+            disinheritDefault: form.disinheritDefault,
+            disinherited: form.disinherited,
+            disinherit: form.disinherit,
+            inheritable: form.inheritable,
+            fileName: form.fileName,
+            description: form.description,
+            folderId: form.folderId,
+            modified: form.modified,
+            publisher: form.publisher,
+            pdate: form.pdate,
+            timeManagement: form.timeManagement,
+            planned: form.planned,
+            queued: form.queued,
+            languages: form.languages,
+            online: form.online,
+            folder: form.folder,
+            master: form.master,
+            locked: form.locked,
+            lockedSince: form.lockedSince,
+            lockedBy: form.lockedBy,
+            successPageId: form.successPageId,
+            successNodeId: form.successNodeId,
+            version: form.version,
+            data: {
+                type: CmsFormType.GENERIC,
+                templateContext: '',
+                elements: [],
+            },
+        };
+        if (form.data) {
+            mappedForm.data.email = form.data.email;
+            mappedForm.data.successurl = form.data.successurl; /* old property that must not be removed or altered */
+            mappedForm.data.successurl_i18n = form.data.successurl_i18n;
+            mappedForm.data.mailsubject_i18n = form.data.mailsubject_i18n;
+            mappedForm.data.mailsource_pageid = form.data.mailsource_pageid;
+            mappedForm.data.mailsource_nodeid = form.data.mailsource_nodeid;
+            mappedForm.data.mailtemp_i18n = form.data.mailtemp_i18n;
+            mappedForm.data.type = form.data.type ? form.data.type : CmsFormType.GENERIC;
+            mappedForm.data.templateContext = form.data.templateContext ? form.data.templateContext : '';
+        }
+        if (form.data && form.data.elements) {
+            mappedForm.data.elements = form.data.elements.map(element => this.mapFormElementToFormElementBO(
+                element,
+                formEditorConfiguration,
+                ignoreMissingElementTypes,
+                ignoreMissingElementPropertyTypes,
+            ));
+        }
+        return mappedForm;
+    }
 
     private mapFormElementToFormElementBO = (
         formElement: CmsFormElement,

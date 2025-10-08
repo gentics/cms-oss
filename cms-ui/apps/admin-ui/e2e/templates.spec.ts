@@ -120,13 +120,13 @@ test.describe('Templates Module', () => {
         });
 
         await test.step('Unassign test node', async () => {
-            const unassignReq = page.waitForResponse(matchRequest('POST', `/rest/template/${testTemplate.id}/unlink`));
+            const unassignReq = page.waitForResponse(matchRequest('POST', '/rest/template/unlink'));
             await selectTrableRow(folderRow);
             await unassignReq;
         });
 
         await test.step('Assign test node', async () => {
-            const assignReq = page.waitForResponse(matchRequest('POST', `/rest/template/${testTemplate.id}/link`));
+            const assignReq = page.waitForResponse(matchRequest('POST', '/rest/template/link'));
             await selectTrableRow(folderRow);
             await assignReq;
         });

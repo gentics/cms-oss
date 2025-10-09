@@ -11,9 +11,9 @@ import { Observable, OperatorFunction, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { NGGCMSRestClientRequest } from './models';
 
-function asSafeJSON(request: GCMSRestClientRequestData, str: string | null) {
+function asSafeJSON(request: GCMSRestClientRequestData, str: string | null, statusCode: number) {
     const value = typeof str !== 'string' || str.trim().length === 0 ? str : JSON.parse(str);
-    validateResponseObject(request, value);
+    validateResponseObject(request, value, statusCode);
     return value;
 }
 

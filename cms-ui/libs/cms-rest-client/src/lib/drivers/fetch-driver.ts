@@ -32,7 +32,10 @@ async function parseErrorFromAPI<T>(request: GCMSRestClientRequestData, res: Res
 async function jsonResponseHandler<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
     if (res.ok) {
         return res.json().then(json => {
-            validateResponseObject(request, json);
+            const err = validateResponseObject(request, json, res.status);
+            if (err) {
+                throw err;
+            }
             return json;
         });
     }

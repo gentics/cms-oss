@@ -27,7 +27,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
     protected createStringRequest<T>(
         request: GCMSRestClientRequestData,
         body: null | string | FormData,
-        bodyHandler: (body: string) => T,
+        bodyHandler: (body: string, status: number) => T,
     ): Observable<T> {
         let q = new HttpParams();
 
@@ -48,7 +48,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         }).pipe(
             map(res => {
                 if (res.ok) {
-                    return bodyHandler(res.body);
+                    return bodyHandler(res.body, res.status);
                 }
 
                 throw new HttpErrorResponse({
@@ -173,7 +173,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         request: GCMSRestClientRequestData,
         body?: string,
     ): NGGCMSRestClientRequest<T> {
-        const req = this.createStringRequest(request, body, (res) => asSafeJSON(request, res));
+        const req = this.createStringRequest(request, body, (res, status) => asSafeJSON(request, res, status));
         return this.createClientResponse(req);
     }
 

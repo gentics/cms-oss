@@ -1,16 +1,16 @@
 import { FormSaveRequest, NodeFeature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
-    formOne,
+    FORM_ONE,
     isVariant,
     ITEM_TYPE_FORM,
     LANGUAGE_DE,
     loginWithForm,
     matchesUrl,
     matchRequest,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
-    pageOne,
+    PAGE_ONE,
     pickSelectValue,
     TestSize,
 } from '@gentics/e2e-utils';
@@ -30,29 +30,41 @@ test.describe('Form Management', () => {
     const PUBLISH_BUTTON_TEXT = 'Veröffentlichen';
 
     test.beforeAll(async ({ request }) => {
-        IMPORTER.setApiContext(request);
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
+
+        await test.step('Test Bootstrapping', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
     });
 
-    test.beforeEach(async ({ page, request, context }) => {
-        await context.clearCookies();
-        IMPORTER.setApiContext(request);
-
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
-        await IMPORTER.setupFeatures(TestSize.MINIMAL, {
-            [NodeFeature.FORMS]: true,
+    test.beforeEach(async ({ request, context }) => {
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await context.clearCookies();
+            await IMPORTER.clearClient();
         });
-        await IMPORTER.importData([formOne]);
+
+        await test.step('Common Test Setup', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
+        });
+
+        await test.step('Specialized Test Setup', async () => {
+            await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.FORMS]: true,
+            });
+            await IMPORTER.importData([FORM_ONE]);
+        });
     });
 
     test('should be possible to create a new form', async ({ page }) => {
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
 
         const list = findList(page, ITEM_TYPE_FORM);
         await list.locator('.header-controls [data-action="create-new-item"] button').click();
@@ -76,7 +88,7 @@ test.describe('Form Management', () => {
     });
 
     test('should load forms on initial navigation', async ({ page }) => {
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         const loadReq = page.waitForResponse(matchRequest('GET', '/rest/form', {
             params: {
@@ -85,7 +97,7 @@ test.describe('Form Management', () => {
         }));
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
         await loadReq;
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -99,14 +111,14 @@ test.describe('Form Management', () => {
             description: 'SUP-18694',
         }],
     }, async ({ page }) => {
-        const SUCCESS_PAGE = IMPORTER.get(pageOne);
-        const SUCCESS_FOLDER = IMPORTER.get(minimalNode);
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const SUCCESS_PAGE = IMPORTER.get(PAGE_ONE);
+        const SUCCESS_FOLDER = IMPORTER.get(NODE_MINIMAL);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
         const SUCCESS_URL = 'https://gentics.com';
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
 
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
@@ -176,11 +188,11 @@ test.describe('Form Management', () => {
             description: 'SUP-18802',
         }],
     }, async ({page}) => {
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
 
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
@@ -217,7 +229,7 @@ test.describe('Form Management', () => {
             description: 'SUP-18932',
         }],
     }, async ({ page }) => {
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         await test.step('Specialized Setup', async () => {
             // Block requests to the config
@@ -227,7 +239,7 @@ test.describe('Form Management', () => {
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(minimalNode)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
         });
 
         const list = findList(page, ITEM_TYPE_FORM);

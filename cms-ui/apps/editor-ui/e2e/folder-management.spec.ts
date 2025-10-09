@@ -2,9 +2,9 @@ import {
     EntityImporter,
     ITEM_TYPE_FOLDER,
     TestSize,
-    folderA,
+    FOLDER_A,
     loginWithForm,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
@@ -47,7 +47,7 @@ test.describe('Folder Management', () => {
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     test('should be possible to create a new folder', async ({ page }) => {
@@ -72,7 +72,7 @@ test.describe('Folder Management', () => {
     });
 
     test('should be possible to edit the folder properties', async ({ page }) => {
-        const folder = IMPORTER.get(folderA)!;
+        const folder = IMPORTER.get(FOLDER_A)!;
         const list = findList(page, ITEM_TYPE_FOLDER);
         const item = findItem(list, folder.id);
 
@@ -90,7 +90,7 @@ test.describe('Folder Management', () => {
     });
 
     test('should be possible to edit the folder object-properties', async ({ page }) => {
-        const folder = IMPORTER.get(folderA)!;
+        const folder = IMPORTER.get(FOLDER_A)!;
         let list = findList(page, ITEM_TYPE_FOLDER);
         let item = findItem(list, folder.id);
 

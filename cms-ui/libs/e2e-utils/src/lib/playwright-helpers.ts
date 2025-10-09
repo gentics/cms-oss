@@ -1,4 +1,5 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
+import { GCMSRestClient } from '@gentics/cms-rest-client';
 import { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import { ATTR_CONTEXT_ID, ATTR_MULTIPLE, DEFAULT_KEYCLOAK_URL, ENV_KEYCLOAK_URL, LoginInformation } from './common';
 import { hasMatchingParams, matchesPath } from './utils';
@@ -114,7 +115,7 @@ export async function openContext(element: Locator): Promise<Locator> {
     return findContextContent(element.page(), id);
 }
 
-export async function pickSelectValue(select: Locator, values: string | string[]): Promise<void> {
+export async function pickSelectValue(select: Locator, values: string | number | (string | number)[]): Promise<void> {
     const dropdown = select.locator('gtx-dropdown-list');
 
     let multi = false;
@@ -175,3 +176,88 @@ export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Pr
         });
     });
 }
+
+export async function getSourceLocator(source: Page | Locator, nodeName: string): Promise<Locator> {
+    if (
+        typeof (source as Page).reload === 'function'
+        || await (source as Locator).evaluate(
+            (el, args) => el == null
+                || typeof el !== 'object'
+                || el.nodeName.toLowerCase() !== args.nodeName,
+            { nodeName },
+        )
+    ) {
+        return source.locator(nodeName);
+    }
+
+    return source as Locator;
+}
+
+/**
+ * Clicks a modal button by its action
+ */
+export async function clickModalAction(source: Locator, action: string): Promise<void> {
+    await source.locator(`.modal-footer [data-action="${action}"] button`).click();
+}
+
+export async function selectTab(source: Page | Locator, id: number | string): Promise<Locator> {
+    const tabs = await getSourceLocator(source, 'gtx-tabs');
+    await tabs.locator(`.tab-link[data-id="${id}"]`).click();
+    return tabs.locator(`gtx-tab[data-id="${id}"]`);
+}
+
+export function findNotification(page: Page, id?: string): Locator {
+    if (id) {
+        return page.locator(`gtx-toast .gtx-toast[data-id="${id}"]`)
+    } else {
+        return page.locator('gtx-toast .gtx-toast');
+    }
+}
+
+const SIMPLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing) .gtx-toast-btn_close:not([hidden])';
+const ACTION_TOAST = 'gtx-toast .gtx-toast:not(.dismissing) .gtx-toast-btn_close[hidden] + .action > button';
+export async function dismissNotifications(page: Page): Promise<void> {
+    function getNotifications(): Promise<Locator[]> {
+        return page.locator(`${SIMPLE_TOAST}, ${ACTION_TOAST}`).all();
+    }
+
+    let notifs = await getNotifications();
+    while (notifs.length > 0) {
+        for (const toast of notifs) {
+            await toast.click();
+        }
+        await page.waitForTimeout(300);
+        notifs = await getNotifications();
+    }
+}
+
+export async function openSidebar(page: Page): Promise<Locator> {
+    const sideMenu = page.locator('gtx-user-menu gtx-side-menu');
+    const userMenuToggle = sideMenu.locator('gtx-user-menu-toggle');
+    const userMenu = sideMenu.locator('.menu .menu-content');
+
+    const isOpen = await userMenu.isVisible();
+    if (!isOpen) {
+        await userMenuToggle.click();
+    }
+
+    return userMenu;
+}
+
+export async function logout(page: Page): Promise<void> {
+    const userMenu = await openSidebar(page);
+
+    const logoutButton = userMenu.locator('.user-details [data-action="logout"] button');
+    await logoutButton.click();
+
+    await page.context().clearCookies();
+}
+
+export async function waitForPublishDone(page: Page, client: GCMSRestClient): Promise<void> {
+    let info = await client.admin.getPublishInfo().send();
+    while (info.totalWork !== info.totalWorkDone) {
+        await page.waitForTimeout(1_000);
+        info = await client.admin.getPublishInfo().send();
+    }
+}
+

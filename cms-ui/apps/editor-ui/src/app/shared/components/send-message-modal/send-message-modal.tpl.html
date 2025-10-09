@@ -4,8 +4,9 @@
 
 <div class="modal-content">
     <gtx-message-properties
-        [users]="users$ | async"
-        [groups]="groups$ | async"
+        *ngIf="users && groups"
+        [users]="users"
+        [groups]="groups"
         [formControl]="form"
     />
 </div>
@@ -14,10 +15,12 @@
     <gtx-button
         flat
         type="secondary"
+        data-action="cancel"
         (click)="cancelFn()"
     >{{ 'common.cancel_button' | i18n }}</gtx-button>
 
     <gtx-button
+        data-action="confirm"
         [disabled]="form.invalid"
         (click)="okayClicked()"
     >{{ 'common.okay_button' | i18n }}</gtx-button>

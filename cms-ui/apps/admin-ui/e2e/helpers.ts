@@ -11,15 +11,6 @@ export async function navigateToModule(page: Page, moduleId: string): Promise<vo
 }
 
 /**
- * Selects a tab in a tab group by its ID
- */
-export async function selectTab(source: Page | Locator, tabId: string): Promise<void> {
-    const tab = source.locator(`.tab-link[data-id="${tabId}"]`);
-    await tab.waitFor({ state: 'visible' });
-    await tab.click();
-}
-
-/**
  * Logs out from the mesh management interface
  */
 export async function logoutMeshManagement(page: Page): Promise<void> {
@@ -39,14 +30,6 @@ export async function loginWithCR(page: Page, shouldBeLoggedIn: boolean = true):
     if (shouldBeLoggedIn) {
         await page.locator('.management-container').waitFor({ state: 'visible' });
     }
-}
-
-/**
- * Clicks a modal button by its action
- */
-export async function clickModalAction(source: Page | Locator, action: 'confirm' | 'cancel'): Promise<void> {
-    const selector = action === 'confirm' ? '.modal-footer [data-action="confirm"]' : '.modal-footer [data-action="cancel"]';
-    await source.locator(selector).click();
 }
 
 export function findEntityTableActionButton(source: Page | Locator, action: string): Locator {

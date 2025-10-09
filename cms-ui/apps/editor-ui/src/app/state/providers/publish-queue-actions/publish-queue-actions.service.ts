@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { FolderItemType } from '@gentics/cms-models';
-import { Api } from '../../../core/providers/api/api.service';
+import { FolderItemType, ResponseCode } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { ApplicationStateService } from '..';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { ApplicationStateService } from '..';
 import {
     AssigningUsersToPagesErrorAction,
     AssigningUsersToPagesSuccessAction,
@@ -20,7 +21,7 @@ export class PublishQueueActionsService {
 
     constructor(
         private appState: ApplicationStateService,
-        private api: Api,
+        private client: GCMSRestClientService,
         private errorHandler: ErrorHandler,
         private notification: I18nNotification,
     ) {}
@@ -31,16 +32,19 @@ export class PublishQueueActionsService {
     getQueue(): void {
         this.appState.dispatch(new StartPublishQueueFetchingAction());
 
-        this.api.publishQueue.getPublishQueue().subscribe(res => {
-            this.appState.dispatch(new PublishQueuePagesFetchingSuccessAction(res.pages));
-        }, err => {
-            this.notification.show({
-                message: err,
-                type: 'alert',
-                delay: 5000,
-            });
+        this.client.page.listPublishQueue().subscribe({
+            next: res => {
+                this.appState.dispatch(new PublishQueuePagesFetchingSuccessAction(res.pages));
+            },
+            error: err => {
+                this.notification.show({
+                    message: err,
+                    type: 'alert',
+                    delay: 5000,
+                });
 
-            this.appState.dispatch(new PublishQueueFetchingErrorAction());
+                this.appState.dispatch(new PublishQueueFetchingErrorAction());
+            },
         });
     }
 
@@ -50,18 +54,26 @@ export class PublishQueueActionsService {
     getUsersForRevision(): void {
         this.appState.dispatch(new StartPublishQueueFetchingAction());
 
-        this.api.user.getUsers().subscribe(response => {
-            this.appState.dispatch(new PublishQueueUsersFetchingSuccessAction(response.items));
-        }, error => {
-            this.appState.dispatch(new PublishQueueFetchingErrorAction());
+        this.client.user.list().subscribe({
+            next: response => {
+                this.appState.dispatch(new PublishQueueUsersFetchingSuccessAction(response.items));
+            },
+            error: error => {
+                this.appState.dispatch(new PublishQueueFetchingErrorAction());
 
-            this.notification.show({
-                message: 'message.get_users_error',
-                type: 'alert',
-                delay: 2000,
-            });
+                // Ignore errors when it's about permissions
+                if ((error as GCMSRestClientRequestError)?.data?.responseInfo?.responseCode === ResponseCode.PERMISSION) {
+                    return;
+                }
 
-            this.errorHandler.catch(error, { notification: false });
+                this.notification.show({
+                    message: 'message.get_users_error',
+                    type: 'alert',
+                    delay: 2000,
+                });
+
+                this.errorHandler.catch(error, { notification: false });
+            },
         });
     }
 
@@ -71,7 +83,7 @@ export class PublishQueueActionsService {
     assignToUsers(pageIds: number[], userIds: number[], message: string): Promise<boolean> {
         this.appState.dispatch(new StartAssigningUsersToPagesAction());
 
-        return this.api.publishQueue.assignToUsers(pageIds, userIds, message).toPromise()
+        return this.client.page.assign({ pageIds, userIds, message }).toPromise()
             .then(() => {
                 this.appState.dispatch(new AssigningUsersToPagesSuccessAction(pageIds));
                 this.notification.show({

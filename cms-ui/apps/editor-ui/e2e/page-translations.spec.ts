@@ -5,9 +5,9 @@ import {
     TestSize,
     isVariant,
     loginWithForm,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
-    pageOne,
+    PAGE_ONE,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -23,32 +23,43 @@ test.describe('Page Translation', () => {
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {
-        IMPORTER.setApiContext(request);
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
 
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        await test.step('Test Bootstrapping', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
     });
 
     test.beforeEach(async ({ page, request, context }) => {
-        await context.clearCookies();
-        IMPORTER.setApiContext(request);
+        await test.step('Client Setup', async () => {
+            await context.clearCookies();
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
 
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
-        await IMPORTER.setupFeatures(TestSize.MINIMAL, {
-            [NodeFeature.AUTOMATIC_TRANSLATION]: true,
+        await test.step('Common Test Setup', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
+        });
+
+        await test.step('Specialized Test Setup', async () => {
+            await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.AUTOMATIC_TRANSLATION]: true,
+            });
         });
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     test.describe('Automatic Translations', () => {
         test('should be possible to translate a page automatically', async ({ page }) => {
-            const pageData = IMPORTER.get(pageOne)!;
+            const pageData = IMPORTER.get(PAGE_ONE)!;
             const NEW_LANG = 'de';
 
             const list = findList(page, ITEM_TYPE_PAGE);

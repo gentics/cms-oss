@@ -1,23 +1,23 @@
 import { Node, Template } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    clickModalAction,
     clickTableRow,
-    emptyNode,
     EntityImporter,
     findTableAction,
     findTableRowById,
     findTrableRowById,
     loginWithForm,
     matchRequest,
-    minimalNode,
     navigateToApp,
+    NODE_MINIMAL,
     selectTableRow,
     selectTrableRow,
     TestSize,
 } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { clickModalAction, navigateToModule } from './helpers';
+import { navigateToModule } from './helpers';
 
 const LINK_TO_NODE_ACTION = 'linkToNode';
 const LINK_TO_NODE_MODAL = 'gtx-assign-templates-to-nodes-modal';
@@ -47,7 +47,7 @@ test.describe('Templates Module', () => {
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
         testTemplate = IMPORTER.get(BASIC_TEMPLATE_ID as any) as any;
-        testNode = IMPORTER.get(minimalNode);
+        testNode = IMPORTER.get(NODE_MINIMAL);
 
         // Navigate to the app and log in
         await navigateToApp(page);

@@ -1,18 +1,27 @@
 import { AlohaCoreComponentNames } from '@gentics/aloha-models';
 import {
     AccessControlledType,
+    ConstructCategory,
     ConstructCategoryCreateRequest,
     EditableFileProps,
     EditableFormProps,
+    File,
+    Folder,
     FolderCreateRequest,
+    Group,
     GroupCreateRequest,
     GroupUserCreateRequest,
+    Image,
+    Node,
     NodeCreateRequest,
     Page,
     PageCreateRequest,
     PermissionInfo,
+    Schedule,
     ScheduleCreateReqeust,
+    ScheduleTask,
     ScheduleTaskCreateRequest,
+    User,
     Variant,
 } from '@gentics/cms-models';
 
@@ -28,7 +37,7 @@ export enum TestSize {
 }
 
 export type EntityMap = Record<string, any>;
-export type BinaryMap = Record<string, File>;
+export type BinaryMap = Record<string, globalThis.File>;
 
 export interface ImportBinary {
     /** The path to the fixture file to load. */
@@ -135,7 +144,10 @@ export const IMPORT_ID = Symbol('gtx-e2e-import-id');
 export const BASIC_TEMPLATE_ID = '57a5.5db4acfa-3224-11ef-862c-0242ac110002';
 
 export const CONTENT_REPOSITORY_MESH = '7f25.8f630a60-355e-11ef-8e0a-0242ac110002';
-export const CR_PREFIX_MESH = 'example';
+export const MESH_SCHEMA_PREFIX = 'example';
+export const MESH_SCHEMA_FOLDER = `${MESH_SCHEMA_PREFIX}_folder`;
+export const MESH_SCHEMA_CONTENT = `${MESH_SCHEMA_PREFIX}_content`;
+export const MESH_SCHEMA_BIN_CONTENT = `${MESH_SCHEMA_PREFIX}_binary_content`;
 
 export const CONSTRUCT_ALOHA_LINK = 'A547.70950';
 export const CONSTRUCT_ALOHA_TEXT = 'A547.75403';
@@ -193,6 +205,15 @@ export const INTERNAL_TASKS = [
     TASK_PURGE_WASTEBIN,
     TASK_PUBLISH,
 ];
+
+export const KEYCLOAK_LOGIN: LoginInformation = {
+    username: 'node',
+    password: 'node',
+};
+export const MESH_LOGIN: LoginInformation = {
+    username: 'admin',
+    password: 'admin',
+};
 
 export const BOUNDARY_NODES = new Set([
     'article',
@@ -330,18 +351,24 @@ export interface ImportBinary {
     type: string;
 }
 
+export type ImportSinglePermission = Pick<PermissionInfo, 'type' | 'value'>;
+
 export interface ImportPermissions {
     type: AccessControlledType;
     instanceId?: string;
     subGroups?: boolean;
     subObjects?: boolean;
-    perms: Pick<PermissionInfo, 'type' | 'value'>[];
+    perms: ImportSinglePermission[];
 }
 
 export interface ImportData {
     [IMPORT_TYPE]: ImportType;
     [IMPORT_ID]: string;
 }
+
+export type ImportReference<T extends ImportData | ImportType> = ImportData | (T extends ImportType
+    ? { [IMPORT_TYPE]: T } & Pick<ImportData, typeof IMPORT_ID>
+    : T);
 
 export interface NodeImportData extends Omit<NodeCreateRequest, 'node'>, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_NODE;
@@ -420,8 +447,12 @@ export interface FormImportData extends EditableFormProps, ImportData {
 export interface GroupImportData extends GroupCreateRequest, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_GROUP,
 
-    /** The parent `IMPORT_ID` value */
-    parentId?: string;
+    /**
+     * The parent reference under which the group should be created.
+     * If `undefined`, it'll default to the rootGroup.
+     * If `null`, it'll use the actual root of the groups.
+     */
+    parent?: null | ImportReference<GroupImportData>;
 
     permissions?: ImportPermissions[];
 }
@@ -429,8 +460,11 @@ export interface GroupImportData extends GroupCreateRequest, ImportData {
 export interface UserImportData extends GroupUserCreateRequest, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_USER,
 
-    /** The groups `IMPORT_ID` value */
-    groupId: string;
+    /** The group reference, in which the user should be created in. */
+    group: ImportReference<GroupImportData>;
+
+    /** Additional group references the user should be put into, after they have been created. */
+    extraGroups?: ImportReference<GroupImportData>[];
 }
 
 export interface ScheduleTaskImportData extends ScheduleTaskCreateRequest, ImportData {
@@ -450,3 +484,19 @@ export interface ConstructCategoryImportData
     [IMPORT_TYPE]: typeof IMPORT_TYPE_CONSTRUCT_CATEGORY;
 }
 
+export interface ImportEntityMapping extends Record<ImportType, any> {
+    [ITEM_TYPE_FOLDER]: Folder;
+    [ITEM_TYPE_PAGE]: Page;
+    [ITEM_TYPE_IMAGE]: Image;
+    [ITEM_TYPE_FILE]: File;
+
+    [IMPORT_TYPE_NODE]: Node;
+    [IMPORT_TYPE_PAGE_TRANSLATION]: Page;
+    [IMPORT_TYPE_GROUP]: Group;
+    [IMPORT_TYPE_USER]: User;
+    [IMPORT_TYPE_CONSTRUCT_CATEGORY]: ConstructCategory;
+    [IMPORT_TYPE_TASK]: ScheduleTask;
+    [IMPORT_TYPE_SCHEDULE]: Schedule;
+}
+
+export type ImportEntityType<T extends (keyof ImportEntityMapping) | ImportType> = ImportEntityMapping[T];

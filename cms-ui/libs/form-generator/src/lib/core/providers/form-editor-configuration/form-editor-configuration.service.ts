@@ -3,7 +3,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { filter, switchMap, take } from 'rxjs/operators';
+import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import {
     FormConfigurationI18nString,
     FormEditorConfiguration,

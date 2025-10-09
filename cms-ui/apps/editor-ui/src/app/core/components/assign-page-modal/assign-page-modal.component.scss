@@ -6,3 +6,11 @@
 .page-icon {
     color: $gcms-color-page;
 }
+
+.message-control {
+    margin-top: 0.5rem;
+
+    &::ng-deep textarea {
+        margin-bottom: 0;
+    }
+}

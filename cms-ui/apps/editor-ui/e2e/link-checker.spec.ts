@@ -7,11 +7,11 @@ import {
     loginWithForm,
     matchesUrl,
     matchRequest,
-    minimalNode,
+    NODE_MINIMAL,
     mockResponse,
     navigateToApp,
-    pageOne,
-    scheduleLinkChecker,
+    PAGE_ONE,
+    SCHEDULE_LINK_CHECKER,
     TestSize,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
@@ -55,18 +55,18 @@ test.describe('Link Checker', () => {
         await IMPORTER.setupFeatures(TestSize.MINIMAL, {
             [NodeFeature.LINK_CHECKER]: true,
         });
-        await IMPORTER.importData([scheduleLinkChecker]);
-        await IMPORTER.executeSchedule(scheduleLinkChecker);
+        await IMPORTER.importData([SCHEDULE_LINK_CHECKER]);
+        await IMPORTER.executeSchedule(SCHEDULE_LINK_CHECKER);
         await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     async function setupEditMode(page) {
         const list = findList(page, ITEM_TYPE_PAGE);
-        const item = findItem(list, IMPORTER.get(pageOne)!.id);
+        const item = findItem(list, IMPORTER.get(PAGE_ONE)!.id);
         await itemAction(item, 'edit');
         const iframe = await getAlohaIFrame(page);
         await iframe.locator('main').waitFor({ state:'visible', timeout: 600000 });

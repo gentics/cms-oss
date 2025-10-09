@@ -20,6 +20,16 @@ describe('FetchDriver', () => {
 
     it('should execute a created request only once, and return the same value', async () => {
         const driver = new GCMSFetchDriver();
+        const REQUEST_URL = 'http://localhost:8080/rest/nowhere';
+        const STATUS_MSG = 'Ok';
+        const STATUS_CODE = 200;
+        const RESPONSE_DATA: GCMSResponse = {
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+                responseMessage: 'Success',
+            },
+            messages: [],
+        };
 
         let execCounter = 0;
 
@@ -27,31 +37,19 @@ describe('FetchDriver', () => {
             execCounter++;
 
             return Promise.resolve<Partial<Response>>({
-                status: 200,
-                statusText: 'Ok',
-                ok: true,
+                status: STATUS_CODE,
+                statusText: STATUS_MSG,
+                ok: STATUS_CODE < 400,
                 headers: new Headers(),
-                text: () => Promise.resolve(JSON.stringify({
-                    responseInfo: {
-                        responseCode: ResponseCode.OK,
-                        responseMessage: 'Success',
-                    },
-                    messages: [],
-                } as GCMSResponse)),
-                json: () => Promise.resolve({
-                    responseInfo: {
-                        responseCode: ResponseCode.OK,
-                        responseMessage: 'Success',
-                    },
-                    messages: [],
-                } as GCMSResponse),
+                text: () => Promise.resolve(JSON.stringify(RESPONSE_DATA)),
+                json: () => Promise.resolve(RESPONSE_DATA),
             });
         })  as any;
 
         const req = driver.performMappedRequest({
             headers: {},
             method: RequestMethod.GET,
-            url: 'http://localhost:8080/rest/nowhere',
+            url: REQUEST_URL,
             params: {},
         });
 
@@ -69,27 +67,25 @@ describe('FetchDriver', () => {
 
     it('should return a proper error on an error response', async () => {
         const driver = new GCMSFetchDriver();
+        const REQUEST_URL = 'http://localhost:8080/rest/nowhere';
+        const STATUS_MSG = 'Invalid';
+        const STATUS_CODE = 400;
+        const RESPONSE_DATA: GCMSResponse = {
+            responseInfo: {
+                responseCode: ResponseCode.INVALID_DATA,
+                responseMessage: 'Invalid Data sent',
+            },
+            messages: [],
+        };
 
         global.fetch = jest.fn(() => {
             return Promise.resolve<Partial<Response>>({
-                status: 400,
-                statusText: 'Invalid',
-                ok: false,
+                status: STATUS_CODE,
+                statusText: STATUS_MSG,
+                ok: STATUS_CODE < 400,
                 headers: new Headers(),
-                text: () => Promise.resolve(JSON.stringify({
-                    responseInfo: {
-                        responseCode: ResponseCode.INVALID_DATA,
-                        responseMessage: 'Invalid Data sent',
-                    },
-                    messages: [],
-                } as GCMSResponse)),
-                json: () => Promise.resolve({
-                    responseInfo: {
-                        responseCode: ResponseCode.INVALID_DATA,
-                        responseMessage: 'Invalid Data sent',
-                    },
-                    messages: [],
-                } as GCMSResponse),
+                text: () => Promise.resolve(JSON.stringify(RESPONSE_DATA)),
+                json: () => Promise.resolve(RESPONSE_DATA),
             });
         }) as any;
 
@@ -97,7 +93,7 @@ describe('FetchDriver', () => {
             await driver.performMappedRequest<GCMSResponse>({
                 headers: {},
                 method: RequestMethod.GET,
-                url: 'http://localhost:8080/rest/nowhere',
+                url: REQUEST_URL,
                 params: {},
             }).send();
             expect.fail('Should not resolve!');
@@ -105,14 +101,9 @@ describe('FetchDriver', () => {
             // Don't use `toBeInstanceOf`, doesn't work!
             expect(err instanceof GCMSRestClientRequestError).toEqual(true);
             expect(err).toMatchObject<Partial<GCMSRestClientRequestError>>({
-                responseCode: 400,
-                data: {
-                    responseInfo: {
-                        responseCode: ResponseCode.INVALID_DATA,
-                        responseMessage: 'Invalid Data sent',
-                    },
-                    messages: [],
-                } as GCMSResponse,
+                responseCode: STATUS_CODE,
+                rawBody: JSON.stringify(RESPONSE_DATA),
+                data: RESPONSE_DATA,
             });
         }
     });
@@ -124,27 +115,25 @@ describe('FetchDriver', () => {
      */
     it('should return a proper error on a HTTP success response', async () => {
         const driver = new GCMSFetchDriver();
+        const REQUEST_URL = 'http://localhost:8080/rest/nowhere';
+        const STATUS_MSG = 'Invalid';
+        const STATUS_CODE = 400;
+        const RESPONSE_DATA: GCMSResponse = {
+            responseInfo: {
+                responseCode: ResponseCode.INVALID_DATA,
+                responseMessage: 'Invalid Data sent',
+            },
+            messages: [],
+        };
 
         global.fetch = jest.fn(() => {
             return Promise.resolve<Partial<Response>>({
-                status: 200,
-                statusText: 'Ok',
-                ok: true,
+                status: STATUS_CODE,
+                statusText: STATUS_MSG,
+                ok: STATUS_CODE < 400,
                 headers: new Headers(),
-                text: () => Promise.resolve(JSON.stringify({
-                    responseInfo: {
-                        responseCode: ResponseCode.INVALID_DATA,
-                        responseMessage: 'Invalid Data sent',
-                    },
-                    messages: [],
-                } as GCMSResponse)),
-                json: () => Promise.resolve({
-                    responseInfo: {
-                        responseCode: ResponseCode.INVALID_DATA,
-                        responseMessage: 'Invalid Data sent',
-                    },
-                    messages: [],
-                } as GCMSResponse),
+                text: () => Promise.resolve(JSON.stringify(RESPONSE_DATA)),
+                json: () => Promise.resolve(RESPONSE_DATA),
             });
         }) as any;
 
@@ -152,7 +141,7 @@ describe('FetchDriver', () => {
             await driver.performMappedRequest<GCMSResponse>({
                 headers: {},
                 method: RequestMethod.GET,
-                url: 'http://localhost:8080/rest/nowhere',
+                url: REQUEST_URL,
                 params: {},
             }).send();
             expect.fail('Should not resolve!');
@@ -160,20 +149,26 @@ describe('FetchDriver', () => {
             // Don't use `toBeInstanceOf`, doesn't work!
             expect(err instanceof GCMSRestClientRequestError).toEqual(true);
             expect(err).toMatchObject<Partial<GCMSRestClientRequestError>>({
-                responseCode: 400,
-                data: {
-                    responseInfo: {
-                        responseCode: ResponseCode.INVALID_DATA,
-                        responseMessage: 'Invalid Data sent',
-                    },
-                    messages: [],
-                } as GCMSResponse,
+                responseCode: STATUS_CODE,
+                rawBody: JSON.stringify(RESPONSE_DATA),
+                data: RESPONSE_DATA,
             });
+            expect((err as GCMSRestClientRequestError).message).toEqual(`Request "GET ${REQUEST_URL}" responded with error code ${STATUS_CODE}: "${STATUS_MSG}"`);
         }
     });
 
     it('should cancel the request when told to do so', async () => {
         const driver = new GCMSFetchDriver();
+        const REQUEST_URL = 'http://localhost:8080/rest/nowhere';
+        const STATUS_MSG = 'Ok';
+        const STATUS_CODE = 200;
+        const RESPONSE_DATA: GCMSResponse = {
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+                responseMessage: 'Success',
+            },
+            messages: [],
+        };
 
         global.fetch = jest.fn((args) => {
             if (typeof args === 'string') {
@@ -192,23 +187,12 @@ describe('FetchDriver', () => {
                     }
 
                     resolve({
-                        status: 200,
-                        ok: true,
+                        status: STATUS_CODE,
+                        statusText: STATUS_MSG,
+                        ok: STATUS_CODE < 400,
                         headers: new Headers(),
-                        text: () => Promise.resolve(JSON.stringify({
-                            responseInfo: {
-                                responseCode: ResponseCode.OK,
-                                responseMessage: 'Success',
-                            },
-                            messages: [],
-                        } as GCMSResponse)),
-                        json: () => Promise.resolve({
-                            responseInfo: {
-                                responseCode: ResponseCode.OK,
-                                responseMessage: 'Success',
-                            },
-                            messages: [],
-                        } as GCMSResponse),
+                        text: () => Promise.resolve(JSON.stringify(RESPONSE_DATA)),
+                        json: () => Promise.resolve(RESPONSE_DATA),
                     });
                 }, 1_000);
 
@@ -222,7 +206,7 @@ describe('FetchDriver', () => {
         const req = driver.performMappedRequest({
             headers: {},
             method: RequestMethod.GET,
-            url: 'http://localhost:8080/rest/nowhere',
+            url: REQUEST_URL,
             params: {},
         });
 

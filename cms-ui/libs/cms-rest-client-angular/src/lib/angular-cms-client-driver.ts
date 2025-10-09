@@ -12,12 +12,9 @@ import { Observable, OperatorFunction, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { NGGCMSRestClientRequest } from './models';
 
-function asSafeJSON(request: GCMSRestClientRequestData, str: string | null) {
+function asSafeJSON(request: GCMSRestClientRequestData, str: string | null, status: number) {
     const value = typeof str !== 'string' || str.trim().length === 0 ? str : JSON.parse(str);
-    const err = validateResponseObject(request, value);
-    if (err) {
-        throw err;
-    }
+    validateResponseObject(request, value, status);
     return value;
 }
 
@@ -31,7 +28,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
     protected createStringRequest<T>(
         request: GCMSRestClientRequestData,
         body: null | string | FormData,
-        bodyHandler: (body: string) => T,
+        bodyHandler: (body: string, status: number) => T,
     ): Observable<T> {
         let q = new HttpParams();
 
@@ -52,7 +49,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         }).pipe(
             map(res => {
                 if (res.ok) {
-                    return bodyHandler(res.body);
+                    return bodyHandler(res.body, res.status);
                 }
 
                 throw new HttpErrorResponse({
@@ -177,15 +174,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         request: GCMSRestClientRequestData,
         body?: string,
     ): NGGCMSRestClientRequest<T> {
-        const obs = this.createStringRequest(request, body, (res) => asSafeJSON(request, res));
-        return this.createClientResponse(obs, request);
-    }
-
-    performFormRequest<T>(
-        request: GCMSRestClientRequestData,
-        form: FormData,
-    ): NGGCMSRestClientRequest<T> {
-        const obs = this.createStringRequest(request, form, (res) => asSafeJSON(request, res));
+        const obs = this.createStringRequest(request, body, (res, status) => asSafeJSON(request, res, status));
         return this.createClientResponse(obs, request);
     }
 

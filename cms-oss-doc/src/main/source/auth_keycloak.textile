@@ -27,6 +27,12 @@ keycloak:
 
 Place the `keycloak.json` generated for the CMS in the UI configuration directory (default: `ui-conf`).
 
+NOTE: It is important to have both, the `keycloak.json` and the configuration in sync. If that is not the case
+(e.g. `keycloak.json` exists, but the feature is deactivated), unexpected behaviour will be the result.
+
+NOTE: Changes in the configuration, especially activation/deactivation of the feature itself, will only become
+effective when the CMS server is restarted.
+
 h3. Configuration for the Editor/Administration User Interface
 
 If you are using the new UI, you will also have to make sure the REST-API

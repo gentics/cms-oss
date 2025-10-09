@@ -334,7 +334,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
         const isLocalized = !isMaster && !inherited;
         const userCan: ItemPermissions = (<any>this.permissions)[type];
-        const canPublish = (isPage || isForm) && userCan.edit;
+        const canPublish = (isPage || isForm) && userCan.edit && !inherited;
         const templatePermissions = this.permissions['template'];
 
         // Items can be synchronized to master when they are inside a folder

@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { findItem, findList, selectNode } from './helpers';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Asset Management', () => {
     const IMPORTER = new EntityImporter();
 

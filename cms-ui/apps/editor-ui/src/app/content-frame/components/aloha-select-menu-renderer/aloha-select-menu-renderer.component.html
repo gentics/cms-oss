@@ -13,7 +13,7 @@
             tabindex="0"
             [class.multi-step-entry]="entry.isMultiStep"
             [class.active]="entry.id === value"
-            [attr.id]="entry.id"
+            [attr.data-id]="entry.id"
             (click)="handleOptionClick(entry)"
         >
             <div class="entry-icon icon-left">
@@ -33,7 +33,7 @@
     <div #nextStep class="next-step" [class.with-confirm]="activeMultiStep?.multiStepContext?.requiresConfirm || componentRequiresConfirm">
         <ng-container *ngIf="activeMultiStep">
             <div class="next-step-header">
-                <button class="header-icon header-back-button" (click)="stepBack()">
+                <button class="header-icon header-back-button" data-action="back" (click)="stepBack()">
                     <i class="material-icons">chevron_left</i>
                 </button>
 
@@ -41,6 +41,7 @@
 
                 <button
                     class="header-confirm-button"
+                    data-action="confirm"
                     [disabled]="!control.valid"
                     (click)="multiStepConfirm()"
                 >

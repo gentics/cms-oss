@@ -2,6 +2,7 @@ import { EntityImporter, navigateToApp, loginWithForm } from '@gentics/e2e-utils
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('No Nodes', () => {
     const IMPORTER = new EntityImporter();
 

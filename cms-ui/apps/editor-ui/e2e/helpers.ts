@@ -224,6 +224,10 @@ export async function createInternalLink(
     });
 }
 
+export function findDynamicDropdown(page: Page, ref: string): Locator {
+    return page.locator(`gtx-dynamic-dropdown .gtx-context-menu[data-ref="${ref}"]`);
+}
+
 export async function findDynamicFormModal(page: Page, ref?: string): Promise<Locator> {
     const refSelector = ref ? `[data-ref="${ref}"]` : '';
     const modal = page.locator(`gtx-dynamic-modal gtx-dynamic-form-modal${refSelector}`);
@@ -425,4 +429,15 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
     const context = await openContext(page.locator('gtx-top-bar gtx-actions-selector gtx-dropdown-list'));
     const btn = context.locator(`.action-button[data-tool-id="${id}"], .action-button[data-action-id="${id}"]`);
     await btn.click();
+}
+
+export function overrideAlohaConfig(page: Page, configFilename: string): Promise<void> {
+    return page.route('/internal/minimal/files/js/aloha-config.js', route => {
+        return route.fulfill({
+            headers: {
+                location: `/internal/minimal/files/js/${configFilename}`,
+            },
+            status: 301,
+        })
+    });
 }

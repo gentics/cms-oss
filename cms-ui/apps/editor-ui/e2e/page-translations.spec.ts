@@ -17,6 +17,7 @@ import {
     selectNode,
 } from './helpers';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Page Translation', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 

@@ -4,6 +4,11 @@ import { expect, Locator, Page, Request, Response, Route } from '@playwright/tes
 import { ATTR_CONTEXT_ID, ATTR_MULTIPLE, DEFAULT_KEYCLOAK_URL, ENV_KEYCLOAK_URL, LoginInformation } from './common';
 import { hasMatchingParams, matchesPath } from './utils';
 
+const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
+const TOAST_CLOSE_BUTTON = '.gtx-toast-btn_close:not([hidden])';
+const SIMPLE_TOAST = `${VISIBLE_TOAST} ${TOAST_CLOSE_BUTTON}`
+const ACTION_TOAST = `${VISIBLE_TOAST} .gtx-toast-btn_close[hidden] + .action > button`;
+
 function isResponse(input: any): input is Response {
     return typeof (input as Response).request === 'function';
 }
@@ -214,8 +219,14 @@ export function findNotification(page: Page, id?: string): Locator {
     }
 }
 
-const SIMPLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing) .gtx-toast-btn_close:not([hidden])';
-const ACTION_TOAST = 'gtx-toast .gtx-toast:not(.dismissing) .gtx-toast-btn_close[hidden] + .action > button';
+export function closeNotification(toast: Locator): Promise<void> {
+    return toast.locator(TOAST_CLOSE_BUTTON).click();
+}
+
+export function clickNotificationAction(toast: Locator): Promise<void> {
+    return toast.locator('.action button[data-action="primary"]').click();
+}
+
 export async function dismissNotifications(page: Page): Promise<void> {
     function getNotifications(): Promise<Locator[]> {
         return page.locator(`${SIMPLE_TOAST}, ${ACTION_TOAST}`).all();
@@ -247,8 +258,10 @@ export async function openSidebar(page: Page): Promise<Locator> {
 export async function logout(page: Page): Promise<void> {
     const userMenu = await openSidebar(page);
 
+    const req = page.waitForResponse(matchRequest('POST', '/rest/auth/logout/*'));
     const logoutButton = userMenu.locator('.user-details [data-action="logout"] button');
     await logoutButton.click();
+    await req;
 
     await page.context().clearCookies();
 }

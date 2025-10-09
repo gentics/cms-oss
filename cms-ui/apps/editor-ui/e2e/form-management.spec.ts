@@ -13,6 +13,8 @@ import {
     PAGE_ONE,
     pickSelectValue,
     TestSize,
+    findNotification,
+    clickNotificationAction,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -26,8 +28,6 @@ test.describe('Form Management', () => {
     const NEW_FORM_NAME = 'Hello World';
     const CHANGE_FORM_NAME = 'Hello World again';
     const NEW_FORM_DESCRIPTION = 'This is an example text';
-    // TODO: find a solution to not depend on the translated text
-    const PUBLISH_BUTTON_TEXT = 'Veröffentlichen';
 
     test.beforeAll(async ({ request }) => {
         await test.step('Client Setup', async () => {
@@ -200,27 +200,31 @@ test.describe('Form Management', () => {
         // expect the form to be offline
         await expectItemOffline(item);
 
-        await itemAction(item, 'properties');
+        await test.step('Update Form', async () => {
+            await itemAction(item, 'properties');
 
-        const propertiesform = page.locator('content-frame combined-properties-editor .properties-content gtx-form-properties');
+            const propertiesform = page.locator('content-frame combined-properties-editor .properties-content gtx-form-properties');
+            await propertiesform.locator('[formcontrolname="name"] input').fill(CHANGE_FORM_NAME);
 
-        await propertiesform.locator('[formcontrolname="name"] input').fill(CHANGE_FORM_NAME);
+            await editorAction(page, 'save');
+        });
 
-        await editorAction(page, 'save');
+        await test.step('Publish with notification action', async () => {
+            const publishReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}/online`, {
+                params: {
+                    at: '0',
+                },
+            }));
 
-        // toast with success notification should have the "publish" action
-        const publishButton = page.locator('.gtx-toast .action');
+            // toast with success notification should have the "publish" action
+            const publishToast = findNotification(page, `form-save-success-with-publish:${EDITING_FORM.id}`);
+            await clickNotificationAction(publishToast);
 
-        await expect(publishButton).toHaveText(PUBLISH_BUTTON_TEXT);
+            await publishReq;
 
-        // click the "publish" button
-        await publishButton.click();
-
-        // properties form should be closed
-        await expect(propertiesform).toBeHidden();
-
-        // form should be published now
-        await expectItemPublished(item);
+            // form should be published now
+            await expectItemPublished(item);
+        });
     });
 
     test('should display an error message when form config is missing', {

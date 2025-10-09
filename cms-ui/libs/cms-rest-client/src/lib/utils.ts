@@ -75,9 +75,22 @@ function isResponseObject(value: any): value is Response {
         && typeof value.responseInfo === 'object';
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+/**
+ * Validation helper function, as the CMS will sometimes respond with a status 200,
+ * even if the request did not succeed.
+ * The "actual" valid status is then in the body and has to be checked.
+ *
+ * If the response-code is not OK, then it indicates an error.
+ * This function *will throw* an error in that case.
+ *
+ * @param request The request that has been sent
+ * @param response The parsed response data
+ * @param statusCode The response http status code
+ * @returns If the `response` is a response object.
+ */
 export function validateResponseObject(
     request: GCMSRestClientRequestData,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     response: any,
     statusCode: number,
 ): boolean {

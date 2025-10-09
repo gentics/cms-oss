@@ -2,11 +2,10 @@
 
 .action-buttons-dropdown-content {
 
-    margin: 1rem 0 1.5rem;
+    padding: 1rem;
 
     .action-button-group {
         .action-button-group-label {
-            margin: 0.25rem 1.5rem;
             font-size: 1.1rem;
             font-weight: bold;
             border-bottom: 1px solid $gtx-color-light-gray;
@@ -15,8 +14,8 @@
         .action-button-group-content {
             display: grid;
             grid-template-columns: repeat(3, auto);
-            grid-gap: 0px;
-            padding: 0 1rem;
+            grid-gap: 1rem 0px;
+            padding: 1rem 0;
             width: 100%;
         }
     }
@@ -26,15 +25,18 @@
         display: flex;
         flex-direction: column;
         flex-wrap: nowrap;
+        gap: 0.5rem;
         text-align: center;
         position: relative;
         cursor: pointer;
         width: 8rem;
         max-width: 8rem;
-        margin: 1rem 0;
+        background: none;
+        border: none;
+        align-items: baseline;
 
         .action-button-icon-wrapper {
-            margin: auto auto 0;
+            margin: auto;
             width: 64px;
             height: 64px;
             background-color: $gtx-color-very-light-gray;
@@ -44,8 +46,9 @@
             .tool-new-tab {
                 position: absolute;
                 top: -0.5rem;
-                right: -1rem;
+                right: -0.5rem;
                 color: $gtx-color-light-gray;
+                transition: 300ms;
             }
 
             .action-button-icon {
@@ -68,7 +71,7 @@
         .action-button-label {
             color: $gtx-color-dark-gray;
             transition: 300ms;
-            margin: 0.5rem auto auto;
+            margin: auto;
             width: 100%;
             text-align: center;
             white-space: initial;
@@ -76,7 +79,8 @@
         }
 
         &:hover {
-            .action-button-icon-wrapper .action-button-icon {
+            .action-button-icon-wrapper .action-button-icon,
+            .action-button-icon-wrapper .tool-new-tab {
                 color: $gtx-color-primary;
             }
 

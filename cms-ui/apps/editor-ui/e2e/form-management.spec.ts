@@ -1,17 +1,20 @@
 import { FormSaveRequest, NodeFeature, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
-    formOne,
+    FORM_ONE,
     isVariant,
     ITEM_TYPE_FORM,
     LANGUAGE_DE,
     loginWithForm,
+    matchesUrl,
     matchRequest,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
-    pageOne,
+    PAGE_ONE,
     pickSelectValue,
     TestSize,
+    findNotification,
+    clickNotificationAction,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -25,34 +28,44 @@ test.describe('Form Management', () => {
     const NEW_FORM_NAME = 'Hello World';
     const CHANGE_FORM_NAME = 'Hello World again';
     const NEW_FORM_DESCRIPTION = 'This is an example text';
-    // TODO: find a solution to not depend on the translated text
-    const PUBLISH_BUTTON_TEXT = 'Veröffentlichen';
 
     test.beforeAll(async ({ request }) => {
-        IMPORTER.setApiContext(request);
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await IMPORTER.clearClient();
+        });
+
+        await test.step('Test Bootstrapping', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+        });
     });
 
-    test.beforeEach(async ({ page, request, context }) => {
-        await context.clearCookies();
-        IMPORTER.setApiContext(request);
-
-        await IMPORTER.clearClient();
-        await IMPORTER.cleanupTest();
-        await IMPORTER.setupTest(TestSize.MINIMAL);
-        await IMPORTER.setupFeatures(TestSize.MINIMAL, {
-            [NodeFeature.FORMS]: true,
+    test.beforeEach(async ({ request, context }) => {
+        await test.step('Client Setup', async () => {
+            IMPORTER.setApiContext(request);
+            await context.clearCookies();
+            await IMPORTER.clearClient();
         });
-        await IMPORTER.importData([formOne]);
 
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
+        await test.step('Common Test Setup', async () => {
+            await IMPORTER.cleanupTest();
+            await IMPORTER.setupTest(TestSize.MINIMAL);
+        });
+
+        await test.step('Specialized Test Setup', async () => {
+            await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.FORMS]: true,
+            });
+            await IMPORTER.importData([FORM_ONE]);
+        });
     });
 
     test('should be possible to create a new form', async ({ page }) => {
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+
         const list = findList(page, ITEM_TYPE_FORM);
         await list.locator('.header-controls [data-action="create-new-item"] button').click();
 
@@ -75,14 +88,16 @@ test.describe('Form Management', () => {
     });
 
     test('should load forms on initial navigation', async ({ page }) => {
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         const loadReq = page.waitForResponse(matchRequest('GET', '/rest/form', {
             params: {
                 folderId: `${EDITING_FORM.folderId}`,
             },
         }));
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
         await loadReq;
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -96,12 +111,15 @@ test.describe('Form Management', () => {
             description: 'SUP-18694',
         }],
     }, async ({ page }) => {
-        const SUCCESS_PAGE = IMPORTER.get(pageOne);
-        const SUCCESS_FOLDER = IMPORTER.get(minimalNode);
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const SUCCESS_PAGE = IMPORTER.get(PAGE_ONE);
+        const SUCCESS_FOLDER = IMPORTER.get(NODE_MINIMAL);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
         const SUCCESS_URL = 'https://gentics.com';
 
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
         await itemAction(item, 'properties');
@@ -170,35 +188,93 @@ test.describe('Form Management', () => {
             description: 'SUP-18802',
         }],
     }, async ({page}) => {
-        const EDITING_FORM = IMPORTER.get(formOne);
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
 
         // expect the form to be offline
         await expectItemOffline(item);
 
-        await itemAction(item, 'properties');
+        await test.step('Update Form', async () => {
+            await itemAction(item, 'properties');
 
-        const propertiesform = page.locator('content-frame combined-properties-editor .properties-content gtx-form-properties');
+            const propertiesform = page.locator('content-frame combined-properties-editor .properties-content gtx-form-properties');
+            await propertiesform.locator('[formcontrolname="name"] input').fill(CHANGE_FORM_NAME);
 
-        await propertiesform.locator('[formcontrolname="name"] input').fill(CHANGE_FORM_NAME);
+            await editorAction(page, 'save');
+        });
 
-        await editorAction(page, 'save');
+        await test.step('Publish with notification action', async () => {
+            const publishReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}/online`, {
+                params: {
+                    at: '0',
+                },
+            }));
 
-        // toast with success notification should have the "publish" action
-        const publishButton = page.locator('.gtx-toast .action');
+            // toast with success notification should have the "publish" action
+            const publishToast = findNotification(page, `form-save-success-with-publish:${EDITING_FORM.id}`);
+            await clickNotificationAction(publishToast);
 
-        await expect(publishButton).toHaveText(PUBLISH_BUTTON_TEXT);
+            await publishReq;
 
-        // click the "publish" button
-        await publishButton.click();
+            // form should be published now
+            await expectItemPublished(item);
+        });
+    });
 
-        // properties form should be closed
-        await expect(propertiesform).toBeHidden();
+    test('should display an error message when form config is missing', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-18932',
+        }],
+    }, async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
-        // form should be published now
-        await expectItemPublished(item);
+        await test.step('Specialized Setup', async () => {
+            // Block requests to the config
+            await page.route(url => matchesUrl(url, '/ui-conf/form-editor.json'), route => {
+                return route.abort('failed');
+            });
+
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        });
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, EDITING_FORM.id);
+
+        await test.step('Diplay when creating new form', async () => {
+            await list.locator('.header-controls [data-action="create-new-item"] button').click();
+
+            const modal = page.locator('create-form-modal');
+            const form = modal.locator('gtx-form-properties');
+
+            await expect(form.locator('form')).not.toBeVisible();
+            await expect(form.locator('.form-editor-error')).toBeVisible();
+
+            await modal.locator('.modal-footer [data-action="cancel"] button').click();
+        });
+
+        await test.step('Display in Form Edit-Mode', async () => {
+            await itemAction(item, 'edit');
+
+            await expect(page.locator('content-frame gtx-form-editor .form-editor-error')).toBeVisible();
+            await expect(page.locator('content-frame gtx-form-editor .form-editor-menu-container > *')).not.toBeAttached();
+
+            await editorAction(page, 'close');
+        });
+
+        await test.step('Display in Form Properties', async () => {
+            await itemAction(item, 'properties');
+
+            await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor form')).not.toBeVisible();
+            await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor .form-editor-error')).toBeVisible();
+        });
     });
 });

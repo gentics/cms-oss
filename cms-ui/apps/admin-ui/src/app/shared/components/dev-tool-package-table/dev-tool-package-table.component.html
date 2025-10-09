@@ -10,6 +10,7 @@
 <div *ngIf="!hideActions || nodeId" class="entity-table-actions-bar">
     <gtx-button
         *ngIf="!hideActions && !nodeId"
+        data-action="create"
         class="table-action-button"
         flat
         size="small"
@@ -24,6 +25,7 @@
     <gtx-button
         *ngIf="nodeId"
         class="table-action-button"
+        data-action="assign-to-node"
         flat
         size="small"
         type="primary"
@@ -35,6 +37,7 @@
 
     <gtx-button
         *ngIf="!hideSync"
+        data-action="toggle-sync"
         flat
         size="small"
         class="table-action-button sync-status-toggle"
@@ -50,6 +53,7 @@
     <gtx-button
         *ngIf="!hideActions"
         class="table-action-button reload-button"
+        data-action="reload"
         flat
         size="small"
         type="primary"

@@ -14,7 +14,7 @@
 }
 
 @mixin status-icon {
-    content: '\e836';
+    content: '\e837';
     position: absolute;
     left: -9px;
     top: 0;
@@ -110,7 +110,7 @@
                 }
 
                 &.status-icon.inactive::before {
-                    content: '\e837';
+                    content: '\e836';
                 }
 
                 &.status-icon.is-active::before {

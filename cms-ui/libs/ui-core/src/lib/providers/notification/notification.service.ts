@@ -114,6 +114,7 @@ export class NotificationService {
         const toast: ToastComponent = ref.instance;
 
         let dismissTimer: any;
+        toast.id = options.id;
         toast.message = options.message;
         toast.type = options.type;
         toast.dismissOnClick = options.dismissOnClick;

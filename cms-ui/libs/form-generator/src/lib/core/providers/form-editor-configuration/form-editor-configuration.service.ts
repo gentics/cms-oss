@@ -73,7 +73,6 @@ export class FormEditorConfigurationService {
             });
         }
         return this.configurationSubjects[type].asObservable().pipe(
-            catchError(() => of(null)),
             filter(configuration => configuration !== null),
             take(1),
         );

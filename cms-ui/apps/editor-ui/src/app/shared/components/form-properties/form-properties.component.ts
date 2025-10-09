@@ -172,6 +172,8 @@ export class FormPropertiesComponent
                 console.error('Error while loading form configuration', err);
                 this.formConfig = null;
                 this.formConfigLoaded = true;
+                this.updateTemplateContextValidator(this.formConfig?.form_properties?.template_context_options);
+                this.changeDetector.markForCheck();
             },
         }));
 

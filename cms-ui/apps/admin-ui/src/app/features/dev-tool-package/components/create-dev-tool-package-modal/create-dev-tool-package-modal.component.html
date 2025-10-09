@@ -29,6 +29,7 @@
     <div class="modal-footer">
         <gtx-button
             type="primary"
+            data-action="confirm"
             (click)="buttonCreatePackageClicked()"
             [disabled]="!form.valid || loading"
         >
@@ -37,6 +38,7 @@
 
         <gtx-button
             type="secondary"
+            data-action="cancel"
             flat
             (click)="cancelFn()"
         >

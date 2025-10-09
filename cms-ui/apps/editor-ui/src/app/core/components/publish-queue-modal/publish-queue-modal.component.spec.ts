@@ -23,9 +23,7 @@ describe('PublishQueueModal is created ok', () => {
     let navigationService: NavigationService;
 
     @Component({
-        template: `
-          <publish-queue>
-          </publish-queue>`,
+        template: '<gtx-publish-queue-modal />',
         standalone: false,
     })
     class TestComponent {

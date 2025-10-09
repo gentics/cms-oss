@@ -1,7 +1,7 @@
 import { discard, TemplateBO } from '@admin-ui/common';
 import { FolderOperations, FolderTrableLoaderService, I18nNotificationService, TemplateOperations } from '@admin-ui/core';
 import { FolderLinkEvent } from '@admin-ui/shared';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { EntityIdType, Folder } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { intersection } from'lodash-es'
@@ -31,6 +31,7 @@ export class AssignTemplatesToFoldersModalComponent extends BaseModal<void> impl
     protected subscriptions: Subscription[] = [];
 
     constructor(
+        protected changeDetector: ChangeDetectorRef,
         protected templateOperations: TemplateOperations,
         protected folderOperations: FolderOperations,
         protected notification: I18nNotificationService,
@@ -48,6 +49,7 @@ export class AssignTemplatesToFoldersModalComponent extends BaseModal<void> impl
             }),
         ).subscribe(selectedFolders => {
             this.selectedIds = new Set(intersection(...selectedFolders));
+            this.changeDetector.markForCheck();
         }));
     }
 

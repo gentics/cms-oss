@@ -68,18 +68,6 @@ export function stringifyEmbedOptions<T>(options: EmbedListOptions<T>): void {
     (options as any).embed = options.embed.join(',');
 }
 
-const codeToHttpCode: Record<ResponseCode, number> = {
-    [ResponseCode.OK]: 200,
-    [ResponseCode.NOT_FOUND]: 404,
-    [ResponseCode.INVALID_DATA]: 400,
-    [ResponseCode.FAILURE]: 500,
-    [ResponseCode.PERMISSION]: 403,
-    [ResponseCode.AUTH_REQUIRED]: 401,
-    [ResponseCode.MAINTENANCE_MODE]: 503,
-    [ResponseCode.NOT_LICENSED]: 501,
-    [ResponseCode.LOCKED]: 503,
-};
-
 function isResponseObject(value: any): value is Response {
     return value != null
         && typeof value === 'object'
@@ -87,14 +75,31 @@ function isResponseObject(value: any): value is Response {
         && typeof value.responseInfo === 'object';
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function validateResponseObject(request: GCMSRestClientRequestData, response: any): null | GCMSRestClientRequestError {
+/**
+ * Validation helper function, as the CMS will sometimes respond with a status 200,
+ * even if the request did not succeed.
+ * The "actual" valid status is then in the body and has to be checked.
+ *
+ * If the response-code is not OK, then it indicates an error.
+ * This function *will throw* an error in that case.
+ *
+ * @param request The request that has been sent
+ * @param response The parsed response data
+ * @param statusCode The response http status code
+ * @returns If the `response` is a response object.
+ */
+export function validateResponseObject(
+    request: GCMSRestClientRequestData,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    response: any,
+    statusCode: number,
+): boolean {
     if (!isResponseObject(response)) {
-        return null;
+        return false;
     }
 
     if (response.responseInfo.responseCode === ResponseCode.OK) {
-        return;
+        return true;
     }
 
     // some responses contain no messages
@@ -102,7 +107,7 @@ export function validateResponseObject(request: GCMSRestClientRequestData, respo
     throw new GCMSRestClientRequestError(
         response?.messages[0]?.message || response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
         request,
-        codeToHttpCode[response.responseInfo.responseCode],
+        statusCode,
         null,
         response,
         null,

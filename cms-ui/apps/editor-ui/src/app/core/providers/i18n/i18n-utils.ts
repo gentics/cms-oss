@@ -1,4 +1,4 @@
-import { Form, FormRequestOptions, Page, PageRequestOptions, PageVersion, TimeManagement, User } from '@gentics/cms-models';
+import { Form, Page, PageVersion, TimeManagement, User } from '@gentics/cms-models';
 import { TranslateService } from '@ngx-translate/core';
 import { from, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -29,7 +29,7 @@ export function applyShortcuts(value: string, params?: any): string {
         case 'linkedImage':
         case 'variant': {
             let key = `common.type_${value}`;
-            if (params && params.hasOwnProperty('count') && 1 != params.count) {
+            if (params && params.hasOwnProperty('count') && 1 !== params.count) {
                 key += 's';
             }
             if (params && params.hasOwnProperty('dative') && params.dative) {
@@ -52,8 +52,8 @@ export function applyShortcuts(value: string, params?: any): string {
 }
 
 export function translateParams(params: {[key: string]: any}, translate: TranslateService): {[key: string]: any} {
-    let translated: {[key: string]: any} = {};
-    for (let key in params) {
+    const translated: {[key: string]: any} = {};
+    for (const key in params) {
         if (key === '_lang' || key === '_language') {
             translated[key.substr(1)] = translate.instant(`lang.${params[key]}`);
         } else if (key[0] === '_') {
@@ -87,11 +87,18 @@ export function pageVersionsGetLatest(versions: PageVersion[]): string {
     return versions[versions.length - 1].number;
 }
 
+function formattedUser(user: User): string {
+    if (user == null || typeof user !== 'object') {
+        return '';
+    }
+    return `${user.firstName} ${user.lastName}`;
+}
+
 /**
  * @param item object to extract timemanegement translation from
  * @param field 'at' | 'offlineAt' | 'queuedPublish' | 'queuedOffline' | 'version'
- * @param i18n translation service instance
  * @param currentNodeId unique ID of current node active in UI
+ * @param i18n translation service instance
  * @param datePipe date pipe instance
  * @param folderActions service for folder-related API requests
  *
@@ -106,120 +113,127 @@ export function getFormattedTimeMgmtValue(
     datePipe: I18nDatePipe,
     folderActions: FolderActionsService,
 ): Observable<string | boolean> {
-    if (!item || !item.timeManagement || !item.timeManagement[field]) return of(false);
+    if (!item || !item.timeManagement || !item.timeManagement[field]) {
+        return of(false);
+    }
 
-    // unix timestamp of scheduled action date value
-    let dateRaw: number;
     // human-readable and translated scheduled action date value
     let date: string;
     // scheduled page version
     let version: string;
     // user who has set scheduled action
     let user: string;
-    // final translation of scheduled action information
-    let translation: string;
+
+    function toDateString(dateRaw): string {
+        return dateRaw > 0
+            ? datePipe.transform(dateRaw, 'dateTime')
+            : i18n.translate('editor.publish_queue_date_value_immediately');
+    }
+
+    function getCompatiblityPageValue(page: Page): Observable<string> {
+        // if version property is already contained
+        if (page.versions) {
+            version = pageVersionsGetLatest(page.versions);
+            return of(i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version}));
+        }
+
+        // get page data with version information
+        return from(folderActions.getPage(page.id, {
+            nodeId: currentNodeId,
+            versioninfo: true,
+            langvars: true,
+        })).pipe(
+            map(versionedPage => {
+                // if there are mutliple versions, get latest
+                if (versionedPage.versions && versionedPage.versions.length > 0) {
+                    version = pageVersionsGetLatest(versionedPage.versions);
+                } else {
+                    console.error('No version information found in page data.');
+                    version = 'unknown';
+                }
+                return i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
+            }),
+        );
+    }
+
+    function getCompatiblityFormValue(form: Form): Observable<string> {
+        if (form.version) {
+            version = form.version.number;
+            return of(i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version}));
+        }
+
+        // get form data with version information
+        return from(folderActions.getForm(form.id, {
+            nodeId: currentNodeId,
+        })).pipe(
+            map(versionedForm => {
+                // if there are mutliple versions, get latest
+                if (versionedForm.version) {
+                    version = versionedForm.version.number;
+                } else {
+                    console.error('No version information found in form data.');
+                    version = 'unknown';
+                }
+                return i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
+            }),
+        );
+    }
 
     switch (field) {
         // PLANNED: action is scheduled and will we performed
         case 'at': {
-            dateRaw = item.timeManagement.at;
-            date = dateRaw > 0 ? datePipe.transform(dateRaw, 'dateTime') : i18n.translate('editor.publish_queue_date_value_immediately');
             const timeManagement = item.timeManagement;
+            date = toDateString(timeManagement.at);
+
             if (timeManagement.version) {
                 version = timeManagement.version.number;
-                user = `${item.timeManagement?.futurePublisher.firstName} ${item.timeManagement?.futurePublisher.lastName}`;
-                translation = i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
-            } else {
-                user = i18n.translate('editor.publish_queue_migration_notice');
-                // SPECIAL CASE
-                // If there is no ```timeManagement.version``` despite ```timeManagement.at > 0``` in the CMS' response
-                // a legal data migration issue occured documented at https://jira.gentics.com/browse/GTXPE-446 .
-                // In this case, the latest page version shall be published.
-
-                // if version property is already contained
-                if (item.type === 'page' && item.versions) {
-                    version = pageVersionsGetLatest(item.versions);
-                    return of(i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version}));
-                }
-                if (item.type === 'form' && item.version) {
-                    version = item.version.number;
-                    return of(i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version}));
-                }
-
-                // otherwise fetch it
-                const pageOptions: PageRequestOptions = {
-                    nodeId: currentNodeId,
-                    versioninfo: true,
-                    langvars: true,
-                };
-                const formOptions: FormRequestOptions = {
-                    nodeId: currentNodeId,
-                };
-
-                if (item.type === 'page') {
-                    // get page data with version information
-                    return from(folderActions.getPage(item.id, pageOptions)).pipe(
-                        map(versionedPage => {
-                            // if there are mutliple versions, get latest
-                            if (versionedPage.versions && versionedPage.versions.length > 0) {
-                                version = pageVersionsGetLatest(versionedPage.versions);
-                            } else {
-                                throw new Error('No version information found in page data.');
-                            }
-                            return i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
-                        }),
-                    );
-                }
-                if (item.type === 'form') {
-                    // get form data with version information
-                    return from(folderActions.getForm(item.id, formOptions)).pipe(
-                        map(versionedForm => {
-                            // if there are mutliple versions, get latest
-                            if (versionedForm.version) {
-                                version = versionedForm.version.number;
-                            } else {
-                                throw new Error('No version information found in form data.');
-                            }
-                            return i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
-                        }),
-                    );
-                }
+                user = formattedUser(item.timeManagement?.futurePublisher);
+                return of(i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version}));
             }
-            break;
+
+            user = i18n.translate('editor.publish_queue_migration_notice');
+            // SPECIAL CASE
+            // If there is no ```timeManagement.version``` despite ```timeManagement.at > 0``` in the CMS' response
+            // a legal data migration issue occured documented at https://jira.gentics.com/browse/GTXPE-446 .
+            // In this case, the latest page version shall be published.
+
+            if (item.type === 'page') {
+                return getCompatiblityPageValue(item);
+            }
+
+            // Precautious check
+            if (item.type !== 'form') {
+                // TODO: Can't really happen, but maybe a fallback value?
+                return of('');
+            }
+
+            return getCompatiblityFormValue(item);
         }
 
         case 'offlineAt':
-            dateRaw = item.timeManagement.offlineAt;
-            date = dateRaw > 0 ? datePipe.transform(dateRaw, 'dateTime') : i18n.translate('editor.publish_queue_date_value_immediately');
-            user = item.timeManagement.futureUnpublisher && `${item.timeManagement.futureUnpublisher.firstName} ${item.timeManagement.futureUnpublisher.lastName}`;
+            date = toDateString(item.timeManagement.offlineAt);
+            user = formattedUser(item.timeManagement?.futureUnpublisher);
 
             // if no user is available, fallback to date-only
             if (user) {
-                translation = i18n.translate('editor.publish_queue_date_value_label', {date, user})
+                return of(i18n.translate('editor.publish_queue_date_value_label', {date, user}));
             } else {
-                translation = date;
+                return of(date);
             }
-            break;
 
         // QUEUED: action is requested to be planned but won't be performed until approval
         case 'queuedPublish':
-            dateRaw = item.timeManagement.queuedPublish['at'];
-            date = dateRaw > 0 ? datePipe.transform(dateRaw, 'dateTime') : i18n.translate('editor.publish_queue_date_value_immediately');
-            version = item.timeManagement.queuedPublish['version'] ? item.timeManagement.queuedPublish['version']['number'] : '1.0';
-            user = item.timeManagement.queuedPublish['user']['firstName'] + ' ' + item.timeManagement.queuedPublish['user']['lastName'];
-            translation = i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
-            break;
+            date = toDateString(item.timeManagement.queuedPublish?.at);
+            version = item.timeManagement.queuedPublish?.version?.number || '1.0';
+            user = formattedUser(item.timeManagement?.queuedPublish?.user);
+            return of(i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version}));
 
         case 'queuedOffline':
-            dateRaw = item.timeManagement.queuedOffline['at'];
-            date = dateRaw > 0 ? datePipe.transform(dateRaw, 'dateTime') : i18n.translate('editor.publish_queue_date_value_immediately');
-            user = item.timeManagement.queuedOffline['user']['firstName'] + ' ' + item.timeManagement.queuedOffline['user']['lastName'];
-            translation = i18n.translate('editor.publish_queue_date_value_label', {date, user})
-            break;
+            date = toDateString(item.timeManagement?.queuedOffline?.at);
+            user = formattedUser(item.timeManagement?.queuedOffline?.user);
+            return of(i18n.translate('editor.publish_queue_date_value_label', {date, user}));
 
         default:
             return of(false);
     }
-
-    return of(translation);
 }

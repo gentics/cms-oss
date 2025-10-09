@@ -15,6 +15,7 @@ import {
     NodeFeature,
     Page,
     PageCreateRequest,
+    PageSaveRequest,
     PagingSortOrder,
     ResponseCode,
     Schedule,
@@ -133,8 +134,10 @@ export class EntityImporter {
     public templates: Record<string, Template> = {};
     /** Mapping of schedule-task command to task instance. Only contains internal commands. */
     public tasks: Record<string, ScheduleTask> = {};
+    /** The top most group that can be accessed from the admin account. */
+    public cmsRootGroup: Group;
     /** The root of all test groups, which is imported via the {@link GROUP_ROOT} import data.*/
-    public rootGroup: Group;
+    public testRootGroup: Group;
     /** If the `bootstrapSuite` has been successfully run through. */
     public bootstrapped = false;
 
@@ -189,8 +192,14 @@ export class EntityImporter {
         this.templates = await this.getTemplateMapping();
         this.languages = await this.getLanguageMapping();
         this.dummyNode = await this.setupDummyNode();
-        // Make sure root group is present
-        this.rootGroup = await this.importGroup(GROUP_ROOT);
+        // Make sure root groups are present
+        if (!this.cmsRootGroup) {
+            this.cmsRootGroup = (await this.client.group.list({
+                pageSize: 1,
+                sort: [{ attribute: 'id', sortOrder: PagingSortOrder.Asc }],
+            }).send())?.items?.[0];
+        }
+        this.testRootGroup = await this.importGroup(GROUP_ROOT);
 
         // Store all Tasks in the entity map
         const tasks = (await this.client.schedulerTask.list().send()).items || [];
@@ -624,17 +633,21 @@ export class EntityImporter {
 
         let created = (await this.client.page.create(body).send()).page;
 
-        if (tags) {
-            await this.client.page.update(created.id, {
-                page: {
-                    tags,
-                },
-                unlock: true,
-            }).send();
+        const updateBody: PageSaveRequest = {
+            unlock: true,
+            page: {},
+        };
 
-            // Reload the page data, as it has the tags in it now
-            created = (await this.client.page.get(created.id).send()).page;
+        if (tags) {
+            updateBody.page = {
+                tags,
+            };
         }
+
+        await this.client.page.update(created.id, updateBody).send();
+
+        // Reload the page data just to be sure
+        created = (await this.client.page.get(created.id).send()).page;
 
         return created;
     }
@@ -718,14 +731,11 @@ export class EntityImporter {
         let importedGroup: Group;
 
         if (parent === null) {
-            parentGroup = (await this.client.group.list({
-                pageSize: 1,
-                sort: [{ attribute: 'id', sortOrder: PagingSortOrder.Asc }],
-            }).send())?.items?.[0];
+            parentGroup = this.cmsRootGroup;
         } else if (parent != null) {
             parentGroup = this.getDependency(parent, true);
         } else {
-            parentGroup = this.rootGroup;
+            parentGroup = this.testRootGroup;
         }
 
         try {
@@ -772,8 +782,16 @@ export class EntityImporter {
     ): Promise<User | null> {
         const { group, extraGroups, ...reqData } = data;
 
-        const groupEntity = this.getDependency(group);
+        let groupEntity: Group;
         let user: User;
+
+        if (group === null) {
+            groupEntity = this.cmsRootGroup;
+        } else if (!group) {
+            groupEntity = this.testRootGroup;
+        } else {
+            groupEntity = this.getDependency(group);
+        }
 
         try {
             user = (await this.client.group.createUser(groupEntity.id, reqData).send()).user;
@@ -856,6 +874,7 @@ export class EntityImporter {
                 language,
                 ...req,
             },
+            unlock: true,
         }).send();
 
         // Reload the page as it has the tags now
@@ -1087,7 +1106,7 @@ export class EntityImporter {
         }
 
         // Make sure root group is present
-        this.rootGroup = await this.importGroup(GROUP_ROOT);
+        this.testRootGroup = await this.importGroup(GROUP_ROOT);
 
         // Then attempt to import all
         for (const importData of importList) {

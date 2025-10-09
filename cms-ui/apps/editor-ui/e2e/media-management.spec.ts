@@ -4,7 +4,7 @@ import {
     ITEM_TYPE_IMAGE,
     TestSize,
     loginWithForm,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
     pickSelectValue,
 } from '@gentics/e2e-utils';
@@ -50,7 +50,7 @@ test.describe('Media Management', () => {
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     test('should be possible to create a new file and edit the object-properties', async ({ page }) => {

@@ -1,9 +1,10 @@
 import { FileUploadResponse, NodeFeature } from '@gentics/cms-models';
-import { EntityImporter, fullNode, loginWithForm, matchesPath, minimalNode, navigateToApp, openContext, TestSize } from '@gentics/e2e-utils';
+import { EntityImporter, NODE_FULL, loginWithForm, matchesPath, NODE_MINIMAL, navigateToApp, openContext, TestSize } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { findItem, findList, selectNode } from './helpers';
 
+test.describe.configure({ mode: 'serial' });
 test.describe('Asset Management', () => {
     const IMPORTER = new EntityImporter();
 
@@ -49,7 +50,7 @@ test.describe('Asset Management', () => {
             }],
         }, async ({ page }) => {
             await test.step('open asset-management in minimal node', async () => {
-                await selectNode(page, IMPORTER.get(minimalNode)!.id);
+                await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
                 const list = findList(page, 'image');
                 const picker = list.locator('[data-action="upload-item"] gtx-dropdown-list');
                 const context = await openContext(picker);
@@ -60,7 +61,7 @@ test.describe('Asset Management', () => {
             });
 
             await test.step('open asset-management in full node', async () => {
-                await selectNode(page, IMPORTER.get(fullNode)!.id);
+                await selectNode(page, IMPORTER.get(NODE_FULL)!.id);
                 const list = findList(page, 'image');
                 const picker = list.locator('[data-action="upload-item"] gtx-dropdown-list');
                 const context = await openContext(picker);
@@ -84,7 +85,7 @@ test.describe('Asset Management', () => {
                 description: 'SUP-18778',
             }],
         }, async ({ page }) => {
-            await selectNode(page, IMPORTER.get(minimalNode)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
             const list = findList(page, 'image');
             const picker = list.locator('[data-action="upload-item"] gtx-dropdown-list');
             const context = await openContext(picker);

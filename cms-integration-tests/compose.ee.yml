@@ -89,6 +89,8 @@ services:
       # Disable machine learning
       - xpack.ml.enabled=false
 
+    mem_limit: 2gb
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9200/_cat/health"]
       start_period: 120s

@@ -11,11 +11,11 @@ import { ErrorHandler } from '../../providers/error-handler/error-handler.servic
 import { NavigationService } from '../../providers/navigation/navigation.service';
 
 @Component({
-    selector: 'publish-queue',
+    selector: 'gtx-publish-queue-modal',
     templateUrl: './publish-queue-modal.component.html',
     styleUrls: ['./publish-queue-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class PublishQueueModal extends BaseModal<void | Page[]> implements OnInit, OnDestroy {
 
@@ -104,9 +104,9 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
     }
 
     approveBtnIsVisible(): boolean {
-        return this.selectedPages.filter(page => {
+        return this.selectedPages.some(page => {
             return page.timeManagement.queuedPublish || page.timeManagement.queuedOffline;
-        }).length > 0;
+        });
     }
 
     assign(): void {

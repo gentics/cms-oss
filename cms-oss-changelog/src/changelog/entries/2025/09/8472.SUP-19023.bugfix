@@ -1,0 +1,1 @@
+Fixes an error when adding an object property to a devtools package. The object property was still added to the package but a general backend error message was shown and the list was not updated. This has been fixed.

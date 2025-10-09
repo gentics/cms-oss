@@ -3,6 +3,7 @@ import {
     createClient,
     EntityImporter,
     isVariant,
+    KEYCLOAK_LOGIN,
     loginWithForm,
     navigateToApp,
     TestSize,
@@ -92,7 +93,7 @@ test.describe('Login', () => {
 
         test('should be able to login with SSO', async ({ page }) => {
             await navigateToApp(page);
-            await loginWithForm(page, AUTH.keycloak);
+            await loginWithForm(page, KEYCLOAK_LOGIN);
             await page.locator('project-editor').waitFor();
         });
 

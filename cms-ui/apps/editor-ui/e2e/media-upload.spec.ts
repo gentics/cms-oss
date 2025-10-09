@@ -3,7 +3,7 @@ import {
     ITEM_TYPE_FILE,
     ITEM_TYPE_IMAGE,
     loginWithForm,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
     TestSize,
 } from '@gentics/e2e-utils';
@@ -45,7 +45,7 @@ test.describe('Media Upload', () => {
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     test('should be possible to upload a regular text file', async ({ page }) => {

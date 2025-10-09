@@ -4,6 +4,7 @@ import { User } from '@gentics/cms-models';
 /**
  * A generic user list. This component is designed to be stateless - the selection must be set from the
  * parent component.
+ * TODO: Needs a complete rework, this is a mess. Use a table or something similar instead.
  */
 @Component({
     selector: 'users-list',
@@ -16,7 +17,7 @@ export class UsersList {
     @Input() users: User[] = [];
     @Input() selected: number[] = [];
     @Input() maxHeight: string = '1000px';
-    @Output() selectionChange = new EventEmitter<number[]>();
+    @Output() selectedChange = new EventEmitter<number[]>();
 
     private selectedMap: { [id: number]: boolean } = {};
 
@@ -30,9 +31,9 @@ export class UsersList {
 
     toggleSelectall(): void {
         if (this.areAllSelected()) {
-            this.selectionChange.emit([]);
+            this.selectedChange.emit([]);
         } else {
-            this.selectionChange.emit(this.users.map(user => user.id));
+            this.selectedChange.emit(this.users.map(user => user.id));
         }
     }
 
@@ -41,9 +42,9 @@ export class UsersList {
         if (-1 < index) {
             const newSelection = this.selected.slice();
             newSelection.splice(index, 1);
-            this.selectionChange.emit(newSelection);
+            this.selectedChange.emit(newSelection);
         } else {
-            this.selectionChange.emit(this.selected.concat([userId]));
+            this.selectedChange.emit(this.selected.concat([userId]));
         }
     }
 

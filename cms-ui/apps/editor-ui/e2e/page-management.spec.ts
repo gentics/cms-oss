@@ -4,9 +4,9 @@ import {
     TestSize,
     findContextContent,
     loginWithForm,
-    minimalNode,
+    NODE_MINIMAL,
     navigateToApp,
-    pageOne,
+    PAGE_ONE,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -52,7 +52,7 @@ test.describe('Page Management', () => {
 
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(minimalNode)!.id);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
     test('should be possible to create a new page', async ({ page }) => {
@@ -76,7 +76,7 @@ test.describe('Page Management', () => {
     });
 
     test('should be possible to edit the page properties', async ({ page }) => {
-        const PAGE = IMPORTER.get(pageOne)!;
+        const PAGE = IMPORTER.get(PAGE_ONE)!;
         const list = findList(page, ITEM_TYPE_PAGE);
         const item = findItem(list, PAGE.id);
 
@@ -99,7 +99,7 @@ test.describe('Page Management', () => {
             description: 'SUP-18802',
         }],
     }, async ({page}) => {
-        const PAGE = IMPORTER.get(pageOne);
+        const PAGE = IMPORTER.get(PAGE_ONE);
         const list = findList(page, ITEM_TYPE_PAGE);
         const item = findItem(list, PAGE.id);
 
@@ -130,7 +130,7 @@ test.describe('Page Management', () => {
     });
 
     test('should be possible to edit the page object-properties', async ({ page }) => {
-        const PAGE = IMPORTER.get(pageOne)!;
+        const PAGE = IMPORTER.get(PAGE_ONE)!;
         let list = findList(page, ITEM_TYPE_PAGE);
         let item = findItem(list, PAGE.id);
 
@@ -157,7 +157,7 @@ test.describe('Page Management', () => {
             description: 'SUP-18791',
         }],
     }, async ({ page }) => {
-        const PAGE = IMPORTER.get(pageOne)!;
+        const PAGE = IMPORTER.get(PAGE_ONE)!;
         const list = findList(page, ITEM_TYPE_PAGE);
         const item = findItem(list, PAGE.id);
 

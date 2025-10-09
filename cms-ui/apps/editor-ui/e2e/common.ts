@@ -1,5 +1,5 @@
 import { AlohaCoreComponentNames } from '@gentics/aloha-models';
-import type { createRange, selectRange, selectText, updateAlohaRange } from '@gentics/e2e-utils';
+import type { createRange, KEYCLOAK_LOGIN, selectRange, selectText, updateAlohaRange } from '@gentics/e2e-utils';
 export interface HelperWindow extends Window {
     createRange: typeof createRange;
     selectRange: typeof selectRange;
@@ -8,10 +8,12 @@ export interface HelperWindow extends Window {
 }
 
 export const AUTH = {
+    /** @deprecated Use a dedicated user from your test instead. */
     admin: {
         username: 'node',
         password: 'node',
     },
+    /** @deprecated Use the {@link KEYCLOAK_LOGIN} instead */
     keycloak: {
         username: 'node',
         password: 'node',

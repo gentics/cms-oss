@@ -1,18 +1,21 @@
 <div
     #toast
     class="gtx-toast z-depth-3"
+    [attr.data-id]="id"
     [ngClass]="type || 'default'"
     [class.dismissing]="dismissing"
     [style.transform]="getTransform()"
     (click)="dismiss()"
 >
-    <span class="gtx-toast-btn_close"
-        [hidden]="!dismissOnClick">
+    <span
+        class="gtx-toast-btn_close"
+        [hidden]="!dismissOnClick"
+    >
         <icon>close</icon>
     </span>
 
     <span class="action" *ngIf="actionLabel">
-        <button (click)="actionClick()">
+        <button data-action="primary" (click)="actionClick()">
             {{ actionLabel }}
         </button>
     </span>

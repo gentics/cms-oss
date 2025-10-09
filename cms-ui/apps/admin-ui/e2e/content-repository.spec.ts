@@ -2,9 +2,9 @@
 import { ContentRepository, Variant } from '@gentics/cms-models';
 import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import {
+    clickModalAction,
     clickTableRow,
     CONTENT_REPOSITORY_MESH,
-    CR_PREFIX_MESH,
     EntityImporter,
     expandTrableRow,
     findTableAction,
@@ -12,28 +12,27 @@ import {
     findTableRowByText,
     findTrableRowById,
     findTrableRowByText,
-    folderA,
-    folderB,
+    FOLDER_A,
+    FOLDER_B,
     isVariant,
-    matchesPath,
-    minimalNode,
-    navigateToApp,
-    schedulePublisher,
-    selectTableRow,
-    TestSize,
     loginWithForm,
     matchRequest,
+    MESH_SCHEMA_PREFIX,
+    navigateToApp,
+    NODE_MINIMAL,
+    SCHEDULE_PUBLISHER,
+    selectTab,
+    selectTableRow,
+    TestSize,
 } from '@gentics/e2e-utils';
 import { UserUpdateRequest } from '@gentics/mesh-models';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 import {
-    clickModalAction,
     findEntityTableActionButton,
     loginWithCR,
     logoutMeshManagement,
     navigateToModule,
-    selectTab,
 } from './helpers';
 
 // Selector constants
@@ -225,13 +224,11 @@ test.describe('Content Repositories Module', () => {
                 let userRow: Locator;
 
                 await test.step('Login and force PW reset', async () => {
-                    const usersReq = page.waitForResponse(response =>
-                        response.ok() && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/users'),
-                    );
+                    const usersLoad = page.waitForResponse(matchRequest('GET', '/rest/contentrepositories/*/proxy/api/v2/users'));
 
                     await loginWithCR(page, true);
                     await selectTab(page, 'users');
-                    await usersReq;
+                    await usersLoad;
 
                     // Edit user and force password change
                     userRow = findTableRowByText(managementContent, AUTH.mesh.username);
@@ -260,11 +257,7 @@ test.describe('Content Repositories Module', () => {
                     await loginForm.locator(SELECTORS.LOGIN_FORM.PASSWORD).fill(AUTH.mesh.password);
                     await newPassword.fill(AUTH.mesh.newPassword);
 
-                    const pwResetLoginReq = page.waitForResponse(response =>
-                        response.ok()
-                            && response.request().method() === 'POST'
-                            && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/auth/login'),
-                    );
+                    const pwResetLoginReq = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/auth/login'));
                     await loginForm.locator(SELECTORS.LOGIN_FORM.SUBMIT).click();
                     await pwResetLoginReq;
 
@@ -281,11 +274,7 @@ test.describe('Content Repositories Module', () => {
                     await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).first().fill(AUTH.mesh.password);
                     await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).last().fill(AUTH.mesh.password);
 
-                    const updateReq = page.waitForResponse(response =>
-                        response.ok()
-                        && response.request().method() === 'POST'
-                        && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/users/*'),
-                    );
+                    const updateReq = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/users/*'));
                     await clickModalAction(userModal, 'confirm');
                     const resetRes = await updateReq;
                     const resetReqData: UserUpdateRequest = resetRes.request().postDataJSON();
@@ -305,8 +294,8 @@ test.describe('Content Repositories Module', () => {
             test.slow();
 
             test.beforeEach(async ({ page }) => {
-                await IMPORTER.importData([schedulePublisher]);
-                await IMPORTER.executeSchedule(schedulePublisher);
+                await IMPORTER.importData([SCHEDULE_PUBLISHER]);
+                await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
                 await loginWithCR(page);
             });
 
@@ -317,12 +306,12 @@ test.describe('Content Repositories Module', () => {
 
                 await findEntityTableActionButton(managementContent, 'create').click();
 
-                const createModal = page.locator(SELECTORS.PROJECT.MODAL);
+                await test.step('Create a new Project', async () => {
+                    const createModal = page.locator(SELECTORS.PROJECT.MODAL);
 
-                await createModal.locator(SELECTORS.PROJECT.NAME_INPUT)
-                    .fill(NEW_PROJECT_NAME);
+                    await createModal.locator(SELECTORS.PROJECT.NAME_INPUT)
+                        .fill(NEW_PROJECT_NAME);
 
-                await test.step('Select the schema "folder" as root schema', async () => {
                     await createModal.locator(SELECTORS.PROJECT.SCHEMA_PICKER)
                         .click();
 
@@ -331,9 +320,9 @@ test.describe('Content Repositories Module', () => {
                     await schemaRow.waitFor({ state: 'visible' });
                     await selectTableRow(schemaRow);
                     await clickModalAction(schemaSelectModal, 'confirm');
-                });
 
-                await clickModalAction(createModal, 'confirm');
+                    await clickModalAction(createModal, 'confirm');
+                });
 
                 await test.step('Delete the newly created Project', async () => {
                     const projectRow = findTableRowByText(managementContent, NEW_PROJECT_NAME);
@@ -341,7 +330,7 @@ test.describe('Content Repositories Module', () => {
 
                     await findTableAction(projectRow, 'delete').click();
 
-                    await clickModalAction(page, 'confirm');
+                    await clickModalAction(page.locator('gtx-confirm-delete-modal'), 'confirm');
                 });
             });
         });
@@ -350,8 +339,8 @@ test.describe('Content Repositories Module', () => {
             test.slow();
 
             test.beforeEach(async ({ page }) => {
-                await IMPORTER.importData([schedulePublisher]);
-                await IMPORTER.executeSchedule(schedulePublisher);
+                await IMPORTER.importData([SCHEDULE_PUBLISHER]);
+                await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
                 await loginWithCR(page);
             });
 
@@ -369,7 +358,7 @@ test.describe('Content Repositories Module', () => {
                     await projectsRow.waitFor({ timeout: 60_000 });
                     await expandTrableRow(projectsRow);
 
-                    const exampleRow = findTrableRowByText(permModal, CR_PREFIX_MESH);
+                    const exampleRow = findTrableRowByText(permModal, MESH_SCHEMA_PREFIX);
                     await exampleRow.waitFor({ state: 'visible' });
                     const projectId = await exampleRow.evaluate((el) => {
                         return el.getAttribute('data-id');
@@ -382,7 +371,7 @@ test.describe('Content Repositories Module', () => {
                 });
 
                 // Verify initial state
-                const minimalRow = findTrableRowByText(permModal, IMPORTER.get(minimalNode).name);
+                const minimalRow = findTrableRowByText(permModal, IMPORTER.get(NODE_MINIMAL).name);
                 await minimalRow.waitFor({ state: 'visible' });
                 await expect(minimalRow.locator('.permission-icon[data-id="readPublished"]')).not.toHaveClass(CLASS_GRANTED);
 
@@ -391,11 +380,7 @@ test.describe('Content Repositories Module', () => {
                     const editModal = page.locator('gtx-mesh-role-permissions-edit-modal');
                     await editModal.locator('gtx-checkbox[formcontrolname="readPublished"] label').click();
 
-                    const loadRequest = page.waitForResponse(response =>
-                        response.ok()
-                        && matchesPath(response.url(), '/rest/contentrepositories/'),
-                    );
-
+                    const loadRequest = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*'));
                     await clickModalAction(editModal, 'confirm');
                     await loadRequest;
                 });
@@ -405,32 +390,25 @@ test.describe('Content Repositories Module', () => {
 
                 await test.step('Apply permissions recursively to child nodes', async () => {
                     // Apply permissions recursively
-                    const recursiveLoadReq = page.waitForResponse(response =>
-                        response.ok()
-                            && response.request().method() === 'GET'
-                            && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*'),
-                    );
+                    const recursiveLoadReq = page.waitForResponse(matchRequest('GET', '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*'));
                     await findTableAction(minimalRow, 'applyRecursive').click();
-                    await clickModalAction(page, 'confirm');
+                    await clickModalAction(page.locator('gtx-modal-dialog'), 'confirm');
                     await recursiveLoadReq;
 
                     // Load/Open child elements first
-                    const childLoad = page.waitForResponse(response =>
-                        response.ok()
-                        && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/*/graphql'),
-                    );
+                    const childLoad = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/*/graphql'));
                     await expandTrableRow(minimalRow);
                     await childLoad;
 
                     // Verify permissions have been set
-                    const folderARow = findTrableRowByText(permModal, IMPORTER.get(folderA).name);
-                    const folderBRow = findTrableRowByText(permModal, IMPORTER.get(folderB).name);
+                    const folderARow = findTrableRowByText(permModal, IMPORTER.get(FOLDER_A).name);
+                    const folderBRow = findTrableRowByText(permModal, IMPORTER.get(FOLDER_B).name);
                     await expect(folderARow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(CLASS_GRANTED);
                     await expect(folderBRow.locator('.permission-icon[data-id="readPublished"]')).toHaveClass(CLASS_GRANTED);
                 });
 
                 // Close modal
-                await clickModalAction(page, 'cancel');
+                await clickModalAction(permModal, 'cancel');
             });
         });
     });

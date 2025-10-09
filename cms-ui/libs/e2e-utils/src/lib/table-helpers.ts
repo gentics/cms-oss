@@ -31,10 +31,6 @@ export async function selectTableRow(row: Locator): Promise<void> {
     return row.locator('.select-column gtx-checkbox label').click();
 }
 
-export async function selectTab(source: Page, id: number | string): Promise<void> {
-    return source.locator(`gtx-tabs .tab-link[data-id="${id}"]`).click();
-}
-
 /**
  * Expands a trable row (tree-table row)
  */
@@ -56,4 +52,8 @@ export function findTrableRowByText(source: Page | Locator, text: string, exact:
     return source.locator('gtx-trable .data-row .data-column', {
         hasText: exact ? new RegExp(`^[\\s]*${text}[\\s]*$`) : text,
     }).locator('..');
+}
+
+export async function selectTrableRow(row: Locator): Promise<void> {
+    return row.locator('.select-column .selection-checkbox  label, .inline-selection .selection-checkbox label').click();
 }

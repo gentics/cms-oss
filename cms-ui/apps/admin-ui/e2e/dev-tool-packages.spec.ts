@@ -7,11 +7,12 @@ import {
     findTableRowById,
     loginWithForm,
     navigateToApp,
+    selectTab,
     selectTableRow,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
-import { navigateToModule, selectTab } from './helpers';
+import { navigateToModule } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Dev-Tool Packages Module', () => {

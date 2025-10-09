@@ -256,7 +256,7 @@ test.describe('Publish Queue', () => {
             });
 
             await openToolOrAction(page, 'publish-queue');
-            const publishQueueModal = page.locator('publish-queue');
+            const publishQueueModal = page.locator('gtx-publish-queue-modal');
             // Select the first/only element
             await publishQueueModal.locator('publish-queue-list .row-checkbox label').click();
 

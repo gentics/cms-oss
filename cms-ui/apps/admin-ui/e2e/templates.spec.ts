@@ -1,6 +1,7 @@
 import { Node, Template } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    clickModalAction,
     clickTableRow,
     EntityImporter,
     findTableAction,
@@ -16,7 +17,7 @@ import {
 } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { clickModalAction, navigateToModule } from './helpers';
+import { navigateToModule } from './helpers';
 
 const LINK_TO_NODE_ACTION = 'linkToNode';
 const LINK_TO_NODE_MODAL = 'gtx-assign-templates-to-nodes-modal';

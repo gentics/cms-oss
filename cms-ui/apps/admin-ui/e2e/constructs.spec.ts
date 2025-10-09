@@ -22,11 +22,12 @@ import {
     matchRequest,
     navigateToApp,
     NodeImportData,
+    selectTab,
     TestSize,
 } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { navigateToModule, selectTab } from './helpers';
+import { navigateToModule } from './helpers';
 
 const EXAMPLE_NODE_ONE: NodeImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_NODE,

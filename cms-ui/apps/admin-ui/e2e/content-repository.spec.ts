@@ -2,9 +2,9 @@
 import { ContentRepository, Variant } from '@gentics/cms-models';
 import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import {
+    clickModalAction,
     clickTableRow,
     CONTENT_REPOSITORY_MESH,
-    MESH_SCHEMA_PREFIX,
     EntityImporter,
     expandTrableRow,
     findTableAction,
@@ -15,25 +15,24 @@ import {
     FOLDER_A,
     FOLDER_B,
     isVariant,
-    matchesPath,
-    NODE_MINIMAL,
-    navigateToApp,
-    SCHEDULE_PUBLISHER,
-    selectTableRow,
-    TestSize,
     loginWithForm,
     matchRequest,
+    MESH_SCHEMA_PREFIX,
+    navigateToApp,
+    NODE_MINIMAL,
+    SCHEDULE_PUBLISHER,
+    selectTab,
+    selectTableRow,
+    TestSize,
 } from '@gentics/e2e-utils';
 import { UserUpdateRequest } from '@gentics/mesh-models';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 import {
-    clickModalAction,
     findEntityTableActionButton,
     loginWithCR,
     logoutMeshManagement,
     navigateToModule,
-    selectTab,
 } from './helpers';
 
 // Selector constants

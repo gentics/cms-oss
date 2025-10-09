@@ -32,16 +32,19 @@ export class PublishQueueActionsService {
     getQueue(): void {
         this.appState.dispatch(new StartPublishQueueFetchingAction());
 
-        this.client.page.publishQueue().subscribe(res => {
-            this.appState.dispatch(new PublishQueuePagesFetchingSuccessAction(res.pages));
-        }, err => {
-            this.notification.show({
-                message: err,
-                type: 'alert',
-                delay: 5000,
-            });
+        this.client.page.listPublishQueue().subscribe({
+            next: res => {
+                this.appState.dispatch(new PublishQueuePagesFetchingSuccessAction(res.pages));
+            },
+            error: err => {
+                this.notification.show({
+                    message: err,
+                    type: 'alert',
+                    delay: 5000,
+                });
 
-            this.appState.dispatch(new PublishQueueFetchingErrorAction());
+                this.appState.dispatch(new PublishQueueFetchingErrorAction());
+            },
         });
     }
 
@@ -51,23 +54,26 @@ export class PublishQueueActionsService {
     getUsersForRevision(): void {
         this.appState.dispatch(new StartPublishQueueFetchingAction());
 
-        this.client.user.list().subscribe(response => {
-            this.appState.dispatch(new PublishQueueUsersFetchingSuccessAction(response.items));
-        }, error => {
-            this.appState.dispatch(new PublishQueueFetchingErrorAction());
+        this.client.user.list().subscribe({
+            next: response => {
+                this.appState.dispatch(new PublishQueueUsersFetchingSuccessAction(response.items));
+            },
+            error: error => {
+                this.appState.dispatch(new PublishQueueFetchingErrorAction());
 
-            // Ignore errors when it's about permissions
-            if ((error as GCMSRestClientRequestError)?.data?.responseInfo?.responseCode === ResponseCode.PERMISSION) {
-                return;
-            }
+                // Ignore errors when it's about permissions
+                if ((error as GCMSRestClientRequestError)?.data?.responseInfo?.responseCode === ResponseCode.PERMISSION) {
+                    return;
+                }
 
-            this.notification.show({
-                message: 'message.get_users_error',
-                type: 'alert',
-                delay: 2000,
-            });
+                this.notification.show({
+                    message: 'message.get_users_error',
+                    type: 'alert',
+                    delay: 2000,
+                });
 
-            this.errorHandler.catch(error, { notification: false });
+                this.errorHandler.catch(error, { notification: false });
+            },
         });
     }
 

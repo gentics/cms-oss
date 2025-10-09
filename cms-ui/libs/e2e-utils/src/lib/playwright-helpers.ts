@@ -177,17 +177,33 @@ export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Pr
     });
 }
 
-export async function selectTab(source: Page | Locator, id: number | string): Promise<Locator> {
+export async function getSourceLocator(source: Page | Locator, nodeName: string): Promise<Locator> {
     if (
         typeof (source as Page).reload === 'function'
-        || await (source as Locator).evaluate((el: any) => typeof el !== 'object' || el.nodeName !== 'GTX-TABS')
+        || await (source as Locator).evaluate(
+            (el, args) => el == null
+                || typeof el !== 'object'
+                || el.nodeName.toLowerCase() !== args.nodeName,
+            { nodeName },
+        )
     ) {
-        source = source.locator('gtx-tabs');
+        return source.locator(nodeName);
     }
 
-    await source.locator(`.tab-link[data-id="${id}"]`).click();
+    return source as Locator;
+}
 
-    return source.locator(`gtx-tab[data-id="${id}"]`);
+/**
+ * Clicks a modal button by its action
+ */
+export async function clickModalAction(source: Locator, action: string): Promise<void> {
+    await source.locator(`.modal-footer [data-action="${action}"] button`).click();
+}
+
+export async function selectTab(source: Page | Locator, id: number | string): Promise<Locator> {
+    const tabs = await getSourceLocator(source, 'gtx-tabs');
+    await tabs.locator(`.tab-link[data-id="${id}"]`).click();
+    return tabs.locator(`gtx-tab[data-id="${id}"]`);
 }
 
 export function findNotification(page: Page, id?: string): Locator {
@@ -216,8 +232,9 @@ export async function dismissNotifications(page: Page): Promise<void> {
 }
 
 export async function openSidebar(page: Page): Promise<Locator> {
-    const userMenuToggle = page.locator('gtx-user-menu gtx-side-menu gtx-user-menu-toggle');
-    const userMenu = page.locator('gtx-user-menu gtx-side-menu .menu .menu-content');
+    const sideMenu = page.locator('gtx-user-menu gtx-side-menu');
+    const userMenuToggle = sideMenu.locator('gtx-user-menu-toggle');
+    const userMenu = sideMenu.locator('.menu .menu-content');
 
     const isOpen = await userMenu.isVisible();
     if (!isOpen) {

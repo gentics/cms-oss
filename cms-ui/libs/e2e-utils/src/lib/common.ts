@@ -206,6 +206,15 @@ export const INTERNAL_TASKS = [
     TASK_PUBLISH,
 ];
 
+export const KEYCLOAK_LOGIN: LoginInformation = {
+    username: 'node',
+    password: 'node',
+};
+export const MESH_LOGIN: LoginInformation = {
+    username: 'admin',
+    password: 'admin',
+};
+
 export const BOUNDARY_NODES = new Set([
     'article',
     'aside',

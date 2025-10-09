@@ -5,13 +5,13 @@
 </div>
 
 <div class="modal-content">
-    <ng-container *ngIf="(queue$ | async).length as requestsAmount">
+    <ng-container *ngIf="(queue$ | async)?.length as requestsAmount">
         <p *ngIf="requestsAmount === 1" class="modal-title-sub">{{ 'modal.publish_queue_title_sub_singular' | i18n }}:</p>
         <p *ngIf="requestsAmount > 1" class="modal-title-sub">{{ 'modal.publish_queue_title_sub_plural' | i18n:{ amount: requestsAmount } }}:</p>
     </ng-container>
 
     <ng-container *ngIf="!(loading$ | async)">
-        <div *ngIf="(queue$ | async).length > 0; else emptyMessage" class="queue-list">
+        <div *ngIf="(queue$ | async)?.length > 0; else emptyMessage" class="queue-list">
             <publish-queue-list
                 [pages]="queue$ | async"
                 (pageClick)="pageClicked($event)"

@@ -88,6 +88,10 @@ public interface MCPageResource {
 	@Path("/localize/{id}")
 	GenericResponse localize(@PathParam("id") Integer id, PageLocalizeRequest request) throws Exception;
 
+	@POST
+	@Path("/localize/{pageId}/tags/{tagId}")
+	GenericResponse localizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId) throws Exception;
+
 	/**
 	 * Get localization info for a list of pages for a given channel and all master channels
 	 * @param ids list of page ids

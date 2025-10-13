@@ -1,6 +1,7 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,12 +21,15 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.job.LocalizePageCallable;
+import com.gentics.contentnode.job.LocalizeRootTagCallable;
 import com.gentics.contentnode.job.PushToMasterJob;
 import com.gentics.contentnode.job.UnlocalizeJob;
+import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.filters.Authenticated;
@@ -63,6 +67,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import org.apache.commons.lang3.StringUtils;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
@@ -257,6 +262,123 @@ public class MCPageResourceImpl implements MCPageResource {
 
 			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000,
 					Operator.lock(LockType.channelSet, page.getChannelSetId()), new LocalizePageCallable(id, request.getChannelId(), false, partial));
+		}
+	}
+
+	@POST
+	@Path("/localize/{pageId}/tags/{tagId}")
+	@Override
+	public GenericResponse localizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId) throws Exception {
+		if (pageId == null) {
+			var msg = "Error while localizing tag: no page ID provided";
+
+			logger.error(msg);
+
+			var m = new CNI18nString("rest.general.error");
+
+			return new GenericResponse(
+					new Message(Message.Type.CRITICAL, m.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, msg));
+
+		}
+
+		if (StringUtils.isBlank(tagId)) {
+			var msg = "Error while localizing tag: no tag ID provided";
+
+			logger.error(msg);
+
+			var m = new CNI18nString("rest.general.error");
+
+			return new GenericResponse(
+					new Message(Message.Type.CRITICAL, m.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, msg));
+		}
+
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			Page page = t.getObject(Page.class, pageId);
+
+			if (page == null) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: the specified page does not exist", tagId, pageId);
+
+				logger.error(msg);
+
+				I18nString m = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+
+			try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
+				if (!ObjectPermission.edit.checkObject(page)) {
+					String msg = new CNI18nString("page.nopermission").toString();
+					return new GenericResponse(
+							new Message(Type.CRITICAL, msg),
+							new ResponseInfo(ResponseCode.PERMISSION, "Not enough permissions to edit this page in the channel"));
+				}
+			}
+
+			if (!Feature.PARTIAL_MULTICHANNELLING.isActivated(page.getNode())) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: page is not partially localized", tagId, pageId);
+
+				logger.error(msg);
+
+				I18nString m = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			if (!page.getContent().isPartiallyLocalized()) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: page is not partially localized", tagId, pageId);
+
+				logger.error(msg);
+
+				I18nString m = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			var tag = page.getContentTag(tagId);
+
+			if (tag == null) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: the specified tag does not exist", tagId, pageId);
+				logger.error(msg);
+				I18nString m = new CNI18nString("rest.general.error");
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			if (!tag.comesFromTemplate()) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: tag is not a root tag", tagId, pageId);
+
+				logger.error(msg);
+
+				I18nString m = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			if (page.getMaster().getTag(tagId).equals(tag)) {
+				return new GenericResponse(
+						new Message(Type.SUCCESS, "Tag already localized"),
+						new ResponseInfo(ResponseCode.OK, "Tag already localized"));
+			}
+
+			return Operator.executeLocked(
+					new CNI18nString("localizejob").toString(),
+					AbstractContentNodeResource.getJobForegroundTime(null) * 1000,
+					Operator.lock(LockType.channelSet, page.getChannelSetId()),
+					new LocalizeRootTagCallable(pageId, page.getChannel().getId(), tagId)
+			);
 		}
 	}
 

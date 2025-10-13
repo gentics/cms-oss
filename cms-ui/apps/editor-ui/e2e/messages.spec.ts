@@ -82,10 +82,7 @@ test.describe('Messages', () => {
         await test.step('Clear all messages', async () => {
             const client = await createClient({
                 context: page.request,
-                connection: {
-                    absolute: false,
-                    basePath: '/rest',
-                },
+                isPageContext: true,
             });
             client.sid = login.sid;
             const res = await client.message.list().send();

@@ -34,6 +34,8 @@ export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequest
         return res.json().then(json => {
             validateResponseObject(request, json, res.status);
             return json;
+        }).catch(err => {
+            throw new Error(`Unexpected error while parsing response-data from "${request.method} ${request.url}"`, { cause: err });
         });
     }
 
@@ -206,7 +208,10 @@ export class GCMSFetchDriver implements GCMSClientDriver {
             // }
 
             sentRequest = fetch(options)
-                .then(res => handler(res));
+                .then(res => handler(res))
+                .catch(err => {
+                    throw new Error(`Unexpected error while performing request "${request.method} ${request.url}"`, { cause: err });
+                });
 
             return sentRequest;
         }

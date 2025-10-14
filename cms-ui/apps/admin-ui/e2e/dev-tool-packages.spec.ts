@@ -6,6 +6,7 @@ import {
     clickTableRow,
     findTableRowById,
     loginWithForm,
+    matchRequest,
     navigateToApp,
     selectTab,
     selectTableRow,
@@ -57,7 +58,14 @@ test.describe('Dev-Tool Packages Module', () => {
             const input = form.locator('[formcontrolname="name"] input');
 
             await input.fill(TEST_PACKAGE_NAME);
+
+            const createReq = page.waitForResponse(matchRequest('PUT', `/rest/devtools/packages/${encodeURIComponent(TEST_PACKAGE_NAME)}`));
+            const listReq = page.waitForResponse(matchRequest('GET', '/rest/devtools/packages'));
+
             await modal.locator('.modal-footer [data-action="confirm"] button').click();
+
+            await createReq;
+            await listReq;
         });
 
         await test.step('Assign object property to test package', async () => {

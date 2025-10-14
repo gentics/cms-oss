@@ -1,9 +1,9 @@
 import { Variant } from '@gentics/cms-models';
 import {
     ENV_CI,
-    ENV_CMS_IMPORTER_PASSWORD,
-    ENV_CMS_IMPORTER_USERNAME,
-    ENV_CMS_VARIANT,
+    ENV_E2E_CMS_IMPORTER_PASSWORD,
+    ENV_E2E_CMS_IMPORTER_USERNAME,
+    ENV_E2E_CMS_VARIANT,
     FormattedText,
     FORMATTING_NODES,
     LoginInformation,
@@ -25,7 +25,7 @@ export function envNone(...vars: string[]): boolean {
 }
 
 export function isVariant(variant: Variant): boolean {
-    return process.env[ENV_CMS_VARIANT] === variant;
+    return process.env[ENV_E2E_CMS_VARIANT] === variant;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -466,7 +466,7 @@ export function isCIEnvironment(): boolean {
 
 export function getDefaultSystemLogin(): LoginInformation {
     return {
-        username: process.env[ENV_CMS_IMPORTER_USERNAME] || 'node',
-        password: process.env[ENV_CMS_IMPORTER_PASSWORD] || 'node',
+        username: process.env[ENV_E2E_CMS_IMPORTER_USERNAME] || 'node',
+        password: process.env[ENV_E2E_CMS_IMPORTER_PASSWORD] || 'node',
     };
 }

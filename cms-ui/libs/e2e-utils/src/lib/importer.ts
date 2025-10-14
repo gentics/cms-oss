@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
+import { join } from 'path';
 import {
     ConstructCategory,
     ContentRepository,
@@ -28,11 +29,13 @@ import { MeshRestClient } from '@gentics/mesh-rest-client';
 import { APIRequestContext } from '@playwright/test';
 import {
     BinaryMap,
+    ClientOptions,
     CONSTRUCT_CATEGORY_CORE,
     CONSTRUCT_CATEGORY_TESTS,
     ConstructCategoryImportData,
     CORE_CONSTRUCTS,
     EntityMap,
+    ENV_E2E_CMS_URL,
     FileImportData,
     FolderImportData,
     FormImportData,
@@ -49,6 +52,7 @@ import {
     IMPORT_TYPE_USER,
     ImportData,
     ImportEntityType,
+    ImporterOptions,
     ImportReference,
     ImportType,
     ITEM_TYPE_FILE,
@@ -56,7 +60,6 @@ import {
     ITEM_TYPE_FORM,
     ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
-    LoginInformation,
     NodeImportData,
     PageImportData,
     PageTranslationImportData,
@@ -67,31 +70,15 @@ import {
 } from './common';
 import {
     emptyNode,
+    GROUP_ROOT,
     PACKAGE_IMPORTS,
     PACKAGE_MAP,
-    GROUP_ROOT,
     SCHEDULE_PUBLISHER,
 } from './entities';
 import { MeshPlaywrightDriver } from './mesh-playwright-driver';
 import { createMeshProxy } from './mesh-proxy';
 import { GCMSPlaywrightDriver } from './playwright-driver';
 import { getDefaultSystemLogin } from './utils';
-
-/**
- * Options to configure the behaviour of the importer
- */
-export interface ImporterOptions {
-    /**
-     * If it should log out when a entity is getting imported and what the result of it is.
-     * Useful for debugging the test-data import.
-     */
-    logImports?: boolean;
-}
-
-export interface ClientOptions extends Partial<GCMSRestClientConfig> {
-    context: APIRequestContext;
-    autoLogin?: LoginInformation;
-}
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
@@ -1179,12 +1166,14 @@ export class EntityImporter {
 
 export async function createClient(options: ClientOptions): Promise<GCMSRestClient> {
     if (options.connection == null) {
+        const baseUrl = new URL(process.env[ENV_E2E_CMS_URL]);
+
         options.connection = {
             absolute: true,
-            ssl: false,
-            host: 'localhost',
-            port: 8080,
-            basePath: '/rest',
+            ssl: baseUrl.protocol === 'https:',
+            host:options.isPageContext ? baseUrl.hostname : 'localhost',
+            port: parseInt(baseUrl.port, 10),
+            basePath: join(baseUrl.pathname, '/rest'),
         };
     }
 

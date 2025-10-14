@@ -24,10 +24,35 @@ import {
     User,
     Variant,
 } from '@gentics/cms-models';
+import { GCMSRestClientConfig } from '@gentics/cms-rest-client';
+import { APIRequestContext } from '@playwright/test';
 
 export interface LoginInformation {
     username: string;
     password: string;
+}
+
+/**
+ * Options to configure the behaviour of the importer
+ */
+export interface ImporterOptions {
+    /**
+     * If it should log out when a entity is getting imported and what the result of it is.
+     * Useful for debugging the test-data import.
+     */
+    logImports?: boolean;
+}
+
+export interface ClientOptions extends Partial<GCMSRestClientConfig> {
+    /** Playwright API context from where to send requests from. */
+    context: APIRequestContext;
+    /**
+     * If the provided context is from a Playwright Page.
+     * This is needed to determine the correct URL, as the browser context
+     * is executed from a separate node process.
+     */
+    isPageContext?: boolean;
+    autoLogin?: LoginInformation;
 }
 
 export enum TestSize {
@@ -78,20 +103,22 @@ export const IMPORT_TYPE_SCHEDULE = 'schedule';
 
 export const IMPORT_TYPE_CONSTRUCT_CATEGORY = 'construct-category';
 
-export const ENV_CMS_IMPORTER_USERNAME = 'CMS_IMPORTER_USERNAME';
-export const ENV_CMS_IMPORTER_PASSWORD = 'CMS_IMPORTER_PASSWORD';
-
-export const ENV_CMS_VARIANT = 'CMS_VARIANT';
 export const ENV_CI = 'CI';
-export const ENV_BASE_URL = 'BASE_URL';
-export const ENV_KEYCLOAK_URL = 'KEYCLOAK_URL';
-export const ENV_FORCE_REPEATS = 'FORCE_REPEATS';
+export const ENV_E2E_CMS_VARIANT = 'E2E_CMS_VARIANT';
+export const ENV_E2E_LOCAL_PLAYWRIGHT = 'E2E_LOCAL_PLAYWRIGHT';
+export const ENV_E2E_LOCAL_APP = 'E2E_LOCAL_APP';
+export const ENV_SKIP_E2E_LOCAL_APP_LAUNCH = 'SKIP_E2E_LOCAL_APP_LAUNCH';
+export const ENV_E2E_FORCE_REPEATS = 'E2E_FORCE_REPEATS';
 
-export const ENV_LOCAL_PLAYWRIGHT = 'LOCAL_PLAYWRIGHT';
-export const ENV_LOCAL_APP = 'LOCAL_APP';
-export const ENV_SKIP_LOCAL_APP_LAUNCH = 'SKIP_LOCAL_APP_LAUNCH';
+export const ENV_E2E_KEYCLOAK_URL = 'E2E_KEYCLOAK_URL';
+export const ENV_E2E_CMS_URL = 'E2E_CMS_URL';
+export const ENV_E2E_APP_PATH = 'E2E_APP_PATH';
+export const ENV_E2E_APP_URL = 'E2E_APP_URL';
 
-export const DEFAULT_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
+export const ENV_E2E_CMS_IMPORTER_USERNAME = 'E2E_CMS_IMPORTER_USERNAME';
+export const ENV_E2E_CMS_IMPORTER_PASSWORD = 'E2E_CMS_IMPORTER_PASSWORD';
+
+export const DEFAULT_E2E_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
 
 export const ATTR_CONTEXT_ID = 'data-context-id';
 export const ATTR_MULTIPLE = 'data-multiple';
@@ -100,26 +127,33 @@ declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace NodeJS {
         interface ProcessEnv {
-            /** Username override for setup rest calls */
-            [ENV_CMS_IMPORTER_USERNAME]?: string;
-            /** Password override for setup rest calls */
-            [ENV_CMS_IMPORTER_PASSWORD]?: string;
-            /** The CMS Variant that is being tested. */
-            [ENV_CMS_VARIANT]: Variant;
             /** Flag which determines if we're running in a CI context. */
             [ENV_CI]: boolean | string | number;
-            /** Override for the URL where the app to test is reachable. */
-            [ENV_BASE_URL]?: string;
-            /** Override for the URL where keycloak is reachable. */
-            [ENV_KEYCLOAK_URL]?: string;
-            /** If it should force repeats of intergration tests. */
-            [ENV_FORCE_REPEATS]?: boolean | string | number;
+
+            /** The CMS Variant that is being tested. */
+            [ENV_E2E_CMS_VARIANT]: Variant;
             /** If it should use the local playwright server instead of the container. */
-            [ENV_LOCAL_PLAYWRIGHT]?: boolean | string | number;
+            [ENV_E2E_LOCAL_PLAYWRIGHT]?: boolean | string | number;
             /** If it should use the local application instead of the application in the container. */
-            [ENV_LOCAL_APP]?: boolean | string | number;
+            [ENV_E2E_LOCAL_APP]?: boolean | string | number;
             /** If it should not automatically launch the local application. */
-            [ENV_SKIP_LOCAL_APP_LAUNCH]?: boolean | string | number;
+            [ENV_SKIP_E2E_LOCAL_APP_LAUNCH]?: boolean | string | number;
+            /** If it should force repeats of intergration tests. */
+            [ENV_E2E_FORCE_REPEATS]?: boolean | string | number;
+
+            /** Override for the URL where keycloak is reachable. */
+            [ENV_E2E_KEYCLOAK_URL]?: string;
+            /** The URL where the CMS is reachable. */
+            [ENV_E2E_CMS_URL]?: string;
+            /** The path where the app is reachable, if it is hosted on the CMS. */
+            [ENV_E2E_APP_PATH]?: string;
+            /** Full URL for the current test application. */
+            [ENV_E2E_APP_URL]?: string;
+
+            /** Username override for setup rest calls */
+            [ENV_E2E_CMS_IMPORTER_USERNAME]?: string;
+            /** Password override for setup rest calls */
+            [ENV_E2E_CMS_IMPORTER_PASSWORD]?: string;
         }
     }
 }

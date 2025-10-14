@@ -95,7 +95,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
     protected errorHandler<T>(request: GCMSRestClientRequestData): OperatorFunction<T, T> {
         return catchError(err => {
             if (!(err instanceof HttpErrorResponse)) {
-                return throwError(err);
+                return throwError(() => new Error(`Unexpected error while performing request "${request.method} ${request.url}"`, { cause: err }));
             }
 
             let raw: string;
@@ -114,7 +114,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
             }
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            return throwError(new GCMSRestClientRequestError(
+            return throwError(() => new GCMSRestClientRequestError(
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `Request "${request.method} ${request.url}" responded with error code ${err.status}: "${err.statusText}"`,
                 request,

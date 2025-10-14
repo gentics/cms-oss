@@ -52,10 +52,7 @@ test.describe('Login', () => {
             // // Setup client for login
             const client = await createClient({
                 context: page.request,
-                connection: {
-                    absolute: false,
-                    basePath: '/rest',
-                },
+                isPageContext: true,
             });
 
             // Perform login via API

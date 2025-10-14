@@ -91,7 +91,7 @@ spec:
 
             environment {
                 // Settings to determine what services we're testing against
-                CMS_VARIANT = "${params.variant}"
+                E2E_CMS_VARIANT = "${params.variant}"
                 CI_CMS_VERSION = "${params.cmsVersion}"
                 CI_MESH_VERSION = "${params.meshVersion}"
 

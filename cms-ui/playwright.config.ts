@@ -1,10 +1,12 @@
 /* eslint-disable import/no-nodejs-modules,import/order */
 import {
-    ENV_BASE_URL,
-    ENV_FORCE_REPEATS,
-    ENV_LOCAL_APP,
-    ENV_LOCAL_PLAYWRIGHT,
-    ENV_SKIP_LOCAL_APP_LAUNCH,
+    ENV_E2E_APP_PATH,
+    ENV_E2E_APP_URL,
+    ENV_E2E_CMS_URL,
+    ENV_E2E_FORCE_REPEATS,
+    ENV_E2E_LOCAL_APP,
+    ENV_E2E_LOCAL_PLAYWRIGHT,
+    ENV_SKIP_E2E_LOCAL_APP_LAUNCH,
     isCIEnvironment,
     isEnvBool,
 } from '@gentics/e2e-utils';
@@ -30,15 +32,12 @@ export function createConfiguration(
     config({ path: resolve(projectRoot, '.env.local'), override: true });
 
     const isCI = isCIEnvironment();
-    const forceRepeats = isEnvBool(process.env[ENV_FORCE_REPEATS]);
+    const forceRepeats = isEnvBool(process.env[ENV_E2E_FORCE_REPEATS]);
     /** If we want to use the local app, but don't actually start it */
-    const useLocalApp = isEnvBool(process.env[ENV_LOCAL_APP]);
-    const startLocalApp = !isEnvBool(process.env[ENV_SKIP_LOCAL_APP_LAUNCH]);
+    const useLocalApp = isEnvBool(process.env[ENV_E2E_LOCAL_APP]);
+    const startLocalApp = !isEnvBool(process.env[ENV_SKIP_E2E_LOCAL_APP_LAUNCH]);
     /** If we want to use the playwright server locally instead of from the container */
-    const useLocalPlaywright = useLocalApp || isEnvBool(process.env[ENV_LOCAL_PLAYWRIGHT]);
-
-    // Usually never defined, but allow overrides
-    let baseUrl = process.env[ENV_BASE_URL];
+    const useLocalPlaywright = useLocalApp || isEnvBool(process.env[ENV_E2E_LOCAL_PLAYWRIGHT]);
 
     /*
      * If we're running it on the CI/Jenkins, we want to test the actual baked in UI from the CMS.
@@ -47,14 +46,20 @@ export function createConfiguration(
      * `hostmachine` is an extra hosts entry in the docker compose setup, which allows the playwright
      * container/service to access that webserver.
      */
-    if (!baseUrl) {
-        if (useLocalApp) {
-            baseUrl = 'http://localhost:4200';
-        } else if (isCI || !useLocalPlaywright) {
-            baseUrl = `http://cms:8080${serviceBaseUrl}/`;
-        } else {
-            baseUrl = `http://localhost:8080${serviceBaseUrl}/`;
-        }
+
+    if (!process.env[ENV_E2E_CMS_URL]) {
+        // Set iy up in the ENV since it isn't defined yet
+        process.env[ENV_E2E_CMS_URL] = !useLocalPlaywright ? 'http://cms:8080' : 'http://localhost:8080';
+    }
+
+    if (!process.env[ENV_E2E_APP_PATH]) {
+        process.env[ENV_E2E_APP_PATH] = !useLocalApp ? serviceBaseUrl : '/';
+    }
+
+    if (!process.env[ENV_E2E_APP_URL]) {
+        process.env[ENV_E2E_APP_URL] = (isCI || !useLocalApp)
+            ? `${process.env[ENV_E2E_CMS_URL]}${process.env[ENV_E2E_APP_PATH]}`
+            : 'http://localhost:4200';
     }
 
     /**
@@ -68,7 +73,7 @@ export function createConfiguration(
 
         /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
         use: {
-            baseURL: baseUrl,
+            baseURL: process.env[ENV_E2E_APP_URL],
             /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
             trace: isCI ? 'off' : 'retain-on-first-failure',
             /*
@@ -142,5 +147,4 @@ export function createConfiguration(
             },
         ],
     });
-
 }

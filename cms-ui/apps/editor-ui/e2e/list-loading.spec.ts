@@ -243,6 +243,7 @@ test.describe('List Loading', () => {
             await createTempUser(async (user, auth) => {
                 const client = await createClient({
                     context: context.request,
+                    isPageContext: true,
                     autoLogin: auth,
                 });
                 await client.page.publish(TEST_PAGE.id, {
@@ -274,6 +275,7 @@ test.describe('List Loading', () => {
             await createTempUser(async (user, auth) => {
                 const client = await createClient({
                     context: context.request,
+                    isPageContext: true,
                     autoLogin: auth,
                 });
                 await client.page.publish(TEST_PAGE.id, {

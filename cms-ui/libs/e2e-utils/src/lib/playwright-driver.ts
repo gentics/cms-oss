@@ -54,7 +54,7 @@ export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequest
             if (!data) {
                 return {} as T;
             }
-            throw err;
+            throw new Error(`Unexpected error while parsing response-data from "${request.method} ${request.url}"`, { cause: err });
         });
     }
 }

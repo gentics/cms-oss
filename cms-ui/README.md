@@ -100,10 +100,10 @@ The E2E/Integration tests require a bit of setup however.
 First, you need the required services running locally to run the tests against.
 For this, there's already a pre-configured setup via `docker compose` available, in the [cms-integration-tests](../cms-integration-tests/README.md) Module.
 
-For local development/settings, there's the `.env` file, where you should create a copy of, named `.env.local` for local changes.
+For local development/settings, there's the `.env.example` file, where you should create a copy of, named `.env` or `.env.local` for local changes.
 It contains all settings and a description in it, so please read it carefully.
 
-Please also note, when you want to run the local application for the tests `LOCAL_APP=true`,
+Please also note, when you want to run the local application for the tests `E2E_LOCAL_APP=true`,
 you'll also need to setup the `proxy.conf.json` of the application `apps/<app-name>/proxy.conf.json`,
 and have it point to the locally running CMS container.
 The example config `proxy.conf.example.json` should already be prepared for this.

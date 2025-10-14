@@ -1,7 +1,7 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
 import { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
-import { ATTR_CONTEXT_ID, ATTR_MULTIPLE, DEFAULT_KEYCLOAK_URL, ENV_KEYCLOAK_URL, LoginInformation } from './common';
+import { ATTR_CONTEXT_ID, ATTR_MULTIPLE, DEFAULT_E2E_KEYCLOAK_URL, ENV_E2E_APP_PATH, ENV_E2E_KEYCLOAK_URL, LoginInformation } from './common';
 import { hasMatchingParams, matchesPath } from './utils';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
@@ -76,7 +76,7 @@ export function matchRequest(method: string, path: string | RegExp, options?: Re
 }
 
 export function waitForKeycloakAuthPage(page: Page): Promise<void> {
-    const kcUrl = process.env[ENV_KEYCLOAK_URL] || DEFAULT_KEYCLOAK_URL;
+    const kcUrl = process.env[ENV_E2E_KEYCLOAK_URL] || DEFAULT_E2E_KEYCLOAK_URL;
     const parsedUrl = new URL(kcUrl);
 
     return page.waitForURL(url =>
@@ -90,7 +90,12 @@ export async function navigateToApp(page: Page, path: string = '', withSSO: bool
         path = path.substring(1);
     }
 
-    const fullPath = `./${!withSSO ? '?skip-sso' : ''}#/${path}`;
+    let appPath = process.env[ENV_E2E_APP_PATH];
+    if (appPath === '/') {
+        appPath = '';
+    }
+
+    const fullPath = `${appPath}/${!withSSO ? '?skip-sso' : ''}#/${path}`;
     await page.goto(fullPath);
 }
 

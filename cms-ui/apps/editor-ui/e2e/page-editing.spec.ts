@@ -6,7 +6,7 @@ import {
     hasMatchingParams,
     ITEM_TYPE_PAGE,
     loginWithForm,
-    matchesPath,
+    matchesPath, matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
@@ -141,6 +141,69 @@ test.describe('Page Editing', () => {
                 await editorAction(page, 'close');
 
                 await cancelRequest;
+            });
+
+
+            test.describe('Mobile view', () => {
+                test.use({ viewport: { width: 450, height: 812 } });
+
+                test('should display list correctly after closing in mobile view', {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19055',
+                    }],
+                }, async ({page}) => {
+                    await page.route(url => matchesUrl(url, `/rest/page/save/${editingPage.id}`), async (route, request) => {
+                        setTimeout(() => {
+                            route.continue();
+                        }, 5_000);
+                    });
+
+                    const saveRequest = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+
+                    await mainEditable.click();
+                    await mainEditable.clear();
+                    await mainEditable.fill('Foobardoo');
+
+                    await editorAction(page, 'save');
+
+                    await saveRequest;
+
+                    await editorAction(page, 'close');
+
+                    await page.locator('content-frame').waitFor({state: 'detached'});
+                    await expect(page.locator('folder-contents')).toBeInViewport({ratio: 1.0});
+                });
+            });
+
+            test('should display list correctly after closing', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19055',
+                }],
+            }, async ({page}) => {
+                await page.route(url => matchesUrl(url, `/rest/page/save/${editingPage.id}`), async (route, request) => {
+                    console.log('Hey there');
+                    setTimeout(() => {
+                        console.log('CONTINUE');
+                        route.continue();
+                    }, 5_000);
+                });
+
+                const saveRequest = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill('Foobardoo');
+
+                await editorAction(page, 'save');
+
+                await saveRequest;
+
+                await editorAction(page, 'close');
+
+                await page.locator('content-frame').waitFor({state: 'detached'});
+                await expect(page.locator('folder-contents')).toBeInViewport({ratio: 1.0});
             });
 
             test('should be able to select an internal page as link', async ({ page }) => {

@@ -8,8 +8,8 @@
         flex: 1 1 auto;
 
         &.clearable::ng-deep input {
-            border-top-right-radius: 0px;
-            border-bottom-right-radius: 0px;
+            border-top-right-radius: 0px !important;
+            border-bottom-right-radius: 0px !important;
             border-right-width: 1px;
         }
 

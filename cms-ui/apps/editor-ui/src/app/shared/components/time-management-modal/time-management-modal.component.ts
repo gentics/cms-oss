@@ -15,13 +15,15 @@ enum VersionManagement {
     NEW_VERSION = 'new',
 }
 
+type ChangableSchedules = 'publishAt' | 'takeOfflineAt';
+
 @Component({
     selector: 'gtx-time-management-modal',
     templateUrl: './time-management-modal.component.html',
     styleUrls: ['./time-management-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [I18nDatePipe],
-    standalone: false
+    standalone: false,
 })
 export class TimeManagementModal extends BaseModal<TimeManagement> implements OnDestroy, OnInit {
 
@@ -82,6 +84,9 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
     selectedLanguageVariants: { [pageId: number]: number[] } = {};
 
     itemsToBeModified: (Page | Form)[] = [];
+
+    /** Simple set which keeps track which schedule has been changed */
+    modifiedSchedules = new Set<ChangableSchedules>();
 
     private subscriptions: Subscription[] = [];
 
@@ -225,8 +230,11 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         this.existingItemVersion = this.item?.timeManagement?.version?.number;
     }
 
-    public updateFormValidity(): void {
+    public updateFormValidity(change?: ChangableSchedules): void {
         this.formValid = this.isFormValid();
+        if (change) {
+            this.modifiedSchedules.add(change);
+        }
     }
 
     private isFormValid(): boolean {
@@ -243,7 +251,8 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
 
             // New Versions need to provide at least one schedule
             case VersionManagement.NEW_VERSION:
-                return (this.publishAt != null && this.publishAt > 0)
+                return !this.keepVersionVisible
+                    || (this.publishAt != null && this.publishAt > 0)
                     || (this.takeOfflineAt != null && this.takeOfflineAt > 0);
         }
     }
@@ -271,16 +280,20 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             let clearPublishAt = false;
             let clearOfflineAt = false;
 
-            if (publishDate) {
-                changesToSave.push(this.publishItemAtSet(publishDate, item));
-            } else {
-                clearPublishAt = true;
+            if (this.modifiedSchedules.has('publishAt')) {
+                if (publishDate) {
+                    changesToSave.push(this.publishItemAtSet(publishDate, item));
+                } else {
+                    clearPublishAt = true;
+                }
             }
 
-            if (offlineDate) {
-                changesToSave.push(this.takeItemOfflineAtSet(offlineDate, item));
-            } else {
-                clearOfflineAt = true;
+            if (this.modifiedSchedules.has('takeOfflineAt')) {
+                if (offlineDate) {
+                    changesToSave.push(this.takeItemOfflineAtSet(offlineDate, item));
+                } else {
+                    clearOfflineAt = true;
+                }
             }
 
             if (clearPublishAt || clearOfflineAt) {

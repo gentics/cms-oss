@@ -183,9 +183,7 @@ test.describe('Page Editing', () => {
                 }],
             }, async ({page}) => {
                 await page.route(url => matchesUrl(url, `/rest/page/save/${editingPage.id}`), async (route, request) => {
-                    console.log('Hey there');
                     setTimeout(() => {
-                        console.log('CONTINUE');
                         route.continue();
                     }, 5_000);
                 });

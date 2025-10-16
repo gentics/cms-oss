@@ -1,0 +1,84 @@
+@import 'variables';
+
+.modal-content {
+    width: 620px;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0;
+    gap: 1rem;
+
+    + .section {
+        border-top: 1px solid $gtx-color-light-gray;
+    }
+}
+
+.split {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1rem;
+
+    .split-title {
+        margin: 0;
+        padding-bottom: 0.25rem;
+    }
+
+    .split-entry {
+        flex: 1 1 50%;
+    }
+}
+
+.date-display {
+    font-size: 1rem;
+
+    &:not(.has-date) {
+        font-style: italic;
+    }
+    &.has-date {
+        font-family: monospace;
+    }
+}
+
+gtx-radio-group {
+    display: contents;
+}
+
+detail-chip {
+    padding: 0;
+}
+
+gtx-date-time-picker::ng-deep gtx-input input {
+    margin-bottom: 0;
+}
+
+.language-selector::ng-deep .language-select {
+    margin: 0;
+
+    > gtx-select {
+        flex: 1 1 auto;
+        max-width: none !important;
+    }
+}
+
+.timemgmt-form-warning {
+    border-left: 5px solid $gtx-color-warning;
+    padding: 0.5rem 0 0.5rem 0.5rem;
+}
+
+.split-title {
+    font-size: 0.8rem;
+    display: block;
+    color: #797979;
+    transition: color 0.2s;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}

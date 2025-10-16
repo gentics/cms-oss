@@ -1,7 +1,15 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
 import { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
-import { ATTR_CONTEXT_ID, ATTR_MULTIPLE, DEFAULT_E2E_KEYCLOAK_URL, ENV_E2E_APP_PATH, ENV_E2E_KEYCLOAK_URL, LoginInformation } from './common';
+import {
+    ATTR_CONTEXT_ID,
+    ATTR_MULTIPLE,
+    DEFAULT_E2E_KEYCLOAK_URL,
+    ENV_E2E_APP_PATH,
+    ENV_E2E_KEYCLOAK_URL,
+    LoginInformation,
+    UserImportData,
+} from './common';
 import { hasMatchingParams, matchesPath } from './utils';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
@@ -99,10 +107,12 @@ export async function navigateToApp(page: Page, path: string = '', withSSO: bool
     await page.goto(fullPath);
 }
 
-export async function loginWithForm(source: Page | Locator, loginData: LoginInformation): Promise<void> {
+export async function loginWithForm(source: Page | Locator, loginData: LoginInformation | UserImportData): Promise<void> {
+    const username = (loginData as UserImportData).login ?? (loginData as LoginInformation).username;
+
     await source.locator('gtx-input[formcontrolname="username"] input:not([disabled]), input[name="username"]')
         .first()
-        .fill(loginData.username);
+        .fill(username);
     await source.locator('gtx-input[formcontrolname="password"] input:not([disabled]), input[name="password"]')
         .first()
         .fill(loginData.password);
@@ -279,3 +289,83 @@ export async function waitForPublishDone(page: Page, client: GCMSRestClient): Pr
     }
 }
 
+export async function selectDateInPicker(source: Locator, date: Date): Promise<void> {
+    const picker = await getSourceLocator(source, 'gtx-date-time-picker-controls');
+
+    const content = picker.locator('.controls-content');
+    const header = picker.locator('.controls-header');
+    const previousMonth = content.locator('.rd-month .rd-back');
+    const nextMonth = content.locator('.rd-month .rd-next');
+
+    // Get the current state
+    let year: number;
+    let month: number;
+
+    async function refreshState(): Promise<void> {
+        year = parseInt(await content.getAttribute('data-value-year'), 10);
+        month = parseInt(await content.getAttribute('data-value-month'), 10);
+    }
+    await refreshState();
+
+    if (year !== date.getFullYear()) {
+        const yearSelector = header.locator('.year-selector');
+
+        if (await yearSelector.isVisible()) {
+            await pickSelectValue(yearSelector, date.getFullYear());
+        } else if (year > date.getFullYear()) {
+            const diff = ((year - date.getFullYear() - 1) * 12) + month;
+            for (let i = 0; i < diff; i++) {
+                await previousMonth.click();
+            }
+            await refreshState();
+        } else {
+            const diff = ((date.getFullYear() - year) * 12) - month;
+            for (let i = 0; i < diff; i++) {
+                await nextMonth.click();
+            }
+            await refreshState();
+        }
+    }
+
+    if (month > (date.getMonth() - 1)) {
+        const diff = month - date.getMonth() - 1;
+        for (let i = 0; i < diff; i++) {
+            await previousMonth.click();
+        }
+    } else if (month < (date.getMonth() - 1)) {
+        const diff = date.getMonth() - 1 - month;
+        for (let i = 0; i < diff; i++) {
+            await nextMonth.click();
+        }
+    }
+
+    const timeSelect = content.locator('.time-picker');
+    if (await timeSelect.isVisible()) {
+        await timeSelect.locator('.hours gtx-input input').fill(`${date.getHours()}`);
+        await timeSelect.locator('.minutes gtx-input input').fill(`${date.getMinutes()}`);
+
+        const seconds = timeSelect.locator('.seconds');
+        if (await seconds.isVisible()) {
+            await seconds.locator('gtx-input input').fill(`${date.getSeconds()}`);
+        }
+    }
+
+    await content.locator('.rd-days .rd-days-body .rd-day-body:not(.rd-day-prev-month):not(.rd-day-next-month):not(.rd-day-disabled)').filter({
+        hasText: `${date.getDate()}`,
+    }).click();
+}
+
+export async function pickDate(source: Locator, date?: Date): Promise<void> {
+    const dateTimePicker = await getSourceLocator(source, 'gtx-date-time-picker');
+    const input = dateTimePicker.locator('gtx-input');
+    await input.click();
+
+    const modal = source.page().locator('gtx-date-time-picker-modal');
+
+    // If we have a date, try to select it
+    if (date) {
+        await selectDateInPicker(modal, date);
+    }
+
+    await clickModalAction(modal, 'confirm');
+}

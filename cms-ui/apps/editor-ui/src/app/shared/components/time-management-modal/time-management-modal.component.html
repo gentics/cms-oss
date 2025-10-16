@@ -110,7 +110,7 @@
                     [disabled]="!userHasPublishPermission || versionSelect !== VersionManagement.KEEP_VERSION"
                     [clearable]="true"
                     [(ngModel)]="existingPublishAt"
-                    (valueChange)="updateFormValidity()"
+                    (valueChange)="updateFormValidity('publishAt')"
                 ></gtx-date-time-picker>
 
                 <gtx-date-time-picker
@@ -120,7 +120,7 @@
                     [disabled]="!userHasPublishPermission || versionSelect !== VersionManagement.KEEP_VERSION"
                     [clearable]="true"
                     [(ngModel)]="existingTakeOfflineAt"
-                    (valueChange)="updateFormValidity()"
+                    (valueChange)="updateFormValidity('takeOfflineAt')"
                 ></gtx-date-time-picker>
             </div>
 
@@ -138,23 +138,23 @@
                 <gtx-date-time-picker
                     class="split-entry"
                     data-control="current_publishAt"
-                    [label]="((item.type === 'page' ? 'modal.publish_at' : 'modal.publish_form_at') | i18n) + '*'"
+                    [label]="((item.type === 'page' ? 'modal.publish_at' : 'modal.publish_form_at') | i18n) + (keepVersionVisible && !(takeOfflineAt > 0) ? '*' : '')"
                     [disabled]="versionSelect !== VersionManagement.NEW_VERSION"
-                    [required]="!(takeOfflineAt > 0)"
+                    [required]="keepVersionVisible && !(takeOfflineAt > 0)"
                     [clearable]="true"
                     [(ngModel)]="publishAt"
-                    (valueChange)="updateFormValidity()"
+                    (valueChange)="updateFormValidity('publishAt')"
                 ></gtx-date-time-picker>
 
                 <gtx-date-time-picker
                     class="split-entry"
                     data-control="current_offlineAt"
-                    [label]="((item.type === 'page'? 'modal.take_offline_at' : 'modal.take_form_offline_at') | i18n) + '*'"
+                    [label]="((item.type === 'page'? 'modal.take_offline_at' : 'modal.take_form_offline_at') | i18n) + (keepVersionVisible && !(publishAt > 0) ? '*' : '')"
                     [disabled]="versionSelect !== VersionManagement.NEW_VERSION"
-                    [required]="!(publishAt > 0)"
+                    [required]="keepVersionVisible && !(publishAt > 0)"
                     [clearable]="true"
                     [(ngModel)]="takeOfflineAt"
-                    (valueChange)="updateFormValidity()"
+                    (valueChange)="updateFormValidity('takeOfflineAt')"
                 ></gtx-date-time-picker>
             </div>
 

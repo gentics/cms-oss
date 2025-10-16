@@ -81,9 +81,9 @@ test.describe('Page Editing', () => {
 
         await test.step('Specialized Test Setup', async () => {
             await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
+            await setupHelperWindowFunctions(page);
         });
 
-        await setupHelperWindowFunctions(page);
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);
         await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);

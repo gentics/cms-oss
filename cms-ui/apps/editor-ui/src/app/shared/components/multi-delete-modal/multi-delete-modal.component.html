@@ -160,12 +160,14 @@
     <gtx-button
         type="secondary"
         flat
+        data-action="cancel"
         (click)="cancelFn()"
     >{{ 'common.cancel_button' | i18n }}</gtx-button>
 
     <gtx-button
         type="alert"
         class="confirm-button"
+        data-action="confirm"
         [disabled]="deleteCount === 0"
         (click)="confirm()"
     >

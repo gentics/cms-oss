@@ -1,4 +1,4 @@
-import { AccessControlledType, GcmsPermission, PagePublishRequest } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, PagePublishRequest, PageSaveRequest } from '@gentics/cms-models';
 import {
     clickModalAction,
     EntityImporter,
@@ -122,11 +122,10 @@ test.describe('Time Management', () => {
         await test.step('Schedule page publish', async () => {
             await itemAction(item, 'time-management');
 
-            modal = page.locator('time-management-modal');
-            const form = modal.locator('.timemgmt-form');
+            modal = page.locator('gtx-time-management-modal');
 
             const futureDate = new Date(new Date().getTime() + (1_000 * 3_600 * 24));
-            publishAt = form.locator('[data-control="publishAt"]');
+            publishAt = modal.locator('[data-control="current_publishAt"]');
             await pickDate(publishAt, futureDate);
 
             const publishReq = page.waitForResponse(matchRequest('POST', `/rest/page/publish/${PAGE_TO_EDIT.id}`));
@@ -141,12 +140,13 @@ test.describe('Time Management', () => {
             await itemAction(item, 'time-management');
             await publishAt.locator('.clear-button button').click();
 
-            const clearReq = page.waitForResponse(matchRequest('POST', `/rest/page/publish/${PAGE_TO_EDIT.id}`));
+            const clearReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${PAGE_TO_EDIT.id}`));
             await clickModalAction(modal, 'confirm');
 
             const clearRes = await clearReq;
-            const reqBody: PagePublishRequest = clearRes.request().postDataJSON();
-            expect(reqBody.at).toEqual(0);
+            const reqBody: PageSaveRequest = clearRes.request().postDataJSON();
+            expect(reqBody.clearPublishAt).toEqual(true);
+            expect(reqBody.clearOfflineAt).toEqual(false);
         });
     });
 });

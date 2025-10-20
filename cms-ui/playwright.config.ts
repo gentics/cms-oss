@@ -84,6 +84,8 @@ export function createConfiguration(
                 wsEndpoint: 'ws://127.0.0.1:3000/',
             } : null,
             bypassCSP: true,
+            /* Make sure we have a consistent timezone for our tests. */
+            timezoneId: 'Europe/Vienna',
         },
         /*
          * None of our tests can be run in parallel, as they all access the same CMS instance

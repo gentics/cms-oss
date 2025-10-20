@@ -1570,6 +1570,12 @@ export interface PageSaveRequestOptions {
      */
     deriveFileName?: boolean;
 
+    /** Flag to clear the "publish At" data (time and version). */
+    clearPublishAt?: boolean;
+
+    /** Flag to clear the "offline At" data (time). */
+    clearOfflineAt?: boolean;
+
 }
 
 export interface MultiPageLoadRequest extends MultiObjectLoadRequest {

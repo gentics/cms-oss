@@ -1,0 +1,201 @@
+<div class="modal-title">
+    <h5 [attr.data-pageName]="item?.name">{{ 'modal.time_management_title' | i18n:{ itemName: item?.name } }}</h5>
+</div>
+
+<ng-template #dateDisplay let-value="value">
+    <div
+        class="date-display"
+        [class.has-date]="value > 0"
+    >
+        {{ !value ? ('modal.time_management_date_not_set' | i18n) : (value | i18nDate:'dateTime')}}
+    </div>
+</ng-template>
+
+<div class="modal-content">
+    <div
+        *ngIf="item && (item?.timeManagement?.at > 0 || item?.timeManagement?.offlineAt > 0 || timeMgmtQueuedRequestsExists())"
+        class="section"
+    >
+        <h2 class="section-title">{{ 'modal.time_management_current_settings_label' | i18n }}</h2>
+
+        <div class="split">
+            <div
+                class="split-entry"
+                data-entry="existing-publish-at"
+                [attr.data-value]="item?.timeManagement?.at"
+                [attr.data-version]="existingPublishAtVersion"
+            >
+                <h3 class="split-title">{{ (item.type === 'page' ? 'modal.publish_at' : 'modal.publish_form_at') | i18n }}</h3>
+
+                <ng-container *ngTemplateOutlet="dateDisplay; context: { value: item?.timeManagement?.at }"></ng-container>
+
+                <detail-chip *ngIf="hasExistingPublishAt">
+                    {{ 'modal.time_version_label' | i18n:{ version: existingPublishAtVersion } }}
+                </detail-chip>
+            </div>
+
+            <div
+                class="split-entry"
+                data-entry="existing-offline-at"
+                [attr.data-value]="item?.timeManagement?.offlineAt"
+            >
+                <h3 class="split-title">{{ (item.type === 'page' ? 'modal.take_offline_at' : 'modal.take_form_offline_at') | i18n }}</h3>
+
+                <ng-container *ngTemplateOutlet="dateDisplay; context: { value: item?.timeManagement?.offlineAt }"></ng-container>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="item && timeMgmtQueuedRequestsExists()" class="section timemgmt-queue">
+        <h2 class="section-title">{{ 'editor.publish_queue_label' | i18n }}</h2>
+
+        <div class="split">
+            <div
+                class="split-entry"
+                data-entry="queued-publish"
+                [attr.data-value]="item?.timeManagement?.queuedPublish?.at"
+                [attr.data-first-name]="item?.timeManagement?.queuedPublish?.user?.firstName"
+                [attr.data-last-name]="item?.timeManagement?.queuedPublish?.user?.lastName"
+            >
+                <ng-container *ngIf="item.timeManagement.queuedPublish">
+                    <h3 class="split-title">{{ (item.type === 'page' ? 'modal.publish_at' : 'modal.publish_form_at') | i18n }}</h3>
+
+                    <div class="queue-info">
+                        {{ getFormattedTimeMgmtValue('queuedPublish') | async }}
+                    </div>
+                </ng-container>
+            </div>
+
+            <div
+                class="split-entry"
+                data-entry="queued-offline"
+                [attr.data-value]="item?.timeManagement?.queuedOffline?.at"
+                [attr.data-first-name]="item?.timeManagement?.queuedOffline?.user?.firstName"
+                [attr.data-last-name]="item?.timeManagement?.queuedOffline?.user?.lastName"
+            >
+                <ng-container *ngIf="item.timeManagement.queuedOffline">
+                    <h3 class="split-title">{{ (item.type === 'page' ? 'modal.take_offline_at' : 'modal.take_form_offline_at') | i18n }}</h3>
+
+                    <div class="queue-info">
+                        {{ getFormattedTimeMgmtValue('queuedOffline') | async }}
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">{{ 'modal.time_management_override_label' | i18n }}</h2>
+
+        <gtx-radio-group
+            data-control="version"
+            [attr.data-value]="versionSelect"
+            [(ngModel)]="versionSelect"
+            (valueChange)="updateFormValidity()"
+        >
+            <gtx-radio-button
+                *ngIf="keepVersionVisible"
+                class="version-select"
+                data-control="existing_version"
+                [attr.data-value]="existingItemVersion"
+                [value]="VersionManagement.KEEP_VERSION"
+                [label]="'modal.time_version_label' | i18n:{ version: existingItemVersion }"
+            ></gtx-radio-button>
+
+            <div *ngIf="keepVersionVisible" class="split">
+                <gtx-date-time-picker
+                    class="split-entry"
+                    data-control="existing_publishAt"
+                    [label]="(item.type === 'page' ? 'modal.publish_at' : 'modal.publish_form_at') | i18n"
+                    [disabled]="!userHasPublishPermission || versionSelect !== VersionManagement.KEEP_VERSION"
+                    [clearable]="true"
+                    [(ngModel)]="existingPublishAt"
+                    (valueChange)="updateFormValidity('publishAt')"
+                ></gtx-date-time-picker>
+
+                <gtx-date-time-picker
+                    class="split-entry"
+                    data-control="existing_offlineAt"
+                    [label]="(item.type === 'page'? 'modal.take_offline_at' : 'modal.take_form_offline_at') | i18n"
+                    [disabled]="!userHasPublishPermission || versionSelect !== VersionManagement.KEEP_VERSION"
+                    [clearable]="true"
+                    [(ngModel)]="existingTakeOfflineAt"
+                    (valueChange)="updateFormValidity('takeOfflineAt')"
+                ></gtx-date-time-picker>
+            </div>
+
+            <gtx-radio-button
+                *ngIf="keepVersionVisible"
+                class="version-select"
+                data-control="current_version"
+                [attr.data-value]="latestItemVersion"
+                [value]="VersionManagement.NEW_VERSION"
+                [label]="'modal.time_management_publish_keep_version' | i18n:{ version: latestItemVersion }"
+                [attr.data-pageOrFormVersionLatest]="latestItemVersion"
+            ></gtx-radio-button>
+
+            <div class="split">
+                <gtx-date-time-picker
+                    class="split-entry"
+                    data-control="current_publishAt"
+                    [label]="((item.type === 'page' ? 'modal.publish_at' : 'modal.publish_form_at') | i18n) + (keepVersionVisible && !(takeOfflineAt > 0) ? '*' : '')"
+                    [disabled]="versionSelect !== VersionManagement.NEW_VERSION"
+                    [required]="keepVersionVisible && !(takeOfflineAt > 0)"
+                    [clearable]="true"
+                    [(ngModel)]="publishAt"
+                    (valueChange)="updateFormValidity('publishAt')"
+                ></gtx-date-time-picker>
+
+                <gtx-date-time-picker
+                    class="split-entry"
+                    data-control="current_offlineAt"
+                    [label]="((item.type === 'page'? 'modal.take_offline_at' : 'modal.take_form_offline_at') | i18n) + (keepVersionVisible && !(publishAt > 0) ? '*' : '')"
+                    [disabled]="versionSelect !== VersionManagement.NEW_VERSION"
+                    [required]="keepVersionVisible && !(publishAt > 0)"
+                    [clearable]="true"
+                    [(ngModel)]="takeOfflineAt"
+                    (valueChange)="updateFormValidity('takeOfflineAt')"
+                ></gtx-date-time-picker>
+            </div>
+
+            <p
+                *ngIf="keepVersionVisible && versionSelect === VersionManagement.NEW_VERSION"
+                class="timemgmt-form-warning"
+            >{{ 'modal.time_management_keep_version_warning' | i18n:{
+                version: existingPublishAtVersion
+            } }}</p>
+        </gtx-radio-group>
+    </div>
+
+    <div
+        *ngIf="itemsToBeModified.length > 1"
+        class="section"
+        [class.none-selected]="selectedLanguageVariants[item.id]?.length === 0"
+    >
+        <h2 class="section-title">{{ 'modal.time_management_apply_languages' | i18n }}</h2>
+
+        <page-language-selector
+            class="language-selector"
+            data-control="languages"
+            [page]="item"
+            [variants]="itemsToBeModified"
+            [selected]="selectedLanguageVariants[item.id]"
+            (selectionChange)="onLanguageSelectionChange(item.id, $event)"
+        ></page-language-selector>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        flat
+        type="secondary"
+        data-action="cancel"
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        data-action="confirm"
+        [disabled]="!formValid"
+        (click)="btnOkayClicked()"
+    >{{ 'common.okay_button' | i18n }}</gtx-button>
+</div>

@@ -15,10 +15,12 @@ enum VersionManagement {
     NEW_VERSION = 'new',
 }
 
+type ChangableSchedules = 'publishAt' | 'takeOfflineAt';
+
 @Component({
-    selector: 'time-management-modal',
-    templateUrl: './time-management-modal.tpl.html',
-    styleUrls: ['./time-management-modal.scss'],
+    selector: 'gtx-time-management-modal',
+    templateUrl: './time-management-modal.component.html',
+    styleUrls: ['./time-management-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [I18nDatePipe],
 })
@@ -39,9 +41,6 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
 
     /* ==================================================== */
 
-    /** If the current item has publish at already set */
-    hasExistingPublishAt = false;
-
     /** "Publish at" value for the existing version */
     existingPublishAt: number = null;
 
@@ -52,9 +51,6 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
     publishAt: number = null;
 
     /* ==================================================== */
-
-    /** Value of timemanagement for takeOfflineAt if already set */
-    hasExistingTakeOfflineAt = false;
 
     /** "Take offline at" value for the existing version */
     existingTakeOfflineAt: number = null;
@@ -87,6 +83,9 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
     selectedLanguageVariants: { [pageId: number]: number[] } = {};
 
     itemsToBeModified: (Page | Form)[] = [];
+
+    /** Simple set which keeps track which schedule has been changed */
+    modifiedSchedules = new Set<ChangableSchedules>();
 
     private subscriptions: Subscription[] = [];
 
@@ -230,8 +229,11 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         this.existingItemVersion = this.item?.timeManagement?.version?.number;
     }
 
-    public updateFormValidity(): void {
+    public updateFormValidity(change?: ChangableSchedules): void {
         this.formValid = this.isFormValid();
+        if (change) {
+            this.modifiedSchedules.add(change);
+        }
     }
 
     private isFormValid(): boolean {
@@ -241,12 +243,15 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         }
 
         switch (this.versionSelect) {
+            // Current Versions can have empty values as well, to allow removing
+            // of existing schedules.
             case VersionManagement.KEEP_VERSION:
-                return (this.existingPublishAt != null && this.existingPublishAt > 0)
-                    || (this.existingTakeOfflineAt != null && this.existingTakeOfflineAt > 0);
+                return true;
 
+            // New Versions need to provide at least one schedule
             case VersionManagement.NEW_VERSION:
-                return (this.publishAt != null && this.publishAt > 0)
+                return !this.keepVersionVisible
+                    || (this.publishAt != null && this.publishAt > 0)
                     || (this.takeOfflineAt != null && this.takeOfflineAt > 0);
         }
     }
@@ -255,18 +260,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         // any change requests to be collected here
         const changesToSave: Promise<any>[] = [];
 
-        // prepare clear request data
-        const requestClear: QueuedActionRequestClear = {
-            page: {
-                id: this.item.id,
-            },
-            unlock: true,
-            clearPublishAt: false,
-            clearOfflineAt: false,
-        };
-
         const itemIDs: number[] = [];
-
         this.itemsToBeModified.forEach(item => {
             // eslint-disable-next-line @typescript-eslint/no-for-in-array, guard-for-in
             for (const key in this.selectedLanguageVariants[item.id]) {
@@ -274,58 +268,40 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             }
         });
 
+        const publishDate = this.getPublishAtDate();
+        const offlineDate = this.getTakeItemOfflineAtDate();
+
         for (const item of this.itemsToBeModified) {
             if (itemIDs.indexOf(item.id) === -1) {
                 continue;
             }
 
-            const publishDate = this.getPublishAtDate();
-            const takeOfflineDate = this.getTakeItemOfflineAtDate();
+            let clearPublishAt = false;
+            let clearOfflineAt = false;
 
-            // if settings are different from current for publishAt
-            if (
-                (this.versionSelect === VersionManagement.KEEP_VERSION
-                    // if form value differs from value already set in page properties
-                    && this.existingPublishAt !== item.timeManagement.at
-                    && this.existingPublishAt > 0
-                    && (
-                        // if form value differs from value requested by an unprivileged user
-                        !item.timeManagement.queuedPublish
-                        || this.existingPublishAt !== item.timeManagement.queuedPublish.at
-                    )
-                ) || !this.keepVersionVisible
-            ) {
-                // if user has date set, request timemanagement
+            if (this.modifiedSchedules.has('publishAt')) {
                 if (publishDate) {
                     changesToSave.push(this.publishItemAtSet(publishDate, item));
+                } else {
+                    clearPublishAt = true;
                 }
             }
 
-            // if settings are different from current for takeOfflineAt
-            if (
-                (this.versionSelect === VersionManagement.KEEP_VERSION
-                    // if form value differs from value already set in page properties
-                    && this.existingTakeOfflineAt !== item.timeManagement.offlineAt
-                    && this.existingTakeOfflineAt > 0
-                    && (
-                        // if form value differs from value requested by an unprivileged user
-                        !item.timeManagement.queuedOffline
-                        || this.existingTakeOfflineAt !== item.timeManagement.queuedOffline.at
-                    )
-                ) || !this.keepVersionVisible
-            ) {
-                // if user has date set, request timemanagement
-                if (takeOfflineDate) {
-                    changesToSave.push(this.takeItemOfflineAtSet(takeOfflineDate, item));
+            if (this.modifiedSchedules.has('takeOfflineAt')) {
+                if (offlineDate) {
+                    changesToSave.push(this.takeItemOfflineAtSet(offlineDate, item));
+                } else {
+                    clearOfflineAt = true;
                 }
             }
 
-            requestClear.clearPublishAt = publishDate == null;
-            requestClear.clearOfflineAt = takeOfflineDate == null;
-
-            // if any value has been cleared, request it
-            if (requestClear.clearPublishAt || requestClear.clearOfflineAt) {
-                this.itemTimeManagementClear(requestClear);
+            if (clearPublishAt || clearOfflineAt) {
+                changesToSave.push(this.itemTimeManagementClear({
+                    page: { id: this.item.id },
+                    unlock: true,
+                    clearPublishAt,
+                    clearOfflineAt,
+                }));
             }
         }
 
@@ -377,38 +353,34 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
     }
 
     protected setFormValues(item: Page | Form): void {
-        this.hasExistingPublishAt = item.timeManagement.at != null && item.timeManagement.at > 0;
         this.existingPublishAt = item.timeManagement.at;
         this.existingPublishAtVersion = this.getPublishAtVersion(item);
         this.publishAt = item.timeManagement.at;
 
-        this.hasExistingTakeOfflineAt = item.timeManagement.offlineAt != null && item.timeManagement.offlineAt > 0;
         this.existingTakeOfflineAt = item.timeManagement.offlineAt;
         this.takeOfflineAt = item.timeManagement.offlineAt;
     }
 
     getPublishAtVersion(item: Page | Form): string {
-        let version: string;
-
         if (item.timeManagement.version) {
-            version = item.timeManagement.version.number;
-        } else {
-            if (item.type === 'page') {
-                // SPECIAL CASE
-                // If there is no ```timeManagement.version``` despite ```timeManagement.at > 0``` in the CMS' response
-                // a legal data migration issue occured documented at https://jira.gentics.com/browse/GTXPE-446 .
-                // In this case, the latest page version shall be published.
-
-                // if planned version is not available, fallback to latest page version
-                version = pageVersionsGetLatest(item.versions);
-            }
-
-            if (item.type === 'form') {
-                version = item.version.number;
-            }
+            return item.timeManagement.version.number;
         }
 
-        return version;
+        if (item.type === 'form') {
+            return item.version.number;
+        }
+
+        if (item.type === 'page') {
+            // SPECIAL CASE
+            // If there is no ```timeManagement.version``` despite ```timeManagement.at > 0``` in the CMS' response
+            // a legal data migration issue occured documented at https://jira.gentics.com/browse/GTXPE-446 .
+            // In this case, the latest page version shall be published.
+
+            // if planned version is not available, fallback to latest page version
+            return pageVersionsGetLatest(item.versions);
+        }
+
+        return null;
     }
 
     protected async publishItemAtSet(value: number, item: Page | Form): Promise<void> {

@@ -100,7 +100,7 @@ describe('TimeManagementModal', () => {
                     fixture.detectChanges();
                     tick();
 
-                    expect(fixture.nativeElement.querySelector('time-management-modal')).toBeTruthy();
+                    expect(fixture.nativeElement.querySelector('gtx-time-management-modal')).toBeTruthy();
                 });
         }),
     );
@@ -144,7 +144,7 @@ describe('TimeManagementModal', () => {
                     fixture.detectChanges();
                     tick();
 
-                    expect(fixture.nativeElement.querySelector('time-management-modal')).toBeTruthy();
+                    expect(fixture.nativeElement.querySelector('gtx-time-management-modal')).toBeTruthy();
                 });
         }),
     );
@@ -233,62 +233,62 @@ describe('TimeManagementModal', () => {
                     fixture.detectChanges();
                     tick();
 
+                    const modalEl = (fixture.nativeElement as HTMLElement).querySelector('gtx-time-management-modal');
                     // check is modal visible
-                    expect(fixture.nativeElement.querySelector('time-management-modal')).toBeTruthy();
+                    expect(modalEl).toBeTruthy();
 
                     // check modal contents
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-pagename]')
+                        modalEl.querySelector('[data-pagename]')
                             .getAttribute('data-pagename'),
                     ).toEqual('Braintribe Mashup Demo');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-publishatexistingdate]')
-                            .getAttribute('data-publishatexistingdate'),
+                        modalEl
+                            .querySelector('[data-entry="existing-publish-at"]')
+                            .getAttribute('data-value'),
                     ).toEqual('1561901595');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-publishatversion]')
-                            .getAttribute('data-publishatversion'),
+                        modalEl
+                            .querySelector('[data-entry="existing-publish-at"]')
+                            .getAttribute('data-version'),
                     ).toEqual('1.0');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-takeofflineatexistingdate]')
-                            .getAttribute('data-takeofflineatexistingdate'),
-                    ).toEqual('date_not_set');
+                        modalEl
+                            .querySelector('[data-entry="existing-offline-at"]')
+                            .getAttribute('data-value'),
+                    ).toEqual('0');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-queuedofflinedate]')
-                            .getAttribute('data-queuedofflinedate'),
+                        modalEl
+                            .querySelector('[data-entry="queued-offline"]')
+                            .getAttribute('data-value'),
                     ).toEqual('1561901635');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-queuedofflineuserfirstname]')
-                            .getAttribute('data-queuedofflineuserfirstname'),
+                        modalEl
+                            .querySelector('[data-entry="queued-offline"]')
+                            .getAttribute('data-first-name'),
                     ).toEqual('firstNameTEST02');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-queuedofflineuserlastname]')
-                            .getAttribute('data-queuedofflineuserlastname'),
+                        modalEl
+                            .querySelector('[data-entry="queued-offline"]')
+                            .getAttribute('data-last-name'),
                     ).toEqual('lastNameTEST02');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-pageorformversionwithexistingqueuedpublish]')
-                            .getAttribute('data-pageorformversionwithexistingqueuedpublish'),
+                        modalEl
+                            .querySelector('[data-control="existing_version"]')
+                            .getAttribute('data-value'),
                     ).toEqual('1.0');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-pageorformversionlatest]')
-                            .getAttribute('data-pageorformversionlatest'),
+                        modalEl
+                            .querySelector('[data-control="current_version"]')
+                            .getAttribute('data-value'),
                     ).toEqual('1.1');
                 });
         }),
@@ -364,62 +364,64 @@ describe('TimeManagementModal', () => {
                     fixture.detectChanges();
                     tick();
 
+                    const modalEl = (fixture.nativeElement as HTMLElement).querySelector('gtx-time-management-modal');
+
                     // check is modal visible
-                    expect(fixture.nativeElement.querySelector('time-management-modal')).toBeTruthy();
+                    expect(modalEl).toBeTruthy();
 
                     // check modal contents
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-pagename]')
+                        modalEl
+                            .querySelector('[data-pagename]')
                             .getAttribute('data-pagename'),
                     ).toEqual('Form');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-publishatexistingdate]')
-                            .getAttribute('data-publishatexistingdate'),
+                        modalEl
+                            .querySelector('[data-entry="existing-publish-at"]')
+                            .getAttribute('data-value'),
                     ).toEqual('1561901595');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-publishatversion]')
-                            .getAttribute('data-publishatversion'),
+                        modalEl
+                            .querySelector('[data-entry="existing-publish-at"]')
+                            .getAttribute('data-version'),
                     ).toEqual('1.0');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-takeofflineatexistingdate]')
-                            .getAttribute('data-takeofflineatexistingdate'),
-                    ).toEqual('date_not_set');
+                        modalEl
+                            .querySelector('[data-entry="existing-offline-at"]')
+                            .getAttribute('data-value'),
+                    ).toEqual('0');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-queuedofflinedate]')
-                            .getAttribute('data-queuedofflinedate'),
+                        modalEl
+                            .querySelector('[data-entry="queued-offline"]')
+                            .getAttribute('data-value'),
                     ).toEqual('1561901635');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-queuedofflineuserfirstname]')
-                            .getAttribute('data-queuedofflineuserfirstname'),
+                        modalEl
+                            .querySelector('[data-entry="queued-offline"]')
+                            .getAttribute('data-first-name'),
                     ).toEqual('firstNameTEST02');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-queuedofflineuserlastname]')
-                            .getAttribute('data-queuedofflineuserlastname'),
+                        modalEl
+                            .querySelector('[data-entry="queued-offline"]')
+                            .getAttribute('data-last-name'),
                     ).toEqual('lastNameTEST02');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-pageorformversionwithexistingqueuedpublish]')
-                            .getAttribute('data-pageorformversionwithexistingqueuedpublish'),
+                        modalEl
+                            .querySelector('[data-control="existing_version"]')
+                            .getAttribute('data-value'),
                     ).toEqual('1.0');
 
                     expect(
-                        fixture.nativeElement
-                            .querySelector('time-management-modal [data-pageorformversionlatest]')
-                            .getAttribute('data-pageorformversionlatest'),
+                        modalEl
+                            .querySelector('[data-control="current_version"]')
+                            .getAttribute('data-value'),
                     ).toEqual('1.1');
                 });
         }),

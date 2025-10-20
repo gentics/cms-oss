@@ -1,0 +1,2 @@
+Core: If in a multilanguage node a page language encoding is set either to `PATH` or `FILENAME`, and the page's language has been switched through the object properties,
+ it is gotten duplicated on being published to Mesh, keeping the old language variant around. This has been fixed.

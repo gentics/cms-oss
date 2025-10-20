@@ -14,14 +14,14 @@ The status of the scheduler itself as well as tasks, schedules and executions ca
 
 h3. Scheduler email Notification
 
-In case of errors the Scheduler is able to send notification mails. Use the array @scheduler_job_failure_email@ to configure notifications.
+In case of errors the Scheduler is able to send notification mails. Use the setting @scheduler_job_failure_email@ to configure notifications.
 
 NOTE: The Scheduler will send notification emails whenever a command that has been executed returns any other exit status than 0.
 
 See "eMail Sending with Gentics CMS":https://gentics.com/Content.Node/guides/email_sending.html for the necessary configuration items for sending emails.
 
 <shell filename="conf/*.yml">
-scheduler_job_failure:
+scheduler_job_failure_email:
   # Additional recipient address to send a notification to besides the ones listed in the corresponding schedule.
   to: 'admin@emailaddress.com'
   # The sender address.

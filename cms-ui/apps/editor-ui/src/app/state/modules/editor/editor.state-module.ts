@@ -76,6 +76,7 @@ export class EditorStateModule {
         ctx.patchState({
             editorIsOpen: false,
             editorIsFocused: false,
+            focusMode: false,
         });
     }
 

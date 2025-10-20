@@ -4,3 +4,8 @@ compose*.local.yml
 # Add the conf directory as we need this for the tests
 !cms/conf
 !cms/ui-conf
+
+# Ignore packages we create in tests
+cms/packages/*
+!cms/packages/full
+!cms/packages/minimal

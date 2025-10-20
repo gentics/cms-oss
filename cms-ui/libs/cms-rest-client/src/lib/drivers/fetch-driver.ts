@@ -208,10 +208,7 @@ export class GCMSFetchDriver implements GCMSClientDriver {
             // }
 
             sentRequest = fetch(options)
-                .then(res => handler(res))
-                .catch(err => {
-                    throw new Error(`Unexpected error while performing request "${request.method} ${request.url}"`, { cause: err });
-                });
+                .then(res => handler(res));
 
             return sentRequest;
         }

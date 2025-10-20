@@ -901,20 +901,33 @@ public class MeshPublisher implements AutoCloseable {
 			// remove the primary language "en"
 			languages.remove("en");
 			return languages;
+		} else if (object instanceof Page) {
+			Page page = (Page) object;
+			Collection<Page> pageLanguages = page.getLanguages();
+			Set<String> languages = new HashSet<>();
+			if (pageLanguages != null && page.getLanguage() != null) {
+				for (Page languagePage : pageLanguages) {
+					ContentLanguage language = languagePage.getLanguage();
+					if (language != null && !language.getCode().equals(page.getLanguage().getCode())) {
+						languages.add(language.getCode());
+					}
+				}
+			}
+			return languages;
 		} else {
 			return Collections.emptySet();
 		}
 	}
 
 	/**
-	 * Check whether the object supports alternative languages (currently only folders).
+	 * Check whether the object supports alternative languages (folders / forms).
 	 * Alternative languages means that the same object (same cms_id) may be published onto multiple language variants in Mesh.
 	 * Pages do <b>not</b> support alternative languages, because every language variant has a unique cms_id
 	 * @param object object
-	 * @return true iff the object supports alternative languages
+	 * @return true if the object supports alternative languages
 	 */
 	public static boolean supportsAlternativeLanguages(NodeObject object) {
-		return supportsAlternativeLanguages(object.getTType());
+		return supportsAlternativeLanguages(object.getTType(), false);
 	}
 
 	/**
@@ -922,10 +935,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Alternative languages means that the same object (same cms_id) may be published onto multiple language variants in Mesh.
 	 * Pages do <b>not</b> support alternative languages, because every language variant has a unique cms_id
 	 * @param objType object type
+	 * @param includePages consider page type as well
 	 * @return true iff the object type supports alternative languages
 	 */
-	public static boolean supportsAlternativeLanguages(int objType) {
-		return objType == Folder.TYPE_FOLDER || objType == Form.TYPE_FORM;
+	public static boolean supportsAlternativeLanguages(int objType, boolean includePages) {
+		return objType == Folder.TYPE_FOLDER || objType == Form.TYPE_FORM || (includePages && objType == Page.TYPE_PAGE);
 	}
 
 	/**
@@ -2802,7 +2816,7 @@ public class MeshPublisher implements AutoCloseable {
 				}
 			}
 			task.language = scheduled.language;
-			if (supportsAlternativeLanguages(task.objType)) {
+			if (supportsAlternativeLanguages(task.objType, true)) {
 				task.alternativeMeshLanguages = getAlternativeMeshLanguages(o.getObject());
 			}
 
@@ -3938,7 +3952,7 @@ public class MeshPublisher implements AutoCloseable {
 			}
 		}
 
-		boolean supportsAlternativeLanguages = supportsAlternativeLanguages(task.objType) && task.alternativeMeshLanguages != null;
+		boolean supportsAlternativeLanguages = supportsAlternativeLanguages(task.objType, true) && task.alternativeMeshLanguages != null;
 		GenericParameters params = supportsAlternativeLanguages
 				? new GenericParametersImpl().setETag(false).setFields("uuid", "parent", "languages")
 				: new GenericParametersImpl().setETag(false).setFields("uuid", "parent");
@@ -3993,7 +4007,11 @@ public class MeshPublisher implements AutoCloseable {
 						if (supportsAlternativeLanguages && node.getAvailableLanguages() != null) {
 							Set<String> languages = node.getAvailableLanguages().keySet();
 							// remove the primary language
-							languages.remove("en");
+							if (task.objType == Page.TYPE_PAGE) {
+								languages.remove(task.language);
+							} else {
+								languages.remove("en");
+							}
 							// remove all the languages that should exist
 							languages.removeAll(task.alternativeMeshLanguages);
 

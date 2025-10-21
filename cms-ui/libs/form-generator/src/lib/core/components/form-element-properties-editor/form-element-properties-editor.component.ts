@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import {
@@ -125,7 +126,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
             (this.properties || []).forEach((property: CmsFormElementProperty) => {
                 switch (property.type) {
                     case CmsFormElementPropertyType.SELECTABLE_OPTIONS:
-                        property.value = formValues[property.name];
+                        property.value = formValues[property.name]?.trim();
                         break;
                     case CmsFormElementPropertyType.REPOSITORY_BROWSER:
                         property.value = formValues[property.name]?.id;
@@ -135,7 +136,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
                     case CmsFormElementPropertyType.SELECT:
                     case CmsFormElementPropertyType.NUMBER:
                     case CmsFormElementPropertyType.STRING:
-                        property.value_i18n = formValues[property.name];
+                        property.value_i18n = formValues[property.name]?.trim();
                         break;
                 }
             });
@@ -180,7 +181,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
         this.formGroup.updateValueAndValidity();
     }
 
-    identify(index: number, element: CmsFormElementProperty): string {
+    identify(_index: number, element: CmsFormElementProperty): string {
         return element.name;
     }
 }

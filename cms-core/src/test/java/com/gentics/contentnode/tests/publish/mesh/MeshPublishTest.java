@@ -130,7 +130,7 @@ public class MeshPublishTest {
 			return t.getObjects(ContentLanguage.class, DBUtils.select("SELECT id FROM contentgroup", DBUtils.IDS)).stream()
 					.collect(Collectors.toMap(ContentLanguage::getCode, Function.identity()));
 		});
-		node = supply(() -> createNode("node", "Node", PublishTarget.CONTENTREPOSITORY, languages.get("de"), languages.get("en")));
+		node = supply(() -> createNode("node", "Node", PublishTarget.CONTENTREPOSITORY, languages.get("de"), languages.get("en"), languages.get("it")));
 		crId = createMeshCR(mesh, MESH_PROJECT_NAME);
 
 		meshCrUrl = supply(t -> t.getObject(ContentRepository.class, crId).getEffectiveUrl());
@@ -401,6 +401,17 @@ public class MeshPublishTest {
 			});
 		});
 
+		// translate page to it
+		Page itPage = Trx.supply(() -> {
+			return create(Page.class, p -> {
+				p.setTemplateId(template.getId());
+				p.setFolderId(folder.getId());
+				p.setLanguage(languages.get("it"));
+				p.setContentsetId(page.getContentsetId());
+				p.setName("Page");
+			});
+		});
+
 		Trx.operate(() -> {
 			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
 			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
@@ -409,6 +420,7 @@ public class MeshPublishTest {
 
 		Trx.operate(t -> {
 			t.getObject(page, true).publish();
+			t.getObject(itPage, true).publish();
 		});
 
 		try (Trx trx = new Trx()) {
@@ -416,18 +428,19 @@ public class MeshPublishTest {
 			trx.success();
 		}
 
-		// page must be "de" in mesh
+		// page must be "de" and "it" in mesh
 		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "de", page);
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "it", itPage);
 		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en");
 
-		// change the page language and path to "en"
+		// change the page language and path from "de" to "en"
 		consume(p -> {
 			com.gentics.contentnode.rest.model.Page newPage = new com.gentics.contentnode.rest.model.Page();
-            newPage.setLanguage("en");
-            newPage.setFileName(p.getFilename().replace(".de.", ".en."));
-            newPage.setName(p.getName());
-            newPage.setPriority(p.getPriority());
-            newPage.setTemplateId(p.getTemplate().getId());
+			newPage.setLanguage("en");
+			newPage.setFileName(p.getFilename().replace(".de.", ".en."));
+			newPage.setName(p.getName());
+			newPage.setPriority(p.getPriority());
+			newPage.setTemplateId(p.getTemplate().getId());
 			PageSaveRequest request = new PageSaveRequest();
 			request.setPage(newPage);
 			request.setDeriveFileName(false);
@@ -447,8 +460,9 @@ public class MeshPublishTest {
 			trx.success();
 		}
 
-		// page must be "en" in mesh now
+		// page must be in "en" and "it" in mesh now
 		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en", page);
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "it", itPage);
 		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "de");
 	}
 

@@ -138,12 +138,13 @@ export async function selectOption(element: Locator, value: number | string | (s
     }
 }
 
-export function findAlohaComponent(page: Page, options?: { slot?: string, type?: string }, subject?: Locator): Locator {
+export function findAlohaComponent(page: Page, options?: { slot?: string, action?: string, type?: string }, subject?: Locator): Locator {
     const root = subject || page.locator('project-editor content-frame gtx-page-editor-controls');
     const slotSelector = options?.slot ? `[slot="${options.slot}"]` : '';
+    const actionSelector = `[data-action="${options.action ? options.action : 'primary'}"]`;
     const childSelector = (options?.type ? RENDERABLE_ALOHA_COMPONENTS[options.type] : '*') || '*';
 
-    const aloha = root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector} button[data-action="primary"]`);
+    const aloha = root.locator(`gtx-aloha-component-renderer${slotSelector} > ${childSelector} button${actionSelector}`);
     return aloha;
 }
 

@@ -157,6 +157,9 @@ define('gcn/gcn-links', [
 
 			plugin.hrefChange(link);
 
+			// Add the anchor attribute immediatelly to make sure the information is available when reopening the dialog before saving the page (which replaces the link with an actual gtxalohalink tag).
+			link.setAttribute(ATTR_ANCHOR, formData.url.anchor);
+
 			return link;
 		};
 	}

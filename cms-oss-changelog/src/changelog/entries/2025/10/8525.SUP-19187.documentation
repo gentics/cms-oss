@@ -1,0 +1,1 @@
+Fixed the configuration example in the "Scheduler API documentation":https://www.gentics.com/Content.Node/cmp8/guides/scheduler_api.html#scheduler-email-notification. The example used the incorrect setting @scheduler_job_failure@ instead of @scheduler_job_failure_email@.

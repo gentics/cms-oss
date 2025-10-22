@@ -1,0 +1,1 @@
+The feature @publish_cache@ is now be default disabled. If @publish_cache@ is required, make sure to explicitly enable it in the configuration.

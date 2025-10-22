@@ -582,7 +582,7 @@ feature:
   channelsync: true
   multichannelling: true
   resizable_itemlist_columns: true
-  publish_cache: true
+  publish_cache: false
   multithreaded_publishing: true
   view_perms: false
   use_php_streaming_api: true

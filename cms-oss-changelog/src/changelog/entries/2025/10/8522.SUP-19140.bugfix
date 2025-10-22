@@ -1,0 +1,1 @@
+Editor UI: Fixes an issue while pasting link tags, that caused an error in the JavaScript console.

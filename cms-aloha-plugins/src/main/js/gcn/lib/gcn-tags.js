@@ -169,8 +169,8 @@ define('gcn/gcn-tags', [
 					if (constructId === magicLinkId) {
 						$element = $('#' + block.element);
 
-                        if ($element.length === 0) {
-                            if ($element[0].nodeName == 'A') {
+                        if ($element.length > 0) {
+                            if ($element[0].nodeName === 'A') {
                                 if ($element.hasClass('aloha-block')) {
                                     $element.removeClass('aloha-block');
                                 }

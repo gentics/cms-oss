@@ -185,12 +185,6 @@ define('gcn/gcn-links', [
 
 		// Not actually an internal link
 		if (objId == null || objId === '') {
-			// When the dialog is opened initially, the target is "https://", which is stripped to an empty URL when saving.
-			// Make sure to restore the "https://" when the dialog is reopened and the external URL is empty.
-			if (data.url.target === '') {
-				data.url.target = 'https://';
-			}
-
 			return data;
 		}
 

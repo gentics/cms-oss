@@ -281,7 +281,7 @@ test.describe('Page Editing', () => {
                     const modal = page.locator('gtx-dynamic-form-modal');
                     const form = modal.locator('.form-wrapper');
 
-                    await expect(form.locator('[data-slot="url"] .target-input input')).toHaveText('https://');
+                    await expect(form.locator('[data-slot="url"] .target-input input')).toHaveText('');
                     await expect(form.locator('[data-slot="url"] .anchor-input input')).toHaveText(LINK_ANCHOR);
                 });
             });

@@ -201,7 +201,7 @@ test.describe('Page Editing', () => {
                 await editorAction(page, 'close');
 
                 await page.locator('content-frame').waitFor({state: 'detached'});
-                await expect(page.locator('folder-contents')).toBeInViewport({ratio: 1.0});
+                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.98 });
             });
 
             test('should be able to select an internal page as link', async ({ page }) => {

@@ -1,0 +1,1 @@
+Editor UI: Fixed an issue with editing link information. For external links or links to sections on the same page, the anchor was not stored with the link until the page was saved.

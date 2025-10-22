@@ -126,6 +126,10 @@ folder-context-menu {
         }
     }
 
+    &.hasNoRightPanel .right-panel {
+        display: none;
+    }
+
     &.focusMode.rightPanelFocused {
         @include focusModeAnimation;
 

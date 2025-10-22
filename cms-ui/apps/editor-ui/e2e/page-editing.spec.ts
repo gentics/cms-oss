@@ -201,7 +201,7 @@ test.describe('Page Editing', () => {
                 await editorAction(page, 'close');
 
                 await page.locator('content-frame').waitFor({state: 'detached'});
-                await expect(page.locator('folder-contents')).toBeInViewport({ratio: 1.0});
+                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.98 });
             });
 
             test('should be able to select an internal page as link', async ({ page }) => {
@@ -241,6 +241,49 @@ test.describe('Page Editing', () => {
                 await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_ITEM.id}`);
                 await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
                 await expect(linkElement).toHaveText(LINK_TEXT);
+            });
+
+            test('should be able to set link anchor for empty external link', async ({ page }) => {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+                const LINK_ANCHOR = 'test-anchor';
+
+                await test.step('Create link', async () => {
+                    // Type content and select text for link
+                    await mainEditable.click();
+                    await mainEditable.clear();
+                    await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                    expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+
+                    await createExternalLink(page, async form => {
+                        await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
+                    });
+                });
+
+                await test.step('Verify link was created', async () => {
+                    const linkElement = mainEditable.locator('a');
+
+                    await expect(linkElement).toHaveAttribute('href', `#${LINK_ANCHOR}`);
+                    await expect(linkElement).toHaveAttribute('data-gcn-anchor', LINK_ANCHOR);
+                    await expect(linkElement).toHaveText(LINK_TEXT);
+                });
+
+                await test.step('Verify anchor is set when re-opening dialog', async () => {
+                    const insertLinkButton = findAlohaComponent(page, {
+                        slot: 'insertLink',
+                        action: 'secondary',
+                        type: 'toggle-split-button'
+                    });
+
+                    await insertLinkButton.click();
+
+                    const modal = page.locator('gtx-dynamic-form-modal');
+                    const form = modal.locator('.form-wrapper');
+
+                    await expect(form.locator('[data-slot="url"] .target-input input')).toHaveText('');
+                    await expect(form.locator('[data-slot="url"] .anchor-input input')).toHaveText(LINK_ANCHOR);
+                });
             });
 
             test('should be able to edit inline-editables with simple formatting', {

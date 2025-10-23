@@ -138,7 +138,7 @@ spec:
                 always {
                     script {
                         def pwDir = new File('cms-ui/.playwright')
-                        def tracePattern = Pattern.compile(".*" + Pattern.quote("trace.zip") + "$")
+                        def tracePattern = Pattern.compile(".*" + Pattern.quote("trace.zip"))
                         pwDir.traverse(type: FileType.DIRECTORIES, nameFilter: tracePattern) { traceFile ->
                             traceFile.renameTo(traceFile.getPath().replace("/trace.zip", ".zip"))
                         }

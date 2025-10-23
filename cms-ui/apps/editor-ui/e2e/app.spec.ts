@@ -42,9 +42,7 @@ test.describe('App', () => {
         await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
     });
 
-    test.only('should have the minimal node present', async ({ page }) => {
-        test.fail();
-
+    test('should have the minimal node present', async ({ page }) => {
         const title = page.locator('folder-contents > .title .title-name');
         await expect(title).toHaveText(NODE_MINIMAL.node.name);
 

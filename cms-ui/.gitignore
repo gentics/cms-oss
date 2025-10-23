@@ -18,6 +18,7 @@ speed-measure-plugin.json
 # output directories
 coverage
 .playwright
+test-results
 
 # Customer specific configurations
 customer-config/

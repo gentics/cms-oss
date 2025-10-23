@@ -137,11 +137,11 @@ spec:
             post {
                 always {
                     script {
-                        def pwDir = new File('cms-ui/.playwright')
-                        def tracePattern = Pattern.compile(".*" + Pattern.quote("trace.zip"))
-                        pwDir.traverse(type: FileType.DIRECTORIES, nameFilter: tracePattern) { traceFile ->
-                            traceFile.renameTo(traceFile.getPath().replace("/trace.zip", ".zip"))
+                        for (traceFile in findFiles(glob: 'cms-ui/.playwright/**/*.zip')) {
+                            def newName = traceFile.path.replace("/trace.zip", ".zip")
+                            sh "mv $traceFile.path $newName"
                         }
+
                         archiveArtifacts artifacts: 'cms-ui/.playwright/**/*.zip', allowEmptyArchive: true
                         junit testResults: "cms-ui/.reports/**/PLAYWRIGHT-report.xml", allowEmptyResults: true
                     }

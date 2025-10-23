@@ -206,12 +206,15 @@ test.describe('Constructs Module', () => {
             await selectTab(page.locator('gtx-construct-module-master > gtx-tabs'), 'categories');
         });
 
-        test('should be possible to re-order the categories', {
+        test.only('should be possible to re-order the categories', {
             annotation: [{
                 type: 'ticket',
                 description: 'SUP-18765',
             }],
         }, async ({ page }) => {
+            // Force a failed test
+            test.fail();
+
             const REORDER_UP_FROM_INDEX = 7;
             const REORDER_UP_TO_INDEX = 4;
             const REORDER_DOWN_FROM_INDEX = 10;

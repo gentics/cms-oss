@@ -1,5 +1,7 @@
 // The GIT repository for this pipeline lib is defined in the global Jenkins setting
 @Library('jenkins-pipeline-library@nexus') import com.gentics.*
+import groovy.io.FileType
+import java.util.regex.Pattern
 
 // Make the helpers aware of this jobs environment
 JobContext.set(this)
@@ -135,6 +137,12 @@ spec:
             post {
                 always {
                     script {
+                        def pwDir = new File('cms-ui/.playwright')
+                        def tracePattern = Pattern.compile(".*" + Pattern.quote("trace.zip") + "$")
+                        pwDir.traverse(type: FileType.DIRECTORIES, nameFilter: tracePattern) { traceFile ->
+                            traceFile.renameTo(traceFile.getPath().replace("/trace.zip", ".zip"))
+                        }
+                        archiveArtifacts artifacts: 'cms-ui/.playwright/**/*.zip', allowEmptyArchive: true
                         junit testResults: "cms-ui/.reports/**/PLAYWRIGHT-report.xml", allowEmptyResults: true
                     }
                 }

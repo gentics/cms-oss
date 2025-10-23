@@ -1,7 +1,6 @@
 # compiled output
 /build
 /dist
-/tmp
 /out-tsc
 /apps/**/src/**/*.css
 /apps/ui-core-docs/compile-docs.js
@@ -11,9 +10,14 @@
 chrome-profiler-events.json
 speed-measure-plugin.json
 
-# misc
-coverage
+# temp/cache files
+/tmp
 .angular
+.nx
+
+# output directories
+coverage
+.playwright
 
 # Customer specific configurations
 customer-config/
@@ -25,5 +29,3 @@ customer-config/
 proxy.conf.json
 proxy.conf.*.json
 report.*.json
-
-.nx

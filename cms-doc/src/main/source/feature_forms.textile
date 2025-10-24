@@ -980,7 +980,7 @@ NOTE: These are examples - you can and should adapt these configurations to your
 }
 </javascript>
 
-<javascript filename="/Node/var/httpd/htdocs/customer-config/config/form-poll-editor.json">
+<javascript filename="ui-conf/form-poll-editor.json">
 {
 	"elements": [
 		{

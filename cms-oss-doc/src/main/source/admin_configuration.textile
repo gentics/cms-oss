@@ -1,179 +1,49 @@
-h2. Migration from CMP 7.x to CMP 8.x
+h2. Configuration of the CMS
 
-With CMP 8.x the architecture of the CMS has been changed significally.
-Instead of the hybrid architecture of prior versions (with PHP code running in an Apache HTTP Server and Java code running in an Apache Tomcat Server),
-the CMS now consists of only a single .jar file, which will start an embedded HTTP Server.
-
-For migration of an existing installation to CMP 8.x, at least the following steps will be necessary:
-
-* Migrate the configuration (from PHP-style to YML-style)
-* Change configuration options, that have been renamed
-* Move files to new locations
-* Adapt URLs for accessing the CMS via HTTP if necessary
+Basically, the CMS can be configured in the following ways:
+* Environment variables
+* System properties
+* Configuration files in YAML format
+* Configuration files in JSON format (for the UI)
 
 endprologue.
 
-h3. Migrate configuration
+h3. Backend configuration files
 
-When starting CMS 6.0 it is important to define which configuration files to load via a comma separated list in either
+Depending on the environment variables "CONF_PATH":#conf_path and "CONF_FILES":#conf_files, the CMS will read the specified configuration files.
+@CONF_FILES@ must be set to a comma separated list of directories and/or files, relative to the path configured via @CONF_PATH@ (which defaults to @conf@ relative to the home directory of the CMS).
 
-* Environment variable `CONF_FILES`, or
-* Java system property `com.gentics.contentnode.config.files`
-
-Note that for every directory in this list, all .yml files in the directory will be loaded.
-
-h4. Transform to .yml file(s)
-
-The format of the configuration files has been changed from PHP files to YML files.
-
-To help with the migration, there is a tool in the CMS (also available in CMP 7.x), which converts the current configuration into a YML file.
-The tool must be used in a CMS running CMP 7.x:
+Example configuration (with the CMS home directory being @/cms@):
 
 <shell>
-/Node/bin/java.sh com.gentics.contentnode.tools.MigrateConfiguration -config "http://localhost/.Node/?do=24" -out /tmp/new_configuration.yml
+export CONF_PATH=conf
+export CONF_FILES=basic.yml,features,custom/overrides.yml
 </shell>
 
-It supports the following command line parameters:
+With the following files:
 
-|_. Parameter |_. Description                                   |
-| -config     | URL to get configuration                        |
-| -out        | Filename for writing the migrated configuration |
-
-NOTE: The written configuration file will only contain configuration settings, which are different from the current default settings.
-
-WARNING: The tool only re-writes the current configuration (collected from all PHP-style configuration files) in the new format, but will not do necessary changes in the configuration. This has to be done manually (see chapters below).
-
-h4. Manual transformation of configuration settings
-
-h5. Enabling of features
-
-In the old PHP-style configuration, features were enabled like this:
-
-<javascript filename="/Node/etc/conf.d/*.conf">
-$FEATURE["wastebin"] = true;
-</javascript>
-
-In the new format, this is done with:
-
-<shell filename="features.yml">
-feature:
-  wastebin: true
+<shell>
+/cms/conf/basic.yml
+/cms/conf/custom/overrides.yml
+/cms/conf/features/devtools.yml
+/cms/conf/features/gis.yml
+/cms/conf/features/other.yml
 </shell>
 
-h5. Database Access
+The CMS will read the following configuration files (in the given order):
+# @/cms/conf/basic.yml@
+# @/cms/conf/features/devtools.yml@
+# @/cms/conf/features/gis.yml@
+# @/cms/conf/features/other.yml@
+# @/cms/conf/custom/overrides.yml@
 
-PHP-style:
+NOTE: With the default value of @CONF_FILES@ (which is empty), the CMS will not read any configuration files (a warning will be logged in that case).
 
-<javascript filename="/Node/etc/conf.d/*.conf">
-$SETTINGS["db"] = "<dbname>";
-$SETTINGS["server"] = "<dbhost>:<dbport>";
-$SETTINGS["login"] = "<dbuser>";
-$SETTINGS["pw"] = "<dbpassword>";
-</javascript>
-
-New format and configuration parameters:
-
-<shell filename="db.yml">
-db:
-  settings:
-    url: jdbc:mariadb://<dbhost>:<dbport>/<dbname>
-    user: <dbuser>
-    password: <dbpassword>
-</shell>
-
-h5. Other settings
-
-Most other settings will be transformed in the following way:
-
-PHP-style:
-
-<javascript filename="/Node/etc/conf.d/*.conf">
-$ALOHA_SETTINGS['plugins']['block']['rootTags'] = array('div', 'span', 'a');
-</javascript>
-
-New format:
-
-<shell filename="aloha.yml">
-aloha_settings:
-  plugins:
-    block:
-      rootTags:
-        - "div"
-        - "span"
-        - "a"
-</shell>
-
-h6. Exceptions
-
-There are two exception to the naming rule above:
-
-# Settings in `$PUBLISH_LOAD_BALANCING` must be put under `config.loadbalancing`.
-# Settings in `$VELOCITY_PROPERTIES` must be put under `velocity`.
-
-PHP-style:
-
-<javascript filename="/Node/etc/conf.d/*.conf">
-$PUBLISH_LOAD_BALANCING["threadlimit"] = 2;
-
-$VELOCITY_PROPERTIES["resource.loader"] = "string,file";
-</javascript>
-
-New format:
-
-<shell filename="conf/*.yml">
-config
-  loadbalancing:
-    threadlimit: 2
-
-velocity:
-  resource.loader: "string,file"
-</shell>
-
-h4. Configuration changes
-
-Some configuration parameters have been renamed or removed:
-
-|_. Parameter                |_. Change                          |
-| cn_map_db_settings         | _Removed_                         |
-| db.settings.login          | Renamed to @db.settings.user@     |
-| db.settings.pw             | Renamed to @db.settings.password@ |
-| filepath                   | _Removed_                         |
-| fileutils.class            | _Removed_                         |
-| fileutils.encoding         | _Removed_                         |
-| nodecopy_configfile        | _Removed_                         |
-| nodepath                   | _Removed_                         |
-| selfupdate.updateFromLocal | _Removed_                         |
-| tidy_configuration         | _Removed_                         |
-| ttm_skip_backup            | _Removed_                         |
-| xnl_function               | _Removed_                         |
-
-h4. Keycloak Integration
-
-Keycloak integration is now done in the following steps
-
-# Activate Feature
-# Place keycloak.json as @ui-conf/keycloak.json@
-# Optionally configure keycloak.user_created_callback
-# Optionally configure keycloak.init_groups
-
-<shell filename="keycloak.yml">
-feature:
-  keycloak: true
-keycloak:
-  user_created_callback: your.companyname.custom.SsoUserCreated
-  init_groups: |
-    if(attr.roles.realm CONTAINSONEOF 'admin-user-role',
-      [3],
-      if(attr.roles.resource.gcms CONTAINSONEOF 'editor-user-role',
-        [4],
-        [5]
-      )
-    )
-</shell>
+NOTE: Configuration settings from "later" files will overwrite the settings from "earlier" files.
 
 h4. Property substitution
 
-The new configuration files will now support property substitution in string values.
+The configuration files support property substitution in string values.
 
 The general format for property substitution is @${key:property}@ where @key@ defines substitution type, and @property@ the property to be substituted:
 
@@ -183,14 +53,26 @@ The general format for property substitution is @${key:property}@ where @key@ de
 | date          | Replace with current date                  | @${date:yyyy-mm-dd}@                | @2023-04-01@       |
 | env           | Replace with value of environment variable | @${env:USER}@                       | @node@             |
 | sys           | Replace with value of system property      | @${sys:user.name}@                  | @node@             |
-| urlEncoder    | Replace with URL encoded string            | @${urlEncoder:path with spaces}@    | @path+with+spaces@ |
-| urlDecoder    | Replace with URL decoded string            | @${urlDecoder:path+with+spaces}@    | @path with spaces@ |
+| urlEncoder    | Replace with URL encoded string            | @${urlEncoder:path with spaces}@    | @path@<notextile>&#43;</notextile>@with@<notextile>&#43;</notextile>@spaces@ |
+| urlDecoder    | Replace with URL decoded string            | @${urlDecoder:path@<notextile>&#43;</notextile>@with@<notextile>&#43;</notextile>@spaces}@    | @path with spaces@ |
 
-h4. Environment variables
+NOTE: Since the format for properties contains curly brackets and colons (characters, which are used to format JSON), it is strongly recommended to quote all strings containing properties, which should be substituted.
 
-The CMS now supports the following environment variables (some settings can also be set over Java System properties or in the CMS configuration):
+Example configuration:
+<shell filename="conf/*.yml">
+maxfilesize: "${env:CMS_MAX_FILESIZE}"
+</shell>
 
-h5. HTTP_PORT
+h3. UI Configuration files
+
+UI Configuration files must be located in the directory which is defined with the environment variable "UI_CONF_PATH":#ui_conf_path.
+Those files will be available over http and will be read by the UI.
+
+h3. Environment variables/System properties
+
+The CMS supports the following environment variables (some settings can also be set over Java System properties or in the CMS configuration):
+
+h4. HTTP_PORT
 
 |_. Description     | Http Port of the CMS                |
 |_. Env             | @HTTP_PORT@                         |
@@ -198,7 +80,7 @@ h5. HTTP_PORT
 |_. Configuration   | @server.port@                       |
 |_. Default         | 8080                                |
 
-h5. HTTP2
+h4. HTTP2
 
 |_. Description     | Use HTTP/2 protocol version         |
 |_. Env             | @HTTP2@                             |
@@ -206,7 +88,7 @@ h5. HTTP2
 |_. Configuration   | @server.http2@                      |
 |_. Default         | false                               |
 
-h5. CONF_PATH
+h4. CONF_PATH
 
 |_. Description     | Path to configuration files           |
 |_. Env             | @CONF_PATH@                           |
@@ -214,7 +96,7 @@ h5. CONF_PATH
 |_. Configuration   | -                                     |
 |_. Default         | @conf@                                |
 
-h5. DBFILES_PATH
+h4. DBFILES_PATH
 
 |_. Description     | Path to binary files                   |
 |_. Env             | @DBFILES_PATH@                         |
@@ -222,7 +104,7 @@ h5. DBFILES_PATH
 |_. Configuration   | @config.dbfiles@                       |
 |_. Default         | @data/dbfiles@                         |
 
-h5. CONF_FILES
+h4. CONF_FILES
 
 |_. Description     | Comma separated list of configuration files or folders containing configuration files (relative to "CONF_PATH":#conf_path) |
 |_. Env             | @CONF_FILES@                                                                                                               |
@@ -230,7 +112,7 @@ h5. CONF_FILES
 |_. Configuration   | -                                                                                                                          |
 |_. Default         |                                                                                                                            |
 
-h5. LICENSEKEY
+h4. LICENSEKEY
 
 |_. Description     | License Key                                |
 |_. Env             | @LICENSEKEY@                               |
@@ -238,7 +120,7 @@ h5. LICENSEKEY
 |_. Configuration   | -                                          |
 |_. Default         |                                            |
 
-h5. KEYS_PATH
+h4. KEYS_PATH
 
 |_. Description     | Path to keys directory              |
 |_. Env             | @KEYS_PATH@                         |
@@ -246,7 +128,7 @@ h5. KEYS_PATH
 |_. Configuration   | -                                   |
 |_. Default         | @keys@                              |
 
-h5. CACHE_CONFIG_PATH
+h4. CACHE_CONFIG_PATH
 
 |_. Description     | Path to cache.ccf                           |
 |_. Env             | @CACHE_CONFIG_PATH@                         |
@@ -254,7 +136,7 @@ h5. CACHE_CONFIG_PATH
 |_. Configuration   | -                                           |
 |_. Default         | ["CONF_PATH":#conf_path]/@cache.ccf@        |
 
-h5. CACHE_PATH
+h4. CACHE_PATH
 
 |_. Description     | Path to cache files                  |
 |_. Env             | @CACHE_PATH@                         |
@@ -262,7 +144,7 @@ h5. CACHE_PATH
 |_. Configuration   | -                                    |
 |_. Default         | @cache@                              |
 
-h5. LOGS_PATH
+h4. LOGS_PATH
 
 |_. Description     | Path to logs                        |
 |_. Env             | @LOGS_PATH@                         |
@@ -270,7 +152,15 @@ h5. LOGS_PATH
 |_. Configuration   | -                                   |
 |_. Default         | @logs@                              |
 
-h5. PUBLISH_PATH
+h4. ACCESS_LOG
+
+|_. Description     | Access Log Format, see "Jetty Custom Request Log":https://javadoc.jetty.org/jetty-9/org/eclipse/jetty/server/CustomRequestLog.html |
+|_. Env             | @ACCESS_LOG@                                                                                                                       |
+|_. System Property | @com.gentics.contentnode.access_log@                                                                                               |
+|_. Configuration   | -                                                                                                                                  |
+|_. Default         | @%{client}a - %u %t \"%r\" %s %O@                                                                                                  |
+
+h4. PUBLISH_PATH
 
 |_. Description     | Path to statically published files     |
 |_. Env             | @PUBLISH_PATH@                         |
@@ -278,7 +168,7 @@ h5. PUBLISH_PATH
 |_. Configuration   | -                                      |
 |_. Default         | @publish@                              |
 
-h5. GIS_PATH
+h4. GIS_PATH
 
 |_. Description     | Path to statically published GIS files |
 |_. Env             | @GIS_PATH@                             |
@@ -286,7 +176,7 @@ h5. GIS_PATH
 |_. Configuration   | -                                      |
 |_. Default         | ["PUBLISH_PATH":#publish_path]/@gis@   |
 
-h5. PACKAGES_PATH
+h4. PACKAGES_PATH
 
 |_. Description     | Path to the directory containing the devtool packages |
 |_. Env             | @PACKAGES_PATH@                                       |
@@ -294,7 +184,7 @@ h5. PACKAGES_PATH
 |_. Configuration   | -                                                     |
 |_. Default         | @packages@                                            |
 
-h5. CONTENT_PACKAGES_PATH
+h4. CONTENT_PACKAGES_PATH
 
 |_. Description     | Path to the directory containing the content packages |
 |_. Env             | @CONTENT_PACKAGES_PATH@                               |
@@ -302,7 +192,7 @@ h5. CONTENT_PACKAGES_PATH
 |_. Configuration   | -                                                     |
 |_. Default         | @content-packages@                                    |
 
-h5. SCHEDULER_COMMANDS_PATH
+h4. SCHEDULER_COMMANDS_PATH
 
 |_. Description     | Path to the directory containing the scripts, that can be run by the scheduler |
 |_. Env             | @SCHEDULER_COMMANDS_PATH@                                                      |
@@ -310,7 +200,7 @@ h5. SCHEDULER_COMMANDS_PATH
 |_. Configuration   | -                                                                              |
 |_. Default         | @scheduler-commands@                                                           |
 
-h5. STATIC_SERVE_LIST
+h4. STATIC_SERVE_LIST
 
 |_. Description     | Comma separated list of directories that contain files, which should be served statically over HTTP |
 |_. Env             | @STATIC_SERVE_LIST@                                                                                 |
@@ -318,7 +208,7 @@ h5. STATIC_SERVE_LIST
 |_. Configuration   | -                                                                                                   |
 |_. Default         |                                                                                                     |
 
-h5. UI_CONF_PATH
+h4. UI_CONF_PATH
 
 |_. Description     | Path to UI configuration files         |
 |_. Env             | @UI_CONF_PATH@                         |
@@ -326,7 +216,7 @@ h5. UI_CONF_PATH
 |_. Configuration   | @ui.conf_path@                         |
 |_. Default         | @ui-conf@                              |
 
-h5. TMP_PATH
+h4. TMP_PATH
 
 |_. Description     | Path to store temporary files          |
 |_. Env             | @TMP_PATH@                             |
@@ -334,7 +224,7 @@ h5. TMP_PATH
 |_. Configuration   | @tmppath@                              |
 |_. Default         | System property java.io.tmpdir         |
 
-h5. NODE_USER_PASSWORD
+h4. NODE_USER_PASSWORD
 
 |_. Description     | Initial password for the CMS user 'node'     |
 |_. Env             | @NODE_USER_PASSWORD@                         |
@@ -342,7 +232,7 @@ h5. NODE_USER_PASSWORD
 |_. Configuration   | -                                            |
 |_. Default         |                                              |
 
-h5. NODE_DB_DRIVER_CLASS
+h4. NODE_DB_DRIVER_CLASS
 
 |_. Description     | Name of the JDBC Driver class for accessing the backend DB |
 |_. Env             | @NODE_DB_DRIVER_CLASS@                                     |
@@ -350,7 +240,7 @@ h5. NODE_DB_DRIVER_CLASS
 |_. Configuration   | @db.settings.driverClass@                                  |
 |_. Default         | @org.mariadb.jdbc.Driver@                                  |
 
-h5. NODE_DB_HOST
+h4. NODE_DB_HOST
 
 |_. Description     | Hostname of the backend DB        |
 |_. Env             | @NODE_DB_HOST@                    |
@@ -358,7 +248,7 @@ h5. NODE_DB_HOST
 |_. Configuration   | @db.settings.host@                |
 |_. Default         | @localhost@                       |
 
-h5. NODE_DB_PORT
+h4. NODE_DB_PORT
 
 |_. Description     | Port of the backend DB            |
 |_. Env             | @NODE_DB_PORT@                    |
@@ -366,7 +256,7 @@ h5. NODE_DB_PORT
 |_. Configuration   | @db.settings.port@                |
 |_. Default         | @3306@                            |
 
-h5. NODE_DB_USER
+h4. NODE_DB_USER
 
 |_. Description     | Username for accessing the backend DB |
 |_. Env             | @NODE_DB_USER@                        |
@@ -374,7 +264,7 @@ h5. NODE_DB_USER
 |_. Configuration   | @db.settings.user@                    |
 |_. Default         |                                       |
 
-h5. NODE_DB_PASSWORD
+h4. NODE_DB_PASSWORD
 
 |_. Description     | Password for accessing the backend DB |
 |_. Env             | @NODE_DB_PASSWORD@                    |
@@ -382,7 +272,7 @@ h5. NODE_DB_PASSWORD
 |_. Configuration   | @db.settings.password@                |
 |_. Default         |                                       |
 
-h5. NODE_DB_NAME
+h4. NODE_DB_NAME
 
 |_. Description     | Name of the backend DB            |
 |_. Env             | @NODE_DB_NAME@                    |
@@ -390,7 +280,7 @@ h5. NODE_DB_NAME
 |_. Configuration   | @db.settings.name@                |
 |_. Default         | @node_utf8@                       |
 
-h5. NODE_DB_PARAMETERS
+h4. NODE_DB_PARAMETERS
 
 |_. Description     | Additional JDBC Parameters for accessing the backend DB |
 |_. Env             | @NODE_DB_PARAMETERS@                                    |
@@ -398,7 +288,7 @@ h5. NODE_DB_PARAMETERS
 |_. Configuration   | @db.settings.jdbcparameters@                            |
 |_. Default         | @netTimeoutForStreamingResults=900@                     |
 
-h5. NODE_DB_URL
+h4. NODE_DB_URL
 
 |_. Description     | JDBC Connection URL for accessing the backend DB                                                                                                                         |
 |_. Env             | @NODE_DB_URL@                                                                                                                                                            |
@@ -406,7 +296,7 @@ h5. NODE_DB_URL
 |_. Configuration   | @db.settings.url@                                                                                                                                                        |
 |_. Default         | _Will be constructed from ["NODE_DB_HOST":#node_db_host], ["NODE_DB_PORT":#node_db_port], ["NODE_DB_NAME":#node_db_name] and ["NODE_DB_PARAMETERS":#node_db_parameters]_ |
 
-h5. NODE_DB_INIT_TIMEOUT
+h4. NODE_DB_INIT_TIMEOUT
 
 |_. Description     | Timeout in ms for establishing initial connection to the backen DB, when the CMS is started |
 |_. Env             | @NODE_DB_INIT_TIMEOUT@                                                                      |
@@ -414,7 +304,7 @@ h5. NODE_DB_INIT_TIMEOUT
 |_. Configuration   | -                                                                                           |
 |_. Default         | @60000@                                                                                     |
 
-h5. ALOHAEDITOR_PATH
+h4. ALOHAEDITOR_PATH
 
 |_. Description     | Path to Aloha Editor (used only in development environments) |
 |_. Env             | @ALOHAEDITOR_PATH@                                           |
@@ -422,7 +312,7 @@ h5. ALOHAEDITOR_PATH
 |_. Configuration   | -                                                            |
 |_. Default         |                                                              |
 
-h5. ALOHAEDITOR_PLUGINS_PATH
+h4. ALOHAEDITOR_PLUGINS_PATH
 
 |_. Description     | Path to Aloha Editor Plugins (used only in development environments) |
 |_. Env             | @ALOHAEDITOR_PLUGINS_PATH@                                           |
@@ -430,7 +320,7 @@ h5. ALOHAEDITOR_PLUGINS_PATH
 |_. Configuration   | -                                                                    |
 |_. Default         |                                                                      |
 
-h5. GCNJSAPI_PATH
+h4. GCNJSAPI_PATH
 
 |_. Description     | Path to Gentics CMS JS API (used only in development environments) |
 |_. Env             | @GCNJSAPI_PATH@                                                    |
@@ -438,96 +328,3 @@ h5. GCNJSAPI_PATH
 |_. Configuration   | -                                                                  |
 |_. Default         |                                                                    |
 
-h4. Disk based cache files
-
-In order to have the cache place the files for disk based caches (normally for GIS and publish cache) at the configured location, it is mandatory to have the cache.ccf file contain the following lines:
-
-<shell filename="cache.ccf">
-...
-jcs.auxiliary.DC.attributes.DiskPath=${com.gentics.contentnode.cache.path}
-...
-jcs.auxiliary.PUB.attributes.DiskPath=${com.gentics.contentnode.cache.path}
-...
-</shell>
-
-h3. Changes in directory structure
-
-The directory structure has been flattened and made configurable.
-The new default values are considered relative to the execution directory of the CMS. If the CMS is running in a container, this will be relative to @/cms@.
-
-|_. Contents                               |_. Old directory                          |_. New default        |
-| Configuration files                      | @/Node/etc/conf.d@                       | @conf@               |
-| File @nodelog.yml@                       | @/Node/tomcat/conf/gentics@              | @conf@               |
-| File @cache.ccf@                         | @/Node/tomcat/conf/gentics@              | @conf@               |
-| UI Configuration files                   | @/Node/var/httpd/htdocs/customer-config@ | @ui-conf@            |
-| File @license.key@                       | @/Node/tomcat/conf/gentics@              | @keys@               |
-| Generated private key                    | @/Node/tomcat/conf/gentics@              | @keys@               |
-| Uploaded binaries                        | @/Node/node/content/dbfiles@             | @data/dbfiles@       |
-| Disk based cache for GIS                 | @/Node/tomcat/temp/jcs@                  | @cache@              |
-| Disk based cache for Publish Cache       | @/Node/tomcat/temp/pub@                  | @cache@              |
-| Publish logs                             | @/Node/node/content/log@                 | @logs@               |
-| CMS logs                                 | @/Node/tomcat/logs@                      | @logs@               |
-| Statically published content             | @/Node/node/content/publish@             | @publish@            |
-| Statically published GIS Images          | @/Node/node/content/imagestore@          | @publish/gis@        |
-| Devtool packages                         | @/Node/node/content/packages@            | @packages@           |
-| Custom libraries                         | @/Node/tomcat/shared/lib/custom@         | @libs@               |
-| Content packages                         | @/Node/node/content/content-packages@    | @content-packages@   |
-| Scheduler scripts                        | @/Node/bin/scheduler-commands@           | @scheduler-commands@ |
-
-h3. URL Changes
-
-WARNING: The default port of the CMS has been changed from 80 to 8080.
-
-The URLs to various parts of the CMS have been changed (shortened), and some parts have been removed:
-
-|_. Description             |_. Old URL                                         |_. New URL                            |
-| Old UI and PHP backend    | @/.Node/...@                                      | _Removed_                            |
-| File Servlet              | @/file/...@                          | _Removed_                            |
-| Aloha Tag Servlet         | @/alohatag/...@                      | _Removed_                            |
-| Java Parser Invoker       | @/JavaParserInvoker/...@             | _Removed_                            |
-| Tidy Servlet              | @/tidy/...@                          | _Removed_                            |
-| Gentics Image Store       | @/GenticsImageStore/...@             | @/GenticsImageStore@                 |
-| Aloha Page Servlet        | @/alohapage/...@                     | @/alohaeditor/...@                   |
-| Aloha Editor              | @/[build-timestamp]/alohaeditor/...@ | @/alohaeditor/[build-timestamp]/...@ |
-| Gentics CMS JS API        | @/[build-timestamp]/gcnjsapi/...@    | @/gcnjsapi/[build-timestamp]/...@    |
-| REST API                  | @/rest/...@                          | @/rest/...@                          |
-| JMX Monitoring API        | @/jmx/...@                           | @/jmx/...@                           |
-| Keycloak configuration    | @/customer-config/config/keycloak.json@           | @/ui-conf/keycloak.json@             |
-| UI Overrides              | @/customer-config/config/ui-overrides.json@       | @/ui-conf/ui-overrides.json@         |
-| Form Generator Overrides  | @/customer-config/config/config-override.json@    | @/ui-conf/config-override.json@      |
-| Form Editor configuration | @/customer-config/config/form-editor.json@        | @/ui-conf/form-editor.json@          |
-| UI Custom Script          | @/customer-config/scripts/index.js@               | @/ui-conf/index.js@                  |
-| Implementation tool       | @/generic.html@                      | @/tools/generic.html@                |
-| Implementation tool       | @/renderpage.html@                   | @/tools/renderpage.html@             |
-| Open API (YAML)           | @/openapi.yaml@                      | @/openapi/openapi.yaml@              |
-| Open API (JSON)           | @/openapi.json@                      | @/openapi/openapi.json@              |
-
-h3. File Upload Manipulator
-
-Since PHP has been removed from the CMS, it is no longer possible to implement a File Upload Manipulator with PHP scripts that run along
-with the CMS. Existing PHP scripts that serve as File Upload Manipulator must be migrated to an external service, which can run PHP scripts.
-
-When the container image of the CMS is used, that external service must run in another container and http access between the CMS container and the FUM
-container must be possible.
-
-h3. Removed Features
-
-h4. XNL
-
-Rendering XNL has been removed. All existing XNL Implementations must be replaced with Velocity Implementations.
-
-h4. Import/Export
-
-Use the new "Content Staging":https://www.gentics.com/Content.Node/cmp8/guides/feature_content_staging.html. instead.
-
-h4. SSO with CAS
-
-Single-Sign-On is now handled by the "Keycloak integration":rest_auth.html#sso-with-keycloak
-
-h4. Activiti Integration
-
-Use the Activiti API directly.
-
-h4. Auto-Update
-
-See the Gentics infoportal for instructions on how to update "Docker":https://www.gentics.com/infoportal/cmp/operations/docker/updates/, "Kubernetes":https://www.gentics.com/infoportal/cmp/operations/kubernetes/updates/ or "Linux":https://www.gentics.com/infoportal/cmp/operations/linux/updates/ installations.

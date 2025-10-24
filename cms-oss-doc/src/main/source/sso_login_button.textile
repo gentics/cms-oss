@@ -6,25 +6,15 @@ endprologue.
 
 h3. Customer Config
 
-All customer-specific configuration and code should reside in the customer-config directory which should be a sibling of the ui folder. The structure of this folder should be as follows:
+All customer-specific configuration and code should reside in the "ui-conf":admin_configuration.html#ui_conf_path directory. The structure of this folder should be as follows:
 
 <shell>
-<webserver root>/
-|
-|- ui/  # the GCMS UI
-|
-|- customer-config/
-    |
-    |- config/
-    |   |
-    |   |- ui-overrides.json
-    |
-    |- scripts/
-        |
-        |- index.js
+/cms/ui-conf/
+├── ui-overrides.json
+├── index.js
 </shell>
 
-h3. The overrides.json file
+h3. The ui-overrides.json file
 
 A simple JSON file with one single object is needed to configure the Single Sign On button:
 

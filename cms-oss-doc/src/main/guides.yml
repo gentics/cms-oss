@@ -59,6 +59,9 @@ index:
     - title: "Installing Gentics CMS"
       url: admin_install
       text: "Learn how to install Gentics CMS"
+    - title: "Configuring the CMS"
+      url: admin_configuration
+      text: "How to set configuration values"
     - title: "Email Sending"
       url: email_sending
       text: "Configuration settings for Email Sending capability"

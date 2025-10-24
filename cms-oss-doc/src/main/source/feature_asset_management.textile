@@ -27,7 +27,7 @@ node_settings:
           label_i18n:
             de: "Celum verwenden"
             en: "Use Celum"
-          iframeSrcUrl: "/customer-config/config/asset_management/celum/asset-picker-2.5.1-dist/api/index.html"
+          iframeSrcUrl: "/ui-conf/asset_management/celum/asset-picker-2.5.1-dist/api/index.html"
 </shell>
 
 Additionally the feature must be activated in the Node Features Dialog in the Administration User Interface for all Nodes where it should be avaliable.
@@ -119,7 +119,7 @@ E. g. CELUM provides an asset selection application called "Asset Picker" and mu
 h5. File structure
 
 <shell>
-/Node/etc/conf/customer-config/
+/cms/ui-conf/
 ├── asset_management
 │   └── celum
 │       └── asset-picker-2.5.1-dist
@@ -152,7 +152,7 @@ h5. File structure
 
 h5. index.html
 
-<shell filename="/Node/etc/conf/customer-config/asset_management/celum/asset-picker-2.5.1-dist/api/index.html">
+<shell filename="/cms/ui-conf/asset_management/celum/asset-picker-2.5.1-dist/api/index.html">
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>

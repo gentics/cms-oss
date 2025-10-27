@@ -143,6 +143,8 @@ spec:
                         }
 
                         archiveArtifacts artifacts: 'cms-ui/.playwright/**/*.zip', allowEmptyArchive: true
+                        archiveArtifacts artifacts: 'cms-integration-tests/cms/logs/full.log', allowEmptyArchive: true
+
                         junit testResults: "cms-ui/.reports/**/PLAYWRIGHT-report.xml", allowEmptyResults: true
                     }
                 }

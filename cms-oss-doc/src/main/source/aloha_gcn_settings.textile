@@ -28,19 +28,45 @@ aloha_settings:
     table:
       config: [ "table" ]
       tableConfig:
-        - name: "hor-minimalist-a"
-        - name: "box-table-a"
-        - name: "hor-zebra"
+        - name: "table-style-minimalist"
+          icon: "border_clear"
+          iconHollow: false,
+          label: "Minimalist"
+        - name: "table-style-box"
+          icon: "border_all"
+          iconHollow: false
+          label: "Box"
+        - name: "table-style-zebra"
+          icon: "table_rows_narrow"
+          iconHollow: false
+          label: "Zebra"
       columnConfig:
-        - name: "bigbold"
-          iconClass: "GENTICS_button_col_bigbold"
-        - name: "redwhite"
-          iconClass: "GENTICS_button_col_redwhite"
+        - name: "column-style-align-left"
+          icon: "format_align_left"
+          iconHollow: false
+          label: "Align left"
+        - name: "column-style-align-right"
+          icon: "format_align_right"
+          iconHollow: false
+          label: "Align right"
       rowConfig:
-        - name: "bigbold"
-          iconClass: "GENTICS_button_row_bigbold"
-        - name: "redwhite"
-          iconClass: "GENTICS_button_row_redwhite"
+        - name: "row-style-align-left"
+          icon: "format_align_left"
+          iconHollow: false
+          label: "Align left"
+        - name: "row-style-align-right"
+          icon: "format_align_right"
+          iconHollow: false
+          label: "Align right"
+      cellConfig:
+        - name: "cell-style-align-left"
+          icon: "format_align_left"
+          iconHollow: false
+          label: "Align left"
+        - name: "cell-style-align-right"
+          icon: "format_align_right"
+          iconHollow: false
+          label: "Align right"
     # Image Plugin
     image:
       maxWidth: 1024

@@ -50,7 +50,6 @@
 		<alohaeditor.date>27.10.2025</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
 		<mesh.version>2.1.25</mesh.version>
-		<mesh.forms.plugin.version>2.1.9</mesh.forms.plugin.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>2.46</jersey.version>

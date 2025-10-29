@@ -97,6 +97,7 @@ spec:
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
         string(name:       'meshVersion',               defaultValue: "",  description: "Optional version of mesh (rest client)")
+        string(name:       'alohaEditorVersion',        defaultValue: "",  description: "Optional version of aloha editor")
     }
 
     options {
@@ -279,6 +280,12 @@ spec:
                     if (params.meshVersion?.trim() != "") {
                         echo "Setting Mesh version to " + params.meshVersion.trim()
                         mvnArguments += " -Dmesh.version=" + params.meshVersion.trim()
+                    }
+
+                    // Set custom aloha editor version (if configured)
+                    if (params.alohaEditorVersion?.trim() != "") {
+                        echo "Setting Aloha Editor version to " + params.alohaEditorVersion.trim()
+                        mvnArguments += " -Dalohaeditor.version=" + params.alohaEditorVersion.trim()
                     }
 
                     // Login to docker.gentics.com so that the tests can pull all Mesh images

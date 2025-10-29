@@ -18,7 +18,7 @@ import {
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
-import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
+import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode, getAlohaIFrame } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Form Management', () => {
@@ -103,6 +103,81 @@ test.describe('Form Management', () => {
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
         await expect(item).toBeVisible();
+    });
+
+    test('should add a text input with label', async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
+
+        const loadReq = page.waitForResponse(matchRequest('GET', '/rest/form', {
+            params: {
+                folderId: `${EDITING_FORM.folderId}`,
+            },
+        }));
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        await loadReq;
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, EDITING_FORM.id);
+        await itemAction(item, 'edit');
+
+        // Wait for editor to be ready
+        const editable = page.locator('.form-editor-form');
+        await editable.waitFor({ timeout: 60_000 });
+
+        const dropZone = editable.locator('.form-element-drop-zone');
+        const textInput = page.locator('gtx-form-editor-menu .form-element-type--used-as-title')
+            .getByText('Eingabefeld', { exact: true });
+        await dropZone.waitFor({ timeout: 60_000 });
+        await textInput.waitFor({ timeout: 60_000 });
+        await textInput.dragTo(dropZone);
+
+        const formElement = editable.locator('.form-element-container-inner.is-interactive-in-editor');
+        await formElement.waitFor({ timeout: 60_000 });
+        const formElementEditor = formElement.locator('.form-element-properties-editor-container--opened');
+        if (!(await formElementEditor.isVisible())) {
+            await formElement.locator('icon.form-element-btn-properties-editor-toggle').click();
+        }
+        await expect(formElementEditor).toBeVisible();
+
+        await test.step('Correct input is saved', async () => {
+            // TODO No IDs to attach to = need to use first()
+            await formElementEditor.locator('.form-element-properties-editor-property input.input-element[type="text"]').first().clear();
+            await formElementEditor.locator('.form-element-properties-editor-property input.input-element[type="text"]').first().fill('abcdefgh');
+
+            // Save and verify request
+            const saveRequest = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
+
+            // TODO: Investigate why we need this timeout/why save isn't executed immediately.
+            // Possible reason being angular event bindings.
+            await page.waitForTimeout(2000);
+
+            await editorAction(page, 'save');
+
+            const response = await saveRequest;
+            const data = await response.request().postDataJSON();
+            expect(data.data.elements[0].label_i18n.en).toStrictEqual('abcdefgh');
+        });
+
+        await test.step('Untrimmed input is saved', async () => {
+            // TODO No IDs to attach to = need to use first()
+            await formElementEditor.locator('.form-element-properties-editor-property input.input-element[type="text"]').first().clear();
+            await formElementEditor.locator('.form-element-properties-editor-property input.input-element[type="text"]').first().fill('    abcdefgh    ');
+
+            // Save and verify request
+            const saveRequest = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
+
+            // TODO: Investigate why we need this timeout/why save isn't executed immediately.
+            // Possible reason being angular event bindings.
+            await page.waitForTimeout(2000);
+
+            await editorAction(page, 'save');
+
+            const response = await saveRequest;
+            const data = await response.request().postDataJSON();
+            expect(data.data.elements[0].label_i18n.en).toStrictEqual('abcdefgh');
+        });
     });
 
     test('should be able to change success-page correctly', {

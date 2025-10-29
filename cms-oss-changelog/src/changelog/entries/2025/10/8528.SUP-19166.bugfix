@@ -1,0 +1,1 @@
+Form Generator: Now the user input of form element values is trimmed against spaces and caret returns. This also means no empty value is allowed for the form element.

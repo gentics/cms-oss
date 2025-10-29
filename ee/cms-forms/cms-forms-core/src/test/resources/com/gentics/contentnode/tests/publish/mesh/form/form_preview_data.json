@@ -1,5 +1,5 @@
 {
-	"type": "form",
+	"type": "GENERIC",
 	"email": "",
 	"mailsubject": "",
 	"mailtemp": "",

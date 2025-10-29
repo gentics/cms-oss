@@ -75,7 +75,7 @@ public abstract class AbstractFormPublishTest {
 
 	public final static String pluginFileName = "mesh-forms-plugin.jar";
 
-	public final static String pluginFilePath = "./target/plugins/" + pluginFileName;
+	public final static String pluginFilePath = "target/plugins/" + pluginFileName;
 
 	public static File pluginJarFile;
 
@@ -89,8 +89,8 @@ public abstract class AbstractFormPublishTest {
 		try {
 			pluginJarFile = new File(pluginFilePath);
 			assertThat(pluginJarFile).as("Plugin File").exists().canRead().isFile();
-			pluginConfigDir = new File(FormPublishTest.class.getResource("config").toURI());
-			licenseKeyFile = new File(FormPublishTest.class.getResource("license.key").toURI());
+			pluginConfigDir = new File(FormPublishTest.class.getResource("/config").toURI());
+			licenseKeyFile = new File(FormPublishTest.class.getResource("/license.key").toURI());
 		} catch (URISyntaxException e) {
 			fail("Error while preparing plugin", e);
 		}

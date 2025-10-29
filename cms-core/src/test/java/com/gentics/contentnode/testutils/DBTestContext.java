@@ -770,7 +770,7 @@ public class DBTestContext extends TestWatcher {
 	 *
 	 * @throws SQLUtilException
 	 */
-	public void checkDirtedPages(int dirtedPagesBeforeModification, int[] ids) throws Exception {
+	public void checkDirtedPages(int dirtedPagesBeforeModification, int[] ids) throws NodeException {
 		List<Integer> dirtedPageIds = PublishQueue.getDirtedObjectIds(Page.class, false, null);
 
 		for (int id : ids) {

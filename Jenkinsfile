@@ -89,6 +89,7 @@ spec:
         string(name:       'forceVersion',              defaultValue: "",    description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",    description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
         string(name:       'cmsOssVersion',             defaultValue: "",    description: "Override CMS OSS version")
+        string(name:       'meshPluginsVersion',        defaultValue: "",    description: "Optional version of mesh plugins (for testing)")
     }
 
     options {
@@ -144,6 +145,11 @@ spec:
                     if (params.cmsOssVersion?.trim() && !params.runReleaseBuild) {
                         echo "Setting CMS OSS version to " + params.cmsOssVersion.trim()
                         mvnArguments += " -Dcms\\-oss.version=" + params.cmsOssVersion.trim()
+                    }
+
+                    if (params.meshPluginsVersion?.trim() && !params.runReleaseBuild) {
+                        echo "Setting Mesh Plugins version to " + params.meshPluginsVersion.trim()
+                        mvnArguments += " -Dmesh.forms.plugin.version=" + params.meshPluginsVersion.trim()
                     }
 
                     if (version) {

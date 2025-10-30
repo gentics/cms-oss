@@ -2,14 +2,15 @@
 <div class="form-element-preview-container">
     <ng-container *ngIf="element.label_property_ui || (!element?.properties || element?.properties?.length === 0); else noPreview">
         <ng-container *ngIf="element.label_property_ui">
-            <ng-container *ngIf="!!(element | property | i18nfg$:'content' | async); else emptyProperty">
+            <ng-container *ngIf="(element | property | i18nfg$:'content' | async) as propValue; else emptyProperty">
                 <div class="label-property-value-container">
-                    {{ element | property | i18nfg$:'content' | async | gtxStripRichContent }}
+                    {{ propValue | gtxStripRichContent }}
                 </div>
             </ng-container>
             <ng-template #emptyProperty>
                 <div class="label-property-no-value-container">
-                    {{ 'gtxFormGenerator.preview_property_empty' | i18n:{ name: (element | property:'label' | i18nfg$:'ui' | async) } }}
+                    label prop value: {{ element | property:'label' | json }}<br>
+                    {{ 'gtxFormGenerator.preview_property_empty' | i18n:{ name: (element | property:'label' | i18nfg$:'content' | async) } }}
                 </div>
             </ng-template>
         </ng-container>

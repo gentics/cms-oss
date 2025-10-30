@@ -13,7 +13,7 @@ import java.util.List;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
@@ -55,6 +55,20 @@ public class HandlebarsPartTypeHelperTest extends AbstractHandlebarsPartTypeRend
 	public static Collection<Object[]> data() {
 		return ListUtils.union(getGenericTestCases(), Arrays.asList(
 			new Object[] { loadHelper("folder_children.js"), "English Test Page,Subfolder,Test Page,blume.jpg,testfile.txt", Arrays.asList(Pair.of("testPage", "name"), Pair.of("englishPage", "name"), Pair.of("subFolder", "name"), Pair.of("testFile", "name"), Pair.of("testImage", "name"))},
+
+			// tag part (direct)
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.internal", "true", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.url", "/node/pub/dir/test/Test-Page.de.html", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.target.name", "Test Page", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.node.host", "test.node.hostname", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.extpage.internal", "false", null },
+
+			// tag part (indirect)
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').internal", "true", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').url", "/node/pub/dir/test/Test-Page.de.html", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').target.name", "Test Page", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').node.host", "test.node.hostname", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('extpage').internal", "false", null },
 
 			// file properties
 			new Object[] { "cms.folder.files[0].name", "testfile.txt", null },
@@ -132,7 +146,7 @@ public class HandlebarsPartTypeHelperTest extends AbstractHandlebarsPartTypeRend
 		File helperFile = new File(helpersRoot, "resolve.js");
 		assertThat(helpersRoot.mkdirs()).as("Creation of dirs " + helpersRoot + " succeded").isTrue();
 
-		if (!StringUtils.startsWith(testedHelper, "function")) {
+		if (!Strings.CS.startsWith(testedHelper, "function")) {
 			testedHelper = String.format("function resolve(cms) { return %s;}", testedHelper);
 		}
 

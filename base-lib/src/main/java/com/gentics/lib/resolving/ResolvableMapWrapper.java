@@ -94,7 +94,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 	@Override
 	public Object get(String key) {
-		return wrapped.get(key);
+		return wrap(wrapped.get(key));
 	}
 
 	@Override

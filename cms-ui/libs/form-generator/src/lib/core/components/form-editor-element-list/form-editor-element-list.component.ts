@@ -270,7 +270,7 @@ export class BaseFormEditorElementListComponent
 
     public onElementChange(element: CmsFormElementBO, index: number): void {
         if (this.elements) {
-            this.elements[index] = element;
+            this.elements[index] = {... element };
         }
         this.elementsChange.emit(this.elements);
     }

@@ -112,7 +112,7 @@ export function createConfiguration(
          * Making sure no accidental `only` runs are being run on CI which would skip all
          * other tests, potentially marking it successful.
          */
-        forbidOnly: false && isCI,
+        forbidOnly: isCI,
         /*
          * Don't perserve data on the CI, as it can't be retrieved anyways.
          */

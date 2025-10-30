@@ -19,6 +19,7 @@ import {
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode, getAlohaIFrame } from './helpers';
+import { has } from 'lodash-es';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Form Management', () => {
@@ -141,10 +142,12 @@ test.describe('Form Management', () => {
         }
         await expect(formElementEditor).toBeVisible();
 
+        const formElementInput = formElementEditor.locator('.form-element-properties-editor-property');
+        const inputBox = formElementInput.locator('input.input-element[type="text"]').nth(2);
+
         await test.step('Correct input is saved', async () => {
-            // TODO No IDs to attach to = need to use first()
-            await formElementEditor.locator('.form-element-properties-editor-property input.input-element[type="text"]').first().clear();
-            await formElementEditor.locator('.form-element-properties-editor-property input.input-element[type="text"]').first().fill('abcdefgh');
+            await inputBox.clear();
+            await inputBox.fill('abcdefgh');
 
             // Save and verify request
             const saveRequest = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
@@ -157,13 +160,12 @@ test.describe('Form Management', () => {
 
             const response = await saveRequest;
             const data = await response.request().postDataJSON();
-            expect(data.data.elements[0].label_i18n.en).toStrictEqual('abcdefgh');
+            expect(data.data.elements[0].value_i18n.en).toStrictEqual('abcdefgh');
         });
 
         await test.step('Untrimmed input is saved', async () => {
-            // TODO No IDs to attach to = need to use first()
-            await formElementEditor.locator('.form-element-properties-editor-property input.input-element[type="text"]').first().clear();
-            await formElementEditor.locator('.form-element-properties-editor-property input.input-element[type="text"]').first().fill('    abcdefgh    ');
+            await inputBox.clear();
+            await inputBox.fill('    abcdefgh    ');
 
             // Save and verify request
             const saveRequest = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
@@ -176,7 +178,7 @@ test.describe('Form Management', () => {
 
             const response = await saveRequest;
             const data = await response.request().postDataJSON();
-            expect(data.data.elements[0].label_i18n.en).toStrictEqual('abcdefgh');
+            expect(data.data.elements[0].value_i18n.en).toStrictEqual('abcdefgh');
         });
     });
 

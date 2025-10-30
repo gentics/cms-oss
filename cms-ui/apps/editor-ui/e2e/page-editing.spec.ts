@@ -265,7 +265,7 @@ test.describe('Page Editing', () => {
                     const linkElement = mainEditable.locator('a');
 
                     await expect(linkElement).toHaveAttribute('href', `#${LINK_ANCHOR}`);
-                    await expect(linkElement).toHaveAttribute('data-gcn-anchor', LINK_ANCHOR);
+                    await expect(linkElement).toHaveAttribute('data-gentics-gcn-anchor', LINK_ANCHOR);
                     await expect(linkElement).toHaveText(LINK_TEXT);
                 });
 
@@ -273,7 +273,7 @@ test.describe('Page Editing', () => {
                     const insertLinkButton = findAlohaComponent(page, {
                         slot: 'insertLink',
                         action: 'secondary',
-                        type: 'toggle-split-button'
+                        type: 'toggle-split-button',
                     });
 
                     await insertLinkButton.click();
@@ -281,8 +281,8 @@ test.describe('Page Editing', () => {
                     const modal = page.locator('gtx-dynamic-form-modal');
                     const form = modal.locator('.form-wrapper');
 
-                    await expect(form.locator('[data-slot="url"] .target-input input')).toHaveText('');
-                    await expect(form.locator('[data-slot="url"] .anchor-input input')).toHaveText(LINK_ANCHOR);
+                    await expect(form.locator('[data-slot="url"] .target-input input')).toHaveValue('');
+                    await expect(form.locator('[data-slot="url"] .anchor-input input')).toHaveValue(LINK_ANCHOR);
                 });
             });
 

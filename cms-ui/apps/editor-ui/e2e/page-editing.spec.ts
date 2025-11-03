@@ -2,14 +2,22 @@ import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
 import { Page as CmsPage, PageSaveRequest, Template } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    clickModalAction,
+    CONSTRUCT_CATEGORY_TESTS,
+    CONSTRUCT_TEST_IMAGE,
     EntityImporter,
+    FIXTURE_IMAGE_ONE,
     hasMatchingParams,
+    IMAGE_ONE,
+    IMPORT_ID,
+    ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
     loginWithForm,
     matchesPath, matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    openContext,
     PAGE_ONE,
     pickSelectValue,
     TestSize,
@@ -37,6 +45,8 @@ import {
     findDynamicDropdown,
     findItem,
     findList,
+    findRepoBrowserItem,
+    findRepoBrowserList,
     getAlohaIFrame,
     itemAction,
     openPageForEditing,
@@ -51,7 +61,7 @@ import {
 test.describe.configure({ mode: 'serial' });
 test.describe('Page Editing', () => {
     // Mark this suite as slow - Because it is
-    test.slow();
+    // test.slow();
 
     const IMPORTER = new EntityImporter();
 
@@ -76,17 +86,22 @@ test.describe('Page Editing', () => {
 
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
+            await IMPORTER.setupBinaryFiles({
+                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_ONE,
+            });
             await IMPORTER.setupTest(TestSize.MINIMAL);
         });
 
         await test.step('Specialized Test Setup', async () => {
             await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
+            await setupHelperWindowFunctions(page);
         });
 
-        await setupHelperWindowFunctions(page);
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        await test.step('Open Editor-UI', async () => {
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        });
     });
 
     test.describe('Edit Mode', () => {
@@ -97,10 +112,12 @@ test.describe('Page Editing', () => {
         let mainEditable: Locator;
 
         async function openEditingPageInEditmode(page: Page) {
-            const { row, iframe: pageIFrame, editable } = await openPageForEditing(page, editingPage);
-            itemRow = row;
-            iframe = pageIFrame;
-            mainEditable = editable;
+            await test.step('Open Page in Edit-Mode', async () => {
+                const { row, iframe: pageIFrame, editable } = await openPageForEditing(page, editingPage);
+                itemRow = row;
+                iframe = pageIFrame;
+                mainEditable = editable;
+            });
         }
 
         test.describe('Basic Editing', () => {
@@ -691,6 +708,77 @@ test.describe('Page Editing', () => {
 
                 await dropdown.locator(`gtx-table-size-select .grid-row:nth-child(${ROW_COUNT}) .cell:nth-child(${COLUMN_COUNT})`).click();
             }
+        });
+
+        test.describe('Constructs', () => {
+            test.beforeEach(async ({page}) => {
+                editingPage = IMPORTER.get(PAGE_ONE);
+                await openEditingPageInEditmode(page);
+            });
+
+            test('should be able to move a construct between two existing ones', async ({ page }) => {
+                const TEST_IMAGE = IMPORTER.get(IMAGE_ONE);
+
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                let imageCounter = 1;
+                async function createImageTag(): Promise<void> {
+                    await test.step(`Create Image ${imageCounter++}`, async () => {
+                        const dropdown = await openContext(category);
+                        await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                        const block = mainEditable.locator('.GENTICS_block').last();
+                        await block.locator('.gcn-construct-button-edit').click();
+
+                        const modal = page.locator('gtx-tag-editor-modal');
+                        const editor = modal.locator('file-or-image-url-tag-property-editor');
+                        await editor.locator('browse-box [data-action="browse"] button').click();
+
+                        const repoBrowser = page.locator('repository-browser');
+                        const images = findRepoBrowserList(repoBrowser, ITEM_TYPE_IMAGE);
+                        const targetImage = findRepoBrowserItem(images, TEST_IMAGE.id);
+                        await targetImage.locator('gtx-checkbox label').click();
+                        await clickModalAction(repoBrowser, 'confirm');
+
+                        const renderReq = page.waitForResponse(matchRequest('POST', '/rest/page/renderTag/*'));
+                        await modal.locator('[data-action="confirm"] button').click();
+                        await renderReq;
+                    });
+                }
+
+                await createImageTag();
+                await createImageTag();
+                await createImageTag();
+
+                await test.step('Move image', async () => {
+                    const blocks = mainEditable.locator('.GENTICS_block');
+
+                    const idsBefore = await Promise.all((await blocks.all()).map(loc => loc.getAttribute('id')));
+
+                    const originImage = blocks.last();
+                    const blockId = await originImage.getAttribute('id');
+                    const rect = await originImage.evaluate(el => el.getBoundingClientRect());
+
+                    await originImage.locator('.aloha-block-handle .gcn-construct-drag-handle').dragTo(mainEditable, {
+                        targetPosition: {
+                            x: rect.height - 10,
+                            y: 50,
+                        },
+                    });
+
+                    const idsAfter = await Promise.all((await blocks.all()).map(loc => loc.getAttribute('id')));
+
+                    // IDs should have changed
+                    expect(idsBefore).not.toStrictEqual(idsAfter);
+                    await expect(blocks.last()).not.toHaveAttribute('id', blockId);
+                });
+            });
         });
     });
 

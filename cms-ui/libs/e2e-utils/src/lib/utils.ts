@@ -1,3 +1,5 @@
+/* eslint-disable import/order */
+/* eslint-disable import/no-nodejs-modules */
 import { Variant } from '@gentics/cms-models';
 import {
     ENV_CI,

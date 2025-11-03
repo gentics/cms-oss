@@ -9,6 +9,7 @@ import { AlohaGlobal } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../../providers';
 
 interface DisplayGroup {
+    globalId?: string;
     id: number;
     label: string;
     order?: number;
@@ -230,6 +231,7 @@ export class ConstructControlsComponent implements OnChanges {
             }
 
             return {
+                globalId: category.globalId,
                 id: category.id,
                 label: category.name,
                 constructs: allowed.sort((a, b) => a.name.localeCompare(b.name)),
@@ -240,6 +242,7 @@ export class ConstructControlsComponent implements OnChanges {
 
         if (uncategorized.length > 0) {
             groups.unshift({
+                globalId: null,
                 id: UNCATEGORIZED_ID,
                 label: this.i18n.translate(UNCATEGORIZED_LABEL),
                 order: -1,

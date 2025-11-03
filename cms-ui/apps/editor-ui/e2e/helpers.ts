@@ -10,8 +10,16 @@ export function findList(page: Page, type: string): Locator {
     return page.locator(`item-list .content-list[data-item-type="${type}"]`);
 }
 
+export function findRepoBrowserList(repoBrowser: Locator, type: string): Locator {
+    return repoBrowser.locator(`repository-browser-list[data-type="${type}"]`);
+}
+
 export function findItem(list: Locator, id: string | number): Locator {
     return list.locator(`gtx-contents-list-item[data-id="${id}"], masonry-item[data-id="${id}"]`);
+}
+
+export function findRepoBrowserItem(list: Locator, id: string | number): Locator {
+    return list.locator(`gtx-contents-list-item[data-id="${id}"], repository-browser-list-thumbnail[data-id="${id}"]`);
 }
 
 export async function selectNode(element: Page | Locator, nodeId: number | string): Promise<void> {

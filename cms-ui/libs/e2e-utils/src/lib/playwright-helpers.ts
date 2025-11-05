@@ -350,8 +350,12 @@ export async function selectDateInPicker(source: Locator, date: Date): Promise<v
         }
     }
 
+    let day = `${date.getDate()}`;
+    if (day.length === 1) {
+        day = `0${day}`;
+    }
     await content.locator('.rd-days .rd-days-body .rd-day-body:not(.rd-day-prev-month):not(.rd-day-next-month):not(.rd-day-disabled)').filter({
-        hasText: `${date.getDate()}`,
+        hasText: day,
     }).click();
 }
 

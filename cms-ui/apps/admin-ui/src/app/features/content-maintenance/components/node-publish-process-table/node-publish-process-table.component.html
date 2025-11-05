@@ -7,6 +7,10 @@
     (clear)="updateSearchQuery('')"
 ></gtx-search-bar>
 
+<div *ngIf="selectable" class="entity-table-selection">
+    {{ 'shared.info_selected_nodes' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+</div>
+
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
 <gtx-table
@@ -27,7 +31,6 @@
     [page]="page"
     [sortBy]="sortBy"
     [sortOrder]="sortOrder"
-    [paginated]="false"
 
     [renderers]="{
         name: nameRenderer

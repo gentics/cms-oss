@@ -292,14 +292,14 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
      * Tracking function for ngFor for better performance.
      */
     identify(index: number, item: Item): number {
-        return item.id;
+        return item?.id || index;
     }
 
     /**
      * Returns true is the item is in the selectedItems array.
      */
     isSelected(item: Item): boolean {
-        return this.itemsInfo.selected.indexOf(item.id) >= 0;
+        return this.itemsInfo.selected.indexOf(item?.id) >= 0;
     }
 
 }

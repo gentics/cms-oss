@@ -1,16 +1,70 @@
 import { Feature, Variant } from '@gentics/cms-models';
 import {
+    BASIC_TEMPLATE_ID,
     EntityImporter,
+    FolderImportData,
+    IMPORT_ID,
+    IMPORT_TYPE,
     isVariant,
+    ITEM_TYPE_FOLDER,
+    ITEM_TYPE_PAGE,
     loginWithForm,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    PageImportData,
     TestSize,
 } from '@gentics/e2e-utils';
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
-import { addSearchChip, selectNode, setChipOperator, setDateChipValue, setStringChipValue } from './helpers';
+import { addSearchChip, findItem, findList, selectNode, setChipOperator, setDateChipValue, setStringChipValue } from './helpers';
+
+const FOLDER_TEST_ONE: FolderImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FOLDER,
+    [IMPORT_ID]: 'folderTestLongName1',
+
+    motherId: NODE_MINIMAL[IMPORT_ID],
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+
+    name: 'A really unreasonably and nonsensical long folder name for testing purposes',
+};
+const FOLDER_TEST_TWO: FolderImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FOLDER,
+    [IMPORT_ID]: 'folderTestLongName2',
+
+    motherId: FOLDER_TEST_ONE[IMPORT_ID],
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+
+    name: 'Again a really unreasonably long folder name that has even more text for testing purposes',
+};
+const FOLDER_TEST_THREE: FolderImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FOLDER,
+    [IMPORT_ID]: 'folderTestLongName3',
+
+    motherId: FOLDER_TEST_TWO[IMPORT_ID],
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+
+    name: 'Another exceptionally long, boring, but yet important folder name for testing purposes',
+};
+const FOLDER_TEST_FOUR: FolderImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FOLDER,
+    [IMPORT_ID]: 'folderTestLongName4',
+
+    motherId: FOLDER_TEST_THREE[IMPORT_ID],
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+
+    name: 'The last very long folder name for testing purposes as there should be enough examples by now',
+};
+const PAGE_TEST_LONG: PageImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_PAGE,
+    [IMPORT_ID]: 'pageVeryLongName',
+
+    folderId: FOLDER_TEST_FOUR[IMPORT_ID],
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+
+    pageName: 'Finally a page with an even longer and more unreasonable name for testing purposes',
+    templateId: BASIC_TEMPLATE_ID,
+};
 
 test.describe('Search', () => {
     const IMPORTER = new EntityImporter();
@@ -41,6 +95,13 @@ test.describe('Search', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupTest(TestSize.MINIMAL);
+            await IMPORTER.importData([
+                FOLDER_TEST_ONE,
+                FOLDER_TEST_TWO,
+                FOLDER_TEST_THREE,
+                FOLDER_TEST_FOUR,
+                PAGE_TEST_LONG,
+            ]);
         });
     });
 
@@ -138,6 +199,29 @@ test.describe('Search', () => {
             const url = new URL(req.url());
             const timeStamp = parseInt(url.searchParams.get(`${CHIP_NAME}since`) || '', 10);
             expect(Math.abs(TIME - timeStamp)).toBeLessThanOrEqual(1000);
+        });
+
+        test('search result breadcrumbs should be displayed correctly', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19012',
+            }],
+        }, async ({ page }) => {
+            const SEARCH_TERM = 'test';
+            const SEARCH_ITEM = IMPORTER.get(PAGE_TEST_LONG);
+
+            await searchInput.fill(SEARCH_TERM);
+            const searchReq = page.waitForResponse(matchRequest('GET', '/rest/folder/getPages/*'));
+            await searchButton.click();
+            await searchReq;
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, SEARCH_ITEM.id);
+            const breadcrumbs = item.locator('item-breadcrumbs .item-breadcrumbs');
+            const size = await breadcrumbs.evaluate(el => el.getBoundingClientRect());
+
+            // Should be a max of 44px, i.E. two lines + a bit of buffer
+            expect(size.height).toBeLessThanOrEqual(46);
         });
     });
 

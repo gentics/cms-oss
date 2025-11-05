@@ -1,8 +1,8 @@
 /* eslint-disable import/no-nodejs-modules */
 /// <reference lib="dom"/>
-import { readFileSync } from 'fs';
+import { readFileSync } from 'node:fs';
 import { Page as CmsPage } from '@gentics/cms-models';
-import { dismissNotifications, ITEM_TYPE_PAGE, openContext } from '@gentics/e2e-utils';
+import { clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, selectDateInPicker } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
@@ -441,4 +441,29 @@ export function overrideAlohaConfig(page: Page, configFilename: string): Promise
             status: 301,
         })
     });
+}
+
+export async function addSearchChip(searchBar: Locator, filter: string): Promise<Locator> {
+    const properties = searchBar.locator('.gtx-chipsearchbar-menu-filter-properties');
+    await properties.locator('.custom-content button').click();
+    const dropdown = searchBar.locator('.custom-content-menu');
+    await dropdown.locator(`.custom-content-menu-button[data-value="${filter}"]`).click();
+
+    return searchBar.locator(`.gtx-chip[data-id="${filter}"]`);
+}
+
+export async function setChipOperator(chip: Locator, operatorId: string): Promise<void> {
+    await chip.locator('.gtx-chip-operator .default-trigger').click();
+    await chip.locator(`.custom-content-menu .custom-content-menu-button[data-value="${operatorId}"]`).click();
+}
+
+export async function setStringChipValue(chip: Locator, value: string | number): Promise<void> {
+    await chip.locator('input.gtx-chip-input-value-inner-string').fill(`${value}`);
+}
+
+export async function setDateChipValue(chip: Locator, value: Date): Promise<void> {
+    await chip.locator('.gtx-chip-input-value-inner-date').click();
+    const datePickerModal = chip.page().locator('gtx-date-time-picker-modal');
+    await selectDateInPicker(datePickerModal, value);
+    await clickModalAction(datePickerModal, 'confirm');
 }

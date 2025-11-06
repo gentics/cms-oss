@@ -654,6 +654,21 @@ test.describe('Page Editing', () => {
                 });
             });
 
+            test('should be possible to paste plain text', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19262',
+                }]
+            }, async ({page, context}) => {
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await context.grantPermissions(['clipboard-write']);
+                await page.evaluate(() => navigator.clipboard.writeText('Hello from Playwright!'));
+                await mainEditable.press('ControlOrMeta+v');
+                await expect(mainEditable).toHaveText('Hello from Playwright!');
+            });
+
             test('should be possible to insert a link with a keybind', {
                 annotation: [{
                     type: 'ticket',

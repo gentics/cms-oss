@@ -1229,7 +1229,10 @@ export interface ElasticSearchQueryResponse<T extends InheritableItem<Raw>> {
             _type: FolderItemType;
         }>;
         max_score: number;
-        total: number | { value: number, relation: 'eq' | string };
+        total: number | {
+            value: number;
+            relation: 'eq';
+        };
         /** JSON encoded "{ [packageName]: StagedItemsMap }" when in staging mode */
         staging?: string;
     };

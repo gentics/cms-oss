@@ -277,4 +277,44 @@ test.describe('Form Management', () => {
             await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor .form-editor-error')).toBeVisible();
         });
     });
+
+    test('should display the label value as title', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19032',
+        }],
+    }, async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
+        const LABEL_TEXT = 'Hello World';
+
+        await test.step('Generic Setup', async () => {
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        });
+
+        await test.step('Open Editor', async () => {
+            const list = findList(page, ITEM_TYPE_FORM);
+            const item = findItem(list, EDITING_FORM.id);
+            await itemAction(item, 'edit');
+        });
+
+        await test.step('Edit Form', async () => {
+            const editor = page.locator('content-frame gtx-form-editor');
+            const menu = editor.locator('gtx-form-editor-menu');
+            const list = editor.locator('.form-editor-form > gtx-form-editor-element-list');
+
+            const menuEl = menu.locator('.form-editor-elements-container .form-editor-menu-element').first();
+            await menuEl.dragTo(list.locator('gtx-form-element-drop-zone').first());
+
+            const el = list.locator('gtx-form-editor-element');
+            const header = el.locator('.form-element-container-header');
+            await header.locator('.form-element-btn-properties-editor-toggle').click();
+
+            const elEditor = el.locator('gtx-form-element-properties-editor');
+            await elEditor.locator('[data-control="label"] input').fill(LABEL_TEXT);
+
+            await expect(el.locator('.form-element-preview-container .label-property-value-container')).toHaveText(LABEL_TEXT);
+        });
+    });
 });

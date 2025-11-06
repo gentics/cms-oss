@@ -9,7 +9,6 @@
             </ng-container>
             <ng-template #emptyProperty>
                 <div class="label-property-no-value-container">
-                    label prop value: {{ element | property:'label' | json }}<br>
                     {{ 'gtxFormGenerator.preview_property_empty' | i18n:{ name: (element | property:'label' | i18nfg$:'content' | async) } }}
                 </div>
             </ng-template>

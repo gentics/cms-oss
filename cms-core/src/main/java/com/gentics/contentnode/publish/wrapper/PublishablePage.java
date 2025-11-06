@@ -1086,6 +1086,13 @@ public class PublishablePage extends AbstractPage {
 			// TODO Auto-generated method stub
 			return null;
 		}
+
+		@Override
+		public Content setModified(boolean modified) throws ReadOnlyException {
+			failReadOnly();
+
+			return null;
+		}
 	}
 
 	/**

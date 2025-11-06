@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentTag;
@@ -17,6 +18,7 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.lib.i18n.CNI18nString;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 
 /**
@@ -56,10 +58,13 @@ public class LocalizeRootTagCallable extends AbstractLocalizeCallable{
 
 	@Override
 	public GenericResponse call() throws Exception {
-		try (InstantPublishingTrx ip = new InstantPublishingTrx(!disableInstantPublish)) {
+		try (InstantPublishingTrx ip = new InstantPublishingTrx(!disableInstantPublish); ChannelTrx ct = new ChannelTrx(channelId)) {
 			var t = TransactionManager.getCurrentTransaction();
-			var page = t.getObject(Page.class, pageId);
+			var page = t.getObject(Page.class, pageId, true);
 			var content = page.getContent();
+
+			content.setModified(true);
+
 			var tags = content.getContentTags();
 			var toBeLocalized = new LinkedList<String>();
 			var localizedTags = new HashSet<String>();
@@ -69,20 +74,23 @@ public class LocalizeRootTagCallable extends AbstractLocalizeCallable{
 			toBeLocalized.add(tagId);
 
 			while (!toBeLocalized.isEmpty()) {
+				ContentTag localizedTag;
 				var origTagKey = toBeLocalized.pop();
 				var origTag = tags.get(origTagKey);
 
 				tags.remove(origTagKey);
 
 				if (origTag.comesFromTemplate()) {
-					var localizedTag = (ContentTag) origTag.copy();
-
+					localizedTag = (ContentTag) origTag.copy();
 					localizedTag.setName(origTagKey);
 					tags.put(origTagKey, localizedTag);
 				} else {
-					var localizedTag = content.addContentTag(origTag.getConstructId());
+					localizedTag = content.addContentTag(origTag.getConstructId());
+
+					var localizedTagName = localizedTag.getName();
 
 					localizedTag.copyFrom(origTag);
+					localizedTag.setName(localizedTagName);
 
 					if (toBeRenamed.containsKey(origTagKey)) {
 						for (var value: toBeRenamed.get(origTagKey)) {
@@ -96,8 +104,8 @@ public class LocalizeRootTagCallable extends AbstractLocalizeCallable{
 
 				localizedTags.add(origTagKey);
 
-				var construct = origTag.getConstruct();
-				var values = origTag.getValues();
+				var construct = localizedTag.getConstruct();
+				var values = localizedTag.getValues();
 
 				for (var part: construct.getParts()) {
 					var key = part.getKeyname();
@@ -109,7 +117,7 @@ public class LocalizeRootTagCallable extends AbstractLocalizeCallable{
 
 					var text = val.getValueText();
 
-					if (text.isEmpty()) {
+					if (StringUtils.isEmpty(text)) {
 						continue;
 					}
 
@@ -121,6 +129,9 @@ public class LocalizeRootTagCallable extends AbstractLocalizeCallable{
 					}
 				}
 			}
+
+			page.save();
+			page.unlock();
 
 			I18nString message = new CNI18nString("page.localize.success");
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, message.toString()));

@@ -1,0 +1,12 @@
+{{#and (not cms.tag.parts.image.url) cms.rendermode.edit}}
+    <div class="message info" style="font-size: 14px; line-height: 1rem;">
+        No Image Selected
+    </div>
+{{else}}
+    <figure data-image-id="{{ cms.tag.parts.image.id }}" data-tag-name="{{ cms.tag.name }}">
+        <img
+            src="{{{gtx_gis cms.tag.parts.image.target width=825 height="auto" mode="prop"}}}"
+            style="max-width: 100%; height: auto;"
+        />
+    </figure>
+{{/and}}

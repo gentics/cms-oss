@@ -129,7 +129,10 @@ export class ListService implements OnDestroy {
                     this.state.select(state => state.entities).pipe(
                         map(entities => entities[key]),
                         distinctUntilChanged((a, b) => a === b || ids.every(id => a[id] === b[id])),
-                        map(entityHash => ids.map(id => entityHash[id] as any)),
+                        map(entityHash => ids
+                            .map(id => entityHash[id] as any)
+                            .filter(entity => entity != null),
+                        ),
                     ),
                 ),
             );

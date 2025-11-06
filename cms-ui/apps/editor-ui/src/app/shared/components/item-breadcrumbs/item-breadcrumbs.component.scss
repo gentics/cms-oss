@@ -3,22 +3,21 @@
 .item-breadcrumbs {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 0.25rem;
 
     .item-breadcrumb {
         font-size: 14px;
-
-        &:not(:first-child) {
-            margin-left: -4px;
-        }
+        padding-right: 16px;
+        max-width: 180px;
     }
 
     .item-breadcrumb:not(:last-child)::after {
         content: '>';
         color: #444;
         font-size: 13px;
-        margin: 0 3px;
+        position: absolute;
+        right: 4px;
     }
 
     span.item-breadcrumb {
@@ -27,7 +26,14 @@
 
     .item-name {
         color: $gtx-color-mid-gray;
-        margin-left: -4px;
         font-size: 14px;
+    }
+
+    .item-breadcrumb,
+    .item-name {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        position: relative;
     }
 }

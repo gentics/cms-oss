@@ -1,5 +1,3 @@
-<h2 *ngIf="showTitle" class="title">{{ 'widget.task_publishing_process_title' | i18n }}</h2>
-
 <div *ngIf="info" class="content">
     <gtx-progress-bar [active]="info.running" [progress]="(info.progress / 100)" />
 

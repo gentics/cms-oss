@@ -41,9 +41,6 @@ export class PublishProcessSummaryComponent implements OnChanges {
     public readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
 
     @Input()
-    public showTitle = false;
-
-    @Input()
     public info: PublishInfo = null;
 
     @Input()

@@ -1490,7 +1490,7 @@ export interface NodeSaveRequest {
  */
 export interface NodeCreateRequest extends NodeSaveRequest {
 
-    node: Partial<Node<Raw>> & {
+    node: Partial<Omit<Node<Raw>, 'name' | 'host'>> & Pick<Node<Raw>, 'name' | 'host'> & {
         /** The ID of the root folder of the parent of the new node. */
         masterId?: number;
     };

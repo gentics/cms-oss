@@ -564,21 +564,23 @@ export class EntityImporter {
             }
         }
 
-        // We need the local template-ids for page references, so load all referenced templates via global id
-        for (const tplId of templates) {
-            const tpl = (await this.client.template.get(tplId).send()).template;
+        if (Array.isArray(templates)) {
+            // We need the local template-ids for page references, so load all referenced templates via global id
+            for (const tplId of templates) {
+                const tpl = (await this.client.template.get(tplId).send()).template;
 
-            // Additionally, we have to link the templates to the root-folder
-            await this.client.template.link(tplId, {
-                nodeId: created.id,
-                folderIds: [created.folderId || created.id],
-            }).send();
+                // Additionally, we have to link the templates to the root-folder
+                await this.client.template.link(tplId, {
+                    nodeId: created.id,
+                    folderIds: [created.folderId || created.id],
+                }).send();
 
-            if (tpl) {
-                if (this.options?.logImports) {
-                    console.log(`Loaded node template ${tplId} -> ${tpl.id}`);
+                if (tpl) {
+                    if (this.options?.logImports) {
+                        console.log(`Loaded node template ${tplId} -> ${tpl.id}`);
+                    }
+                    this.entityMap[tplId] = tpl;
                 }
-                this.entityMap[tplId] = tpl;
             }
         }
 

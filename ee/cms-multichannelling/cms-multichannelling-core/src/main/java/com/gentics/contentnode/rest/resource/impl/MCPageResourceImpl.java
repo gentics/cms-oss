@@ -310,7 +310,6 @@ public class MCPageResourceImpl implements MCPageResource {
 						new ResponseInfo(ResponseCode.FAILURE, msg));
 			}
 
-
 			try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
 				if (!ObjectPermission.edit.checkObject(page)) {
 					String msg = new CNI18nString("page.nopermission").toString();
@@ -367,7 +366,7 @@ public class MCPageResourceImpl implements MCPageResource {
 						new ResponseInfo(ResponseCode.FAILURE, msg));
 			}
 
-			if (page.getMaster().getTag(tagId).equals(tag)) {
+			if (!page.getMaster().getTag(tagId).equals(tag)) {
 				return new GenericResponse(
 						new Message(Type.SUCCESS, "Tag already localized"),
 						new ResponseInfo(ResponseCode.OK, "Tag already localized"));

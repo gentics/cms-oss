@@ -1128,7 +1128,9 @@ export class FolderActionsService {
     ): ItemListResponse {
         // eslint-disable-next-line no-underscore-dangle
         const items = res.hits.hits.map((hit) => hit._object);
-        const numItems = res.hits.total.value;
+        const numItems = typeof res.hits.total === 'number'
+            ? res.hits.total
+            : res.hits.total.value;
         const hasMoreItems = items.length < numItems;
         let stagingMap: StagedItemsMap = {};
 

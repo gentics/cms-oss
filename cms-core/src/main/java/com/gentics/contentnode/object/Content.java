@@ -199,4 +199,6 @@ public abstract class Content extends AbstractContentObject implements TagContai
 	 * @throws NodeException
 	 */
 	public abstract Node getNode() throws NodeException;
+
+	public abstract Content setModified(boolean modified) throws ReadOnlyException;
 }

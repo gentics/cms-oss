@@ -1229,7 +1229,7 @@ export interface ElasticSearchQueryResponse<T extends InheritableItem<Raw>> {
             _type: FolderItemType;
         }>;
         max_score: number;
-        total: {
+        total: number | {
             value: number;
             relation: 'eq';
         };

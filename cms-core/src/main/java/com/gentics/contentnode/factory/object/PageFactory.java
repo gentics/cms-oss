@@ -123,7 +123,6 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.StackResolver;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
-import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
@@ -4106,7 +4105,77 @@ public class PageFactory extends AbstractFactory {
 				contentTags.put(tag.getName(), tag);
 			}
 
+			if (isPartiallyLocalized()) {
+				var page = getPages().stream().findAny();
+
+				if (page.isPresent()) {
+					addInheritedContentTags(page.get().getMaster().getContent().getContentTags(), contentTags);
+				}
+			}
+
 			return contentTags;
+		}
+
+		private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
+			var inheritedTags = new HashMap<String, ContentTag>();
+			var possibleInheritedTagNames = new HashSet<>(masterContentTags.keySet());
+			var tagsToCheck = new LinkedList<String>();
+
+			for (var masterTagEntry : masterContentTags.entrySet()) {
+				var masterTagName = masterTagEntry.getKey();
+				var masterTag = masterTagEntry.getValue();
+
+				if (masterTag.comesFromTemplate() && !contentTags.containsKey(masterTagName)) {
+					tagsToCheck.push(masterTagName);
+				}
+			}
+
+			tagsToCheck.forEach(possibleInheritedTagNames::remove);
+
+			while (!tagsToCheck.isEmpty()) {
+				var masterTagName = tagsToCheck.pop();
+
+				if (inheritedTags.containsKey(masterTagName)) {
+					continue;
+				}
+
+				var masterTag = masterContentTags.get(masterTagName);
+
+				inheritedTags.put(masterTagName, masterTag);
+
+				var construct = masterTag.getConstruct();
+				var values = masterTag.getValues();
+
+				for (var part : construct.getParts()) {
+					var key = part.getKeyname();
+					var val = values.getByKeyname(key);
+
+					if (val == null) {
+						continue;
+					}
+
+					var text = val.getValueText();
+
+					if (text.isEmpty()) {
+						continue;
+					}
+
+					var newToCheck = new HashSet<String>();
+
+					for (var embeddedTag : possibleInheritedTagNames) {
+						if (!inheritedTags.containsKey(embeddedTag) && text.contains("<node " + embeddedTag + ">")) {
+							newToCheck.add(embeddedTag);
+						}
+					}
+
+					if (!newToCheck.isEmpty()) {
+						possibleInheritedTagNames.removeAll(newToCheck);
+						tagsToCheck.addAll(newToCheck);
+					}
+				}
+			}
+
+			contentTags.putAll(inheritedTags);
 		}
 
 		private synchronized void loadPageIds() throws NodeException {
@@ -4254,6 +4323,13 @@ public class PageFactory extends AbstractFactory {
 
 			return t.getObject(Node.class, nodeId);
 		}
+
+		@Override
+		public Content setModified(boolean modified) throws ReadOnlyException {
+			failReadOnly();
+
+			return this;
+		}
 	}
 
 	/**
@@ -4350,7 +4426,9 @@ public class PageFactory extends AbstractFactory {
 			}
 
 			for (ContentTag tag : contentTags.values()) {
-				tag.setContent(this);
+				if (tag.getObjectInfo().isEditable()) {
+					tag.setContent(this);
+				}
 			}
 			return contentTags;
 		}
@@ -4487,10 +4565,10 @@ public class PageFactory extends AbstractFactory {
 				tagIdsToRemove.addAll(tagIds);
 			}
 
-			if (!partiallyLocalized) {
-				for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext(); ) {
-					ContentTag tag = i.next();
+			for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext(); ) {
+				ContentTag tag = i.next();
 
+				if (!partiallyLocalized || tag.getObjectInfo().isEditable()) {
 					tag.setContentId(getId());
 					isModified |= tag.save();
 
@@ -4563,6 +4641,13 @@ public class PageFactory extends AbstractFactory {
 				pages.add(page);
 			}
 			return pages;
+		}
+
+		@Override
+		public EditableFactoryContent setModified(boolean modified) throws ReadOnlyException {
+			this.modified = modified;
+
+			return this;
 		}
 	}
 

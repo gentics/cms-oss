@@ -11,50 +11,57 @@
     {{ 'shared.info_selected_nodes' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
-<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+<div class="content-wrapper">
+    <gtx-progress-bar class="load-bar" [active]="nodesLoading"></gtx-progress-bar>
 
-<gtx-table
-    class="entity-table"
+    <gtx-table
+        class="entity-table"
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [disabled]="disabled"
+        [selectAllType]="TableSelectAllType.PAGE"
+        [selectable]="selectable"
+        [hideActions]="hideActions"
+        [disabled]="disabled"
 
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+        [columns]="columns"
+        [rows]="rows"
+        [actions]="actions"
+        [selected]="selected"
+        [active]="activeEntity"
+        [totalCount]="totalCount"
 
-    [page]="page"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
+        [page]="page"
+        [sortBy]="sortBy"
+        [sortOrder]="sortOrder"
 
-    [renderers]="{
-        name: nameRenderer
-    }"
+        [renderers]="{
+            name: nameRenderer
+        }"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (select)="forwardSelect($event)"
-    (deselect)="forwardDeselect($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
-></gtx-table>
+        (pageChange)="changePageTo($event)"
+        (sortByChange)="updateSortBy($event)"
+        (sortOrderChange)="updateSortOrder($event)"
+        (selectedChange)="updateSelection($event)"
+        (select)="forwardSelect($event)"
+        (deselect)="forwardDeselect($event)"
+        (rowClick)="handleRowClick($event)"
+        (actionClick)="handleAction($event)"
+    ></gtx-table>
+</div>
 
 <ng-template #nameRenderer let-value="value" let-row="row">
     <ng-template #name>
         <div class="node-name">{{ value }}</div>
     </ng-template>
 
-    <gtx-accordion [trigger]="name" [open]="expandedNodes | gtxIncludes:row.id" (openChange)="updateExpandedNodes(row.id, $event)">
+    <gtx-accordion
+        *ngIf="publishQueue?.nodes?.[row.id] as nodePublishData; else name"
+        [trigger]="name"
+        [open]="expandedNodes | gtxIncludes:row.id"
+        (openChange)="updateExpandedNodes(row.id, $event)"
+    >
         <div class="queue-content">
             <ng-container *ngFor="let entry of PUBLISH_PLURAL_MAPPING | gtxEntries">
-                <div *ngIf="publishQueue?.nodes?.[row.id]?.[entry.key] as data" class="type-queue-wrapper">
+                <div *ngIf="nodePublishData[entry.key] as data" class="type-queue-wrapper">
                     <ng-container
                         [ngTemplateOutlet]="typeStatus"
                         [ngTemplateOutletContext]="{ data: data, type: entry.value }"

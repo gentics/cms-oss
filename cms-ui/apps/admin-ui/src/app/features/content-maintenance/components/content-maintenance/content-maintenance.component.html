@@ -1,19 +1,42 @@
-
 <div class="maintenance-tab-content" [class.hide-sidebar]="activeTabId !== ContentMaintenanceTabs.GENERAL">
 
     <div class="sidebar sidebar-left">
         <ng-container *ngIf="activeTabId === ContentMaintenanceTabs.GENERAL">
-            <gtx-dirt-queue-summary
-                [summary]="dirtQueueSummary"
-                [failedTasks]="failedTasks"
-            ></gtx-dirt-queue-summary>
 
-            <gtx-publish-process-summary
-                [showTitle]="true"
-                [info]="publishInfo"
-                [hasFailedJobs]="hasFailedSchedules"
-                [publisherStatus]="schedulerStatus"
-            ></gtx-publish-process-summary>
+            <div class="sidebar-widget">
+                <h2 class="widget-title">{{ 'widget.task_queue_title' | i18n }}</h2>
+
+                <div class="widget-content">
+                    <gtx-progress-bar [active]="dirtQueueLoading"></gtx-progress-bar>
+
+                    @if (dirtQueueError == null) {
+                        <gtx-dirt-queue-summary
+                            [summary]="dirtQueueSummary"
+                            [failedTasks]="failedTasks"
+                        ></gtx-dirt-queue-summary>
+                    } @else {
+                        <div class="error-message">{{ dirtQueueError }}</div>
+                    }
+                </div>
+            </div>
+
+            <div class="sidebar-widget">
+                <h2 class="widget-title">{{ 'widget.task_publishing_process_title' | i18n }}</h2>
+
+                <div class="widget-content">
+                    <gtx-progress-bar [active]="publishProcessLoading"></gtx-progress-bar>
+
+                    @if (publishProcessError == null) {
+                        <gtx-publish-process-summary
+                            [info]="publishInfo"
+                            [hasFailedJobs]="hasFailedSchedules"
+                            [publisherStatus]="schedulerStatus"
+                        ></gtx-publish-process-summary>
+                    } @else {
+                        <div class="error-message">{{ publishProcessError }}</div>
+                    }
+                </div>
+            </div>
         </ng-container>
     </div>
 
@@ -24,14 +47,18 @@
                 [title]="'contentmaintenance.title_general' | i18n"
                 (select)="changeTab($event)"
             >
-                <gtx-progress-bar [active]="loading"></gtx-progress-bar>
-
-                <gtx-node-publish-process-table
-                    [showSearch]="true"
-                    [(selected)]="selectedNodeIds"
-                    [publishQueue]="publishQueue"
-                    (actionClick)="handleTableAction($event)"
-                ></gtx-node-publish-process-table>
+                @if (nodesError == null) {
+                    <gtx-node-publish-process-table
+                        [showSearch]="true"
+                        [publishQueue]="publishQueue"
+                        [nodes]="nodes"
+                        [nodesLoading]="nodesLoading"
+                        [(selected)]="selectedNodeIds"
+                        (actionClick)="handleTableAction($event)"
+                    ></gtx-node-publish-process-table>
+                } @else {
+                    <div class="error-message">{{ nodesError }}</div>
+                }
             </gtx-tab>
 
             <gtx-tab
@@ -54,7 +81,7 @@
                     flat
                     size="small"
                     type="primary"
-                    [disabled]="loading"
+                    [disabled]="leftLoading || nodesLoading || rightLoading"
                     (click)="loadData()"
                 >
                     <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
@@ -65,7 +92,7 @@
                     flat
                     size="small"
                     type="primary"
-                    [disabled]="working"
+                    [disabled]="!modifyPermissions || working"
                     (click)="reloadConfiguration()"
                 >
                     <icon left>settings_applications</icon> {{ 'contentmaintenance.reload_configuration' | i18n }}
@@ -76,17 +103,29 @@
                     flat
                     size="small"
                     type="primary"
-                    [disabled]="working"
+                    [disabled]="!modifyPermissions || working"
                     (click)="stopPublishing()"
                 >
                     <icon left>highlight_off</icon> {{ 'contentmaintenance.stop_publishing' | i18n }}
                 </gtx-button>
             </div>
 
-            <gtx-publish-queue-summary
-                [nodes]="nodes"
-                [publishQueue]="publishQueue"
-            ></gtx-publish-queue-summary>
+            <div class="sidebar-widget">
+                <h2 class="widget-title">{{ 'widget.widget_publishing_process_total_title' | i18n }}</h2>
+
+                <div class="widget-content">
+                    <gtx-progress-bar [active]="publishQueueLoading"></gtx-progress-bar>
+
+                    @if (publishQueueError == null) {
+                        <gtx-publish-queue-summary
+                            [nodes]="nodes"
+                            [publishQueue]="publishQueue"
+                        ></gtx-publish-queue-summary>
+                    } @else {
+                        <div class="error-message">{{ publishQueueError }}</div>
+                    }
+                </div>
+            </div>
         </ng-container>
     </div>
 </div>

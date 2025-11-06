@@ -1,7 +1,18 @@
 import { EntityTableActionClickEvent } from '@admin-ui/common';
-import { AdminHandlerService, I18nNotificationService, NodeOperations, NodeTableLoaderService, ScheduleHandlerService } from '@admin-ui/core';
+import { AdminHandlerService, I18nNotificationService, I18nService, NodeOperations, PermissionsService, ScheduleHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { DirtQueueEntry, DirtQueueResponse, DirtQueueSummaryResponse, Node, PublishInfo, PublishQueue, SchedulerStatus } from '@gentics/cms-models';
+import {
+    AccessControlledType,
+    DirtQueueEntry,
+    DirtQueueSummaryResponse,
+    GcmsPermission,
+    Node,
+    PublishInfo,
+    PublishQueue,
+    ResponseCode,
+    SchedulerStatus,
+} from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { ModalService } from '@gentics/ui-core';
 import { forkJoin, Subscription } from 'rxjs';
 import { MaintenanceActionModalAction, MaintenanceActionModalComponent } from '../maintenance-action-modal/maintenance-action-modal.component';
@@ -24,20 +35,37 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
 
     public activeTabId: ContentMaintenanceTabs = ContentMaintenanceTabs.GENERAL;
 
-    public loading = false;
     public working = false;
 
-    public dirtQueue: DirtQueueResponse;
+    // Queue summary content
+    public dirtQueueLoading = false;
+    public dirtQueueError: string | null = null;
+
     public dirtQueueSummary: DirtQueueSummaryResponse;
     public failedTasks: DirtQueueEntry[] = [];
 
-    public publishInfo: PublishInfo;
-    public publishQueue: PublishQueue;
+    // Publish process
+    public publishProcessLoading = false;
+    public publishProcessError: string | null = null;
 
-    public schedulerStatus: SchedulerStatus;
+    public publishInfo: PublishInfo;
     public hasFailedSchedules = false;
+    public schedulerStatus: SchedulerStatus;
+
+    // Nodes
+    public nodesLoading = false;
+    public nodesError: string | null = null;
 
     public nodes: Node[] = [];
+
+    // Publish queue
+    public publishQueueLoading = false;
+    public publishQueueError: string | null = null;
+
+    public publishQueue: PublishQueue;
+
+    // Permissions
+    public modifyPermissions = false;
 
     /** Node IDs selected for ction request. */
     public selectedNodeIds: string[] = [];
@@ -49,56 +77,165 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
         private handler: AdminHandlerService,
         private schedule: ScheduleHandlerService,
         private nodeOps: NodeOperations,
-        private nodeTable: NodeTableLoaderService,
         private modals: ModalService,
         private notification: I18nNotificationService,
+        private permissions: PermissionsService,
+        private i18n: I18nService,
     ) {}
 
     ngOnInit(): void {
         this.loadData();
+        this.loadPermissions();
     }
 
     ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
-    public loadData(): void {
-        if (this.loading) {
+    public loadDirtQueueData(): void {
+        if (this.dirtQueueLoading) {
             return;
         }
 
-        this.loading = true;
+        this.dirtQueueLoading = true;
+        this.dirtQueueError = null;
         this.changeDetector.markForCheck();
-
-        this.nodeTable.reload();
 
         this.subscriptions.push(forkJoin([
             this.handler.getDirtQueue(),
             this.handler.getDirtQueueSummary(),
+        ]).subscribe({
+            next: ([dirtQueue, summary]) => {
+                this.dirtQueueSummary = summary;
+                this.failedTasks = dirtQueue.items.filter(item => item.failed);
 
+                this.dirtQueueLoading = false;
+                this.dirtQueueError = null
+                this.changeDetector.markForCheck();
+            },
+            error: err => {
+                console.error(err);
+                this.dirtQueueSummary = null;
+                this.failedTasks = [];
+
+                this.dirtQueueLoading = false;
+                this.dirtQueueError = this.getErrorMessage(err);
+                this.changeDetector.markForCheck();
+            },
+        }))
+    }
+
+    public loadPublishProcessData(): void {
+        // Don't start when it's already loading
+        if (this.publishProcessLoading) {
+            return;
+        }
+
+        this.publishProcessLoading = true;
+        this.publishProcessError = null;
+        this.changeDetector.markForCheck();
+
+        this.subscriptions.push(forkJoin([
             this.handler.getPublishInfo(),
-            this.handler.getPublishQueue(),
-
             this.schedule.status(),
             this.schedule.list(null, { pageSize: 0, sort: '-edate', failed: true }),
+        ]).subscribe({
+            next: ([publishInfo, schedulerStatus, failedSchedules]) => {
+                this.schedulerStatus = schedulerStatus.status;
+                this.hasFailedSchedules = failedSchedules.numItems > 0;
+                this.publishInfo = publishInfo;
 
-            this.nodeOps.getAll(),
-        ]).subscribe(([dirtQueue, summary, publishInfo, publishQueue, schedulerStatus, failedSchedules, nodes]) => {
-            this.dirtQueue = dirtQueue;
-            this.failedTasks = dirtQueue.items.filter(item => item.failed);
-            this.dirtQueueSummary = summary;
+                this.publishProcessLoading = false;
+                this.publishProcessError = null;
+                this.changeDetector.markForCheck();
+            },
+            error: err => {
+                console.error(err);
+                this.schedulerStatus = null;
+                this.hasFailedSchedules = false;
+                this.publishInfo = null;
 
-            this.publishInfo = publishInfo;
-            this.publishQueue = publishQueue;
-
-            this.schedulerStatus = schedulerStatus.status;
-            this.hasFailedSchedules = failedSchedules.numItems > 0;
-
-            this.nodes = nodes;
-
-            this.loading = false;
-            this.changeDetector.markForCheck();
+                this.publishProcessLoading = false;
+                this.publishProcessError = this.getErrorMessage(err);
+                this.changeDetector.markForCheck();
+            },
         }));
+    }
+
+    public loadNodes(): void {
+        if (this.nodesLoading) {
+            return;
+        }
+
+        this.nodesLoading = true;
+        this.nodesError = null;
+        this.changeDetector.markForCheck();
+
+        this.subscriptions.push(forkJoin([
+            this.nodeOps.getAll(),
+        ]).subscribe({
+            next: ([nodes]) => {
+                this.nodes = nodes;
+
+                this.nodesLoading = false;
+                this.nodesError = null;
+                this.changeDetector.markForCheck();
+            },
+            error: err => {
+                console.error(err);
+                this.nodes = [];
+
+                this.nodesLoading = false;
+                this.nodesError = this.getErrorMessage(err);
+                this.changeDetector.markForCheck();
+            },
+        }));
+    }
+
+    public loadPublishQueueData(): void {
+        if (this.publishQueueLoading) {
+            return;
+        }
+
+        this.publishQueueLoading = true;
+        this.publishQueueError = null;
+        this.changeDetector.markForCheck();
+
+        this.subscriptions.push(forkJoin([
+            this.handler.getPublishQueue(),
+        ]).subscribe({
+            next: ([publishQueue]) => {
+                this.publishQueue = publishQueue;
+
+                this.publishQueueLoading = false;
+                this.publishQueueError = null;
+                this.changeDetector.markForCheck();
+            },
+            error: err => {
+                console.error(err);
+                this.publishQueue = null;
+
+                this.publishQueueLoading = false;
+                this.publishQueueError = this.getErrorMessage(err);
+                this.changeDetector.markForCheck();
+            },
+        }));
+    }
+
+    public loadPermissions(): void {
+        this.subscriptions.push(this.permissions.checkPermissions([{
+            type: AccessControlledType.CONTENT_ADMIN,
+            permissions: [GcmsPermission.READ],
+        }]).subscribe(hasPerm => {
+            this.modifyPermissions = hasPerm;
+        }))
+    }
+
+    public loadData(): void {
+        this.loadDirtQueueData();
+        this.loadPublishProcessData();
+        this.loadNodes();
+        this.loadPublishQueueData();
     }
 
     changeTab(activeTabId: ContentMaintenanceTabs): void {
@@ -166,5 +303,17 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
         });
 
         await modal.open();
+    }
+
+    private getErrorMessage(error: Error): string {
+        if (!(error instanceof GCMSRestClientRequestError)) {
+            return error.message;
+        }
+
+        if (error.data?.responseInfo?.responseCode === ResponseCode.PERMISSION) {
+            return this.i18n.instant('common.general_permission_required');
+        }
+
+        return this.i18n.instant('common.loading_error');
     }
 }

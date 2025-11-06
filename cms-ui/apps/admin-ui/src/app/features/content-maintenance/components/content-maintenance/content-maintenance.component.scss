@@ -1,3 +1,20 @@
+@import 'variables';
+
+.sidebar-widget {
+    .widget-title {
+        border-bottom: 1px solid $gtx-color-very-light-gray;
+        padding-bottom: 0.5rem;
+    }
+
+    .widget-content {
+        position: relative;
+    }
+
+    &:last-child {
+        padding-bottom: 2rem;
+    }
+}
+
 .maintenance-tab-content {
     height: 100%;
     width: 100%;
@@ -12,6 +29,7 @@
     .main-content {
         flex: 1 1 100%;
         order: 2;
+        position: relative;
 
         @media (min-width: 1420px) {
             flex: 0 0 780px;
@@ -31,6 +49,7 @@
         display: flex;
         flex-direction: column;
         gap: 2rem;
+        position: relative;
     }
 
     .sidebar-right {

@@ -81,7 +81,7 @@
                     flat
                     size="small"
                     type="primary"
-                    [disabled]="leftLoading || nodesLoading || rightLoading"
+                    [disabled]="dirtQueueLoading || publishProcessLoading || nodesLoading || publishQueueLoading"
                     (click)="loadData()"
                 >
                     <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}

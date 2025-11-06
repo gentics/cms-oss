@@ -307,7 +307,7 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
 
     private getErrorMessage(error: Error): string {
         if (!(error instanceof GCMSRestClientRequestError)) {
-            return error.message;
+            return this.i18n.instant('common.loading_error');
         }
 
         if (error.data?.responseInfo?.responseCode === ResponseCode.PERMISSION) {

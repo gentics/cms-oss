@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections4.ListUtils;
@@ -97,6 +98,8 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 			// ImageURLPartType
 			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.target.name }}", "blume.jpg", null },
 			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.url }}", "/node/pub/dir/bin/test/blume.jpg", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.target.object.copyright.parts.text.text }}", "Copyright blume", null },
+			new Object[] { "{{{gtx_render cms.page.tags.urls_construct1.parts.image.target.object.copyright.parts.text }}}", "Copyright blume", null },
 
 			// CheckboxPartType
 			new Object[] { "{{gtx_render cms.page.tags.checkbox_construct1 }}", "10", null},

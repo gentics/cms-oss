@@ -34,7 +34,9 @@ INFO: To find out all possible attributes that can be resolved from the base obj
 This obviously does not only work for "cms", but for every object in the context.
 
 WARNING: Unlike the Velocity Part Type, the Handlebars Part Type does not support "shortcuts" when resolving. So for example to resolve a specific part in the current tag,
-it is not allowed to omit the "parts" keyword in handlebars: +{{ cms.tag.parts.html }}+ will resolve to the part "html" in the current tag, whereas +{{ cms.tag.html }}+ will *not* work.
+it is not allowed to omit the "parts" keyword in handlebars: +{{ cms.tag.parts.html }}+ will resolve to the part "html" in the current tag, whereas +{{ cms.tag.html }}+ will *not* work. 
+Hence, if you need to, say, render a copyright of a referenced image, set withing an image's object property, the Velocity's definition +{{cms.tag.parts.img.object.copyright}}+ turns into a longer variant for the Handlebars: 
++{{cms.tag.parts.img.target.object.copyright.parts.text.text}}+, where +target+ image dereferencing, +parts+ property listing, and +text+ part type now have to be explicitly mentioned, for the sake of clarity.
 
 h3. Helpers
 

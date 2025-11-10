@@ -4125,8 +4125,14 @@ public class PageFactory extends AbstractFactory {
 				var masterTagName = masterTagEntry.getKey();
 				var masterTag = masterTagEntry.getValue();
 
-				if (masterTag.comesFromTemplate() && !contentTags.containsKey(masterTagName)) {
-					tagsToCheck.push(masterTagName);
+				if (masterTag.comesFromTemplate()) {
+					if (!contentTags.containsKey(masterTagName)) {
+						tagsToCheck.push(masterTagName);
+					}
+				}
+
+				if (!contentTags.containsKey(masterTagName)) {
+					masterTag.setInherited(true);
 				}
 			}
 
@@ -4134,11 +4140,6 @@ public class PageFactory extends AbstractFactory {
 
 			while (!tagsToCheck.isEmpty()) {
 				var masterTagName = tagsToCheck.pop();
-
-				if (inheritedTags.containsKey(masterTagName)) {
-					continue;
-				}
-
 				var masterTag = masterContentTags.get(masterTagName);
 
 				inheritedTags.put(masterTagName, masterTag);

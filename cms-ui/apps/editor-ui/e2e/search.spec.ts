@@ -95,6 +95,9 @@ test.describe('Search', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupTest(TestSize.MINIMAL);
+        });
+
+        await test.step('Specialized Test Setup', async () => {
             await IMPORTER.importData([
                 FOLDER_TEST_ONE,
                 FOLDER_TEST_TWO,

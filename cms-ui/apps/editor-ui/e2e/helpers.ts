@@ -425,12 +425,12 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
 }
 
 export async function expectItemOffline(item: Locator): Promise<void> {
-    // TODO it would be better not to test on the icon
+    // TODO: it would be better not to test on the icon
     await expect(item.locator('icon.main-icon')).toHaveText('cloud_off');
 }
 
 export async function expectItemPublished(item: Locator): Promise<void> {
-    // TODO it would be better not to test on the icon
+    // TODO: it would be better not to test on the icon
     await expect(item.locator('icon.main-icon')).toHaveText('cloud_upload');
 }
 

@@ -2,6 +2,7 @@ import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
     EntityImporter,
     findNotification,
+    GROUP_ROOT,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -10,15 +11,15 @@ import {
     loginWithForm,
     logout,
     matchRequest,
-    NODE_MINIMAL,
     navigateToApp,
+    NODE_MINIMAL,
     openSidebar,
     PAGE_ONE,
-    GROUP_ROOT,
     selectTab,
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
+import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { randomId } from '@gentics/ui-core/utils/random-id';
 import test from '@playwright/test';
 import { editorAction, findItem, findList, itemAction, openToolOrAction, selectNode } from './helpers';
@@ -27,13 +28,14 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Publish Queue', () => {
 
     const IMPORTER = new EntityImporter();
+    const NAMESPACE = 'pubqueue';
 
     const TEST_GROUP_EDITOR_BASE: GroupImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
-        [IMPORT_ID]: 'group_pubqueue_editor',
+        [IMPORT_ID]: `group_${NAMESPACE}_editor`,
 
         description: 'PubQueue: Editor',
-        name: 'pubqueue_editor',
+        name: `${NAMESPACE}_editor`,
         permissions: [],
     };
 
@@ -42,7 +44,7 @@ test.describe('Publish Queue', () => {
         [IMPORT_ID]: 'group_pubqueue_assigner',
 
         description: 'PubQueue: Assigner',
-        name: 'pubqueue_assigner',
+        name: `${NAMESPACE}_assigner`,
         permissions: [],
     };
 
@@ -51,26 +53,26 @@ test.describe('Publish Queue', () => {
         [IMPORT_ID]: 'group_pubqueue_publisher',
 
         description: 'PubQueue: Publisher',
-        name: 'pubqueue_publisher',
+        name: `${NAMESPACE}_publisher`,
         permissions: [],
     };
 
     const TEST_USER_EDITOR: UserImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_USER,
-        [IMPORT_ID]: 'user_pubqueue_editor',
+        [IMPORT_ID]: `user_${NAMESPACE}_editor`,
 
         group: TEST_GROUP_EDITOR_BASE,
 
         email: 'something@example.com',
         firstName: 'PubQueue',
         lastName: 'Editor',
-        login: 'pubqueue_editor',
+        login: `${NAMESPACE}_editor`,
         password: 'test',
     };
 
     const TEST_USER_ASSIGNER: UserImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_USER,
-        [IMPORT_ID]: 'user_pubqueue_assigner',
+        [IMPORT_ID]: `user_${NAMESPACE}_assigner`,
 
         group: TEST_GROUP_ASSIGNER_BASE,
         // Has to be in a higher or same group as others to see them
@@ -81,20 +83,20 @@ test.describe('Publish Queue', () => {
         email: 'something@example.com',
         firstName: 'PubQueue',
         lastName: 'Assigner',
-        login: 'pubqueue_assigner',
+        login: `${NAMESPACE}_assigner`,
         password: 'test',
     };
 
     const TEST_USER_PUBLISHER: UserImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_USER,
-        [IMPORT_ID]: 'user_pubqueue_publisher',
+        [IMPORT_ID]: `user_${NAMESPACE}_publisher`,
 
         group: TEST_GROUP_PUBLISHER_BASE,
 
         email: 'something@example.com',
         firstName: 'PubQueue',
         lastName: 'Publisher',
-        login: 'pubqueue_publisher',
+        login: `${NAMESPACE}_publisher`,
         password: 'test',
     };
 
@@ -122,14 +124,14 @@ test.describe('Publish Queue', () => {
             await IMPORTER.setupTest(TestSize.MINIMAL);
         });
 
-        await test.step('Specialized Test Setup', async () => {
+        await test.step('Test User Setup', async () => {
             // We have to assemble the group permissions here, because we
             // need the imported data refs.
             const NODE = IMPORTER.get(NODE_MINIMAL);
             // Create a copy, so we have a clean base object
-            const TEST_GROUP_EDITOR = {...TEST_GROUP_EDITOR_BASE};
-            const TEST_GROUP_PUBLISHER = {...TEST_GROUP_PUBLISHER_BASE};
-            const TEST_GROUP_ASSIGNER = {...TEST_GROUP_ASSIGNER_BASE};
+            const TEST_GROUP_EDITOR = cloneWithSymbols(TEST_GROUP_EDITOR_BASE);
+            const TEST_GROUP_PUBLISHER = cloneWithSymbols(TEST_GROUP_PUBLISHER_BASE);
+            const TEST_GROUP_ASSIGNER = cloneWithSymbols(TEST_GROUP_ASSIGNER_BASE);
 
             TEST_GROUP_EDITOR.permissions = [
                 {
@@ -146,8 +148,6 @@ test.describe('Publish Queue', () => {
                         { type: GcmsPermission.READ, value: true },
                         { type: GcmsPermission.READ_ITEMS, value: true },
                         { type: GcmsPermission.UPDATE_ITEMS, value: true },
-                        // FIXME: SUP-19039, should be removed once fixed.
-                        { type: GcmsPermission.READ_TEMPLATES, value: true },
                     ],
                 },
             ];

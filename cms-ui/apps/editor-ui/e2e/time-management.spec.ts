@@ -74,7 +74,7 @@ test.describe('Time Management', () => {
 
         const NODE = IMPORTER.get(NODE_MINIMAL);
 
-        await test.step('Specialized Test Setup', async () => {
+        await test.step('Test User Setup', async () => {
             // We have to assemble the group permissions here, because we
             // need the imported data refs.
             // Create a copy, so we have a clean base object

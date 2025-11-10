@@ -88,6 +88,10 @@ public abstract class ContentTag extends Tag {
 	 * @see com.gentics.lib.parser.tag.ParserTag#isEditable()
 	 */
 	public boolean isEditable() throws NodeException {
+		if (isInherited()) {
+			return false;
+		}
+
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
 		int tagNestLevel = renderType.getStack().countInstances(Tag.class, this);
@@ -135,7 +139,7 @@ public abstract class ContentTag extends Tag {
 	 * @see com.gentics.lib.parser.tag.ParserTag#isInlineEditable()
 	 */
 	public boolean isInlineEditable() throws NodeException {
-		return getConstruct().isInlineEditable();
+		return !isInherited() && getConstruct().isInlineEditable();
 	}
 
 	@Override

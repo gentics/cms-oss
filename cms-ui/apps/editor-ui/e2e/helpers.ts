@@ -2,7 +2,7 @@
 /// <reference lib="dom"/>
 import { readFileSync } from 'node:fs';
 import { Page as CmsPage } from '@gentics/cms-models';
-import { clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, selectDateInPicker } from '@gentics/e2e-utils';
+import { clickButton, clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, selectDateInPicker } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
@@ -453,7 +453,7 @@ export function overrideAlohaConfig(page: Page, configFilename: string): Promise
 
 export async function addSearchChip(searchBar: Locator, filter: string): Promise<Locator> {
     const properties = searchBar.locator('.gtx-chipsearchbar-menu-filter-properties');
-    await properties.locator('.custom-content button').click();
+    await clickButton(properties.locator('.trigger-content [data-action="open-context"]'));
     const dropdown = searchBar.locator('.custom-content-menu');
     await dropdown.locator(`.custom-content-menu-button[data-value="${filter}"]`).click();
 

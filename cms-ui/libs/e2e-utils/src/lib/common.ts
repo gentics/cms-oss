@@ -26,10 +26,15 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientConfig } from '@gentics/cms-rest-client';
 import { APIRequestContext } from '@playwright/test';
+import { ClickOptions } from './playwright-types';
 
 export interface LoginInformation {
     username: string;
     password: string;
+}
+
+export interface ButtonClickOptions extends ClickOptions {
+    action?: 'primary' | 'secondary';
 }
 
 /**

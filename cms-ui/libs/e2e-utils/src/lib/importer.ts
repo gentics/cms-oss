@@ -662,7 +662,9 @@ export class EntityImporter {
         nodeId: number | string,
     ): Promise<File> {
         const fileName = fixtureFile.name ?? basename(fixtureFile.fixturePath);
-        const res = await this.apiContext.post('/rest/file/create', {
+        // URL has to be hardcoded like this.
+        // CMS is actually only reachable under localhost in this case, no idea why.
+        const res = await this.apiContext.post('http://localhost:8080/rest/file/create', {
             multipart: {
                 fileBinaryData: {
                     name: fileName,

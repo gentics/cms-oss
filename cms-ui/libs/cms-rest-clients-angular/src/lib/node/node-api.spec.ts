@@ -2,6 +2,7 @@ import {
     Language,
     NodeCopyRequest,
     NodeCopyRequestOptions,
+    NodeCreateRequest,
     NodeDeleteRequestOptions,
     NodeFeature,
     NodeFeatureListRequestOptions,
@@ -33,7 +34,7 @@ describe('NodeApi', () => {
     });
 
     it('addNode() sends the correct PUT request', () => {
-        const payload: NodeSaveRequest = {
+        const payload: NodeCreateRequest = {
             node: getExampleNodeData(),
         };
 

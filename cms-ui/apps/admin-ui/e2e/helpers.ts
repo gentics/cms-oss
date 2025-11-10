@@ -7,8 +7,8 @@ export async function navigateToModule(page: Page, moduleId: string): Promise<Lo
     await moduleItem.click();
 
     // Wait for the module content to be visible
-    const splitOutlet = page.locator('gtx-split-view-router-outlet .master-route-wrapper > *:not(router-outlet)');
-    const genericOutlet = page.locator('gtx-generic-router-outlet > *:not(router-outlet):not(gtx-generic-router-outlet)');
+    const splitOutlet = page.locator('gtx-generic-router-outlet > gtx-split-view-router-outlet .master-route-wrapper > *:not(router-outlet)');
+    const genericOutlet = page.locator('gtx-generic-router-outlet > gtx-generic-router-outlet > *:not(router-outlet)');
 
     const module = splitOutlet.or(genericOutlet);
 

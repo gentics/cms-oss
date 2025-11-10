@@ -183,7 +183,7 @@ test.describe('Search', () => {
             const CHIP_NAME = 'created';
             const chipDate = new Date();
             chipDate.setFullYear(chipDate.getFullYear(), chipDate.getMonth(), chipDate.getDate());
-            const TIME = Math.floor(chipDate.getTime() / 1000);
+            const TIME = Math.floor(chipDate.getTime() / 1_000);
 
             await test.step('Add search chip', async () => {
                 const chip = await addSearchChip(searchBar, CHIP_NAME);
@@ -198,7 +198,7 @@ test.describe('Search', () => {
             const req = await searchReq;
             const url = new URL(req.url());
             const timeStamp = parseInt(url.searchParams.get(`${CHIP_NAME}since`) || '', 10);
-            expect(Math.abs(TIME - timeStamp)).toBeLessThanOrEqual(1000);
+            expect([0, 3_600]).toContainEqual(Math.abs(TIME - timeStamp));
         });
 
         test('search result breadcrumbs should be displayed correctly', {

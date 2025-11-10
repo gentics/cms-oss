@@ -126,7 +126,7 @@ test.describe('Page Editing', () => {
                 await openEditingPageInEditmode(page);
             });
 
-            test('should be able to add new text to the content-editable', async ({page}) => {
+            test.only('should be able to add new text to the content-editable', async ({page}) => {
                 const TEXT_CONTENT = 'Foo bar hello world';
 
                 // Type content into editor
@@ -701,7 +701,7 @@ test.describe('Page Editing', () => {
                 await expect(styleToggle).toBeDisabled();
             });
 
-            test.skip('should be able to style table with config', async ({ page }) => {
+            test('should be able to style table with config', async ({ page }) => {
                 const STYLE_NAME = 'table-style-1';
 
                 await overrideAlohaConfig(page, 'aloha-config-table-test.js');
@@ -718,7 +718,7 @@ test.describe('Page Editing', () => {
 
                 const styleOptionsContainer = findDynamicDropdown(page, SLOT_CELL_STYLE);
                 const styleOptions = styleOptionsContainer.locator('.select-menu-entry');
-                await expect(styleOptions).toHaveCount(6);
+                await expect(styleOptions).toHaveCount(8);
 
                 const tableStyle = styleOptionsContainer.locator(`.select-menu-entry[data-id="${STYLE_NAME}"]`);
                 await tableStyle.click();

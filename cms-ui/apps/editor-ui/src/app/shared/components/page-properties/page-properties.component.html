@@ -21,6 +21,7 @@
                 class="template-select"
                 [required]="true"
                 [label]="('editor.item_template_label' | i18n) + '*'"
+                [placeholder]="viewTemplatesAllowed ? null : item?.template?.name"
                 formControlName="templateId"
             >
                 <gtx-option
@@ -30,7 +31,7 @@
             </gtx-select>
 
             <span
-                *ngIf="templates.length === 0"
+                *ngIf="viewTemplatesAllowed && templates.length === 0"
                 class="no-templates"
                 [title]="linkToTemplatesAllowed ? ('editor.link_templates_no_templates_linked_assign_self' | i18n) : ('editor.link_templates_no_templates_linked_assign_request' | i18n)"
             >

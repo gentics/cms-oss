@@ -159,8 +159,8 @@ export class PagePropertiesComponent
             this.client.node.listTemplates(this.nodeId, { pageSize: 0 }),
             this.permissions.forFolder(this.folderId, this.nodeId),
         ]).subscribe(([templateRes, perms]) => {
-            this.viewTemplatesAllowed = templateRes.numItems > 0 && perms.template?.view
-            this.linkToTemplatesAllowed = this.viewTemplatesAllowed && perms.template?.link;
+            this.viewTemplatesAllowed = perms.template?.view;
+            this.linkToTemplatesAllowed = templateRes.numItems > 0 && perms.template?.view && perms.template?.link;
             this.configureForm(this.form.value);
             this.changeDetector.markForCheck();
         }));
@@ -222,7 +222,7 @@ export class PagePropertiesComponent
         const options = { onlySelf: false, emitEvent: loud };
         setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], this.niceUrlEnabled, options);
         setControlsEnabled(this.form, ['language'], !this.disableLanguageSelect, options);
-        setControlsEnabled(this.form, ['templateId'], this.viewTemplatesAllowed);
+        setControlsEnabled(this.form, ['templateId'], this.mode === PagePropertiesMode.CREATE || this.viewTemplatesAllowed);
     }
 
     protected assembleValue(value: EditablePageProps): EditablePageProps {

@@ -311,7 +311,7 @@ public class ModelBuilder {
 		if (channel != null) {
 			restFile.setChannelId(channel.getId());
 		} else {
-			restFile.setChannelId(new Integer(0));
+			restFile.setChannelId(0);
 			channel = getMaster(nodeFile.getFolder().getNode());
 		}
 		restFile.setInherited(nodeFile.isInherited());
@@ -944,6 +944,8 @@ public class ModelBuilder {
 		switch (ttype) {
 		case Tag.TYPE_CONTENTTAG:
 			restTag.setType(com.gentics.contentnode.rest.model.Tag.Type.CONTENTTAG);
+			restTag.setRootTag(((ContentTag) nodeTag).comesFromTemplate());
+			restTag.setInherited(((ContentTag) nodeTag).isInherited());
 			break;
 
 		case Tag.TYPE_TEMPLATETAG:

@@ -274,6 +274,9 @@ public class Page extends PublishableContentItem implements Serializable {
 	 */
 	private Integer customEdate;
 
+	/**
+	 * Whether this page has been partially localized.
+	 */
 	private Boolean partiallyLocalized;
 
 	/**

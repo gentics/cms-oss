@@ -79,6 +79,17 @@ public interface MCPageResource {
 	GenericResponse unlocalize(MultiUnlocalizeRequest request) throws Exception;
 
 	/**
+	 * Unlocalize the specified tag for the given page.
+	 * @param pageId The ID of the page to unlocalize the tag for.
+	 * @param tagId The ID of the tag to unlocalize.
+	 * @param request The unlocalize request.
+	 * @return generic response
+	 */
+	@POST
+	@Path("/unlocalize/{pageId}/tags/{tagId}")
+	GenericResponse unlocalizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId, UnlocalizeRequest request) throws Exception;
+
+	/**
 	 * Localize the given page
 	 * @param id id of the page to localize
 	 * @param request request
@@ -88,6 +99,17 @@ public interface MCPageResource {
 	@Path("/localize/{id}")
 	GenericResponse localize(@PathParam("id") Integer id, PageLocalizeRequest request) throws Exception;
 
+	/**
+	 * Localize the specified tag for the given page.
+	 *
+	 * <p>
+	 *     Note that the page must already be {@link PageLocalizeRequest#getPartial() partially localized}.
+	 * </p>
+	 *
+	 * @param pageId The ID of the page to localize the tag for.
+	 * @param tagId The ID of the tag to localize.
+	 * @return generic response
+	 */
 	@POST
 	@Path("/localize/{pageId}/tags/{tagId}")
 	GenericResponse localizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId) throws Exception;

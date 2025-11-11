@@ -24,6 +24,7 @@ import com.gentics.contentnode.job.LocalizePageCallable;
 import com.gentics.contentnode.job.LocalizeRootTagCallable;
 import com.gentics.contentnode.job.PushToMasterJob;
 import com.gentics.contentnode.job.UnlocalizeJob;
+import com.gentics.contentnode.job.UnlocalizeTagJob;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
@@ -378,6 +379,40 @@ public class MCPageResourceImpl implements MCPageResource {
 					Operator.lock(LockType.channelSet, page.getChannelSetId()),
 					new LocalizeRootTagCallable(pageId, page.getChannel().getId(), tagId)
 			);
+		}
+	}
+
+	@POST
+	@Path("/unlocalize/{pageId}/tags/{tagId}")
+	@Override
+	public GenericResponse unlocalizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId, UnlocalizeRequest request) throws Exception {
+		if (request == null) {
+			var msg = "Error while unlocalizing root tag: no UnlocalizeRequest provided";
+
+			logger.error(msg);
+
+			return new GenericResponse(
+				new Message(Message.Type.CRITICAL, new CNI18nString("rest.general.error").toString()),
+				new ResponseInfo(ResponseCode.FAILURE, msg));
+		}
+
+		var channelId = request.getChannelId();
+
+		try (var trx = ContentNodeHelper.trx()) {
+			if (!checkChannelSyncPerm(channelId) && !checkDeletePermSome(channelId, Page.class, Collections.singletonList(pageId))) {
+				var message = new CNI18nString("page.nopermission");
+
+				return new GenericResponse(
+					new Message(Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
+			}
+
+			var job = new UnlocalizeTagJob()
+				.setPageId(pageId)
+				.setTagId(tagId)
+				.setChannelId(channelId);
+
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 

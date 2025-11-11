@@ -121,4 +121,12 @@ public interface ParserTag extends GCNRenderable {
 	 * @return true if the tag is an Aloha block otherwise false
 	 */
 	boolean isAlohaBlock() throws NodeException;
+
+	/**
+	 * Tells if the tag is localizable.
+	 * @return true if the tag is localizable otherwise false.
+	 */
+	default boolean isLocalizable() throws NodeException {
+		return false;
+	}
 }

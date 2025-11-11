@@ -24,7 +24,7 @@ import org.apache.commons.lang3.tuple.Triple;
 /**
  * Callable implementation for localizing a root tag.
  */
-public class LocalizeRootTagCallable extends AbstractLocalizeCallable{
+public class LocalizeRootTagCallable extends AbstractLocalizeCallable {
 
 	/** The page ID. */
 	private final int pageId;
@@ -133,7 +133,7 @@ public class LocalizeRootTagCallable extends AbstractLocalizeCallable{
 			page.save();
 			page.unlock();
 
-			I18nString message = new CNI18nString("page.localize.success");
+			I18nString message = new CNI18nString("page.localize_root_tag.success");
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, message.toString()));
 		}
 	}

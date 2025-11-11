@@ -286,9 +286,9 @@ public class ParseStructRenderer implements StructRenderer {
 					logger.debug("rendering {" + tag + "} in editMode {" + editMode + "}");
 				}
 				renderEditableTag(source, code, tag, omitTags, omitTagsEdit, result);
-			} else if (editMode == RenderType.EM_ALOHA_READONLY) {
+			} else if (editMode == RenderType.EM_ALOHA_READONLY || tag.isLocalizable()) {
 				if (debugLog) {
-					logger.debug("rendering {" + tag + "} in " + RenderType.renderEditMode(editMode) + " mode");
+					logger.debug("rendering {" + tag + "}, isEditable + {" + tag.isEditable() + "}, isLocalizable {" + tag.isLocalizable() + "} in " + RenderType.renderEditMode(editMode) + " mode");
 				}
 				AlohaRenderer alohaRenderer = (AlohaRenderer) RendererFactory.getRenderer(ContentRenderer.RENDERER_ALOHA);
 

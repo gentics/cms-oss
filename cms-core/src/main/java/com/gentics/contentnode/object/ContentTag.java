@@ -177,4 +177,9 @@ public abstract class ContentTag extends Tag {
 	public void setInherited(boolean inherited) {
 		this.inherited = inherited;
 	}
+
+	@Override
+	public boolean isLocalizable() {
+		return comesFromTemplate() && isInherited();
+	}
 }

@@ -1,0 +1,2 @@
+When a new template tag (not editable in pages) was created, pages were not dirted, even if they were published with a tagmap entry referencing that tag.
+This has been fixed.

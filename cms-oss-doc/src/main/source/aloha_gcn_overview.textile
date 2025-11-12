@@ -35,7 +35,7 @@ When using Aloha Editor to edit your contents you want to be able to use Content
 
 h4. Single Root Tags
 
-Use single root tags for your constructs. This will allow Gentics CMS to re-use your root tags as container elements. Make sure that *there are no whitespaces* before or after your root tag. You can add your own id attributes to the root tags, but you have to make sure that those ids are unique on the page.
+Use single root tags for your constructs. This will allow Gentics CMS to re-use your root tags as container elements. Make sure that *there are no whitespaces* before or after your root tag. It is *possible, yet discouraged to add your own ID attributes to the root tags*: along with making sure that those IDs are unique on the page, one must remember that the root tag is changed in the terms of attributes (including an ID) to make it recognizable by the tagging mechanism, and having a custom ID can trigger unwanted side effects while adding/editing/removing the tag in an editor. If it is possible, please eliminate adding own IDs in the root tags, by, for example, wrapping the tag with an ID with another empty tag (making it a root).
 
 WARNING: No whitespace also means: no line breaks! Avoid line breaks in velocity implementations by putting velocity comments at the end of the line (##).
 

@@ -107,9 +107,12 @@ export async function openPropertiesTab(page: Page): Promise<void> {
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {
     await openPropertiesTab(page);
     const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
-    if (!(await group.evaluate(el => el.classList.contains('expanded')))) {
+    const isExpanded = await group.evaluate(el => el.classList.contains('expanded'));
+
+    if (!isExpanded) {
         await group.locator('.collapsible-header').click();
     }
+
     const tab = group.locator(`.tab-link[data-id="object.${name}"]`);
     await tab.click();
 }
@@ -425,12 +428,12 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
 }
 
 export async function expectItemOffline(item: Locator): Promise<void> {
-    // TODO it would be better not to test on the icon
+    // TODO: it would be better not to test on the icon
     await expect(item.locator('icon.main-icon')).toHaveText('cloud_off');
 }
 
 export async function expectItemPublished(item: Locator): Promise<void> {
-    // TODO it would be better not to test on the icon
+    // TODO: it would be better not to test on the icon
     await expect(item.locator('icon.main-icon')).toHaveText('cloud_upload');
 }
 

@@ -1246,6 +1246,7 @@ export class FolderActionsService {
 
             case 'page':
                 options.langvars = true;
+                options.template = true;
 
                 fetchPromise = this.client.page.get(itemId, options).pipe(
                     map(res => res.page),

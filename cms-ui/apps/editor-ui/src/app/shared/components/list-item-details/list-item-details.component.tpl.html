@@ -74,7 +74,7 @@
                 Priority: {{ item[field] }}
             </detail-chip>
             <detail-chip *ngSwitchCase="'template'">
-                <i class="material-icons" [attr.translate]="'no'">dashboard</i> {{ templateName(item.templateId) }}
+                <i class="material-icons" [attr.translate]="'no'">dashboard</i> {{ item.template?.name }}
             </detail-chip>
             <detail-chip *ngSwitchCase="'fileType'">
                 <i class="material-icons" [attr.translate]="'no'">insert_drive_file</i> {{ item[field] }}

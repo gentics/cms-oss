@@ -481,7 +481,7 @@ export interface GroupImportData extends GroupCreateRequest, ImportData {
     permissions?: ImportPermissions[];
 }
 
-export interface UserImportData extends GroupUserCreateRequest, ImportData {
+export interface UserImportData extends Omit<GroupUserCreateRequest, 'groups'>, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_USER,
 
     /** The group reference, in which the user should be created in. */

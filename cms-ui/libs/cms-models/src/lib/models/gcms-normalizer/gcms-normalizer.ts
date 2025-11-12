@@ -219,13 +219,6 @@ export class GcmsNormalizer {
                 }
             }
         }
-        if (page.template) {
-            if (isNested) {
-                delete page.template;
-            } else {
-                this.processDenormalizedTemplate(page.template);
-            }
-        }
     }
 
     private processDenormalizedTemplate(template: Template<Raw>): void {

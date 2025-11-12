@@ -98,8 +98,9 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 			// ImageURLPartType
 			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.target.name }}", "blume.jpg", null },
 			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.url }}", "/node/pub/dir/bin/test/blume.jpg", null },
-			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.target.object.copyright.parts.text.text }}", "Copyright blume", null },
+			new Object[] { "{{{gtx_render cms.page.tags.urls_construct1.parts.image.target.object.copyright }}}", "Copyright blume", null },
 			new Object[] { "{{{gtx_render cms.page.tags.urls_construct1.parts.image.target.object.copyright.parts.text }}}", "Copyright blume", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.image.target.object.copyright.parts.text.text }}", "Copyright blume", null },
 
 			// CheckboxPartType
 			new Object[] { "{{gtx_render cms.page.tags.checkbox_construct1 }}", "10", null},

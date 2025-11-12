@@ -35,8 +35,9 @@ This obviously does not only work for "cms", but for every object in the context
 
 WARNING: Unlike the Velocity Part Type, the Handlebars Part Type does not support "shortcuts" when resolving. So for example to resolve a specific part in the current tag,
 it is not allowed to omit the "parts" keyword in handlebars: +{{ cms.tag.parts.html }}+ will resolve to the part "html" in the current tag, whereas +{{ cms.tag.html }}+ will *not* work. 
-Hence, if you need to, say, render a copyright of a referenced image, set withing an image's object property, the Velocity's definition +{{cms.tag.parts.img.object.copyright}}+ turns into a longer variant for the Handlebars: 
-+{{cms.tag.parts.img.target.object.copyright.parts.text.text}}+, where +target+ image dereferencing, +parts+ property listing, and +text+ part type now have to be explicitly mentioned, for the sake of clarity.
+Hence, if you need to, say, render a copyright of a referenced image, set withing an image's object property, the Velocity's definition +{{cms.tag.parts.img.object.copyright}}+ turns into longer variants for the Handlebars: 
+either +{{{gtx_render cms.tag.parts.img.target.object.copyright }}}+ with +target+ image dereferencing, or 
++{{cms.tag.parts.img.target.object.copyright.parts.text.text}}+, where in addition +parts+ property listing, and +text+ part type now have to be explicitly mentioned, if one wants to avoid using +gtx_render+ (which is  discouraged).
 
 h3. Helpers
 

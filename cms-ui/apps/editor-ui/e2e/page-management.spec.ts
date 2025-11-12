@@ -1,4 +1,4 @@
-import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, Page as CmsPage } from '@gentics/cms-models';
 import {
     clickNotificationAction,
     EntityImporter,
@@ -66,6 +66,9 @@ test.describe('Page Management', () => {
     const TEST_CATEGORY_ID = 2;
     const COLOR_ID = 2;
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    let TEST_PAGE: CmsPage;
+
     test.beforeAll(async ({ request }) => {
         await test.step('Client Setup', async () => {
             IMPORTER.setApiContext(request);
@@ -88,6 +91,7 @@ test.describe('Page Management', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupTest(TestSize.MINIMAL);
+            TEST_PAGE = IMPORTER.get(PAGE_ONE);
         });
     });
 
@@ -157,11 +161,10 @@ test.describe('Page Management', () => {
             },
         ]);
 
-        const PAGE = IMPORTER.get(PAGE_ONE)!;
         const list = findList(page, ITEM_TYPE_PAGE);
-        const item = findItem(list, PAGE.id);
+        const item = findItem(list, TEST_PAGE.id);
 
-        await expect(item.locator('.item-name .item-name-only')).toHaveText(PAGE.name);
+        await expect(item.locator('.item-name .item-name-only')).toHaveText(TEST_PAGE.name);
 
         await test.step('Update the page name', async () => {
             await itemAction(item, 'properties');
@@ -192,9 +195,8 @@ test.describe('Page Management', () => {
             },
         ]);
 
-        const PAGE = IMPORTER.get(PAGE_ONE);
         const list = findList(page, ITEM_TYPE_PAGE);
-        const item = findItem(list, PAGE.id);
+        const item = findItem(list, TEST_PAGE.id);
         let form: Locator;
 
         // expect the page to be offline
@@ -208,8 +210,8 @@ test.describe('Page Management', () => {
         });
 
         await test.step('Publish the page with toast action', async () => {
-            const publishNotification = findNotification(page, `page-save-success-with-publish:${PAGE.id}`);
-            const publishReq = page.waitForResponse(matchRequest('POST', `/rest/page/publish/${PAGE.id}`));
+            const publishNotification = findNotification(page, `page-save-success-with-publish:${TEST_PAGE.id}`);
+            const publishReq = page.waitForResponse(matchRequest('POST', `/rest/page/publish/${TEST_PAGE.id}`));
             await clickNotificationAction(publishNotification);
             await publishReq;
             await expect(form).toBeHidden();
@@ -230,11 +232,19 @@ test.describe('Page Management', () => {
                     { type: GcmsPermission.UPDATE_ITEMS, value: true },
                 ],
             },
+            {
+                type: AccessControlledType.OBJECT_PROPERTY_TYPE,
+                instanceId: '10007',
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                ],
+            },
         ]);
 
-        const PAGE = IMPORTER.get(PAGE_ONE)!;
         let list = findList(page, ITEM_TYPE_PAGE);
-        let item = findItem(list, PAGE.id);
+        let item = findItem(list, TEST_PAGE.id);
 
         await test.step('Update Page Object-Properties', async () => {
             await itemAction(item, 'properties');
@@ -248,7 +258,7 @@ test.describe('Page Management', () => {
         await test.step('Validate the changes are correct after reloading', async () => {
             await closeObjectPropertyEditor(page);
             list = findList(page, ITEM_TYPE_PAGE);
-            item = findItem(list, PAGE.id);
+            item = findItem(list, TEST_PAGE.id);
             await itemAction(item, 'properties');
             await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY);
             await expect(page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
@@ -273,9 +283,8 @@ test.describe('Page Management', () => {
             },
         ]);
 
-        const PAGE = IMPORTER.get(PAGE_ONE)!;
         const list = findList(page, ITEM_TYPE_PAGE);
-        const item = findItem(list, PAGE.id);
+        const item = findItem(list, TEST_PAGE.id);
 
         await itemAction(item, 'properties');
         await editorAction(page, 'editor-context');

@@ -135,6 +135,14 @@ spec:
             post {
                 always {
                     script {
+                        for (traceFile in findFiles(glob: 'cms-ui/.playwright/**/*.zip')) {
+                            def newName = traceFile.path.replace("/trace.zip", ".zip")
+                            sh "mv $traceFile.path $newName"
+                        }
+
+                        archiveArtifacts artifacts: 'cms-ui/.playwright/**/*.zip', allowEmptyArchive: true
+                        archiveArtifacts artifacts: 'cms-integration-tests/cms/logs/full.log', allowEmptyArchive: true
+
                         junit testResults: "cms-ui/.reports/**/PLAYWRIGHT-report.xml", allowEmptyResults: true
                     }
                 }

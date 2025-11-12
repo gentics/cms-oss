@@ -1,0 +1,42 @@
+Configuration:
+  status: error
+  name: CMS Configuration
+  monitorInterval: 10
+  appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%d [%t] %-5p %c - %m%n"
+    File:
+      name: LOGFILE
+      fileName: "/cms/logs/full.log"
+      append: true
+      createOnDemand: true
+      PatternLayout:
+        Pattern: "%d [%t] %-5p %c - %m%n"
+  Loggers:
+    logger:
+      -
+        name: com.gentics.contentnode
+        level: error
+      -
+        name: com.gentics.contentnode.runtime
+        level: warn
+      -
+        name: com.gentics.contentnode.scheduler
+        level: info
+      -
+        name: wastebin
+        level: error
+      -
+        name: access_log
+        level: info
+      -
+        name: org.eclipse.jetty
+        level: warn
+    Root:
+      level: error
+      AppenderRef:
+        - ref: STDOUT
+        - ref: LOGFILE

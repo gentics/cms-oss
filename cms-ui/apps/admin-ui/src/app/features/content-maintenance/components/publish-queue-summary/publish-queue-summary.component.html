@@ -1,5 +1,3 @@
-<h2 class="title">{{ 'widget.widget_publishing_process_total_title' | i18n }}</h2>
-
 <table *ngIf="publishQueue" class="summary-table">
     <ng-container *ngFor="let entry of PUBLISH_PLURAL_MAPPING | gtxEntries">
         <tr class="type-header-row">

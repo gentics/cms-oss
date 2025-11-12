@@ -4,6 +4,10 @@ services:
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW --log-bin=mysqld-bin
 
     environment:
+      # General Container Settings
+      TZ: "Europe/Vienna"
+
+      # Database settings
       MYSQL_DATABASE: node_utf8
       MYSQL_USER: node
       MYSQL_PASSWORD: node
@@ -23,6 +27,10 @@ services:
     image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-3.1.0}
 
     environment:
+      # General Container Settings
+      TZ: "Europe/Vienna"
+
+      # Auth settings
       MESH_INITIAL_ADMIN_PASSWORD_FORCE_RESET: false
       MESH_INITIAL_ADMIN_PASSWORD: admin
       MESH_ELASTICSEARCH_URL: null
@@ -45,6 +53,9 @@ services:
       - 8080:8080
 
     environment:
+      # General Container Settings
+      TZ: "Europe/Vienna"
+
       # DB Connection
       NODE_DB_HOST: mariadb
       NODE_DB_USER: root
@@ -69,8 +80,9 @@ services:
 
     volumes:
       - ./cms/commands:/cms/scheduler-commands
-      - ./cms/conf:/cms/conf/cms
+      - ./cms/conf:/cms/conf
       - ./cms/packages:/cms/packages
+      - ./cms/logs:/cms/logs
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/rest/auth/globalprefix"]

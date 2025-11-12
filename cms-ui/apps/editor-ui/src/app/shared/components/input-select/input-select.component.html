@@ -1,19 +1,20 @@
 <div (gtxClickOutside)="dropDownMenuClose()" [id]="'gtx-input-select-' + compId">
     <div
         *ngIf="iconOnly; else contentDefault"
-        class="custom-content"
+        class="trigger-content"
     >
         <gtx-button
             icon
             type="primary"
             size="regular"
+            data-action="open-context"
             [class.disabled]="disabled"
             [disabled]="disabled"
             (click)="dropDownMenuTrigger($event)"
             (keydown.space)="dropDownMenuTrigger($event)"
             (keydown.escape)="dropDownMenuClose()"
         >
-            <i class="material-icons" [attr.translate]="'no'">filter_list</i>
+            <icon>filter_list</icon>
         </gtx-button>
 
     </div>
@@ -23,6 +24,7 @@
             *ngIf="!noInput; else triggerNoInput"
             #buttonDefault
             class="default-trigger"
+            data-action="open-context"
             [class.disabled]="disabled"
             [disabled]="disabled"
             [title]="labelGetByValue(value) | i18n"
@@ -45,8 +47,8 @@
             type="text"
             class="custom-content-menu-filter"
             [hidden]="!dropDownMenuItemsFilterIsDisplayed()"
-            [(ngModel)]="dropDownMenuItemsFilterTerm"
             [placeholder]="'common.search_placeholder' | i18n"
+            [(ngModel)]="dropDownMenuItemsFilterTerm"
             (keydown.escape)="dropDownMenuClose()"
         >
         <div class="custom-content-menu-inner">

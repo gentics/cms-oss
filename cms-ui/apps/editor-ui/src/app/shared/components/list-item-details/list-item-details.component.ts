@@ -158,20 +158,6 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
     }
 
     /**
-     * Format a template id into the template name. Accepts normalized IDs
-     * or a template object to work with the repository browser.
-     */
-    templateName(template: number | Template): string {
-        let templateObj: Template;
-        if (typeof template === 'number') {
-            templateObj = this.entityResolver.getTemplate(template);
-        } else {
-            templateObj = (template );
-        }
-        return templateObj && templateObj.name;
-    }
-
-    /**
      * Displays the total usage of an item if it is available.
      */
     totalUsage(item: Item): string {

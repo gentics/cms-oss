@@ -26,10 +26,15 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientConfig } from '@gentics/cms-rest-client';
 import { APIRequestContext } from '@playwright/test';
+import { ClickOptions } from './playwright-types';
 
 export interface LoginInformation {
     username: string;
     password: string;
+}
+
+export interface ButtonClickOptions extends ClickOptions {
+    action?: 'primary' | 'secondary';
 }
 
 /**
@@ -62,26 +67,20 @@ export enum TestSize {
 }
 
 export type EntityMap = Record<string, any>;
-export type BinaryMap = Record<string, globalThis.File>;
+export type BinaryMap = Record<string, BufferedFixtureFile>;
 
-export interface ImportBinary {
+export interface FixtureFile {
     /** The path to the fixture file to load. */
     fixturePath: string;
     /** The File name. If left empty, it'll be determined from the fixture-path. */
     name?: string;
-    /** The mime-type of the binary, because cypress doesn't provide it. */
+    /** The mime-type of the binary, because the FS doesn't provide it. */
     type: string;
 }
-export interface ContentFile {
-    contents: string | Buffer;
-    fileName: string;
-    mimeType: string;
-}
 
-export interface BinaryFileLoadOptions extends BinaryLoadOptions {}
-
-export interface BinaryContentFileLoadOptions extends BinaryLoadOptions {
-    asContent: true;
+export interface BufferedFixtureFile extends FixtureFile {
+    /** The loaded/buffered contents of the fixture file */
+    buffer: Buffer;
 }
 
 export const LANGUAGE_EN = 'en';
@@ -376,15 +375,6 @@ export interface FormattedText {
     formats: string[];
 }
 
-export interface ImportBinary {
-    /** The path to the fixture file to load. */
-    fixturePath: string;
-    /** The File name. If left empty, it'll be determined from the fixture-path. */
-    name?: string;
-    /** The mime-type of the binary, because cypress doesn't provide it. */
-    type: string;
-}
-
 export type ImportSinglePermission = Pick<PermissionInfo, 'type' | 'value'>;
 
 export interface ImportPermissions {
@@ -491,7 +481,7 @@ export interface GroupImportData extends GroupCreateRequest, ImportData {
     permissions?: ImportPermissions[];
 }
 
-export interface UserImportData extends GroupUserCreateRequest, ImportData {
+export interface UserImportData extends Omit<GroupUserCreateRequest, 'groups'>, ImportData {
     [IMPORT_TYPE]: typeof IMPORT_TYPE_USER,
 
     /** The group reference, in which the user should be created in. */

@@ -1,0 +1,1 @@
+Aloha Editor: It is discouraged to use IDs in the construct's root tag(s), as those may malfunction the editor's tagging mechanism. The description of this effect has been added to the documentation.

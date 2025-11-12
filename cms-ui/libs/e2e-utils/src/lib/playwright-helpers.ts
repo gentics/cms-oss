@@ -4,6 +4,7 @@ import { expect, Locator, Page, Request, Response, Route } from '@playwright/tes
 import {
     ATTR_CONTEXT_ID,
     ATTR_MULTIPLE,
+    ButtonClickOptions,
     DEFAULT_E2E_KEYCLOAK_URL,
     ENV_E2E_APP_PATH,
     ENV_E2E_KEYCLOAK_URL,
@@ -11,6 +12,7 @@ import {
     UserImportData,
 } from './common';
 import { hasMatchingParams, matchesPath } from './utils';
+import { ClickOptions } from './playwright-types';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
 const TOAST_CLOSE_BUTTON = '.gtx-toast-btn_close:not([hidden])';
@@ -289,6 +291,20 @@ export async function waitForPublishDone(page: Page, client: GCMSRestClient): Pr
     }
 }
 
+export async function clickButton(source: Locator, options?: ButtonClickOptions): Promise<void> {
+    const nodeType = await source.evaluate(el => el.nodeName);
+
+    // For a simple button, simply click it without any other stuff
+    if (nodeType === 'BUTTON') {
+        await source.click(options);
+        return;
+    }
+
+    const action = options?.action || 'primary';
+    const btn = source.locator(`[data-action="${action}"]`);
+    await btn.click(options);
+}
+
 export async function selectDateInPicker(source: Locator, date: Date): Promise<void> {
     const picker = await getSourceLocator(source, 'gtx-date-time-picker-controls');
 
@@ -350,8 +366,12 @@ export async function selectDateInPicker(source: Locator, date: Date): Promise<v
         }
     }
 
+    let day = `${date.getDate()}`;
+    if (day.length === 1) {
+        day = `0${day}`;
+    }
     await content.locator('.rd-days .rd-days-body .rd-day-body:not(.rd-day-prev-month):not(.rd-day-next-month):not(.rd-day-disabled)').filter({
-        hasText: `${date.getDate()}`,
+        hasText: day,
     }).click();
 }
 

@@ -5,10 +5,14 @@
  */
 package com.gentics.contentnode.object;
 
+import java.util.List;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.devtools.model.TemplateTagModel;
 import com.gentics.contentnode.etc.BiFunction;
+import com.gentics.contentnode.events.DependencyObject;
+import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.factory.FieldGetter;
 import com.gentics.contentnode.factory.FieldSetter;
 import com.gentics.contentnode.factory.TType;
@@ -134,5 +138,20 @@ public abstract class TemplateTag extends Tag {
 	@Override
 	public Integer getTType() {
 		return Tag.TYPE_TEMPLATETAG;
+	}
+
+	@Override
+	public void triggerEvent(DependencyObject object, String[] property, int eventMask, int depth, int channelId)
+			throws NodeException {
+		super.triggerEvent(object, property, eventMask, depth, channelId);
+
+		// when a new tag was created in the template, which is not editable in pages, we trigger "tags" for all pages using the template
+		if ((Events.isEvent(eventMask, Events.UPDATE) || Events.isEvent(eventMask, Events.CREATE)) && !isPublic()) {
+			List<Page> pages = getTemplate().getPages();
+			for (Page page : pages) {
+				page.triggerEvent(new DependencyObject(page, (NodeObject) null), new String[] { "tags" }, Events.UPDATE,
+						depth + 1, 0);
+			}
+		}
 	}
 }

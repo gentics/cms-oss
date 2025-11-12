@@ -71,11 +71,20 @@ export function createConfiguration(
         }),
         name: `${appName} integration tests`,
 
+        /** Update the output dir */
+        outputDir: `../../.playwright/${appName}/`,
+
         /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
         use: {
             baseURL: process.env[ENV_E2E_APP_URL],
             /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-            trace: isCI ? 'off' : 'retain-on-first-failure',
+            trace: {
+                mode: isCI ? 'retain-on-first-failure' : 'off',
+                attachments: true,
+                screenshots: false,
+                snapshots: true,
+                sources: false,
+            },
             /*
              * For consistency (and the only way for us right now to run the tests stable in Jenkins),
              * the actual playwright server is being run as container/service in the integration-tests setup.
@@ -107,7 +116,7 @@ export function createConfiguration(
         /*
          * Don't perserve data on the CI, as it can't be retrieved anyways.
          */
-        preserveOutput: isCI ? 'never' : 'always',
+        preserveOutput: 'failures-only',
         /*
          * If it's on the CI, we use the UI from the CMS container.
          * Otherwise start the dev server for the app and use that to run the tests.
@@ -146,6 +155,10 @@ export function createConfiguration(
             {
                 name: 'chromium',
                 use: { ...devices['Desktop Chrome'] },
+            },
+            {
+                name: 'firefox',
+                use: { ...devices['Desktop Firefox'] },
             },
         ],
     });

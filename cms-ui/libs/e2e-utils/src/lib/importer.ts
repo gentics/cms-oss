@@ -1,12 +1,13 @@
+/* eslint-disable import/order */
+/* eslint-disable import/no-nodejs-modules */
 /* eslint-disable @typescript-eslint/no-use-before-define */
-import { join } from 'path';
 import {
     ConstructCategory,
     ContentRepository,
     ContentRepositoryType,
     Feature,
     File,
-    FileUploadOptions,
+    FileUploadResponse,
     Folder,
     FolderCreateRequest,
     Form,
@@ -27,8 +28,11 @@ import {
 import { GCMSRestClient, GCMSRestClientConfig, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import { MeshRestClient } from '@gentics/mesh-rest-client';
 import { APIRequestContext } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import {
     BinaryMap,
+    BufferedFixtureFile,
     ClientOptions,
     CONSTRUCT_CATEGORY_CORE,
     CONSTRUCT_CATEGORY_TESTS,
@@ -37,6 +41,7 @@ import {
     EntityMap,
     ENV_E2E_CMS_URL,
     FileImportData,
+    FixtureFile,
     FolderImportData,
     FormImportData,
     GroupImportData,
@@ -108,11 +113,10 @@ export class EntityImporter {
     /** Map of imported entities `{ [IMPORT_ID]: Item }` */
     public entityMap: EntityMap = {};
     /**
-     * Map of binaries which should be applied when importing a file/image.
-     * If not provided, the file/image will not be imported/skipped.
-     * `{ [IMPORT_ID]: File }`
+     * Map of id -> BufferedFixtureFile, which to import.
+     * Use the {@link setupBinaryFiles} function to populate this map.
      */
-    public binaryMap: BinaryMap = {};
+    private binaryMap: BinaryMap = {};
     /** The ID of the dummy-node, if present/checked. */
     public dummyNode: number | null = null;
     /** Mapping of language-code to language-id. */
@@ -393,6 +397,17 @@ export class EntityImporter {
         await this.syncTestPackages(size);
     }
 
+    public async setupBinaryFiles(map: Record<string, FixtureFile>): Promise<void> {
+        await Promise.all(Object.entries(map).map(([key, fixture]) => {
+            return readFile(fixture.fixturePath).then(buffer => {
+                this.binaryMap[key] = {
+                    ...fixture,
+                    buffer,
+                };
+            });
+        }));
+    }
+
     private async syncTestPackages(size: TestSize): Promise<void> {
         await this.setupClient();
 
@@ -456,8 +471,8 @@ export class EntityImporter {
         return item;
     }
 
-    private getBinaryDependency(id: string, optiona?: boolean): globalThis.File;
-    private getBinaryDependency(id: string, optional: true): globalThis.File | null {
+    private getBinaryDependency(id: string, optiona?: boolean): BufferedFixtureFile;
+    private getBinaryDependency(id: string, optional: true): BufferedFixtureFile | null {
         const bin = this.binaryMap[id];
 
         if (bin) {
@@ -549,21 +564,23 @@ export class EntityImporter {
             }
         }
 
-        // We need the local template-ids for page references, so load all referenced templates via global id
-        for (const tplId of templates) {
-            const tpl = (await this.client.template.get(tplId).send()).template;
+        if (Array.isArray(templates)) {
+            // We need the local template-ids for page references, so load all referenced templates via global id
+            for (const tplId of templates) {
+                const tpl = (await this.client.template.get(tplId).send()).template;
 
-            // Additionally, we have to link the templates to the root-folder
-            await this.client.template.link(tplId, {
-                nodeId: created.id,
-                folderIds: [created.folderId || created.id],
-            }).send();
+                // Additionally, we have to link the templates to the root-folder
+                await this.client.template.link(tplId, {
+                    nodeId: created.id,
+                    folderIds: [created.folderId || created.id],
+                }).send();
 
-            if (tpl) {
-                if (this.options?.logImports) {
-                    console.log(`Loaded node template ${tplId} -> ${tpl.id}`);
+                if (tpl) {
+                    if (this.options?.logImports) {
+                        console.log(`Loaded node template ${tplId} -> ${tpl.id}`);
+                    }
+                    this.entityMap[tplId] = tpl;
                 }
-                this.entityMap[tplId] = tpl;
             }
         }
 
@@ -639,26 +656,48 @@ export class EntityImporter {
         return created;
     }
 
+    private async uploadFixtureFile(
+        fixtureFile: BufferedFixtureFile,
+        folderId: number | string,
+        nodeId: number | string,
+    ): Promise<File> {
+        const fileName = fixtureFile.name ?? basename(fixtureFile.fixturePath);
+        // URL has to be hardcoded like this.
+        // CMS is actually only reachable under localhost in this case, no idea why.
+        const res = await this.apiContext.post('http://localhost:8080/rest/file/create', {
+            multipart: {
+                fileBinaryData: {
+                    name: fileName,
+                    mimeType: fixtureFile.type,
+                    buffer: fixtureFile.buffer,
+                },
+                fileName: fileName,
+                folderId: folderId.toString(),
+                nodeId: nodeId.toString(),
+            },
+            params: {
+                sid: this.client.sid.toString(),
+            },
+        });
+        const created = (await res.json() as FileUploadResponse).file;
+        return created;
+    }
+
     private async importFile(
         data: FileImportData,
     ): Promise<File | false | null> {
         const { folderId, nodeId, ...updateData } = data;
 
         const node = this.getDependency(IMPORT_TYPE_NODE, nodeId);
-        const bin = this.getBinaryDependency(data[IMPORT_ID], true);
+        const fixtureFile = this.getBinaryDependency(data[IMPORT_ID], true);
         const parentEntity = this.getParentEntity(folderId);
         const parentId = this.getParentId(parentEntity);
 
-        if (!bin) {
+        if (!fixtureFile) {
             return false;
         }
 
-        const body: FileUploadOptions = {
-            folderId: parentId,
-            nodeId: node.id,
-        };
-
-        const created = (await this.client.file.upload(new Blob([bin]), body).send())?.file;
+        const created = await this.uploadFixtureFile(fixtureFile, parentId, node.id);
         await this.client.file.update(created.id, { file: updateData }).send();
 
         return created;
@@ -670,20 +709,15 @@ export class EntityImporter {
         const { folderId, nodeId, ...updateData } = data;
 
         const node = this.getDependency(IMPORT_TYPE_NODE, nodeId);
-        const bin = this.getBinaryDependency(data[IMPORT_ID], true);
+        const fixtureFile = this.getBinaryDependency(data[IMPORT_ID], true);
         const parentEntity = this.getParentEntity(folderId);
         const parentId = this.getParentId(parentEntity);
 
-        if (!bin) {
+        if (!fixtureFile) {
             return false;
         }
 
-        const body: FileUploadOptions = {
-            folderId: parentId,
-            nodeId: node.id,
-        };
-
-        const created = (await this.client.file.upload(new Blob([bin]), body).send()).file;
+        const created = await this.uploadFixtureFile(fixtureFile, parentId, node.id);
         await this.client.image.update(created.id, { image: updateData }).send();
 
         return created;

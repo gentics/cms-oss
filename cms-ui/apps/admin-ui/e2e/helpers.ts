@@ -1,13 +1,20 @@
 import { matchesPath } from '@gentics/e2e-utils';
 import { Locator, Page } from '@playwright/test';
 
-export async function navigateToModule(page: Page, moduleId: string): Promise<void> {
+export async function navigateToModule(page: Page, moduleId: string): Promise<Locator> {
     // Click the module item
     const moduleItem = page.locator(`gtx-dashboard-item[data-id="${moduleId}"] > .item:not(.disabled)`).locator('..');
     await moduleItem.click();
 
     // Wait for the module content to be visible
-    await page.locator('gtx-split-view-router-outlet .master-route-wrapper > *:not(router-outlet)').waitFor();
+    const splitOutlet = page.locator('gtx-generic-router-outlet > gtx-split-view-router-outlet .master-route-wrapper > *:not(router-outlet)');
+    const genericOutlet = page.locator('gtx-generic-router-outlet > gtx-generic-router-outlet > *:not(router-outlet)');
+
+    const module = splitOutlet.or(genericOutlet);
+
+    await module.waitFor({ state: 'visible' });
+
+    return module;
 }
 
 /**

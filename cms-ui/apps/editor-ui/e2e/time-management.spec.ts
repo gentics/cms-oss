@@ -74,7 +74,7 @@ test.describe('Time Management', () => {
 
         const NODE = IMPORTER.get(NODE_MINIMAL);
 
-        await test.step('Specialized Test Setup', async () => {
+        await test.step('Test User Setup', async () => {
             // We have to assemble the group permissions here, because we
             // need the imported data refs.
             // Create a copy, so we have a clean base object
@@ -124,6 +124,7 @@ test.describe('Time Management', () => {
 
             modal = page.locator('gtx-time-management-modal');
 
+            // exactly 24h in the future, also known as tomorrow
             const futureDate = new Date(new Date().getTime() + (1_000 * 3_600 * 24));
             publishAt = modal.locator('[data-control="current_publishAt"]');
             await pickDate(publishAt, futureDate);
@@ -133,7 +134,8 @@ test.describe('Time Management', () => {
 
             const publishRes = await publishReq;
             const reqBody: PagePublishRequest = publishRes.request().postDataJSON();
-            expect(reqBody.at).toEqual(Math.trunc(futureDate.getTime() / 1_000));
+            const diff = Math.trunc(futureDate.getTime() / 1_000) - reqBody.at;
+            expect([0, 3_600]).toContain(diff)
         });
 
         await test.step('Clear page publish', async () => {

@@ -17,18 +17,16 @@
     },
     "plugins": [
         {
-            "plugin": "@nx/cypress/plugin",
-            "options": {
-                "targetName": "e2e",
-                "openTargetName": "open-cypress",
-                "componentTestingTargetName": "component-test",
-                "ciTargetName": "e2e-ci"
-            }
-        },
-        {
             "plugin": "@nx/eslint/plugin",
             "options": {
                 "targetName": "lint"
+            }
+        },
+        {
+            "plugin": "@nx/cypress/plugin",
+            "options": {
+                "openTargetName": "open-cypress",
+                "componentTestingTargetName": "component-test"
             }
         }
     ],
@@ -48,62 +46,92 @@
         }
     },
     "namedInputs": {
-        "default": ["{projectRoot}/**/*", "sharedGlobals"],
-        "production": [
-            "default",
-            "!{projectRoot}/.eslintrc.json",
-            "!{projectRoot}/eslint.config.js",
-            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
-            "!{projectRoot}/tsconfig.spec.json",
-            "!{projectRoot}/jest.config.[jt]s",
-            "!{projectRoot}/src/test-setup.[jt]s",
-            "!{projectRoot}/test-setup.[jt]s",
-            "!{projectRoot}/cypress/**/*",
-            "!{projectRoot}/**/*.cy.[jt]s?(x)",
-            "!{projectRoot}/cypress.config.[jt]s"
+        "sharedGlobals": [
+            "{workspaceRoot}/package.json",
+            "{workspaceRoot}/tsconfig.json"
         ],
-        "sharedGlobals": []
+        "default": [
+            "sharedGlobals",
+            "{projectRoot}/src/**/*.ts",
+            "{projectRoot}/project.json",
+            "{projectRoot}/tsconfig.json",
+            "{projectRoot}/tsconfig.app.json",
+            "{projectRoot}/tsconfig.lib.json"
+        ],
+        "building": [
+            "default",
+            "!{projectRoot}/src/**/*.spec.ts",
+            "!{projectRoot}/src/**/*.cy.ts"
+        ],
+        "production": [
+            "building",
+            "{projectRoot}/package.json",
+            "{projectRoot}/ng-package.json"
+        ],
+        "envFiles": [
+            "{workspaceRoot}/.env",
+            "{workspaceRoot}/.env.local"
+        ],
+        "linting": [
+            "{projectRoot}/cypress/**/*",
+            "{projectRoot}/e2e/**/*",
+            "{projectRoot}/.eslintrc.json",
+            "{workspaceRoot}/.eslintrc.js",
+            "{workspaceRoot}/.prettierignore",
+            "{workspaceRoot}/.prettierrc"
+        ],
+        "karmaTests": [
+            "!{projectRoot}/src/**/*.cy.ts",
+            "{projectRoot}/src/**/*.spec.ts",
+            "{projectRoot}/tsconfig.spec.json",
+            "{projectRoot}/karma.conf.js",
+            "{workspaceRoot}/karma.conf.js",
+            "{workspaceRoot}/ng-workspace/angular.json"
+        ],
+        "jestTests": [
+            "!{projectRoot}/src/**/*.cy.ts",
+            "{projectRoot}/src/**/*.spec.ts",
+            "{projectRoot}/tsconfig.spec.json",
+            "{projectRoot}/jest.config.ci.js",
+            "{projectRoot}/jest.config.js",
+            "{workspaceRoot}/jest.config.ts",
+            "{workspaceRoot}/jest.preset.ts"
+        ],
+        "cypressTests": [
+            "!{projectRoot}/src/**/*.spec.ts",
+            "{projectRoot}/cypress/**/*",
+            "{projectRoot}/cypress.config.ci.ts",
+            "{projectRoot}/cypress.config.ts",
+            "{workspaceRoot}/cypress.preset.js"
+        ],
+        "playwrightTests": [
+            "envFiles",
+            "!{projectRoot}/src/**/*.spec.ts",
+            "!{projectRoot}/src/**/*.cy.ts",
+            "{projectRoot}/e2e/**/*",
+            "{projectRoot}/playwright.config.ts",
+            "{workspaceRoot}/playwright.config.ts"
+        ]
     },
     "targetDefaults": {
+        "serve": {
+            "inputs": ["default", "^default"]
+        },
+        "@nx/eslint:lint": {
+            "cache": true,
+            "inputs": ["default", "linting"]
+        },
         "build": {
             "dependsOn": ["^build"],
             "inputs": ["production", "^production"],
             "cache": true
         },
-        "serve": {
-            "inputs": ["default", "^default"]
-        },
         "test": {
-            "inputs": ["default", "^default", "{workspaceRoot}/karma.conf.js"],
+            "inputs": ["default", "karmaTests", "^default"],
             "cache": true
         },
-        "e2e": {
-            "inputs": ["default", "^production"],
-            "cache": false,
-            "parallelism": false,
-            "configurations": {
-                "watch": {
-                    "watch": true
-                },
-                "ci": {}
-            }
-        },
-        "component-test": {
-            "inputs": ["default", "^production"],
-            "cache": true,
-            "parallelism": false,
-            "configurations": {
-                "watch": {
-                    "watch": true
-                }
-            }
-        },
         "@nx/jest:jest": {
-            "inputs": [
-                "default",
-                "^production",
-                "{workspaceRoot}/jest.preset.js"
-            ],
+            "inputs": ["default", "jestTests", "^default"],
             "cache": true,
             "options": {
                 "passWithNoTests": true
@@ -115,14 +143,26 @@
                 }
             }
         },
-        "@nx/eslint:lint": {
+        "@nx/cypress:cypress": {
+            "inputs": ["default", "cypressTests", "^default"],
             "cache": true,
-            "inputs": [
-                "default",
-                "{workspaceRoot}/.eslintrc.json",
-                "{workspaceRoot}/.eslintignore",
-                "{workspaceRoot}/eslint.config.js"
-            ]
+            "parallelism": false,
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
+        },
+        "@nx/playwright:playwright": {
+            "inputs": ["default", "playwrightTests", "^default"],
+            "cache": false,
+            "parallelism": false,
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {}
+            }
         }
     }
 }

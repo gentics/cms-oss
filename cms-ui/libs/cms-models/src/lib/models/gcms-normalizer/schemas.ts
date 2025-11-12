@@ -146,7 +146,7 @@ export class GcmsNormalizationSchemas implements Record<NormalizableEntityType, 
             lockedBy: this.user,
             pageVariants: new schema.Array(this.page),
             publisher: this.user,
-            template: this.template,
+            // template: this.template,
         });
 
         // Language Variant Page
@@ -158,7 +158,7 @@ export class GcmsNormalizationSchemas implements Record<NormalizableEntityType, 
             lockedBy: this.user,
             pageVariants: new schema.Array(this.page),
             publisher: this.user,
-            template: this.template,
+            // template: this.template,
         });
 
         // Role

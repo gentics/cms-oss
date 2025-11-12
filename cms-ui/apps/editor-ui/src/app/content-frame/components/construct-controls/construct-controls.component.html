@@ -3,6 +3,7 @@
     let-isFavourite="isFavourite"
     let-label="label"
     let-constructs="constructs"
+    let-globalId="globalId"
     let-id="id"
 >
     <gtx-dropdown-list
@@ -11,6 +12,8 @@
         [belowTrigger]="true"
         [sticky]="false"
         [width]="'content'"
+        [attr.data-favourite]="isFavourite"
+        [attr.data-global-id]="globalId"
         [attr.data-id]="id"
         data-context-id="construct-category"
     >
@@ -30,6 +33,7 @@
                 <div
                     *ngFor="let construct of constructs"
                     class="construct-element"
+                    [attr.data-global-id]="construct.globalId"
                     [attr.data-keyword]="construct.keyword"
                     (click)="insertConstruct(construct, $event)"
                 >
@@ -52,6 +56,7 @@
         <div class="groups-container">
             <ng-container *ngIf="favouriteConstructs.length > 0">
                 <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                    globalId: null,
                     id: FAVOURITES_ID,
                     label: (FAVOURITES_LABEL | i18n),
                     constructs: favouriteConstructs,
@@ -61,6 +66,7 @@
 
             <ng-container *ngFor="let group of displayGroups">
                 <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                    globalId: group.globalId,
                     id: group.id,
                     label: group.label,
                     constructs: group.constructs,

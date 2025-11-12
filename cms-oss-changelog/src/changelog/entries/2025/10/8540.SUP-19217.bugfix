@@ -1,0 +1,2 @@
+Resolving properties using the .get() notation in a velocity part type or a
+handlebars helpe did not work and has been fixed.

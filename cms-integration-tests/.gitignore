@@ -5,6 +5,10 @@ compose*.local.yml
 !cms/conf
 !cms/ui-conf
 
+# Ignore unused config files and log files
+cms/conf/cache.ccf
+cms/logs
+
 # Ignore packages we create in tests
 cms/packages/*
 !cms/packages/full

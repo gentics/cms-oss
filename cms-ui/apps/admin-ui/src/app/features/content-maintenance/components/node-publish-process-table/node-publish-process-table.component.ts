@@ -1,11 +1,11 @@
-import { NodeBO } from '@admin-ui/common';
+import { NodeBO, TableLoadOptions, TableLoadResponse } from '@admin-ui/common';
 import { I18nService, NodeTableLoaderService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, Node, NormalizableEntityTypesMap, PublishQueue } from '@gentics/cms-models';
-import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
-import { map, Observable } from 'rxjs';
+import { ChangesOf, ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { map, Observable, of } from 'rxjs';
 import { PUBLISH_PLURAL_MAPPING } from '../../models';
 import { MaintenanceActionModalAction } from '../maintenance-action-modal/maintenance-action-modal.component';
 
@@ -16,12 +16,18 @@ import { MaintenanceActionModalAction } from '../maintenance-action-modal/mainte
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class NodePublishProcessTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
+export class NodePublishProcessTableComponent extends BaseEntityTableComponent<Node, NodeBO> implements OnChanges {
 
     public readonly PUBLISH_PLURAL_MAPPING = PUBLISH_PLURAL_MAPPING;
 
     @Input()
     public publishQueue: PublishQueue;
+
+    @Input()
+    public nodes: Node[] = [];
+
+    @Input()
+    public nodesLoading = false;
 
     protected rawColumns: TableColumn<NodeBO>[] = [
         {
@@ -50,6 +56,14 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
             loader,
             modalService,
         )
+    }
+
+    override ngOnChanges(changes: ChangesOf<this>): void {
+        super.ngOnChanges(changes);
+
+        if (changes.nodes) {
+            this.loadTrigger.next();
+        }
     }
 
     protected createTableActionLoading(): Observable<TableAction<NodeBO>[]> {
@@ -97,6 +111,25 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
                 return actions;
             }),
         );
+    }
+
+    protected override loadTablePage(options: TableLoadOptions, _additionalOptions?: never): Observable<TableLoadResponse<NodeBO>> {
+        let sourceNodes = this.nodes;
+
+        if ((options.query || '').trim() !== '') {
+            sourceNodes = sourceNodes.filter(node => node.name.includes(options.query));
+        }
+
+        const rows = sourceNodes.map(node => {
+            const bo = (this.loader as NodeTableLoaderService).mapToBusinessObject(node);
+            return this.loader.mapToTableRow(bo);
+        })
+
+        return of({
+            rows,
+            totalCount: rows.length,
+            hasError: false,
+        });
     }
 
     public updateExpandedNodes(id: string, open: boolean): void {

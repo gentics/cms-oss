@@ -146,7 +146,7 @@
         },
         "e2e": {
             "executor": "@nx/playwright:playwright",
-            "outputs": ["{workspaceRoot}/dist/.playwright/apps/admin-ui"],
+            "outputs": ["{workspaceRoot}/.playwright/admin-ui"],
             "options": {
                 "config": "apps/admin-ui/playwright.config.ts",
                 "skipInstall": true

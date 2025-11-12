@@ -8,6 +8,7 @@ import { AccessControlledType, CmsFormType, GcmsPermission, NodePageLanguageCode
 import {
     BASIC_TEMPLATE_ID,
     FileImportData,
+    FixtureFile,
     FolderImportData,
     FormImportData,
     GroupImportData,
@@ -261,6 +262,11 @@ export const SCHEDULE_LINK_CHECKER: ScheduleImportData = {
     scheduleData: {
         type: ScheduleType.MANUAL,
     },
+};
+
+export const FIXTURE_IMAGE_ONE: FixtureFile = {
+    fixturePath: 'fixtures/aedrian-cDe4G55k6pE-unsplash.jpg',
+    type: 'image/jpeg',
 };
 
 /*

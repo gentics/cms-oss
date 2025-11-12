@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue where it was not possible to save the properties of a page when the user had no permissions to view templates.

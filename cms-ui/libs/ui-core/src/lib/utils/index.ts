@@ -1,4 +1,5 @@
 export * from './cancel-event';
+export * from './clone-with-symbols';
 export * from './coerce-to-boolean';
 export * from './date-in-years';
 export * from './drag-and-drop';

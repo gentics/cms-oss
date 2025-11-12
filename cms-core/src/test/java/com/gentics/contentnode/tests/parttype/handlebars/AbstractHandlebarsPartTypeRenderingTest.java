@@ -7,6 +7,7 @@ import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.Builder.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
@@ -54,6 +55,7 @@ import com.gentics.contentnode.object.parttype.MultiSelectPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
+import com.gentics.contentnode.object.parttype.ShortTextPartType;
 import com.gentics.contentnode.object.parttype.SingleSelectPartType;
 import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.Builder;
@@ -125,6 +127,8 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 	static Construct checkboxConstruct;
 
 	static Construct nodeConstruct;
+
+	static Integer shortTextConstruct;
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
@@ -201,6 +205,8 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 				p.setKeyname("html");
 			}).doNotSave().build());
 		}).build();
+
+		shortTextConstruct = supply(() -> createConstruct(node, ShortTextPartType.class, "text", "text"));
 
 		create(ObjectTagDefinition.class, oe -> {
 			oe.setTargetType(Folder.TYPE_FOLDER);
@@ -301,6 +307,17 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 			objectTag.setObjType(Template.TYPE_TEMPLATE);
 		}).build();
 
+		create(ObjectTagDefinition.class, oe -> {
+			oe.setTargetType(ImageFile.TYPE_IMAGE);
+			oe.setName("Copyright Object Property", 1);
+			ObjectTag objectTag = oe.getObjectTag();
+
+			objectTag.setConstructId(shortTextConstruct);
+			objectTag.setEnabled(true);
+			objectTag.setName("object.copyright");
+			objectTag.setObjType(ImageFile.TYPE_IMAGE);
+		}).build();
+
 		homeFolder = create(Folder.class, f -> {
 			f.setMotherId(node.getFolder().getId());
 			f.setName("Home");
@@ -344,6 +361,11 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 			f.setName("blume.jpg");
 			f.setFileStream(GenericTestUtils.getPictureResource("blume.jpg"));
 		}).at(creationTimestamp).as(creator).build();
+
+		testImage = update(testImage, f -> {
+			getPartType(ShortTextPartType.class, f.getObjectTag("copyright"), "text").setText("Copyright blume");
+			f.getObjectTag("copyright").setEnabled(true);
+		}).at(editTimestamp).as(editor).build();
 
 		testImage = update(testImage, f -> {
 			f.setDescription("This is the test image");

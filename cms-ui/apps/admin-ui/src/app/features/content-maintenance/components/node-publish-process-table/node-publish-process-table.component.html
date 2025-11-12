@@ -7,51 +7,61 @@
     (clear)="updateSearchQuery('')"
 ></gtx-search-bar>
 
-<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+<div *ngIf="selectable" class="entity-table-selection">
+    {{ 'shared.info_selected_nodes' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+</div>
 
-<gtx-table
-    class="entity-table"
+<div class="content-wrapper">
+    <gtx-progress-bar class="load-bar" [active]="nodesLoading"></gtx-progress-bar>
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [disabled]="disabled"
+    <gtx-table
+        class="entity-table"
 
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+        [selectAllType]="TableSelectAllType.PAGE"
+        [selectable]="selectable"
+        [hideActions]="hideActions"
+        [disabled]="disabled"
 
-    [page]="page"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
-    [paginated]="false"
+        [columns]="columns"
+        [rows]="rows"
+        [actions]="actions"
+        [selected]="selected"
+        [active]="activeEntity"
+        [totalCount]="totalCount"
 
-    [renderers]="{
-        name: nameRenderer
-    }"
+        [page]="page"
+        [sortBy]="sortBy"
+        [sortOrder]="sortOrder"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (select)="forwardSelect($event)"
-    (deselect)="forwardDeselect($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
-></gtx-table>
+        [renderers]="{
+            name: nameRenderer
+        }"
+
+        (pageChange)="changePageTo($event)"
+        (sortByChange)="updateSortBy($event)"
+        (sortOrderChange)="updateSortOrder($event)"
+        (selectedChange)="updateSelection($event)"
+        (select)="forwardSelect($event)"
+        (deselect)="forwardDeselect($event)"
+        (rowClick)="handleRowClick($event)"
+        (actionClick)="handleAction($event)"
+    ></gtx-table>
+</div>
 
 <ng-template #nameRenderer let-value="value" let-row="row">
     <ng-template #name>
         <div class="node-name">{{ value }}</div>
     </ng-template>
 
-    <gtx-accordion [trigger]="name" [open]="expandedNodes | gtxIncludes:row.id" (openChange)="updateExpandedNodes(row.id, $event)">
+    <gtx-accordion
+        *ngIf="publishQueue?.nodes?.[row.id] as nodePublishData; else name"
+        [trigger]="name"
+        [open]="expandedNodes | gtxIncludes:row.id"
+        (openChange)="updateExpandedNodes(row.id, $event)"
+    >
         <div class="queue-content">
             <ng-container *ngFor="let entry of PUBLISH_PLURAL_MAPPING | gtxEntries">
-                <div *ngIf="publishQueue?.nodes?.[row.id]?.[entry.key] as data" class="type-queue-wrapper">
+                <div *ngIf="nodePublishData[entry.key] as data" class="type-queue-wrapper">
                     <ng-container
                         [ngTemplateOutlet]="typeStatus"
                         [ngTemplateOutletContext]="{ data: data, type: entry.value }"

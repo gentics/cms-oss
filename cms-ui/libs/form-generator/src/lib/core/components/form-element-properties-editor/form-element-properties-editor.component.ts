@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import {
@@ -88,6 +89,16 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
         }
     }
 
+    private trimValues(values: any): any {
+        if (values != null && typeof values === 'object') {
+            return Object.fromEntries(
+                Object.entries(values).map(e => [e[0], (typeof e[1] === 'string') ? e[1].trim() : e[1] as any]),
+            );
+        } else {
+            return values?.trim();
+        }
+    }
+
     private createFormGroup(
         properties: CmsFormElementProperty[],
     ): void {
@@ -126,7 +137,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
             (this.properties || []).forEach((property: CmsFormElementProperty) => {
                 switch (property.type) {
                     case CmsFormElementPropertyType.SELECTABLE_OPTIONS:
-                        property.value = formValues[property.name];
+                        property.value = this.trimValues(formValues[property.name]);
                         break;
                     case CmsFormElementPropertyType.REPOSITORY_BROWSER:
                         property.value = formValues[property.name]?.id;
@@ -136,7 +147,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
                     case CmsFormElementPropertyType.SELECT:
                     case CmsFormElementPropertyType.NUMBER:
                     case CmsFormElementPropertyType.STRING:
-                        property.value_i18n = formValues[property.name];
+                        property.value_i18n = this.trimValues(formValues[property.name]);
                         break;
                 }
             });
@@ -181,7 +192,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
         this.formGroup.updateValueAndValidity();
     }
 
-    identify(index: number, element: CmsFormElementProperty): string {
+    identify(_index: number, element: CmsFormElementProperty): string {
         return element.name;
     }
 }

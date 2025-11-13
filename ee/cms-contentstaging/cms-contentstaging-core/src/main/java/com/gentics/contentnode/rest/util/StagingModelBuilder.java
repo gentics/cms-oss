@@ -586,7 +586,11 @@ public class StagingModelBuilder {
 
 		for (Iterator<String> i = contenttagMap.keySet().iterator(); i.hasNext();) {
 			String tagName = i.next();
-			restContentTags.put(tagName, getTag(contenttagMap.get(tagName), new StagedTag()));
+			ContentTag tag = contenttagMap.get(tagName);
+
+			if (!nodePage.getContent().isPartiallyLocalized() || !tag.isInherited()) {
+				restContentTags.put(tagName, getTag(tag, new StagedTag()));
+			}
 		}
 		restPage.setTags(restContentTags);
 
@@ -1406,6 +1410,12 @@ public class StagingModelBuilder {
 				stagedObject.setDisinheritedChannelIds(channels.stream().map(c -> c.getGlobalId().toString()).collect(Collectors.toSet()));
 			}
 		}
+
+		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PARTIAL_MULTICHANNELLING)) {
+			if (Page.TYPE_PAGE_INTEGER.equals(object.getTType())) {
+				((StagedPage) stagedObject).setPartiallyLocalized(((Page) object).getContent().isPartiallyLocalized());
+			}
+		}
 	}
 
 	/**
@@ -1434,6 +1444,12 @@ public class StagingModelBuilder {
 				}
 			} else if (object.isNew()) {
 				object.setChannelInfo(channel.getId(), 0);
+			}
+		}
+
+		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PARTIAL_MULTICHANNELLING) && channel != null) {
+			if (clazz.equals(Page.class)) {
+				((Page) object).getContent().setPartiallyLocalized(((StagedPage) stagedObject).isPartiallyLocalized());
 			}
 		}
 	}

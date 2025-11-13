@@ -40,6 +40,7 @@ public class StagedPage extends StagedLocalizableObject {
 		this.contentId = origin.contentId;
 		this.customCdate = origin.customCdate;
 		this.customEdate = origin.customEdate;
+		this.partiallyLocalized = origin.partiallyLocalized;
 		if (origin.tags != null) {
 			this.tags = new TreeMap<>(origin.tags);
 		}
@@ -127,6 +128,11 @@ public class StagedPage extends StagedLocalizableObject {
 	 * Custom edate
 	 */
 	private Integer customEdate;
+
+	/**
+	 * Whether this page is partially localized
+	 */
+	private boolean partiallyLocalized;
 
 	/**
 	 * Nice URL
@@ -331,6 +337,22 @@ public class StagedPage extends StagedLocalizableObject {
 	 */
 	public void setCustomEdate(Integer customEdate) {
 		this.customEdate = customEdate;
+	}
+
+	/**
+	 * Whether this page is partially localized
+	 * @return Whether this page is partially localized
+	 */
+	public boolean isPartiallyLocalized() {
+		return partiallyLocalized;
+	}
+
+	/**
+	 * Set whether this page is partially localized
+	 * @param partiallyLocalized Whether this page is partially localized
+	 */
+	public void setPartiallyLocalized(boolean partiallyLocalized) {
+		this.partiallyLocalized = partiallyLocalized;
 	}
 
 	@Override

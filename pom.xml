@@ -44,7 +44,7 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>2.1.12</alohaeditor.version>
+		<alohaeditor.version>ci-devtest-SNAPSHOT</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
 		<alohaeditor.date>27.10.2025</alohaeditor.date>

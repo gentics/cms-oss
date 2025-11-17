@@ -1,5 +1,13 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
+import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME, WindowRef } from '@gentics/cms-components';
+import { EmbeddedTool } from '@gentics/cms-models';
+import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
+import { Subscription } from 'rxjs';
+import { filter, map, pairwise, startWith, switchMap, take, tap } from 'rxjs/operators';
+import { ADMIN_UI_LINK } from '../../../common/config/config';
+import { Api } from '../../../core/providers/api/api.service';
 import {
     ApplicationStateService,
     CloseToolAction,
@@ -9,15 +17,7 @@ import {
     ToolNavigationAction,
     ToolsFetchingErrorAction,
     ToolsFetchingSuccessAction,
-} from '@editor-ui/app/state';
-import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME, WindowRef } from '@gentics/cms-components';
-import { EmbeddedTool } from '@gentics/cms-models';
-import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
-import { filter, map, pairwise, startWith, switchMap, take, tap } from 'rxjs/operators';
-import { ADMIN_UI_LINK } from '../../../common/config/config';
-import { Api } from '../../../core/providers/api/api.service';
+} from '../../../state';
 import { ToolApiChannelService } from '../tool-api-channel/tool-api-channel.service';
 import { TabbedTool } from './tabbed-tool';
 
@@ -38,7 +38,7 @@ export class EmbeddedToolsService implements OnDestroy {
         private state: ApplicationStateService,
         private modalService: ModalService,
         private router: Router,
-        private translate: TranslateService,
+        private translate: I18nService,
         private windowRef: WindowRef,
         private keycloak : KeycloakService,
     ) {

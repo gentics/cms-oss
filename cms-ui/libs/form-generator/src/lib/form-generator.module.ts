@@ -1,11 +1,8 @@
-import { ModuleWithProviders, NgModule } from '@angular/core';
-import { GTX_TOKEN_EXTENDED_TRANSLATIONS } from '@gentics/cms-components';
+import { inject, ModuleWithProviders, NgModule, provideAppInitializer } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import DE_TRANSLATIONS from '../../public/i18n/de.json';
+import EN_TRANSLATIONS from '../../public/i18n/en.json';
 import { CoreModule } from './core/core.module';
-import * as FORM_TRANSLATIONS from './core/providers/i18n/translations/form.translations.json';
-
-const MODULE_TRANSLATIONS = {
-    gtxFormGenerator: (FORM_TRANSLATIONS as any).default,
-};
 
 @NgModule({
     imports: [
@@ -20,9 +17,12 @@ export class FormGeneratorModule {
         return {
             ngModule: FormGeneratorModule,
             providers: [
-                // provide this module's translations to the i18n solution in parent module
-                { provide: GTX_TOKEN_EXTENDED_TRANSLATIONS, useValue: MODULE_TRANSLATIONS, multi: true },
+                provideAppInitializer(() => {
+                    const translations = inject(TranslateService);
+                    translations.setTranslation('de', DE_TRANSLATIONS, true);
+                    translations.setTranslation('en', EN_TRANSLATIONS, true);
+                }),
             ],
-        }
+        };
     }
 }

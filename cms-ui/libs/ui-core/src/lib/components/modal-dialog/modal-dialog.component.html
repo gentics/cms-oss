@@ -1,17 +1,20 @@
 <div class="modal-title">
-    <h4>{{ config.title }}</h4>
+  <h4>{{ config.title }}</h4>
 </div>
 
 <div class="modal-content">
-    <div class="modal-body" *ngIf="safeBody" [innerHTML]="safeBody"></div>
+  @if (safeBody) {
+    <div class="modal-body" [innerHTML]="safeBody"></div>
+  }
 </div>
 
 <div class="modal-footer">
+  @for (button of config.buttons; track button) {
     <gtx-button
-        *ngFor="let button of config.buttons"
-        [attr.data-action]="button.id"
-        [type]="button.type"
-        [flat]="button.flat"
-        (click)="onClick(button)"
+      [attr.data-action]="button.id"
+      [type]="button.type"
+      [flat]="button.flat"
+      (click)="onClick(button)"
     >{{ button.label }}</gtx-button>
+  }
 </div>

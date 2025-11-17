@@ -1,7 +1,7 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import { Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
+import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { UserSettingsService } from '../user-settings/user-settings.service';

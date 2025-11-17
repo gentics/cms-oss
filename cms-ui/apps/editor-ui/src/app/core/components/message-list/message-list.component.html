@@ -1,37 +1,38 @@
-<div
-    *ngFor="let msg of messages; trackBy: trackUnique"
-    class="message"
-    [class.read]="!msg?.unread"
->
-    <icon-checkbox
-        icon="mail"
-        [selected]="isSelected(msg)"
-        (change)="toggleSelect(msg, $event)"
-    ></icon-checkbox>
+@for (msg of messages; track trackUnique(msg)) {
+    <div
+        class="message"
+        [class.read]="!msg?.unread"
+    >
+        <icon-checkbox
+            icon="mail"
+            [selected]="isSelected(msg)"
+            (change)="toggleSelect(msg, $event)"
+        ></icon-checkbox>
 
-    <span class="name" (click)="messageClick.emit(msg)">{{ getFullName(msg?.sender) }}</span>:
+        <span class="name" (click)="messageClick.emit(msg)">{{ getFullName(msg?.sender) }}</span>:
 
-    <message-body
-        singleLine
-        [body]="msg?.message"
-        [nodes]="nodes"
-        (click)="messageClick.emit(msg)"
-    ></message-body>
+        <message-body
+            singleLine
+            [body]="msg?.message"
+            [nodes]="nodes"
+            (click)="messageClick.emit(msg)"
+        ></message-body>
 
-    <div class="message-actions">
-        <icon
-            *ngIf="msg?.unread"
-            data-action="archive"
-            [title]="'user.archive_message_title' | i18n"
-            (click)="messageArchive.emit(msg)"
-        >move_to_inbox</icon>
-
-        <icon
-            data-action="delete"
-            [title]="'user.delete_message_title' | i18n"
-            [attr.data-msg-id]="msg.id"
-            [class.confirm]="msg === waitsForDeleteConfirmation"
-            (click)="messageDelete.emit(msg)"
-        >delete</icon>
+        <div class="message-actions">
+            @if (msg?.unread) {
+                <icon
+                    data-action="archive"
+                    [title]="'user.archive_message_title' | gtxI18n"
+                    (click)="messageArchive.emit(msg)"
+                >move_to_inbox</icon>
+            }
+            <icon
+                data-action="delete"
+                [title]="'user.delete_message_title' | gtxI18n"
+                [attr.data-msg-id]="msg.id"
+                [class.confirm]="msg === waitsForDeleteConfirmation"
+                (click)="messageDelete.emit(msg)"
+            >delete</icon>
+        </div>
     </div>
-</div>
+}

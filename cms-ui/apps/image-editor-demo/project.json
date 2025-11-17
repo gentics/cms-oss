@@ -73,10 +73,8 @@
                     "buildTarget": "image-editor-demo:build:development"
                 }
             },
-            "defaultConfiguration": "development"
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint"
+            "defaultConfiguration": "development",
+            "continuous": true
         },
         "test": {
             "executor": "nx:noop"

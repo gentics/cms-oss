@@ -1,33 +1,34 @@
 <gtx-progress-bar [active]="loading"></gtx-progress-bar>
 
 <div class="modal-title">
-    <h5>{{ 'modal.' + mode + '_tagmapEntry_title' | i18n }}</h5>
+  <h5>{{ 'modal.' + mode + '_tagmapEntry_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
+  @if (form) {
     <gtx-tag-map-entry-properties
-        *ngIf="form"
-        [formControl]="form"
-        [mode]="mode"
-        [displayFields]="displayFields"
-        [reserved]="reserved"
+      [formControl]="form"
+      [mode]="mode"
+      [displayFields]="displayFields"
+      [reserved]="reserved"
     ></gtx-tag-map-entry-properties>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        [disabled]="!form.valid || loading"
-        (click)="confirmButtonClicked()"
+  <gtx-button
+    type="primary"
+    [disabled]="!form.valid || loading"
+    (click)="confirmButtonClicked()"
     >
-        {{ (mode === CreateTagmapEntryModalComponentMode.UPDATE ? 'modal.save_button' : 'modal.create_button') | i18n }}
-    </gtx-button>
+    {{ (mode === CreateTagmapEntryModalComponentMode.UPDATE ? 'modal.save_button' : 'modal.create_button') | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

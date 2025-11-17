@@ -26,13 +26,12 @@ import {
     EntityUpdateResponseModel,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { DataSource, Raw } from '@gentics/cms-models';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class DataSourceHandlerService
@@ -70,7 +69,7 @@ export class DataSourceHandlerService
         params?: EntityCreateRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EntityCreateResponseModel<EditableEntity.DATA_SOURCE>> {
         return this.api.dataSource.createDataSource(data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.datasource);
                 this.nameMap[res.datasource.id] = name;
 
@@ -91,7 +90,7 @@ export class DataSourceHandlerService
         options?: EntityCreateRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]> {
         return this.create(data, options).pipe(
-            map(res => this.mapToBusinessObject(res.datasource)),
+            map((res) => this.mapToBusinessObject(res.datasource)),
         );
     }
 
@@ -100,7 +99,7 @@ export class DataSourceHandlerService
         params?: EntityLoadRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EntityLoadResponseModel<EditableEntity.DATA_SOURCE>> {
         return this.api.dataSource.getDataSource(id).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.datasource);
                 this.nameMap[res.datasource.id] = name;
             }),
@@ -110,7 +109,7 @@ export class DataSourceHandlerService
 
     getMapped(id: string | number): Observable<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]> {
         return this.get(id).pipe(
-            map(res => this.mapToBusinessObject(res.datasource)),
+            map((res) => this.mapToBusinessObject(res.datasource)),
         );
     }
 
@@ -120,7 +119,7 @@ export class DataSourceHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.DATA_SOURCE>> {
         return this.api.dataSource.updateDataSource(id, data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.datasource);
                 this.nameMap[res.datasource.id] = name;
 
@@ -142,7 +141,7 @@ export class DataSourceHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]> {
         return this.update(id, data, params).pipe(
-            map(res => this.mapToBusinessObject(res.datasource)),
+            map((res) => this.mapToBusinessObject(res.datasource)),
         );
     }
 
@@ -173,8 +172,8 @@ export class DataSourceHandlerService
         params?: EntityListRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EntityListResponseModel<EditableEntity.DATA_SOURCE>> {
         return this.api.dataSource.getDataSources(params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
+            tap((res) => {
+                res.items.forEach((objCat) => {
                     const name = this.displayName(objCat);
                     this.nameMap[objCat.id] = name;
                 });
@@ -188,7 +187,7 @@ export class DataSourceHandlerService
         params?: EntityListRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]>> {
         return this.list(body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
@@ -202,7 +201,7 @@ export class DataSourceHandlerService
         return this.api.devTools.addDataSourceToPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
-                    message: 'dataSource.dataSource_successfully_added_to_package',
+                    message: 'data_source.added_to_package',
                     type: 'success',
                     translationParams: {
                         name: this.nameMap[entityId],
@@ -220,7 +219,7 @@ export class DataSourceHandlerService
         return this.api.devTools.removeDataSourceFromPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
-                    message: 'dataSource.dataSource_successfully_removed_from_package',
+                    message: 'data_source.removed_from_package',
                     type: 'success',
                     translationParams: {
                         name: this.nameMap[entityId],
@@ -237,8 +236,8 @@ export class DataSourceHandlerService
         params?: DevToolEntityListRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<DevToolEntityListResponseModel<EditableEntity.DATA_SOURCE>> {
         return this.api.devTools.getDataSources(devtoolPackage, params).pipe(
-            tap(res => {
-                res.items.forEach(ds => {
+            tap((res) => {
+                res.items.forEach((ds) => {
                     const name = this.displayName(ds);
                     this.nameMap[ds.id] = name;
                 });
@@ -253,7 +252,7 @@ export class DataSourceHandlerService
         params?: DevToolEntityListRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]>> {
         return this.listFromDevTool(devtoolPackage, body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
@@ -262,8 +261,8 @@ export class DataSourceHandlerService
 
     getFromDevtoolMapped(packageId: string, entityId: string): Observable<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]> {
         return this.api.devTools.getDataSource(packageId, entityId).pipe(
-            map(res => this.mapToBusinessObject(res.datasource)),
-            tap(con => {
+            map((res) => this.mapToBusinessObject(res.datasource)),
+            tap((con) => {
                 this.nameMap[con.id] = con[BO_DISPLAY_NAME];
             }),
             this.catchAndRethrowError(),

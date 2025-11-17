@@ -1,20 +1,23 @@
 <gtx-progress-bar [for]="loading"></gtx-progress-bar>
 
 <div class="container">
-    <div *ngIf="showButtons" class="btn-group">
-        <gtx-button
-            class="proxy-btn"
-            (click)="openInNewTab()"
-        >{{ 'editor.open_ressource' | i18n }}</gtx-button>
-
-        <gtx-button
-            class="proxy-btn"
-            type="secondary"
-            (click)="returnToEditor()"
-        >{{ 'editor.back_to_application' | i18n  }}</gtx-button>
+  @if (showButtons) {
+    <div class="btn-group">
+      <gtx-button
+        class="proxy-btn"
+        (click)="openInNewTab()"
+      >{{ 'editor.open_ressource' | gtxI18n }}</gtx-button>
+      <gtx-button
+        class="proxy-btn"
+        type="secondary"
+        (click)="returnToEditor()"
+      >{{ 'editor.back_to_application' | gtxI18n  }}</gtx-button>
     </div>
+  }
 
-    <div *ngIf="loading" class="loading-message">
-        {{ 'editor.loading_data' | i18n }}
+  @if (loading) {
+    <div class="loading-message">
+      {{ 'editor.loading_data' | gtxI18n }}
     </div>
+  }
 </div>

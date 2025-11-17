@@ -1,8 +1,9 @@
 import { GroupBO } from '@admin-ui/common';
-import { EntityManagerService, GroupOperations, I18nService } from '@admin-ui/core';
+import { EntityManagerService, GroupOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Group, Normalized, Raw } from '@gentics/cms-models';
 import { BaseModal, TableRow } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { forkJoin, Observable } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 
@@ -10,7 +11,7 @@ import { mergeMap } from 'rxjs/operators';
     selector: 'gtx-move-groups-modal',
     templateUrl: './move-groups-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MoveGroupsModalComponent extends BaseModal<Group<Raw>[] | boolean> {
 
@@ -34,8 +35,8 @@ export class MoveGroupsModalComponent extends BaseModal<Group<Raw>[] | boolean> 
 
     /** Get form validity state */
     allIsValid(): boolean {
-        return this.sourceGroupIds && this.sourceGroupIds.length > 0 &&
-            Number.isInteger(this.targetGroupId);
+        return this.sourceGroupIds && this.sourceGroupIds.length > 0
+          && Number.isInteger(this.targetGroupId);
     }
 
     /**
@@ -43,7 +44,7 @@ export class MoveGroupsModalComponent extends BaseModal<Group<Raw>[] | boolean> 
      */
     buttonMoveClicked(): void {
         this.moveEntities()
-            .then(movedGroups => this.closeFn(movedGroups));
+            .then((movedGroups) => this.closeFn(movedGroups));
     }
 
     getModalTitle(): Observable<string> {
@@ -57,7 +58,7 @@ export class MoveGroupsModalComponent extends BaseModal<Group<Raw>[] | boolean> 
     }
 
     private moveEntities(): Promise<Group<Raw>[]> {
-        return forkJoin(this.sourceGroupIds.map(sourceGroupId => {
+        return forkJoin(this.sourceGroupIds.map((sourceGroupId) => {
             return this.groupOperations.moveSubgroup(sourceGroupId, this.targetGroupId);
         })).toPromise();
     }

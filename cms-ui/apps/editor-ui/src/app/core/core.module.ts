@@ -1,14 +1,21 @@
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
-import { NgModule, Optional, SkipSelf, inject, provideAppInitializer } from '@angular/core';
+import { inject, NgModule, Optional, provideAppInitializer, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CmsComponentsModule, GCMS_COMMON_LANGUAGE, GCMS_UI_SERVICES_PROVIDER, KeycloakService } from '@gentics/cms-components';
+import {
+    CmsComponentsModule,
+    GCMS_UI_SERVICES_PROVIDER,
+    I18nDatePickerFormatService,
+    KeycloakService,
+} from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
-import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
+import DE_TRANSLATIONS from '../../../public/i18n/de.json';
+import EN_TRANSLATIONS from '../../../public/i18n/en.json';
 import { API_BASE_URL } from '../common/utils/base-urls';
 import { throwIfAlreadyLoaded } from '../common/utils/module-import-guard';
 import { EmbeddedToolsModule } from '../embedded-tools/embedded-tools.module';
@@ -53,10 +60,6 @@ import { FavouritesService } from './providers/favourites/favourites.service';
 import { GcmsUiServices } from './providers/gcms-ui-services/gcms-ui-services.service';
 import { AuthGuard } from './providers/guards/auth-guard';
 import { OpenModalGuard } from './providers/guards/open-modal-guard';
-import { I18nDatePickerFormat } from './providers/i18n-date-picker-format/i18n-date-picker-format.service';
-import { I18nNotification } from './providers/i18n-notification/i18n-notification.service';
-import { CustomLoader } from './providers/i18n/custom-loader';
-import { I18nService } from './providers/i18n/i18n.service';
 import { ListSearchService } from './providers/list-search/list-search.service';
 import { LocalStorage } from './providers/local-storage/local-storage.service';
 import { LocalizationsService } from './providers/localizations/localizations.service';
@@ -73,27 +76,10 @@ import { UserSettingsService } from './providers/user-settings/user-settings.ser
 import { UsersnapService } from './providers/usersnap/usersnap.service';
 
 export const getSidFromAppState = (appState: ApplicationStateService): Observable<number> =>
-    appState.select(state => state.auth.sid);
+    appState.select((state) => state.auth.sid);
 
 export const createLanguageObservable = (appState: ApplicationStateService): Observable<GcmsUiLanguage> =>
-    appState.select(state => state.ui.language);
-
-export function initializeApp(appState: ApplicationStateService, client: GCMSRestClientService, keycloak: KeycloakService): () => Promise<any> {
-    return () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        client.init({
-            connection: {
-                absolute: false,
-                basePath: '/rest',
-            },
-        });
-        appState.select(state => state.auth.sid).subscribe(sid => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            client.setSessionId(sid);
-        });
-        return keycloak.checkKeycloakAuth();
-    };
-}
+    appState.select((state) => state.ui.language);
 
 const COMPONENTS = [
     ActionsSelectorComponent,
@@ -135,8 +121,6 @@ const PROVIDERS = [
     ErrorHandler,
     ExposedUIAPI,
     FavouritesService,
-    I18nNotification,
-    I18nService,
     ListSearchService,
     LocalStorage,
     LocalizationsService,
@@ -154,7 +138,7 @@ const PROVIDERS = [
     UploadConflictService,
     UserSettingsService,
     UsersnapService,
-    { provide: DateTimePickerFormatProvider, useClass: I18nDatePickerFormat },
+    { provide: DateTimePickerFormatProvider, useClass: I18nDatePickerFormatService },
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: GCMS_API_BASE_URL, useValue: API_BASE_URL },
     { provide: GCMS_API_ERROR_HANDLER, useClass: ErrorHandler },
@@ -162,17 +146,30 @@ const PROVIDERS = [
     {
         provide: GCMS_API_SID,
         useFactory: getSidFromAppState,
-        deps: [ ApplicationStateService ],
-    },
-    {
-        provide: GCMS_COMMON_LANGUAGE,
-        useFactory: createLanguageObservable,
-        deps: [ ApplicationStateService ],
+        deps: [ApplicationStateService],
     },
     provideAppInitializer(() => {
-        const initializerFn = (initializeApp)(inject(ApplicationStateService), inject(GCMSRestClientService), inject(KeycloakService));
-        return initializerFn();
-      }),
+        const client = inject(GCMSRestClientService);
+        const appState = inject(ApplicationStateService);
+        const keycloak = inject(KeycloakService);
+        const translations = inject(TranslateService);
+
+        translations.setTranslation('de', DE_TRANSLATIONS, true);
+        translations.setTranslation('en', EN_TRANSLATIONS, true);
+
+        client.init({
+            connection: {
+                absolute: false,
+                basePath: '/rest',
+            },
+        });
+
+        appState.select((state) => state.auth.sid).subscribe((sid) => {
+            client.setSessionId(sid);
+        });
+
+        return keycloak.checkKeycloakAuth();
+    }),
 ];
 
 @NgModule({
@@ -187,11 +184,11 @@ const PROVIDERS = [
         GenticsUICoreModule.forRoot({
             dropDownPageMargin: 20,
         }),
-        CmsComponentsModule,
-        TranslateModule.forRoot({
-            loader: { provide: TranslateLoader, useClass: CustomLoader },
-        }),
+        CmsComponentsModule.forRoot(),
         TagEditorModule,
+        TranslateModule.forRoot({
+            fallbackLang: 'en',
+        }),
     ],
     exports: [
         BrowserModule,

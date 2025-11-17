@@ -1,18 +1,8 @@
 import { Component, DebugElement, Injectable, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { FolderApi } from '@editor-ui/app/core/providers/api';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { MockErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.mock';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelection,
@@ -39,6 +29,15 @@ import {
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { NEVER, Observable } from 'rxjs';
+import { FolderApi } from '../../../core/providers/api';
+import { Api } from '../../../core/providers/api/api.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { RepositoryBrowserClient, RepositoryBrowserDataService } from '../../providers';
 import { RepositoryBrowser } from '../repository-browser/repository-browser.component';
 
@@ -66,8 +65,7 @@ describe('RepositoryBrowserList', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 EntityResolver,
                 { provide: ErrorHandler, useClass: MockErrorHandler },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: PermissionService, useClass: MockPermissionService },
                 ModalService,
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
@@ -82,8 +80,8 @@ describe('RepositoryBrowserList', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        repositoryBrowserClientService = TestBed.get(RepositoryBrowserClient);
+        state = TestBed.inject(ApplicationStateService) as any;
+        repositoryBrowserClientService = TestBed.inject(RepositoryBrowserClient);
         expect(state instanceof ApplicationStateService).toBeTruthy();
 
         // prepare test data

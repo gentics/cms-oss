@@ -1,19 +1,19 @@
 import { Component, ErrorHandler } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Api } from '@editor-ui/app/core/providers/api';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { PagePropertiesComponent } from '@editor-ui/app/shared/components';
-import { DynamicDisableDirective } from '@editor-ui/app/shared/directives';
-import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
+import { Api } from '../../../core/providers/api';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { PagePropertiesComponent } from '../../../shared/components';
+import { DynamicDisableDirective } from '../../../shared/directives';
+import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { CreatePageModalComponent } from '../create-page-modal/create-page-modal.component';
 
 xdescribe('CreateFormModalComponent', () => {
@@ -47,10 +47,10 @@ xdescribe('CreateFormModalComponent', () => {
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         expect(state instanceof TestApplicationState).toBe(true);
 
-        folderActions = TestBed.get(FolderActionsService);
+        folderActions = TestBed.inject(FolderActionsService) as any;
         expect(folderActions instanceof MockFolderActions).toBe(true);
     });
 

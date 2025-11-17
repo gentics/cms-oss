@@ -1,19 +1,19 @@
 import { Component, ViewChild } from '@angular/core';
 import { tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { TagChangedFn, TagEditorResult } from '@gentics/cms-integration-api-models';
 import { EditableTag, StringTagPartProperty, TagPropertyMap } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
+import { I18nService } from '@gentics/cms-components';
 import { cloneDeep } from 'lodash-es';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
 import { spyOnDynamicallyCreatedComponent } from '../../../../testing/dynamic-components';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
 import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { CustomTagEditorHostComponent } from '../custom-tag-editor-host/custom-tag-editor-host.component';
@@ -31,7 +31,6 @@ describe('TagEditorHostComponent', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 IFrameStylesService,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 CustomTagEditorHostComponent,
@@ -58,7 +57,7 @@ describe('TagEditorHostComponent', () => {
                 let resolve: (tag: TagEditorResult) => void = null;
                 spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
                     editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
-                        new Promise(resolveFn => resolve = resolveFn),
+                        new Promise((resolveFn) => resolve = resolveFn),
                     );
                 });
 
@@ -79,7 +78,7 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the promise is resolved correctly.
                 let origPromiseResolved = false;
                 let resultResolved = false;
-                result.then(editorResult => {
+                result.then((editorResult) => {
                     expect(origPromiseResolved).toBe(true);
                     expect(editorResult.doDelete).toEqual(false);
                     expect(editorResult.tag).toEqual(expectedEditedTag);
@@ -114,7 +113,7 @@ describe('TagEditorHostComponent', () => {
                 let resolve: (tag: TagEditorResult) => void = null;
                 spyOnDynamicallyCreatedComponent([CustomTagEditorHostComponent], (componentType, componentInstance) => {
                     editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
-                        new Promise(resolveFn => resolve = resolveFn),
+                        new Promise((resolveFn) => resolve = resolveFn),
                     );
                 });
 
@@ -135,7 +134,7 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the promise is resolved correctly.
                 let origPromiseResolved = false;
                 let resultResolved = false;
-                result.then(editorResult => {
+                result.then((editorResult) => {
                     expect(origPromiseResolved).toBe(true);
                     expect(editorResult.doDelete).toEqual(false);
                     expect(editorResult.tag).toEqual(expectedEditedTag);
@@ -295,7 +294,7 @@ describe('TagEditorHostComponent', () => {
                 });
 
                 const reportedChangedStates: TagPropertyMap[] = [];
-                const onChangeHandler: TagChangedFn = (tagProperties) => reportedChangedStates.push(tagProperties)
+                const onChangeHandler: TagChangedFn = (tagProperties) => reportedChangedStates.push(tagProperties);
 
                 fixture.detectChanges();
                 fixture.componentInstance.tagEditorHost.editTagLive(tag, context, onChangeHandler);
@@ -329,7 +328,7 @@ describe('TagEditorHostComponent', () => {
                 });
 
                 const reportedChangedStates: TagPropertyMap[] = [];
-                const onChangeHandler: TagChangedFn = (tagProperties) => reportedChangedStates.push(tagProperties)
+                const onChangeHandler: TagChangedFn = (tagProperties) => reportedChangedStates.push(tagProperties);
 
                 fixture.detectChanges();
                 fixture.componentInstance.tagEditorHost.editTagLive(tag, context, onChangeHandler);
@@ -367,8 +366,8 @@ class MockErrorHandlerService {
     catch(error: Error, options?: { notification: boolean }): void { }
 }
 
-class MockI18nService implements Partial<I18nService> {
-    translate(key: string | string[], params?: any): string {
+class MockI18nService implements Partial<TranslateService> {
+    instant(key: string | string[], params?: any): string {
         return key as string;
     }
 }

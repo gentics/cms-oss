@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { AlohaLinkTargetComponent, ExtendedLinkTarget } from '@gentics/aloha-models';
 import { File, Image, ItemRequestOptions, Page } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { generateFormProvider } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { NEVER, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { RepositoryBrowserClient } from '../../../shared/providers';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
@@ -74,7 +74,7 @@ export class AlohaLinkTargetRendererComponent
     public pickInternalTarget(): void {
         let title = this.settings?.pickerTitle;
         if (!title) {
-            title = this.i18n.translate('aloha.linktarget_pick_target');
+            title = this.i18n.instant('aloha.linktarget_pick_target');
         }
 
         this.repositoryBrowserClient.openRepositoryBrowser({

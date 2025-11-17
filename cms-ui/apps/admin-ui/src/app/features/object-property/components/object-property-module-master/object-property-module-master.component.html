@@ -1,7 +1,7 @@
 <gtx-tabs pure [activeId]="activeTab">
     <gtx-tab
         [id]="ObjectPropertyModuleTabs.OBJECT_PROPERTIES"
-        [title]="'common.objectProperty_plural' | i18n"
+        [title]="'common.objectProperty_plural' | gtxI18n"
         (select)="setTabAsActive($event)"
     >
         <gtx-object-property-master class="properties-master"></gtx-object-property-master>
@@ -9,7 +9,7 @@
 
     <gtx-tab
         [id]="ObjectPropertyModuleTabs.CATEGORIES"
-        [title]="'objectProperty.objectPropertyCategory_plural' | i18n"
+        [title]="'object_property.objectPropertyCategory_plural' | gtxI18n"
         (select)="setTabAsActive($event)"
     >
         <gtx-object-property-category-master class="categories-master"></gtx-object-property-category-master>

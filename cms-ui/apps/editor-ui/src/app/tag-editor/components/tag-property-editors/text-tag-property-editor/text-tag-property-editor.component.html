@@ -1,30 +1,30 @@
-<ng-container *ngIf="tagProperty">
-    <div class="tag-part-editor text-box">
-        <gtx-input
-            *ngIf="isTextShort"
-            maxLength="255"
-            [label]="tagPart | tagPropLabel"
-            [pattern]="tagPart?.regex?.expression"
-            [placeholder]="tagPart?.regex?.description"
-            [required]="tagPart?.mandatory"
-            [readonly]="readOnly"
-            [value]="tagProperty.stringValue"
-            (blur)="onBlur()"
-            (valueChange)="onChange($event)"
-        ></gtx-input>
-
-        <gtx-textarea
-            *ngIf="!isTextShort"
-            multiline="true"
-            [label]="tagPart | tagPropLabel"
-            [placeholder]="tagPart?.regex?.description"
-            [required]="tagPart?.mandatory"
-            [readonly]="readOnly"
-            [value]="tagProperty.stringValue"
-            (touch)="onBlur()"
-            (valueChange)="onChange($event)"
-        ></gtx-textarea>
-
-        <validation-error-info [validationResult]="displayedValidationResult"></validation-error-info>
-    </div>
-</ng-container>
+@if (tagProperty) {
+  <div class="tag-part-editor text-box">
+    @if (isTextShort) {
+      <gtx-input
+        maxLength="255"
+        [label]="tagPart | tagPropLabel"
+        [pattern]="tagPart?.regex?.expression"
+        [placeholder]="tagPart?.regex?.description"
+        [required]="tagPart?.mandatory"
+        [readonly]="readOnly"
+        [value]="tagProperty.stringValue"
+        (blur)="onBlur()"
+        (valueChange)="onChange($event)"
+      ></gtx-input>
+    }
+    @if (!isTextShort) {
+      <gtx-textarea
+        multiline="true"
+        [label]="tagPart | tagPropLabel"
+        [placeholder]="tagPart?.regex?.description"
+        [required]="tagPart?.mandatory"
+        [readonly]="readOnly"
+        [value]="tagProperty.stringValue"
+        (touch)="onBlur()"
+        (valueChange)="onChange($event)"
+      ></gtx-textarea>
+    }
+    <validation-error-info [validationResult]="displayedValidationResult"></validation-error-info>
+  </div>
+}

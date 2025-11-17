@@ -19,7 +19,7 @@ describe('KeycloakService', () => {
             imports: [RouterModule.forRoot([])],
         });
 
-        keycloakService = TestBed.get(KeycloakService);
+        keycloakService = TestBed.inject(KeycloakService);
     });
 
     it('can be created', () => {

@@ -1,28 +1,29 @@
 <form [formGroup]="form">
-    <gtx-select
-        [label]="('modal.send_message_recipient' | i18n) + '*'"
-        [required]="true"
-        formControlName="recipientIds"
-        multiple="true"
-        required
+  <gtx-select
+    [label]="('modal.send_message_recipient' | gtxI18n) + '*'"
+    [required]="true"
+    formControlName="recipientIds"
+    multiple="true"
+    required
     >
     <!-- Temporarily removed groups due to SUP-6589.
-        <gtx-optgroup [label]="('modal.send_message_groups' | i18n)">
-            <gtx-option *ngFor="let group of groups" [value]="'toGroupId_'+group.id">{{ group?.name }}</gtx-option>
-        </gtx-optgroup>
+    <gtx-optgroup [label]="('modal.send_message_groups' | gtxI18n)">
+      <gtx-option *ngFor="let group of groups" [value]="'toGroupId_'+group.id">{{ group?.name }}</gtx-option>
+    </gtx-optgroup>
     -->
-        <gtx-optgroup [label]="('modal.send_message_users' | i18n)">
-            <gtx-option
-                *ngFor="let user of users"
-                [value]="'toUserId_'+user.id"
-            >{{ user?.firstName }} {{ user?.lastName }}</gtx-option>
-        </gtx-optgroup>
-    </gtx-select>
+    <gtx-optgroup [label]="('modal.send_message_users' | gtxI18n)">
+      @for (user of users; track user) {
+        <gtx-option
+          [value]="'toUserId_'+user.id"
+        >{{ user?.firstName }} {{ user?.lastName }}</gtx-option>
+      }
+    </gtx-optgroup>
+  </gtx-select>
 
-    <gtx-checkbox [label]="('modal.send_message_instant' | i18n)" formControlName="isInstant"/>
+  <gtx-checkbox [label]="('modal.send_message_instant' | gtxI18n)" formControlName="isInstant"/>
 
-    <gtx-textarea
-        [label]="'modal.send_message_message' | i18n"
-        formControlName="message"
-    ></gtx-textarea>
+  <gtx-textarea
+    [label]="'modal.send_message_message' | gtxI18n"
+    formControlName="message"
+  ></gtx-textarea>
 </form>

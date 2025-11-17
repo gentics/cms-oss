@@ -33,7 +33,8 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { Observable, of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ActivityManagerService, EntityManagerService, ErrorHandler, I18nNotificationService } from '../..';
+import { ActivityManagerService, EntityManagerService, ErrorHandler } from '../..';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { TranslatedNotificationOptions } from '../../i18n-notification';
@@ -149,13 +150,13 @@ describe('GroupOperations', () => {
             ],
         });
 
-        api = TestBed.get(GcmsApi);
-        appState = TestBed.get(AppStateService);
-        entityManager = TestBed.get(EntityManagerService);
-        errorHandler = TestBed.get(ErrorHandler);
-        groupOperations = TestBed.get(GroupOperations);
+        api = TestBed.inject(GcmsApi) as any;
+        appState = TestBed.inject(AppStateService) as any;
+        entityManager = TestBed.inject(EntityManagerService) as any;
+        errorHandler = TestBed.inject(ErrorHandler) as any;
+        groupOperations = TestBed.inject(GroupOperations);
         normalizer = new GcmsNormalizer();
-        notification = TestBed.get(I18nNotificationService);
+        notification = TestBed.inject(I18nNotificationService) as any;
 
         addEntitySpy = spyOn(entityManager, 'addEntity').and.callThrough();
         addEntitiesSpy = spyOn(entityManager, 'addEntities').and.callThrough();

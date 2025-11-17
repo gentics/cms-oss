@@ -1,15 +1,6 @@
 
 import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ItemLanguageClickEvent } from '@editor-ui/app/common/models';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
-import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { FavouritesService } from '@editor-ui/app/core/providers/favourites/favourites.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { ApplicationStateService, FolderActionsService, UsageActionsService, WastebinActionsService } from '@editor-ui/app/state';
-import { I18nService } from '@gentics/cms-components';
 import {
     AnyModelType,
     Node,
@@ -19,8 +10,16 @@ import {
 import { getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { ModalService } from '@gentics/ui-core';
 import { mockPipe } from '@gentics/ui-core/testing';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { WindowRef } from 'ngx-autosize';
+import { ItemLanguageClickEvent } from '../../../common/models';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
+import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { FavouritesService } from '../../../core/providers/favourites/favourites.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { ApplicationStateService, FolderActionsService, UsageActionsService, WastebinActionsService } from '../../../state';
 import { ItemListRowComponent } from './item-list-row.component';
 
 
@@ -58,7 +57,6 @@ describe('ItemListRowComponent', () => {
                 { provide: ModalService, useValue: modalServiceSpy },
                 { provide: EntityResolver, useValue: {} },
                 { provide: FavouritesService, useValue: {} },
-                { provide: TranslateService, useValue: {} },
                 { provide: I18nService, useValue: {} },
                 { provide: NavigationService, useValue: {} },
                 { provide: UsageActionsService, useValue: {} },

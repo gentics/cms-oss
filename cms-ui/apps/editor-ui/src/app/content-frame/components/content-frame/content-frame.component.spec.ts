@@ -14,7 +14,7 @@ import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
 import {
@@ -36,8 +36,6 @@ import { Api } from '../../../core/providers/api/api.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
@@ -48,6 +46,7 @@ import { InheritedLocalizedIcon } from '../../../shared/components/inherited-loc
 import { ItemStatusLabelComponent } from '../../../shared/components/item-status-label/item-status-label.component';
 import { DynamicDisableDirective } from '../../../shared/directives/dynamic-disable/dynamic-disable.directive';
 import { ItemIsLocalizedPipe } from '../../../shared/pipes/item-is-localized/item-is-localized.pipe';
+import { RepositoryBrowserClient } from '../../../shared/providers';
 import { BreadcrumbsService } from '../../../shared/providers/breadcrumbs.service';
 import { ApplicationStateService, EditorActionsService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
@@ -498,8 +497,7 @@ describe('ContentFrameComponent', () => {
                 EditorActionsService,
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: PermissionService, useValue: permissionService },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
                 { provide: CustomScriptHostService, useClass: MockCustomScriptHostService },
                 { provide: CustomerScriptService, useClass: MockCustomerScriptService },
@@ -533,10 +531,10 @@ describe('ContentFrameComponent', () => {
             ],
         });
 
-        appState = TestBed.get(ApplicationStateService);
-        api = TestBed.get(Api);
-        folderActions = TestBed.get(FolderActionsService);
-        canSaveService = TestBed.get(MockCanSaveService);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        api = TestBed.inject(Api) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        canSaveService = TestBed.inject(MockCanSaveService);
         route = TestBed.inject(ActivatedRoute) as any;
 
         // Make sure we're marking the test as logged in, otherwise nothing will be displayed/rendered

@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { LINK_TYPES, LinkType, USAGE_TYPES, UsageType } from '@editor-ui/app/common/models';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     InheritableItem,
@@ -8,6 +7,7 @@ import {
 } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
+import { LINK_TYPES, LinkType, USAGE_TYPES, UsageType } from '../../../common/models';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService } from '../../../state';
 import { PageLoadEndEvent, PageLoadStartEvent } from '../item-usage-list/item-usage-list.component';

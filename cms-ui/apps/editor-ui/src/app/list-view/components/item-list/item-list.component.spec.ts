@@ -13,9 +13,7 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { WindowRef } from '@gentics/cms-components';
+import { I18nNotificationService, WindowRef } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File,
@@ -30,12 +28,12 @@ import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { FavouritesService } from '../../../core/providers/favourites/favourites.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { ListSearchService } from '../../../core/providers/list-search/list-search.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
@@ -275,8 +273,7 @@ describe('ItemListComponent', () => {
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: ListSearchService, useClass: MockListSearchService },
                 { provide: ChangeDetectorRef, useClass: MockChangeDetector },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: FavouritesService, useClass: MockFavouritesService },
                 { provide: ResourceUrlBuilder, useClass: MockResourceUrlBuilder },
                 { provide: UsageActionsService, useClass: MockUsageActionsService },
@@ -331,8 +328,8 @@ describe('ItemListComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
         expect(state instanceof ApplicationStateService).toBeTruthy();
         state.mockState({
             auth: {
@@ -681,7 +678,7 @@ describe('ItemListComponent', () => {
                     { id: 2, name: 'item2', path: 'root/item2', type: 'page' },
                     { id: 3, name: 'item3', path: 'root/item3', type: 'page' },
                 ];
-                const contextMenuService = TestBed.get(ContextMenuOperationsService);
+                const contextMenuService = TestBed.inject(ContextMenuOperationsService);
                 spyOn(contextMenuService, 'copyItems').and.stub();
 
                 fixture.detectChanges();
@@ -707,7 +704,7 @@ describe('ItemListComponent', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(contextMenuService.copyItems).toHaveBeenCalledWith('page', [instance.items[1]], state.now.folder.activeNode);
+                expect(contextMenuService.copyItems).toHaveBeenCalledWith('page', [instance.items[1]] as any, state.now.folder.activeNode);
             }),
         );
 
@@ -870,7 +867,7 @@ describe('ItemListComponent', () => {
 
         it('loads all items of the type when hasMore = true, then emits full selection on state update',
             componentTest(() => TestComponent, (fixture, instance) => {
-                const folderActions: FolderActionsService = TestBed.get(FolderActionsService);
+                const folderActions: FolderActionsService = TestBed.inject(FolderActionsService);
                 spyOn(folderActions, 'getItemsOfTypeInFolder');
                 updateItemsInfoState({
                     hasMore: true,
@@ -935,7 +932,7 @@ describe('ItemListComponent', () => {
 
         it('emits with all items when a single items is clicked and then toggleAll is clicked (with hasMore = true)',
             componentTest(() => TestComponent, (fixture, instance) => {
-                const folderActions: FolderActionsService = TestBed.get(FolderActionsService);
+                const folderActions: FolderActionsService = TestBed.inject(FolderActionsService);
                 spyOn(folderActions, 'getItemsOfTypeInFolder');
                 updateItemsInfoState({
                     hasMore: true,

@@ -1,5 +1,5 @@
-<gtx-select
-    *ngIf="settings"
+@if (settings) {
+  <gtx-select
     [class.in-form]="renderContext === 'modal'"
     [value]="settings.value"
     [label]="settings.label"
@@ -7,9 +7,11 @@
     [clearable]="settings.clearable"
     [placeholder]="settings.placeholder"
     (valueChange)="triggerChange($event)"
->
-    <gtx-option
-        *ngFor="let option of (settings?.options || [])"
+    >
+    @for (option of (settings?.options || []); track option) {
+      <gtx-option
         [value]="option.id"
-    >{{ option.label }}</gtx-option>
-</gtx-select>
+      >{{ option.label }}</gtx-option>
+    }
+  </gtx-select>
+}

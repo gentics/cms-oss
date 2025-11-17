@@ -1,4 +1,3 @@
-import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -38,6 +37,7 @@ import {
     setControlsEnabled,
     setControlsValidators,
 } from '@gentics/ui-core';
+import { AppStateService } from '../../../../state';
 
 export enum ContentRepositoryPropertiesMode {
     CREATE = 'create',
@@ -55,7 +55,7 @@ type CRDisplayType = {
     label: string;
 };
 
-const DB_CONTROLS: (keyof EditableContentRepositoryProperties)[] =  [
+const DB_CONTROLS: (keyof EditableContentRepositoryProperties)[] = [
     'dbType',
     'diffDelete',
     'languageInformation',
@@ -83,7 +83,7 @@ const MESH_CONTROLS: (keyof EditableContentRepositoryProperties)[] = [
         generateFormProvider(ContentRepositoryPropertiesComponent),
         generateValidatorProvider(ContentRepositoryPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class ContentRepositoryPropertiesComponent extends BasePropertiesComponent<ContentRepositoryPropertiesFormData> implements OnInit, OnChanges {
 
@@ -104,54 +104,54 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     public showBasepath = false;
 
     /** selectable options for contentRepository input passwordType */
-    public readonly PASSWORD_TYPES: { id: ContentRepositoryPasswordType; label: string; }[] = [
+    public readonly PASSWORD_TYPES: { id: ContentRepositoryPasswordType; label: string }[] = [
         {
             id: ContentRepositoryPasswordType.NONE,
-            label: 'contentRepository.passwordType_none',
+            label: 'content_repository.passwordType_none',
         },
         {
             id: ContentRepositoryPasswordType.VALUE,
-            label: 'contentRepository.passwordType_value',
+            label: 'content_repository.passwordType_value',
         },
         {
             id: ContentRepositoryPasswordType.PROPERTY,
-            label: 'contentRepository.passwordType_property',
+            label: 'content_repository.passwordType_property',
         },
     ];
 
     /** selectable options for contentRepository input usernameType */
-    public readonly USERNAME_TYPES: { id: UsernameType; label: string; }[] = [
+    public readonly USERNAME_TYPES: { id: UsernameType; label: string }[] = [
         {
             id: UsernameType.VALUE,
-            label: 'contentRepository.usernameType_value',
+            label: 'content_repository.usernameType_value',
         },
         {
             id: UsernameType.PROPERTY,
-            label: 'contentRepository.usernameType_property',
+            label: 'content_repository.usernameType_property',
         },
     ];
 
     /** selectable options for contentRepository input urlType */
-    public readonly URL_TYPES: { id: UrlType; label: string; }[] = [
+    public readonly URL_TYPES: { id: UrlType; label: string }[] = [
         {
             id: UrlType.VALUE,
-            label: 'contentRepository.urlType_value',
+            label: 'content_repository.urlType_value',
         },
         {
             id: UrlType.PROPERTY,
-            label: 'contentRepository.urlType_property',
+            label: 'content_repository.urlType_property',
         },
     ];
 
     /** selectable options for contentRepository input basepathType */
-    public readonly BASEPATH_TYPES: { id: BasepathType; label: string; }[] = [
+    public readonly BASEPATH_TYPES: { id: BasepathType; label: string }[] = [
         {
             id: BasepathType.VALUE,
-            label: 'contentRepository.basepathType_value',
+            label: 'content_repository.basepathType_value',
         },
         {
             id: BasepathType.PROPERTY,
-            label: 'contentRepository.basepathType_property',
+            label: 'content_repository.basepathType_property',
         },
     ];
 
@@ -174,14 +174,14 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         } else {
             return null;
         }
-    }
+    };
 
     public ngOnInit(): void {
         super.ngOnInit();
 
         this.updateCRTypes();
 
-        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MESH_CR]).subscribe(featureEnabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features.global[Feature.MESH_CR]).subscribe((featureEnabled) => {
             this.meshCrEnabled = featureEnabled;
             this.updateCRTypes();
             this.changeDetector.markForCheck();
@@ -218,14 +218,14 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         const types: CRDisplayType[] = [
             {
                 id: ContentRepositoryType.CR,
-                label: `contentRepository.contentRepository_type_${ContentRepositoryType.CR}`,
+                label: `content_repository.contentRepository_type_${ContentRepositoryType.CR}`,
             },
         ];
 
         if (this.meshCrEnabled) {
             types.push({
                 id: ContentRepositoryType.MESH,
-                label: `contentRepository.contentRepository_type_${ContentRepositoryType.MESH}`,
+                label: `content_repository.contentRepository_type_${ContentRepositoryType.MESH}`,
             });
         }
 

@@ -18,14 +18,12 @@ import {
 import { WindowRef } from '@gentics/cms-components';
 import { Item, Page, Template, TimeManagement } from '@gentics/cms-models';
 import { SplitViewContainerComponent } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, fromEventPattern, merge, Observable, of, Subject, Subscription } from 'rxjs';
 import { debounceTime, map, mapTo, startWith } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
-import { getFormattedTimeMgmtValue } from '../../../core/providers/i18n/i18n-utils';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
+import { getFormattedTimeMgmtValue } from '../../../core/utils/i18n';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
-import { I18nDatePipe } from '../../pipes/i18n-date/i18n-date.pipe';
-
 
 const MAX_HEIGHT = '80px';
 
@@ -37,8 +35,7 @@ const MAX_HEIGHT = '80px';
     templateUrl: './list-item-details.component.tpl.html',
     styleUrls: ['./list-item-details.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [I18nDatePipe],
-    standalone: false
+    standalone: false,
 })
 export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
     @Input() fields: string[];
@@ -70,8 +67,9 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
     @HostListener('mouseenter')
     hoverHandler(): void {
         this.enterTimer = setTimeout(() => {
-            this.maxHeight = this.autoCompact && this.compact ?
-                this.fieldsWrapper.nativeElement.getBoundingClientRect().height + 'px' : 'initial';
+            this.maxHeight = this.autoCompact && this.compact
+                ? this.fieldsWrapper.nativeElement.getBoundingClientRect().height + 'px'
+                : 'initial';
             this.changeDetector.markForCheck();
         }, 200);
     }
@@ -87,7 +85,6 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
         private changeDetector: ChangeDetectorRef,
         private windowRef: WindowRef,
         private i18n: I18nService,
-        private i18nDate: I18nDatePipe,
         private folderActions: FolderActionsService,
         private state: ApplicationStateService,
         @Optional() private splitViewContainer?: SplitViewContainerComponent,
@@ -113,9 +110,9 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
                 this.fields$.pipe(
                     startWith(this.fields),
                 ),
-            ]).subscribe(([split, widthInPixels])  => {
+            ]).subscribe(([split, widthInPixels]) => {
                 if (widthInPixels > 1600 && split < 100) {
-                    widthInPixels = widthInPixels * (split ) / 100;
+                    widthInPixels = widthInPixels * (split) / 100;
                 }
                 return this.setCompactStatus(widthInPixels);
             });
@@ -146,11 +143,11 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
      */
     private setCompactStatus(widthInPixels: number): void {
         this.compact = this.fields != null && (
-            7 <= this.fields.length && widthInPixels < 960 ||
-            6 <= this.fields.length && widthInPixels < 840 ||
-            5 <= this.fields.length && widthInPixels < 720 ||
-            4 <= this.fields.length && widthInPixels < 600 ||
-            3 <= this.fields.length && widthInPixels < 480
+            7 <= this.fields.length && widthInPixels < 960
+            || 6 <= this.fields.length && widthInPixels < 840
+            || 5 <= this.fields.length && widthInPixels < 720
+            || 4 <= this.fields.length && widthInPixels < 600
+            || 3 <= this.fields.length && widthInPixels < 480
         );
 
         this.maxHeight = this.compact ? MAX_HEIGHT : 'initial';
@@ -178,7 +175,7 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
         if (!this.activeNodeId) {
             return of(false);
         }
-        return getFormattedTimeMgmtValue(page, field, this.activeNodeId, this.i18n, this.i18nDate, this.folderActions);
+        return getFormattedTimeMgmtValue(page, field, this.activeNodeId, this.i18n, this.folderActions);
     }
 
     getUserName(item: Item): string {
@@ -196,7 +193,7 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
             (handler: any) => window.addEventListener('resize', handler),
             (handler: any) => window.removeEventListener('resize', handler),
         ).pipe(
-            map(ev => window.innerWidth),
+            map((ev) => window.innerWidth),
             debounceTime(200),
             startWith(window.innerWidth),
         );

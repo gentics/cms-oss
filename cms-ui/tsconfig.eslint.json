@@ -12,8 +12,10 @@
         "jest.preset.[jt]s",
         "jest.config.[jt]s",
         "cypress.preset.js",
+        "playwright.config.[jt]s",
         "apps/**/*.ts",
         "libs/**/*.ts",
-        "typings/**/*.d.ts"
+        "**/*.component.html",
+        "**/*.tpl.html"
     ]
 }

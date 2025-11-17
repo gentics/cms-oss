@@ -6,8 +6,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
-import { I18nService } from '../i18n';
-import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
 import { PermissionsService } from '../permissions/permissions.service';
 import { MessageService } from './message.service';
 
@@ -47,14 +45,13 @@ describe('MessageService', () => {
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: GcmsApi, useClass: MockGcmsApi },
                 { provide: PermissionsService, useClass: MockPermissionsService },
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
             ],
         });
 
-        poller = TestBed.get(MessageService);
-        appState = TestBed.get(AppStateService);
-        gcmsApi = TestBed.get(GcmsApi);
-        permissionsService = TestBed.get(PermissionsService);
+        poller = TestBed.inject(MessageService);
+        appState = TestBed.inject(AppStateService) as any;
+        gcmsApi = TestBed.inject(GcmsApi);
+        permissionsService = TestBed.inject(PermissionsService) as any;
 
         fetchAllMessages = spyOn(poller, 'fetchAllMessages');
         fetchUnreadMessages = spyOn(poller, 'fetchUnreadMessages');

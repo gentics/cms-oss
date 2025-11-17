@@ -1,6 +1,5 @@
 import { PackageDependencyEntityBO } from '@admin-ui/common';
 import {
-    I18nService,
     PackageCheckTrableLoaderOptions,
     PackageCheckTrableLoaderService,
 } from '@admin-ui/core';
@@ -12,6 +11,7 @@ import {
 } from '@angular/core';
 import { PackageDependencyEntity } from '@gentics/cms-models';
 import { TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
 @Component({
@@ -19,11 +19,10 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './dev-tool-package-trable.component.html',
     styleUrls: ['./dev-tool-package-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class PackageCheckTrableComponent
-    extends BaseEntityTrableComponent<PackageDependencyEntity, PackageDependencyEntityBO, PackageCheckTrableLoaderOptions>
-{
+    extends BaseEntityTrableComponent<PackageDependencyEntity, PackageDependencyEntityBO, PackageCheckTrableLoaderOptions> {
     @Input()
     public packageName: string;
 
@@ -60,6 +59,7 @@ export class PackageCheckTrableComponent
         },
     ];
 
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         changeDetector: ChangeDetectorRef,
         i18n: I18nService,
@@ -67,7 +67,6 @@ export class PackageCheckTrableComponent
     ) {
         super(changeDetector, i18n, loader);
     }
-
 
     protected override createAdditionalLoadOptions(): PackageCheckTrableLoaderOptions {
         return {

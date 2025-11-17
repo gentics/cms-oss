@@ -1,10 +1,10 @@
 import { BO_PERMISSIONS, ScheduleTaskBO } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, GcmsPermission, NormalizableEntityTypesMap, ScheduleTask } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn, TableSortOrder } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ScheduleTaskTableLoaderService } from '../../providers';
@@ -15,7 +15,7 @@ import { CreateScheduleTaskModalComponent } from '../create-schedule-task-modal/
     templateUrl: './schedule-task-table.component.html',
     styleUrls: ['./schedule-task-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ScheduleTaskTableComponent extends BaseEntityTableComponent<ScheduleTask, ScheduleTaskBO> {
 
@@ -41,8 +41,10 @@ export class ScheduleTaskTableComponent extends BaseEntityTableComponent<Schedul
             align: 'center',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'scheduleTask';
 
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -59,20 +61,19 @@ export class ScheduleTaskTableComponent extends BaseEntityTableComponent<Schedul
         );
     }
 
-    public override async handleCreateButton(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(CreateScheduleTaskModalComponent, {
+    public override handleCreateButton(): void {
+        this.modalService.fromComponent(CreateScheduleTaskModalComponent, {
             closeOnEscape: false,
             closeOnOverlayClick: false,
             width: '80%',
-        }, {});
-        const created = await dialog.open();
-
-        if (!created) {
-            return;
-        }
-
-        // Reload list once a new schedule was created
-        this.loader.reload();
+        }, {})
+            .then((dialog) => dialog.open())
+            .then((created) => {
+                if (created) {
+                // Reload list once a new schedule was created
+                    this.loader.reload();
+                }
+            });
     }
 
     protected override createTableActionLoading(): Observable<TableAction<ScheduleTaskBO>[]> {
@@ -92,6 +93,6 @@ export class ScheduleTaskTableComponent extends BaseEntityTableComponent<Schedul
 
                 return actions;
             }),
-        )
+        );
     }
 }

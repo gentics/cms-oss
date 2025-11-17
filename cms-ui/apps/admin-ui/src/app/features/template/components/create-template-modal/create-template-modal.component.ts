@@ -1,7 +1,7 @@
-import { I18nNotificationService } from '@admin-ui/core';
 import { TemplateDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Node, Raw, TemplateBO, TemplateCreateRequest } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -10,7 +10,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './create-template-modal.component.html',
     styleUrls: ['./create-template-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateTemplateModalComponent extends BaseModal<TemplateBO<Raw>> implements OnInit {
 
@@ -49,9 +49,9 @@ export class CreateTemplateModalComponent extends BaseModal<TemplateBO<Raw>> imp
             template: this.form.value,
         };
 
-        this.entityData.create(req).subscribe(template => {
+        this.entityData.create(req).subscribe((template) => {
             this.closeFn(template);
-        }, err => {
+        }, (err) => {
             this.notification.show({
                 message: 'template.create_error',
                 translationParams: {

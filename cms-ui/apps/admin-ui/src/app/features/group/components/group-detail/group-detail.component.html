@@ -1,155 +1,163 @@
 <div class="gtx-entity-detail">
-    <gtx-tabs pure [activeId]="activeTabId$ | async">
-        <gtx-tab
-            [id]="GroupDetailTabs.PROPERTIES"
-            gtxDetailTabLink
-            [title]="'shared.title_properties' | i18n"
-        >
-            <div class="detail-tab-wrapper">
-                <gtx-entity-detail-header
-                    [hidden]="isLoading"
-                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
-                    saveActionAllowedId="group.updateGroupInstance"
-                    [saveActionAllowedInstanceId]="currentEntity?.id"
-                    [saveDisabled]="!fgProperties?.dirty || fgProperties?.invalid"
-                    (saveClick)="btnSavePropertiesOnClick()"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
+  <gtx-tabs pure [activeId]="activeTabId$ | async">
+    <gtx-tab
+      [id]="GroupDetailTabs.PROPERTIES"
+      gtxDetailTabLink
+      [title]="'shared.title_properties' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [hidden]="isLoading"
+          [title]="'shared.title_properties_of_entity' | gtxI18n: { entityName: currentEntity?.name }"
+          saveActionAllowedId="group.updateGroupInstance"
+          [saveActionAllowedInstanceId]="currentEntity?.id"
+          [saveDisabled]="!fgProperties?.dirty || fgProperties?.invalid"
+          (saveClick)="btnSavePropertiesOnClick()"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
 
-                <div class="gtx-entity-details-tab-content-body">
-                    <form
-                        *ngIf="fgProperties"
-                        [hidden]="isLoading"
-                        [formGroup]="fgProperties" class="gtx-entity-details-tab-content-body-form properties"
-                    >
-                        <div class="input-container small-12 medium-6 columns">
-                            <gtx-input
-                                type="text"
-                                [required]="true"
-                                maxlength="50"
-                                [label]="('shared.group_name' | i18n) + ' *'"
-                                [placeholder]="'shared.group_name' | i18n"
-                                formControlName="name"
-                                gtxActionAllowed="group.updateGroupInstance"
-                                [aaInstanceId]="currentEntity?.id"
-                            ></gtx-input>
-                        </div>
+        <div class="gtx-entity-details-tab-content-body">
+          @if (fgProperties) {
+            <form
+              [hidden]="isLoading"
+              [formGroup]="fgProperties" class="gtx-entity-details-tab-content-body-form properties"
+              >
+              <div class="input-container small-12 medium-6 columns">
+                <gtx-input
+                  type="text"
+                  [required]="true"
+                  maxlength="50"
+                  [label]="('shared.group_name' | gtxI18n) + ' *'"
+                  [placeholder]="'shared.group_name' | gtxI18n"
+                  formControlName="name"
+                  gtxActionAllowed="group.updateGroupInstance"
+                  [aaInstanceId]="currentEntity?.id"
+                ></gtx-input>
+              </div>
+              <div class="small-12 medium-6 columns"></div>
+              <div class="input-container medium-12 columns">
+                <gtx-textarea
+                  [required]="false"
+                  maxlength="200"
+                  [label]="'shared.description' | gtxI18n"
+                  [placeholder]="'shared.description' | gtxI18n"
+                  formControlName="description"
+                  gtxActionAllowed="group.updateGroupInstance"
+                  [aaInstanceId]="currentEntity?.id"
+                ></gtx-textarea>
+              </div>
+            </form>
+          }
+        </div>
+      </div>
+    </gtx-tab>
 
-                        <div class="small-12 medium-6 columns"></div>
+    <gtx-tab
+      [id]="GroupDetailTabs.SUB_GROUPS"
+      gtxDetailTabLink
+      [title]="'shared.title_subgroups' | gtxI18n"
+      >
+      @if ((activeTabId$ | async) === GroupDetailTabs.SUB_GROUPS) {
+        <div class="detail-tab-wrapper">
+          <gtx-entity-detail-header
+            [title]="'shared.title_subgroups_of_entity' | gtxI18n: { entityName: currentEntity?.name }"
+            (cancelClick)="detailsClose()"
+          ></gtx-entity-detail-header>
+          <div class="gtx-entity-details-tab-content-body">
+            @if (currentEntity) {
+              <gtx-group-table
+                [groupId]="currentEntity.id"
+                [showSearch]="true"
+              ></gtx-group-table>
+            }
+          </div>
+        </div>
+      }
+    </gtx-tab>
 
-                        <div class="input-container medium-12 columns">
-                            <gtx-textarea
-                                [required]="false"
-                                maxlength="200"
-                                [label]="'shared.description' | i18n"
-                                [placeholder]="'shared.description' | i18n"
-                                formControlName="description"
-                                gtxActionAllowed="group.updateGroupInstance"
-                                [aaInstanceId]="currentEntity?.id"
-                            ></gtx-textarea>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </gtx-tab>
+    <gtx-tab
+      [id]="GroupDetailTabs.CONTENT_PERMISSIONS"
+      gtxDetailTabLink
+      [title]="'shared.title_permissions_content' | gtxI18n"
+      >
+      @if ((activeTabId$ | async) === GroupDetailTabs.CONTENT_PERMISSIONS) {
+        <div class="detail-tab-wrapper">
+          <gtx-entity-detail-header
+            class="tab-header"
+            [title]="'shared.title_permissions_content_of_entity' | gtxI18n: { entityName: currentEntity?.name }"
+            (cancelClick)="detailsClose()"
+          ></gtx-entity-detail-header>
+          <div class="gtx-entity-details-tab-content-body">
+            @if (permissionContentRead$ | async) {
+              <gtx-permissions-trable
+                [group]="currentEntity"
+                [inlineExpansion]="true"
+                [inlineSelection]="true"
+                [parentName]="currentEntity.name"
+                [parentType]="PermissionsTreeType.CONTENT"
+                [groupPermissionsByCategory]="true"
+              ></gtx-permissions-trable>
+            } @else {
+              <div class="message-unauthorized">
+                <h5>{{ 'common.general_permission_required' | gtxI18n }}</h5>
+                <icon>warning</icon>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </gtx-tab>
 
-        <gtx-tab
-            [id]="GroupDetailTabs.SUB_GROUPS"
-            gtxDetailTabLink
-            [title]="'shared.title_subgroups' | i18n"
-        >
-            <div class="detail-tab-wrapper" *ngIf="(activeTabId$ | async) === GroupDetailTabs.SUB_GROUPS">
-                <gtx-entity-detail-header
-                    [title]="'shared.title_subgroups_of_entity' | i18n: { entityName: currentEntity?.name }"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
+    <gtx-tab
+      [id]="GroupDetailTabs.ADMIN_PERMISSIONS"
+      gtxDetailTabLink
+      [title]="'shared.title_permissions_admin' | gtxI18n"
+      >
+      @if ((activeTabId$ | async) === GroupDetailTabs.ADMIN_PERMISSIONS) {
+        <div class="detail-tab-wrapper">
+          <gtx-entity-detail-header
+            class="tab-header"
+            [title]="'shared.title_permissions_admin_of_entity' | gtxI18n: { entityName: currentEntity?.name }"
+            (cancelClick)="detailsClose()"
+          ></gtx-entity-detail-header>
+          <div class="gtx-entity-details-tab-content-body">
+            @if (permissionContentRead$ | async) {
+              <gtx-permissions-trable
+                [group]="currentEntity"
+                [inlineExpansion]="true"
+                [inlineSelection]="true"
+                [parentName]="currentEntity.name"
+                [groupPermissionsByCategory]="false"
+              ></gtx-permissions-trable>
+            } @else {
+              <div class="message-unauthorized">
+                <h5>{{ 'common.general_permission_required' | gtxI18n }}</h5>
+                <icon>warning</icon>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </gtx-tab>
 
-                <div class="gtx-entity-details-tab-content-body">
-                    <gtx-group-table
-                        *ngIf="currentEntity"
-                        [groupId]="currentEntity.id"
-                        [showSearch]="true"
-                    ></gtx-group-table>
-                </div>
-            </div>
-        </gtx-tab>
+    <gtx-tab
+      [id]="GroupDetailTabs.GROUP_USERS"
+      gtxDetailTabLink
+      [title]="'shared.title_group_users' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [title]="'shared.title_group_users_of_entity' | gtxI18n: { entityName: currentEntity?.name }"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
 
-        <gtx-tab
-            [id]="GroupDetailTabs.CONTENT_PERMISSIONS"
-            gtxDetailTabLink
-            [title]="'shared.title_permissions_content' | i18n"
-        >
-            <div class="detail-tab-wrapper" *ngIf="(activeTabId$ | async) === GroupDetailTabs.CONTENT_PERMISSIONS">
-                <gtx-entity-detail-header
-                    class="tab-header"
-                    [title]="'shared.title_permissions_content_of_entity' | i18n: { entityName: currentEntity?.name }"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
-
-                <div class="gtx-entity-details-tab-content-body">
-                    <gtx-permissions-trable
-                        *ngIf="permissionContentRead$ | async; else unauthorized"
-                        [group]="currentEntity"
-                        [inlineExpansion]="true"
-                        [inlineSelection]="true"
-                        [parentName]="currentEntity.name"
-                        [parentType]="PermissionsTreeType.CONTENT"
-                        [groupPermissionsByCategory]="true"
-                    ></gtx-permissions-trable>
-
-                    <ng-template #unauthorized>
-                        <div class="message-unauthorized">
-                            <h5>{{ 'common.general_permission_required' | i18n }}</h5>
-                            <icon>warning</icon>
-                        </div>
-                    </ng-template>
-                </div>
-            </div>
-        </gtx-tab>
-
-        <gtx-tab
-            [id]="GroupDetailTabs.ADMIN_PERMISSIONS"
-            gtxDetailTabLink
-            [title]="'shared.title_permissions_admin' | i18n"
-        >
-            <div class="detail-tab-wrapper" *ngIf="(activeTabId$ | async) === GroupDetailTabs.ADMIN_PERMISSIONS">
-                <gtx-entity-detail-header
-                    class="tab-header"
-                    [title]="'shared.title_permissions_admin_of_entity' | i18n: { entityName: currentEntity?.name }"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
-
-                <div class="gtx-entity-details-tab-content-body">
-                    <gtx-permissions-trable
-                        *ngIf="permissionContentRead$ | async; else unauthorized"
-                        [group]="currentEntity"
-                        [inlineExpansion]="true"
-                        [inlineSelection]="true"
-                        [parentName]="currentEntity.name"
-                        [groupPermissionsByCategory]="false"
-                    ></gtx-permissions-trable>
-                </div>
-            </div>
-        </gtx-tab>
-
-        <gtx-tab
-            [id]="GroupDetailTabs.GROUP_USERS"
-            gtxDetailTabLink
-            [title]="'shared.title_group_users' | i18n"
-        >
-            <div class="detail-tab-wrapper">
-                <gtx-entity-detail-header
-                    [title]="'shared.title_group_users_of_entity' | i18n: { entityName: currentEntity?.name }"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
-
-                <div class="gtx-entity-details-tab-content-body">
-                    <gtx-user-table
-                        [group]="currentEntity"
-                        [showSearch]="true"
-                    ></gtx-user-table>
-                </div>
-            </div>
-        </gtx-tab>
-    </gtx-tabs>
+        <div class="gtx-entity-details-tab-content-body">
+          <gtx-user-table
+            [group]="currentEntity"
+            [showSearch]="true"
+          ></gtx-user-table>
+        </div>
+      </div>
+    </gtx-tab>
+  </gtx-tabs>
 </div>

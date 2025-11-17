@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'license.contentRepository_info_modal_title' | i18n: { entityName: info?.name } }}</h5>
+    <h5>{{ 'license.contentRepository_info_modal_title' | gtxI18n: { entityName: info?.name } }}</h5>
 </div>
 
 <div class="modal-content">
@@ -15,6 +15,6 @@
         flat
         (click)="closeFn()"
     >
-        {{ 'common.close_button' | i18n }}
+        {{ 'common.close_button' | gtxI18n }}
     </gtx-button>
 </div>

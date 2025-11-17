@@ -41,8 +41,8 @@ describe('LogoutCleanupService', () => {
             ],
         });
 
-        appState = TestBed.get(AppStateService);
-        logoutCleanup = TestBed.get(LogoutCleanupService);
+        appState = TestBed.inject(AppStateService) as any;
+        logoutCleanup = TestBed.inject(LogoutCleanupService);
         stopper = new ObservableStopper();
     });
 

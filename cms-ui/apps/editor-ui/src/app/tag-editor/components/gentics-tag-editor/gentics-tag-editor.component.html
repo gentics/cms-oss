@@ -1,45 +1,52 @@
 <div class="container">
 
-    <div *ngIf="showTitle" class="header">
-        <h2>
-            <ng-container *ngIf="originalTag?.type !== 'OBJECTTAG'; else objPropName">{{ originalTag?.tagType?.name }}</ng-container>
-            <ng-template #objPropName>{{ originalTag | objTagName }}</ng-template>
-        </h2>
+  @if (showTitle) {
+    <div class="header">
+      <h2>
+        @if (originalTag?.type !== 'OBJECTTAG') {
+          {{ originalTag?.tagType?.name }}
+        } @else {
+          {{ originalTag | objTagName }}
+        }
+      </h2>
     </div>
+  }
 
-    <div class="tag-property-editors">
-        <div
-            *ngFor="let tagPart of editableTagParts"
-            class="tag-property-editor-row"
-            [ngClass]="tagPart?.keyword ? 'gtx-tag-part-keyword__' + tagPart.keyword : 'gtx-tag-part-keyword__no-keyword'"
+  <div class="tag-property-editors">
+    @for (tagPart of editableTagParts; track tagPart) {
+      <div
+        class="tag-property-editor-row"
+        [ngClass]="tagPart?.keyword ? 'gtx-tag-part-keyword__' + tagPart.keyword : 'gtx-tag-part-keyword__no-keyword'"
         >
-            <tag-property-editor-host [tagPart]="tagPart"></tag-property-editor-host>
-        </div>
+        <tag-property-editor-host [tagPart]="tagPart"></tag-property-editor-host>
+      </div>
+    }
+  </div>
+
+  @if (!onTagChangeFn) {
+    <div class="footer">
+      @if (context?.withDelete) {
+        <gtx-button
+          class="delete-button"
+          type="alert"
+          data-action="delete"
+          (click)="onDeleteClick()"
+        >{{ 'common.delete_button' | gtxI18n }}</gtx-button>
+      }
+      <gtx-button
+        class="cancel-button"
+        type="secondary"
+        data-action="cancel"
+        (click)="onCancelClick()"
+      >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+      <gtx-button
+        class="ok-button"
+        data-action="confirm"
+        [disabled]="!allPropertiesValid"
+        data-action="confirm"
+        (click)="onOkClick()"
+      >{{ 'common.okay_button' | gtxI18n }}</gtx-button>
     </div>
-
-    <div *ngIf="!onTagChangeFn" class="footer">
-        <gtx-button
-            *ngIf="context?.withDelete"
-            class="delete-button"
-            type="alert"
-            data-action="delete"
-            (click)="onDeleteClick()"
-        >{{ 'common.delete_button' | i18n }}</gtx-button>
-
-        <gtx-button
-            class="cancel-button"
-            type="secondary"
-            data-action="cancel"
-            (click)="onCancelClick()"
-        >{{ 'common.cancel_button' | i18n }}</gtx-button>
-
-        <gtx-button
-            class="ok-button"
-            data-action="confirm"
-            [disabled]="!allPropertiesValid"
-            data-action="confirm"
-            (click)="onOkClick()"
-        >{{ 'common.okay_button' | i18n }}</gtx-button>
-    </div>
+  }
 
 </div>

@@ -1,33 +1,36 @@
 <div class="modal-title">
-    <h5>{{ 'modal.assign_constructs_to_category_title' | i18n }}</h5>
+  <h5>{{ 'modal.assign_constructs_to_category_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-select
-        [label]="('construct.category' | i18n) + ' *'"
-        [required]="true"
-        [multiple]="false"
-        [formControl]="form"
+  <gtx-select
+    [label]="('construct.category' | gtxI18n) + ' *'"
+    [required]="true"
+    [multiple]="false"
+    [formControl]="form"
     >
-        <gtx-option *ngFor="let cat of categories$ | async" [value]="cat.id">{{ cat.name }}</gtx-option>
-    </gtx-select>
+    @for (cat of categories$ | async; track cat) {
+      <gtx-option [value]="cat.id">{{ cat.name }}</gtx-option>
+    }
+  </gtx-select>
 </div>
 
 <div class="modal-footer">
+  @if (form) {
     <gtx-button
-        *ngIf="form"
-        type="primary"
-        [disabled]="form.invalid || form.disabled"
-        (click)="closeFn(form.value)"
-    >
-        {{ 'modal.save_button' | i18n }}
+      type="primary"
+      [disabled]="form.invalid || form.disabled"
+      (click)="closeFn(form.value)"
+      >
+      {{ 'modal.save_button' | gtxI18n }}
     </gtx-button>
+  }
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="closeFn(false)"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="closeFn(false)"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

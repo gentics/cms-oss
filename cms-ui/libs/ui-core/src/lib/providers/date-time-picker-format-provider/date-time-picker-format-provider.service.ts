@@ -61,7 +61,7 @@ export class DateTimePickerFormatProvider {
 
     /** Formats a human-readable string to be displayed in the control input field. */
     format(date: MomentLike, displayTime: boolean, displaySeconds: boolean): string {
-        let formatString = displayTime ? (displaySeconds ? 'L, LTS' : 'L, LT') : 'L';
+        const formatString = displayTime ? (displaySeconds ? 'L, LTS' : 'L, LT') : 'L';
         return date.format(formatString);
     }
 }

@@ -1,6 +1,7 @@
-import { ContentPackageOperations, I18nNotificationService } from '@admin-ui/core';
+import { ContentPackageOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ContentPackageBO, EditableContentPackage } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';

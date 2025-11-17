@@ -7,10 +7,10 @@ import {
     OnInit,
     SimpleChange,
 } from '@angular/core';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { IndexById, Language, Normalized, Page, Raw } from '@gentics/cms-models';
 import { combineLatest, Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { PublishableStateUtil } from '../../util/entity-states';
 import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-language-indicator.component';

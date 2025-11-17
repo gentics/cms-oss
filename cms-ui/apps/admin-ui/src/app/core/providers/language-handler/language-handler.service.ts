@@ -25,20 +25,20 @@ import {
     EntityUpdateResponseModel,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     I18nLanguage,
     ItemDeleteResponse,
     Language,
     NodeLanguageListRequest,
     NodeLanguagesListResponse,
-    Response
+    Response,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, forkJoin } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class LanguageHandlerService
@@ -77,7 +77,7 @@ export class LanguageHandlerService
         params?: EntityCreateRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EntityCreateResponseModel<EditableEntity.LANGUAGE>> {
         return this.api.language.createLanguage(data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.language);
                 this.nameMap[res.language.id] = name;
 
@@ -98,13 +98,13 @@ export class LanguageHandlerService
         options?: EntityCreateRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]> {
         return this.create(data, options).pipe(
-            map(res => this.mapToBusinessObject(res.language)),
+            map((res) => this.mapToBusinessObject(res.language)),
         );
     }
 
     get(id: string | number, params?: EntityLoadRequestParams<EditableEntity.LANGUAGE>): Observable<EntityLoadResponseModel<EditableEntity.LANGUAGE>> {
         return this.api.language.getLanguage(id).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.language);
                 this.nameMap[res.language.id] = name;
             }),
@@ -117,7 +117,7 @@ export class LanguageHandlerService
         params?: EntityLoadRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]> {
         return this.get(id, params).pipe(
-            map(res => this.mapToBusinessObject(res.language)),
+            map((res) => this.mapToBusinessObject(res.language)),
         );
     }
 
@@ -127,7 +127,7 @@ export class LanguageHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.LANGUAGE>> {
         return this.api.language.updateLanguage(id, data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.language);
                 this.nameMap[res.language.id] = name;
 
@@ -149,7 +149,7 @@ export class LanguageHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]> {
         return this.update(id, data, params).pipe(
-            map(res => this.mapToBusinessObject(res.language)),
+            map((res) => this.mapToBusinessObject(res.language)),
         );
     }
 
@@ -180,8 +180,8 @@ export class LanguageHandlerService
         params?: EntityListRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EntityListResponseModel<EditableEntity.LANGUAGE>> {
         return this.api.language.getLanguages(params).pipe(
-            tap(res => {
-                res.items.forEach(lang => {
+            tap((res) => {
+                res.items.forEach((lang) => {
                     const name = this.displayName(lang);
                     this.nameMap[lang.id] = name;
                 });
@@ -195,7 +195,7 @@ export class LanguageHandlerService
         params?: EntityListRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]>> {
         return this.list(body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
@@ -208,8 +208,8 @@ export class LanguageHandlerService
         params?: NodeLanguageListRequest,
     ): Observable<NodeLanguagesListResponse> {
         return this.api.node.getNodeLanguageList(nodeId, params).pipe(
-            tap(res => {
-                res.items.forEach(lang => {
+            tap((res) => {
+                res.items.forEach((lang) => {
                     const name = this.displayName(lang);
                     this.nameMap[lang.id] = name;
                 });
@@ -224,7 +224,7 @@ export class LanguageHandlerService
         params?: NodeLanguageListRequest,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]>> {
         return this.listFromNode(nodeId, body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
@@ -241,9 +241,9 @@ export class LanguageHandlerService
         );
     }
 
-    unassignLanguage(nodeId: number, languageId: number): Observable<ItemDeleteResponse>{
+    unassignLanguage(nodeId: number, languageId: number): Observable<ItemDeleteResponse> {
         return this.api.node.removeNodeLanguage(nodeId, languageId).pipe(
-            tap(response => {
+            tap((response) => {
                 this.notification.show({
                     type: 'success',
                     message: response.responseInfo.responseMessage,
@@ -255,14 +255,14 @@ export class LanguageHandlerService
 
     getActiveBackendLanguage(): Observable<string> {
         return this.api.i18n.getActiveUiLanguage().pipe(
-            map(response => response.code),
+            map((response) => response.code),
             this.catchAndRethrowError(),
         );
     }
 
     getBackendLanguages(): Observable<I18nLanguage[]> {
         return this.api.i18n.getAvailableUiLanguages().pipe(
-            map(response => response.items),
+            map((response) => response.items),
             this.catchAndRethrowError(),
         );
     }
@@ -272,7 +272,7 @@ export class LanguageHandlerService
             this.listMapped(null as never, params),
             this.getBackendLanguages(),
         ]).pipe(
-            map(([allLangs, avilableLangs]) => allLangs.items.filter(lang => avilableLangs.map(i => i.code).includes(lang.code))),
+            map(([allLangs, avilableLangs]) => allLangs.items.filter((lang) => avilableLangs.map((i) => i.code).includes(lang.code))),
         );
     }
 }

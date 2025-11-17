@@ -1,35 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { EditorPermissions, StageableItem } from '@editor-ui/app/common/models';
-import { parentFolderOfItem } from '@editor-ui/app/common/utils/parent-folder-of-item';
-import {
-    ChannelDependenciesModal,
-    InheritanceDialog,
-    LinkTemplateModal,
-    PublishProtocolModalComponent,
-    MultiDeleteResult,
-    PageVersionsModal,
-    PublishTimeManagedPagesModal,
-    SynchronizeChannelModal,
-    TimeManagementModal,
-} from '@editor-ui/app/shared/components';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { EntityStateUtil, PublishableStateUtil } from '@editor-ui/app/shared/util/entity-states';
-import {
-    ApplicationStateService,
-    ChangeListSelectionAction,
-    ContentStagingActionsService,
-    FolderActionsService,
-    TemplateActionsService,
-    UsageActionsService,
-    WastebinActionsService,
-} from '@editor-ui/app/state';
-import { InitializableServiceBase } from '@gentics/cms-components';
+import { I18nNotificationService, InitializableServiceBase } from '@gentics/cms-components';
 import {
     EditMode,
-    ModalCloseError, ModalClosingReason,
+    ModalCloseError,
+    ModalClosingReason,
     RepositoryBrowserOptions,
-    wasClosedByUser
+    wasClosedByUser,
 } from '@gentics/cms-integration-api-models';
 import {
     ChannelSyncRequest,
@@ -55,16 +32,39 @@ import {
     Template,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, take, takeUntil } from 'rxjs/operators';
+import { EditorPermissions, StageableItem } from '../../../common/models';
+import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
+import {
+    ChannelDependenciesModal,
+    InheritanceDialog,
+    LinkTemplateModal,
+    MultiDeleteResult,
+    PageVersionsModal,
+    PublishProtocolModalComponent,
+    PublishTimeManagedPagesModal,
+    SynchronizeChannelModal,
+    TimeManagementModal,
+} from '../../../shared/components';
+import { RepositoryBrowserClient } from '../../../shared/providers';
+import { EntityStateUtil, PublishableStateUtil } from '../../../shared/util/entity-states';
+import {
+    ApplicationStateService,
+    ChangeListSelectionAction,
+    ContentStagingActionsService,
+    FolderActionsService,
+    TemplateActionsService,
+    UsageActionsService,
+    WastebinActionsService,
+} from '../../../state';
 import { ApiError } from '../api';
 import { DecisionModalsService } from '../decision-modals/decision-modals.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { FavouritesService } from '../favourites/favourites.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
-import { I18nService } from '../i18n/i18n.service';
 import { LocalizationMap } from '../localizations/localizations.service';
 import { NavigationInstruction, NavigationService } from '../navigation/navigation.service';
 import { PermissionService } from '../permissions/permission.service';
@@ -83,7 +83,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         private router: Router,
         private state: ApplicationStateService,
         private entityResolver: EntityResolver,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
         private permissions: PermissionService,
         private wastebinActions: WastebinActionsService,
         private errorHandler: ErrorHandler,
@@ -102,9 +102,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     protected onServiceInit(): void {
-        this.state.select(state => state.contentStaging.activePackage).pipe(
+        this.state.select((state) => state.contentStaging.activePackage).pipe(
             takeUntil(this.stopper.stopper$),
-        ).subscribe(pkg => {
+        ).subscribe((pkg) => {
             this.currentStagingPackage = pkg;
         });
     }
@@ -137,7 +137,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         const editMode = (item.type === 'page' || item.type === 'form' || item.type === 'image') ? EditMode.EDIT : EditMode.EDIT_PROPERTIES;
 
         this.folderActions.getItem(item.id, item.type, { nodeId })
-            .then(itemInMasterNode => {
+            .then((itemInMasterNode) => {
                 const folderToNavigateTo = parentFolderOfItem(itemInMasterNode);
                 const instruction: NavigationInstruction = {
                     list: {
@@ -201,17 +201,17 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         }
 
         const dialog = await this.modalService.dialog({
-            title: this.i18n.translate('modal.link_templates_to_folder_modal_checkbox_apply_recursively_label'),
+            title: this.i18n.instant('modal.link_templates_to_folder_modal_checkbox_apply_recursively_label'),
             buttons: [
                 {
-                    label: this.i18n.translate('common.no_label'),
+                    label: this.i18n.instant('common.no'),
                     type: 'secondary',
                     flat: true,
                     returnValue: false,
                     shouldReject: false,
                 },
                 {
-                    label: this.i18n.translate('common.yes_label'),
+                    label: this.i18n.instant('common.yes'),
                     type: 'alert',
                     returnValue: true,
                 },
@@ -221,7 +221,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         try {
             const recursive: boolean = await dialog.open();
 
-            await this.templateActions.linkTemplatesToFolders(nodeId, selectResult.map(t => t.id), [folderId], recursive).toPromise();
+            await this.templateActions.linkTemplatesToFolders(nodeId, selectResult.map((t) => t.id), [folderId], recursive).toPromise();
             return this.folderActions.getTemplates(folderId, true);
         } catch (err) {
             if (!wasClosedByUser(err)) {
@@ -259,8 +259,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             return;
         }
 
-        let deleteResult: { succeeded: number, failed: number, error: ApiError } | null = null;
-        let updateResult: { succeeded: number, failed: number, error: ApiError } | null = null;
+        let deleteResult: { succeeded: number; failed: number; error: ApiError } | null = null;
+        let updateResult: { succeeded: number; failed: number; error: ApiError } | null = null;
 
         let deleteIds: number[] = [];
         let unlocalizeIds: number[] = [];
@@ -271,10 +271,10 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         }[] = [];
 
         if (type === 'form') {
-            Object.keys(selectResult.deleteForms).forEach(id => {
+            Object.keys(selectResult.deleteForms).forEach((id) => {
                 const formId = parseInt(id, 10);
                 const languageCodesToDelete = selectResult.deleteForms[formId];
-                const form = items.find(i => i.id === formId) as Form<Normalized>;
+                const form = items.find((i) => i.id === formId) as Form<Normalized>;
 
                 if (
                     !Array.isArray(languageCodesToDelete)
@@ -291,14 +291,14 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 updateItems.push({
                     itemId: formId,
                     payload: {
-                        languages: form.languages.filter(l => !languageCodesToDelete.includes(l)),
+                        languages: form.languages.filter((l) => !languageCodesToDelete.includes(l)),
                         data: this.removeLanguagesFromFormData(form.data, languageCodesToDelete),
                     },
                 });
             });
         } else {
-            deleteIds = selectResult.delete.map(item => item.id) || [];
-            unlocalizeIds = selectResult.unlocalize.map(item => item.id) || [];
+            deleteIds = selectResult.delete.map((item) => item.id) || [];
+            unlocalizeIds = selectResult.unlocalize.map((item) => item.id) || [];
         }
 
         const localizationIdsDeleted: LocalizationMap = {};
@@ -310,7 +310,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             // filter only localizations that has been deleted and put them to array of IDs
             // forms cannot be localized
             if (type !== 'form') {
-                deleteIds.forEach(id => { localizationIdsDeleted[id] = selectResult.localizations[id]; });
+                deleteIds.forEach((id) => { localizationIdsDeleted[id] = selectResult.localizations[id]; });
                 localizationIds = localizationIdsDeleted && this.flattenMap(localizationIdsDeleted);
             }
         }
@@ -330,11 +330,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             }
         }
 
-        const removedItemIds = [...deleteIds, ...unlocalizeIds, ...updateItems.map(i => i.itemId)];
+        const removedItemIds = [...deleteIds, ...unlocalizeIds, ...updateItems.map((i) => i.itemId)];
         const results = {
-            succeeded: deleteResult?.succeeded ?? 0 + updateResult?.succeeded ?? 0,
-            failed: deleteResult?.failed ?? 0 + updateResult?.failed ?? 0,
-            error: deleteResult?.error ?? updateResult?.error ?? null,
+            succeeded: (deleteResult?.succeeded ?? 0) + (updateResult?.succeeded ?? 0),
+            failed: (deleteResult?.failed ?? 0) + (updateResult?.failed ?? 0),
+            error: deleteResult?.error ?? updateResult?.error,
         };
         await this.showMultiDeleteResultNotification(results, unlocalizeIds, type, removedItemIds, localizationIds, type !== 'form')
             .toPromise();
@@ -361,12 +361,12 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             page: [],
         };
 
-        Object.keys(itemMap).forEach(key => {
-            itemMap[key] = items.filter(singleItem => singleItem.type === key && this.isDeleted(singleItem));
+        Object.keys(itemMap).forEach((key) => {
+            itemMap[key] = items.filter((singleItem) => singleItem.type === key && this.isDeleted(singleItem));
         });
 
         // if no language variants exist, dont show modal as there would be nothing to select
-        if (itemMap.page.length === 0 || !itemMap.page.some(p => Object.keys((p as Page).languageVariants).length > 0)) {
+        if (itemMap.page.length === 0 || !itemMap.page.some((p) => Object.keys((p as Page).languageVariants).length > 0)) {
             await Promise.all(Object.keys(itemMap).map((type: FolderItemType) => {
                 if (itemMap[type].length <= 0) {
                     return Promise.resolve();
@@ -397,7 +397,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             if (itemIdsToBeRestored[type].length > 0) {
                 return this.wastebinActions.restoreItemsFromWastebin(type, itemIdsToBeRestored[type]);
             }
-        }).filter(action => action != null);
+        }).filter((action) => action != null);
 
         await Promise.all(requests);
     }
@@ -418,7 +418,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     private showMultiDeleteResultNotification(
-        deleteResult: { succeeded: number; failed: number; },
+        deleteResult: { succeeded: number; failed: number },
         unlocalizeIds: number[],
         type: FolderItemType,
         removedItemIds: number[],
@@ -445,7 +445,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
         return combineLatest([
             this.permissions.wastebin$,
-            this.state.select(state => state.features.wastebin),
+            this.state.select((state) => state.features.wastebin),
         ])
             .pipe(
                 debounceTime(50),
@@ -490,13 +490,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      */
     showTimeManagement(item: Page | Form, nodeId: number): void {
         this.modalService.fromComponent(TimeManagementModal, {}, { item, currentNodeId: nodeId })
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             .then(() => {
                 // refresh folder content list to display new TimeManagement settings
                 this.folderActions.refreshList('page');
                 this.folderActions.refreshList('form');
             })
-            .catch(err => {
+            .catch((err) => {
                 if (!wasClosedByUser(err)) {
                     throw err;
                 }
@@ -508,11 +508,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * then clear the current pages selection.
      */
     async publishPages(pages: Page[], publishLanguageVariants: boolean = false): Promise<void> {
-        const pagesNotDeleted = pages.filter(page => !this.isDeleted(page));
+        const pagesNotDeleted = pages.filter((page) => !this.isDeleted(page));
         try {
-            const pagesToPublish = await this.decisionModals.selectPagesToPublish(pagesNotDeleted, publishLanguageVariants)
+            const pagesToPublish = await this.decisionModals.selectPagesToPublish(pagesNotDeleted, publishLanguageVariants);
             const ids = await this.publishPagesWithTimeManagementCheck(pagesToPublish);
-            const pageLanguages = ids.map(id => this.entityResolver.getPage(id).language);
+            const pageLanguages = ids.map((id) => this.entityResolver.getPage(id).language);
             await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
             await this.folderActions.refreshList('page', pageLanguages);
         } catch (err) {
@@ -539,7 +539,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
         if (nonTimeManagedPages.length > 0) {
             const promise = this.folderActions.publishPages(nonTimeManagedPages)
-                .then(({ queued, published }) => [...queued, ...published].map(item => item.id));
+                .then(({ queued, published }) => [...queued, ...published].map((item) => item.id));
             publishedPages.push(promise);
         }
 
@@ -547,18 +547,18 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             const promise = this.modalService.fromComponent(
                 PublishTimeManagedPagesModal, {}, { pages: timeManagedPages, allPages: pages.length },
             )
-                .then(modal => modal.open())
+                .then((modal) => modal.open())
                 .then((pages: Page[]) => {
-                    return pages.map(page => page.id);
+                    return pages.map((page) => page.id);
                 })
                 .catch(() => ([]));
             publishedPages.push(promise);
         }
 
         return Promise.all(publishedPages)
-            .then(results => {
+            .then((results) => {
                 const ret: number[] = [];
-                results.forEach(ids => {
+                results.forEach((ids) => {
                     ret.push(...ids);
                 });
                 return ret;
@@ -573,10 +573,10 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             const pagesToTakeOffline = await this.decisionModals.selectPagesToTakeOffline(pages);
             const response = await this.folderActions.takePagesOffline(pagesToTakeOffline);
             // Wait half a second to let the server unlock the pages
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
             await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
             const responsePages: Page[] = response.queued.length > 0 ? response.queued : response.takenOffline;
-            const pageLanguages = responsePages.map(page => page.language);
+            const pageLanguages = responsePages.map((page) => page.language);
             await this.folderActions.refreshList('page', pageLanguages);
         } catch (error) {
             this.errorHandler.catch(error);
@@ -587,7 +587,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * Take forms (and possibly their language variants) offline.
      */
     async takeFormsOffline(forms: Form[]): Promise<any> {
-        const formIds = forms.map(form => form.id);
+        const formIds = forms.map((form) => form.id);
         try {
             await this.folderActions.takeFormsOffline(formIds);
             await this.state.dispatch(new ChangeListSelectionAction('form', 'clear')).toPromise();
@@ -600,8 +600,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     listPageVersions(page: Page, activeNodeId: number): void {
         const options = { page, nodeId: activeNodeId };
         this.modalService.fromComponent(PageVersionsModal, null, options)
-            .then(modal => modal.open())
-            .catch(err => {});
+            .then((modal) => modal.open())
+            .catch((err) => {});
     }
 
     openPublishProtocol(item: Page | Form): void {
@@ -610,8 +610,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         };
 
         this.modalService.fromComponent(PublishProtocolModalComponent, null, options)
-            .then(modal => modal.open())
-            .catch(err => {});
+            .then((modal) => modal.open())
+            .catch((err) => {});
     }
 
     localize(item: InheritableItem, activeNodeId: number): void {
@@ -658,18 +658,17 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             return;
         }
 
-
         if (itemType === 'page') {
-            const itemIds = items.map(item => item.id);
+            const itemIds = items.map((item) => item.id);
             await this.folderActions.copyPagesToFolder(itemIds, activeNodeId, targetFolder.id, targetFolder.nodeId);
         } else if (itemType === 'form') {
-            const itemIds = items.map(item => item.id);
+            const itemIds = items.map((item) => item.id);
             await this.folderActions.copyFormsToFolder(itemIds, activeNodeId, targetFolder.id);
         } else if (itemType === 'file' || itemType === 'image') {
             const files = items as FileModel[];
             await this.folderActions.copyFilesToFolder(files, activeNodeId, targetFolder.id, targetFolder.nodeId);
         } else {
-            return
+            return;
         }
 
         await this.goToOrRefreshFolder(targetFolder, itemType);
@@ -738,11 +737,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 if (folder && (folder.id !== currentFolderId || folder.nodeId !== activeNodeId)) {
                     const node = this.entityResolver.getNode(folder.nodeId);
                     return this.decisionModals.moveMultipleItems(items as InheritableItem[], folder, node)
-                        .then(items => this.folderActions.moveItemsToFolder(itemType, items.map(item => item.id), folder.id, folder.nodeId))
-                        .then(success => success && this.navigationService.list(folder.nodeId, folder.id).navigate());
+                        .then((items) => this.folderActions.moveItemsToFolder(itemType, items.map((item) => item.id), folder.id, folder.nodeId))
+                        .then((success) => success && this.navigationService.list(folder.nodeId, folder.id).navigate());
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 if (!wasClosedByUser(err)) {
                     this.errorHandler.catch(err);
                 }
@@ -750,20 +749,20 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     requestTranslation(pageId: number, nodeId: number): void {
-        const tool = this.state.now.tools.available.find(tool => tool.key.startsWith('task-management'));
+        const tool = this.state.now.tools.available.find((tool) => tool.key.startsWith('task-management'));
         const urlInTool = `new-process/translate?sourcePage=${pageId}&nodeid=${nodeId}`;
         this.router.navigateByUrl(`/tools/${tool.key}/${urlInTool}`);
     }
 
     setInheritance(item: InheritableItem, activeNodeId: number): void {
         this.folderActions.fetchItemInheritance(item.type, item.id, activeNodeId)
-            .then(item => {
+            .then((item) => {
                 const nodes = this.state.now.entities.node;
                 return this.modalService.fromComponent(InheritanceDialog, {}, { item, nodes });
             })
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             .then((request: InheritanceRequest) => this.folderActions.updateItemInheritance(item.type, item.id, request))
-            .catch(err => {
+            .catch((err) => {
                 if (!wasClosedByUser(err)) {
                     this.errorHandler.catch(err);
                 }
@@ -828,12 +827,12 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * then clear the current forms selection.
      */
     publishForms(forms: Form[]): Promise<number[]> {
-        const formsToPublish = forms.filter(form => !this.isDeleted(form));
+        const formsToPublish = forms.filter((form) => !this.isDeleted(form));
         return this.folderActions.publishForms(formsToPublish)
             .then(({ queued, published }) => {
                 this.state.dispatch(new ChangeListSelectionAction('form', 'clear'));
                 this.folderActions.refreshList('form');
-                return published.map(form => form.id);
+                return published.map((form) => form.id);
             });
     }
 
@@ -911,7 +910,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     private showStagingNotification(item: StageableItem, base: string, error?: Error): void {
-        const itemType = this.i18n.translate(`common.type_${item.type}_article`);
+        const itemType = this.i18n.instant(`common.type_${item.type}_article`);
         const itemName = item.name;
 
         if (!error) {

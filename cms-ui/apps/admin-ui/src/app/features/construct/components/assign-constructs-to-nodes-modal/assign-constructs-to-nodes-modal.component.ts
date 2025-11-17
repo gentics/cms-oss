@@ -1,6 +1,7 @@
 import { ConstructBO } from '@admin-ui/common';
-import { ConstructHandlerService, I18nNotificationService, NodeOperations } from '@admin-ui/core';
+import { ConstructHandlerService, NodeOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { IndexById, Node, Raw } from '@gentics/cms-models';
 import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
 import { Subscription, forkJoin } from 'rxjs';
@@ -11,7 +12,7 @@ import { map } from 'rxjs/operators';
     templateUrl: './assign-constructs-to-nodes-modal.component.html',
     styleUrls: ['./assign-constructs-to-nodes-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class AssignConstructsToNodesModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 
@@ -41,8 +42,8 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<boolean> im
     ngOnInit(): void {
         this.subscriptions.push(forkJoin([
             this.nodeOperations.getAll(),
-            forkJoin(this.constructs.map(con => this.handler.getLinkedNodes(con.id).pipe(
-                map(linked => [con.id, linked]),
+            forkJoin(this.constructs.map((con) => this.handler.getLinkedNodes(con.id).pipe(
+                map((linked) => [con.id, linked]),
             ))),
         ]).subscribe(([loadedNodes, links]: [Node[], [number, Node[]][]]) => {
             const assignment: Record<number, Set<number>> = {};
@@ -86,7 +87,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<boolean> im
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     async okButtonClicked(): Promise<void> {

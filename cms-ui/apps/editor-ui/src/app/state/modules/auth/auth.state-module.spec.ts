@@ -1,13 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { userSchema } from '@editor-ui/app/common/models';
 import { NgxsModule } from '@ngxs/store';
 import { normalize } from 'normalizr';
-import { STATE_MODULES } from '../state-modules';
-import { AuthState } from '../../../common/models';
+import { AuthState, userSchema } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { TestApplicationState } from '../../test-application-state.mock';
 import { AddEntitiesAction } from '../entity/entity.actions';
 import { UpdateSearchFilterAction } from '../folder/folder.actions';
+import { STATE_MODULES } from '../state-modules';
 import {
     ChangePasswordAction,
     LoginErrorAction,
@@ -33,7 +32,7 @@ describe('AuthStateModule', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
     });
 
     it('sets the correct initial state', () => {

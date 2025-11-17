@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
-import { ADMIN_UI_LINK } from '@editor-ui/app/common/config/config';
-import { EmbeddedToolsService } from '@editor-ui/app/embedded-tools/providers/embedded-tools/embedded-tools.service';
-import { ApplicationStateService, ContentStagingActionsService } from '@editor-ui/app/state';
 import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
 import { AccessControlledType, EmbeddedTool, GcmsPermission } from '@gentics/cms-models';
 import { DropdownListComponent } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { Observable, Subscription, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { ADMIN_UI_LINK } from '../../../common/config/config';
 import {
     ADMIN_TOOL_KEY,
     ActionButton,
@@ -16,7 +15,8 @@ import {
     ActionButtonType,
     PRODUCT_TOOL_KEYS,
 } from '../../../common/models/actions';
-import { I18nService } from '../../providers/i18n/i18n.service';
+import { EmbeddedToolsService } from '../../../embedded-tools/providers/embedded-tools/embedded-tools.service';
+import { ApplicationStateService, ContentStagingActionsService } from '../../../state';
 import { PermissionService } from '../../providers/permissions/permission.service';
 
 @Component({
@@ -24,15 +24,15 @@ import { PermissionService } from '../../providers/permissions/permission.servic
     templateUrl: './actions-selector.component.html',
     styleUrls: ['./actions-selector.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ActionsSelectorComponent implements OnInit, OnDestroy {
 
     @Output()
-    public actionClick = new EventEmitter<{ action: string, event: MouseEvent }>();
+    public actionClick = new EventEmitter<{ action: string; event: MouseEvent }>();
 
     @Output()
-    public toolClick = new EventEmitter<{ tool: EmbeddedTool, event: MouseEvent }>();
+    public toolClick = new EventEmitter<{ tool: EmbeddedTool; event: MouseEvent }>();
 
     @ContentChild('dropdown')
     public dropdown: DropdownListComponent;
@@ -58,20 +58,20 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
         this.subscriptions.push(combineLatest([
             this.createProductToolsGroup(),
             this.createCustomToolsGroup(),
-        ]).subscribe(groups => {
-            this.buttonGroups = groups.filter(group => group != null);
+        ]).subscribe((groups) => {
+            this.buttonGroups = groups.filter((group) => group != null);
             this.changeDetector.markForCheck();
 
             if (this.dropdown && this.dropdown.isOpen) {
                 this.dropdown.resize();
             }
-        }, err => {
+        }, (err) => {
             console.error('Error while generating action-button groups!', err);
         }));
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     triggerClick(button: ActionButton, event: MouseEvent): void {
@@ -82,7 +82,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const tool = this.appState.now.tools.available.find(tool => tool.key === button.toolKey);
+        const tool = this.appState.now.tools.available.find((tool) => tool.key === button.toolKey);
         this.toolClick.emit({ tool, event });
 
         if (button.newTab) {
@@ -108,18 +108,18 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
 
     protected createProductToolsGroup(): Observable<ActionButtonGroup> {
         // Content Staging setup
-        const showContentStaging$ = this.appState.select(state => state.features.content_staging).pipe(
-            switchMap(isEnabled => {
+        const showContentStaging$ = this.appState.select((state) => state.features.content_staging).pipe(
+            switchMap((isEnabled) => {
                 if (!isEnabled) {
                     return of(false);
                 }
 
                 // Check if the user has the required permissions
                 return this.permissions.getTypePermissions(AccessControlledType.CONTENT_STAGING_ADMIN).pipe(
-                    map(perm => perm.hasPermission(GcmsPermission.READ) && perm.hasPermission(GcmsPermission.MODIFY_CONTENT)),
+                    map((perm) => perm.hasPermission(GcmsPermission.READ) && perm.hasPermission(GcmsPermission.MODIFY_CONTENT)),
                 );
             }),
-            tap(enabledAndPermission => {
+            tap((enabledAndPermission) => {
                 // Load the packages if it's enabled and the user got permissions
                 if (enabledAndPermission) {
                     this.stagingActions.loadPackages();
@@ -129,7 +129,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
 
         const userCanSeeWastebin$ = combineLatest([
             this.permissions.wastebin$,
-            this.appState.select(state => state.features.wastebin),
+            this.appState.select((state) => state.features.wastebin),
         ]).pipe(
             debounceTime(50),
             startWith([false, false]),
@@ -139,14 +139,14 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
 
         const userCanSeePublishQueue$ = this.permissions.viewPublishQueue$;
 
-        const isAdmin$ = this.appState.select(state => state.auth.isAdmin);
-        const productTools = this.appState.select(state => state.tools.available).pipe(
-            map(tools => tools.filter(tool => PRODUCT_TOOL_KEYS.includes(tool.key))),
+        const isAdmin$ = this.appState.select((state) => state.auth.isAdmin);
+        const productTools = this.appState.select((state) => state.tools.available).pipe(
+            map((tools) => tools.filter((tool) => PRODUCT_TOOL_KEYS.includes(tool.key))),
             startWith([]),
         );
 
         return combineLatest([
-            this.appState.select(state => state.ui.language),
+            this.appState.select((state) => state.ui.language),
             showContentStaging$,
             userCanSeeWastebin$,
             userCanSeePublishQueue$,
@@ -200,14 +200,14 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             }
 
             if (Array.isArray(otherTools) && otherTools.length > 0) {
-                buttons.push(...otherTools.map(tool => this.toolToButton(tool, language)));
+                buttons.push(...otherTools.map((tool) => this.toolToButton(tool, language)));
             }
 
             if (buttons.length === 0) {
                 return null;
             }
 
-            buttons.forEach(btn => this.normalizeActionButton(btn));
+            buttons.forEach((btn) => this.normalizeActionButton(btn));
             buttons.sort((a, b) => a.label.localeCompare(b.label));
 
             return {
@@ -219,15 +219,15 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
 
     protected createCustomToolsGroup(): Observable<ActionButtonGroup> {
         return combineLatest([
-            this.appState.select(state => state.ui.language),
-            this.appState.select(state => state.tools.available).pipe(
-                map(tools => tools.filter(tool => !PRODUCT_TOOL_KEYS.includes(tool.key))),
+            this.appState.select((state) => state.ui.language),
+            this.appState.select((state) => state.tools.available).pipe(
+                map((tools) => tools.filter((tool) => !PRODUCT_TOOL_KEYS.includes(tool.key))),
             ),
         ]).pipe(
             map(([language, tools]) => {
                 const buttons: ActionButton[] = (tools || [])
-                    .map(tool => this.toolToButton(tool, language))
-                    .map(btn => this.normalizeActionButton(btn));
+                    .map((tool) => this.toolToButton(tool, language))
+                    .map((btn) => this.normalizeActionButton(btn));
 
                 if (buttons.length === 0) {
                     return null;
@@ -261,7 +261,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
     protected normalizeActionButton(btn: ActionButton): ActionButton {
         if (!btn.label) {
             if (btn.i18nLabel) {
-                btn.label = this.i18n.translate(btn.i18nLabel);
+                btn.label = this.i18n.instant(btn.i18nLabel);
             }
         }
         if (!btn.label) {

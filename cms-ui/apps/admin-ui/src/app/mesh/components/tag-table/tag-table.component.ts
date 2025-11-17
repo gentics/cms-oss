@@ -1,5 +1,4 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { MeshTagBO } from '@admin-ui/mesh/common';
 import { TagHandlerService, TagTableLoaderOptions, TagTableLoaderService } from '@admin-ui/mesh/providers';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
@@ -7,6 +6,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { Permission, Tag, TagFamilyReference } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TagModal } from '../tag-modal/tag-modal.component';
@@ -19,7 +19,7 @@ const EDIT_ACTION = 'edit';
     templateUrl: './tag-table.component.html',
     styleUrls: ['./tag-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TagTableComponent extends BaseEntityTableComponent<Tag, MeshTagBO, TagTableLoaderOptions> {
 
@@ -37,6 +37,7 @@ export class TagTableComponent extends BaseEntityTableComponent<Tag, MeshTagBO, 
             sortable: true,
         },
     ];
+
     protected entityIdentifier = 'tag' as any;
 
     constructor(
@@ -104,7 +105,6 @@ export class TagTableComponent extends BaseEntityTableComponent<Tag, MeshTagBO, 
 
         super.handleAction(event);
     }
-
 
     async openModal(mode: TagPropertiesMode, tag?: Tag): Promise<void> {
         const dialog = await this.modalService.fromComponent(TagModal, {}, {

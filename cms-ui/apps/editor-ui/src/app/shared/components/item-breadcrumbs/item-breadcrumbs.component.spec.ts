@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { File, Folder, FolderBreadcrumb, Image, Page, Raw } from '@gentics/cms-models';
 import {
     getExampleFolderData,
@@ -13,6 +11,8 @@ import {
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { ItemBreadcrumbsComponent } from './item-breadcrumbs.component';
 
 const BREADCRUMB_SPAN_SELECTOR = 'span.item-breadcrumb';
@@ -77,7 +77,7 @@ describe('ItemBreadcrumbsComponent', () => {
             const normalizedFolder = getExampleFolderDataNormalized();
             normalizedPage.folder = normalizedFolder.id;
             expect(normalizedFolder.breadcrumbs.length >= 2).toBeTruthy();
-            const entityResolver = TestBed.get(EntityResolver) as MockEntityResolver;
+            const entityResolver: MockEntityResolver = TestBed.inject(EntityResolver) as any;
             entityResolver.getFolder.and.returnValue(normalizedFolder);
 
             instance.item = normalizedPage;

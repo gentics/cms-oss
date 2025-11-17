@@ -1,9 +1,11 @@
 import { detailLoading, LOAD_FROM_PACKAGE } from '@admin-ui/common';
 import { masterLoading } from '@admin-ui/common/utils/rxjs-loading-operators/master-loading.operator';
-import { ContentRepositoryFragmentOperations, EntityManagerService, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { ContentRepositoryFragmentOperations, EntityManagerService } from '@admin-ui/core';
 import { AppStateService, SelectState, UIStateModel } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ContentRepositoryFragmentBO, Raw } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, OperatorFunction } from 'rxjs';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
 
@@ -11,7 +13,7 @@ import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-b
 export class ContentRepositoryFragmentDataService
     extends ExtendedEntityDataServiceBase<'contentRepositoryFragment', ContentRepositoryFragmentOperations> {
 
-    @SelectState(state => state.ui)
+    @SelectState((state) => state.ui)
     stateUi$: Observable<UIStateModel>;
 
     constructor(

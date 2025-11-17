@@ -2,8 +2,6 @@ import {
     EntityManagerService,
     ErrorHandler,
     GroupOperations,
-    I18nNotificationService,
-    I18nService,
     PermissionsService,
     UserOperations,
 } from '@admin-ui/core';
@@ -20,8 +18,6 @@ import { componentTest } from '../../../../testing';
 import { createDelayedObservable } from '../../../../testing/utils/rxjs-utils';
 import { InterfaceOf } from '../../../common/utils/util-types/util-types';
 import { MockEntityManagerService } from '../../../core/providers/entity-manager/entity-manager.service.mock';
-import { MockI18nNotificationService } from '../../../core/providers/i18n-notification/i18n-notification.service.mock';
-import { MockI18nService } from '../../../core/providers/i18n/i18n.service.mock';
 import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 import { OPTIONS_CONFIG } from '../../../state/state-store.config';
 import { STATE_MODULES } from '../../../state/state.module';
@@ -168,8 +164,6 @@ xdescribe('AssignUserToGroupsModalComponent', () => {
                 GroupDataService,
                 GroupUserDataService,
                 { provide: GroupOperations, useClass: MockGroupOperations },
-                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: NotificationService, useClass: MockNotificationService },
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: Router, useClass: MockRouter },
@@ -182,7 +176,7 @@ xdescribe('AssignUserToGroupsModalComponent', () => {
 
         fixture = TestBed.createComponent(TestComponent);
         component = fixture.componentInstance;
-        userData = TestBed.get(UserDataService);
+        userData = TestBed.inject(UserDataService);
         fixture.detectChanges();
     });
 
@@ -192,7 +186,7 @@ xdescribe('AssignUserToGroupsModalComponent', () => {
 
     it('should return the right data after calling buttonAssignUserToGroupsClicked()',
         componentTest(() => TestComponent, (fixture, instance) => {
-            let userDataSpy = spyOn(userData, 'changeGroupsOfUsers').and.returnValue(
+            const userDataSpy = spyOn(userData, 'changeGroupsOfUsers').and.returnValue(
                 of(MOCK_USER) as any,
             );
 

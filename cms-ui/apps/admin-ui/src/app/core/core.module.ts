@@ -1,15 +1,5 @@
-import { API_BASE_URL, throwIfAlreadyLoaded, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '@admin-ui/common';
-import {
-    BreadcrumbsService,
-    ErrorHandler,
-    I18nNotificationService,
-    I18nService,
-    LocalTranslateLoader,
-} from '@admin-ui/core';
 import { MeshModule } from '@admin-ui/mesh';
-import { SharedModule } from '@admin-ui/shared/shared.module';
-import { AppStateService, StateModule } from '@admin-ui/state';
-import { NgModule, Optional, SkipSelf, inject, provideAppInitializer } from '@angular/core';
+import { inject, NgModule, Optional, provideAppInitializer, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
@@ -17,8 +7,13 @@ import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-c
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
+import DE_TRANSLATIONS from '../../../public/i18n/de.json';
+import EN_TRANSLATIONS from '../../../public/i18n/en.json';
+import { API_BASE_URL, throwIfAlreadyLoaded, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../common';
+import { SharedModule } from '../shared/shared.module';
+import { AppStateService, StateModule } from '../state';
 import {
     ActivityManagerComponent,
     ChangePasswordModalComponent,
@@ -36,6 +31,7 @@ import {
     ActivityManagerService,
     AdminHandlerService,
     BreadcrumbResolver,
+    BreadcrumbsService,
     ConstructCategoryHandlerService,
     ConstructHandlerService,
     ConstructTableLoaderService,
@@ -55,6 +51,7 @@ import {
     EditorCloserService,
     EditorTabTrackerService,
     ElasticSearchIndexOperations,
+    ErrorHandler,
     FeatureOperations,
     FileOperations,
     FolderOperations,
@@ -78,8 +75,8 @@ import {
     PermissionsTrableLoaderService,
     RoleOperations,
     RouteEntityResolverService,
-    ScheduleHandlerService,
     ScheduleExecutionOperations,
+    ScheduleHandlerService,
     ScheduleOperations,
     ScheduleTaskOperations,
     ServerStorageService,
@@ -101,25 +98,7 @@ import { AuthOperations } from './providers/operations/auth/auth.operations';
 import { NodeOperations } from './providers/operations/node';
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
 
-export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select(state => state.auth.sid);
-
-export function initializeApp(appState: AppStateService, client: GCMSRestClientService, keycloak: KeycloakService): () => Promise<void> {
-    return () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        client.init({
-            connection: {
-                absolute: false,
-                basePath: '/rest',
-            },
-        });
-        appState.select(state => state.auth.sid).subscribe(sid => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            client.setSessionId(sid);
-        });
-
-        return keycloak.checkKeycloakAuth();
-    };
-}
+export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select((state) => state.auth.sid);
 
 const COMPONENTS: any[] = [
     ActivityManagerComponent,
@@ -188,8 +167,6 @@ const PROVIDERS: any[] = [
     FolderTrableLoaderService,
     GroupTableLoaderService,
     GroupTrableLoaderService,
-    I18nNotificationService,
-    I18nService,
     LanguageHandlerService,
     LanguageTableLoaderService,
     LogoutCleanupService,
@@ -225,9 +202,26 @@ const PROVIDERS: any[] = [
         deps: [AppStateService],
     },
     provideAppInitializer(() => {
-        const initializerFn = (initializeApp)(inject(AppStateService), inject(GCMSRestClientService), inject(KeycloakService));
-        return initializerFn();
-      }),
+        const appState = inject(AppStateService);
+        const client = inject(GCMSRestClientService);
+        const keycloak = inject(KeycloakService);
+        const translations = inject(TranslateService);
+
+        translations.setTranslation('de', DE_TRANSLATIONS, true);
+        translations.setTranslation('en', EN_TRANSLATIONS, true);
+
+        client.init({
+            connection: {
+                absolute: false,
+                basePath: '/rest',
+            },
+        });
+        appState.select((state) => state.auth.sid).subscribe((sid) => {
+            client.setSessionId(sid);
+        });
+
+        return keycloak.checkKeycloakAuth();
+    }),
 ];
 
 @NgModule({
@@ -240,9 +234,9 @@ const PROVIDERS: any[] = [
         GCMSRestClientModule,
         MeshRestClientModule,
         GenticsUICoreModule,
-        CmsComponentsModule,
+        CmsComponentsModule.forRoot(),
         TranslateModule.forRoot({
-            loader: { provide: TranslateLoader, useClass: LocalTranslateLoader },
+            fallbackLang: 'en',
         }),
         SharedModule,
         StateModule,

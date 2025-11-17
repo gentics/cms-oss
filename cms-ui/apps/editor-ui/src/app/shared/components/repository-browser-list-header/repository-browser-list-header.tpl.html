@@ -1,70 +1,94 @@
 <div class="left-items">
 
-    <span class="item-icon">
-        <icon>{{ itemType | gtxTypeIcon }}</icon>
+  <span class="item-icon">
+    <icon>{{ itemType | gtxTypeIcon }}</icon>
+  </span>
+  @if (filtering) {
+    <span class="type">
+      {{ 'editor.item_count_header_matching' | gtxI18n:{
+        count: itemCount,
+        items: ('common.type_' + itemType + (itemCount !== 1 ? 's' : '')) | translate
+      } }}
     </span>
-    <span class="type" *ngIf="filtering">
-        {{ 'editor.item_count_header_matching' | i18n:{ count: itemCount, _items: itemType } }}
+  }
+  @if (!filtering) {
+    <span class="type">
+      {{ 'editor.item_count_header_simple' | gtxI18n:{
+        count: itemCount,
+        items: ('common.type_' + itemType + (itemCount !== 1 ? 's' : '')) | translate
+      } }}
     </span>
-    <span class="type" *ngIf="!filtering">
-        {{ 'editor.item_count_header_simple' | i18n:{ count: itemCount, _items: itemType } }}
-    </span>
+  }
 
 </div>
 
 <div class="right-items">
+  @if ((nodeLanguages$ | async)?.length > 1 && itemType !=='file' && itemType !=='folder' && itemType !== 'image') {
     <language-context-selector
-        *ngIf="(nodeLanguages$ | async)?.length > 1 && itemType !=='file' && itemType !=='folder' && itemType !== 'image'"
-        [availableLanguages]="nodeLanguages$ | async"
-        [activeLanguage]="activeLanguage$ | async"
-        (languageChange)="languageChanged($event)"
+      [availableLanguages]="nodeLanguages$ | async"
+      [activeLanguage]="activeLanguage$ | async"
+      (languageChange)="languageChanged($event)"
     ></language-context-selector>
-    <gtx-dropdown-list align="right">
-        <gtx-dropdown-trigger>
-            <gtx-button icon type="secondary">
-                <icon>more_vert</icon>
-            </gtx-button>
-        </gtx-dropdown-trigger>
-        <gtx-dropdown-content>
-            <gtx-dropdown-item *ngIf="itemType === 'image'" (click)="toggleDisplayImagesGridView()">
-                {{ (showImagesGridView ? 'editor.show_list' : 'editor.show_grid') | i18n }}
-            </gtx-dropdown-item>
-            <gtx-dropdown-item (click)="selectDisplayFields.emit()" *ngIf="itemType !== 'contenttag' && itemType !== 'templatetag'">
-                {{ 'editor.select_display_fields_label' | i18n }}
-            </gtx-dropdown-item>
-            <gtx-dropdown-item (click)="selectSortOrder()" *ngIf="sort$ | async as sort" class="sort-mode">
-                {{ 'editor.sorting_by_label' | i18n:{ field: ('common.sort_' + sort.field | i18n) } }}
-                <icon class="sort-order-icon" *ngIf="sort.order === 'asc'">arrow_upward</icon>
-                <icon class="sort-order-icon" *ngIf="sort.order === 'desc'">arrow_downward</icon>
-            </gtx-dropdown-item>
-            <gtx-dropdown-item (click)="toggleDisplayAllLanguages()"
-                class="page-language-toggle"
-                *ngIf="itemType === 'page' && 1 < (nodeLanguages$ | async)?.length">
-                <gtx-checkbox
-                    [checked]="showAllLanguages$ | async"
-                    (change)="toggleDisplayAllLanguages()"
-                ></gtx-checkbox>
-                {{ 'editor.display_all_languages_label' | i18n }}
-            </gtx-dropdown-item>
-            <gtx-dropdown-item
-                (click)="toggleDisplayStatusIcons()"
-                class="page-language-toggle"
-                *ngIf="itemType === 'page'"
-            >
-                <gtx-checkbox
-                    [checked]="showStatusIcons$ | async"
-                    (change)="toggleDisplayStatusIcons()"
-                ></gtx-checkbox>
-                {{ 'editor.display_status_icons_label' | i18n }}
-            </gtx-dropdown-item>
-        </gtx-dropdown-content>
-    </gtx-dropdown-list>
+  }
+  <gtx-dropdown-list align="right">
+    <gtx-dropdown-trigger>
+      <gtx-button icon type="secondary">
+        <icon>more_vert</icon>
+      </gtx-button>
+    </gtx-dropdown-trigger>
+    <gtx-dropdown-content>
+      @if (itemType === 'image') {
+        <gtx-dropdown-item (click)="toggleDisplayImagesGridView()">
+          {{ (showImagesGridView ? 'editor.show_list' : 'editor.show_grid') | gtxI18n }}
+        </gtx-dropdown-item>
+      }
+      @if (itemType !== 'contenttag' && itemType !== 'templatetag') {
+        <gtx-dropdown-item (click)="selectDisplayFields.emit()">
+          {{ 'editor.select_display_fields_label' | gtxI18n }}
+        </gtx-dropdown-item>
+      }
+      @if (sort$ | async; as sort) {
+        <gtx-dropdown-item (click)="selectSortOrder()" class="sort-mode">
+          {{ 'editor.sorting_by_label' | gtxI18n:{ field: ('common.sort_' + sort.field | gtxI18n) } }}
+          @if (sort.order === 'asc') {
+            <icon class="sort-order-icon">arrow_upward</icon>
+          }
+          @if (sort.order === 'desc') {
+            <icon class="sort-order-icon">arrow_downward</icon>
+          }
+        </gtx-dropdown-item>
+      }
+      @if (itemType === 'page' && 1 < (nodeLanguages$ | async)?.length) {
+        <gtx-dropdown-item (click)="toggleDisplayAllLanguages()"
+          class="page-language-toggle"
+          >
+          <gtx-checkbox
+            [checked]="showAllLanguages$ | async"
+            (change)="toggleDisplayAllLanguages()"
+          ></gtx-checkbox>
+          {{ 'editor.display_all_languages_label' | gtxI18n }}
+        </gtx-dropdown-item>
+      }
+      @if (itemType === 'page') {
+        <gtx-dropdown-item
+          (click)="toggleDisplayStatusIcons()"
+          class="page-language-toggle"
+          >
+          <gtx-checkbox
+            [checked]="showStatusIcons$ | async"
+            (change)="toggleDisplayStatusIcons()"
+          ></gtx-checkbox>
+          {{ 'editor.display_status_icons_label' | gtxI18n }}
+        </gtx-dropdown-item>
+      }
+    </gtx-dropdown-content>
+  </gtx-dropdown-list>
 
-    <div class="collapse-icon" [class.collapsed]="collapsed">
-        <gtx-button flat icon type="secondary" [disabled]="!itemCount"
-                (click)="collapsedChange.emit(!collapsed)">
-            <icon>keyboard_arrow_down</icon>
-        </gtx-button>
-    </div>
+  <div class="collapse-icon" [class.collapsed]="collapsed">
+    <gtx-button flat icon type="secondary" [disabled]="!itemCount"
+      (click)="collapsedChange.emit(!collapsed)">
+      <icon>keyboard_arrow_down</icon>
+    </gtx-button>
+  </div>
 
 </div>

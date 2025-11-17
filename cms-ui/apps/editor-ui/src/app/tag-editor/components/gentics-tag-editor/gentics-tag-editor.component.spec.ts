@@ -2,9 +2,6 @@ import { Component, ComponentRef, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import {
     MultiValidationResult,
     TagChangedFn,
@@ -22,12 +19,15 @@ import {
 } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
+import { I18nService } from '@gentics/cms-components';
 import { cloneDeep } from 'lodash-es';
 import { TagEditorHostComponent } from '../..';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { spyOnDynamicallyCreatedComponent } from '../../../../testing/dynamic-components';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
 import { TagPropertyLabelPipe } from '../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
@@ -50,7 +50,6 @@ describe('GenticsTagEditorComponent', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 GenticsTagEditorComponent,
@@ -689,7 +688,7 @@ describe('GenticsTagEditorComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
 
-            const errorHandler: ErrorHandler = TestBed.get(ErrorHandler);
+            const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch').and.callThrough();
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
@@ -753,7 +752,7 @@ describe('GenticsTagEditorComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
 
-            const errorHandler: ErrorHandler = TestBed.get(ErrorHandler);
+            const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch').and.callThrough();
 
             const tag = getMockedTag();
@@ -798,7 +797,7 @@ describe('GenticsTagEditorComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
 
-            const errorHandler: ErrorHandler = TestBed.get(ErrorHandler);
+            const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch').and.callThrough();
             const expectedError = new Error('error during init');
 
@@ -1137,8 +1136,8 @@ class MockErrorHandlerService {
     catch(error: Error, options?: { notification: boolean }): void { }
 }
 
-class MockI18nService implements Partial<I18nService> {
-    translate(key: string | string[], params?: any): string {
+class MockI18nService implements Partial<TranslateService> {
+    instant(key: string | string[], params?: any): string {
         return key as string;
     }
 }

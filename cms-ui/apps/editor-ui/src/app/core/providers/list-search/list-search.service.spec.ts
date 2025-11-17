@@ -1,4 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -7,8 +8,6 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
-import { I18nService } from '../i18n/i18n.service';
 import { QuickJumpService } from '../quick-jump/quick-jump.service';
 import { ListSearchService } from './list-search.service';
 
@@ -67,15 +66,14 @@ describe('ListSearchService', () => {
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: QuickJumpService, useClass: MockQuickJumpService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18Notification },
+                { provide: I18nNotificationService, useClass: MockI18Notification },
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
-        quickJumpService = TestBed.get(QuickJumpService);
-        listSearchService = TestBed.get(ListSearchService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        quickJumpService = TestBed.inject(QuickJumpService) as any;
+        listSearchService = TestBed.inject(ListSearchService);
 
         initialState = {
             auth: {

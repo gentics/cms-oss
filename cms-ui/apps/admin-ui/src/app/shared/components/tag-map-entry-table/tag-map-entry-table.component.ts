@@ -1,5 +1,5 @@
 import { TAGMAP_ENTRY_ATTRIBUTES_MAP, TagMapEntryBO } from '@admin-ui/common';
-import { I18nService, PermissionsService, TagMapEntryTableLoaderOptions, TagMapEntryTableLoaderService } from '@admin-ui/core';
+import { PermissionsService, TagMapEntryTableLoaderOptions, TagMapEntryTableLoaderService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import {
@@ -11,10 +11,15 @@ import {
     TagmapEntryPropertiesObjectType,
 } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
 import { debounceTime, filter, map, switchMap } from 'rxjs/operators';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
-import { CreateTagmapEntryModalComponentMode, CreateUpdateTagmapEntryModalComponent, TagmapEntryDisplayFields } from '../create-update-tagmapentry-modal';
+import {
+    CreateTagmapEntryModalComponentMode,
+    CreateUpdateTagmapEntryModalComponent,
+    TagmapEntryDisplayFields,
+} from '../create-update-tagmapentry-modal';
 
 const EDIT_ACTION = 'edit';
 const FRAGMENT_COLUMN_ID = 'fragmentName';
@@ -28,7 +33,7 @@ function mapObjectType(row: TagMapEntryBO): number {
     templateUrl: './tag-map-entry-table.component.html',
     styleUrls: ['./tag-map-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TagMapEntryTableComponent
     extends BaseEntityTableComponent<TagmapEntry, TagMapEntryBO, TagMapEntryTableLoaderOptions>
@@ -62,70 +67,71 @@ export class TagMapEntryTableComponent
     protected rawColumns: TableColumn<TagMapEntryBO>[] = [
         {
             id: 'mapname',
-            label: 'tagmapEntry.mapname',
+            label: 'tagmap_entry.mapname',
             fieldPath: 'mapname',
             sortable: true,
         },
         {
             id: FRAGMENT_COLUMN_ID,
-            label: 'tagmapEntry.fragmentname',
+            label: 'tagmap_entry.fragmentname',
             fieldPath: 'fragmentName',
             sortable: true,
         },
         {
             id: 'object',
-            label: 'tagmapEntry.object',
+            label: 'tagmap_entry.object',
             sortable: true,
             mapper: mapObjectType,
         },
         {
             id: 'tagname',
-            label: 'tagmapEntry.tagname',
+            label: 'tagmap_entry.tagname',
             fieldPath: 'tagname',
             sortable: true,
         },
         {
             id: 'attributeType',
-            label: 'tagmapEntry.attributeType',
+            label: 'tagmap_entry.attributeType',
             fieldPath: 'attributeType',
             sortable: true,
         },
         {
             id: 'targetType',
-            label: 'tagmapEntry.targetType',
+            label: 'tagmap_entry.targetType',
             fieldPath: 'targetType',
             sortable: true,
         },
         {
             id: 'reserved',
-            label: 'tagmapEntry.reserved',
+            label: 'tagmap_entry.reserved',
             fieldPath: 'reserved',
             align: 'center',
         },
         {
             id: 'optimized',
-            label: 'tagmapEntry.optimized',
+            label: 'tagmap_entry.optimized',
             fieldPath: 'optimized',
             align: 'center',
             sortable: true,
         },
         // {
         //     id: 'filesystem',
-        //     label: 'tagmapEntry.filesystem',
+        //     label: 'tagmap_entry.filesystem',
         //     fieldPath: 'filesystem',
         //     align: 'center',
         // },
         // {
         //     id: 'foreignlinkAttribute',
-        //     label: 'tagmapEntry.foreignlinkAttribute',
+        //     label: 'tagmap_entry.foreignlinkAttribute',
         //     fieldPath: 'foreignlinkAttribute',
         // },
         // {
         //     id: 'foreignlinkAttributeRule',
-        //     label: 'tagmapEntry.foreignlinkAttributeRule',
+        //     label: 'tagmap_entry.foreignlinkAttributeRule',
         //     fieldPath: 'foreignlinkAttributeRule',
         // },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'tagmapEntry';
 
     protected parentIdSubject: Subject<string | number> = new BehaviorSubject(null);
@@ -144,7 +150,7 @@ export class TagMapEntryTableComponent
             i18n,
             loader,
             modalService,
-        )
+        );
     }
 
     protected override createAdditionalLoadOptions(): TagMapEntryTableLoaderOptions {
@@ -188,14 +194,14 @@ export class TagMapEntryTableComponent
         // Setup columns with the translated labels
         let cols = this.rawColumns;
         if (!this.showFragments) {
-            cols = cols.filter(col => col.id !== FRAGMENT_COLUMN_ID);
+            cols = cols.filter((col) => col.id !== FRAGMENT_COLUMN_ID);
         }
         this.columns = this.translateColumns(cols);
     }
 
     protected rebuildErrorMap(): void {
         this.errorMap = (this.errors || []).reduce((acc, err) => {
-            err.entries.forEach(id => {
+            err.entries.forEach((id) => {
                 if (!Array.isArray(acc[id])) {
                     acc[id] = [];
                 }
@@ -211,9 +217,9 @@ export class TagMapEntryTableComponent
             this.parentIdSubject.asObservable(),
         ]).pipe(
             debounceTime(50),
-            filter(id => id != null),
-            switchMap(id => {
-                const perms = this.permissions.getUserActionPermsForId('contentRepository.updateContentRepositoryInstance');
+            filter((id) => id != null),
+            switchMap((id) => {
+                const perms = this.permissions.getUserActionPermsForId('content_repository.updateContentRepositoryInstance');
                 const instancePerms = {
                     ...perms.instancePermissions,
                     instanceId: id,

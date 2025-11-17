@@ -1,14 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
+import { ResponseCode } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { ApiError } from '../api';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
 import { ErrorHandler } from './error-handler.service';
-import { ResponseCode } from '@gentics/cms-models';
 
 describe('ErrorHandler', () => {
 
@@ -34,7 +34,7 @@ describe('ErrorHandler', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
 
         modalService = new MockModalService();
         notification = new MockNotificationService();
@@ -46,7 +46,7 @@ describe('ErrorHandler', () => {
             router as any as Router,
             modalService as any as ModalService,
             translate as any as TranslateService,
-            notification as any as I18nNotification,
+            notification as any as I18nNotificationService,
         );
     });
 

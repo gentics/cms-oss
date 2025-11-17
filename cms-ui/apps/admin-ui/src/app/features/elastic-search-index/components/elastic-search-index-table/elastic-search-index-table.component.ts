@@ -1,12 +1,13 @@
-import { ElasticSearchIndexBO } from '@admin-ui/common';
-import { ElasticSearchIndexOperations, I18nService, PermissionsService } from '@admin-ui/core';
-import { BaseEntityTableComponent } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { AnyModelType, ElasticSearchIndex, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ElasticSearchIndexBO } from '../../../../common';
+import { ElasticSearchIndexOperations, PermissionsService } from '../../../../core';
+import { BaseEntityTableComponent } from '../../../../shared';
+import { AppStateService } from '../../../../state';
 import { ElasticSearchIndexTableLoaderService } from '../../providers';
 
 const REBUILD_ACTION = 'rebuildIndex';
@@ -17,59 +18,60 @@ const DELETE_AND_REBUILD_ACTION = 'deleteAndRebuildIndex';
     templateUrl: './elastic-search-index-table.component.html',
     styleUrls: ['./elastic-search-index-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ElasticSearchIndexTableComponent extends BaseEntityTableComponent<ElasticSearchIndex, ElasticSearchIndexBO> {
 
     protected rawColumns: TableColumn<ElasticSearchIndexBO>[] = [
         {
             id: 'name',
-            label: 'elasticSearchIndex.index_name',
+            label: 'elastic_search_index.index_name',
             fieldPath: 'name',
             sortable: true,
         },
         {
             id: 'found',
-            label: 'elasticSearchIndex.index_found',
+            label: 'elastic_search_index.index_found',
             fieldPath: 'found',
             align: 'center',
             sortable: true,
         },
         {
             id: 'settingsValid',
-            label: 'elasticSearchIndex.index_settingsValid',
+            label: 'elastic_search_index.index_settingsValid',
             fieldPath: 'settingsValid',
             align: 'center',
             sortable: true,
         },
         {
             id: 'mappingValid',
-            label: 'elasticSearchIndex.index_mappingValid',
+            label: 'elastic_search_index.index_mappingValid',
             fieldPath: 'mappingValid',
             align: 'center',
             sortable: true,
         },
         {
             id: 'indexed',
-            label: 'elasticSearchIndex.index_indexed',
+            label: 'elastic_search_index.index_indexed',
             fieldPath: 'indexed',
             align: 'right',
             sortable: true,
         },
         {
             id: 'objects',
-            label: 'elasticSearchIndex.index_objects',
+            label: 'elastic_search_index.index_objects',
             fieldPath: 'objects',
             align: 'right',
             sortable: true,
         },
         {
             id: 'queued',
-            label: 'elasticSearchIndex.index_queued',
+            label: 'elastic_search_index.index_queued',
             fieldPath: 'queued',
             align: 'right',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'elasticSearchIndex';
 
     constructor(
@@ -101,7 +103,7 @@ export class ElasticSearchIndexTableComponent extends BaseEntityTableComponent<E
                     {
                         id: REBUILD_ACTION,
                         icon: 'build',
-                        label: this.i18n.instant('elasticSearchIndex.index_rebuild'),
+                        label: this.i18n.instant('elastic_search_index.index_rebuild'),
                         type: 'primary',
                         enabled: canRebuild,
                         single: true,
@@ -110,7 +112,7 @@ export class ElasticSearchIndexTableComponent extends BaseEntityTableComponent<E
                     {
                         id: DELETE_AND_REBUILD_ACTION,
                         icon: 'autorenew',
-                        label: this.i18n.instant('elasticSearchIndex.index_delete_and_rebuild'),
+                        label: this.i18n.instant('elastic_search_index.index_delete_and_rebuild'),
                         type: 'alert',
                         enabled: canRebuild,
                         single: true,

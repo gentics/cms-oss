@@ -1,27 +1,25 @@
 
 <div class="form-element-preview-container">
-    <ng-container *ngIf="element.label_property_ui || (!element?.properties || element?.properties?.length === 0); else noPreview">
-        <ng-container *ngIf="element.label_property_ui">
-            <ng-container *ngIf="(element | property | i18nfg$:'content' | async) as propValue; else emptyProperty">
-                <div class="label-property-value-container">
-                    {{ propValue | gtxStripRichContent }}
-                </div>
-            </ng-container>
-            <ng-template #emptyProperty>
-                <div class="label-property-no-value-container">
-                    {{ 'gtxFormGenerator.preview_property_empty' | i18n:{ name: (element | property:'label' | i18nfg$:'content' | async) } }}
-                </div>
-            </ng-template>
-        </ng-container>
-        <ng-container *ngIf="!element?.properties || element?.properties?.length === 0">
-            <div class="element-type-label-container">
-                {{ element.type_label_i18n_ui | i18nfg$:'ui' | async }}
-            </div>
-        </ng-container>
-    </ng-container>
-    <ng-template #noPreview>
-        <div class="no-preview">
-            {{ 'gtxFormGenerator.no_preview_property_configured' | i18n }}
+  @if (element.label_property_ui || (!element?.properties || element?.properties?.length === 0)) {
+    @if (element.label_property_ui) {
+      @if (element | property | i18nfg$:'content' | async; as propValue) {
+        <div class="label-property-value-container">
+          {{ propValue | gtxStripRichContent }}
         </div>
-    </ng-template>
+      } @else {
+        <div class="label-property-no-value-container">
+          {{ 'gtxFormGenerator.preview_property_empty' | gtxI18n:{ name: (element | property:'label' | i18nfg$:'ui' | async) } }}
+        </div>
+      }
+    }
+    @if (!element?.properties || element?.properties?.length === 0) {
+      <div class="element-type-label-container">
+        {{ element.type_label_i18n_ui | i18nfg$:'ui' | async }}
+      </div>
+    }
+  } @else {
+    <div class="no-preview">
+      {{ 'gtxFormGenerator.no_preview_property_configured' | gtxI18n }}
+    </div>
+  }
 </div>

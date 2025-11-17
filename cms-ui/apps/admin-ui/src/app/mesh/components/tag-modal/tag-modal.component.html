@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ (mode === TagPropertiesMode.CREATE ? 'mesh.create_tag' : 'mesh.update_tag') | i18n: { entityName: tag?.name } }}</h5>
+    <h5>{{ (mode === TagPropertiesMode.CREATE ? 'mesh.create_tag' : 'mesh.update_tag') | gtxI18n: { entityName: tag?.name } }}</h5>
 </div>
 
 <div class="modal-content">
@@ -15,7 +15,7 @@
         [disabled]="!form.valid && form.enabled"
         (click)="buttonCreateEntityClicked()"
     >
-        {{ (mode === TagPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | i18n }}
+        {{ (mode === TagPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | gtxI18n }}
     </gtx-button>
 
     <gtx-button
@@ -23,6 +23,6 @@
         flat
         (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
 </div>

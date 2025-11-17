@@ -2,8 +2,7 @@ import { TestBed, waitForAsync } from '@angular/core/testing';
 import { AccessControlledType, PermissionsMapCollection } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { AppStateService } from '..';
-
-import { TestAppState, TEST_APP_STATE } from '../utils/test-app-state';
+import { TEST_APP_STATE, TestAppState } from '../utils/test-app-state';
 import { AddTypePermissionsMap, ClearAllPermissions } from './permissions.actions';
 import { INITIAL_PERMISSIONS_STATE, PermissionsStateModule } from './permissions.state';
 
@@ -35,7 +34,7 @@ describe('MaintenanceModeStateModule', () => {
             imports: [NgxsModule.forRoot([PermissionsStateModule])],
             providers: [TEST_APP_STATE],
         }).compileComponents();
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
     }));
 
     it('sets the correct initial state', () => {

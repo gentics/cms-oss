@@ -1,180 +1,179 @@
-<ng-container [ngSwitch]="type">
+
+@switch (type) {
+  @case (TagPropertyType.PAGE) {
     <gtx-page-part-fill
-        *ngSwitchCase="TagPropertyType.PAGE"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-page-part-fill>
-
+  }
+  @case (TagPropertyType.IMAGE) {
     <gtx-generic-url-part-fill
-        *ngSwitchCase="TagPropertyType.IMAGE"
-        [type]="type"
-        [selectType]="SelectableTypes.IMAGE"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [type]="type"
+      [selectType]="SelectableTypes.IMAGE"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-generic-url-part-fill>
-
+  }
+  @case (TagPropertyType.FILE) {
     <gtx-generic-url-part-fill
-        *ngSwitchCase="TagPropertyType.FILE"
-        [type]="type"
-        [selectType]="SelectableTypes.FILE"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [type]="type"
+      [selectType]="SelectableTypes.FILE"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-generic-url-part-fill>
-
+  }
+  @case (TagPropertyType.FOLDER) {
     <gtx-generic-url-part-fill
-        *ngSwitchCase="TagPropertyType.FOLDER"
-        [type]="type"
-        [selectType]="SelectableTypes.FOLDER"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [type]="type"
+      [selectType]="SelectableTypes.FOLDER"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-generic-url-part-fill>
-
+  }
+  @case (TagPropertyType.CMSFORM) {
     <gtx-generic-url-part-fill
-        *ngSwitchCase="TagPropertyType.CMSFORM"
-        [type]="type"
-        [selectType]="SelectableTypes.FORM"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [type]="type"
+      [selectType]="SelectableTypes.FORM"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-generic-url-part-fill>
-
+  }
+  @case (TagPropertyType.NODE) {
     <gtx-node-url-part-fill
-        *ngSwitchCase="TagPropertyType.NODE"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-node-url-part-fill>
-
+  }
+  @case (TagPropertyType.BOOLEAN) {
     <gtx-boolean-part-fill
-        *ngSwitchCase="TagPropertyType.BOOLEAN"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-boolean-part-fill>
-
+  }
+  @case (TagPropertyType.SELECT) {
     <gtx-select-part-fill
-        *ngSwitchCase="TagPropertyType.SELECT"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [clearable]="true"
-        [entries]="selectOptions"
-        [multiple]="false"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [clearable]="true"
+      [entries]="selectOptions"
+      [multiple]="false"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-select-part-fill>
-
+  }
+  @case (TagPropertyType.MULTISELECT) {
     <gtx-select-part-fill
-        *ngSwitchCase="TagPropertyType.MULTISELECT"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [clearable]="true"
-        [entries]="selectOptions"
-        [multiple]="true"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [clearable]="true"
+      [entries]="selectOptions"
+      [multiple]="true"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-select-part-fill>
-
+  }
+  @case (TagPropertyType.STRING) {
     <gtx-string-part-fill
-        *ngSwitchCase="TagPropertyType.STRING"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [type]="type"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [type]="type"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-string-part-fill>
-
+  }
+  @case (TagPropertyType.RICHTEXT) {
     <gtx-string-part-fill
-        *ngSwitchCase="TagPropertyType.RICHTEXT"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [type]="type"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [type]="type"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-string-part-fill>
-
+  }
+  @case (TagPropertyType.DATASOURCE) {
     <gtx-data-source-part-fill
-        *ngSwitchCase="TagPropertyType.DATASOURCE"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-data-source-part-fill>
-
+  }
+  @case (TagPropertyType.LIST) {
     <gtx-list-part-fill
-        *ngSwitchCase="TagPropertyType.LIST"
-        [type]="type"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [type]="type"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-list-part-fill>
-
+  }
+  @case (TagPropertyType.ORDEREDLIST) {
     <gtx-list-part-fill
-        *ngSwitchCase="TagPropertyType.ORDEREDLIST"
-        [type]="type"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [type]="type"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-list-part-fill>
-
+  }
+  @case (TagPropertyType.UNORDEREDLIST) {
     <gtx-list-part-fill
-        *ngSwitchCase="TagPropertyType.UNORDEREDLIST"
-        [type]="type"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [type]="type"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-list-part-fill>
-
-    <ng-container *ngSwitchCase="TagPropertyType.OVERVIEW">
-        <!-- Nothing, as Overviews are only to be filled in the Editor -->
-    </ng-container>
-
-    <ng-container *ngSwitchCase="TagPropertyType.VELOCITY">
-        <!-- Nothing, as Velocity is rendered by the CMS at publish time -->
-    </ng-container>
-
+  }
+  @case (TagPropertyType.OVERVIEW) {
+    <!-- Nothing, as Overviews are only to be filled in the Editor -->
+  }
+  @case (TagPropertyType.VELOCITY) {
+    <!-- Nothing, as Velocity is rendered by the CMS at publish time -->
+  }
+  @default {
     <gtx-json-part-fill
-        *ngSwitchDefault
-        [type]="type"
-        [label]="label"
-        [disabled]="disabled"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
+      [type]="type"
+      [label]="label"
+      [disabled]="disabled"
+      [required]="required"
+      [value]="value"
+      (valueChange)="triggerChange($event)"
     ></gtx-json-part-fill>
-
-    <!-- <gtx-textarea
-        *ngSwitchDefault
-        [label]="label"
-        [value]="value"
-        (change)="triggerChange($value)"
-    ></gtx-textarea> -->
-</ng-container>
+  }
+  <!-- <gtx-textarea
+  *ngSwitchDefault
+  [label]="label"
+  [value]="value"
+  (change)="triggerChange($value)"
+></gtx-textarea> -->
+}

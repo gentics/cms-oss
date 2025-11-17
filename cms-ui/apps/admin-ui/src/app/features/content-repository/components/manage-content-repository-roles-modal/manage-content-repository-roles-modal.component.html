@@ -1,44 +1,43 @@
 <div class="modal-title">
-    <h5 *ngIf="loaded">{{ 'modal.synchronize_content_repository_roles_title' | i18n:{ crName: contentRepository?.name } }}</h5>
+  @if (loaded) {
+    <h5>{{ 'modal.synchronize_content_repository_roles_title' | gtxI18n:{ crName: contentRepository?.name } }}</h5>
+  }
 </div>
 
 <div class="modal-content">
-    <div class="entity-table-selection">
-        {{ 'contentRepository.info_selected_roles' | i18n:{ amountSelected: selected?.length, amountTotal: rows?.length } }}
-    </div>
+  <div class="entity-table-selection">
+    {{ 'content_repository.info_selected_roles' | gtxI18n:{ amountSelected: selected?.length, amountTotal: rows?.length } }}
+  </div>
 
+  @if (loaded) {
     <gtx-table
-        *ngIf="loaded"
-        class="entity-table"
-
-        [selectAllType]="TableSelectAllType.PAGE"
-        [disabled]="working"
-        [selectable]="true"
-
-        [rows]="rows"
-        [columns]="columns"
-        [selected]="selected"
-
-        [perPage]="10"
-
-        (selectedChange)="updateSelection($event)"
+      class="entity-table"
+      [selectAllType]="TableSelectAllType.PAGE"
+      [disabled]="working"
+      [selectable]="true"
+      [rows]="rows"
+      [columns]="columns"
+      [selected]="selected"
+      [perPage]="10"
+      (selectedChange)="updateSelection($event)"
     ></gtx-table>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        [disabled]="working"
-        (click)="updateAssignment()"
+  <gtx-button
+    type="primary"
+    [disabled]="working"
+    (click)="updateAssignment()"
     >
-        {{ 'shared.confirm_selection' | i18n }}
-    </gtx-button>
+    {{ 'shared.confirm_selection' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

@@ -1,34 +1,37 @@
-<h2 *ngIf="label" class="item-properties-heading">{{ label }}</h2>
+@if (label) {
+  <h2 class="item-properties-heading">{{ label }}</h2>
+}
 
 <div class="properties-editor-i18n">
-    <gtx-grouped-tabs
-        class="properties-tabs"
-        pure
-        wrap
-        statusIcons
-        [activeId]="activeLanguage?.id"
-        (tabChange)="setActiveLanguage($event)"
+  <gtx-grouped-tabs
+    class="properties-tabs"
+    pure
+    wrap
+    statusIcons
+    [activeId]="activeLanguage?.id"
+    (tabChange)="setActiveLanguage($event)"
     >
-        <gtx-tab-pane
-            *ngFor="let language of languages"
-            [id]="language?.id"
-            [readonly]="disabled"
+    @for (language of languages; track language) {
+      <gtx-tab-pane
+        [id]="language?.id"
+        [readonly]="disabled"
         >
-            <ng-template gtx-tab-label>
-                <div
-                    class="language-pane-label"
-                    [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
-                >{{ language?.name }}</div>
-            </ng-template>
-        </gtx-tab-pane>
-    </gtx-grouped-tabs>
+        <ng-template gtx-tab-label>
+          <div
+            class="language-pane-label"
+            [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
+          >{{ language?.name }}</div>
+        </ng-template>
+      </gtx-tab-pane>
+    }
+  </gtx-grouped-tabs>
 
+  @if (activeLanguage?.code) {
     <div
-        *ngIf="activeLanguage?.code"
-        class="tab-content"
-    >
-        <h3>{{ activeLanguage?.name }}</h3>
-
-        <ng-content></ng-content>
+      class="tab-content"
+      >
+      <h3>{{ activeLanguage?.name }}</h3>
+      <ng-content></ng-content>
     </div>
+  }
 </div>

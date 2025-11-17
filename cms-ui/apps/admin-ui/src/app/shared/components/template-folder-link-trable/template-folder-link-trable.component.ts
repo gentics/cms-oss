@@ -1,8 +1,9 @@
 import { BO_ID, FolderBO } from '@admin-ui/common';
-import { FolderTrableLoaderService, I18nService } from '@admin-ui/core';
+import { FolderTrableLoaderService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Folder } from '@gentics/cms-models';
 import { TableAction, TableActionClickEvent, TrableRow } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 
 export interface FolderLinkEvent {
     folder: Folder;
@@ -16,7 +17,7 @@ const APPLY_RECURSIVE = 'applyRecusrive';
     templateUrl: './template-folder-link-trable.component.html',
     styleUrls: ['./template-folder-link-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TemplateFolderLinkTrableComponent implements OnInit {
 

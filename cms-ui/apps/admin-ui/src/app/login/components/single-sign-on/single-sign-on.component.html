@@ -1,19 +1,22 @@
-<div
-    *ngIf="keycloakService.showSSOButton && !(enabled$ | async)"
+@if (keycloakService.showSSOButton && !(enabled$ | async)) {
+  <div
     class="line"
-></div>
+  ></div>
+}
 
 <div class="sso-container">
+  @if (enabled$ | async) {
     <iframe
-        #iframe
-        *ngIf="enabled$ | async"
-        [src]="url"
-        (load)="frameLoaded(iframe)"
+      #iframe
+      [src]="url"
+      (load)="frameLoaded(iframe)"
     ></iframe>
+  }
 
+  @if (keycloakService.showSSOButton && !(enabled$ | async)) {
     <gtx-button
-        *ngIf="keycloakService.showSSOButton && !(enabled$ | async)"
-        size="large"
-        (click)="login()"
-    >{{ 'common.login_sso_button_label' | i18n }}</gtx-button>
+      size="large"
+      (click)="login()"
+    >{{ 'common.login_sso_button_label' | gtxI18n }}</gtx-button>
+  }
 </div>

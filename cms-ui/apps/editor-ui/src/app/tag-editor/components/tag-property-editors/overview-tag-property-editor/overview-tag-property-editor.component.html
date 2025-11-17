@@ -1,166 +1,172 @@
-<div *ngIf="tagProperty" class="tag-part-editor">
-
+@if (tagProperty) {
+  <div class="tag-part-editor">
     <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
-
     <div class="options-row">
-        <gtx-select
-            class="overview-property"
-            data-control="listType"
-            [label]="'tag_editor.list_type_selector' | i18n"
-            [required]="true"
-            [disabled]="allowedListTypes.length < 2 || context.readOnly"
-            [(ngModel)]="tagProperty.overview.listType"
-            (valueChange)="onSelectedListOrSelectTypeChange()"
+      <gtx-select
+        class="overview-property"
+        data-control="listType"
+        [label]="'tag_editor.list_type_selector' | gtxI18n"
+        [required]="true"
+        [disabled]="allowedListTypes.length < 2 || context.readOnly"
+        [(ngModel)]="tagProperty.overview.listType"
+        (valueChange)="onSelectedListOrSelectTypeChange()"
         >
-            <gtx-option *ngFor="let listType of allowedListTypes" [value]="listType.value">
-                {{ listType.label | i18n }}
-            </gtx-option>
-        </gtx-select>
-
-        <gtx-select
-            class="overview-property"
-            data-control="selectType"
-            [label]="'tag_editor.select_type_selector' | i18n"
-            [required]="true"
-            [disabled]="allowedSelectTypes.length < 2 || context.readOnly"
-            [(ngModel)]="tagProperty.overview.selectType"
-            (valueChange)="onSelectedListOrSelectTypeChange()"
+        @for (listType of allowedListTypes; track listType) {
+          <gtx-option [value]="listType.value">
+            {{ listType.label | gtxI18n }}
+          </gtx-option>
+        }
+      </gtx-select>
+      <gtx-select
+        class="overview-property"
+        data-control="selectType"
+        [label]="'tag_editor.select_type_selector' | gtxI18n"
+        [required]="true"
+        [disabled]="allowedSelectTypes.length < 2 || context.readOnly"
+        [(ngModel)]="tagProperty.overview.selectType"
+        (valueChange)="onSelectedListOrSelectTypeChange()"
         >
-            <gtx-option *ngFor="let selectType of allowedSelectTypes" [value]="selectType.value">
-                {{ selectType.label | i18n }}
+        @for (selectType of allowedSelectTypes; track selectType) {
+          <gtx-option [value]="selectType.value">
+            {{ selectType.label | gtxI18n }}
+          </gtx-option>
+        }
+      </gtx-select>
+      @if (!tagPart.overviewSettings.hideSortOptions) {
+        <gtx-select
+          class="overview-property"
+          data-control="orderBy"
+          [disabled]="allowedOrderByTypes.length < 2 || context.readOnly"
+          [label]="'tag_editor.order_by_type_selector' | gtxI18n"
+          [required]="true"
+          [(ngModel)]="tagProperty.overview.orderBy"
+          (valueChange)="onUserChange()"
+          >
+          @for (orderByType of allowedOrderByTypes; track orderByType) {
+            <gtx-option [value]="orderByType.value">
+              {{ orderByType.label | gtxI18n }}
             </gtx-option>
+          }
         </gtx-select>
-
-        <ng-container *ngIf="!tagPart.overviewSettings.hideSortOptions">
-            <gtx-select
-                class="overview-property"
-                data-control="orderBy"
-                [disabled]="allowedOrderByTypes.length < 2 || context.readOnly"
-                [label]="'tag_editor.order_by_type_selector' | i18n"
-                [required]="true"
-                [(ngModel)]="tagProperty.overview.orderBy"
-                (valueChange)="onUserChange()"
-            >
-                <gtx-option *ngFor="let orderByType of allowedOrderByTypes" [value]="orderByType.value">
-                    {{ orderByType.label | i18n }}
-                </gtx-option>
-            </gtx-select>
-
-            <gtx-select
-                class="overview-property"
-                data-control="orderDirection"
-                [label]="'tag_editor.order_direction_selector' | i18n"
-                [required]="true"
-                [disabled]="allowedOrderDirections.length < 2 || context.readOnly"
-                [(ngModel)]="tagProperty.overview.orderDirection"
-                (valueChange)="onUserChange()"
-            >
-                <gtx-option *ngFor="let orderDirection of allowedOrderDirections" [value]="orderDirection.value">
-                    {{ orderDirection.label | i18n }}
-                </gtx-option>
-            </gtx-select>
-        </ng-container>
-
+        <gtx-select
+          class="overview-property"
+          data-control="orderDirection"
+          [label]="'tag_editor.order_direction_selector' | gtxI18n"
+          [required]="true"
+          [disabled]="allowedOrderDirections.length < 2 || context.readOnly"
+          [(ngModel)]="tagProperty.overview.orderDirection"
+          (valueChange)="onUserChange()"
+          >
+          @for (orderDirection of allowedOrderDirections; track orderDirection) {
+            <gtx-option [value]="orderDirection.value">
+              {{ orderDirection.label | gtxI18n }}
+            </gtx-option>
+          }
+        </gtx-select>
+      }
     </div>
-
-    <div
-        *ngIf="tagProperty.overview.selectType === selectTypeEnum.FOLDER
-            || tagProperty.overview.selectType === selectTypeEnum.AUTO
-            || tagProperty.overview.selectType === selectTypeEnum.FOLDER"
+    @if (tagProperty.overview.selectType === selectTypeEnum.FOLDER
+      || tagProperty.overview.selectType === selectTypeEnum.AUTO
+      || tagProperty.overview.selectType === selectTypeEnum.FOLDER) {
+      <div
         class="options-row"
-    >
-        <gtx-input
-            *ngIf="tagProperty.overview.selectType === selectTypeEnum.FOLDER
-                || tagProperty.overview.selectType === selectTypeEnum.AUTO"
+        >
+        @if (tagProperty.overview.selectType === selectTypeEnum.FOLDER
+          || tagProperty.overview.selectType === selectTypeEnum.AUTO) {
+          <gtx-input
             class="overview-property input-property"
             type="number"
             min="0"
             max="999999999"
-            [label]="'tag_editor.overview_max_items' | i18n"
+            [label]="'tag_editor.overview_max_items' | gtxI18n"
             [required]="true"
             [pattern]="'^[0-9]+$'"
             [readonly]="context.readOnly"
             [(ngModel)]="tagProperty.overview.maxItems"
             (valueChange)="onMaxItemsChange($event)"
-        ></gtx-input>
-
-        <gtx-checkbox
-            *ngIf="tagProperty.overview.listType === listTypeEnum.FOLDER
-                || tagProperty.overview.selectType === selectTypeEnum.FOLDER"
+          ></gtx-input>
+        }
+        @if (tagProperty.overview.listType === listTypeEnum.FOLDER
+          || tagProperty.overview.selectType === selectTypeEnum.FOLDER) {
+          <gtx-checkbox
             class="overview-property checkbox-property"
-            [label]="'tag_editor.overview_recursive' | i18n"
+            [label]="'tag_editor.overview_recursive' | gtxI18n"
             [disabled]="context.readOnly"
             [(ngModel)]="tagProperty.overview.recursive"
             (change)="onUserChange()"
-        ></gtx-checkbox>
-    </div>
-
-    <ng-container *ngIf="areSelectedItemsVisible(tagProperty.overview)">
-        <div class="browse-button-cell">
-            <gtx-button
-                data-action="browse-items"
-                type="secondary"
-                [disabled]="context.readOnly"
-                (click)="browseForItems()"
-            >
-                {{ 'tag_editor.overview_add_items' | i18n }}
-            </gtx-button>
-        </div>
-
+          ></gtx-checkbox>
+        }
+      </div>
+    }
+    @if (areSelectedItemsVisible(tagProperty.overview)) {
+      <div class="browse-button-cell">
+        <gtx-button
+          data-action="browse-items"
+          type="secondary"
+          [disabled]="context.readOnly"
+          (click)="browseForItems()"
+          >
+          {{ 'tag_editor.overview_add_items' | gtxI18n }}
+        </gtx-button>
+      </div>
+      @if (selectedItems.length > 0) {
         <sortable-array-list
-            *ngIf="selectedItems.length > 0; else noItemsSelected"
-            class="overview-items"
-            [allowDrag]="tagProperty.overview.orderBy === 'SELF' && !context.readOnly"
-            [allowRemoval]="!context.readOnly"
-            [(ngModel)]="selectedItems"
-            (orderChange)="onUserChange()"
-            (itemRemove)="onUserChange()"
-        >
-            <ng-template let-item="item" let-index="index">
-                <div
-                    class="overview-item"
-                    [attr.data-type]="item.type"
-                    [attr.data-id]="item.id"
-                    [attr.data-node-id]="item._checkedNodeId || item.nodeId"
-                >
-                    <span *ngIf="item.type" class="item-icon" [ngClass]="item.type || ''">
-                        <icon>{{ item.type | gtxTypeIcon }}</icon>
-                    </span>
-
-                    <ng-template #itemPathTpl let-path="path">
-                        <span class="item-path" [title]="path">{{ path }}</span>
-                    </ng-template>
-
-                    <ng-container [ngSwitch]="item.type">
-                        <ng-container
-                            *ngSwitchCase="'folder'"
-                            [ngTemplateOutlet]="itemPathTpl"
-                            [ngTemplateOutletContext]="{ path: item.path }"
-                        ></ng-container>
-                        <ng-container
-                            *ngSwitchCase="'channel'"
-                            [ngTemplateOutlet]="itemPathTpl"
-                            [ngTemplateOutletContext]="{ path: item.name}"
-                        ></ng-container>
-                        <ng-container
-                            *ngSwitchCase="'node'"
-                            [ngTemplateOutlet]="itemPathTpl"
-                            [ngTemplateOutletContext]="{ path: item.name }"
-                        ></ng-container>
-                        <ng-container
-                            *ngSwitchDefault
-                            [ngTemplateOutlet]="itemPathTpl"
-                            [ngTemplateOutletContext]="{ path: (item.path || '') + item.name }"
-                        ></ng-container>
-                    </ng-container>
-                </div>
-            </ng-template>
-        </sortable-array-list>
-
-        <ng-template #noItemsSelected>
-            <div class="no-items-label">
-                {{ 'tag_editor.overview_no_items_selected' | i18n }}
+          class="overview-items"
+          [allowDrag]="tagProperty.overview.orderBy === 'SELF' && !context.readOnly"
+          [allowRemoval]="!context.readOnly"
+          [(ngModel)]="selectedItems"
+          (orderChange)="onUserChange()"
+          (itemRemove)="onUserChange()"
+          >
+          <ng-template let-item="item" let-index="index">
+            <div
+              class="overview-item"
+              [attr.data-type]="item.type"
+              [attr.data-id]="item.id"
+              [attr.data-node-id]="item._checkedNodeId || item.nodeId"
+              >
+              @if (item.type) {
+                <span class="item-icon" [ngClass]="item.type || ''">
+                  <icon>{{ item.type | gtxTypeIcon }}</icon>
+                </span>
+              }
+              <ng-template #itemPathTpl let-path="path">
+                <span class="item-path" [title]="path">{{ path }}</span>
+              </ng-template>
+              @switch (item.type) {
+                @case ('folder') {
+                  <ng-container
+                    [ngTemplateOutlet]="itemPathTpl"
+                    [ngTemplateOutletContext]="{ path: item.path }"
+                  ></ng-container>
+                }
+                @case ('channel') {
+                  <ng-container
+                    [ngTemplateOutlet]="itemPathTpl"
+                    [ngTemplateOutletContext]="{ path: item.name}"
+                  ></ng-container>
+                }
+                @case ('node') {
+                  <ng-container
+                    [ngTemplateOutlet]="itemPathTpl"
+                    [ngTemplateOutletContext]="{ path: item.name }"
+                  ></ng-container>
+                }
+                @default {
+                  <ng-container
+                    [ngTemplateOutlet]="itemPathTpl"
+                    [ngTemplateOutletContext]="{ path: (item.path || '') + item.name }"
+                  ></ng-container>
+                }
+              }
             </div>
-        </ng-template>
-    </ng-container>
-</div>
+          </ng-template>
+        </sortable-array-list>
+      } @else {
+        <div class="no-items-label">
+          {{ 'tag_editor.overview_no_items_selected' | gtxI18n }}
+        </div>
+      }
+    }
+  </div>
+}

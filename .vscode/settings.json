@@ -8,7 +8,6 @@
         "*.textile": "asciidoc"
     },
     // Plugin Settings
-    "eslint.format.enable": true,
     "redhat.telemetry.enabled": false,
     // Language Settings
     "[typescript]": {
@@ -28,5 +27,13 @@
     "[xml]": {
         "editor.defaultFormatter": "redhat.vscode-xml"
     },
-    "angular.enable-strict-mode-prompt": false
+    "angular.enable-strict-mode-prompt": false,
+    "eslint.useFlatConfig": true,
+    "eslint.format.enable": true,
+    "eslint.enable": true,
+    "eslint.workingDirectories": [
+        {
+            "mode": "auto"
+        }
+    ]
 }

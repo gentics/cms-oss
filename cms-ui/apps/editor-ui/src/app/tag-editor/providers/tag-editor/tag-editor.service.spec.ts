@@ -1,8 +1,5 @@
 import { TestBed, fakeAsync } from '@angular/core/testing';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { ApplicationStateService, STATE_MODULES, SetUILanguageAction } from '@editor-ui/app/state';
+import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.mock';
 import { TagEditorContext, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -18,11 +15,14 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
 import { NEVER, Observable } from 'rxjs';
-import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
+import { RepositoryBrowserClient } from '../../../shared/providers';
+import { ApplicationStateService, STATE_MODULES, SetUILanguageAction } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
@@ -49,7 +49,7 @@ describe('TagEditorService', () => {
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
-                { provide: TranslateService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockTranslateService },
                 { provide: ModalService, useClass: MockModalService },
                 { provide: ApiBase, useClass: MockBaseApiService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },

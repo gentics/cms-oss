@@ -1,7 +1,7 @@
 import { PermissionListResponse } from '@gentics/cms-models';
 import { TableAction, TableRow } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { sortBy } from 'lodash-es';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import {
     BO_ID,
     BO_NEW_SORT_ORDER,
@@ -53,11 +53,11 @@ export function createMoveActions<T>(i18n: I18nService, enabled: boolean): Table
 }
 
 export function resetEntitySorting<T extends SortableBusinessObject>(rows: TableRow<T>[]): TableRow<T>[] {
-    return sortBy(rows.map(row => {
+    return sortBy(rows.map((row) => {
         row.item[BO_NEW_SORT_ORDER] = row.item[BO_ORIGINAL_SORT_ORDER];
         row.hash = row.item[BO_ORIGINAL_SORT_ORDER];
         return row;
-    }), [(row => row.item[BO_NEW_SORT_ORDER])]);
+    }), [(row) => row.item[BO_NEW_SORT_ORDER]]);
 }
 
 export function sortEntityRow<T extends SortableBusinessObject>(rows: TableRow<T>[], from: number, to: number): TableRow<T>[] {

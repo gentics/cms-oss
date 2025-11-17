@@ -10,16 +10,7 @@ import {
     ViewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import {
-    EditorState,
-    EditorTab,
-    ITEM_PROPERTIES_TAB,
-    ITEM_TAG_LIST_TAB,
-    PropertiesTab,
-    SaveBehaviour,
-    noItemPermissions,
-} from '@editor-ui/app/common/models';
-import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CmsFormType,
@@ -44,13 +35,12 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
 import { debounce, isEqual } from 'lodash-es';
 import {
-    BehaviorSubject,
     Observable,
     SubscribableOrPromise,
     Subscription,
     combineLatest,
     forkJoin,
-    of,
+    of
 } from 'rxjs';
 import {
     catchError,
@@ -64,13 +54,22 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
+import {
+    EditorState,
+    EditorTab,
+    ITEM_PROPERTIES_TAB,
+    ITEM_TAG_LIST_TAB,
+    PropertiesTab,
+    SaveBehaviour,
+    noItemPermissions,
+} from '../../../common/models';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { PublishTimeManagedPagesModal } from '../../../shared/components/publish-time-managed-pages-modal/publish-time-managed-pages-modal.component';
 import { TimeManagementModal } from '../../../shared/components/time-management-modal/time-management-modal.component';
 import { PublishableStateUtil } from '../../../shared/util/entity-states';
@@ -100,7 +99,6 @@ import { CustomerScriptService } from '../../providers/customer-script/customer-
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
-
 
 /**
  * This component wraps the GCMS content in an iframe, and provides the means for interacting with
@@ -217,7 +215,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private folderActions: FolderActionsService,
         private entityResolver: EntityResolver,
         private permissions: PermissionService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
         private customScriptHostService: CustomScriptHostService,
         private customerScriptService: CustomerScriptService,
         private client: GCMSRestClientService,

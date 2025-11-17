@@ -1,83 +1,87 @@
-<ng-container *ngIf="!(advancedSearchActive$ | async) && !(searchFiltersActive$ | async); else resultsTitle">
-    <div
-        class="container breadcrumbs-container"
-        [class.multilineExpanded]="multilineExpanded$ | async"
-        [class.staging-mode]="inStagingMode$ | async"
+@if (!(advancedSearchActive$ | async) && !(searchFiltersActive$ | async)) {
+  <div
+    class="container breadcrumbs-container"
+    [class.multilineExpanded]="multilineExpanded$ | async"
+    [class.staging-mode]="inStagingMode$ | async"
     >
-        <node-selector
-            class="node-selector"
-            [nodes]="nodes$ | async"
-            [activeNodeId]="activeNodeId"
-            [attr.data-active-id]="activeNodeId"
-        ></node-selector>
-
-        <gtx-breadcrumbs
-            class="breadcrumbs"
-            [routerLinks]="breadcrumbs$ | async"
-            [multiline]="true"
-            [class.isInherited]="isInherited$ | async"
-            [class.notInherited]="!(isInherited$ | async)"
-            [multilineExpanded]="multilineExpanded$ | async"
-            (multilineExpandedChange)="expandedChanged($event)"
+    <node-selector
+      class="node-selector"
+      [nodes]="nodes$ | async"
+      [activeNodeId]="activeNodeId"
+      [attr.data-active-id]="activeNodeId"
+    ></node-selector>
+    <gtx-breadcrumbs
+      class="breadcrumbs"
+      [routerLinks]="breadcrumbs$ | async"
+      [multiline]="true"
+      [class.isInherited]="isInherited$ | async"
+      [class.notInherited]="!(isInherited$ | async)"
+      [multilineExpanded]="multilineExpanded$ | async"
+      (multilineExpandedChange)="expandedChanged($event)"
+      >
+      @if (isInherited$ | async) {
+        <icon class="iconChannel">input</icon>
+      }
+    </gtx-breadcrumbs>
+    @if (inStagingMode$ | async) {
+      <gtx-button
+        class="staging-mode-leaver"
+        size="small"
+        type="secondary"
+        (click)="leaveStagingMode()"
         >
-            <icon *ngIf="isInherited$ | async" class="iconChannel">input</icon>
-        </gtx-breadcrumbs>
-
-        <gtx-button
-            *ngIf="inStagingMode$ | async"
-            class="staging-mode-leaver"
-            size="small"
-            type="secondary"
-            (click)="leaveStagingMode()"
-        >
-            <span class="leaver-label">{{ 'modal.leave_content_staging_mode' | i18n }}</span>
-            <icon class="leaver-icon" right>logout</icon>
-        </gtx-button>
-    </div>
-
-    <div
-        class="title"
-        [class.staging-mode]="inStagingMode$ | async"
+        <span class="leaver-label">{{ 'modal.leave_content_staging_mode' | gtxI18n }}</span>
+        <icon class="leaver-icon" right>logout</icon>
+      </gtx-button>
+    }
+  </div>
+  <div
+    class="title"
+    [class.staging-mode]="inStagingMode$ | async"
     >
-        <div class="title-name columns left-items">{{ currentFolderDisplayName$ | async }}</div>
-        <div class="show-on-hover columns shrink">
-            <favourite-toggle [item]="currentFolder$ | async"></favourite-toggle>
-            <folder-context-menu
-                [folder]="currentFolder$ | async"
-                [activeNodeId]="activeNodeId"
-                [permissions]="currentFolder$ | async | permissions"
-                [uiMode]="uiMode$ | async"
-                [stagingMap]="stagingMap$ | async"
-            ></folder-context-menu>
-        </div>
-    </div>
-</ng-container>
-
-<ng-template #resultsTitle>
-    <div class="title">
-        <div *ngIf="!(searchFiltersNodeNames$ | async)" class="title-name columns left-items">
-            {{ 'editor.search_results_in_path' | i18n: { path: (breadcrumbsString$ | async) } }}
-        </div>
-        <div
-            *ngIf="(searchFiltersNodeNames$ | async)
-                && (searchFiltersNodeNames$ | async) !== 'all'
-                && (searchFiltersActive$ | async)"
-            class="title-name columns left-items"
-        >
-            {{ 'editor.search_results_in_path' | i18n: { path: (searchFiltersNodeNames$ | async) } }}
-        </div>
-        <div *ngIf="(searchFiltersNodeNames$ | async) === 'all'" class="title-name columns left-items">
-            {{ 'editor.search_results_in_all_nodes' | i18n }}
-        </div>
-    </div>
-</ng-template>
-
-<div class="startpage-container" [class.staging-mode]="inStagingMode$ | async">
-    <folder-start-page
+    <div class="title-name columns left-items">{{ currentFolderDisplayName$ | async }}</div>
+    <div class="show-on-hover columns shrink">
+      <favourite-toggle [item]="currentFolder$ | async"></favourite-toggle>
+      <folder-context-menu
         [folder]="currentFolder$ | async"
+        [activeNodeId]="activeNodeId"
+        [permissions]="currentFolder$ | async | permissions"
         [uiMode]="uiMode$ | async"
         [stagingMap]="stagingMap$ | async"
-    ></folder-start-page>
+      ></folder-context-menu>
+    </div>
+  </div>
+} @else {
+  <div class="title">
+    @if (!(searchFiltersNodeNames$ | async)) {
+      <div class="title-name columns left-items">
+        {{ 'editor.search_results_in_path' | gtxI18n: { path: (breadcrumbsString$ | async) } }}
+      </div>
+    }
+    @if ((searchFiltersNodeNames$ | async)
+      && (searchFiltersNodeNames$ | async) !== 'all'
+      && (searchFiltersActive$ | async)) {
+      <div
+        class="title-name columns left-items"
+        >
+        {{ 'editor.search_results_in_path' | gtxI18n: { path: (searchFiltersNodeNames$ | async) } }}
+      </div>
+    }
+    @if ((searchFiltersNodeNames$ | async) === 'all') {
+      <div class="title-name columns left-items">
+        {{ 'editor.search_results_in_all_nodes' | gtxI18n }}
+      </div>
+    }
+  </div>
+}
+
+
+<div class="startpage-container" [class.staging-mode]="inStagingMode$ | async">
+  <folder-start-page
+    [folder]="currentFolder$ | async"
+    [uiMode]="uiMode$ | async"
+    [stagingMap]="stagingMap$ | async"
+  ></folder-start-page>
 </div>
 
 <div class="border-container" [class.search-active]="searchFiltersActive$ | async"></div>
@@ -85,28 +89,29 @@
 <gtx-progress-bar [for]="loading$"></gtx-progress-bar>
 
 <gtx-file-drop-area
-    #dropArea="gtxFileDropArea"
-    overrideSlot="fileDragAndDrop"
-    data-action="file-drop"
-    [class.page-file-hovered]="(dropArea.filesDraggedInPage$ | async)?.length > 0 && (this.isModalOpen)"
-    [class.file-hovered]="(dropArea.draggedFiles$ | async)?.length > 0"
-    (fileDragEnter)="setFileDropLabelLeft()"
-    (fileDrop)="uploadFiles($event)"
->
-    <div
-        class="file-drop-text"
-        #fileDropTextOverlay
+  #dropArea="gtxFileDropArea"
+  overrideSlot="fileDragAndDrop"
+  data-action="file-drop"
+  [class.page-file-hovered]="(dropArea.filesDraggedInPage$ | async)?.length > 0 && (this.isModalOpen)"
+  [class.file-hovered]="(dropArea.draggedFiles$ | async)?.length > 0"
+  (fileDragEnter)="setFileDropLabelLeft()"
+  (fileDrop)="uploadFiles($event)"
+  >
+  <div
+    class="file-drop-text"
+    #fileDropTextOverlay
     >
-        <span [style.left]="fileDropLabelLeft">{{ (allFilesAreImages(dropArea.filesDraggedInPage$ | async)
-            ? 'editor.drop_images_to_upload'
-            : 'editor.drop_files_to_upload'
-        ) | i18n }}</span>
-    </div>
+    <span [style.left]="fileDropLabelLeft">{{ (allFilesAreImages(dropArea.filesDraggedInPage$ | async)
+      ? 'editor.drop_images_to_upload'
+      : 'editor.drop_files_to_upload'
+    ) | gtxI18n }}</span>
+  </div>
 </gtx-file-drop-area>
 
-<div class="list-wrapper" *ngIf="(noErrors$ | async); else notFound">
-    <item-list
-        *ngFor="let type of (itemTypes$ | async)"
+@if ((noErrors$ | async)) {
+  <div class="list-wrapper">
+    @for (type of (itemTypes$ | async); track type) {
+      <item-list
         [class]="type || ''"
         [itemType]="type"
         [linkPaths]="!!(searchTerm$ | async)"
@@ -125,45 +130,48 @@
         [stagingMap]="stagingMap$ | async"
         (pageChange)="pageChange(type, $event)"
         (itemsPerPageChange)="itemsPerPageChange(type, $event)"
-    ></item-list>
-</div>
+      ></item-list>
+    }
+  </div>
+} @else {
+  <div class="not-found">
+    <icon>error_outline</icon>
+    @if (displayErrorNodeNotFound$ | async) {
+      <div class="message-wrapper">
+        <div class="message">{{ 'editor.node_not_found' | gtxI18n: { id: activeNodeId } }}</div>
+        <gtx-button (click)="goToDefaultNode()" flat>{{ 'editor.go_to_default_node' | gtxI18n }}</gtx-button>
+      </div>
+    }
+    @if (displayErrorFolderNotFound$ | async) {
+      <div class="message-wrapper">
+        <div class="message">{{ 'editor.folder_not_found' | gtxI18n: { id: currentFolderId } }}</div>
+        <gtx-button (click)="goToBaseFolder()" flat>{{ 'editor.go_to_base_folder' | gtxI18n }}</gtx-button>
+      </div>
+    }
+    @if (displayErrorFolderNotFoundInNode$ | async) {
+      <div class="message-wrapper">
+        <div class="message">{{ 'editor.folder_not_found_in_node' | gtxI18n: {
+          nodeId: (activeNode$ | async)?.id,
+          folderId: currentFolderId,
+          nodeIdActual: (nodeIdActual$ | async)
+        } }}</div>
+        <gtx-button
+          flat
+          (click)="goToBaseFolder()"
+        >{{ 'editor.go_to_base_folder_of_node_with_id' | gtxI18n: { nodeId: (activeNode$ | async)?.id } }}</gtx-button>
+        <gtx-button
+          flat
+          (click)="goToCurrentFolder()"
+        >{{ 'editor.go_to_folder_with_id' | gtxI18n: { folderId: (activeFolder$ | async)?.id } }}</gtx-button>
+      </div>
+    }
+    @if (displayErrorFolderNotFoundAndNodeNotFound$ | async) {
+      <div class="message-wrapper">
+        <div class="message">{{ 'editor.node_not_found' | gtxI18n: { id: activeNodeId } }}</div>
+        <div class="message">{{ 'editor.folder_not_found' | gtxI18n: { id: currentFolderId } }}</div>
+        <gtx-button (click)="goToDefaultNode()" flat>{{ 'editor.go_to_default_node' | gtxI18n }}</gtx-button>
+      </div>
+    }
+  </div>
+}
 
-<ng-template #notFound>
-    <div class="not-found">
-        <icon>error_outline</icon>
-
-        <div *ngIf="displayErrorNodeNotFound$ | async" class="message-wrapper">
-            <div class="message">{{ 'editor.node_not_found' | i18n: { id: activeNodeId } }}</div>
-            <gtx-button (click)="goToDefaultNode()" flat>{{ 'editor.go_to_default_node' | i18n }}</gtx-button>
-        </div>
-
-        <div *ngIf="displayErrorFolderNotFound$ | async" class="message-wrapper">
-            <div class="message">{{ 'editor.folder_not_found' | i18n: { id: currentFolderId } }}</div>
-            <gtx-button (click)="goToBaseFolder()" flat>{{ 'editor.go_to_base_folder' | i18n }}</gtx-button>
-        </div>
-
-        <div *ngIf="displayErrorFolderNotFoundInNode$ | async" class="message-wrapper">
-            <div class="message">{{ 'editor.folder_not_found_in_node' | i18n: {
-                nodeId: (activeNode$ | async)?.id,
-                folderId: currentFolderId,
-                nodeIdActual: (nodeIdActual$ | async)
-            } }}</div>
-
-            <gtx-button
-                flat
-                (click)="goToBaseFolder()"
-            >{{ 'editor.go_to_base_folder_of_node_with_id' | i18n: { nodeId: (activeNode$ | async)?.id } }}</gtx-button>
-
-            <gtx-button
-                flat
-                (click)="goToCurrentFolder()"
-            >{{ 'editor.go_to_folder_with_id' | i18n: { folderId: (activeFolder$ | async)?.id } }}</gtx-button>
-        </div>
-
-        <div *ngIf="displayErrorFolderNotFoundAndNodeNotFound$ | async" class="message-wrapper">
-            <div class="message">{{ 'editor.node_not_found' | i18n: { id: activeNodeId } }}</div>
-            <div class="message">{{ 'editor.folder_not_found' | i18n: { id: currentFolderId } }}</div>
-            <gtx-button (click)="goToDefaultNode()" flat>{{ 'editor.go_to_default_node' | i18n }}</gtx-button>
-        </div>
-    </div>
-</ng-template>

@@ -1,14 +1,13 @@
-<ng-container *ngIf="!currentRepositoryId; else displayMeshContent">
-    <gtx-mesh-browser-repository-table
-        class="entity-table"
-        [showSearch]="true"
-        [selectable]="false"
-        [hideActions]=""
-        [activeEntity]="activeEntity"
-        (rowClick)="rowClickHandler($event)"
+@if (!currentRepositoryId) {
+  <gtx-mesh-browser-repository-table
+    class="entity-table"
+    [showSearch]="true"
+    [selectable]="false"
+    [hideActions]=""
+    [activeEntity]="activeEntity"
+    (rowClick)="rowClickHandler($event)"
     />
-</ng-container>
+} @else {
+  <router-outlet [name]="ROUTE_MESH_BROWSER_OUTLET"></router-outlet>
+}
 
-<ng-template #displayMeshContent>
-    <router-outlet [name]="ROUTE_MESH_BROWSER_OUTLET"></router-outlet>
-</ng-template>

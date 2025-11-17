@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { IModalInstance } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { Subscription, merge } from 'rxjs';
 import { distinctUntilChanged, filter, map, switchMapTo } from 'rxjs/operators';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
@@ -17,7 +17,7 @@ import { EditorOverlayService } from '../../providers/editor-overlay.service';
     selector: 'editor-overlay',
     template: '',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class EditorOverlay implements OnInit, OnDestroy {
 
@@ -32,9 +32,9 @@ export class EditorOverlay implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        const onLogin$ = this.appState.select(state => state.auth).pipe(
-            distinctUntilChanged(isEqual, state => state.currentUserId),
-            filter(state => state.isLoggedIn === true),
+        const onLogin$ = this.appState.select((state) => state.auth).pipe(
+            distinctUntilChanged(isEqual, (state) => state.currentUserId),
+            filter((state) => state.isLoggedIn === true),
         );
 
         const modalRouteParams$ = onLogin$.pipe(switchMapTo(this.route.params));
@@ -46,7 +46,7 @@ export class EditorOverlay implements OnInit, OnDestroy {
 
         const modalDisplayByType$ = modalRouteParams$.pipe(
             filter((params) => Object.keys(params).length === 1 && params.type),
-            map(params => params && this.openModalByType(params.type)),
+            map((params) => params && this.openModalByType(params.type)),
         );
 
         const urlSub = merge(modalEditorState$, modalDisplayByType$).pipe(
@@ -103,6 +103,6 @@ export class EditorOverlay implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 }

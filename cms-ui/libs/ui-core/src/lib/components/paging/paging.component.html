@@ -1,53 +1,53 @@
 <div
-    #p="paginationApi"
-    class="pagination"
-    pagination-template
-    [id]="id"
-    [maxSize]="5"
-    (pageChange)="pageChange.emit($event)"
->
+  #p="paginationApi"
+  class="pagination"
+  pagination-template
+  [id]="id"
+  [maxSize]="5"
+  (pageChange)="pageChange.emit($event)"
+  >
 
-    <ng-container *ngIf="p?.pages?.length > 1">
-        <button
+  @if (p?.pages?.length > 1) {
+    <button
+      type="button"
+      role="button"
+      class="previous"
+      [disabled]="p.isFirstPage()"
+      (click)="p.previous()"
+      >
+      <span>
+        <icon>chevron_left</icon>
+      </span>
+    </button>
+    <div class="pages">
+      @for (singlePage of p.pages; track singlePage) {
+        @if (p.getCurrent() !== singlePage.value) {
+          <button
             type="button"
             role="button"
-            class="previous"
-            [disabled]="p.isFirstPage()"
-            (click)="p.previous()"
-        >
-            <span>
-                <icon>chevron_left</icon>
-            </span>
-        </button>
-
-        <div class="pages">
-            <ng-container *ngFor="let singlePage of p.pages">
-                <button
-                    *ngIf="p.getCurrent() !== singlePage.value"
-                    type="button"
-                    role="button"
-                    class="page link"
-                    (click)="p.setCurrent(singlePage.value)"
-                >
-                    <span class="page-text link-text">{{ singlePage.label }}</span>
-                </button>
-
-                <div *ngIf="p.getCurrent() === singlePage.value" class="page current">
-                    <span class="page-text current-text">{{ singlePage.label }}</span>
-                </div>
-            </ng-container>
-        </div>
-
-        <button
-            type="button"
-            role="button"
-            class="next"
-            [disabled]="p.isLastPage()"
-            (click)="p.next()"
-        >
-            <span>
-                <icon>chevron_right</icon>
-            </span>
-        </button>
-    </ng-container>
+            class="page link"
+            (click)="p.setCurrent(singlePage.value)"
+            >
+            <span class="page-text link-text">{{ singlePage.label }}</span>
+          </button>
+        }
+        @if (p.getCurrent() === singlePage.value) {
+          <div class="page current">
+            <span class="page-text current-text">{{ singlePage.label }}</span>
+          </div>
+        }
+      }
+    </div>
+    <button
+      type="button"
+      role="button"
+      class="next"
+      [disabled]="p.isLastPage()"
+      (click)="p.next()"
+      >
+      <span>
+        <icon>chevron_right</icon>
+      </span>
+    </button>
+  }
 </div>

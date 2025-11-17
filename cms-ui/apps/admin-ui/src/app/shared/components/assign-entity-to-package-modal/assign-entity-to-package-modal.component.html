@@ -1,76 +1,79 @@
 <div class="gtx-modal-datagrid">
-    <div class="modal-title">
-        <h5>{{ 'shared.assign_entity_to_package' | i18n: {
-            entityNamePlural: (entityIdentifier + '.' + entityIdentifier + '_plural' | i18n)
-        } }}</h5>
-    </div>
+  <div class="modal-title">
+    <h5>{{ 'shared.assign_entity_to_package' | gtxI18n: {
+      entityNamePlural: (entityIdentifier + '.' + entityIdentifier + '_plural' | gtxI18n)
+    } }}</h5>
+  </div>
 
-    <div class="modal-content" [ngSwitch]="entityIdentifier">
+  <div class="modal-content">
+    @switch (entityIdentifier) {
+      @case ('construct') {
         <gtx-construct-table
-            *ngSwitchCase="'construct'"
-            class="modal-table"
-	        [showSearch]="true"
-            [hideActions]="true"
-            [(selected)]="packageChildEntitySelectedIdsCurrent"
+          class="modal-table"
+          [showSearch]="true"
+          [hideActions]="true"
+          [(selected)]="packageChildEntitySelectedIdsCurrent"
         ></gtx-construct-table>
-
+      }
+      @case ('contentRepository') {
         <gtx-content-repository-table
-            *ngSwitchCase="'contentRepository'"
-            class="modal-table"
-	        [showSearch]="true"
-            [hideActions]="true"
-            [(selected)]="packageChildEntitySelectedIdsCurrent"
+          class="modal-table"
+          [showSearch]="true"
+          [hideActions]="true"
+          [(selected)]="packageChildEntitySelectedIdsCurrent"
         ></gtx-content-repository-table>
-
+      }
+      @case ('contentRepositoryFragment') {
         <gtx-cr-fragment-table
-            *ngSwitchCase="'contentRepositoryFragment'"
-            class="modal-table"
-	        [showSearch]="true"
-            [hideActions]="true"
-            [(selected)]="packageChildEntitySelectedIdsCurrent"
+          class="modal-table"
+          [showSearch]="true"
+          [hideActions]="true"
+          [(selected)]="packageChildEntitySelectedIdsCurrent"
         ></gtx-cr-fragment-table>
-
+      }
+      @case ('dataSource') {
         <gtx-data-source-table
-            *ngSwitchCase="'dataSource'"
-            class="modal-table"
-	        [showSearch]="true"
-            [hideActions]="true"
-            [(selected)]="packageChildEntitySelectedIdsCurrent"
+          class="modal-table"
+          [showSearch]="true"
+          [hideActions]="true"
+          [(selected)]="packageChildEntitySelectedIdsCurrent"
         ></gtx-data-source-table>
-
+      }
+      @case ('objectProperty') {
         <gtx-object-property-table
-            *ngSwitchCase="'objectProperty'"
-            class="modal-table"
-	        [showSearch]="true"
-            [hideActions]="true"
-            [(selected)]="packageChildEntitySelectedIdsCurrent"
+          class="modal-table"
+          [showSearch]="true"
+          [hideActions]="true"
+          [(selected)]="packageChildEntitySelectedIdsCurrent"
         ></gtx-object-property-table>
-
+      }
+      @case ('template') {
         <gtx-template-table
-            *ngSwitchCase="'template'"
-            class="modal-table"
-	        [showSearch]="true"
-            [hideActions]="true"
-            [(selected)]="packageChildEntitySelectedIdsCurrent"
+          class="modal-table"
+          [showSearch]="true"
+          [hideActions]="true"
+          [(selected)]="packageChildEntitySelectedIdsCurrent"
         ></gtx-template-table>
-    </div>
+      }
+    }
+  </div>
 
-    <div class="modal-footer">
-        <gtx-button
-            type="primary"
-            data-action="confirm"
-            (click)="buttonAssignPackageChildEntityToPackageClicked()"
-        >
-            {{ 'shared.assign_entity_to_package_button' | i18n }}
-        </gtx-button>
+  <div class="modal-footer">
+    <gtx-button
+      type="primary"
+      data-action="confirm"
+      (click)="buttonAssignPackageChildEntityToPackageClicked()"
+      >
+      {{ 'shared.assign_entity_to_package_button' | gtxI18n }}
+    </gtx-button>
 
-        <gtx-button
-            type="secondary"
-            data-action="cancel"
-            flat
-            (click)="cancelFn()"
-        >
-            {{ 'common.cancel_button' | i18n }}
-        </gtx-button>
-    </div>
+    <gtx-button
+      type="secondary"
+      data-action="cancel"
+      flat
+      (click)="cancelFn()"
+      >
+      {{ 'common.cancel_button' | gtxI18n }}
+    </gtx-button>
+  </div>
 </div>

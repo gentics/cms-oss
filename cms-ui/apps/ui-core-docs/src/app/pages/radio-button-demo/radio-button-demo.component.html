@@ -3,26 +3,26 @@
 <h2>Demos</h2>
 
 <gtx-demo-block demoTitle="Basic Binding">
-    <div class="demo-result">
-        <p>
-            A RadioButton may have a label that is rendered right of the radio input.<br>
-            It can be mapped to values of any type (<code>string</code>, <code>Object</code>, <code>number</code>)
-            with <code>ngModel</code>.
-        </p>
-        <div class="row">
-            <div class="column small-4">
-                <gtx-radio-button [(ngModel)]="radioValue" value="A" label="Option A"></gtx-radio-button>
-            </div>
-            <div class="column small-4">
-                <gtx-radio-button [(ngModel)]="radioValue" value="B" label="Option B"></gtx-radio-button>
-            </div>
-            <div class="column small-4">
-                <gtx-radio-button [(ngModel)]="radioValue" value="C" label="Option C"></gtx-radio-button>
-            </div>
-        </div>
-        radioValue: <code>{{ radioValue | json }}</code>
+  <div class="demo-result">
+    <p>
+      A RadioButton may have a label that is rendered right of the radio input.<br>
+      It can be mapped to values of any type (<code>string</code>, <code>Object</code>, <code>number</code>)
+      with <code>ngModel</code>.
+    </p>
+    <div class="row">
+      <div class="column small-4">
+        <gtx-radio-button [(ngModel)]="radioValue" value="A" label="Option A"></gtx-radio-button>
+      </div>
+      <div class="column small-4">
+        <gtx-radio-button [(ngModel)]="radioValue" value="B" label="Option B"></gtx-radio-button>
+      </div>
+      <div class="column small-4">
+        <gtx-radio-button [(ngModel)]="radioValue" value="C" label="Option C"></gtx-radio-button>
+      </div>
     </div>
-    <div class="demo-code">
+    radioValue: <code>{{ radioValue | json }}</code>
+  </div>
+  <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
                 <gtx-radio-button [(ngModel)]="radioValue" value="A" label="Option A"></gtx-radio-button>
                 <gtx-radio-button [(ngModel)]="radioValue" value="B" label="Option B"></gtx-radio-button>
@@ -30,31 +30,33 @@
                 radioValue: <code>(( radioValue | json ))</code>
         '></gtx-highlighted-code>
 
-    </div>
+  </div>
 </gtx-demo-block>
 
 <gtx-demo-block demoTitle="RadioGroup">
-    <div class="demo-result">
-        <p>
-            You can group muliple RadioButtons together by wrapping them in a <code>RadioGroup</code>.<br>
-            The group can be attached to a form via the <code>ngModel</code> / <code>formControlName</code> / <code>formControl</code> directives.
-        </p>
-        <div class="row" gtx-radio-group [(ngModel)]="selectedColor">
-            <div class="column small-2">
-                <gtx-radio-button label="Red" [value]="{name: 'red', hex: '#f00'}"></gtx-radio-button>
-            </div>
-            <div class="column small-2">
-                <gtx-radio-button label="Green" [value]="{name: 'green', hex: '#0f0'}"></gtx-radio-button>
-            </div>
-            <div class="column small-2">
-                <gtx-radio-button label="Blue" [value]="{name: 'blue', hex: '#00f'}"></gtx-radio-button>
-            </div>
-            <div class="column small-6">
-                <pre *ngIf="selectedColor" [style.color]="selectedColor?.hex">{{ selectedColor | json }}</pre>
-            </div>
-        </div>
+  <div class="demo-result">
+    <p>
+      You can group muliple RadioButtons together by wrapping them in a <code>RadioGroup</code>.<br>
+      The group can be attached to a form via the <code>ngModel</code> / <code>formControlName</code> / <code>formControl</code> directives.
+    </p>
+    <div class="row" gtx-radio-group [(ngModel)]="selectedColor">
+      <div class="column small-2">
+        <gtx-radio-button label="Red" [value]="{name: 'red', hex: '#f00'}"></gtx-radio-button>
+      </div>
+      <div class="column small-2">
+        <gtx-radio-button label="Green" [value]="{name: 'green', hex: '#0f0'}"></gtx-radio-button>
+      </div>
+      <div class="column small-2">
+        <gtx-radio-button label="Blue" [value]="{name: 'blue', hex: '#00f'}"></gtx-radio-button>
+      </div>
+      <div class="column small-6">
+        @if (selectedColor) {
+          <pre [style.color]="selectedColor?.hex">{{ selectedColor | json }}</pre>
+        }
+      </div>
     </div>
-    <div class="demo-code">
+  </div>
+  <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
                <div gtx-radio-group [(ngModel)]="selectedColor">
                     <gtx-radio-button label="Red" [value]="{name: \"red\", hex: \"#f00\"}"></gtx-radio-button>
@@ -64,22 +66,22 @@
                <pre *ngIf="selectedColor" [style.color]="selectedColor?.hex">(( selectedColor | json ))</pre>
         '></gtx-highlighted-code>
 
-    </div>
+  </div>
 </gtx-demo-block>
 
 
 <gtx-demo-block demoTitle="Stateless Mode">
-    <div class="demo-result">
-        <gtx-radio-button label="Checkbox is checked" [checked]="radioChecked"></gtx-radio-button>
-        <gtx-radio-button label="Checkbox is not checked" [checked]="!radioChecked"></gtx-radio-button>
-        <gtx-checkbox [(ngModel)]="radioChecked" label="Toggle the radio buttons"></gtx-checkbox>
-    </div>
-    <div class="demo-code">
+  <div class="demo-result">
+    <gtx-radio-button label="Checkbox is checked" [checked]="radioChecked"></gtx-radio-button>
+    <gtx-radio-button label="Checkbox is not checked" [checked]="!radioChecked"></gtx-radio-button>
+    <gtx-checkbox [(ngModel)]="radioChecked" label="Toggle the radio buttons"></gtx-checkbox>
+  </div>
+  <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
             <gtx-radio-button label="Checkbox is checked" [checked]="radioChecked"></gtx-radio-button>
             <gtx-radio-button label="Checkbox is not checked" [checked]="!radioChecked"></gtx-radio-button>
             <gtx-checkbox [(ngModel)]="radioChecked" label="Toggle the radio buttons"></gtx-checkbox>
         '></gtx-highlighted-code>
 
-    </div>
+  </div>
 </gtx-demo-block>

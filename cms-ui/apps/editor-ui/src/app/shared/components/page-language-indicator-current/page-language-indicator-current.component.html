@@ -1,40 +1,45 @@
 <div class="language-icons">
-    <div
-        class="language-icon column"
-        [title]="('editor.item_language_label' | i18n) + ': ' + ((item$ | async)?.languageName || ('common.not_set_label' | i18n))"
-        [class.statusInfos]="displayStatusInfos$ | async"
-        [class.current]="(item$ | async)?.contentGroupId === (displayLanguage$ | async)?.id"
-        [class.available]="isAvailable$((displayLanguage$ | async)) | async"
-        [class.statePublished]="statePublished$((displayLanguage$ | async)?.code) | async"
-        [class.statePublishedColor]="statePublished$((displayLanguage$ | async)?.code) | async"
-        [class.stateUnpublishedColor]="!statePublished$((displayLanguage$ | async)?.code) | async"
-        [class.multiLang]="isMultiLanguage$ | async"
+  <div
+    class="language-icon column"
+    [title]="('editor.item_language_label' | gtxI18n) + ': ' + ((item$ | async)?.languageName || ('common.not_set_label' | gtxI18n))"
+    [class.statusInfos]="displayStatusInfos$ | async"
+    [class.current]="(item$ | async)?.contentGroupId === (displayLanguage$ | async)?.id"
+    [class.available]="isAvailable$((displayLanguage$ | async)) | async"
+    [class.statePublished]="statePublished$((displayLanguage$ | async)?.code) | async"
+    [class.statePublishedColor]="statePublished$((displayLanguage$ | async)?.code) | async"
+    [class.stateUnpublishedColor]="!statePublished$((displayLanguage$ | async)?.code) | async"
+    [class.multiLang]="isMultiLanguage$ | async"
     >
-        <div class="stateUntranslated" [hidden]="!(isMultiLanguage$ | async) || (isAvailable$((displayLanguage$ | async)) | async) || !(displayLanguage$ | async)"></div>
-        <div class="stateDeleted" [hidden]="!(stateDeleted$((displayLanguage$ | async)?.code) | async)"></div>
-        <div class="stateModified" [hidden]="!(stateModified$((displayLanguage$ | async)?.code) | async)"></div>
-        <div class="stateInQueue" [hidden]="!(stateInQueue$((displayLanguage$ | async)?.code) | async)"></div>
-        <div class="statePlanned" [hidden]="!(statePlanned$((displayLanguage$ | async)?.code) | async)"></div>
-        <div class="stateInherited" [hidden]="!(stateInherited$((displayLanguage$ | async)?.code) | async)"></div>
-        <div class="stateLocalized" [hidden]="!(stateLocalized$((displayLanguage$ | async)?.code) | async)"></div>
+    <div class="stateUntranslated" [hidden]="!(isMultiLanguage$ | async) || (isAvailable$((displayLanguage$ | async)) | async) || !(displayLanguage$ | async)"></div>
+    <div class="stateDeleted" [hidden]="!(stateDeleted$((displayLanguage$ | async)?.code) | async)"></div>
+    <div class="stateModified" [hidden]="!(stateModified$((displayLanguage$ | async)?.code) | async)"></div>
+    <div class="stateInQueue" [hidden]="!(stateInQueue$((displayLanguage$ | async)?.code) | async)"></div>
+    <div class="statePlanned" [hidden]="!(statePlanned$((displayLanguage$ | async)?.code) | async)"></div>
+    <div class="stateInherited" [hidden]="!(stateInherited$((displayLanguage$ | async)?.code) | async)"></div>
+    <div class="stateLocalized" [hidden]="!(stateLocalized$((displayLanguage$ | async)?.code) | async)"></div>
 
-        <div class="status-label" [class.online]="(item$ | async)?.online">
-            <span *ngIf="displaySingleLanguagePublished$ | async" class="language-code statePublishedColor">
-                <i class="material-icons info statePublishedColor" [attr.translate]="'no'">cloud_upload</i>
-            </span>
+    <div class="status-label" [class.online]="(item$ | async)?.online">
+      @if (displaySingleLanguagePublished$ | async) {
+        <span class="language-code statePublishedColor">
+          <i class="material-icons info statePublishedColor" [attr.translate]="'no'">cloud_upload</i>
+        </span>
+      }
 
-            <span *ngIf="displaySingleLanguageUnpublished$ | async" class="language-code stateUnpublishedColor">
-                <i class="material-icons info stateUnpublishedColor" [attr.translate]="'no'">cloud_off</i>
-            </span>
+      @if (displaySingleLanguageUnpublished$ | async) {
+        <span class="language-code stateUnpublishedColor">
+          <i class="material-icons info stateUnpublishedColor" [attr.translate]="'no'">cloud_off</i>
+        </span>
+      }
 
-            <span *ngIf="isMultiLanguage$ | async" class="language-code multi-lang">
-                <ng-container *ngIf="displayLanguage$ | async; else hideLanguageIcon">
-                    {{ (displayLanguage$ | async)?.code | uppercase }}
-                </ng-container>
-                <ng-template #hideLanguageIcon>
-                    <icon left>language</icon>
-                </ng-template>
-            </span>
-        </div>
+      @if (isMultiLanguage$ | async) {
+        <span class="language-code multi-lang">
+          @if (displayLanguage$ | async) {
+            {{ (displayLanguage$ | async)?.code | uppercase }}
+          } @else {
+            <icon left>language</icon>
+          }
+        </span>
+      }
     </div>
+  </div>
 </div>

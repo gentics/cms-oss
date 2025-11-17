@@ -28,7 +28,7 @@ describe('ToolsStateModule', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
 
         mockTool = {
             id: 123,

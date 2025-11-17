@@ -25,8 +25,8 @@ describe('DependenciesCountPipe', () => {
 
 function createPageDependency(): any {
     const pageDependency: any = {
-        'file' : [ { 186: 3 } ],
-        'page' : [ { 125: 4 }, { 124: 3 }, { 126: 4 } ]
+        file: [{ 186: 3 }],
+        page: [{ 125: 4 }, { 124: 3 }, { 126: 4 }],
     };
     return pageDependency;
 }
@@ -36,4 +36,3 @@ class MockI18nService {
         return `${key}_translated`;
     });
 }
-

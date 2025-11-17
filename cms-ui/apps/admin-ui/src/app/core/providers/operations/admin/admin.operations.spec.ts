@@ -1,14 +1,14 @@
 import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
 import { AppStateService, SetUsersnapSettings } from '@admin-ui/state';
-import { assembleTestAppStateImports, TestAppState, TEST_APP_STATE, TrackedActions } from '@admin-ui/state/utils/test-app-state';
+import { assembleTestAppStateImports, TEST_APP_STATE, TestAppState, TrackedActions } from '@admin-ui/state/utils/test-app-state';
 import { createDelayedError, createDelayedObservable, tickAndGetEmission } from '@admin-ui/testing';
 import { fakeAsync, TestBed } from '@angular/core/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { RecursivePartial, UsersnapSettings } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ofActionDispatched } from '@ngxs/store';
 import { ErrorHandler } from '../../error-handler';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
-import { I18nNotificationService } from '../../i18n-notification';
 import { AdminOperations } from './admin.operations';
 
 class MockApi implements RecursivePartial<InterfaceOf<GcmsApi>> {
@@ -43,10 +43,10 @@ describe('AdminOperations', () => {
             ],
         });
 
-        api = TestBed.get(GcmsApi);
-        appState = TestBed.get(AppStateService);
-        adminOps = TestBed.get(AdminOperations);
-        errorHandler = TestBed.get(ErrorHandler);
+        api = TestBed.inject(GcmsApi) as any;
+        appState = TestBed.inject(AppStateService) as any;
+        adminOps = TestBed.inject(AdminOperations);
+        errorHandler = TestBed.inject(ErrorHandler) as any;
         stopper = new ObservableStopper();
     });
 

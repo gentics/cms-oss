@@ -1,8 +1,9 @@
-import { I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
+import { LanguageHandlerService } from '@admin-ui/core';
 import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/construct-category-handler/construct-category-handler.service';
 import { ConstructCategoryPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
@@ -12,7 +13,7 @@ import { Observable, Subscription } from 'rxjs';
     templateUrl: './create-construct-category-modal.component.html',
     styleUrls: ['./create-construct-category-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateConstructCategoryModalComponent
     extends BaseModal<boolean>
@@ -45,7 +46,7 @@ export class CreateConstructCategoryModalComponent
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     buttonCreateEntityClicked(): void {

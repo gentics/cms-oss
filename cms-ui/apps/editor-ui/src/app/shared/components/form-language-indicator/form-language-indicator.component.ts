@@ -1,9 +1,9 @@
 import { animate, animateChild, query, style, transition, trigger } from '@angular/animations';
 import { Component, OnInit } from '@angular/core';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { Form, Language, Normalized, Raw } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { map, withLatestFrom } from 'rxjs/operators';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { PublishableStateUtil } from '../../util/entity-states';
 import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-language-indicator.component';

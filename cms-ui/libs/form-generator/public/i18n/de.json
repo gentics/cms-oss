@@ -1,0 +1,19 @@
+{
+    "form": {
+        "search": "Suche",
+        "element_status_missing_translation": "Fehlende Übersetzungen",
+        "element_status_property_error": "Fehler in Elementeigenschaft",
+        "element_button_properties_menu_toggle": "Anzeigen/Verbergen Formularelementeigenschaften",
+        "error_no_or_invalid_formdata": "Keine oder ungültige Formularkonfiguration.",
+        "error_no_formelements_available": "Keine Formularelemente verfügbar.",
+        "error_no_selectable_options": "Keine Daten für Auswahloptionen verfügbar.",
+        "error_no_translation": "Fehlende Übersetzung",
+        "error_invalid_element_type": "Verbotener Elementtyp",
+        "form_type_generic": "Allgemein",
+        "form_type_poll": "Umfrage",
+        "key": "Schlüssel/Wert",
+        "no_preview_property_configured": "Keine Elementeigenschaft als Vorschau konfiguriert",
+        "preview_property_empty": "Kein Wert eingetragen für Elementeigenschaft {{ name }}",
+        "value": "Bezeichnung"
+    }
+}

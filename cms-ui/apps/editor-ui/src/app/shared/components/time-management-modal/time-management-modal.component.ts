@@ -1,14 +1,13 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Form, FormRequestOptions, Page, PageRequestOptions, QueuedActionRequestClear, TimeManagement } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable, Subscription, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { getFormattedTimeMgmtValue, pageVersionsGetLatest } from '../../../core/providers/i18n/i18n-utils';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { getFormattedTimeMgmtValue, pageVersionsGetLatest } from '../../../core/utils/i18n';
 import { FolderActionsService } from '../../../state';
-import { I18nDatePipe } from '../../pipes/i18n-date/i18n-date.pipe';
 
 enum VersionManagement {
     KEEP_VERSION = 'keep',
@@ -22,7 +21,6 @@ type ChangableSchedules = 'publishAt' | 'takeOfflineAt';
     templateUrl: './time-management-modal.component.html',
     styleUrls: ['./time-management-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [I18nDatePipe],
     standalone: false,
 })
 export class TimeManagementModal extends BaseModal<TimeManagement> implements OnDestroy, OnInit {
@@ -48,7 +46,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
     /** Version of timemanagement for publishAt if already set */
     existingPublishAtVersion: string = null;
 
-    /** Publish At timestamp for the new Version*/
+    /** Publish At timestamp for the new Version */
     publishAt: number = null;
 
     /* ==================================================== */
@@ -95,7 +93,6 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         private folderActions: FolderActionsService,
         private errorHandler: ErrorHandler,
         private i18n: I18nService,
-        private i18nDate: I18nDatePipe,
         private permissions: PermissionService,
     ) {
         super();
@@ -123,7 +120,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
                     }
 
                     this.folderActions.getPage(pageID)
-                        .then(page => {
+                        .then((page) => {
                             this.itemsToBeModified.push(page);
                         });
                 }
@@ -135,8 +132,8 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             this.selectedLanguageVariants[this.item.id] = [this.item.id];
 
             permissionLoad$ = this.permissions.forItem(this.item.id, 'page', this.currentNodeId).pipe(
-                map(permissions => permissions.publish),
-            )
+                map((permissions) => permissions.publish),
+            );
         }
 
         if (this.item.type === 'form') {
@@ -145,13 +142,12 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             this.selectedLanguageVariants[this.item.id] = [this.item.id];
 
             permissionLoad$ = this.permissions.forItem(this.item.id, 'form', this.currentNodeId).pipe(
-                map(permissions => permissions.publish),
+                map((permissions) => permissions.publish),
             );
         }
 
-
         if (permissionLoad$) {
-            this.subscriptions.push(permissionLoad$.subscribe(hasPermission => {
+            this.subscriptions.push(permissionLoad$.subscribe((hasPermission) => {
                 this.userHasPublishPermission = hasPermission;
                 this.changeDetector.markForCheck();
             }));
@@ -161,7 +157,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     async componentDataSet(): Promise<void> {
@@ -170,7 +166,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         } else if (this.item.type === 'form') {
             await this.loadFormData();
         } else {
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
             throw new Error(`Cannot load data from invalid item type "${(this.item as any).type}"!`);
         }
 
@@ -252,8 +248,8 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             // New Versions need to provide at least one schedule
             case VersionManagement.NEW_VERSION:
                 return !this.keepVersionVisible
-                    || (this.publishAt != null && this.publishAt > 0)
-                    || (this.takeOfflineAt != null && this.takeOfflineAt > 0);
+                  || (this.publishAt != null && this.publishAt > 0)
+                  || (this.takeOfflineAt != null && this.takeOfflineAt > 0);
         }
     }
 
@@ -262,7 +258,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         const changesToSave: Promise<any>[] = [];
 
         const itemIDs: number[] = [];
-        this.itemsToBeModified.forEach(item => {
+        this.itemsToBeModified.forEach((item) => {
             // eslint-disable-next-line @typescript-eslint/no-for-in-array, guard-for-in
             for (const key in this.selectedLanguageVariants[item.id]) {
                 itemIDs.push(this.selectedLanguageVariants[item.id][key]);
@@ -334,7 +330,6 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         this.updateFormValidity();
     }
 
-
     timeMgmtExists(): boolean {
         return this.item.timeManagement.at > 0 || this.item.timeManagement.offlineAt > 0;
     }
@@ -350,7 +345,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         if (!this.currentNodeId) {
             return of(false);
         }
-        return getFormattedTimeMgmtValue(this.item, field, this.currentNodeId, this.i18n, this.i18nDate, this.folderActions);
+        return getFormattedTimeMgmtValue(this.item, field, this.currentNodeId, this.i18n, this.folderActions);
     }
 
     protected setFormValues(item: Page | Form): void {
@@ -425,7 +420,6 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
 
     /**
      * Set the date of the page to get taken offline
-     *
      * @param value as date integer defining the date the page / the form shall be go offline automatically
      */
     protected async takeItemOfflineAtSet(value: number, page: Page | Form): Promise<void> {

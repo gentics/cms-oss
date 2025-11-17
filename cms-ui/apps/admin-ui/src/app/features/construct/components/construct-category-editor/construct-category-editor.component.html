@@ -1,32 +1,33 @@
 <div class="gtx-entity-detail">
-    <gtx-tabs pure [activeId]="editorTab">
-        <gtx-tab
-            [id]="Tabs.PROPERTIES"
-            gtxDetailTabLink
-            [title]="'shared.title_properties' | i18n"
-        >
-            <div class="detail-tab-wrapper">
-                <gtx-entity-detail-header
-                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: entity?.name }"
-                    saveActionAllowedId="objectProperty.updateObjectpropertyInstance"
-                    [saveActionAllowedInstanceId]="entity?.id"
-                    [saveDisabled]="fgProperties?.pristine || fgProperties?.invalid"
-                    (saveClick)="tabHandles?.[Tabs.PROPERTIES]?.save?.()"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
+  <gtx-tabs pure [activeId]="editorTab">
+    <gtx-tab
+      [id]="Tabs.PROPERTIES"
+      gtxDetailTabLink
+      [title]="'shared.title_properties' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [title]="'shared.title_properties_of_entity' | gtxI18n: { entityName: entity?.name }"
+          saveActionAllowedId="object_property.updateObjectpropertyInstance"
+          [saveActionAllowedInstanceId]="entity?.id"
+          [saveDisabled]="fgProperties?.pristine || fgProperties?.invalid"
+          (saveClick)="tabHandles?.[Tabs.PROPERTIES]?.save?.()"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
 
-                <div class="gtx-entity-details-tab-content-body">
-                    <gtx-construct-category-properties
-                        *ngIf="entity"
-                        class="properties"
-                        [formControl]="fgProperties"
-                        [supportedLanguages]="supportedLanguages$ | async"
-                        [mode]="ConstructCategoryPropertiesMode.UPDATE"
-                        [pureInitialValue]="true"
-                        [(initialValue)]="entityIsClean"
-                    ></gtx-construct-category-properties>
-                </div>
-            </div>
-        </gtx-tab>
-    </gtx-tabs>
+        <div class="gtx-entity-details-tab-content-body">
+          @if (entity) {
+            <gtx-construct-category-properties
+              class="properties"
+              [formControl]="fgProperties"
+              [supportedLanguages]="supportedLanguages$ | async"
+              [mode]="ConstructCategoryPropertiesMode.UPDATE"
+              [pureInitialValue]="true"
+              [(initialValue)]="entityIsClean"
+            ></gtx-construct-category-properties>
+          }
+        </div>
+      </div>
+    </gtx-tab>
+  </gtx-tabs>
 </div>

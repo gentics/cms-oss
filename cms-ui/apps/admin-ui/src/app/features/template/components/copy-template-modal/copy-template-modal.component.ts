@@ -1,8 +1,9 @@
-import { I18nService, TemplateOperations } from '@admin-ui/core';
+import { TemplateOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl, UntypedFormControl } from '@angular/forms';
 import { Node, Raw, Tag, Template, TemplateBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { cloneDeep, pick } from 'lodash-es';
 import { TemplatePropertiesMode } from '../template-properties/template-properties.component';
 

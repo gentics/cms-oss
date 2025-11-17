@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChange } from '@angular/core';
-import { EditorTab, UIMode } from '@editor-ui/app/common/models';
-import { getNestedObject } from '@editor-ui/app/common/utils/get-nested-object';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, Page, StagedItemsMap } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { EditorTab, UIMode } from '../../../common/models';
+import { getNestedObject } from '../../../common/utils/get-nested-object';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';

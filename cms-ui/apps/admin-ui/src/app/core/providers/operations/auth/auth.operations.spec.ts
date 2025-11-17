@@ -28,8 +28,6 @@ import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { ErrorHandler } from '../../error-handler/error-handler.service';
-import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
-import { MockI18nNotificationService } from '../../i18n-notification/i18n-notification.service.mock';
 import { AuthOperations } from './auth.operations';
 
 class MockGcmsApi {
@@ -82,7 +80,6 @@ describe('AuthOperations', () => {
                 { provide: ErrorHandler, useExisting: MockErrorHandler },
                 MockGcmsApi,
                 { provide: GcmsApi, useExisting: MockGcmsApi },
-                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
                 { provide: Router, useClass: MockRouter },
             ],
         }).compileComponents();
@@ -229,7 +226,7 @@ describe('AuthOperations', () => {
         });
 
         it('login works for a success response', fakeAsync(() => {
-            const router = TestBed.get(Router) as MockRouter;
+            const router: MockRouter = TestBed.inject(Router) as any;
             api.auth.login.and.returnValue(
                 observableOf<LoginResponse>({
                     responseInfo: { responseCode: ResponseCode.OK },

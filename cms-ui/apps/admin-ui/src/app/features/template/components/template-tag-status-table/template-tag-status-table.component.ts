@@ -1,10 +1,12 @@
 import { AdminUIEntityDetailRoutes, TagStatusBO } from '@admin-ui/common';
-import { I18nNotificationService, I18nService, TemplateTagStatusOperations } from '@admin-ui/core';
+import { TemplateTagStatusOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { AnyModelType, NormalizableEntityTypesMap, TagStatus } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TemplateTagStatusTableLoaderOptions, TemplateTagStatusTableLoaderService } from '../../providers';
@@ -16,7 +18,7 @@ const SYNC_ACTION = 'syncTag';
     templateUrl: './template-tag-status-table.component.html',
     styleUrls: ['./template-tag-status-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TemplateTagStatusTableComponent
     extends BaseEntityTableComponent<TagStatus, TagStatusBO, TemplateTagStatusTableLoaderOptions>
@@ -63,14 +65,15 @@ export class TemplateTagStatusTableComponent
             align: 'right',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = null;
 
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        protected loader: TemplateTagStatusTableLoaderService,
         modalService: ModalService,
+        loader: TemplateTagStatusTableLoaderService,
         protected entityOperations: TemplateTagStatusOperations,
         protected notification: I18nNotificationService,
     ) {
@@ -137,7 +140,7 @@ export class TemplateTagStatusTableComponent
         const dialog = await this.modalService.dialog({
             title: this.i18n.instant('modal.confirm_template_tag_sync_title'),
             body: this.i18n.instant('modal.confirm_template_tag_sync_body', {
-                names: this.i18n.join(tags.map(t => t.name), {
+                names: this.i18n.join(tags.map((t) => t.name), {
                     quoted: true,
                     withLast: true,
                 }),
@@ -180,7 +183,7 @@ export class TemplateTagStatusTableComponent
         }
 
         try {
-            await this.entityOperations.synchronizeTags(this.templateId, tags.map(tag => tag.name), forceSync).toPromise();
+            await this.entityOperations.synchronizeTags(this.templateId, tags.map((tag) => tag.name), forceSync).toPromise();
         } catch (error) {
             this.notification.show({
                 message: 'templateTag.sync_error',
@@ -201,7 +204,7 @@ export class TemplateTagStatusTableComponent
             this.notification.show({
                 message: 'templateTag.sync_success_plural',
                 translationParams: {
-                    names: this.i18n.join(tags.map(tag => tag.name), {
+                    names: this.i18n.join(tags.map((tag) => tag.name), {
                         quoted: true,
                         withLast: true,
                     }),

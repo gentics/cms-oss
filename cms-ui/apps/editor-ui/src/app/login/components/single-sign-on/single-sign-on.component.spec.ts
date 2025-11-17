@@ -64,9 +64,9 @@ describe('SingleSignOnComponent', () => {
             ],
         });
 
-        keycloakService = TestBed.get(KeycloakService);
+        keycloakService = TestBed.inject(KeycloakService);
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         expect(state instanceof TestApplicationState).toBe(true);
     });
 

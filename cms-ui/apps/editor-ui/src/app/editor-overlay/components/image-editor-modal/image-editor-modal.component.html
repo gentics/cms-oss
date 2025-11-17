@@ -12,11 +12,11 @@
 </div>
 <div class="modal-footer">
     <gtx-button type="secondary" flat
-                (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+                (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
     <gtx-button type="secondary"
                 [disabled]="!params || isEditing"
-                (click)="saveAsCopyAndClose()">{{ 'modal.save_as_copy' | i18n }}</gtx-button>
+                (click)="saveAsCopyAndClose()">{{ 'modal.save_as_copy' | gtxI18n }}</gtx-button>
     <gtx-button type="primary"
                 [disabled]="!params || isEditing"
-                (click)="saveAndClose()">{{ 'modal.save_changes' | i18n }}</gtx-button>
+                (click)="saveAndClose()">{{ 'modal.save_changes' | gtxI18n }}</gtx-button>
 </div>

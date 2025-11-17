@@ -1,14 +1,14 @@
 import { masterLoading } from '@admin-ui/common/utils/rxjs-loading-operators/master-loading.operator';
 import {
     EntityManagerService,
-    I18nNotificationService,
-    I18nService,
     MarkupLanguageOperations,
-    PermissionsService
+    PermissionsService,
 } from '@admin-ui/core/providers';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { MarkupLanguage, Raw } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
 
 @Injectable()

@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     File as FileModel,
@@ -14,8 +15,6 @@ import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { RepositoryBrowserClient } from '../../../shared/providers';
@@ -46,8 +45,7 @@ describe('CustomScriptHostService', () => {
                 CustomScriptHostService,
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: I18nNotification, useClass: MockI18nNotification },
-                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: ResourceUrlBuilder, useClass: MockResourceUrlBuilder },
                 { provide: FolderActionsService, useClass: MockFolderActions },
@@ -57,13 +55,13 @@ describe('CustomScriptHostService', () => {
         });
 
         mockContentFrame = new MockContentFrame();
-        customScriptHostService = TestBed.get(CustomScriptHostService);
-        appState = TestBed.get(ApplicationStateService);
-        resourceUrlBuilder = TestBed.get(ResourceUrlBuilder);
-        folderActions = TestBed.get(FolderActionsService);
-        navigationService = TestBed.get(NavigationService);
-        router = TestBed.get(Router);
-        repositoryBrowserClient = TestBed.get(RepositoryBrowserClient);
+        customScriptHostService = TestBed.inject(CustomScriptHostService);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        resourceUrlBuilder = TestBed.inject(ResourceUrlBuilder);
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        navigationService = TestBed.inject(NavigationService) as any;
+        router = TestBed.inject(Router);
+        repositoryBrowserClient = TestBed.inject(RepositoryBrowserClient);
 
         customScriptHostService.initialize(mockContentFrame as any);
         filePickerButton = {

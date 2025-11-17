@@ -1,12 +1,5 @@
 import { Injectable } from '@angular/core';
 import {
-    AppState,
-    EditorPermissions,
-    getNoPermissions,
-} from '@editor-ui/app/common/models';
-import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
-import { ItemFetchingSuccessAction } from '@editor-ui/app/state/modules/folder/folder.actions';
-import {
     DefaultPermissionsFactory,
     FolderInstancePermissions,
     InstancePermissions,
@@ -32,7 +25,6 @@ import {
     InheritableItem,
     Item,
     ItemPermissions,
-    Language,
     Node,
     Page,
     PagePermissions,
@@ -41,7 +33,7 @@ import {
     PrivilegeMap,
     PrivilegeMapFromServer,
     RolePrivileges,
-    Template,
+    Template
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, of } from 'rxjs';
@@ -58,7 +50,14 @@ import {
     tap,
     withLatestFrom,
 } from 'rxjs/operators';
+import {
+    AppState,
+    EditorPermissions,
+    getNoPermissions,
+} from '../../../common/models';
 import { deepEqual } from '../../../common/utils/deep-equal';
+import { ItemFetchingSuccessAction } from '../../../state/modules/folder/folder.actions';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 import { Api } from '../api/api.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 

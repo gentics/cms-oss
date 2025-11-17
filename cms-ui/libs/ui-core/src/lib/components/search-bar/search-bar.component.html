@@ -1,26 +1,28 @@
 <div class="contents">
-    <ng-content></ng-content>
+  <ng-content></ng-content>
 </div>
 
 <div class="input">
-    <gtx-input
-        [placeholder]="placeholder"
-        [value]="query"
-        (keydown)="onKeyDown($event)"
-        (blur)="onInputBlur($event)"
-        (valueChange)="onInputChange($event)"
-        (select)="cancelEvent($event)"
-    ></gtx-input>
+  <gtx-input
+    [placeholder]="placeholder"
+    [value]="query"
+    (keydown)="onKeyDown($event)"
+    (blur)="onInputBlur($event)"
+    (valueChange)="onInputChange($event)"
+    (select)="cancelEvent($event)"
+  ></gtx-input>
 </div>
 
-<div *ngIf="!hideClearButton && query && query !== ''" class="clear-button">
+@if (!hideClearButton && query && query !== '') {
+  <div class="clear-button">
     <gtx-button icon type="secondary" (click)="clear.emit(true)">
-        <icon>{{ clearIcon }}</icon>
+      <icon>{{ clearIcon }}</icon>
     </gtx-button>
-</div>
+  </div>
+}
 
 <div class="submit-button">
-    <gtx-button flat (click)="doSearch()">
-        <icon>{{ submitIcon }}</icon>
-    </gtx-button>
+  <gtx-button flat (click)="doSearch()">
+    <icon>{{ submitIcon }}</icon>
+  </gtx-button>
 </div>

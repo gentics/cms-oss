@@ -1,11 +1,12 @@
-<form
-    *ngIf="form"
+@if (form) {
+  <form
     [formGroup]="form"
     class="row"
->
+    >
     <gtx-input
-        class="columns small-12"
-        [label]="('common.name' | i18n) + ' *'"
-        formControlName="name"
+      class="columns small-12"
+      [label]="('common.name' | gtxI18n) + ' *'"
+      formControlName="name"
     ></gtx-input>
-</form>
+  </form>
+}

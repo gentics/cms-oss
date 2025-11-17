@@ -1,7 +1,6 @@
 import { BO_PERMISSIONS, TemplateBO } from '@admin-ui/common';
 import {
     DevToolPackageTableLoaderService,
-    I18nService,
     PermissionsService,
     TemplateTableLoaderOptions,
     TemplateTableLoaderService,
@@ -10,6 +9,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, GcmsPermission, NormalizableEntityTypesMap, Template } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
@@ -21,7 +21,7 @@ import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '.
     templateUrl: './template-table.component.html',
     styleUrls: ['./template-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TemplateTableComponent
     extends BasePackageEntityTableComponent<Template, TemplateBO, TemplateTableLoaderOptions>
@@ -38,6 +38,7 @@ export class TemplateTableComponent
             sortable: true,
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'template';
 
     constructor(

@@ -1,10 +1,10 @@
 import { Component, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
-import { EntityState } from '@editor-ui/app/common/models';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { Folder, FolderRequestOptions, Normalized, Page, PageRequestOptions, StringTagPartProperty, TagPropertyMap } from '@gentics/cms-models';
 import { GenticsUICoreModule, OverlayHostService, SizeTrackerService } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { EntityState } from '../../../common/models';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { StartPageIcon } from '../../../shared/components/start-page-icon/start-page-icon.component';
@@ -126,7 +126,7 @@ describe('FolderStartPage', () => {
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
     });
 
     it('shows folder with internal start page',

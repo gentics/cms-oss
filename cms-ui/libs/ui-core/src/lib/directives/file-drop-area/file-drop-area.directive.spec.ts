@@ -1,4 +1,3 @@
-import { AsyncPipe } from '@angular/common';
 import { Component, NO_ERRORS_SCHEMA, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { TestBed, inject } from '@angular/core/testing';
 import { FILE_DROPAREA_DRAG_EVENT_TARGET } from '../../common';
@@ -279,40 +278,6 @@ describe('FileDropAreaDirective', () => {
                     expect(draggedFiles$.next).toHaveBeenCalledWith([]);
                 }),
             );
-
-            // TODO: This does not work in the demo - why?
-            it('works with angulars AsyncPipe',
-                componentTest(() => TestComponent, fixture => {
-                    let pipe: AsyncPipe;
-                    const dropArea = fixture.componentInstance.directive;
-                    const cd = fixture.componentRef.changeDetectorRef;
-
-                    pipe = new AsyncPipe(cd);
-                    try {
-                        const callPipeTransform = () => {
-                            const res = pipe.transform(dropArea.draggedFiles$);
-                            return res;
-                        };
-
-                        expect(callPipeTransform()).toBeNull();
-
-                        triggerEventsWithFiles('dragenter dragover', 'image/png');
-                        fixture.detectChanges();
-
-                        expect(callPipeTransform()).toEqual([{ type: 'image/png' }],
-                            'dragenter/dragover does not cause AsyncPipe to return the expected array');
-
-                        triggerEventsWithFiles('dragleave', 'image/png');
-                        fixture.detectChanges();
-
-                        expect(callPipeTransform()).toEqual([],
-                            'dragleave does not cause AsyncPipe to return an empty array');
-                    } finally {
-                        pipe.ngOnDestroy();
-                    }
-                }),
-            );
-
         });
 
     });

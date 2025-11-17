@@ -38,7 +38,7 @@ function selectionToMap(selection: string[] | TableSelection): TableSelection {
  */
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
 export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>> extends BaseComponent implements OnChanges {
 
@@ -115,11 +115,11 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
 
     /** Event which emits when a row has been selected. */
     @Output()
-    public select = new EventEmitter<R>();
+    public rowSelect = new EventEmitter<R>();
 
     /** Event which emits when a row has been de-selected */
     @Output()
-    public deselect = new EventEmitter<R>();
+    public rowDeselect = new EventEmitter<R>();
 
     /** Event which emits when the column that is sorted by is changed. */
     @Output()
@@ -154,7 +154,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         if (changes.actions) {
             // Actions have to be defined and enabled for either single or multiple elements to be shown.
             this.hasActions = Array.isArray(this.actions)
-                && (this.actions.filter(action => action.single || action.multiple)).length > 0;
+              && (this.actions.filter((action) => action.single || action.multiple)).length > 0;
             this.rebuildActions();
         }
 
@@ -193,7 +193,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         cancelEvent(event);
 
         if (this.selected[row.id] === true) {
-            this.deselect.emit(row);
+            this.rowDeselect.emit(row);
             if (!this.multiple) {
                 if (this.useSelectionMap) {
                     this.selectedChange.emit({ [row.id]: false });
@@ -203,7 +203,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
                 return;
             }
         } else {
-            this.select.emit(row);
+            this.rowSelect.emit(row);
             if (!this.multiple) {
                 if (this.useSelectionMap) {
                     this.selectedChange.emit({ [row.id]: true });
@@ -266,15 +266,15 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
 
     protected determineFilterState(): void {
         const filterKeys = Object.keys(this.filters || {});
-        this.hasFilters = (this.columns || []).some(col => filterKeys.includes(col.id));
+        this.hasFilters = (this.columns || []).some((col) => filterKeys.includes(col.id));
         this.changeDetector.markForCheck();
     }
 
     protected rebuildActions(): void {
         this.singleActions = (this.actions || [])
-            .filter(action => action.single);
+            .filter((action) => action.single);
 
         this.multiActions = (this.actions || [])
-            .filter(action => action.multiple);
+            .filter((action) => action.multiple);
     }
 }

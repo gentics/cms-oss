@@ -2,6 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode, TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableObjectTag,
@@ -44,8 +45,6 @@ import { getExampleEditableTag, mockEditableObjectTag } from '../../../../testin
 import { ITEM_PROPERTIES_TAB } from '../../../common/models';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
@@ -128,8 +127,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 { provide: EditorActionsService, useClass: MockEditorActions },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: EntityResolver, useClass: MockEntityResolver },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: PermissionService, useClass: MockPermissionService },
@@ -361,8 +359,8 @@ describe('CombinedPropertiesEditorComponent', () => {
 
         it('displays the new TagEditor for the selected object property',
             componentTest(() => TestComponent, (fixture, testComponent) => {
-                const navService = TestBed.get(NavigationService) as MockNavigationService;
-                const permissionService = TestBed.get(PermissionService) as MockPermissionService;
+                const navService: MockNavigationService = TestBed.inject(NavigationService) as any;
+                const permissionService: MockPermissionService = TestBed.inject(PermissionService) as any;
                 const expectedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                 const expectedTagEditorContext = mockTagEditorContext({
                     readOnly: false,
@@ -413,7 +411,7 @@ describe('CombinedPropertiesEditorComponent', () => {
         it('displaying the new TagEditor in read-only mode for an item without edit permissions works',
             componentTest(() => TestComponent, (fixture, testComponent) => {
                 fixture.detectChanges();
-                const permissionService = TestBed.get(PermissionService) as MockPermissionService;
+                const permissionService: MockPermissionService = TestBed.inject(PermissionService) as any;
                 permissionService.forItem.and.returnValue(observableOf({ edit: false }));
                 const expectedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                 const expectedTagEditorContext = mockTagEditorContext({
@@ -874,7 +872,7 @@ describe('CombinedPropertiesEditorComponent', () => {
             let resourceUrlBuilder: MockResourceUrlBuilderService;
 
             beforeEach(() => {
-                resourceUrlBuilder = TestBed.get(ResourceUrlBuilder);
+                resourceUrlBuilder = TestBed.inject(ResourceUrlBuilder);
             });
 
             it('is loaded if the NodeFeature.newTagEditor is not enabled',
@@ -990,7 +988,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
             it('does not save object property without an id if it is readOnly',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
-                    const i18nNotificationService = TestBed.get(I18nNotification) as MockI18nNotification;
+                    const i18nNotificationService: MockI18nNotification = TestBed.inject(I18nNotificationService) as any;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     (mockFolder.tags[editedObjProp.name] as ObjectTag).readOnly = true;
                     mockFolder.tags[editedObjProp.name].active = false;
@@ -1086,7 +1084,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
             it('saving works',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
-                    const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
+                    const customScriptHostService: MockCustomScriptHostService = TestBed.inject(CustomScriptHostService) as any;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockPage.tags[editedObjProp.name].active = false;
                     state.mockState({
@@ -1143,7 +1141,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
             it('saving with applyToSubfolders works',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
-                    const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
+                    const customScriptHostService: MockCustomScriptHostService = TestBed.inject(CustomScriptHostService) as any;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockFolder.tags[editedObjProp.name].active = false;
                     state.mockState({
@@ -1219,7 +1217,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
             it('saving with applyToLanguageVariants works',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
-                    const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
+                    const customScriptHostService: MockCustomScriptHostService = TestBed.inject(CustomScriptHostService) as any;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockPage.tags[editedObjProp.name].active = false;
                     state.mockState({

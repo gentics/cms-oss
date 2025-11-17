@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Type } from '@angular/core';
-import { TestBed, discardPeriodicTasks, fakeAsync, flush, tick } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { LinkTemplateModal, MultiDeleteResult } from '@editor-ui/app/shared/components';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { PostUpdateBehavior, TemplateActionsService } from '@editor-ui/app/state';
+import { I18nNotificationService, TranslatedNotificationOptions } from '@gentics/cms-components';
 import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelectionType,
@@ -35,8 +33,10 @@ import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions, ModalDialog
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of } from 'rxjs';
+import { LinkTemplateModal, MultiDeleteResult } from '../../../shared/components';
+import { RepositoryBrowserClient } from '../../../shared/providers';
 import { LinkTemplateService } from '../../../shared/providers/link-template/link-template.service';
-import { ApplicationStateService, FolderActionsService, STATE_MODULES, WastebinActionsService } from '../../../state';
+import { ApplicationStateService, FolderActionsService, PostUpdateBehavior, STATE_MODULES, TemplateActionsService, WastebinActionsService } from '../../../state';
 import { ContentStagingActionsService, UsageActionsService } from '../../../state/index';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { ApiError } from '../api';
@@ -44,8 +44,6 @@ import { DecisionModalsService } from '../decision-modals/decision-modals.servic
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { FavouritesService } from '../favourites/favourites.service';
-import { I18nNotification, TranslatedNotificationOptions } from '../i18n-notification/i18n-notification.service';
-import { I18nService } from '../i18n/i18n.service';
 import { InstructionActions, NavigationService } from '../navigation/navigation.service';
 import { PermissionService } from '../permissions/permission.service';
 import { ContextMenuOperationsService } from './context-menu-operations.service';
@@ -82,8 +80,7 @@ describe('ContextMenuOperationsService', () => {
                 { provide: DecisionModalsService, useClass: MockDecisionModalsService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: Router, useClass: MockRouter },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: WastebinActionsService, useClass: MockWastebinActions },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
@@ -658,7 +655,7 @@ class MockFolderActions implements Partial<FolderActionsService> {
     }
 }
 
-class MockI18nNotification implements Partial<I18nNotification> {
+class MockI18nNotification implements Partial<I18nNotificationService> {
     show(options: TranslatedNotificationOptions): { dismiss: () => void; } {
         return { dismiss: () => {} };
     }

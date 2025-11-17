@@ -1,85 +1,97 @@
 <gtx-progress-bar [active]="loadingLinkDetails$ | async"></gtx-progress-bar>
 
 <div class="modal-title">
-    <h5>{{ 'modal.update_link_modal_title' | translate }}</h5>
+  <h5>{{ 'modal.update_link_modal_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <div class="row scope">
-        <div class="column small-12">
-            <span class="current-url">{{ 'modal.update_link_current_url' | translate }}:</span>
-            <i *ngIf="item.lastStatus === 'invalid'; else noIcon" class="material-icons alert invalidIcon">warning</i>
-            <ng-template #noIcon><i class="material-icons success invalidIcon">check_circle</i></ng-template>
-            {{ item.url }}
-        </div>
+  <div class="row scope">
+    <div class="column small-12">
+      <span class="current-url">{{ 'modal.update_link_current_url' | gtxI18n }}:</span>
+      @if (item.lastStatus === 'invalid') {
+        <i class="material-icons alert invalidIcon">warning</i>
+      } @else {
+        <i class="material-icons success invalidIcon">check_circle</i>
+      }
+      {{ item.url }}
     </div>
+  </div>
 
-    <div class="row">
-        <div class="column small-11">
-            <gtx-input
-                [label]="'modal.update_link_new_url' | translate"
-                [ngModel]="newUrl$ | async"
-                (ngModelChange)="newUrlChanged($event)"
-                (keyup.enter)="replace()"
-                required
-                #newUrlModel="ngModel"></gtx-input>
-        </div>
-        <div class="column small-1 url-result">
-            <i *ngIf="newUrlProgress$ | async; else newUrlStatus" class="material-icons primary invalidIcon">sync</i>
-            <ng-template #newUrlStatus>
-                <ng-container [ngSwitch]="(newUrlValidity$ | async)?.valid">
-                    <i *ngSwitchCase="true" class="material-icons success invalidIcon">check_circle</i>
-                    <i *ngSwitchCase="false" class="material-icons alert invalidIcon">warning</i>
-                    <span *ngSwitchDefault></span>
-                  </ng-container>
-            </ng-template>
-        </div>
-        <div class="column small-12">
-            <small *ngIf="(newUrlValidity$ | async)?.valid === false" class="warning">{{ (newUrlValidity$ | async)?.reason }}</small>
-        </div>
+  <div class="row">
+    <div class="column small-11">
+      <gtx-input
+        [label]="'modal.update_link_new_url' | gtxI18n"
+        [ngModel]="newUrl$ | async"
+        (ngModelChange)="newUrlChanged($event)"
+        (keyup.enter)="replace()"
+        required
+      #newUrlModel="ngModel"></gtx-input>
     </div>
+    <div class="column small-1 url-result">
+      @if (newUrlProgress$ | async) {
+        <i class="material-icons primary invalidIcon">sync</i>
+      } @else {
+        @switch ((newUrlValidity$ | async)?.valid) {
+          @case (true) {
+            <i class="material-icons success invalidIcon">check_circle</i>
+          }
+          @case (false) {
+            <i class="material-icons alert invalidIcon">warning</i>
+          }
+          @default {
+            <span></span>
+          }
+        }
+      }
+    </div>
+    <div class="column small-12">
+      @if ((newUrlValidity$ | async)?.valid === false) {
+        <small class="warning">{{ (newUrlValidity$ | async)?.reason }}</small>
+      }
+    </div>
+  </div>
 
-    <div class="row scope">
-        <div class="column small-12">
-            <gtx-radio-button
-                [value]="ReplaceScope.LINK"
-                [label]="'modal.update_scope_' + ReplaceScope.LINK | translate"
-                [(ngModel)]="scope"
-            ></gtx-radio-button>
+  <div class="row scope">
+    <div class="column small-12">
+      <gtx-radio-button
+        [value]="ReplaceScope.LINK"
+        [label]="'modal.update_scope_' + ReplaceScope.LINK | gtxI18n"
+        [(ngModel)]="scope"
+      ></gtx-radio-button>
 
-            <gtx-radio-button
-                [value]="ReplaceScope.PAGE"
-                [label]="'modal.update_scope_' + ReplaceScope.PAGE | translate: {
+      <gtx-radio-button
+        [value]="ReplaceScope.PAGE"
+                [label]="'modal.update_scope_' + ReplaceScope.PAGE | gtxI18n: {
                     count: (itemDetails$ | async)?.page
                 }"
-                [(ngModel)]="scope"
-            ></gtx-radio-button>
-            <gtx-radio-button
-                [value]="ReplaceScope.NODE"
-                [label]="'modal.update_scope_' + ReplaceScope.NODE | translate: {
+        [(ngModel)]="scope"
+      ></gtx-radio-button>
+      <gtx-radio-button
+        [value]="ReplaceScope.NODE"
+                [label]="'modal.update_scope_' + ReplaceScope.NODE | gtxI18n: {
                     count: (itemDetails$ | async)?.node
                 }"
-                [(ngModel)]="scope"
-            ></gtx-radio-button>
-            <gtx-radio-button
-                [value]="ReplaceScope.GLOBAL"
-                [label]="'modal.update_scope_' + ReplaceScope.GLOBAL | translate: {
+        [(ngModel)]="scope"
+      ></gtx-radio-button>
+      <gtx-radio-button
+        [value]="ReplaceScope.GLOBAL"
+                [label]="'modal.update_scope_' + ReplaceScope.GLOBAL | gtxI18n: {
                     count: (itemDetails$ | async)?.global
                 }"
-                [(ngModel)]="scope"
-            ></gtx-radio-button>
-        </div>
+        [(ngModel)]="scope"
+      ></gtx-radio-button>
     </div>
+  </div>
 </div>
 <div class="modal-footer">
-    <gtx-button
-        flat
-        type="secondary"
-        (click)="cancelFn()"
-    >{{ 'common.cancel_button' | translate }}</gtx-button>
+  <gtx-button
+    flat
+    type="secondary"
+    (click)="cancelFn()"
+  >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 
-    <gtx-button
-        (click)="replace()"
-        [disabled]="newUrlModel.invalid || (newUrlProgress$ | async)"
-    >{{ 'modal.replace_button' | translate }}</gtx-button>
+  <gtx-button
+    (click)="replace()"
+    [disabled]="newUrlModel.invalid || (newUrlProgress$ | async)"
+  >{{ 'modal.replace_button' | gtxI18n }}</gtx-button>
 </div>

@@ -43,10 +43,10 @@ describe('SynchronizeChannelModal', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        apiBase = TestBed.get(ApiBase);
+        apiBase = TestBed.inject(ApiBase);
         expect(apiBase instanceof MockApiBase).toBe(true);
 
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
         expect(appState instanceof TestApplicationState).toBe(true);
 
         appState.mockState({
@@ -100,7 +100,7 @@ describe('SynchronizeChannelModal', () => {
         channelOneLevelDeep = appState.now.entities.node[2];
         channelTwoLevelsDeep = appState.now.entities.node[3];
 
-        folderActions = TestBed.get(FolderActionsService);
+        folderActions = TestBed.inject(FolderActionsService);
     });
 
     function getObjectTypeSection(fixture: ComponentFixture<SynchronizeChannelModal>):

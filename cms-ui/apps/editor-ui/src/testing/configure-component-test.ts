@@ -1,10 +1,10 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, TestModuleMetadata, getTestBed } from '@angular/core/testing';
-import { STATE_MODULES } from '@editor-ui/app/state';
 import { mockPipe } from '@gentics/ui-core/testing';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of } from 'rxjs';
+import { STATE_MODULES } from '../app/state';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -33,7 +33,7 @@ export function configureComponentTest(config: TestModuleMetadata): TestBed {
     const defaultConfig: TestModuleMetadata = {
         imports: [NgxsModule.forRoot(STATE_MODULES)],
         declarations: [mockPipe('i18n')],
-        providers: [{ provide: TranslateService, useClass: MockTranslateService }],
+        providers: [{ provide: I18nService, useClass: MockTranslateService }],
         schemas: [NO_ERRORS_SCHEMA],
     };
 

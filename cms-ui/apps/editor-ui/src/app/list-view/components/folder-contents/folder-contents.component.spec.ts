@@ -4,21 +4,34 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
-import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { FavouritesService } from '@editor-ui/app/core/providers/favourites/favourites.service';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { ListSearchService } from '@editor-ui/app/core/providers/list-search/list-search.service';
-import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
-import { UploadConflictService } from '@editor-ui/app/core/providers/upload-conflict/upload-conflict.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
+import { componentTest, configureComponentTest } from '@editor-ui/testing';
+import { I18nNotificationService, TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
+import { AccessControlledType, ResponseCode } from '@gentics/cms-models';
+import {
+    getExampleFolderData,
+    getExampleFolderDataNormalized,
+    getExampleNodeDataNormalized,
+    getExamplePageDataNormalized,
+} from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
+import { mockPipes } from '@gentics/ui-core/testing';
+import { NgxsModule } from '@ngxs/store';
+import { NgxPaginationModule } from 'ngx-pagination';
+import { Observable, Subject, of, throwError } from 'rxjs';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '../../../common/models';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
+import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { FavouritesService } from '../../../core/providers/favourites/favourites.service';
+import { ListSearchService } from '../../../core/providers/list-search/list-search.service';
+import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
+import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import {
     DetailChip,
     FavouriteToggleComponent,
@@ -33,8 +46,8 @@ import {
     PageLanguageIndicatorComponent,
     PagingControls,
     StartPageIcon,
-} from '@editor-ui/app/shared/components';
-import { MasonryItemDirective } from '@editor-ui/app/shared/directives/masonry-item/masonry-item.directive';
+} from '../../../shared/components';
+import { MasonryItemDirective } from '../../../shared/directives/masonry-item/masonry-item.directive';
 import {
     AllItemsSelectedPipe,
     FileSizePipe,
@@ -49,12 +62,12 @@ import {
     RouterCommandsForItemPipe,
     TruncatePathPipe,
     UserFullNamePipe,
-} from '@editor-ui/app/shared/pipes';
+} from '../../../shared/pipes';
 import {
     BreadcrumbsService,
     QueryAssemblerElasticSearchService,
     QueryAssemblerGCMSSearchService,
-} from '@editor-ui/app/shared/providers';
+} from '../../../shared/providers';
 import {
     ApplicationStateService,
     ContentStagingActionsService,
@@ -63,23 +76,8 @@ import {
     STATE_MODULES,
     UsageActionsService,
     WastebinActionsService,
-} from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
-import { TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
-import { AccessControlledType, ResponseCode } from '@gentics/cms-models';
-import {
-    getExampleFolderData,
-    getExampleFolderDataNormalized,
-    getExampleNodeDataNormalized,
-    getExamplePageDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
-import { NgxsModule } from '@ngxs/store';
-import { NgxPaginationModule } from 'ngx-pagination';
-import { Observable, Subject, of, throwError } from 'rxjs';
+} from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
 import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
 import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-published.pipe';
@@ -431,8 +429,7 @@ describe('FolderContentsComponent', () => {
                 },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: FavouritesService, useClass: MockFavouritesService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
-                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: ListSearchService, useClass: MockListSearchService },
                 { provide: ModalService, useClass: MockNavigationService },
                 { provide: NavigationService, useClass: MockNavigationService },

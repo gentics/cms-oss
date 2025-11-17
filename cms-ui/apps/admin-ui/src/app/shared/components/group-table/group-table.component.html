@@ -1,86 +1,91 @@
-<gtx-search-bar
-    *ngIf="showSearch"
+@if (showSearch) {
+  <gtx-search-bar
     class="search-bar"
     [query]="query"
-    [placeholder]="'shared.search' | i18n"
+    [placeholder]="'shared.search' | gtxI18n"
     (search)="updateSearchQuery($event)"
     (clear)="updateSearchQuery('')"
-></gtx-search-bar>
+  ></gtx-search-bar>
+}
 
 <div class="entity-table-actions-bar">
+  @if (groupId && !hideActions) {
     <gtx-button
-        *ngIf="groupId && !hideActions"
-        class="table-action-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled"
-        [gtxActionAllowed]="'group.createGroup'"
-        (click)="handleCreateButton()"
-    >
-        <icon left>add</icon> {{ 'shared.create_new_sub_group_button' | i18n }}
+      class="table-action-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled"
+      [gtxActionAllowed]="'group.createGroup'"
+      (click)="handleCreateButton()"
+      >
+      <icon left>add</icon> {{ 'shared.create_new_sub_group_button' | gtxI18n }}
     </gtx-button>
+  }
 
+  @if (userId) {
     <gtx-button
-        *ngIf="userId"
-        class="table-action-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled"
-        [gtxActionAllowed]="'user.assignUserToGroup'"
-        (click)="handleAssignUsersButton()"
-    >
-        <icon left>link</icon> {{ 'shared.assign_user_to_groups_button' | i18n }}
+      class="table-action-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled"
+      [gtxActionAllowed]="'user.assignUserToGroup'"
+      (click)="handleAssignUsersButton()"
+      >
+      <icon left>link</icon> {{ 'shared.assign_user_to_groups_button' | gtxI18n }}
     </gtx-button>
+  }
 
-    <gtx-button
-        class="table-action-button reload-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled || loading"
-        (click)="reload()"
+  <gtx-button
+    class="table-action-button reload-button"
+    flat
+    size="small"
+    type="primary"
+    [disabled]="disabled || loading"
+    (click)="reload()"
     >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
-    </gtx-button>
+    <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+  </gtx-button>
 </div>
 
-<div *ngIf="selectable" class="entity-table-selection">
-    {{ 'shared.info_selected_groups' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
-</div>
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'shared.info_selected_groups' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
 <gtx-table
-    class="entity-table"
+  class="entity-table"
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions && (extraActions?.length === 0)"
-    [disabled]="disabled"
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [hideActions]="hideActions && (extraActions?.length === 0)"
+  [disabled]="disabled"
 
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [useSelectionMap]="useSelectionMap"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [useSelectionMap]="useSelectionMap"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
 
-    [page]="page"
-    [perPage]="perPage"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
 
-    [renderers]="{}"
+  [renderers]="{}"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (select)="forwardSelect($event)"
-    (deselect)="forwardDeselect($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowSelect)="forwardSelect($event)"
+  (rowDeselect)="forwardDeselect($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
 ></gtx-table>

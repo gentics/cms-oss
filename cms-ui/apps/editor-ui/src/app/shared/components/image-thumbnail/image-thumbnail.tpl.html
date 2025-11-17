@@ -1,7 +1,9 @@
 <div class="image-container"
-     [style.width.px]="width"
-     [style.height.px]="height"
-     [style.maxHeight.px]="maxHeight || 2 * width">
-    <div *ngIf="showName"></div>
-    <img [src]="imageSrc" #thumbnailImage>
+  [style.width.px]="width"
+  [style.height.px]="height"
+  [style.maxHeight.px]="maxHeight || 2 * width">
+  @if (showName) {
+    <div></div>
+  }
+  <img [src]="imageSrc" #thumbnailImage>
 </div>

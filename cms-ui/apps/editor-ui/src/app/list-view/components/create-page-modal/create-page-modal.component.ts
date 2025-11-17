@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { PagePropertiesMode } from '@editor-ui/app/shared/components';
 import { EditablePageProps, Language, Page, Raw, Template } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { PagePropertiesMode } from '../../../shared/components';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 @Component({

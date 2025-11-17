@@ -23,8 +23,6 @@ export * from './error-handler/error-handler.service';
 export * from './folder-trable-loader/folder-trable-loader.service';
 export * from './group-table-loader/group-table-loader.service';
 export * from './group-trable-loader/group-trable-loader';
-export * from './i18n';
-export * from './i18n-notification/i18n-notification.service';
 export * from './language-handler/language-handler.service';
 export * from './language-table-loader/language-table-loader.service';
 export * from './maintenance-mode/maintenance-mode.service';
@@ -45,4 +43,3 @@ export * from './template-table-loader/template-table-loader.service';
 export * from './user-settings/user-settings.service';
 export * from './user-table-loader/user-table-loader.service';
 export * from './usersnap/usersnap.service';
-

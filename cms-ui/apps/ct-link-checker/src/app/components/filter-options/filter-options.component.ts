@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-
 import { Language, Node, Raw } from '@gentics/cms-models';
-import { TranslateService } from '@ngx-translate/core';
+import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, flatMap, map, publishReplay, refCount, switchMap, withLatestFrom } from 'rxjs/operators';
 import { FilterOptions } from '../../common/models/filter-options';
@@ -15,7 +14,7 @@ import { LinkCheckerService, NodeStats } from '../../services/link-checker/link-
     templateUrl: './filter-options.component.html',
     styleUrls: ['./filter-options.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class FilterOptionsComponent implements OnInit, OnDestroy {
     @ViewChild('searchBar', { static: true }) searchBar: ElementRef;
@@ -34,7 +33,7 @@ export class FilterOptionsComponent implements OnInit, OnDestroy {
     statsLoading$: Observable<boolean>;
 
     /** page status options */
-    pageStatusOptions: { value: string; label: string; }[] = [
+    pageStatusOptions: { value: string; label: string }[] = [
         {
             value: 'all',
             label: 'common.all',
@@ -50,7 +49,7 @@ export class FilterOptionsComponent implements OnInit, OnDestroy {
     ];
 
     /** filter options for links */
-    filterOptions: { value: string; label: string; }[] = [
+    filterOptions: { value: string; label: string }[] = [
         {
             value: 'valid',
             label: 'common.valid',
@@ -77,7 +76,7 @@ export class FilterOptionsComponent implements OnInit, OnDestroy {
         public filterService: FilterService,
         public api: GcmsApi,
         private linkChecker: LinkCheckerService,
-        private translate: TranslateService,
+        private translate: I18nService,
     ) { }
 
     ngOnInit(): void {
@@ -85,7 +84,7 @@ export class FilterOptionsComponent implements OnInit, OnDestroy {
         const loaders = this.linkChecker.getLoaders();
         this.statsLoading$ = loaders.nodeStats.pipe(
             publishReplay(1),
-            refCount()
+            refCount(),
         );
 
         this.nodes$ = this.linkChecker.getNodes();
@@ -94,7 +93,7 @@ export class FilterOptionsComponent implements OnInit, OnDestroy {
 
         // Current nodeId
         const nodeId$ = this.options$.pipe(
-            map(options => options.nodeId),
+            map((options) => options.nodeId),
             distinctUntilChanged((a, b) => a === b),
             withLatestFrom(this.nodes$),
             map(([nodeId, nodes]) => {
@@ -106,24 +105,24 @@ export class FilterOptionsComponent implements OnInit, OnDestroy {
                 }
 
                 return nodeId;
-            })
+            }),
         );
 
         // Current node
         this.currentNode$ = combineLatest([this.nodes$, nodeId$]).pipe(
-            flatMap(([nodes, nodeId]) => nodes.filter(node => node.id === nodeId))
+            flatMap(([nodes, nodeId]) => nodes.filter((node) => node.id === nodeId)),
         );
 
         // Fetch nodeLanguages
-        this.nodeLanguages$ = this.currentNode$.pipe(switchMap(node => this.linkChecker.fetchNodeLanguages(node.id)));
+        this.nodeLanguages$ = this.currentNode$.pipe(switchMap((node) => this.linkChecker.fetchNodeLanguages(node.id)));
 
-        this.subscriptions.add(this.translate.store.onLangChange.subscribe(() => {
+        this.subscriptions.add(this.translate.onLanguageChange().subscribe(() => {
             this.linkFilter = 'invalid';
             this.pageStatusFilter = 'all';
         }));
 
         // Fetch nodeStats
-        this.nodeStats$ = this.currentNode$.pipe(switchMap(node => this.linkChecker.fetchStats(node.id)));
+        this.nodeStats$ = this.currentNode$.pipe(switchMap((node) => this.linkChecker.fetchStats(node.id)));
 
         // Fetch All nodes
         this.app.update$.subscribe(() => {
@@ -161,13 +160,13 @@ export class FilterOptionsComponent implements OnInit, OnDestroy {
     }
 
     selectNode(event: number): void {
-        this.subscriptions.add(this.linkChecker.fetchNodeLanguages(event).subscribe(languages => {
+        this.subscriptions.add(this.linkChecker.fetchNodeLanguages(event).subscribe((languages) => {
             if (languages.length < 2) {
                 this.filterService.options.languages = [];
             } else {
                 this.filterService.options.languages = this.languageOptions;
             }
-        }))
+        }));
         this.filterService.options.nodeId = event;
     }
 

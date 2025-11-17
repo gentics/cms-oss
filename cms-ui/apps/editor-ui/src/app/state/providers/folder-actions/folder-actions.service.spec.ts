@@ -1,5 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     File as FileModel,
     FileUploadResponse,
@@ -29,8 +29,7 @@ import { emptyItemInfo, GtxChipSearchSearchFilterMap, ItemsInfo, plural } from '
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
+import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { QueryAssemblerElasticSearchService, QueryAssemblerGCMSSearchService } from '../../../shared/providers/query-assembler';
@@ -140,10 +139,9 @@ describe('FolderActionsService', () => {
                 FolderActionsService,
                 EntityResolver,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: PermissionService, useClass: MockPermissionService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 QueryAssemblerGCMSSearchService,
@@ -153,10 +151,10 @@ describe('FolderActionsService', () => {
             ],
         });
 
-        folderActions = TestBed.get(FolderActionsService);
+        folderActions = TestBed.inject(FolderActionsService);
         client = TestBed.inject(GCMSRestClientService);
-        permissions = TestBed.get(PermissionService);
-        state = TestBed.get(ApplicationStateService);
+        permissions = TestBed.inject(PermissionService) as any;
+        state = TestBed.inject(ApplicationStateService) as any;
 
         initialState = {
             folder: {

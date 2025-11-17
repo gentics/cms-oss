@@ -1,7 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
 import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     CmsFormTagPartProperty,
@@ -15,8 +12,11 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { RepositoryBrowserClient } from '../../../../shared/providers';
+import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper/selected-item-helper';
 
 /**
  * Used to insert forms created with Editor UI Form Generator.
@@ -26,7 +26,7 @@ import { map, tap } from 'rxjs/operators';
     templateUrl: './form-tag-property-editor.component.html',
     styleUrls: ['./form-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class FormTagPropertyEditorComponent implements TagPropertyEditor {
 
@@ -72,12 +72,12 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
                          * Also, null is emitted in case a referenced form got deleted and the tag property data was refetched.
                          * (Since the formId in tagProperty gets removed).
                          */
-                        return this.i18n.translate('editor.form_no_selection');
+                        return this.i18n.instant('editor.form_no_selection');
                     }
                 }),
             ),
             this.selectedInternalForm.loadingError$.pipe(
-                map((error: { error: any, item: { itemId: number, nodeId?: number } }) => {
+                map((error: { error: any; item: { itemId: number; nodeId?: number } }) => {
                     /**
                      * When a form that is referenced gets deleted, the formId is kept in tagProperty.
                      * When we try to fetch the form information we get an error message.
@@ -85,10 +85,11 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
                      * (and thus avoid suggesting that a valid form is still selected).
                      */
                     if (this.tagProperty && this.tagProperty.formId) {
-                        /** additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
+                        /**
+                         * additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
                          * This could trigger an emission before this.tagProperty is set in updateTagProperty
                          */
-                        return this.i18n.translate('editor.form_not_found', { id: this.tagProperty.formId });
+                        return this.i18n.instant('editor.form_not_found', { id: this.tagProperty.formId });
                     } else {
                         return '';
                     }
@@ -165,7 +166,7 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
         if (newValue.type !== TagPropertyType.CMSFORM) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by FormUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue ;
+        this.tagProperty = newValue;
 
         this.selectedInternalForm.setSelectedItem(this.tagProperty.formId || null);
 

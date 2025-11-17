@@ -11,8 +11,6 @@ import {
 } from '@admin-ui/common';
 import {
     ErrorHandler,
-    I18nNotificationService,
-    I18nService,
     NodeOperations,
     PermissionsService,
     TemplateOperations,
@@ -22,6 +20,7 @@ import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     AnyModelType,
     Feature,
@@ -36,6 +35,7 @@ import {
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ModalService, TableAction, TableRow, getFullPrimaryPath } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { CopyTemplateService } from '../../providers/copy-template/copy-template.service';
@@ -54,13 +54,12 @@ enum Action {
     UNLOCALIZE = 'unlocalize',
 }
 
-
 @Component({
     selector: 'gtx-template-master',
     templateUrl: './template-master.component.html',
     styleUrls: ['./template-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TemplateMasterComponent extends BaseTableMasterComponent<Template, TemplateBO> implements OnInit {
 
@@ -98,9 +97,9 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         super.ngOnInit();
 
         this.subscriptions.push(this.route.paramMap.pipe(
-            map(params => params.get(NODE_ID_PARAM)),
+            map((params) => params.get(NODE_ID_PARAM)),
             distinctUntilChanged(),
-            switchMap(nodeId => {
+            switchMap((nodeId) => {
                 if (nodeId == null || nodeId.trim().length === 0) {
                     return of(null);
                 }
@@ -111,7 +110,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
                 return this.nodeOperations.get(nodeIdNum);
             }),
-        ).subscribe(node => {
+        ).subscribe((node) => {
             this.selected = [];
             this.activeNode = node;
             this.changeDetector.markForCheck();
@@ -154,7 +153,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 icon: 'insert_drive_file',
                 label: this.i18n.instant('template.localize'),
                 type: 'secondary',
-                enabled: template => template == null || (template.inherited),
+                enabled: (template) => template == null || (template.inherited),
                 multiple: true,
                 single: true,
             },
@@ -163,10 +162,10 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 icon: 'restore_page',
                 label: this.i18n.instant('template.unlocalize'),
                 type: 'warning',
-                enabled: template => template == null || (!template.inherited && !template.master),
+                enabled: (template) => template == null || (!template.inherited && !template.master),
                 multiple: true,
                 single: true,
-            })
+            });
         }
     }
 
@@ -205,7 +204,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 return;
 
             case Action.LINK_TO_NODE:
-                this.linkTemplatesToNodes(items).then(didChange => {
+                this.linkTemplatesToNodes(items).then((didChange) => {
                     if (didChange) {
                         this.loader.reload();
                     }
@@ -269,7 +268,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }
 
         let doAbort = false;
-        templates.forEach(t => {
+        templates.forEach((t) => {
             if (!t[BO_PERMISSIONS].includes(GcmsPermission.EDIT)) {
                 this.notification.show({
                     type: 'alert',
@@ -315,7 +314,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }
 
         let doAbort = false;
-        templates.forEach(t => {
+        templates.forEach((t) => {
             if (!t[BO_PERMISSIONS].includes(GcmsPermission.EDIT)) {
                 this.notification.show({
                     type: 'alert',
@@ -357,12 +356,12 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
     }
 
     protected localizeTemplate(templates: TemplateBO[]): void {
-        this.executeTemplateOperation(templates.filter(template => template.inherited),
+        this.executeTemplateOperation(templates.filter((template) => template.inherited),
             (templateId, options) => this.operations.localizeTemplate(templateId, options), 'template.localize_success');
     }
 
     protected unlocalizeTemplate(templates: TemplateBO[]): void {
-        this.executeTemplateOperation(templates.filter(template => !template.inherited && !template.master),
+        this.executeTemplateOperation(templates.filter((template) => !template.inherited && !template.master),
             (templateId, options) => this.operations.unlocalizeTemplate(templateId, options), 'template.unlocalize_success');
     }
 
@@ -377,11 +376,11 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         const channelId = this.activeNode.id;
 
         Promise.all(
-            templates.map(template => {
+            templates.map((template) => {
                 return operation(template.id, {
                     channelId,
                     foregroundTime: OPERATION_FOREGROUND_TIME_MS,
-                }).toPromise().then(_success => {
+                }).toPromise().then((_success) => {
                     this.notification.show({
                         type: 'success',
                         message: i18nMessage,
@@ -389,9 +388,9 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                             templateName: template.name,
                         },
                     });
-                })
+                });
             }),
-        ).then(_success => {
+        ).then((_success) => {
             this.selected = [];
             this.loader.reload();
         });

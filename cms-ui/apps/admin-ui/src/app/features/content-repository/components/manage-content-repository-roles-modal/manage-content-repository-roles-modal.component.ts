@@ -1,7 +1,8 @@
 import { ContentRepositoryBO } from '@admin-ui/common';
-import { ContentRepositoryHandlerService, I18nService } from '@admin-ui/core';
+import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { BaseModal, TableColumn, TableRow, TableSelectAllType } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Subscription, combineLatest } from 'rxjs';
 
 @Component({
@@ -9,7 +10,7 @@ import { Subscription, combineLatest } from 'rxjs';
     templateUrl: './manage-content-repository-roles-modal.component.html',
     styleUrls: ['./manage-content-repository-roles-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ManageContentRepositoryRolesModal extends BaseModal<string[]> implements OnInit, OnDestroy {
 
@@ -47,7 +48,7 @@ export class ManageContentRepositoryRolesModal extends BaseModal<string[]> imple
             this.handler.getAvailableMeshRoles(this.contentRepository.id),
             this.handler.getAssignedMeshRoles(this.contentRepository.id),
         ]).subscribe(([all, assigned]) => {
-            this.rows = all.map(role => ({
+            this.rows = all.map((role) => ({
                 id: role,
                 item: role,
             }));
@@ -58,7 +59,7 @@ export class ManageContentRepositoryRolesModal extends BaseModal<string[]> imple
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     updateSelection(selection: string[]): void {
@@ -68,7 +69,7 @@ export class ManageContentRepositoryRolesModal extends BaseModal<string[]> imple
     updateAssignment(): void {
         this.working = true;
 
-        this.subscriptions.push(this.handler.assignMeshRoles(this.contentRepository.id, this.selected).subscribe(roles => {
+        this.subscriptions.push(this.handler.assignMeshRoles(this.contentRepository.id, this.selected).subscribe((roles) => {
             this.closeFn(roles);
         }, () => {
             this.working = false;

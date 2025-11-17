@@ -1,5 +1,7 @@
-<ng-template ngFor let-link [ngForOf]="links">
-    <span *ngIf="link.textBefore">{{ link.textBefore }}</span>
-    <a (click)="linkClick.emit(link)" [title]="link.fullPath">{{ link.name }}</a>
-</ng-template>
+@for (link of links; track link) {
+  @if (link.textBefore) {
+    <span>{{ link.textBefore }}</span>
+  }
+  <a (click)="linkClick.emit(link)" [title]="link.fullPath">{{ link.name }}</a>
+}
 <span>{{ textAfterLinks }}</span>

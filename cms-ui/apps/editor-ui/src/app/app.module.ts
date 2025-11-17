@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/indent, @typescript-eslint/no-unused-vars */
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule } from '@angular/router';

@@ -1,7 +1,5 @@
-import { I18nNotificationService } from '@admin-ui/core';
 import { Injectable } from '@angular/core';
-
-
+import { I18nNotificationService } from '@gentics/cms-components';
 
 @Injectable()
 export class NotificationService {

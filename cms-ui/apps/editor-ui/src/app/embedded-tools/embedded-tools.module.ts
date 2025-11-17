@@ -25,7 +25,6 @@ const PROVIDERS: Provider[] = [
     // EmbeddedToolsService,
 ];
 
-
 @NgModule({
     imports: [
         SharedModule,

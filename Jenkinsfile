@@ -279,13 +279,13 @@ spec:
                     // Set custom mesh version (if configured)
                     if (params.meshVersion?.trim() != "") {
                         echo "Setting Mesh version to " + params.meshVersion.trim()
-                        mvnArguments += " -Dmesh.version=" + params.meshVersion.trim()
+                        MavenHelper.setProperty("mesh.version", params.meshVersion.trim())
                     }
 
                     // Set custom aloha editor version (if configured)
                     if (params.alohaEditorVersion?.trim() != "") {
                         echo "Setting Aloha Editor version to " + params.alohaEditorVersion.trim()
-                        mvnArguments += " -Dalohaeditor.version=" + params.alohaEditorVersion.trim()
+                        MavenHelper.setProperty("alohaeditor.version", params.alohaEditorVersion.trim())
                     }
 
                     // Login to docker.gentics.com so that the tests can pull all Mesh images

@@ -1,15 +1,17 @@
-<gtx-search-bar
-    *ngIf="showSearch"
+@if (showSearch) {
+  <gtx-search-bar
     class="search-bar"
     [query]="query"
-    [placeholder]="'shared.search' | i18n"
+    [placeholder]="'shared.search' | gtxI18n"
     (search)="updateSearchQuery($event)"
     (clear)="updateSearchQuery('')"
-></gtx-search-bar>
+  ></gtx-search-bar>
+}
 
-<div *ngIf="!hideActions || packageName" class="entity-table-actions-bar">
-    <gtx-button
-        *ngIf="!hideActions && !packageName"
+@if (!hideActions || packageName) {
+  <div class="entity-table-actions-bar">
+    @if (!hideActions && !packageName) {
+      <gtx-button
         class="table-action-button"
         flat
         size="small"
@@ -17,12 +19,12 @@
         [disabled]="disabled"
         [gtxActionAllowed]="'construct.createConstruct'"
         (click)="handleCreateButton()"
-    >
-        <icon left>add</icon> {{ 'shared.create_new_construct' | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        *ngIf="packageName"
+        >
+        <icon left>add</icon> {{ 'shared.create_new_construct' | gtxI18n }}
+      </gtx-button>
+    }
+    @if (packageName) {
+      <gtx-button
         class="table-action-button"
         flat
         size="small"
@@ -30,71 +32,77 @@
         [disabled]="disabled"
         [gtxActionAllowed]="'contentadmin.updateContent'"
         (click)="handleAssignToPackageButton()"
-    >
-        <icon left>link</icon> {{ 'shared.assign_entity_to_package_button' | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        *ngIf="!hideActions"
+        >
+        <icon left>link</icon> {{ 'shared.assign_entity_to_package_button' | gtxI18n }}
+      </gtx-button>
+    }
+    @if (!hideActions) {
+      <gtx-button
         class="table-action-button reload-button"
         flat
         size="small"
         type="primary"
         [disabled]="disabled || loading"
         (click)="reload()"
-    >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
-    </gtx-button>
-</div>
+        >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+      </gtx-button>
+    }
+  </div>
+}
 
-<div *ngIf="selectable" class="entity-table-selection">
-    {{ 'construct.info_selected_constructs' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
-</div>
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'construct.info_selected_constructs' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
 <gtx-table
-    class="entity-table"
+  class="entity-table"
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [disabled]="disabled"
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [hideActions]="hideActions"
+  [disabled]="disabled"
 
-    [paginated]="true"
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+  [paginated]="true"
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
 
-    [page]="page"
-    [perPage]="perPage"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
 
     [renderers]="{
         category: categoryRenderer
     }"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (select)="forwardSelect($event)"
-    (deselect)="forwardDeselect($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowSelect)="forwardSelect($event)"
+  (rowDeselect)="forwardDeselect($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
 ></gtx-table>
 
 <ng-template #categoryRenderer let-row="row" let-value="value">
+  @if (value) {
     <a
-        *ngIf="value; else textOnly"
-        class="gtx-table-cell-link category-link"
-        [routerLink]="AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY | gtxEntityDetailRouterLink:value"
-        (click)="cancelEvent($event)"
+      class="gtx-table-cell-link category-link"
+      [routerLink]="AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY | gtxEntityDetailRouterLink:value"
+      (click)="cancelEvent($event)"
     >{{ row.item.category?.name || value }}</a>
+  } @else {
+    {{ value }}
+  }
 
-    <ng-template #textOnly>{{ value }}</ng-template>
 </ng-template>

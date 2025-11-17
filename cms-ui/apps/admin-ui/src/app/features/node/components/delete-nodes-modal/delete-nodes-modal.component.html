@@ -1,45 +1,45 @@
 <div class="modal-title">
-    <h5>{{ 'modal.copy_nodes_title' | i18n }}</h5>
+  <h5>{{ 'modal.copy_nodes_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <div class="gtx-delete-nodes-modal-container">
-        <div class="gtx-delete-nodes-modal-body row">
-            <p>{{ 'modal.delete_nodes_body' | i18n: { count: nodesToBeDeleted?.length } }}</p>
-        </div>
-        <div
-            *ngFor="let node of nodesToBeDeleted"
-            class="gtx-delete-nodes-modal row"
-        >
-            <div class="gtx-delete-nodes-modal-header small-12">
-                <b>{{ node?.name }}</b>
-
-                <gtx-button
-                    icon
-                    class="gtx-delete-nodes-modal-header-action"
-                    [title]="'modal.remove_from_list_action' | i18n"
-                    (click)="removeNodeFromList(node.id)"
-                >
-                    <icon>close</icon>
-                </gtx-button>
-            </div>
-        </div>
+  <div class="gtx-delete-nodes-modal-container">
+    <div class="gtx-delete-nodes-modal-body row">
+      <p>{{ 'modal.delete_nodes_body' | gtxI18n: { count: nodesToBeDeleted?.length } }}</p>
     </div>
+    @for (node of nodesToBeDeleted; track node) {
+      <div
+        class="gtx-delete-nodes-modal row"
+        >
+        <div class="gtx-delete-nodes-modal-header small-12">
+          <b>{{ node?.name }}</b>
+          <gtx-button
+            icon
+            class="gtx-delete-nodes-modal-header-action"
+            [title]="'modal.remove_from_list_action' | gtxI18n"
+            (click)="removeNodeFromList(node.id)"
+            >
+            <icon>close</icon>
+          </gtx-button>
+        </div>
+      </div>
+    }
+  </div>
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="primary"
-        (click)="onBtnOkayClicked()"
+  <gtx-button
+    type="primary"
+    (click)="onBtnOkayClicked()"
     >
-        {{ 'common.ok_button' | i18n }}
-    </gtx-button>
+    {{ 'common.okay_button' | gtxI18n }}
+  </gtx-button>
 </div>

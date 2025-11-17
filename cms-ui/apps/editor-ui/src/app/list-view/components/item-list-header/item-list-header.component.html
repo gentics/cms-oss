@@ -7,337 +7,386 @@
     ></icon-checkbox>
 
     <span class="type">
-        <ng-template [ngIf]="0 < selectedItems.length" [ngIfElse]="noneSelected">
+        @if (0 < selectedItems.length) {
             <span class="count-full">
                 <span class="item-list-status selected" [class.filtering]="filterTerm !== ''">
-                    {{ (filterTerm === '' ? 'editor.item_count_header_selected' : 'editor.item_count_header_selected_matching') | i18n: {
+                    {{ (filterTerm === '' ? 'editor.item_count_header_selected' : 'editor.item_count_header_selected_matching') | gtxI18n: {
                         selected: selectedItems.length,
                         count: itemsInfo.total,
-                        _items: itemType,
-                        dative: true
+                        items: ('common.type_' + itemType + (itemsInfo.total !== 1 ? 's_dative' : '')) | translate,
                     } }}
                 </span>
             </span>
             <span class="count-part">
-                {{ 'editor.item_count_header_selected_simple' | i18n: { count: selectedItems.length, _items: itemType } }}
+                {{ 'editor.item_count_header_selected_simple' | gtxI18n: {
+                    count: selectedItems.length,
+                    items: ('common.type_' + itemType + (itemsInfo.total !== 1 ? 's' : '')) | translate
+                } }}
             </span>
-        </ng-template>
-        <ng-template #noneSelected>
+        } @else {
             <span class="count-full">
-                <span *ngIf="itemsInfo.itemsPerPage >= itemsInfo.total && filterTerm === ''" class="item-list-status all-items">
-                    {{ 'editor.item_count_header_simple' | i18n: { count: itemsInfo.total, _items: itemType } }}
-                </span>
-                <span *ngIf="itemsInfo.itemsPerPage < itemsInfo.total && filterTerm === ''" class="item-list-status partial-items">
-                    {{ 'editor.item_count_header_partial' | i18n: {
-                        count: (itemsInfo.total - (itemsInfo.currentPage - 1) * itemsInfo.itemsPerPage < itemsInfo.itemsPerPage)
-                            ? itemsInfo.total - (itemsInfo.currentPage - 1) * itemsInfo.itemsPerPage
-                            : itemsInfo.itemsPerPage,
-                        total: itemsInfo.total,
-                        _items: itemType,
-                        dative: true
-                    } }}
-                </span>
-                <span *ngIf="filterTerm !== ''" class="item-list-status filtering">
-                    {{ 'editor.item_count_header_matching' | i18n: {
-                        count: (items | filterItems:filterTerm:itemsInfo.showPath)?.length,
-                        _items: itemType
-                    } }}
-                </span>
+                @if (itemsInfo.itemsPerPage >= itemsInfo.total && filterTerm === '') {
+                    <span class="item-list-status all-items">
+                        {{ 'editor.item_count_header_simple' | gtxI18n: {
+                            count: itemsInfo.total,
+                            items: ('common.type_' + itemType) | translate
+                        } }}
+                    </span>
+                }
+                @if (itemsInfo.itemsPerPage < itemsInfo.total && filterTerm === '') {
+                    <span class="item-list-status partial-items">
+                        @let count = (itemsInfo.total - (itemsInfo.currentPage - 1) * itemsInfo.itemsPerPage < itemsInfo.itemsPerPage)
+                                ? itemsInfo.total - (itemsInfo.currentPage - 1) * itemsInfo.itemsPerPage
+                                : itemsInfo.itemsPerPage;
+                        {{ 'editor.item_count_header_partial' | gtxI18n: {
+                            count: count,
+                            total: itemsInfo.total,
+                            items: ('common.type_' + itemType + (count !== 1 ? 's_dative' : '')) | translate,
+                        } }}
+                    </span>
+                }
+                @if (filterTerm !== '') {
+                    <span class="item-list-status filtering">
+                        @let count = (items | filterItems:filterTerm:itemsInfo.showPath)?.length;
+                        {{ 'editor.item_count_header_matching' | gtxI18n: {
+                            count: count,
+                            items: ('common.type_' + itemType + (count !== 1 ? 's' : '')) | translate
+                        } }}
+                    </span>
+                }
             </span>
             <span class="count-part">
-                {{ 'editor.item_count_header_simple' | i18n: { count: items?.length, _items: itemType } }}
+                {{ 'editor.item_count_header_simple' | gtxI18n: {
+                    count: items?.length,
+                    items: ('common.type_' + itemType + (items?.length !== 1 ? 's' : '')) | translate
+                } }}
             </span>
-        </ng-template>
+        }
     </span>
 </div>
 
 <div class="header-controls right-items">
-    <div class="type-actions" *ngIf="!selectedItems.length">
-        <language-context-selector
-            *ngIf="nodeLanguages?.length > 1 && (itemType === 'page' || itemType === 'form')"
-            [availableLanguages]="nodeLanguages"
-            [activeLanguage]="folderLanguage"
-            [disabled]="elasticsearchQueryActive"
-            [title]="'editor.language_context_selector_disabled_search' | i18n"
-            (languageChange)="selectLanguage($event)"
-        ></language-context-selector>
-
-        <ng-container *ngIf="uiMode === UIMode.EDIT">
-            <gtx-button
-                *ngIf="!acceptUploads && folderPermissions[itemType]?.create"
-                size="small"
-                type="secondary"
-                flat
-                data-action="create-new-item"
-                [disabled]="!canCreateItem"
-                [overrideSlot]="itemType === 'folder' ? 'newFolderButton' : 'newPageButton'"
-                [overrideParams]="{ FOLDERID: currentFolderId, NODEID: activeNode.id }"
-                (click)="createClicked()"
-            >
-                <icon left>add</icon> {{ itemType | i18n }}
-            </gtx-button>
-
-            <upload-button
-                *ngIf="acceptUploads && folderPermissions[itemType].upload"
-                [itemType]="itemType"
-                [acceptUploads]="acceptUploads"
-                [multiple]="true"
-                [targetNodeId]="activeNode.id"
-                [targetFolderId]="currentFolderId"
-                [instantUpload]="true"
-                data-action="upload-item"
-                btnSize="small"
-            ></upload-button>
-        </ng-container>
-
-        <gtx-dropdown-list align="right">
-            <gtx-dropdown-trigger>
-                <gtx-button icon type="secondary" data-action="open-list-context">
-                    <icon>more_vert</icon>
-                </gtx-button>
-            </gtx-dropdown-trigger>
-
-            <gtx-dropdown-content class="item-list-header-context">
-                <gtx-dropdown-item
-                    *ngIf="itemType === 'image'"
-                    data-action="toggle-display-type"
-                    [attr.data-diplay-type]="showImagesGridView ? 'grid' : 'list'"
-                    (click)="toggleDisplayImagesGridView()"
-                >
-                    {{ (showImagesGridView ? 'editor.show_list' : 'editor.show_grid') | i18n }}
-                </gtx-dropdown-item>
-
-                <gtx-dropdown-item data-action="select-display-fields" (click)="selectDisplayFields()">
-                    {{ 'editor.select_display_fields_label' | i18n }}
-                </gtx-dropdown-item>
-
-                <gtx-dropdown-item
-                    class="sort-mode"
-                    data-action="select-sorting"
+    @if (!selectedItems.length) {
+        <div class="type-actions">
+            @if (nodeLanguages?.length !== 1 && (itemType === 'page' || itemType === 'form')) {
+                <language-context-selector
+                    [availableLanguages]="nodeLanguages"
+                    [activeLanguage]="folderLanguage"
                     [disabled]="elasticsearchQueryActive"
-                    (click)="selectSorting()"
-                >
-                    <span class="sort-label">{{ 'editor.sorting_by_label' | i18n:{ field: ('common.sort_' + itemsInfo?.sortBy | i18n) } }}</span>
-                    <icon class="sort-icon">{{ itemsInfo?.sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</icon>
-                </gtx-dropdown-item>
-
-                <gtx-dropdown-item
-                    *ngIf="(itemType === 'page' || itemType === 'form') && 1 < nodeLanguages.length"
-                    class="page-language-toggle"
-                    data-action="toggle-language-display"
-                    [attr.data-active]="showAllLanguages"
-                    (click)="toggleDisplayAllLanguages($event)"
-                >
-                    <gtx-checkbox
-                        [checked]="showAllLanguages"
-                        (change)="toggleDisplayAllLanguages()"
-                    ></gtx-checkbox>
-                    {{ 'editor.display_all_languages_label' | i18n }}
-                </gtx-dropdown-item>
-
-                <ng-container *ngIf="uiMode === UIMode.EDIT">
-                    <gtx-dropdown-item
-                        *ngIf="(itemType === 'page' || itemType === 'form')"
-                        class="page-language-toggle"
-                        data-action="toggle-status-icons"
-                        [attr.data-active]="showStatusIcons"
-                        (click)="toggleDisplayStatusIcons()"
+                    [title]="'editor.language_context_selector_disabled_search' | gtxI18n"
+                    (languageChange)="selectLanguage($event)"
+                ></language-context-selector>
+            }
+            @if (uiMode === UIMode.EDIT) {
+                @if (!acceptUploads && folderPermissions[itemType]?.create) {
+                    <gtx-button
+                        size="small"
+                        type="secondary"
+                        flat
+                        data-action="create-new-item"
+                        [disabled]="!canCreateItem"
+                        [overrideSlot]="itemType === 'folder' ? 'newFolderButton' : 'newPageButton'"
+                        [overrideParams]="{ FOLDERID: currentFolderId, NODEID: activeNode.id }"
+                        (click)="createClicked()"
                     >
-                        <gtx-checkbox
-                            [checked]="showStatusIcons"
-                            (change)="toggleDisplayStatusIcons()"
-                        ></gtx-checkbox>
-                        {{ 'editor.display_status_icons_label' | i18n }}
+                        <icon left>add</icon>
+                        {{ ('common.type_' + itemType) | gtxI18n }}
+                    </gtx-button>
+                }
+                @if (acceptUploads && folderPermissions[itemType].upload) {
+                    <upload-button
+                        [itemType]="itemType"
+                        [acceptUploads]="acceptUploads"
+                        [multiple]="true"
+                        [targetNodeId]="activeNode.id"
+                        [targetFolderId]="currentFolderId"
+                        [instantUpload]="true"
+                        data-action="upload-item"
+                        btnSize="small"
+                    ></upload-button>
+                }
+            }
+
+            <gtx-dropdown-list align="right">
+                <gtx-dropdown-trigger>
+                    <gtx-button
+                        icon
+                        type="secondary"
+                        data-action="open-list-context"
+                    >
+                        <icon>more_vert</icon>
+                    </gtx-button>
+                </gtx-dropdown-trigger>
+                <gtx-dropdown-content class="item-list-header-context">
+                    @if (itemType === 'image') {
+                        <gtx-dropdown-item
+                            data-action="toggle-display-type"
+                            [attr.data-diplay-type]="showImagesGridView ? 'grid' : 'list'"
+                            (click)="toggleDisplayImagesGridView()"
+                        >
+                            {{ (showImagesGridView ? 'editor.show_list' : 'editor.show_grid') | gtxI18n }}
+                        </gtx-dropdown-item>
+                    }
+
+                    <gtx-dropdown-item data-action="select-display-fields" (click)="selectDisplayFields()">
+                        {{ 'editor.select_display_fields_label' | gtxI18n }}
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item
-                        *ngIf="wastebinEnabled"
-                        class="show-deleted-toggle"
-                        data-action="toggle-wastebin"
-                        [attr.data-active]="showDeleted"
-                        (click)="toggleDisplayDeleted()"
+                        class="sort-mode"
+                        data-action="select-sorting"
+                        [disabled]="elasticsearchQueryActive"
+                        (click)="selectSorting()"
                     >
-                        <gtx-checkbox
-                            [checked]="showDeleted"
-                            (change)="toggleDisplayDeleted()"
-                        ></gtx-checkbox>
-                        {{ 'editor.display_deleted_label' | i18n }}
+                        <span class="sort-label">{{ 'editor.sorting_by_label' | gtxI18n:{ field: ('common.sort_' + itemsInfo?.sortBy | gtxI18n) } }}</span>
+                        <icon class="sort-icon">{{ itemsInfo?.sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</icon>
                     </gtx-dropdown-item>
-                </ng-container>
-            </gtx-dropdown-content>
-        </gtx-dropdown-list>
-    </div>
 
-    <div class="group-actions" *ngIf="selectedItems.length > 0">
-        <ng-container *ngIf="uiMode === UIMode.EDIT">
-            <gtx-button
-                *ngIf="itemType === 'page' || itemType === 'form' || itemType === 'file' || itemType === 'image'"
-                icon
-                type="secondary"
-                data-action="copy"
-                [title]="'editor.copy_label' | i18n"
-                (click)="copySelected()"
-            >
-                <icon>file_copy</icon>
-            </gtx-button>
+                    @if ((itemType === 'page' || itemType === 'form') && 1 < nodeLanguages.length) {
+                        <gtx-dropdown-item
+                            class="page-language-toggle"
+                            data-action="toggle-language-display"
+                            [attr.data-active]="showAllLanguages"
+                            (click)="toggleDisplayAllLanguages($event)"
+                        >
+                            <gtx-checkbox
+                                [checked]="showAllLanguages"
+                                (change)="toggleDisplayAllLanguages()"
+                            ></gtx-checkbox>
+                            {{ 'editor.display_all_languages_label' | gtxI18n }}
+                        </gtx-dropdown-item>
+                    }
 
-            <gtx-button
-                *ngIf="folderPermissions[itemType]?.edit"
-                icon
-                type="secondary"
-                data-action="move"
-                [title]="'editor.move_label' | i18n"
-                (click)="moveSelected()"
-            >
-                <icon>subdirectory_arrow_right</icon>
-            </gtx-button>
-        </ng-container>
+                    @if (uiMode === UIMode.EDIT) {
+                        @if ((itemType === 'page' || itemType === 'form')) {
+                            <gtx-dropdown-item
+                                class="page-language-toggle"
+                                data-action="toggle-status-icons"
+                                [attr.data-active]="showStatusIcons"
+                                (click)="toggleDisplayStatusIcons()"
+                            >
+                                <gtx-checkbox
+                                    [checked]="showStatusIcons"
+                                    (change)="toggleDisplayStatusIcons()"
+                                ></gtx-checkbox>
+                                {{ 'editor.display_status_icons_label' | gtxI18n }}
+                            </gtx-dropdown-item>
+                        }
 
-        <gtx-dropdown-list
-            *ngIf="uiMode === UIMode.STAGING
+                        @if (wastebinEnabled) {
+                            <gtx-dropdown-item
+                                class="show-deleted-toggle"
+                                data-action="toggle-wastebin"
+                                [attr.data-active]="showDeleted"
+                                (click)="toggleDisplayDeleted()"
+                            >
+                                <gtx-checkbox
+                                    [checked]="showDeleted"
+                                    (change)="toggleDisplayDeleted()"
+                                ></gtx-checkbox>
+                                {{ 'editor.display_deleted_label' | gtxI18n }}
+                            </gtx-dropdown-item>
+                        }
+                    }
+                </gtx-dropdown-content>
+            </gtx-dropdown-list>
+        </div>
+    }
+
+    @if (selectedItems.length > 0) {
+        <div class="group-actions">
+            @if (uiMode === UIMode.EDIT) {
+                @if (itemType === 'page' || itemType === 'form' || itemType === 'file' || itemType === 'image') {
+                    <gtx-button
+                        icon
+                        type="secondary"
+                        data-action="copy"
+                        [title]="'editor.copy_label' | gtxI18n"
+                        (click)="copySelected()"
+                    >
+                        <icon>file_copy</icon>
+                    </gtx-button>
+                }
+
+                @if (folderPermissions[itemType]?.edit) {
+                    <gtx-button
+                        icon
+                        type="secondary"
+                        data-action="move"
+                        [title]="'editor.move_label' | gtxI18n"
+                        (click)="moveSelected()"
+                    >
+                        <icon>subdirectory_arrow_right</icon>
+                    </gtx-button>
+                }
+            }
+
+            @if (
+                uiMode === UIMode.STAGING
                 || folderPermissions[itemType]?.delete
                 || (selectedItems | anyPageUnpublished)
-                || (selectedItems | anyItemPublished)"
-            align="right"
-        >
-            <gtx-dropdown-trigger>
-                <gtx-button icon type="secondary" data-action="open-list-selection-context">
-                    <icon>more_vert</icon>
-                </gtx-button>
-            </gtx-dropdown-trigger>
+                || (selectedItems | anyItemPublished)
+            ) {
+                <gtx-dropdown-list align="right">
+                    <gtx-dropdown-trigger>
+                        <gtx-button
+                            icon
+                            type="secondary"
+                            data-action="open-list-selection-context"
+                        >
+                            <icon>more_vert</icon>
+                        </gtx-button>
+                    </gtx-dropdown-trigger>
 
-            <gtx-dropdown-content class="list-selection-context">
-                <ng-container *ngIf="uiMode === UIMode.EDIT">
-                    <gtx-dropdown-item
-                        *ngIf="(itemType === 'page' || itemType === 'form') && selectedItems && folderPermissions[itemType]?.edit"
-                        class="success"
-                        data-action="publish"
-                        (click)="publishSelected(itemType)"
-                    >
-                        <icon left>cloud_upload</icon>
-                        {{ 'editor.publish_label' | i18n }}
-                    </gtx-dropdown-item>
+                    <gtx-dropdown-content class="list-selection-context">
+                        @if (uiMode === UIMode.EDIT) {
+                            @if ((itemType === 'page' || itemType === 'form') && selectedItems && folderPermissions[itemType]?.edit) {
+                                <gtx-dropdown-item
+                                    class="success"
+                                    data-action="publish"
+                                    (click)="publishSelected(itemType)"
+                                >
+                                    <icon left>cloud_upload</icon>
+                                    {{ 'editor.publish_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
 
-                    <gtx-dropdown-item
-                        *ngIf="itemType === 'page' && selectedItems && folderPermissions[itemType]?.edit"
-                        data-action="publish-languages"
-                        (click)="publishLanguageVariantsSelected()"
-                    >
-                        <icon left>cloud_upload</icon>
-                        {{ 'editor.publish_language_variants_label' | i18n }}
-                    </gtx-dropdown-item>
+                            @if (itemType === 'page' && selectedItems && folderPermissions[itemType]?.edit) {
+                                <gtx-dropdown-item
+                                    data-action="publish-languages"
+                                    (click)="publishLanguageVariantsSelected()"
+                                >
+                                    <icon left>cloud_upload</icon>
+                                    {{ 'editor.publish_language_variants_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
 
-                    <gtx-dropdown-item
-                        *ngIf="selectedItems && itemType === 'page' && folderPermissions[itemType]?.create"
-                        data-action="create-variations"
-                        (click)="createVariationsClicked()"
-                    >
-                        <icon left>layers</icon>
-                        {{ (selectedItems.length === 1 ? 'editor.create_page_variation_label' : 'editor.create_page_variations_label') | i18n }}
-                    </gtx-dropdown-item>
+                            @if (selectedItems && itemType === 'page' && folderPermissions[itemType]?.create) {
+                                <gtx-dropdown-item
+                                    data-action="create-variations"
+                                    (click)="createVariationsClicked()"
+                                >
+                                    <icon left>layers</icon>
+                                    {{ (selectedItems.length === 1 ? 'editor.create_page_variation_label' : 'editor.create_page_variations_label') | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
 
-                    <gtx-dropdown-item
-                        *ngIf="multiChannelingEnabled && (selectedItems | anyItemInherited)"
-                        data-action="localize"
-                        (click)="localizeSelected()"
-                    >
-                        <icon left>insert_drive_file</icon>
-                        {{ 'editor.localize_label' | i18n }}
-                    </gtx-dropdown-item>
+                            @if (multiChannelingEnabled && (selectedItems | anyItemInherited)) {
+                                <gtx-dropdown-item
+                                    data-action="localize"
+                                    (click)="localizeSelected()"
+                                >
+                                    <icon left>insert_drive_file</icon>
+                                    {{ 'editor.localize_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
 
-                    <gtx-dropdown-item
-                        *ngIf="(selectedItems | anyItemPublished) && folderPermissions[itemType]?.edit"
-                        class="alert"
-                        data-action="take-offline"
-                        (click)="takeSelectedOffline(itemType)"
-                    >
-                        <icon left>cloud_off</icon>
-                        {{ 'editor.take_offline_label' | i18n }}
-                    </gtx-dropdown-item>
+                            @if ((selectedItems | anyItemPublished) && folderPermissions[itemType]?.edit) {
+                                <gtx-dropdown-item
+                                    class="alert"
+                                    data-action="take-offline"
+                                    (click)="takeSelectedOffline(itemType)"
+                                >
+                                    <icon left>cloud_off</icon>
+                                    {{ 'editor.take_offline_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
 
-                    <gtx-dropdown-item
-                        *ngIf="folderPermissions[itemType]?.delete"
-                        class="alert"
-                        data-action="delete"
-                        (click)="deleteSelected(itemType)"
-                    >
-                        <icon left>delete</icon>
-                        {{ 'editor.delete_label' | i18n }}
-                    </gtx-dropdown-item>
+                            @if (folderPermissions[itemType]?.delete) {
+                                <gtx-dropdown-item
+                                    class="alert"
+                                    data-action="delete"
+                                    (click)="deleteSelected(itemType)"
+                                >
+                                    <icon left>delete</icon>
+                                    {{ 'editor.delete_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
 
-                    <gtx-dropdown-item
-                        *ngIf="showDeleted && (selectedItems | anyItemDeleted)"
-                        data-action="restore"
-                        (click)="restoreSelected(itemType)"
-                    >
-                        <icon left>restore_from_trash</icon>
-                        {{ 'editor.restore_from_wastebin_label' | i18n }}
-                    </gtx-dropdown-item>
-                </ng-container>
+                            @if (showDeleted && (selectedItems | anyItemDeleted)) {
+                                <gtx-dropdown-item
+                                    data-action="restore"
+                                    (click)="restoreSelected(itemType)"
+                                >
+                                    <icon left>restore_from_trash</icon>
+                                    {{ 'editor.restore_from_wastebin_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+                        }
 
-                <ng-container *ngIf="uiMode === UIMode.STAGING">
-                    <gtx-dropdown-item data-action="stage" (click)="stageItems(StagingMode.REGULAR)">
-                        <icon left>inventory</icon>
-                        {{ 'editor.stage_multiple_items_label' | i18n:{
-                            itemType: ('common.type_' + itemType | i18n),
-                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
-                        } }}
-                    </gtx-dropdown-item>
+                        @if (uiMode === UIMode.STAGING) {
+                            <gtx-dropdown-item data-action="stage" (click)="stageItems(StagingMode.REGULAR)">
+                                <icon left>inventory</icon>
+                                {{ 'editor.stage_multiple_items_label' | gtxI18n:{
+                                    itemType: ('common.type_' + itemType | gtxI18n),
+                                    itemTypePlural: ('common.type_' + plural[itemType] | gtxI18n)
+                                } }}
+                            </gtx-dropdown-item>
 
-                    <gtx-dropdown-item
-                        *ngIf="itemType === 'folder'"
-                        data-action="stage-recursive"
-                        (click)="stageItems(StagingMode.RECURSIVE)"
-                    >
-                        <icon left>input</icon>
-                        {{ 'editor.stage_multiple_items_recursive_label' | i18n:{
-                            itemType: ('common.type_' + itemType | i18n),
-                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
-                        } }}
-                    </gtx-dropdown-item>
+                            @if (itemType === 'folder') {
+                                <gtx-dropdown-item
+                                    data-action="stage-recursive"
+                                    (click)="stageItems(StagingMode.RECURSIVE)"
+                                >
+                                    <icon left>input</icon>
+                                    {{ 'editor.stage_multiple_items_recursive_label' | gtxI18n:{
+                                        itemType: ('common.type_' + itemType | gtxI18n),
+                                        itemTypePlural: ('common.type_' + plural[itemType] | gtxI18n)
+                                    } }}
+                                </gtx-dropdown-item>
+                            }
 
-                    <gtx-dropdown-item
-                        *ngIf="itemType === 'page'"
-                        data-action="stage-languages"
-                        (click)="stageItems(StagingMode.ALL_LANGUAGES)"
-                    >
-                        <icon left>language</icon>
-                        {{ 'editor.stage_multiple_items_all_languages_label' | i18n:{
-                            itemType: ('common.type_' + itemType | i18n),
-                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
-                        } }}
-                    </gtx-dropdown-item>
+                            @if (itemType === 'page') {
+                                <gtx-dropdown-item
+                                    data-action="stage-languages"
+                                    (click)="stageItems(StagingMode.ALL_LANGUAGES)"
+                                >
+                                    <icon left>language</icon>
+                                    {{ 'editor.stage_multiple_items_all_languages_label' | gtxI18n:{
+                                        itemType: ('common.type_' + itemType | gtxI18n),
+                                        itemTypePlural: ('common.type_' + plural[itemType] | gtxI18n)
+                                    } }}
+                                </gtx-dropdown-item>
+                            }
 
-                    <gtx-dropdown-item data-action="unstage" (click)="unstageItems(StagingMode.REGULAR)">
-                        <icon left>remove</icon>
-                        {{ 'editor.unstage_multiple_items_label' | i18n:{
-                            itemType: ('common.type_' + itemType | i18n),
-                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
-                        } }}
-                    </gtx-dropdown-item>
+                            <gtx-dropdown-item data-action="unstage" (click)="unstageItems(StagingMode.REGULAR)">
+                                <icon left>remove</icon>
+                                {{ 'editor.unstage_multiple_items_label' | gtxI18n:{
+                                    itemType: ('common.type_' + itemType | gtxI18n),
+                                    itemTypePlural: ('common.type_' + plural[itemType] | gtxI18n)
+                                } }}
+                            </gtx-dropdown-item>
 
-                    <gtx-dropdown-item
-                        *ngIf="itemType === 'page'"
-                        data-action="unstage-languages"
-                        (click)="unstageItems(StagingMode.ALL_LANGUAGES)"
-                    >
-                        <icon left>block</icon>
-                        {{ 'editor.unstage_multiple_items_all_languages_label' | i18n:{
-                            itemType: ('common.type_' + itemType | i18n),
-                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
-                        } }}
-                    </gtx-dropdown-item>
-                </ng-container>
-            </gtx-dropdown-content>
-        </gtx-dropdown-list>
-    </div>
+                            @if (itemType === 'page') {
+                                <gtx-dropdown-item
+                                    data-action="unstage-languages"
+                                    (click)="unstageItems(StagingMode.ALL_LANGUAGES)"
+                                >
+                                    <icon left>block</icon>
+                                    {{ 'editor.unstage_multiple_items_all_languages_label' | gtxI18n:{
+                                        itemType: ('common.type_' + itemType | gtxI18n),
+                                        itemTypePlural: ('common.type_' + plural[itemType] | gtxI18n)
+                                    } }}
+                                </gtx-dropdown-item>
+                            }
+                        }
+                    </gtx-dropdown-content>
+                </gtx-dropdown-list>
+            }
+        </div>
+    }
 
     <div
         class="collapse-icon"
         [class.collapsed]="isCollapsed"
         (click)="isCollapsed = !isCollapsed"
     >
-        <gtx-button data-action="collapse" icon type="secondary" [disabled]="items?.length === 0">
+        <gtx-button
+            data-action="collapse"
+            icon
+            type="secondary"
+            [disabled]="items?.length === 0"
+        >
             <icon>keyboard_arrow_down</icon>
         </gtx-button>
     </div>

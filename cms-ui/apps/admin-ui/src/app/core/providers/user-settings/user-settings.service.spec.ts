@@ -1,15 +1,13 @@
-import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
-import { AppStateService, INITIAL_AUTH_STATE } from '@admin-ui/state';
-import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { of } from 'rxjs';
 import { first, takeUntil } from 'rxjs/operators';
 import { createDelayedObservable } from '../../../../testing';
+import { InterfaceOf, ObservableStopper } from '../../../common';
+import { AppStateService, INITIAL_AUTH_STATE } from '../../../state';
 import { SetUILanguage, SetUISettings } from '../../../state/ui/ui.actions';
+import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
 import { EditorUiLocalStorageService } from '../editor-ui-local-storage';
-import { I18nService } from '../i18n';
-import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
 import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ServerStorageService } from '../server-storage';
 import { UI_SETTINGS_DEBOUNCE_MS, UserSettingsService } from './user-settings.service';
@@ -52,8 +50,6 @@ describe('UserSettingsService', () => {
                 { provide: AppStateService, useExisting: TestAppState },
                 MockEditorLocalStorage,
                 { provide: EditorUiLocalStorageService, useExisting: MockEditorLocalStorage },
-                MockI18nServiceWithSpies,
-                { provide: I18nService, useExisting: MockI18nServiceWithSpies },
                 MockServerStorageService,
                 { provide: ServerStorageService, useExisting: MockServerStorageService },
                 { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },

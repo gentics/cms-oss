@@ -1,14 +1,10 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "types": [
-            "node", "jquery"
-        ]
+        "types": ["node", "jquery"],
+        "moduleResolution": "bundler"
     },
-    "files": [
-        "src/main.ts",
-        "src/polyfills.ts"
-    ],
+    "files": ["src/main.ts", "src/polyfills.ts"],
     "exclude": [
         "src/test.ts",
         "src/testing/**",

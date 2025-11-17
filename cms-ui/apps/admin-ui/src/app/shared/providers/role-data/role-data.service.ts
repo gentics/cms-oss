@@ -1,11 +1,12 @@
 import { masterLoading } from '@admin-ui/common/utils/rxjs-loading-operators/master-loading.operator';
-import { EntityManagerService, I18nNotificationService, I18nService, RoleOperations } from '@admin-ui/core';
+import { EntityManagerService, RoleOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ModelType, RoleBO } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { OperatorFunction } from 'rxjs';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
-
 
 @Injectable()
 export class RoleDataService extends ExtendedEntityDataServiceBase<'role', RoleOperations> {

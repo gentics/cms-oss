@@ -9,7 +9,7 @@ import { Component } from '@angular/core';
     styleUrls: ['./link-to-manual.component.scss'],
     standalone: false
 })
-export class GtxLinkToManualComponent {
+export class LinkToManualComponent {
     /** Actual URL string pointing at manual web resource. */
     manualUrl = '/guides/manuals/user-manual/';
 }

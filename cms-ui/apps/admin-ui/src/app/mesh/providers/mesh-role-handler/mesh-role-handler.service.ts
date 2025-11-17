@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import {
     EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
@@ -12,6 +12,7 @@ import {
 } from '@admin-ui/mesh/common';
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ListResponse, RoleCreateRequest, RoleListOptions, RoleListResponse, RoleLoadOptions, RoleResponse, RoleUpdateRequest } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';
@@ -54,7 +55,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public getMapped(uuid: string, params?: RoleLoadOptions): Promise<MeshRoleBO> {
-        return this.get(uuid, params).then(role => this.mapToBusinessObject(role));
+        return this.get(uuid, params).then((role) => this.mapToBusinessObject(role));
     }
 
     public async create(body: RoleCreateRequest): Promise<RoleResponse> {
@@ -75,7 +76,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public createMapped(body: RoleCreateRequest): Promise<MeshRoleBO> {
-        return this.create(body).then(role => this.mapToBusinessObject(role));
+        return this.create(body).then((role) => this.mapToBusinessObject(role));
     }
 
     public async update(uuid: string, body: RoleUpdateRequest): Promise<RoleResponse> {
@@ -96,7 +97,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public updateMapped(uuid: string, body: RoleUpdateRequest): Promise<MeshRoleBO> {
-        return this.update(uuid, body).then(role => this.mapToBusinessObject(role));
+        return this.update(uuid, body).then((role) => this.mapToBusinessObject(role));
     }
 
     public async delete(uuid: string): Promise<void> {
@@ -120,7 +121,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
         try {
             const res = await this.mesh.roles.list(params).send();
             for (const role of res.data) {
-                this.nameMap[role.uuid] = role.name
+                this.nameMap[role.uuid] = role.name;
             }
             return res;
         } catch (err) {
@@ -129,7 +130,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public listMapped(params?: RoleListOptions): Promise<ListResponse<MeshRoleBO>> {
-        return this.list(params).then(res => {
+        return this.list(params).then((res) => {
             return {
                 // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                 _metainfo: res._metainfo,

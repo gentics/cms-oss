@@ -1,8 +1,9 @@
 import { ConstructBO } from '@admin-ui/common';
-import { ALL_TRANSLATIONS, ConstructHandlerService, I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
+import { ConstructHandlerService, LanguageHandlerService } from '@admin-ui/core';
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { CmsI18nValue, Language, TagTypeBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -13,7 +14,7 @@ import { switchMap } from 'rxjs/operators';
     templateUrl: './copy-construct-modal.component.html',
     styleUrls: ['./copy-construct-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CopyConstructModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 
@@ -34,6 +35,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
         private languageHandler: LanguageHandlerService,
         private handler: ConstructHandlerService,
         private notifications: I18nNotificationService,
+        private i18n: I18nService,
     ) {
         super();
     }
@@ -41,16 +43,14 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
     ngOnInit(): void {
         this.loading = true;
 
-        this.subscriptions.push(this.languageHandler.getSupportedLanguages().subscribe(langs => {
+        this.subscriptions.push(this.languageHandler.getSupportedLanguages().subscribe((langs) => {
             langs = langs || [];
             this.supportedLanguages = langs;
             const fallbackLanguage = langs?.[0];
-            const fallbackSuffix = ALL_TRANSLATIONS.common?.copy_suffix?.[fallbackLanguage.code];
+            const suffix = this.i18n.instant('common.copy_suffix');
             const newName: CmsI18nValue = {};
 
-            this.supportedLanguages.forEach(lang => {
-                const suffix: string = ALL_TRANSLATIONS.common?.copy_suffix?.[lang.code] ?? fallbackSuffix;
-
+            this.supportedLanguages.forEach((lang) => {
                 if ((this.construct.nameI18n || {})[lang.code]) {
                     newName[lang.code] = `${this.construct.nameI18n[lang.code]} ${suffix}`;
                 } else {
@@ -69,7 +69,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     initForm(): void {
@@ -78,7 +78,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
 
     buttonCopyEntityClicked(): void {
         const { nodeIds, ...body } = this.form.value;
-        const cleanParts = (this.construct.parts || []).map(part => {
+        const cleanParts = (this.construct.parts || []).map((part) => {
             // Delete all IDs and GlobalIDs, as they will be populated by creating them
             delete part.globalId;
             delete part.id;
@@ -96,12 +96,12 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
         this.form.disable();
 
         this.subscriptions.push(this.handler.createMapped(body, { nodeId: nodeIds }).pipe(
-            switchMap(created => this.handler.updateMapped(created.id, {
+            switchMap((created) => this.handler.updateMapped(created.id, {
                 parts: cleanParts,
             })),
         ).subscribe(() => {
             this.closeFn(true);
-        }, err => {
+        }, (err) => {
             this.loading = false;
             this.form.enable();
             this.changeDetector.markForCheck();

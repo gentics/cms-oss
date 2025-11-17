@@ -1,254 +1,24 @@
-<div *ngIf="editorState" class="editor-toolbar">
+@if (editorState) {
+  <div class="editor-toolbar">
     <div class="element-toolbar" [class.regular]="currentItem?.type !== 'page' || editorState?.editMode !== EditMode.EDIT">
+      @if (focusMode) {
         <a
-            *ngIf="focusMode"
-            class="gentics-logo"
-            [routerLink]="['/editor', { outlets: { list: ['node', currentNode.id, 'folder', currentNode.folderId] } } ]"
-            (click)="logoClick()"
-        >
-            <img src="assets/images/gentics-logo-60px.png">
+          class="gentics-logo"
+          [routerLink]="['/editor', { outlets: { list: ['node', currentNode.id, 'folder', currentNode.folderId] } } ]"
+          (click)="logoClick()"
+          >
+          <img src="assets/images/gentics-logo-60px.png">
         </a>
-
-        <ng-container *ngIf="currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT; else itemBreadcrumb">
-            <div class="page-editor-tabs">
-                <gtx-page-editor-tabs
-                    [brokenLinkCount]="brokenLinkCount"
-                ></gtx-page-editor-tabs>
-            </div>
-        </ng-container>
-
-        <div class="toolbar-actions">
-            <div class="item-status">
-                <item-status-label
-                    class="full-size"
-                    [item]="currentItem"
-                    [nodeLanguages]="activeNodeLanguages"
-                    [activeNodeId]="currentNode?.id"
-                ></item-status-label>
-            </div>
-
-            <gtx-button
-                *ngIf="buttons.saveAsCopy"
-                class="primary-action"
-                size="small"
-                flat
-                data-action="save-copy"
-                [disabled]="copyDisabled"
-                [title]="'editor.content_frame_save_copy_tooltip' | i18n"
-                (click)="saveChanges(SaveBehaviour.SAVE_AS_COPY)"
-            >
-                <icon left>file_copy</icon>
-                <span [innerHTML]="'editor.content_frame_save_copy_button' | i18n"></span>
-            </gtx-button>
-
-            <gtx-button
-                *ngIf="buttons.edit"
-                class="primary-action edit-button"
-                size="small"
-                flat
-                data-action="edit"
-                (click)="editItem()"
-                [title]="'editor.edit_tooltip' | i18n"
-            >
-                <icon left>edit</icon>
-                <span class="edit-button-label">{{ 'editor.edit_label' | i18n }}</span>
-            </gtx-button>
-
-            <gtx-button
-                *ngIf="buttons.lockedEdit"
-                class="primary-action"
-                size="small"
-                type="secondary"
-                flat
-                [disabled]="true"
-                [title]="'editor.content_frame_page_locked_tooltip' | i18n"
-            >
-                <icon>lock</icon>
-            </gtx-button>
-
-            <gtx-split-button
-                *ngIf="showSave"
-                class="primary-action save-button"
-                size="small"
-                data-action="save"
-                [disabled]="saveDisabled || isSaving"
-                [title]="'editor.content_frame_save_changes_tooltip' | i18n"
-            >
-                <gtx-split-button-primary-action (click)="saveChanges(SaveBehaviour.REGULAR)">
-                    <div class="save-button-primary-action">
-                        <icon class="save-button-icon" left>save</icon>
-                        <span class="save-button-label" [innerHTML]="'editor.content_frame_save_changes_button' | i18n"></span>
-                    </div>
-                </gtx-split-button-primary-action>
-
-                <gtx-dropdown-item
-                    *ngIf="currentItem?.type === 'folder' && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB"
-                    data-action="save-recursive"
-                    (click)="saveChanges(SaveBehaviour.APPLY_TO_SUBFOLDERS)"
-                >
-                    <icon left>save</icon>
-                    <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_subfolders_button' | i18n"></span>
-                </gtx-dropdown-item>
-
-                <gtx-dropdown-item
-                    *ngIf="editorState.editMode === EditMode.EDIT_PROPERTIES
-                        && currentItem?.type === 'page'
-                        && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB"
-                    data-action="save-variants"
-                    (click)="saveChanges(SaveBehaviour.APPLY_TO_LANGUAGE_VARIANTS)"
-                >
-                    <icon left>save</icon>
-                    <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_language_variants_button' | i18n"></span>
-                </gtx-dropdown-item>
-            </gtx-split-button>
-
-            <gtx-dropdown-list
-                *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'"
-                data-action="editor-context"
-                data-context-id="item-editor"
-                class="content-frame-context-menu"
-            >
-                <gtx-dropdown-trigger>
-                    <gtx-button
-                        icon
-                        type="secondary"
-                        data-context-trigger
-                    >
-                        <icon>more_vert</icon>
-                    </gtx-button>
-                </gtx-dropdown-trigger>
-
-                <gtx-dropdown-content data-context-id="item-editor" class="content-frame-context">
-                    <gtx-dropdown-item
-                        *ngIf="buttons.editProperties"
-                        data-action="edit-properties"
-                        (click)="editProperties()"
-                    >
-                        <icon left>settings</icon> {{ 'editor.properties_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="buttons.editItem"
-                        data-action="edit"
-                        (click)="editItem()"
-                    >
-                        <icon left>edit</icon> {{ 'editor.edit_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="buttons.previewPage"
-                        data-action="preview"
-                        (click)="previewPage()"
-                    >
-                        <ng-container *ngIf="!editorState.version; else previewCurrentVersion">
-                            <icon left>pageview</icon> {{ 'editor.preview_label' | i18n }}
-                        </ng-container>
-                        <ng-template #previewCurrentVersion>
-                            <icon left>update</icon> {{ 'editor.preview_current_version_label' | i18n }}
-                        </ng-template>
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="buttons.compareSources"
-                        data-action="compare-sources"
-                        (click)="switchToCompareSources()"
-                    >
-                        <icon left>code</icon> {{ 'editor.compare_version_sources_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="buttons.compareContents"
-                        data-action="compare-contents"
-                        (click)="switchToCompareContents()"
-                    >
-                        <icon left>pageview</icon> {{ 'editor.compare_version_contents_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="buttons.versionHistory"
-                        data-action="versions"
-                        (click)="showPageVersionsModal()"
-                    >
-                        <icon left>history</icon> {{ 'editor.version_history_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="buttons.timeManagement"
-                        data-action="time-management"
-                        (click)="showTimeManagement()"
-                    >
-                        <icon left>date_range</icon> {{ 'editor.time_management_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="inQueue"
-                        class="success"
-                        data-action="approve"
-                        (click)="approve()"
-                    >
-                        <icon left>playlist_add_check</icon> {{ 'editor.publish_queue_btn_approve' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="buttons.publish"
-                        class="success"
-                        data-action="publish"
-                        (click)="saveChanges(SaveBehaviour.SAVE_AND_PUBLISH)"
-                    >
-                        <icon left>cloud_upload</icon> {{ 'editor.publish_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="buttons.takeOffline"
-                        class="alert"
-                        data-action="take-offline"
-                        (click)="takeItemOffline()"
-                    >
-                        <icon left>cloud_off</icon> {{ 'editor.take_offline_label' | i18n }}
-                    </gtx-dropdown-item>
-                </gtx-dropdown-content>
-            </gtx-dropdown-list>
-
-            <ng-container *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'">
-                <gtx-button
-                    icon
-                    class="focus-mode-button"
-                    type="secondary"
-                    data-action="toggle-focus-mode"
-                    [attr.data-active]="editorState.focusMode"
-                    [title]="('editor.' + (editorState.focusMode ? 'disable' : 'enable') + '_focus_mode_label') | i18n"
-                    (click)="setFocusMode(!editorState.focusMode)"
-                >
-                    <icon>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>
-                </gtx-button>
-            </ng-container>
-
-            <gtx-button
-                class="close-button"
-                icon
-                type="secondary"
-                data-action="close"
-                (click)="closeEditor()"
-            >
-                <icon>close</icon>
-            </gtx-button>
+      }
+      @if (currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT) {
+        <div class="page-editor-tabs">
+          <gtx-page-editor-tabs
+            [brokenLinkCount]="brokenLinkCount"
+          ></gtx-page-editor-tabs>
         </div>
-    </div>
-
-    <gtx-page-editor-controls
-        *ngIf="currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT"
-        class="page-editor-controls"
-        [nodeId]="currentNode.id"
-        [pageId]="currentItem.id"
-        (brokenLinkCountChange)="updateBrokenLinkCount($event)"
-    ></gtx-page-editor-controls>
-
-    <gtx-progress-bar class="image-loading" [for]="uploadInProgress$"></gtx-progress-bar>
-</div>
-
-<ng-template #itemBreadcrumb>
-    <div class="breadcrumb-info">
-        <gtx-breadcrumbs
+      } @else {
+        <div class="breadcrumb-info">
+          <gtx-breadcrumbs
             [routerLinks]="breadcrumbs"
             [multiline]="true"
             [multilineExpanded]="multilineExpanded"
@@ -256,47 +26,283 @@
             [class.not-inherited]="!nodeInherited"
             (linkClick)="changeFocus()"
             (multilineExpandedChange)="expandedChanged($event)"
-        >
-            <icon *ngIf="nodeInherited" class="iconChannel">input</icon>
-        </gtx-breadcrumbs>
-
-        <div class="item-info">
-            <div
-                class="title-name"
-                [class.is-node]="currentItem?.type === 'node' || currentItem?.type === 'channel'"
-                [title]="currentItem?.name | replaceEscapedCharacters"
             >
+            @if (nodeInherited) {
+              <icon class="iconChannel">input</icon>
+            }
+          </gtx-breadcrumbs>
+          <div class="item-info">
+            <div
+              class="title-name"
+              [class.is-node]="currentItem?.type === 'node' || currentItem?.type === 'channel'"
+              [title]="currentItem?.name | replaceEscapedCharacters"
+              >
+              @if (currentItem?.type !== 'node') {
                 <inherited-localized-icon
-                    *ngIf="currentItem?.type !== 'node'"
-                    [item]="currentItem"
-                    [editorNodeId]="editorNodeId"
+                  [item]="currentItem"
+                  [editorNodeId]="editorNodeId"
                 ></inherited-localized-icon>
-                <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
+              }
+              <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
             </div>
-
-            <div class="item-version" *ngIf="(currentItem?.type === 'page' || currentItem?.type === 'form') && editorState.version">
-                <span *ngIf="editorState.oldVersion">
+            @if ((currentItem?.type === 'page' || currentItem?.type === 'form') && editorState.version) {
+              <div class="item-version">
+                @if (editorState.oldVersion) {
+                  <span>
                     v{{ editorState.oldVersion.number }}
                     <icon class="comparison-icon">compare_arrows</icon>
                     v{{ editorState.version?.number }}
-                </span>
-                <span *ngIf="!editorState.oldVersion">v{{ editorState.version.number }}</span>
-            </div>
-
-            <div *ngIf="currentItem?.type === 'form' || (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId)" class="item-language">
-                <div *ngIf="itemLanguage">{{ itemLanguage?.code | i18n }}</div>
-
-                <ng-container *ngIf="editorState.compareWithId">
-                    <div>
-                        <icon class="comparison-icon">compare_arrows</icon>
-                    </div>
-                    <div>{{ pageComparisonLanguage?.code | i18n }}</div>
-                </ng-container>
-            </div>
-
-            <div class="form-type" *ngIf="currentItem && currentItem?.type === 'form'">
-                {{ 'editor.item_type_label' | i18n }}: {{ 'gtxFormGenerator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | i18n }}
-            </div>
+                  </span>
+                }
+                @if (!editorState.oldVersion) {
+                  <span>v{{ editorState.version.number }}</span>
+                }
+              </div>
+            }
+            @if (currentItem?.type === 'form' || (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId)) {
+              <div class="item-language">
+                @if (itemLanguage) {
+                  <div>{{ itemLanguage?.code | gtxI18n }}</div>
+                }
+                @if (editorState.compareWithId) {
+                  <div>
+                    <icon class="comparison-icon">compare_arrows</icon>
+                  </div>
+                  <div>{{ pageComparisonLanguage?.code | gtxI18n }}</div>
+                }
+              </div>
+            }
+            @if (currentItem && currentItem?.type === 'form') {
+              <div class="form-type">
+                {{ 'editor.item_type_label' | gtxI18n }}: {{ 'gtxFormGenerator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | gtxI18n }}
+              </div>
+            }
+          </div>
         </div>
+      }
+      <div class="toolbar-actions">
+        <div class="item-status">
+          <item-status-label
+            class="full-size"
+            [item]="currentItem"
+            [nodeLanguages]="activeNodeLanguages"
+            [activeNodeId]="currentNode?.id"
+          ></item-status-label>
+        </div>
+        @if (buttons.saveAsCopy) {
+          <gtx-button
+            class="primary-action"
+            size="small"
+            flat
+            data-action="save-copy"
+            [disabled]="copyDisabled"
+            [title]="'editor.content_frame_save_copy_tooltip' | gtxI18n"
+            (click)="saveChanges(SaveBehaviour.SAVE_AS_COPY)"
+            >
+            <icon left>file_copy</icon>
+            <span [innerHTML]="'editor.content_frame_save_copy_button' | gtxI18n"></span>
+          </gtx-button>
+        }
+        @if (buttons.edit) {
+          <gtx-button
+            class="primary-action edit-button"
+            size="small"
+            flat
+            data-action="edit"
+            (click)="editItem()"
+            [title]="'editor.edit_tooltip' | gtxI18n"
+            >
+            <icon left>edit</icon>
+            <span class="edit-button-label">{{ 'editor.edit_label' | gtxI18n }}</span>
+          </gtx-button>
+        }
+        @if (buttons.lockedEdit) {
+          <gtx-button
+            class="primary-action"
+            size="small"
+            type="secondary"
+            flat
+            [disabled]="true"
+            [title]="'editor.content_frame_page_locked_tooltip' | gtxI18n"
+            >
+            <icon>lock</icon>
+          </gtx-button>
+        }
+        @if (showSave) {
+          <gtx-split-button
+            class="primary-action save-button"
+            size="small"
+            data-action="save"
+            [disabled]="saveDisabled || isSaving"
+            [title]="'editor.content_frame_save_changes_tooltip' | gtxI18n"
+            >
+            <gtx-split-button-primary-action (click)="saveChanges(SaveBehaviour.REGULAR)">
+              <div class="save-button-primary-action">
+                <icon class="save-button-icon" left>save</icon>
+                <span class="save-button-label" [innerHTML]="'editor.content_frame_save_changes_button' | gtxI18n"></span>
+              </div>
+            </gtx-split-button-primary-action>
+            @if (currentItem?.type === 'folder' && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB) {
+              <gtx-dropdown-item
+                data-action="save-recursive"
+                (click)="saveChanges(SaveBehaviour.APPLY_TO_SUBFOLDERS)"
+                >
+                <icon left>save</icon>
+                <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_subfolders_button' | gtxI18n"></span>
+              </gtx-dropdown-item>
+            }
+            @if (editorState.editMode === EditMode.EDIT_PROPERTIES
+              && currentItem?.type === 'page'
+              && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB) {
+              <gtx-dropdown-item
+                data-action="save-variants"
+                (click)="saveChanges(SaveBehaviour.APPLY_TO_LANGUAGE_VARIANTS)"
+                >
+                <icon left>save</icon>
+                <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_language_variants_button' | gtxI18n"></span>
+              </gtx-dropdown-item>
+            }
+          </gtx-split-button>
+        }
+        @if (currentItem?.type === 'page' || currentItem?.type === 'form') {
+          <gtx-dropdown-list
+            data-action="editor-context"
+            data-context-id="item-editor"
+            class="content-frame-context-menu"
+            >
+            <gtx-dropdown-trigger>
+              <gtx-button
+                icon
+                type="secondary"
+                data-context-trigger
+                >
+                <icon>more_vert</icon>
+              </gtx-button>
+            </gtx-dropdown-trigger>
+            <gtx-dropdown-content data-context-id="item-editor" class="content-frame-context">
+              @if (buttons.editProperties) {
+                <gtx-dropdown-item
+                  data-action="edit-properties"
+                  (click)="editProperties()"
+                  >
+                  <icon left>settings</icon> {{ 'editor.properties_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+              @if (buttons.editItem) {
+                <gtx-dropdown-item
+                  data-action="edit"
+                  (click)="editItem()"
+                  >
+                  <icon left>edit</icon> {{ 'editor.edit_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+              @if (buttons.previewPage) {
+                <gtx-dropdown-item
+                  data-action="preview"
+                  (click)="previewPage()"
+                  >
+                  @if (!editorState.version) {
+                    <icon left>pageview</icon> {{ 'editor.preview_label' | gtxI18n }}
+                  } @else {
+                    <icon left>update</icon> {{ 'editor.preview_current_version_label' | gtxI18n }}
+                  }
+                </gtx-dropdown-item>
+              }
+              @if (buttons.compareSources) {
+                <gtx-dropdown-item
+                  data-action="compare-sources"
+                  (click)="switchToCompareSources()"
+                  >
+                  <icon left>code</icon> {{ 'editor.compare_version_sources_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+              @if (buttons.compareContents) {
+                <gtx-dropdown-item
+                  data-action="compare-contents"
+                  (click)="switchToCompareContents()"
+                  >
+                  <icon left>pageview</icon> {{ 'editor.compare_version_contents_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+              @if (buttons.versionHistory) {
+                <gtx-dropdown-item
+                  data-action="versions"
+                  (click)="showPageVersionsModal()"
+                  >
+                  <icon left>history</icon> {{ 'editor.version_history_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+              @if (buttons.timeManagement) {
+                <gtx-dropdown-item
+                  data-action="time-management"
+                  (click)="showTimeManagement()"
+                  >
+                  <icon left>date_range</icon> {{ 'editor.time_management_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+              @if (inQueue) {
+                <gtx-dropdown-item
+                  class="success"
+                  data-action="approve"
+                  (click)="approve()"
+                  >
+                  <icon left>playlist_add_check</icon> {{ 'editor.publish_queue_btn_approve' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+              @if (buttons.publish) {
+                <gtx-dropdown-item
+                  class="success"
+                  data-action="publish"
+                  (click)="saveChanges(SaveBehaviour.SAVE_AND_PUBLISH)"
+                  >
+                  <icon left>cloud_upload</icon> {{ 'editor.publish_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+              @if (buttons.takeOffline) {
+                <gtx-dropdown-item
+                  class="alert"
+                  data-action="take-offline"
+                  (click)="takeItemOffline()"
+                  >
+                  <icon left>cloud_off</icon> {{ 'editor.take_offline_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+            </gtx-dropdown-content>
+          </gtx-dropdown-list>
+        }
+        @if (currentItem?.type === 'page' || currentItem?.type === 'form') {
+          <gtx-button
+            icon
+            class="focus-mode-button"
+            type="secondary"
+            data-action="toggle-focus-mode"
+            [attr.data-active]="editorState.focusMode"
+            [title]="('editor.' + (editorState.focusMode ? 'disable' : 'enable') + '_focus_mode_label') | gtxI18n"
+            (click)="setFocusMode(!editorState.focusMode)"
+            >
+            <icon>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>
+          </gtx-button>
+        }
+        <gtx-button
+          class="close-button"
+          icon
+          type="secondary"
+          data-action="close"
+          (click)="closeEditor()"
+          >
+          <icon>close</icon>
+        </gtx-button>
+      </div>
     </div>
-</ng-template>
+    @if (currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT) {
+      <gtx-page-editor-controls
+        class="page-editor-controls"
+        [nodeId]="currentNode.id"
+        [pageId]="currentItem.id"
+        (brokenLinkCountChange)="updateBrokenLinkCount($event)"
+      ></gtx-page-editor-controls>
+    }
+    <gtx-progress-bar class="image-loading" [for]="uploadInProgress$"></gtx-progress-bar>
+  </div>
+}
+

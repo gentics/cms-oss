@@ -1,53 +1,54 @@
 <div class="modal-title">
-    <h5>{{ 'modal.create_group_title' | i18n: { entityName: (parentGroup$ | async)?.name } }}</h5>
+  <h5>{{ 'modal.create_group_title' | gtxI18n: { entityName: (parentGroup$ | async)?.name } }}</h5>
 </div>
 <div class="modal-content">
-    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+  <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
 
-    <form *ngIf="form" autocomplete="off" [formGroup]="form" class="gtx-create-user-modal-tab-content-body-form">
-        <div class="input-container small-12 medium-12 row">
-            <div class="input-container small-12 medium-12 columns">
-                <gtx-input
-                    type="text"
-                    [required]="true"
-                    maxlength="50"
-                    [label]="'shared.group_name' | i18n"
-                    [placeholder]="'shared.group_name' | i18n"
-                    formControlName="name"
-                >
-                </gtx-input>
-            </div>
+  @if (form) {
+    <form autocomplete="off" [formGroup]="form" class="gtx-create-user-modal-tab-content-body-form">
+      <div class="input-container small-12 medium-12 row">
+        <div class="input-container small-12 medium-12 columns">
+          <gtx-input
+            type="text"
+            [required]="true"
+            maxlength="50"
+            [label]="'shared.group_name' | gtxI18n"
+            [placeholder]="'shared.group_name' | gtxI18n"
+            formControlName="name"
+            >
+          </gtx-input>
         </div>
-
-        <div class="input-container small-12 medium-12 row">
-            <div class="input-container medium-12 columns">
-                <gtx-textarea
-                    [required]="false"
-                    maxlength="200"
-                    [label]="'shared.description' | i18n"
-                    [placeholder]="'shared.description' | i18n"
-                    formControlName="description"
-                >
-                </gtx-textarea>
-            </div>
+      </div>
+      <div class="input-container small-12 medium-12 row">
+        <div class="input-container medium-12 columns">
+          <gtx-textarea
+            [required]="false"
+            maxlength="200"
+            [label]="'shared.description' | gtxI18n"
+            [placeholder]="'shared.description' | gtxI18n"
+            formControlName="description"
+            >
+          </gtx-textarea>
         </div>
+      </div>
     </form>
+  }
 </div>
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        [disabled]="!isValid() || loading"
-        (click)="buttonCreateEntityClicked()"
-        gtxActionAllowed="group.createGroup"
+  <gtx-button
+    type="primary"
+    [disabled]="!isValid() || loading"
+    (click)="buttonCreateEntityClicked()"
+    gtxActionAllowed="group.createGroup"
     >
-        {{ 'modal.create_group_button' | i18n }}
-    </gtx-button>
+    {{ 'modal.create_group_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

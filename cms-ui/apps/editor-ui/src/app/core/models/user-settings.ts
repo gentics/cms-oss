@@ -1,8 +1,7 @@
-import { DisplayFields } from '@editor-ui/app/common/models';
+import { FALLBACK_LANGUAGE } from '@gentics/cms-components';
+import { DisplayFields, SETTING_LAST_NODE_ID } from '../../common/models';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { Favourite, SortField } from '@gentics/cms-models';
-import { FALLBACK_LANGUAGE } from '../../common/config/config';
-import { SETTING_LAST_NODE_ID } from '../../common/models';
 
 export interface UserSettings {
     activeLanguage: number;
@@ -17,20 +16,20 @@ export interface UserSettings {
     fileDisplayFieldsRepositoryBrowser: DisplayFields;
     fileItemsPerPage: number;
     fileShowPath: boolean;
-    fileSorting: { sortBy: SortField, sortOrder: 'asc' | 'desc' };
+    fileSorting: { sortBy: SortField; sortOrder: 'asc' | 'desc' };
     folderDisplayFields: string[];
     folderDisplayFieldsRepositoryBrowser: DisplayFields;
     folderItemsPerPage: number;
-    folderSorting: { sortBy: SortField, sortOrder: 'asc' | 'desc' };
+    folderSorting: { sortBy: SortField; sortOrder: 'asc' | 'desc' };
     formDisplayFields: string[];
     formDisplayFieldsRepositoryBrowser: DisplayFields;
     formItemsPerPage: number;
-    formSorting: { sortBy: SortField, sortOrder: 'asc' | 'desc' };
+    formSorting: { sortBy: SortField; sortOrder: 'asc' | 'desc' };
     imageDisplayFields: string[];
     imageDisplayFieldsRepositoryBrowser: DisplayFields;
     imageItemsPerPage: number;
     imageShowPath: boolean;
-    imageSorting: { sortBy: SortField, sortOrder: 'asc' | 'desc' };
+    imageSorting: { sortBy: SortField; sortOrder: 'asc' | 'desc' };
     itemListBreadcrumbsExpanded: boolean;
     [SETTING_LAST_NODE_ID]: number;
     openObjectPropertyGroups: string[];
@@ -40,7 +39,7 @@ export interface UserSettings {
     pageDisplayFieldsPublishQueue: string[];
     pageItemsPerPage: number;
     pageShowPath: boolean;
-    pageSorting: { sortBy: SortField, sortOrder: 'asc' | 'desc' };
+    pageSorting: { sortBy: SortField; sortOrder: 'asc' | 'desc' };
     repositoryBrowserBreadcrumbsExpanded: boolean;
     uiLanguage: GcmsUiLanguage;
     constructFavourites: string[];

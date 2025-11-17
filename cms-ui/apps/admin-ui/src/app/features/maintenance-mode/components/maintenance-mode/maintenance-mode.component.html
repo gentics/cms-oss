@@ -1,7 +1,7 @@
 <gtx-loading-trigger></gtx-loading-trigger>
 <div class="gtx-entity-master">
 
-    <h2 class="title">{{ 'maintenancemode.maintenancemode_title' | i18n }}</h2>
+    <h2 class="title">{{ 'maintenance_mode.maintenancemode_title' | gtxI18n }}</h2>
 
     <div class="maintenancemode-toolbar">
         <div class="gtx-maintenancemode-actions">
@@ -12,7 +12,7 @@
                 (click)="setMaintenanceMode()"
                 [gtxActionAllowed]="'admin.readAdmin'"
             >
-                {{ 'common.save_button' | i18n }}
+                {{ 'common.save_button' | gtxI18n }}
             </gtx-button>
 
             <gtx-button
@@ -22,7 +22,7 @@
                 [routerLink]="['/']"
                 [gtxActionAllowed]="'admin.readAdmin'"
             >
-                {{ 'common.cancel_button' | i18n }}
+                {{ 'common.cancel_button' | gtxI18n }}
             </gtx-button>
 
         </div>
@@ -32,14 +32,14 @@
         <div class="row">
             <div class="input-container small-6 columns">
                 <gtx-checkbox
-                    [label]="'maintenancemode.maintenance' | i18n"
+                    [label]="'maintenance_mode.maintenance' | gtxI18n"
                     formControlName="maintenance"
                 ></gtx-checkbox>
             </div>
 
             <div class="input-container small-6 columns">
                 <gtx-checkbox
-                    [label]="'maintenancemode.banner' | i18n"
+                    [label]="'maintenance_mode.banner' | gtxI18n"
                     formControlName="banner"
                 ></gtx-checkbox>
             </div>
@@ -51,7 +51,7 @@
             <div class="input-container small-12 columns">
                 <gtx-textarea
                     maxlength="255"
-                    [label]="'maintenancemode.message' | i18n"
+                    [label]="'maintenance_mode.message' | gtxI18n"
                     formControlName="message"
                 ></gtx-textarea>
             </div>

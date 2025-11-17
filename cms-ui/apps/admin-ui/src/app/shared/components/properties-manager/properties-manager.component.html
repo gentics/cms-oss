@@ -1,55 +1,53 @@
 <div class="wrapper">
-    <gtx-properties-tabs
-        class="properties-tabs"
-        [items]="finalTabs"
-        [selectedTab]="activeTab"
-        (selectedTabChange)="setActiveTab($event)"
-    ></gtx-properties-tabs>
+  <gtx-properties-tabs
+    class="properties-tabs"
+    [items]="finalTabs"
+    [selectedTab]="activeTab"
+    (selectedTabChange)="setActiveTab($event)"
+  ></gtx-properties-tabs>
 
-    <div class="editor-wrapper">
-        <ng-container *ngIf="activeTab && (propertiesMap[activeTab] || editors[activeTab])">
-            <ng-container *ngIf="editors[activeTab]; else defaultEditor">
-                <ng-container
-                    [ngTemplateOutlet]="editors[activeTab]"
-                    [ngTemplateOutletContext]="{ properties: propertiesMap[activeTab] }"
-                ></ng-container>
-            </ng-container>
-
-            <ng-template #defaultEditor>
-                <ng-container *ngIf="propertiesMap[activeTab]?.construct">
-                    <div class="tag-editor">
-                        <div
-                            class="tag-wrapper"
-                            [class.disabled]="isDisabled"
-                            [class.nonActive]="!propertiesMap[activeTab].construct.active"
-                            [class.tagfillLightEnabled]="(tagfillLightState$ | async)"
-                        >
-                            <div *ngIf="!(tagfillLightState$ | async)" class="activate-obj-prop">
-                                <gtx-checkbox
-                                    [checked]="propertiesMap[activeTab].construct.active"
-                                    [label]="'editor.obj_prop_active_label' | i18n"
-                                ></gtx-checkbox>
-                            </div>
-
-                            <gtx-tag-editor-wrapper
-                                #tagEditor
-                                *ngIf="propertiesMap[activeTab].construct; else tagTypeLoadError"
-                                class="tag-editor-wrapper"
-                                [baseUrl]="baseUrl"
-                                [nodeId]="nodeId || item.nodeId || item.node?.id"
-                                [entityType]="itemType || item.type"
-                                [entityId]="item.id"
-                                [tagName]="tagNameMap[activeTab]"
-                                (change)="forwardTagEditorChange($event)"
-                            ></gtx-tag-editor-wrapper>
-                        </div>
-
-                        <ng-template #tagTypeLoadError>
-                            <span>{{ 'editor.properties_error_loading_tagtype' | i18n }}</span>
-                        </ng-template>
-                    </div>
-                </ng-container>
-            </ng-template>
-        </ng-container>
-    </div>
+  <div class="editor-wrapper">
+    @if (activeTab && (propertiesMap[activeTab] || editors[activeTab])) {
+      @if (editors[activeTab]) {
+        <ng-container
+          [ngTemplateOutlet]="editors[activeTab]"
+          [ngTemplateOutletContext]="{ properties: propertiesMap[activeTab] }"
+        ></ng-container>
+      } @else {
+        @if (propertiesMap[activeTab]?.construct) {
+          <div class="tag-editor">
+            <div
+              class="tag-wrapper"
+              [class.disabled]="isDisabled"
+              [class.nonActive]="!propertiesMap[activeTab].construct.active"
+              [class.tagfillLightEnabled]="(tagfillLightState$ | async)"
+              >
+              @if (!(tagfillLightState$ | async)) {
+                <div class="activate-obj-prop">
+                  <gtx-checkbox
+                    [checked]="propertiesMap[activeTab].construct.active"
+                    [label]="'editor.obj_prop_active_label' | gtxI18n"
+                  ></gtx-checkbox>
+                </div>
+              }
+              @if (propertiesMap[activeTab].construct) {
+                <gtx-tag-editor-wrapper
+                  #tagEditor
+                  class="tag-editor-wrapper"
+                  [baseUrl]="baseUrl"
+                  [nodeId]="nodeId || item.nodeId || item.node?.id"
+                  [entityType]="itemType || item.type"
+                  [entityId]="item.id"
+                  [tagName]="tagNameMap[activeTab]"
+                  (change)="forwardTagEditorChange($event)"
+                ></gtx-tag-editor-wrapper>
+              } @else {
+                <span>{{ 'editor.properties_error_loading_tagtype' | gtxI18n }}</span>
+              }
+            </div>
+          </div>
+        }
+      }
+    }
+  </div>
 </div>

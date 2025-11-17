@@ -1,23 +1,22 @@
 <ng-container>
-    <div class="tag-part-editor">
-        <browse-box
-            [label]="tagPart | tagPropLabel"
-            [displayValue]="tagDisplayValue$ | async"
-            [browseTooltip]="'tag_editor.browse_for_tag' | i18n"
-            [disabled]="readOnly"
-            (clear)="changeSelection({ container: null, tag: null })"
-            (browse)="browseForTag()"
-        ></browse-box>
+  <div class="tag-part-editor">
+    <browse-box
+      [label]="tagPart | tagPropLabel"
+      [displayValue]="tagDisplayValue$ | async"
+      [browseTooltip]="'tag_editor.browse_for_tag' | gtxI18n"
+      [disabled]="readOnly"
+      (clear)="changeSelection({ container: null, tag: null })"
+      (browse)="browseForTag()"
+    ></browse-box>
 
-        <div>
-            <ng-container *ngIf="selectedContainer">
-                <ng-container *ngIf="selectedContainer.type === 'page'; else isTemplateTag">
-                    {{ 'common.type_page' | i18n }}: {{ selectedFullPath }}
-                </ng-container>
-                <ng-template #isTemplateTag>
-                    {{ 'common.type_template' | i18n }}: {{ selectedContainer.name }}
-                </ng-template>
-            </ng-container>
-        </div>
+    <div>
+      @if (selectedContainer) {
+        @if (selectedContainer.type === 'page') {
+          {{ 'common.type_page' | gtxI18n }}: {{ selectedFullPath }}
+        } @else {
+          {{ 'common.type_template' | gtxI18n }}: {{ selectedContainer.name }}
+        }
+      }
     </div>
+  </div>
 </ng-container>

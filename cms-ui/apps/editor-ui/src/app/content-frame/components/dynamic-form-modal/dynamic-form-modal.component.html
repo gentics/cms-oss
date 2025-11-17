@@ -1,40 +1,40 @@
 <div class="modal-title">
-    <h5>{{ configuration?.title | i18n }}</h5>
+  <h5>{{ configuration?.title | gtxI18n }}</h5>
 </div>
 
 <div #content class="modal-content">
-    <div class="form-wrapper" [formGroup]="control">
-        <ng-container *ngFor="let ctrl of (configuration.controls | gtxEntries); let index = index">
-            <gtx-aloha-component-renderer
-                class="dynamic-control"
-                [attr.data-slot]="ctrl.key"
-                [renderContext]="RENDERING_CONTEXT_MODAL"
-                [type]="configuration.controls[ctrl.key].type"
-                [settings]="configuration.controls[ctrl.key].options"
-                [formControlName]="ctrl.key"
-                (initialized)="index === 0 && focusFirstElement()"
-            ></gtx-aloha-component-renderer>
-        </ng-container>
-    </div>
+  <div class="form-wrapper" [formGroup]="control">
+    @for (ctrl of (configuration.controls | gtxEntries); track ctrl; let index = $index) {
+      <gtx-aloha-component-renderer
+        class="dynamic-control"
+        [attr.data-slot]="ctrl.key"
+        [renderContext]="RENDERING_CONTEXT_MODAL"
+        [type]="configuration.controls[ctrl.key].type"
+        [settings]="configuration.controls[ctrl.key].options"
+        [formControlName]="ctrl.key"
+        (initialized)="index === 0 && focusFirstElement()"
+      ></gtx-aloha-component-renderer>
+    }
+  </div>
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        data-action="cancel"
-        (click)="handleAbortClick()"
+  <gtx-button
+    type="secondary"
+    flat
+    data-action="cancel"
+    (click)="handleAbortClick()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="primary"
-        class="confirm-button"
-        data-action="confirm"
-        [disabled]="!control.valid"
-        (click)="handleConfirmClick()"
+  <gtx-button
+    type="primary"
+    class="confirm-button"
+    data-action="confirm"
+    [disabled]="!control.valid"
+    (click)="handleConfirmClick()"
     >
-        {{ 'common.apply_button' | i18n }}
-    </gtx-button>
+    {{ 'common.apply_button' | gtxI18n }}
+  </gtx-button>
 </div>

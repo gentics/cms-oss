@@ -1,36 +1,41 @@
-<div *ngIf="normalizedPalette.length > 0 || settings?.allowClear" class="palette-wrapper">
+@if (normalizedPalette.length > 0 || settings?.allowClear) {
+  <div class="palette-wrapper">
     <div class="palette">
+      @if (settings?.allowClear) {
         <button
-            *ngIf="settings?.allowClear"
-            class="palette-entry clear-entry"
-            [class.active]="!hexValue"
-            (click)="selectPaletteColor(null)"
+          class="palette-entry clear-entry"
+          [class.active]="!hexValue"
+          (click)="selectPaletteColor(null)"
         ></button>
-
+      }
+      @for (paletteColor of normalizedPalette; track paletteColor) {
         <button
-            *ngFor="let paletteColor of normalizedPalette"
-            class="palette-entry"
-            [attr.data-color]="paletteColor.color"
-            [style.--palette-color]="paletteColor.color"
-            [style.--palette-contrast]="paletteColor.contrast"
-            [class.active]="paletteColor.color === hexValue"
-            (click)="selectPaletteColor(paletteColor.color)"
+          class="palette-entry"
+          [attr.data-color]="paletteColor.color"
+          [style.--palette-color]="paletteColor.color"
+          [style.--palette-contrast]="paletteColor.contrast"
+          [class.active]="paletteColor.color === hexValue"
+          (click)="selectPaletteColor(paletteColor.color)"
         ></button>
+      }
     </div>
-</div>
+  </div>
+}
 
-<ng-container *ngIf="settings?.allowOutsidePalette">
+@if (settings?.allowOutsidePalette) {
+  @if (settings?.allowCustomInput) {
     <color-slider
-        *ngIf="settings?.allowCustomInput"
+      [color]="ngxColorValue"
+      (onChange)="handleColorChange($event)"
+    ></color-slider>
+  }
+  @if (settings?.allowTransparency) {
+    <div class="alpha-wrapper">
+      <color-alpha-picker
+        [height]="14"
         [color]="ngxColorValue"
         (onChange)="handleColorChange($event)"
-    ></color-slider>
-
-    <div *ngIf="settings?.allowTransparency" class="alpha-wrapper">
-        <color-alpha-picker
-            [height]="14"
-            [color]="ngxColorValue"
-            (onChange)="handleColorChange($event)"
-        ></color-alpha-picker>
+      ></color-alpha-picker>
     </div>
-</ng-container>
+  }
+}

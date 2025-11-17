@@ -1,107 +1,153 @@
 <div class="fields-wrapper" #fieldsWrapper>
-    <detail-chip *ngIf="isDeleted" class="deleted">
-        {{ 'editor.item_page_status_deleted_label' | i18n:{
-            name: getUserName(item),
-            date: (item?.deleted?.at | i18nDate),
-            time: (item?.deleted?.at | i18nDate:'time')
-        } }}
+  @if (isDeleted) {
+    <detail-chip class="deleted">
+      {{ 'editor.item_page_status_deleted_label' | gtxI18n:{
+        name: getUserName(item),
+        date: (item?.deleted?.at | gtxI18nDate),
+        time: (item?.deleted?.at | gtxI18nDate:'time')
+      } }}
     </detail-chip>
-    <div *ngFor="let field of fields">
-        <div [ngSwitch]="field">
-            <ng-container *ngSwitchCase="'pdate'">
-                <detail-chip *ngIf="(item.type === 'page' || item.type === 'form') && item.pdate && item.pdate > 0">
-                    {{ 'editor.published_label' | i18n:{
-                        publisher: (item.publisher | userFullName),
-                        date: (item.pdate | i18nDate),
-                        time: (item.pdate | i18nDate:'time')
-                    } }}
-                </detail-chip>
-            </ng-container>
-            <ng-container *ngSwitchCase="'unpublishedDate'">
-                <detail-chip *ngIf="(item.type === 'page' || item.type === 'form') && item.unpublishedDate && item.unpublishedDate > 0">
-                    {{ 'editor.unpublished_label' | i18n:{
-                        unpublisher: (item.unpublisher | userFullName),
-                        date: (item.unpublishedDate | i18nDate),
-                        time: (item.unpublishedDate | i18nDate:'time')
-                    } }}
-                </detail-chip>
-            </ng-container>
-            <ng-container *ngSwitchCase="'at'">
-                <detail-chip *ngIf="getFormattedTimeMgmtValue(item, field) | async">
-                    {{ 'editor.publish_planned_publish_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
-                </detail-chip>
-            </ng-container>
-            <ng-container *ngSwitchCase="'offlineAt'">
-                <detail-chip *ngIf="getFormattedTimeMgmtValue(item, field) | async">
-                    {{ 'editor.publish_planned_take_offline_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
-                </detail-chip>
-            </ng-container>
-            <ng-container *ngSwitchCase="'queuedPublish'">
-                <detail-chip *ngIf="getFormattedTimeMgmtValue(item, field) | async">
-                    {{ 'editor.publish_queue_publish_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
-                </detail-chip>
-            </ng-container>
-            <ng-container *ngSwitchCase="'queuedOffline'">
-                <detail-chip *ngIf="getFormattedTimeMgmtValue(item, field) | async">
-                    {{ 'editor.publish_queue_take_offline_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
-                </detail-chip>
-            </ng-container>
-            <detail-chip *ngSwitchCase="'creator'">
-                {{ 'common.creator_label' | i18n }}: {{ item[field] | userFullName }}
+  }
+  @for (field of fields; track field) {
+    <div>
+      <div>
+        @switch (field) {
+          @case ('pdate') {
+            @if ((item.type === 'page' || item.type === 'form') && item.pdate && item.pdate > 0) {
+              <detail-chip>
+                {{ 'editor.published_label' | gtxI18n:{
+                    publisher: (item.publisher | userFullName),
+                    date: (item.pdate | gtxI18nDate),
+                    time: (item.pdate | gtxI18nDate:'time')
+                } }}
+              </detail-chip>
+            }
+          }
+          @case ('unpublishedDate') {
+            @if ((item.type === 'page' || item.type === 'form') && item.unpublishedDate && item.unpublishedDate > 0) {
+              <detail-chip>
+                {{ 'editor.unpublished_label' | gtxI18n:{
+                    unpublisher: (item.unpublisher | userFullName),
+                    date: (item.unpublishedDate | gtxI18nDate),
+                    time: (item.unpublishedDate | gtxI18nDate:'time')
+                } }}
+              </detail-chip>
+            }
+          }
+          @case ('at') {
+            @if (getFormattedTimeMgmtValue(item, field) | async) {
+              <detail-chip>
+                {{ 'editor.publish_planned_publish_at_date_label' | gtxI18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
+              </detail-chip>
+            }
+          }
+          @case ('offlineAt') {
+            @if (getFormattedTimeMgmtValue(item, field) | async) {
+              <detail-chip>
+                {{ 'editor.publish_planned_take_offline_at_date_label' | gtxI18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
+              </detail-chip>
+            }
+          }
+          @case ('queuedPublish') {
+            @if (getFormattedTimeMgmtValue(item, field) | async) {
+              <detail-chip>
+                {{ 'editor.publish_queue_publish_at_date_label' | gtxI18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
+              </detail-chip>
+            }
+          }
+          @case ('queuedOffline') {
+            @if (getFormattedTimeMgmtValue(item, field) | async) {
+              <detail-chip>
+                {{ 'editor.publish_queue_take_offline_at_date_label' | gtxI18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
+              </detail-chip>
+            }
+          }
+          @case ('creator') {
+            <detail-chip>
+              {{ 'common.creator_label' | gtxI18n }}: {{ item[field] | userFullName }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'editor'">
-                {{ 'common.editor_label' | i18n }}: {{ item[field] | userFullName }}
+          }
+          @case ('editor') {
+            <detail-chip>
+              {{ 'common.editor_label' | gtxI18n }}: {{ item[field] | userFullName }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'cdate'">
-                {{ 'common.date_created_label' | i18n }}: {{ item[field] | i18nDate }}
+          }
+          @case ('cdate') {
+            <detail-chip>
+              {{ 'common.date_created_label' | gtxI18n }}: {{ item[field] | gtxI18nDate }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'customCdate'">
-                {{ 'common.date_custom_created_label' | i18n }}: {{ item[field] ? (item[field] | i18nDate) : (item['cdate'] | i18nDate) }}
+          }
+          @case ('customCdate') {
+            <detail-chip>
+              {{ 'common.date_custom_created_label' | gtxI18n }}: {{ item[field] ? (item[field] | gtxI18nDate) : (item['cdate'] | gtxI18nDate) }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'edate'">
-                {{ 'common.date_edited_label' | i18n }}: {{ item[field] | i18nDate }}
+          }
+          @case ('edate') {
+            <detail-chip>
+              {{ 'common.date_edited_label' | gtxI18n }}: {{ item[field] | gtxI18nDate }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'customEdate'">
-                {{ 'common.date_custom_edited_label' | i18n }}: {{ item[field] ? (item[field] | i18nDate) : (item['edate'] | i18nDate) }}
+          }
+          @case ('customEdate') {
+            <detail-chip>
+              {{ 'common.date_custom_edited_label' | gtxI18n }}: {{ item[field] ? (item[field] | gtxI18nDate) : (item['edate'] | gtxI18nDate) }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'fileSize'">
-                {{ item[field] | filesize }}
+          }
+          @case ('fileSize') {
+            <detail-chip>
+              {{ item[field] | filesize }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'pageStatus'">
-                {{ item[field] }}
+          }
+          @case ('pageStatus') {
+            <detail-chip>
+              {{ item[field] }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'priority'">
-                Priority: {{ item[field] }}
+          }
+          @case ('priority') {
+            <detail-chip>
+              Priority: {{ item[field] }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'template'">
-                <i class="material-icons" [attr.translate]="'no'">dashboard</i> {{ item.template?.name }}
+          }
+          @case ('template') {
+            <detail-chip>
+              <i class="material-icons" [attr.translate]="'no'">dashboard</i> {{ item.template?.name }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'fileType'">
-                <i class="material-icons" [attr.translate]="'no'">insert_drive_file</i> {{ item[field] }}
+          }
+          @case ('fileType') {
+            <detail-chip>
+              <i class="material-icons" [attr.translate]="'no'">insert_drive_file</i> {{ item[field] }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'usage'" (click)="usageClicked($event, item)" class="usage">
-                <span>{{ 'common.usage_label' | i18n }}:</span>
-                <span *ngIf="item?.usage?.total !== undefined" class="usage-count">{{ totalUsage(item) }}</span>
-                <i *ngIf="item?.usage?.total === undefined"
-                   class="usage-spinner material-icons usage-count" [attr.translate]="'no'">hourglass_empty</i>
+          }
+          @case ('usage') {
+            <detail-chip (click)="usageClicked($event, item)" class="usage">
+              <span>{{ 'common.usage_label' | gtxI18n }}:</span>
+              @if (item?.usage?.total !== undefined) {
+                <span class="usage-count">{{ totalUsage(item) }}</span>
+              }
+              @if (item?.usage?.total === undefined) {
+                <i class="usage-spinner material-icons usage-count" [attr.translate]="'no'">hourglass_empty</i>
+              }
             </detail-chip>
-            <detail-chip *ngSwitchDefault>
-                {{ field | uppercase }}: <strong>{{ item[field] }}</strong>
+          }
+          @default {
+            <detail-chip>
+              {{ field | uppercase }}: <strong>{{ item[field] }}</strong>
             </detail-chip>
-            <detail-chip *ngSwitchCase="'globalId'">
-                {{ 'editor.item_global_id_label' | i18n }}:<br>{{ item[field] }}
+          }
+          @case ('globalId') {
+            <detail-chip>
+              {{ 'editor.item_global_id_label' | gtxI18n }}:<br>{{ item[field] }}
             </detail-chip>
-            <ng-container *ngSwitchCase="'inheritance'">
-                <ng-container
-                    [ngTemplateOutlet]="inheritanceTpl"
-                    [ngTemplateOutletContext]="{ inheritance: (item | getInheritance) }"
-                ></ng-container>
-                <ng-template #inheritanceTpl let-inheritance="inheritance">
-                    <detail-chip *ngIf="inheritance != null">
-                        <icon class="inheritance-icon-{{ inheritance }}"></icon> {{ ('common.inheritance_label_' + inheritance) | i18n }}
-                    </detail-chip>
-                </ng-template>
-            </ng-container>
-        </div>
+          }
+          @case ('inheritance') {
+            @let inheritance = item | getInheritance;
+            @if (inheritance != null) {
+            <detail-chip>
+                <icon class="inheritance-icon-{{ inheritance }}"></icon> {{ ('common.inheritance_label_' + inheritance) | gtxI18n }}
+            </detail-chip>
+            }
+          }
+        }
+      </div>
     </div>
+  }
 </div>

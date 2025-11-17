@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Message, Node, Normalized } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -6,7 +7,6 @@ import { map } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 import { Api } from '../../providers/api/api.service';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
-import { I18nNotification } from '../../providers/i18n-notification/i18n-notification.service';
 import { MessageLink } from '../message-body';
 
 @Component({
@@ -14,7 +14,7 @@ import { MessageLink } from '../message-body';
     templateUrl: './message-modal.component.html',
     styleUrls: ['./message-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MessageModal extends BaseModal<MessageLink | void> implements OnInit {
 
@@ -29,14 +29,14 @@ export class MessageModal extends BaseModal<MessageLink | void> implements OnIni
         private appState: ApplicationStateService,
         private entityResolver: EntityResolver,
         private api: Api,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.nodes$ = this.appState.select(state => state.folder.nodes.list).pipe(
-            map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id))),
+        this.nodes$ = this.appState.select((state) => state.folder.nodes.list).pipe(
+            map((nodeIds) => nodeIds.map((id) => this.entityResolver.getNode(id))),
         );
     }
 
@@ -52,7 +52,7 @@ export class MessageModal extends BaseModal<MessageLink | void> implements OnIni
                 type: 'success',
             });
             this.closeFn();
-        }, error => {
+        }, (error) => {
             this.notification.show({
                 message: 'message.message_sent_error',
                 type: 'alert',
@@ -64,7 +64,7 @@ export class MessageModal extends BaseModal<MessageLink | void> implements OnIni
 
     transformValuesForApi(sendMessageText: string, recipient: number): any {
         return {
-            message:  sendMessageText,
+            message: sendMessageText,
             toUserId: [recipient],
         };
     }

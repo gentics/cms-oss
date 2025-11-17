@@ -1,5 +1,5 @@
 import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { platformBrowser } from '@angular/platform-browser';
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 
@@ -14,7 +14,7 @@ if (environment.production) {
 // ToDo: If we ever have time, we can refactor the login using the strategy pattern
 // to make it more flexible and to allow further authentication methods besides normal login and Keycloak.
 
-platformBrowserDynamic().bootstrapModule(
+platformBrowser().bootstrapModule(
     AppModule,
     // Enable preservation of whitespaces for default spacing between components.
     { preserveWhitespaces: true },

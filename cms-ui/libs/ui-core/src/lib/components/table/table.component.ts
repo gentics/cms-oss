@@ -20,7 +20,7 @@ import { BaseTableComponent } from '../base-table/base-table.component';
     templateUrl: './table.component.html',
     styleUrls: ['./table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implements OnChanges {
 
@@ -112,7 +112,7 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
         if (this.totalCount == null) {
             this.page = toPage;
         }
-        this.pageChange.emit(toPage)
+        this.pageChange.emit(toPage);
     }
 
     protected recalculateAllSelected(): void {
@@ -120,6 +120,6 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
             return;
         }
 
-        this.allSelected = (this.rows || []).every(row => this.selected[row.id] === true);
+        this.allSelected = (this.rows || []).every((row) => this.selected[row.id] === true);
     }
 }

@@ -11,11 +11,10 @@ import { ObservableStopper } from '../../../common/utils/observable-stopper/obse
 import { GenericRouterOutletComponent } from '../../../shared/components/generic-router-outlet/generic-router-outlet.component';
 import { AppStateService } from '../../../state';
 import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
-import { I18nService } from '../i18n/i18n.service';
-import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
 import { RouteEntityResolverService } from '../route-entity-resolver/route-entity-resolver.service';
 import { BreadcrumbInfo } from './breadcrumb-info';
 import { BreadcrumbsService } from './breadcrumbs.service';
+import { I18nService } from '@gentics/cms-components';
 
 const DASHBOARD = '';
 const MODULE_A = 'module-a';
@@ -42,7 +41,7 @@ class RootComponent { }
 class TestComponent { }
 
 @Injectable()
-class DelayedResolver  {
+class DelayedResolver {
     resolve(): Observable<BreadcrumbInfo> {
         return observableOf({
             title: 'main.resolvedTitle',
@@ -150,36 +149,36 @@ const ROUTES: GcmsAdminUiRoute[] = [
 
 const EXPECTED_BREADCRUMBS: IndexByKey<IBreadcrumbRouterLink> = {
     [DASHBOARD]: {
-        route: [ '/' ],
+        route: ['/'],
         text: 'translated-en-main.dashboard',
     },
     [MODULE_A]: {
-        route: [ MODULE_A ],
+        route: [MODULE_A],
         text: 'translated-en-main.moduleA {"paramA":1,"paramB":2}',
     },
     [SUBMODULE_AA]: {
-        route: [ MODULE_A, SUBMODULE_AA ],
+        route: [MODULE_A, SUBMODULE_AA],
         text: 'SubModule AA',
     },
     [SUBMODULE_AAA]: {
-        route: [ MODULE_A, SUBMODULE_AA, SUBMODULE_AAA ],
+        route: [MODULE_A, SUBMODULE_AA, SUBMODULE_AAA],
         text: 'translated-en-main.subModuleAAA {"paramA":1}',
         tooltip: 'translated-en-main.subModuleAAATooltip {"paramB":2}',
     },
     [SUBMODULE_AB]: {
-        route: [ MODULE_A, SUBMODULE_AB ],
+        route: [MODULE_A, SUBMODULE_AB],
         text: 'translated-en-main.resolvedTitle',
     },
     [MODULE_B]: {
-        route: [ MODULE_B ],
+        route: [MODULE_B],
         text: 'translated-en-main.moduleB',
     },
     [SUBMODULE_BAA]: {
-        route: [ MODULE_B, SUBMODULE_BA, SUBMODULE_BAA ],
+        route: [MODULE_B, SUBMODULE_BA, SUBMODULE_BAA],
         text: 'translated-en-main.moduleBAA',
     },
     [ROOT_SIBLING]: {
-        route: [ ROOT_SIBLING ],
+        route: [ROOT_SIBLING],
         text: 'translated-en-main.root-sibling',
     },
 };
@@ -191,7 +190,7 @@ describe('BreadcrumbsService', () => {
 
     let breadcrumbs: BreadcrumbsService;
     let state: TestAppState;
-    let i18n: MockI18nServiceWithSpies;
+    let i18n: I18nService;
     let router: Router;
     let stopper: ObservableStopper;
     let fixture: ComponentFixture<RootComponent>;
@@ -213,19 +212,17 @@ describe('BreadcrumbsService', () => {
                 TestAppState,
                 { provide: RouteEntityResolverService, useClass: MockRouteEntityResolverService },
                 { provide: AppStateService, useExisting: TestAppState },
-                MockI18nServiceWithSpies,
-                { provide: I18nService, useExisting: MockI18nServiceWithSpies },
             ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(RootComponent);
         breadcrumbs = TestBed.inject(BreadcrumbsService);
         state = TestBed.inject(TestAppState);
-        i18n = TestBed.inject(MockI18nServiceWithSpies);
+        i18n = TestBed.inject(TranslateService);
         router = TestBed.inject(Router);
         stopper = new ObservableStopper();
 
-        i18n.instant.and.callFake((key, params) => {
+        spyOn(i18n, 'instant').and.callFake((key, params) => {
             const translated = `translated-${state.now.ui.language}-${key}`;
             return params ? `${translated} ${JSON.stringify(params)}` : translated;
         });
@@ -247,7 +244,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         expect(breadcrumbLinks).toEqual([]);
     }));
@@ -256,18 +253,18 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl('/');
         tick();
-        expect(breadcrumbLinks).toEqual([ EXPECTED_BREADCRUMBS[DASHBOARD] ]);
+        expect(breadcrumbLinks).toEqual([EXPECTED_BREADCRUMBS[DASHBOARD]]);
     }));
 
     it('works for a first level child route', fakeAsync(() => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_B}`);
         tick();
@@ -281,7 +278,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_A}`);
         tick();
@@ -295,7 +292,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_A}/${SUBMODULE_AA}`);
         tick();
@@ -310,7 +307,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_A}/${SUBMODULE_AA}/${SUBMODULE_AAA}`);
         tick();
@@ -326,7 +323,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_A}/${SUBMODULE_AB}`);
         tick(RESOLVE_DELAY);
@@ -341,7 +338,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_A}/${SUBMODULE_AA}`);
         tick();
@@ -363,7 +360,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_B}/${SUBMODULE_BA}/${SUBMODULE_BAA}`);
         tick();
@@ -378,7 +375,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_B}/${SUBMODULE_BA}`);
         tick();
@@ -392,7 +389,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${ROOT_SIBLING}`);
         tick();
@@ -405,7 +402,7 @@ describe('BreadcrumbsService', () => {
         let breadcrumbLinks: IBreadcrumbRouterLink[];
         breadcrumbs.breadcrumbs$
             .pipe(takeUntil(stopper.stopper$))
-            .subscribe(links => breadcrumbLinks = links);
+            .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_A}`);
         tick();

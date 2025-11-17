@@ -1,7 +1,7 @@
 /* eslint-disable id-blacklist */
 import { ChangeDetectorRef, Component, EventEmitter, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
-import { SetUILanguageAction } from '@editor-ui/app/state';
+import { SetUILanguageAction } from '../../../state';
 import { Form, FormRequestOptions, Normalized, Page, PageRequestOptions } from '@gentics/cms-models';
 import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
@@ -10,7 +10,6 @@ import { NEVER, Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
@@ -25,7 +24,7 @@ describe('TimeManagementModal', () => {
     let modalService: ModalService;
     let folderActions: MockFolderActions;
     let state: TestApplicationState;
-    let translateService: TranslateService;
+    let translateService: MockTranslateService;
 
     beforeEach(() => {
         configureComponentTest({
@@ -37,8 +36,7 @@ describe('TimeManagementModal', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
-                { provide: TranslateService, useClass: MockTranslateService },
-                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nService, useClass: MockTranslateService },
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: NavigationService, useClass: MockNavigationService },
                 ModalService,
@@ -51,14 +49,14 @@ describe('TimeManagementModal', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        modalService = TestBed.get(ModalService);
-        folderActions = TestBed.get(FolderActionsService);
-        state = TestBed.get(ApplicationStateService);
-        translateService = TestBed.inject(TranslateService);
+        modalService = TestBed.inject(ModalService);
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        state = TestBed.inject(ApplicationStateService) as any;
+        translateService = TestBed.inject(TranslateService) as any;
 
         expect(state instanceof ApplicationStateService).toBeTruthy();
 
-        translateService.currentLang = 'de';
+        translateService.use('de');
     });
 
     it('is displayed for pages',
@@ -473,7 +471,7 @@ class MockTranslateService {
     get currentLang(): string {
         return this.lang;
     }
-    set currentLang(lang: string) {
+    use(lang: string) {
         this.onLangChange.emit({
             lang: this.lang = lang,
             translations: {},

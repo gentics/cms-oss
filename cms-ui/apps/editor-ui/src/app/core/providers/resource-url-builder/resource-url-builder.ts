@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { EditorState } from '@editor-ui/app/common/models';
-import { BLANK_PAGE, BLANK_PROPERTIES_PAGE } from '@editor-ui/app/content-frame/models/content-frame';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { File as FileModel, Folder, Form, Image, Node, Page } from '@gentics/cms-models';
+import { EditorState } from '../../../common/models';
 import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '../../../common/utils/base-urls';
+import { BLANK_PAGE, BLANK_PROPERTIES_PAGE } from '../../../content-frame/models/content-frame';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
 /**

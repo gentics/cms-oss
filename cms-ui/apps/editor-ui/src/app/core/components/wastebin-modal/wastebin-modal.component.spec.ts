@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { TypeIconPipe } from '@editor-ui/app/shared/pipes';
 import { Folder, Normalized } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
@@ -10,12 +9,12 @@ import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.c
 import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
 import { ImageThumbnailComponent } from '../../../shared/components/image-thumbnail/image-thumbnail.component';
 import { PagingControls } from '../../../shared/components/paging-controls/paging-controls.component';
+import { TypeIconPipe } from '../../../shared/pipes';
 import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
 import { ApplicationStateService, FolderActionsService, WastebinActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../providers/error-handler/error-handler.service';
-import { I18nService } from '../../providers/i18n/i18n.service';
 import { LocalizationsService } from '../../providers/localizations/localizations.service';
 import { WastebinList } from '../wastebin-list/wastebin-list.component';
 import { SortingModal } from './../../../shared/components/sorting-modal/sorting-modal.component';
@@ -35,7 +34,6 @@ describe('WastebinModal', () => {
                 { provide: ModalService, useClass: MockModalService },
                 { provide: WastebinActionsService, useClass: MockWastebinActions },
                 { provide: FolderActionsService, useClass: MockFolderActions },
-                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 WastebinModal,
@@ -49,7 +47,7 @@ describe('WastebinModal', () => {
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         state.mockState({
             entities: {
                 folder: {
@@ -86,7 +84,7 @@ describe('WastebinModal', () => {
                 },
             });
 
-            let fixture = TestBed.createComponent(WastebinModal);
+            const fixture = TestBed.createComponent(WastebinModal);
             fixture.detectChanges();
 
             expect(fixture.nativeElement.querySelector('.empty-message')).toBeNull();
@@ -104,7 +102,7 @@ describe('WastebinModal', () => {
                 },
             });
 
-            let fixture = TestBed.createComponent(WastebinModal);
+            const fixture = TestBed.createComponent(WastebinModal);
             fixture.detectChanges();
 
             expect(fixture.nativeElement.querySelector('.empty-message')).not.toBeNull();
@@ -122,7 +120,7 @@ describe('WastebinModal', () => {
                 },
             });
 
-            let fixture = TestBed.createComponent(WastebinModal);
+            const fixture = TestBed.createComponent(WastebinModal);
             fixture.detectChanges();
 
             expect(fixture.nativeElement.querySelector('.empty-message')).toBeNull();
@@ -146,8 +144,8 @@ describe('WastebinModal', () => {
         });
 
         it('changes the icon if sort order changed', () => {
-            let fixture = TestBed.createComponent(WastebinModal);
-            let component = fixture.componentInstance;
+            const fixture = TestBed.createComponent(WastebinModal);
+            const component = fixture.componentInstance;
             fixture.detectChanges();
 
             let arrowIcon = fixture.debugElement.query(By.css('.filter-wrapper gtx-button icon'));
@@ -166,16 +164,16 @@ describe('WastebinModal', () => {
         });
 
         it('opens modal to select the sorting if button clicked', () => {
-            let fixture = TestBed.createComponent(WastebinModal);
+            const fixture = TestBed.createComponent(WastebinModal);
             fixture.detectChanges();
-            let component = fixture.componentInstance;
+            const component = fixture.componentInstance;
 
             spyOn(component, 'selectSorting').and.callThrough();
             const button = fixture.debugElement.query(By.css('.filter-wrapper gtx-button'));
             button.triggerEventHandler('click', {});
             expect(component.selectSorting).toHaveBeenCalled();
 
-            const modalService: MockModalService = TestBed.get(ModalService);
+            const modalService: MockModalService = TestBed.inject(ModalService) as any;
             expect(modalService.fromComponent).toHaveBeenCalledWith(SortingModal, {}, {
                 itemType: 'wastebin',
                 sortBy: 'name',

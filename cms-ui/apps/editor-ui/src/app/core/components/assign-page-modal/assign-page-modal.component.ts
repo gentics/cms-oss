@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Page, User } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { FolderActionsService, PublishQueueActionsService } from '../../../state';
-import { I18nNotification } from '../../providers/i18n-notification/i18n-notification.service';
 
 /**
  * Filter the users by a filter term.
@@ -14,7 +14,7 @@ function filterUsers(users: User[], term: string): User[] {
     if (term.trim() === '') {
         return users;
     }
-    return users.filter(u => matches(u.firstName) || matches(u.lastName));
+    return users.filter((u) => matches(u.firstName) || matches(u.lastName));
 }
 
 @Component({
@@ -22,7 +22,7 @@ function filterUsers(users: User[], term: string): User[] {
     templateUrl: './assign-page-modal.component.html',
     styleUrls: ['./assign-page-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class AssignPageModal extends BaseModal<void> implements OnInit, OnDestroy {
 
@@ -47,19 +47,19 @@ export class AssignPageModal extends BaseModal<void> implements OnInit, OnDestro
         private client: GCMSRestClientService,
         private publishQueueActions: PublishQueueActionsService,
         private folderActions: FolderActionsService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) {
         super();
     }
 
     ngOnInit(): void {
         this.subscriptions.push(this.client.user.list().subscribe({
-            next: res => {
+            next: (res) => {
                 this.loadedUsers = res.items;
                 this.filteredUsers = filterUsers(res.items, this.filterTerm);
                 this.changeDetector.markForCheck();
             },
-            error: error => {
+            error: (error) => {
                 this.loadError = true;
                 this.notification.show({
                     message: 'message.get_users_error',
@@ -71,7 +71,7 @@ export class AssignPageModal extends BaseModal<void> implements OnInit, OnDestro
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     public updateFilterTerm(term: string): void {
@@ -89,19 +89,19 @@ export class AssignPageModal extends BaseModal<void> implements OnInit, OnDestro
 
         this.loading = true;
 
-        const pageIds = this.pages.map(p => p.id);
+        const pageIds = this.pages.map((p) => p.id);
         const userIds = this.selected;
         const message = this.message;
 
         this.publishQueueActions.assignToUsers(pageIds, userIds, message)
-            .then(assigned => {
+            .then((assigned) => {
                 if (assigned) {
                     this.folderActions.refreshList('page');
                     this.closeFn(null);
                 }
                 this.loading = false;
             })
-            .catch(err => {
+            .catch((err) => {
                 this.loading = false;
             });
     }

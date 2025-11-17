@@ -1,10 +1,12 @@
-import { ContentPackageOperations, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { ContentPackageOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ModalService } from '@gentics/ui-core';
 import { mockPipe } from '@gentics/ui-core/testing';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, of } from 'rxjs';
 import { ContentPackageImportErrorTableLoaderService, ContentPackageTableLoaderService } from '../../providers';
 import { ContentPackageImportErrorTableComponent } from './content-package-import-error-table.component';
@@ -19,7 +21,7 @@ describe('ContentPackageImportErrorTableComponent', () => {
 
     beforeEach(async () => {
         const loaderServiceSpy = jasmine.createSpyObj('ContentPackageImportErrorTableLoaderService', ['loadTablePage'], {
-            checkResultAvailable$:  new BehaviorSubject<boolean>(true),
+            checkResultAvailable$: new BehaviorSubject<boolean>(true),
             lastCheckTimestamp$: new BehaviorSubject<string>(''),
             reload$: of(null),
         });
@@ -79,7 +81,7 @@ describe('ContentPackageImportErrorTableComponent', () => {
         const element = fixture.debugElement.query(By.css('[data-test-id="check-result-unavailable"]'));
 
         expect(element.nativeElement.textContent).toBeTruthy();
-    })
+    });
 
     it('should show appropriate elements when result is available', async () => {
         loaderService.checkResultAvailable$.next(true);
@@ -111,7 +113,7 @@ describe('ContentPackageImportErrorTableComponent', () => {
         loaderService.checkResultAvailable$.next(true);
         component.totalCount = 0; // no errors
         const lastCheck = 1723453518197;
-        loaderService.lastCheckTimestamp$.next(lastCheck.toString())
+        loaderService.lastCheckTimestamp$.next(lastCheck.toString());
 
         fixture.detectChanges();
         await fixture.whenStable();

@@ -1,29 +1,33 @@
 <div
-    #toast
-    class="gtx-toast z-depth-3"
-    [attr.data-id]="id"
-    [ngClass]="type || 'default'"
-    [class.dismissing]="dismissing"
-    [style.transform]="getTransform()"
-    (click)="dismiss()"
->
-    <span
-        class="gtx-toast-btn_close"
-        [hidden]="!dismissOnClick"
+  #toast
+  class="gtx-toast z-depth-3"
+  [attr.data-id]="id"
+  [ngClass]="type || 'default'"
+  [class.dismissing]="dismissing"
+  [style.transform]="getTransform()"
+  (click)="dismiss()"
+  >
+  <span
+    class="gtx-toast-btn_close"
+    [hidden]="!dismissOnClick"
     >
-        <icon>close</icon>
-    </span>
+    <icon>close</icon>
+  </span>
 
-    <span class="action" *ngIf="actionLabel">
-        <button data-action="primary" (click)="actionClick()">
-            {{ actionLabel }}
-        </button>
+  @if (actionLabel) {
+    <span class="action">
+      <button data-action="primary" (click)="actionClick()">
+        {{ actionLabel }}
+      </button>
     </span>
+  }
 
-    <span class="message">
-        <ng-template ngFor let-line [ngForOf]="messageLines" let-i="index">
-            <br *ngIf="i > 0">
-            <span class="line">{{ line }}</span>
-        </ng-template>
+  <span class="message">
+    @for (line of messageLines; track line; let i = $index) {
+      @if (i > 0) {
+        <br>
+        }
+        <span class="line">{{ line }}</span>
+      }
     </span>
-</div>
+  </div>

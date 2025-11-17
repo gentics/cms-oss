@@ -1,18 +1,18 @@
-<ng-container *ngIf="(loggedIn$ | async) && !(hideExtras$ | async)">
-    <gtx-top-bar class="top-bar">
-        <a
-            *ngIf="nodeRootLink$ | async"
-            class="gentics-logo"
-            [routerLink]="nodeRootLink$ | async"
-            (click)="logoClick()"
+@if ((loggedIn$ | async) && !(hideExtras$ | async)) {
+  <gtx-top-bar class="top-bar">
+    @if (nodeRootLink$ | async) {
+      <a
+        class="gentics-logo"
+        [routerLink]="nodeRootLink$ | async"
+        (click)="logoClick()"
         >
-            <img src="assets/images/gentics-logo-60px.png">
-        </a>
-
-        <div
-            *ngIf="!(showingTools$ | async)"
-            class="corner-actions"
-            [class.show-messages]="(permissions.viewInbox$ | async) && unreadMessageCount > 0"
+        <img src="assets/images/gentics-logo-60px.png">
+      </a>
+    }
+    @if (!(showingTools$ | async)) {
+      <div
+        class="corner-actions"
+        [class.show-messages]="(permissions.viewInbox$ | async) && unreadMessageCount > 0"
             [class.show-alerts]="!(loggingIn$ | async)
                 && (featureLinkcheckerEnabled$ | async)
                 && (toolLinkcheckerAvailable$ | async)
@@ -23,87 +23,88 @@
             <gtx-button
                 icon
                 type="secondary"
-                class="unread-messages"
-                (click)="displayMessages()"
-            >
-                <icon>mail_outline</icon>
-                <span class="counter">{{ unreadMessageCount }}</span>
-            </gtx-button>
-
-            <gtx-button
-                icon
-                type="secondary"
-                class="alert-center"
-                [title]="'editor.alert_notification_plural_label' | i18n:{ count: (alertCenterCounter$ | async) }"
-                (click)="displayAlertCenter()"
-            >
-                <icon>warning</icon>
-            </gtx-button>
-        </div>
-
-        <div class="search-container" *ngIf="!(showingTools$ | async)">
-            <chip-search-bar
-                *ngIf="activeNode && chipSearchBarConfig"
-                [chipSearchBarConfig]="chipSearchBarConfig"
-                [loading]="searchInProgress$ | async"
-            ></chip-search-bar>
-        </div>
-
-        <tool-breadcrumb *ngIf="showingTools$ | async"></tool-breadcrumb>
-    </gtx-top-bar>
-
-    <gtx-user-menu
-        class="user-menu"
-        [opened]="userMenuOpened"
-        [user]="currentUser$ | async"
-        [supportedLanguages]="supportedUiLanguages$ | async"
-        [currentlanguage]="currentUiLanguage$ | async"
-        (toggle)="userMenuOpened = $event"
-        (setLanguage)="setLanguageConfirmation($event)"
-        (showPasswordModal)="onShowPasswordModal()"
-        (logout)="onLogoutClick()"
+          class="unread-messages"
+          (click)="displayMessages()"
+          >
+          <icon>mail_outline</icon>
+          <span class="counter">{{ unreadMessageCount }}</span>
+        </gtx-button>
+        <gtx-button
+          icon
+          type="secondary"
+          class="alert-center"
+          [title]="'editor.alert_notification_plural_label' | gtxI18n:{ count: (alertCenterCounter$ | async) }"
+          (click)="displayAlertCenter()"
+          >
+          <icon>warning</icon>
+        </gtx-button>
+      </div>
+    }
+    @if (!(showingTools$ | async)) {
+      <div class="search-container">
+        @if (activeNode && chipSearchBarConfig) {
+          <chip-search-bar
+            [chipSearchBarConfig]="chipSearchBarConfig"
+            [loading]="searchInProgress$ | async"
+          ></chip-search-bar>
+        }
+      </div>
+    }
+    @if (showingTools$ | async) {
+      <tool-breadcrumb></tool-breadcrumb>
+    }
+  </gtx-top-bar>
+  <gtx-user-menu
+    class="user-menu"
+    [opened]="userMenuOpened"
+    [user]="currentUser$ | async"
+    [supportedLanguages]="supportedUiLanguages$ | async"
+    [currentlanguage]="currentUiLanguage$ | async"
+    (toggle)="userMenuOpened = $event"
+    (setLanguage)="setLanguageConfirmation($event)"
+    (showPasswordModal)="onShowPasswordModal()"
+    (logout)="onLogoutClick()"
     >
-        <gtx-tabs
-            top
-            hideTitle
-            [activeId]="userMenuActiveTab"
-            (tabChange)="userMenuActiveTab = $event"
+    <gtx-tabs
+      top
+      hideTitle
+      [activeId]="userMenuActiveTab"
+      (tabChange)="userMenuActiveTab = $event"
+      >
+      <gtx-tab
+        [id]="userMenuTabIdFavourites"
+        icon="star"
+        [title]="'editor.favourites_title' | gtxI18n"
         >
-            <gtx-tab
-                [id]="userMenuTabIdFavourites"
-                icon="star"
-                [title]="'editor.favourites_title' | i18n"
-            >
-                <favourites-list></favourites-list>
-            </gtx-tab>
-
-            <gtx-tab
-                *ngIf="canUseInbox$ | async"
-                [id]="userMenuTabIdMessages"
-                icon="mail"
-                [title]="'editor.messages_title' | i18n"
-            >
-                <message-inbox></message-inbox>
-            </gtx-tab>
-
-            <gtx-tab
-                *ngIf="(featureLinkcheckerEnabled$ | async) && (toolLinkcheckerAvailable$ | async)"
-                [id]="userMenuTabIdAlerts"
-                icon="warning"
-                [title]="'editor.alert_center_title' | i18n"
-            >
-                <alert-center></alert-center>
-            </gtx-tab>
-        </gtx-tabs>
-
-        <gtx-app-version-label
-            bottom
-            appTitle="Gentics CMS"
-            [versionData]="cmpVersion$ | async"
-            [nodes]="loadedNodes"
-        ></gtx-app-version-label>
-    </gtx-user-menu>
-</ng-container>
+        <favourites-list></favourites-list>
+      </gtx-tab>
+      @if (canUseInbox$ | async) {
+        <gtx-tab
+          [id]="userMenuTabIdMessages"
+          icon="mail"
+          [title]="'editor.messages_title' | gtxI18n"
+          >
+          <message-inbox></message-inbox>
+        </gtx-tab>
+      }
+      @if ((featureLinkcheckerEnabled$ | async) && (toolLinkcheckerAvailable$ | async)) {
+        <gtx-tab
+          [id]="userMenuTabIdAlerts"
+          icon="warning"
+          [title]="'editor.alert_center_title' | gtxI18n"
+          >
+          <alert-center></alert-center>
+        </gtx-tab>
+      }
+    </gtx-tabs>
+    <gtx-app-version-label
+      bottom
+      appTitle="Gentics CMS"
+      [versionData]="cmpVersion$ | async"
+      [nodes]="loadedNodes"
+    ></gtx-app-version-label>
+  </gtx-user-menu>
+}
 
 <router-outlet (deactivate)="resetHideExtras()"></router-outlet>
 <logging-in-overlay [loggingIn]="loggingIn$ | async"></logging-in-overlay>

@@ -4,7 +4,6 @@ import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ApplicationStateService } from '..';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import {
     AssigningUsersToPagesErrorAction,
     AssigningUsersToPagesSuccessAction,
@@ -15,6 +14,7 @@ import {
     StartAssigningUsersToPagesAction,
     StartPublishQueueFetchingAction,
 } from '../../modules';
+import { I18nNotificationService } from '@gentics/cms-components';
 
 @Injectable()
 export class PublishQueueActionsService {
@@ -23,7 +23,7 @@ export class PublishQueueActionsService {
         private appState: ApplicationStateService,
         private client: GCMSRestClientService,
         private errorHandler: ErrorHandler,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) {}
 
     /**

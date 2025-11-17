@@ -1,6 +1,4 @@
 import { ChangeDetectionStrategy, Component, Inject, Input, OnDestroy, OnInit } from '@angular/core';
-import { RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '@editor-ui/app/common/models';
-import { ApplicationStateService, SetListDisplayFieldsAction } from '@editor-ui/app/state';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelection,
@@ -21,7 +19,9 @@ import {
 import { IModalDialog } from '@gentics/ui-core';
 import { Observable, Subject, combineLatest } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
+import { RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '../../../common/models';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { ApplicationStateService, SetListDisplayFieldsAction } from '../../../state';
 import { RepositoryBrowserDataService } from '../../providers';
 
 /**

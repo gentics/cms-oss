@@ -3,13 +3,10 @@ import {
     EntityManagerService,
     ErrorHandler,
     GroupOperations,
-    I18nNotificationService,
-    I18nService,
     NodeOperations,
     PermissionsService,
     UserOperations,
 } from '@admin-ui/core';
-import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
 import { Component, NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
@@ -23,7 +20,6 @@ import { createDelayedObservable } from '../../../../testing/utils/rxjs-utils';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../../../common/user-action-permissions/user-action-permissions';
 import { InterfaceOf } from '../../../common/utils/util-types/util-types';
 import { MockEntityManagerService } from '../../../core/providers/entity-manager/entity-manager.service.mock';
-import { MockI18nNotificationService } from '../../../core/providers/i18n-notification/i18n-notification.service.mock';
 import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 import { OPTIONS_CONFIG } from '../../../state/state-store.config';
 import { STATE_MODULES } from '../../../state/state.module';
@@ -130,8 +126,6 @@ xdescribe('AssignNodeRestrictionsToUsersModalComponent', () => {
                 GroupDataService,
                 { provide: GroupOperations, useClass: MockGroupOperations },
                 GroupUserDataService,
-                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 NodeDataService,
                 { provide: NodeOperations, useClass: MockNodeOperations },
                 { provide: NotificationService, useClass: MockNotificationService },
@@ -146,7 +140,7 @@ xdescribe('AssignNodeRestrictionsToUsersModalComponent', () => {
 
         fixture = TestBed.createComponent(TestComponent);
         component = fixture.componentInstance;
-        groupUserData = TestBed.get(GroupUserDataService);
+        groupUserData = TestBed.inject(GroupUserDataService);
         fixture.detectChanges();
     });
 

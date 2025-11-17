@@ -1,71 +1,73 @@
 <div class="gtx-link-target" [class.has-picker]="settings?.showPicker">
-    <div class="target-wrapper">
-        <div class="gtx-editor-input target-input" [class.internal]="value?.isInternal">
-            <input
-                class="external-input"
-                type="text"
-                tabindex="1"
-                [attr.id]="uid + '_target'"
-                [value]="value?.target"
-                [disabled]="disabled || value?.isInternal"
-                (change)="handleTargetChange($event)"
-            />
+  <div class="target-wrapper">
+    <div class="gtx-editor-input target-input" [class.internal]="value?.isInternal">
+      <input
+        class="external-input"
+        type="text"
+        tabindex="1"
+        [attr.id]="uid + '_target'"
+        [value]="value?.target"
+        [disabled]="disabled || value?.isInternal"
+        (change)="handleTargetChange($event)"
+        />
 
-            <div
-                class="internal-input"
-                [attr.data-target-type]="value?.internalTargetType"
-                [attr.data-target-id]="value?.internalTargetId"
+      <div
+        class="internal-input"
+        [attr.data-target-type]="value?.internalTargetType"
+        [attr.data-target-id]="value?.internalTargetId"
                 [attr.data-target-node]="value?.internalTargetNodeId
                     ?? loadedTargetElement?.nodeId
                     ?? (loadedTargetElement?.channelId || loadedTargetElement?.masterNodeId)"
-            >
-                <span class="internal-label">{{ value?.internalTargetLabel || '' }}</span>
-                <div *ngIf="value?.internalTargetType === 'page'" class="page-language">{{ loadedTargetElement?.language }}</div>
-            </div>
+        >
+        <span class="internal-label">{{ value?.internalTargetLabel || '' }}</span>
+        @if (value?.internalTargetType === 'page') {
+          <div class="page-language">{{ loadedTargetElement?.language }}</div>
+        }
+      </div>
 
-            <label [attr.for]="uid + '_target'">{{ (settings?.targetLabel || (settings?.showPicker
-                ? 'aloha.linktarget_target_and_ref_label'
-                : 'aloha.linktarget_target_label'
-            )) | i18n }}</label>
-        </div>
-
-        <ng-container *ngIf="settings?.showPicker">
-            <button
-                *ngIf="value?.isInternal"
-                class="internal-target-clear"
-                tabindex="3"
-                data-action="clear"
-                [title]="'aloha.linktarget_clear_target' | i18n"
-                [disabled]="disabled || !value?.isInternal"
-                (click)="clearInternalTarget()"
-            >
-                <icon>close</icon>
-            </button>
-
-            <button
-                class="internal-target-picker"
-                tabindex="2"
-                [disabled]="disabled"
-                data-action="select"
-                [title]="'aloha.linktarget_pick_target' | i18n"
-                (click)="pickInternalTarget()"
-            >
-                <icon>pan_tool_alt</icon>
-            </button>
-        </ng-container>
+      <label [attr.for]="uid + '_target'">{{ (settings?.targetLabel || (settings?.showPicker
+        ? 'aloha.linktarget_target_and_ref_label'
+        : 'aloha.linktarget_target_label'
+      )) | gtxI18n }}</label>
     </div>
 
-    <div class="anchor-wrapper">
-        <div class="gtx-editor-input anchor-input">
-            <input
-                type="text"
-                tabindex="4"
-                [attr.id]="uid + '_anchor'"
-                [value]="value?.anchor"
-                [disabled]="disabled"
-                (change)="handleAnchorChange($event)"
-            />
-            <label [attr.for]="uid + '_anchor'">{{ (settings?.anchorLabel || 'aloha.linktarget_anchor_label') | i18n }}</label>
-        </div>
+    @if (settings?.showPicker) {
+      @if (value?.isInternal) {
+        <button
+          class="internal-target-clear"
+          tabindex="3"
+          data-action="clear"
+          [title]="'aloha.linktarget_clear_target' | gtxI18n"
+          [disabled]="disabled || !value?.isInternal"
+          (click)="clearInternalTarget()"
+          >
+          <icon>close</icon>
+        </button>
+      }
+      <button
+        class="internal-target-picker"
+        tabindex="2"
+        [disabled]="disabled"
+        data-action="select"
+        [title]="'aloha.linktarget_pick_target' | gtxI18n"
+        (click)="pickInternalTarget()"
+        >
+        <icon>pan_tool_alt</icon>
+      </button>
+    }
+  </div>
+
+  <div class="anchor-wrapper">
+    <div class="gtx-editor-input anchor-input">
+      <input
+        type="text"
+        tabindex="4"
+        [attr.id]="uid + '_anchor'"
+        [value]="value?.anchor"
+        [disabled]="disabled"
+        (change)="handleAnchorChange($event)"
+        />
+      <label [attr.for]="uid + '_anchor'">{{ (settings?.anchorLabel || 'aloha.linktarget_anchor_label') | gtxI18n }}</label>
     </div>
+  </div>
 </div>

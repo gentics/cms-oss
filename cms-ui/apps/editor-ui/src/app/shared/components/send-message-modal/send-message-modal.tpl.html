@@ -1,27 +1,28 @@
 <div class="modal-title">
-    <h5>{{ 'modal.send_message_title' | i18n }}</h5>
+  <h5>{{ 'modal.send_message_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
+  @if (users && groups) {
     <gtx-message-properties
-        *ngIf="users && groups"
-        [users]="users"
-        [groups]="groups"
-        [formControl]="form"
-    />
+      [users]="users"
+      [groups]="groups"
+      [formControl]="form"
+      />
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        flat
-        type="secondary"
-        data-action="cancel"
-        (click)="cancelFn()"
-    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+  <gtx-button
+    flat
+    type="secondary"
+    data-action="cancel"
+    (click)="cancelFn()"
+  >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 
-    <gtx-button
-        data-action="confirm"
-        [disabled]="form.invalid"
-        (click)="okayClicked()"
-    >{{ 'common.okay_button' | i18n }}</gtx-button>
+  <gtx-button
+    data-action="confirm"
+    [disabled]="form.invalid"
+    (click)="okayClicked()"
+  >{{ 'common.okay_button' | gtxI18n }}</gtx-button>
 </div>

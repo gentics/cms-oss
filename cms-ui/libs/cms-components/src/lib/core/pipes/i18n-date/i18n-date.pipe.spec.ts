@@ -1,6 +1,6 @@
 import { EventEmitter } from '@angular/core';
 import { LangChangeEvent } from '@ngx-translate/core';
-import { GtxI18nDatePipe } from './i18n-date.pipe';
+import { I18nDatePipe } from './i18n-date.pipe';
 
 const originalIntl = (<any> window).Intl;
 const originalNavigator = window.navigator;
@@ -82,7 +82,7 @@ class MockDateTimeFormat implements Intl.DateTimeFormat {
 
 describe('I18nDatePipe', () => {
 
-    let pipe: GtxI18nDatePipe;
+    let pipe: I18nDatePipe;
     let mockTranslateService: MockTranslateService;
     let mockChangeDetector: MockChangeDetectorRef;
     let navigator: MockNavigator;
@@ -102,11 +102,11 @@ describe('I18nDatePipe', () => {
             writable: false,
         });
 
-        pipe = new GtxI18nDatePipe(mockTranslateService as any, mockChangeDetector as any);
+        pipe = new I18nDatePipe(mockTranslateService as any, mockChangeDetector as any);
     });
 
     afterEach(() => {
-        GtxI18nDatePipe.formatCache = {};
+        I18nDatePipe.formatCache = {};
     });
 
     afterAll(() => {

@@ -86,7 +86,7 @@ describe('UploadConflictService', () => {
                 { id: 3, type: 'image', name: 'image2.ext' },
             ];
 
-            const modalService: ModalService = TestBed.get(ModalService);
+            const modalService: ModalService = TestBed.inject(ModalService);
             spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(of(conflictingFiles));
             const sortFilesSpy = spyOn(uploadConflictService, 'sortFilesForUpload').and.callThrough();
             spyOn(folderActions, 'uploadAndReplace').and.callThrough();

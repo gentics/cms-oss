@@ -1,14 +1,18 @@
-<div class="item-breadcrumbs" *ngIf="breadcrumbs">
-    <ng-container *ngFor="let breadcrumb of breadcrumbs">
+@if (breadcrumbs) {
+  <div class="item-breadcrumbs">
+    @for (breadcrumb of breadcrumbs; track breadcrumb) {
+      @if (linkPaths) {
         <a
-            *ngIf="linkPaths; else noLinks"
             class="item-breadcrumb"
             [routerLink]="breadcrumb.route"
             [attr.title]="breadcrumb.text"
         >{{ breadcrumb.text }}</a>
-        <ng-template #noLinks>
-            <span class="item-breadcrumb" [attr.title]="breadcrumb.text">{{ breadcrumb.text }}</span>
-        </ng-template>
-    </ng-container>
-    <a class="item-name" *ngIf="item.type !== 'folder'">{{ itemName }}</a>
-</div>
+      } @else {
+        <span class="item-breadcrumb" [attr.title]="breadcrumb.text">{{ breadcrumb.text }}</span>
+      }
+    }
+    @if (item.type !== 'folder') {
+      <a class="item-name">{{ itemName }}</a>
+    }
+  </div>
+}

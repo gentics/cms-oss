@@ -49,7 +49,7 @@ import {
     TableSizeInputComponent,
     TableSizeSelectComponent,
 } from './components';
-import { contentFrameRoutes } from './content-frame.routes';
+import { CONTENT_FRAME_ROUTES } from './content-frame.routes';
 import { ContentFrameGuard } from './guards';
 import {
     CustomerScriptService,
@@ -112,7 +112,7 @@ const GUARDS = [
 ];
 
 const MODULE_INITIALIZER = provideAppInitializer(() => {
-    const customScriptService = inject(CustomerScriptService)
+    const customScriptService = inject(CustomerScriptService);
     return customScriptService.loadCustomerScript();
 });
 
@@ -123,7 +123,7 @@ const MODULE_INITIALIZER = provideAppInitializer(() => {
         EditorOverlayModule,
         ColorSliderModule,
         ColorAlphaModule,
-        RouterModule.forChild(contentFrameRoutes),
+        RouterModule.forChild(CONTENT_FRAME_ROUTES),
         GenticsUICoreModule,
     ],
     exports: [],

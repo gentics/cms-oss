@@ -22,27 +22,6 @@ import {
     UntypedFormGroup,
     Validators,
 } from '@angular/forms';
-import {
-    GtxChipOperator,
-    GtxChipSearchChipData,
-    GtxChipSearchChipOperatorOption,
-    GtxChipSearchChipPropertyOption,
-    GtxChipSearchConfig,
-    GtxChipSearchData,
-    GtxChipSearchPropertyKeys,
-    GtxChipSearchSearchFilterMap,
-    GtxChipValue,
-} from '@editor-ui/app/common/models';
-import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
-import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { ListSearchService } from '@editor-ui/app/core/providers/list-search/list-search.service';
-import { PresentationService } from '@editor-ui/app/shared/providers/presentation/presentation.service';
-import {
-    ApplicationStateService,
-    FocusEditorAction,
-    FocusListAction,
-    FolderActionsService,
-} from '@editor-ui/app/state';
 import { Node } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
 import {
@@ -59,6 +38,27 @@ import {
     takeUntil,
     tap,
 } from 'rxjs/operators';
+import {
+    GtxChipOperator,
+    GtxChipSearchChipData,
+    GtxChipSearchChipOperatorOption,
+    GtxChipSearchChipPropertyOption,
+    GtxChipSearchConfig,
+    GtxChipSearchData,
+    GtxChipSearchPropertyKeys,
+    GtxChipSearchSearchFilterMap,
+    GtxChipValue,
+} from '../../../common/models';
+import { isLiveUrl } from '../../../common/utils/is-live-url';
+import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
+import { ListSearchService } from '../../../core/providers/list-search/list-search.service';
+import { PresentationService } from '../../../shared/providers/presentation/presentation.service';
+import {
+    ApplicationStateService,
+    FocusEditorAction,
+    FocusListAction,
+    FolderActionsService,
+} from '../../../state';
 
 const patternShortCutSyntaxId = /^(?:jump):(\d+)$/;
 

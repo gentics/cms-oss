@@ -1,10 +1,11 @@
 import { RoleBO } from '@admin-ui/common';
-import { I18nService, PermissionsService } from '@admin-ui/core';
+import { PermissionsService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, Raw, Role } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RoleTableLoaderService } from '../../providers';
@@ -14,7 +15,7 @@ import { RoleTableLoaderService } from '../../providers';
     templateUrl: './role-table.component.html',
     styleUrls: ['./role-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class RoleTableComponent extends BaseEntityTableComponent<Role<Raw>, RoleBO> {
 
@@ -32,6 +33,7 @@ export class RoleTableComponent extends BaseEntityTableComponent<Role<Raw>, Role
             sortable: false,
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'role';
 
     constructor(

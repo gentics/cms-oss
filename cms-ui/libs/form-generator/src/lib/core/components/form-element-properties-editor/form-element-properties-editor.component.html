@@ -1,110 +1,109 @@
-<form
-    *ngIf="formGroup"
+@if (formGroup) {
+  <form
     class="form-element-properties-editor-form"
     [formGroup]="formGroup"
->
-    <div
-        class="form-element-properties-editor-property"
-        *ngFor="let property of properties; let i = index; trackBy:identify"
-        [ngSwitch]="property.type"
     >
-        <ng-container *ngSwitchCase="CmsFormElementPropertyType.BOOLEAN">
+    @for (property of properties; track identify(i, property); let i = $index) {
+      <div
+        class="form-element-properties-editor-property"
+        >
+        @switch (property.type) {
+          @case (CmsFormElementPropertyType.BOOLEAN) {
             <!-- required flag does not make sense for boolean values in this context -->
             <gtx-i18n-checkbox
-                [attr.data-cy]="'boolean-input'"
-                [attr.data-control]="property.name"
-                [formControlName]="property.name"
-                [label]="(property.label_i18n_ui | i18nfg$:'ui' | async)"
-                [language]="formEditorService.activeContentLanguageCode$ | async"
-                [availableLanguages]="formEditorService.formLanguages$ | async"
+              [attr.data-cy]="'boolean-input'"
+              [attr.data-control]="property.name"
+              [formControlName]="property.name"
+              [label]="(property.label_i18n_ui | i18nfg$:'ui' | async)"
+              [language]="formEditorService.activeContentLanguageCode$ | async"
+              [availableLanguages]="formEditorService.formLanguages$ | async"
             >            </gtx-i18n-checkbox>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="CmsFormElementPropertyType.NUMBER">
+          }
+          @case (CmsFormElementPropertyType.NUMBER) {
             <gtx-i18n-input
-                [attr.data-cy]="'number-input'"
+              [attr.data-cy]="'number-input'"
+              [attr.data-control]="property.name"
+              [formControlName]="property.name"
+              [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
+              [requiredInCurrentLanguage]="property.required"
+              [language]="formEditorService.activeContentLanguageCode$ | async"
+              [availableLanguages]="formEditorService.formLanguages$ | async"
+              [type]="'number'"
+            ></gtx-i18n-input>
+          }
+          @case (CmsFormElementPropertyType.STRING) {
+            <gtx-i18n-input
+              [attr.data-cy]="'string-input'"
+              [attr.data-control]="property.name"
+              [formControlName]="property.name"
+              [useRichEditor]="property.allow_rich_content ?? false"
+              [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
+              [requiredInCurrentLanguage]="property.required"
+              [language]="formEditorService.activeContentLanguageCode$ | async"
+              [availableLanguages]="formEditorService.formLanguages$ | async"
+              [type]="'text'"
+            ></gtx-i18n-input>
+          }
+          @case (CmsFormElementPropertyType.SELECT) {
+            @if (property.options; as options) {
+              <gtx-i18n-select
+                [attr.data-cy]="'select-input'"
                 [attr.data-control]="property.name"
                 [formControlName]="property.name"
                 [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
                 [requiredInCurrentLanguage]="property.required"
                 [language]="formEditorService.activeContentLanguageCode$ | async"
+                [multiple]="property.multiple"
+                [clearable]="!property.required"
                 [availableLanguages]="formEditorService.formLanguages$ | async"
-                [type]="'number'"
-            ></gtx-i18n-input>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="CmsFormElementPropertyType.STRING">
-            <gtx-i18n-input
-                [attr.data-cy]="'string-input'"
-                [attr.data-control]="property.name"
-                [formControlName]="property.name"
-                [useRichEditor]="property.allow_rich_content ?? false"
-                [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
-                [requiredInCurrentLanguage]="property.required"
-                [language]="formEditorService.activeContentLanguageCode$ | async"
-                [availableLanguages]="formEditorService.formLanguages$ | async"
-                [type]="'text'"
-            ></gtx-i18n-input>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="CmsFormElementPropertyType.SELECT">
-            <ng-container *ngIf="property.options as options; else errorNoSelectableOptions">
-                <gtx-i18n-select
-                    [attr.data-cy]="'select-input'"
-                    [attr.data-control]="property.name"
-                    [formControlName]="property.name"
-                    [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
-                    [requiredInCurrentLanguage]="property.required"
-                    [language]="formEditorService.activeContentLanguageCode$ | async"
-                    [multiple]="property.multiple"
-                    [clearable]="!property.required"
-                    [availableLanguages]="formEditorService.formLanguages$ | async"
                 >
-                    <gtx-option
-                        *ngFor="let option of options"
-                        [value]="option.key"
+                @for (option of options; track option) {
+                  <gtx-option
+                    [value]="option.key"
                     >
-                        {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
-                    </gtx-option>
-                </gtx-i18n-select>
-
-            </ng-container>
-
-            <ng-template #errorNoSelectableOptions>
-                <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_selectable_options' | i18n }}</p>
-            </ng-template>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="CmsFormElementPropertyType.SELECTABLE_OPTIONS">
+                    {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
+                  </gtx-option>
+                }
+              </gtx-i18n-select>
+            } @else {
+              <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_selectable_options' | gtxI18n }}</p>
+            }
+          }
+          @case (CmsFormElementPropertyType.SELECTABLE_OPTIONS) {
             <gtx-key-i18n-value-list-input
-                [attr.data-cy]="'selectable-options-input'"
-                [attr.data-control]="property.name"
-                [formControlName]="property.name"
-                [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
-                [keyLabel]="property.key_label_i18n_ui | i18nfg$:'ui' | async"
-                [valueLabel]="property.value_label_i18n_ui | i18nfg$:'ui' | async"
-                [requiredInCurrentLanguage]="property.required"
-                [language]="formEditorService.activeContentLanguageCode$ | async"
-                [availableLanguages]="formEditorService.formLanguages$ | async"
+              [attr.data-cy]="'selectable-options-input'"
+              [attr.data-control]="property.name"
+              [formControlName]="property.name"
+              [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
+              [keyLabel]="property.key_label_i18n_ui | i18nfg$:'ui' | async"
+              [valueLabel]="property.value_label_i18n_ui | i18nfg$:'ui' | async"
+              [requiredInCurrentLanguage]="property.required"
+              [language]="formEditorService.activeContentLanguageCode$ | async"
+              [availableLanguages]="formEditorService.formLanguages$ | async"
             ></gtx-key-i18n-value-list-input>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="CmsFormElementPropertyType.REPOSITORY_BROWSER">
+          }
+          @case (CmsFormElementPropertyType.REPOSITORY_BROWSER) {
             <gtx-form-browse-box
-                [attr.data-cy]="'repository-browser-input'"
-                [attr.data-control]="property.name"
-                [formControlName]="property.name"
-                [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
-                [required]="property.required"
-                [activeContentLanguage]="formEditorService.activeContentLanguageCode$ | async"
-                [options]="property.options"
+              [attr.data-cy]="'repository-browser-input'"
+              [attr.data-control]="property.name"
+              [formControlName]="property.name"
+              [label]="(property.label_i18n_ui | i18nfg$:'ui' | async) + (property.required ? '*' : '')"
+              [required]="property.required"
+              [activeContentLanguage]="formEditorService.activeContentLanguageCode$ | async"
+              [options]="property.options"
             ></gtx-form-browse-box>
-        </ng-container>
-
-        <ng-container *ngSwitchCase="CmsFormElementPropertyType.UNSUPPORTED">
+          }
+          @case (CmsFormElementPropertyType.UNSUPPORTED) {
             <div class="unsupported-label">{{ property.label_i18n_ui | i18nfg$:'ui' | async }}</div>
-            <pre *ngIf="property.value_i18n">{{ property.value_i18n | json }}</pre>
-            <pre *ngIf="property.value">{{ property.value | json }}</pre>
-        </ng-container>
-    </div>
-</form>
+            @if (property.value_i18n) {
+              <pre>{{ property.value_i18n | json }}</pre>
+            }
+            @if (property.value) {
+              <pre>{{ property.value | json }}</pre>
+            }
+          }
+        }
+      </div>
+    }
+  </form>
+}

@@ -11,15 +11,6 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
-import {
-    ApplicationStateService,
-    FolderActionsService,
-    SetDisplayAllLanguagesAction,
-    SetDisplayStatusIconsAction,
-    UsageActionsService,
-    WastebinActionsService,
-} from '@editor-ui/app/state';
 import { WindowRef } from '@gentics/cms-components';
 import { Favourite, File, Folder, GcmsPermission, Image, Page, PermissionsMapCollection } from '@gentics/cms-models';
 import {
@@ -30,12 +21,12 @@ import {
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { FavouritesService } from '../../../core/providers/favourites/favourites.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import {
     FavouriteToggleComponent,
@@ -61,6 +52,14 @@ import {
     TruncatePathPipe,
     UserFullNamePipe,
 } from '../../../shared/pipes';
+import {
+    ApplicationStateService,
+    FolderActionsService,
+    SetDisplayAllLanguagesAction,
+    SetDisplayStatusIconsAction,
+    UsageActionsService,
+    WastebinActionsService,
+} from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { IsStartPagePipe } from '../../pipes/is-start-page/is-start-page.pipe';
 import { ItemContextMenuComponent } from '../item-context-menu/item-context-menu.component';
@@ -252,8 +251,7 @@ describe('ItemListRow', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: FavouritesService, useClass: MockFavouritesService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
-                { provide: TranslateService, useClass: MockTranslateService },
-                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nService, useClass: MockTranslateService },
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: UsageActionsService, useClass: MockUsageActions },
                 { provide: WastebinActionsService, useClass: MockWastebinActionsService },
@@ -290,9 +288,9 @@ describe('ItemListRow', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         expect(state instanceof ApplicationStateService).toBeTruthy();
-        mockTranslateService = TestBed.get(TranslateService);
+        mockTranslateService = TestBed.inject(TranslateService) as any;
         state.mockState({
             entities: {
                 folder: {
@@ -1142,10 +1140,10 @@ describe('ItemListRow', () => {
         let favourites: MockFavouritesService;
 
         beforeEach(() => {
-            state = TestBed.get(ApplicationStateService);
+            state = TestBed.inject(ApplicationStateService) as any;
             expect(state instanceof TestApplicationState).toBe(true);
 
-            favourites = TestBed.get(FavouritesService);
+            favourites = TestBed.inject(FavouritesService) as any;
             expect(favourites instanceof MockFavouritesService).toBe(true);
         });
 

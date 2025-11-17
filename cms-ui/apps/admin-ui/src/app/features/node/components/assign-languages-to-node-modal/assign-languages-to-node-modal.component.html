@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'shared.assign_languages_to_node_title' | i18n:{ entityName: nodeName } }}</h5>
+    <h5>{{ 'shared.assign_languages_to_node_title' | gtxI18n:{ entityName: nodeName } }}</h5>
 </div>
 
 <div class="modal-content">
@@ -19,7 +19,7 @@
         data-action="confirm"
         [disabled]="loading"
         (click)="updateLanguages()"
-    >{{ 'shared.assign' | i18n }}</gtx-button>
+    >{{ 'shared.assign' | gtxI18n }}</gtx-button>
 
     <gtx-button
         type="secondary"
@@ -27,6 +27,6 @@
         data-action="cancel"
         (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
 </div>

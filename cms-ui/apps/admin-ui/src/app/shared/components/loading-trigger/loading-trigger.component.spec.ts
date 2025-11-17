@@ -42,7 +42,7 @@ describe('LoadingTriggerComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
     });
 
     afterEach(() => {

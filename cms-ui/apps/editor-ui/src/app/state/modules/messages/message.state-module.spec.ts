@@ -18,7 +18,7 @@ describe('MessageStateModule', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
     });
 
     it('sets the correct initial state', () => {

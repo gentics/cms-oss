@@ -1,81 +1,74 @@
-<div class="form-container active" [ngSwitch]="item.type">
-    <ng-container *ngSwitchCase="'folder'">
-        <gtx-folder-properties
-            [itemId]="item.id"
-            [nodeId]="nodeId"
-            [folderId]="item.motherId"
-            [languages]="languages"
-
-            [initialValue]="itemClean"
-            [formControl]="control"
-            (initialValueChange)="forwardItemCleanChange($event)"
-        ></gtx-folder-properties>
-    </ng-container>
-
-    <ng-container *ngSwitchCase="'form'">
-        <gtx-form-properties
-            [item]="item"
-            [nodeId]="nodeId"
-            [folderId]="item.motherId"
-            [languages]="languages"
-            [disableLanguageSelect]="true"
-            [showDetailProperties]="true"
-
-            [initialValue]="itemClean"
-            [formControl]="control"
-            (initialValueChange)="forwardItemCleanChange($event)"
-        ></gtx-form-properties>
-    </ng-container>
-
-    <ng-container *ngSwitchCase="'page'">
-        <gtx-page-properties
-            [item]="item"
-            [enableFileNameSuggestion]="false"
-            [folderId]="item.folderId"
-            [nodeId]="nodeId"
-            [value]="properties"
-            [templates]="templates"
-            [languages]="languages"
-            [disableLanguageSelect]="itemAsPage?.language != null"
-
-            [initialValue]="itemClean"
-            [formControl]="control"
-            (initialValueChange)="forwardItemCleanChange($event)"
-        ></gtx-page-properties>
-    </ng-container>
-
-    <ng-container *ngSwitchCase="'file'">
-        <ng-container [ngTemplateOutlet]="fileProperties"></ng-container>
-    </ng-container>
-
-    <ng-container *ngSwitchCase="'image'">
-        <ng-container [ngTemplateOutlet]="fileProperties"></ng-container>
-    </ng-container>
-
-    <ng-container *ngSwitchCase="'node'">
-        <ng-container [ngTemplateOutlet]="nodeProperties"></ng-container>
-    </ng-container>
-
-    <ng-container *ngSwitchCase="'channel'">
-        <ng-container [ngTemplateOutlet]="nodeProperties"></ng-container>
-    </ng-container>
+<div class="form-container active">
+  @switch (item.type) {
+    @case ('folder') {
+      <gtx-folder-properties
+        [itemId]="item.id"
+        [nodeId]="nodeId"
+        [folderId]="item.motherId"
+        [languages]="languages"
+        [initialValue]="itemClean"
+        [formControl]="control"
+        (initialValueChange)="forwardItemCleanChange($event)"
+      ></gtx-folder-properties>
+    }
+    @case ('form') {
+      <gtx-form-properties
+        [item]="item"
+        [nodeId]="nodeId"
+        [folderId]="item.motherId"
+        [languages]="languages"
+        [disableLanguageSelect]="true"
+        [showDetailProperties]="true"
+        [initialValue]="itemClean"
+        [formControl]="control"
+        (initialValueChange)="forwardItemCleanChange($event)"
+      ></gtx-form-properties>
+    }
+    @case ('page') {
+      <gtx-page-properties
+        [item]="item"
+        [enableFileNameSuggestion]="false"
+        [folderId]="item.folderId"
+        [nodeId]="nodeId"
+        [value]="properties"
+        [templates]="templates"
+        [languages]="languages"
+        [disableLanguageSelect]="itemAsPage?.language != null"
+        [initialValue]="itemClean"
+        [formControl]="control"
+        (initialValueChange)="forwardItemCleanChange($event)"
+      ></gtx-page-properties>
+    }
+    @case ('file') {
+      <ng-container [ngTemplateOutlet]="fileProperties"></ng-container>
+    }
+    @case ('image') {
+      <ng-container [ngTemplateOutlet]="fileProperties"></ng-container>
+    }
+    @case ('node') {
+      <ng-container [ngTemplateOutlet]="nodeProperties"></ng-container>
+    }
+    @case ('channel') {
+      <ng-container [ngTemplateOutlet]="nodeProperties"></ng-container>
+    }
+  }
 </div>
 
 <ng-template #fileProperties>
-    <gtx-file-properties
-        [item]="item"
-        [initialValue]="itemClean"
-        [formControl]="control"
-        (initialValueChange)="forwardItemCleanChange($event)"
-    ></gtx-file-properties>
+  <gtx-file-properties
+    [item]="item"
+    [initialValue]="itemClean"
+    [formControl]="control"
+    (initialValueChange)="forwardItemCleanChange($event)"
+  ></gtx-file-properties>
 </ng-template>
 
 <ng-template #nodeProperties>
-    <gtx-node-properties
-        [item]="item"
-        [initialValue]="itemClean"
-        [formControl]="control"
-        [mode]="NodePropertiesMode.EDIT"
-        (initialValueChange)="forwardItemCleanChange($event)"
-    ></gtx-node-properties>
+  <gtx-node-properties
+    [item]="item"
+    [initialValue]="itemClean"
+    [formControl]="control"
+    [mode]="NodePropertiesMode.EDIT"
+    (initialValueChange)="forwardItemCleanChange($event)"
+  ></gtx-node-properties>
 </ng-template>

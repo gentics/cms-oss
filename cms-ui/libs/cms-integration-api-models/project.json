@@ -21,9 +21,6 @@
                 "ci": {}
             }
         },
-        "lint": {
-            "executor": "@nx/eslint:lint"
-        },
         "test": {
            "executor": "nx:noop"
         },

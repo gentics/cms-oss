@@ -18,7 +18,7 @@ describe('MaintenanceModeStateModule', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
     });
 
     it('sets the correct initial state', () => {

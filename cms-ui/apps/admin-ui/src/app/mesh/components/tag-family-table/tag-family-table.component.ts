@@ -1,5 +1,4 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { MeshTagBO, MeshTagFamilyBO } from '@admin-ui/mesh/common';
 import { TagFamilyTableLoaderOptions, TagFamilyTableLoaderService, TagHandlerService } from '@admin-ui/mesh/providers';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
@@ -7,6 +6,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { Permission, TagFamily, TagResponse } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TagFamilyModal } from '../tag-family-modal/tag-family-modal.component';
@@ -21,7 +21,7 @@ const EDIT_ACTION = 'edit';
     templateUrl: './tag-family-table.component.html',
     styleUrls: ['./tag-family-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TagFamilyTableComponent extends BaseEntityTableComponent<TagFamily, MeshTagFamilyBO, TagFamilyTableLoaderOptions> {
 
@@ -47,6 +47,7 @@ export class TagFamilyTableComponent extends BaseEntityTableComponent<TagFamily,
             clickable: false,
         },
     ];
+
     protected entityIdentifier = 'tag-family' as any;
 
     constructor(

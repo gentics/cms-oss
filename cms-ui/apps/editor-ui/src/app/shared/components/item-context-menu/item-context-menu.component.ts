@@ -1,6 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { EditorPermissions, StageableItem, StagingMode, UIMode, getNoPermissions, plural } from '@editor-ui/app/common/models';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import {
     Feature,
     File as FileModel,
@@ -15,8 +13,10 @@ import {
     StagedItemsMap,
 } from '@gentics/cms-models';
 import { Subscription } from 'rxjs';
+import { EditorPermissions, StageableItem, StagingMode, UIMode, getNoPermissions, plural } from '../../../common/models';
 import { isEditableImage } from '../../../common/utils/is-editable-image';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 export interface ContextMenuButtonsMap {

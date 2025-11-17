@@ -1,8 +1,7 @@
 import { ChangeDetectorRef, Injectable, OnDestroy, Pipe, PipeTransform } from '@angular/core';
 import { IndexByKey } from '@gentics/cms-models';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
-import { applyShortcuts, translateParamsInstant } from '../../providers/i18n';
+import { I18nService } from '../../providers/i18n/i18n.service';
 
 /**
  * A wrapper around the ngx-translate TranslatePipe. Adds some convenience shortcuts to allow
@@ -12,11 +11,11 @@ import { applyShortcuts, translateParamsInstant } from '../../providers/i18n';
  * =====================
  * Common item types will be short-cut translated, so instead of writing:
  * ```
- * {{ 'common.type_' + item.type | i18n }}
+ * {{ 'common.type_' + item.type | gtxI18n }}
  * ```
  * we can now use:
  * ```
- * {{ item.type | i18n:{ count: items.length } }}
+ * {{ item.type | gtxI18n:{ count: items.length } }}
  * ```
  *
  * The `count` param allows the pipe to use the correct pluralized form.
@@ -35,63 +34,60 @@ import { applyShortcuts, translateParamsInstant } from '../../providers/i18n';
  * In this case we need to translate the "type" param too ("page" or "seite"). To translate a param, simple
  * prefix that param with an underscore:
  * ```
- * {{ 'common.edit_type_button' | i18n:{ _type: item.type } }}
+ * {{ 'common.edit_type_button' | gtxI18n:{ _type: item.type } }}
  * ```
  */
 @Injectable()
 @Pipe({
-    name: 'i18n',
+    name: 'gtxI18n',
     pure: false,
-    standalone: false
+    standalone: false,
 })
-export class GtxI18nPipe implements PipeTransform, OnDestroy {
+export class I18nPipe implements PipeTransform, OnDestroy {
 
     static memoized: { [key: string]: string } = {};
 
-    translatePipe: TranslatePipe;
+    private lastValue: string;
+    private lastParam: any;
+    private lastResult: string;
+    private subscription: Subscription;
 
-    _lastValue: string;
-    _lastParams: any;
-    _lastResult: string;
-    subscription: Subscription;
-
-    constructor(private translate: TranslateService,
-                private changeDetector: ChangeDetectorRef) {
-        this.translatePipe = new TranslatePipe(translate, changeDetector);
-
-        this.subscription = translate.onLangChange.subscribe(() => {
-            GtxI18nPipe.memoized = {};
-            this._lastParams = undefined;
-            this._lastValue = undefined;
-            this._lastResult = undefined;
+    constructor(
+        private translate: I18nService,
+        private changeDetector: ChangeDetectorRef,
+    ) {
+        this.subscription = translate.onLanguageChange().subscribe(() => {
+            I18nPipe.memoized = {};
+            this.lastParam = undefined;
+            this.lastValue = undefined;
+            this.lastResult = undefined;
             this.changeDetector.markForCheck();
         });
     }
 
     transform(value: string, params?: { [key: string]: any }): string {
-        if (value && value === this._lastValue && params === this._lastParams) {
-            return this._lastResult;
+        if (value && value === this.lastValue && params === this.lastParam) {
+            return this.lastResult;
         }
 
         let result: string;
         const token = `${value}:${this.simpleStringify(params)}`;
-        const memoized = GtxI18nPipe.memoized[token];
+        const memoized = I18nPipe.memoized[token];
         if (memoized) {
             result = memoized;
         } else {
-            const shortcut = applyShortcuts(value, params);
-            const translatedParams = translateParamsInstant(params, this.translate);
-            result = this.translatePipe.transform(shortcut, translatedParams);
-            GtxI18nPipe.memoized[token] = result;
+            const shortcut = this.translate.applyShortcuts(value, params);
+            const translatedParams = this.translate.translateParamsInstant(params);
+            result = this.translate.instant(shortcut, translatedParams);
+            I18nPipe.memoized[token] = result;
         }
-        this._lastValue = value;
-        this._lastParams = params;
-        this._lastResult = result;
+        this.lastValue = value;
+        this.lastParam = params;
+        this.lastResult = result;
         return result;
     }
 
     ngOnDestroy(): void {
-        this.translatePipe.ngOnDestroy();
         this.subscription.unsubscribe();
     }
 

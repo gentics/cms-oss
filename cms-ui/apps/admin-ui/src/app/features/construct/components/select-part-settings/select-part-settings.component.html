@@ -1,21 +1,25 @@
-<label *ngIf="label">{{ label }}</label>
+@if (label) {
+  <label>{{ label }}</label>
+}
 
-<div *ngIf="form" class="input-container" [formGroup]="form">
+@if (form) {
+  <div class="input-container" [formGroup]="form">
     <gtx-select
-        [label]="('construct.select_dataSource' | i18n) + '*'"
-        [multiple]="false"
-        [required]="true"
-        [value]="form.value.datasourceId"
-        (valueChange)="loadEntries($event)"
-    >
+      [label]="('construct.select_dataSource' | gtxI18n) + '*'"
+      [multiple]="false"
+      [required]="true"
+      [value]="form.value.datasourceId"
+      (valueChange)="loadEntries($event)"
+      >
+      @for (dsEntry of (dataSourceMap | gtxEntries); track dsEntry) {
         <gtx-option
-            *ngFor="let dsEntry of (dataSourceMap | gtxEntries)"
-            [value]="dsEntry.value.id"
+          [value]="dsEntry.value.id"
         >{{ dsEntry.value.name }}</gtx-option>
+      }
     </gtx-select>
-
     <gtx-textarea
-        [label]="'construct.select_template' | i18n"
-        formControlName="template"
+      [label]="'construct.select_template' | gtxI18n"
+      formControlName="template"
     ></gtx-textarea>
-</div>
+  </div>
+}

@@ -1,34 +1,37 @@
-<ng-container *ngIf="tagProperty">
-    <div class="tag-part-editor">
-        <gtx-select
-            *ngIf="tagPart.type === 'SELECT'"
-            [label]="tagPart | tagPropLabel"
-            [clearable]="!tagPart?.mandatory"
-            [required]="tagPart?.mandatory"
-            [disabled]="readOnly"
-            [(ngModel)]="selectedSingleOptionId"
-            (valueChange)="onSingleSelectChange($event)"
+@if (tagProperty) {
+  <div class="tag-part-editor">
+    @if (tagPart.type === 'SELECT') {
+      <gtx-select
+        [label]="tagPart | tagPropLabel"
+        [clearable]="!tagPart?.mandatory"
+        [required]="tagPart?.mandatory"
+        [disabled]="readOnly"
+        [(ngModel)]="selectedSingleOptionId"
+        (valueChange)="onSingleSelectChange($event)"
         >
-            <gtx-option
-                *ngFor="let item of tagProperty.options"
-                [value]="item.id"
-            >{{ item.key }}</gtx-option>
-        </gtx-select>
-
-        <gtx-select
-            *ngIf="tagPart.type === 'MULTISELECT'"
-            [label]="tagPart | tagPropLabel"
-            [required]="tagPart?.mandatory"
-            [clearable]="true"
-            [disabled]="readOnly"
-            [multiple]="true"
-            [(ngModel)]="selectedMultipleOptionsIds"
-            (valueChange)="onMultipleSelectChange($event)"
+        @for (item of tagProperty.options; track item) {
+          <gtx-option
+            [value]="item.id"
+          >{{ item.key }}</gtx-option>
+        }
+      </gtx-select>
+    }
+    @if (tagPart.type === 'MULTISELECT') {
+      <gtx-select
+        [label]="tagPart | tagPropLabel"
+        [required]="tagPart?.mandatory"
+        [clearable]="true"
+        [disabled]="readOnly"
+        [multiple]="true"
+        [(ngModel)]="selectedMultipleOptionsIds"
+        (valueChange)="onMultipleSelectChange($event)"
         >
-            <gtx-option
-                *ngFor="let item of tagProperty.options"
-                [value]="item.id"
-            >{{ item.key }}</gtx-option>
-        </gtx-select>
-    </div>
-</ng-container>
+        @for (item of tagProperty.options; track item) {
+          <gtx-option
+            [value]="item.id"
+          >{{ item.key }}</gtx-option>
+        }
+      </gtx-select>
+    }
+  </div>
+}

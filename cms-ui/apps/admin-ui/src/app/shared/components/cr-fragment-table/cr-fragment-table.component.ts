@@ -1,17 +1,17 @@
-import { ContentRepositoryFragmentBO } from '@admin-ui/common';
-import {
-    CRFragmentTableLoaderOptions,
-    CRFragmentTableLoaderService,
-    DevToolPackageTableLoaderService,
-    I18nService,
-    PermissionsService,
-} from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { AnyModelType, ContentRepositoryFragment, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContentRepositoryFragmentBO } from '../../../common';
+import {
+    CRFragmentTableLoaderOptions,
+    CRFragmentTableLoaderService,
+    DevToolPackageTableLoaderService,
+    PermissionsService,
+} from '../../../core';
+import { AppStateService } from '../../../state';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
@@ -22,7 +22,7 @@ import { CreateContentRepositoryFragmentModalComponent } from '../create-cr-frag
     templateUrl: './cr-fragment-table.component.html',
     styleUrls: ['./cr-fragment-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CRFragmentTableComponent
     extends BasePackageEntityTableComponent<ContentRepositoryFragment, ContentRepositoryFragmentBO, CRFragmentTableLoaderOptions> {
@@ -30,11 +30,16 @@ export class CRFragmentTableComponent
     protected rawColumns: TableColumn<ContentRepositoryFragmentBO>[] = [
         {
             id: 'name',
-            label: 'contentRepositoryFragment.name',
+            label: 'content_repository_fragment.name',
             fieldPath: 'name',
             sortable: true,
         },
     ];
+
+    public canCreate = false;
+    public canDelete = false;
+    public canManagePackage = false;
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'contentRepositoryFragment';
 
     constructor(
@@ -55,17 +60,22 @@ export class CRFragmentTableComponent
             modalService,
             contextMenu,
             packageTableLoader,
-        )
+        );
     }
 
     protected override createTableActionLoading(): Observable<TableAction<ContentRepositoryFragmentBO>[]> {
         return combineLatest([
             this.actionRebuildTrigger$,
+            this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentRepository.createContentRepository').typePermissions),
             this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentRepository.deleteContentRepository').typePermissions),
             this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentadmin.updateContent').typePermissions),
         ]).pipe(
             map(([_, ...perms]) => perms),
-            map(([canDelete, canManagePackage]) => {
+            map(([canCreate, canDelete, canManagePackage]) => {
+                this.canCreate = canCreate;
+                this.canDelete = canDelete;
+                this.canManagePackage = canManagePackage;
+
                 const actions: TableAction<ContentRepositoryFragmentBO>[] = [];
 
                 if (!this.packageName) {
@@ -101,17 +111,18 @@ export class CRFragmentTableComponent
         };
     }
 
-    async handleCreateButton(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(
+    override handleCreateButton(): void {
+        this.modalService.fromComponent(
             CreateContentRepositoryFragmentModalComponent,
             { closeOnOverlayClick: false, width: '50%' },
-        );
-        const created = await dialog.open();
+        )
+            .then((dialog) => dialog.open())
+            .then((created) => {
+                if (!created) {
+                    return;
+                }
 
-        if (!created) {
-            return;
-        }
-
-        this.loader.reload();
+                this.loader.reload();
+            });
     }
 }

@@ -4,22 +4,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Api, GcmsApi } from '@editor-ui/app/core/providers/api';
-import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
-import { InheritedLocalizedIcon, ItemStatusLabelComponent } from '@editor-ui/app/shared/components';
-import { ItemIsLocalizedPipe } from '@editor-ui/app/shared/pipes';
-import { BreadcrumbsService } from '@editor-ui/app/shared/providers';
-import { ApplicationStateService, EditorActionsService, FolderActionsService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, FolderListResponse, Form, FormPermissions, Node, Page, PagePermissions } from '@gentics/cms-models';
 import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
@@ -27,6 +13,19 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { NEVER, Observable, of } from 'rxjs';
+import { Api, GcmsApi } from '../../../core/providers/api';
+import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
+import { InheritedLocalizedIcon, ItemStatusLabelComponent } from '../../../shared/components';
+import { ItemIsLocalizedPipe } from '../../../shared/pipes';
+import { BreadcrumbsService } from '../../../shared/providers';
+import { ApplicationStateService, EditorActionsService, FolderActionsService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EditorToolbarComponent } from './editor-toolbar.component';
 
 const ITEM_ID = 1;
@@ -54,8 +53,7 @@ describe('EditorToolbarComponent', () => {
                 { provide: DecisionModalsService, useClass: MockDecisionModalsService },
                 { provide: EditorActionsService, useClass: MockEditorActions },
                 { provide: FolderActionsService, useClass: MockFolderActions },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: PermissionService, useClass: MockPermissionService },

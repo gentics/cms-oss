@@ -1,13 +1,25 @@
 import { GroupBO } from '@admin-ui/common';
-import { ErrorHandler, GroupOperations, I18nNotificationService, I18nService, UserOperations } from '@admin-ui/core';
+import { ErrorHandler, GroupOperations, UserOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { Feature, Group, Raw, User } from '@gentics/cms-models';
-import { BaseModal, CHECKBOX_STATE_INDETERMINATE, ModalService, TableAction, TableActionClickEvent, TableSelection, toSelectionArray } from '@gentics/ui-core';
+import {
+    BaseModal,
+    CHECKBOX_STATE_INDETERMINATE,
+    ModalService,
+    TableAction,
+    TableActionClickEvent,
+    TableSelection,
+    toSelectionArray,
+} from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AssignNodeRestrictionsToUsersModalComponent } from '../assign-node-restriction-to-users-modal/assign-node-restriction-to-users-modal.component';
+import {
+    AssignNodeRestrictionsToUsersModalComponent,
+} from '../assign-node-restriction-to-users-modal/assign-node-restriction-to-users-modal.component';
 
 const ACTION_NODE_RESTRICTIONS = 'restrict-by-nodes';
 
@@ -16,7 +28,7 @@ const ACTION_NODE_RESTRICTIONS = 'restrict-by-nodes';
     templateUrl: './assign-user-to-groups-modal.component.html',
     styleUrls: ['./assign-user-to-groups-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnInit, OnDestroy {
 
@@ -54,11 +66,11 @@ export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnIni
         this.subscriptions.push(combineLatest([
             this.groupsOps.getFlattned(),
             forkJoin(
-                this.userIds.map(id => this.userOps.get(id)),
+                this.userIds.map((id) => this.userOps.get(id)),
             ),
             forkJoin(
-                this.userIds.map(id => this.userOps.groups(id).pipe(
-                    map(groups => [id, groups] as [number, Group<Raw>[]]),
+                this.userIds.map((id) => this.userOps.groups(id).pipe(
+                    map((groups) => [id, groups] as [number, Group<Raw>[]]),
                 )),
             ),
         ]).subscribe(([allGroups, loadedUsers, entries]) => {
@@ -104,7 +116,7 @@ export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnIni
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MULTICHANNELLING]).subscribe(multiChanneling => {
+        this.subscriptions.push(this.appState.select((state) => state.features.global[Feature.MULTICHANNELLING]).subscribe((multiChanneling) => {
             if (!multiChanneling || this.userIds.length !== 1) {
                 this.actions = [];
                 this.changeDetector.markForCheck();
@@ -126,7 +138,7 @@ export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnIni
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     /**

@@ -1,10 +1,10 @@
 import { ScheduleExecutionBO } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, ScheduleExecution } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { ScheduleExecutionsTableLoaderOptions, ScheduleExecutionsTableLoaderService } from '../../providers';
 import { ScheduleExecutionDetailModalComponent } from '../schedule-execution-detail-modal/schedule-execution-detail-modal.component';
 
@@ -13,7 +13,7 @@ import { ScheduleExecutionDetailModalComponent } from '../schedule-execution-det
     templateUrl: './schedule-executions-table.component.html',
     styleUrls: ['./schedule-executions-table.components.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ScheduleExecutionsTableComponent
     extends BaseEntityTableComponent<ScheduleExecution, ScheduleExecutionBO, ScheduleExecutionsTableLoaderOptions>
@@ -51,8 +51,10 @@ export class ScheduleExecutionsTableComponent
             sortable: true,
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'scheduleExecution';
 
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -88,7 +90,7 @@ export class ScheduleExecutionsTableComponent
             width: '80%',
         }, {
             execution: row.item,
-        }).then(dialog => dialog.open());
+        }).then((dialog) => dialog.open());
 
         super.handleRowClick(row);
     }

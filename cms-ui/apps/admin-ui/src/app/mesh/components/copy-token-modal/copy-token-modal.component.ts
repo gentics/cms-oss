@@ -1,7 +1,7 @@
-import { I18nNotificationService } from '@admin-ui/core';
 import { MeshUserBO } from '@admin-ui/mesh/common';
 import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { User, UserReference } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -10,7 +10,7 @@ import { BaseModal } from '@gentics/ui-core';
     templateUrl: './copy-token-modal.component.html',
     styleUrls: ['./copy-token-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CopyTokenModal extends BaseModal<void> implements OnInit {
 

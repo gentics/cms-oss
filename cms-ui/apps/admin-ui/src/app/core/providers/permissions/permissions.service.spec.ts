@@ -89,10 +89,10 @@ describe('PermissionsService', () => {
             ],
         });
 
-        appState = TestBed.get(AppStateService);
-        api = TestBed.get(GcmsApi);
+        appState = TestBed.inject(AppStateService) as any;
+        api = TestBed.inject(GcmsApi) as any;
         stopper = new ObservableStopper();
-        permissionsService = TestBed.get(PermissionsService);
+        permissionsService = TestBed.inject(PermissionsService);
 
         appState.mockState({
             auth: {
@@ -217,7 +217,7 @@ describe('PermissionsService', () => {
         });
 
         it('emits "no permissions granted" if there is an error during fetching', fakeAsync(() => {
-            const errorHandler: MockErrorHandler = TestBed.get(ErrorHandler);
+            const errorHandler: MockErrorHandler = TestBed.inject(ErrorHandler) as any;
             const type = AccessControlledType.MAINTENANCE;
             let permissions1: TypePermissions;
             let permissions2: TypePermissions;
@@ -291,7 +291,7 @@ describe('PermissionsService', () => {
         }));
 
         it('emits "no permissions granted" if there is an error during fetching', fakeAsync(() => {
-            const errorHandler: MockErrorHandler = TestBed.get(ErrorHandler);
+            const errorHandler: MockErrorHandler = TestBed.inject(ErrorHandler) as any;
             const type = AccessControlledType.MAINTENANCE;
             let permissions: InstancePermissions;
 

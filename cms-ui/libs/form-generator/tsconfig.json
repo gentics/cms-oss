@@ -1,8 +1,4 @@
 {
-    "compilerOptions": {
-        "outDir": "../../dist/out-tsc",
-        "target": "es2022"
-    },
     "files": [],
     "include": [],
     "references": [

@@ -1,8 +1,9 @@
 import { CategoryInfo, PermissionsCategorizer, PermissionsSetBO, PermissionsUtils } from '@admin-ui/common';
-import { I18nService, PermissionsTrableLoaderOptions, PermissionsTrableLoaderService } from '@admin-ui/core';
+import { PermissionsTrableLoaderOptions, PermissionsTrableLoaderService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AccessControlledType, Group, PermissionsSet } from '@gentics/cms-models';
 import { TableColumn, TrableRow } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { GroupDataService } from '../../providers/group-data/group-data.service';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
@@ -12,7 +13,7 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './permissions-trable.component.html',
     styleUrls: ['./permissions-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class PermissionsTrableComponent
     extends BaseEntityTrableComponent<PermissionsSet, PermissionsSetBO, PermissionsTrableLoaderOptions>
@@ -87,11 +88,11 @@ export class PermissionsTrableComponent
             parentName: this.parentName,
             parentHasChildren: this.parentHasChildren,
             categorizer: this.categorizer,
-        }
+        };
     }
 
     override handleRowClick(row: TrableRow<PermissionsSetBO>): void {
-        this.dataService.editGroupPermissions(row.item.group, row.item, this.groupPermissionsByCategory).then(didChange => {
+        this.dataService.editGroupPermissions(row.item.group, row.item, this.groupPermissionsByCategory).then((didChange) => {
             if (didChange) {
                 this.reloadRow(row, {
                     reloadDescendants: didChange.subObjects,
@@ -112,7 +113,7 @@ export class PermissionsTrableComponent
     }
 
     protected createPermissionColumns(): TableColumn<PermissionsSetBO>[] {
-        return this.categorizer.getKnownCategories().map(category => {
+        return this.categorizer.getKnownCategories().map((category) => {
             return {
                 id: `permission_${category.id}`,
                 label: category.label,

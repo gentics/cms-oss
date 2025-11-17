@@ -1,4 +1,5 @@
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ElasticSearchIndex,
     ElasticSearchIndexListResponse,
@@ -8,7 +9,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()
@@ -30,7 +30,7 @@ export class ElasticSearchIndexOperations extends ExtendedEntityOperationsBase<'
         return this.api.elasticSearchIndex.getItems().pipe(
             map((res: ElasticSearchIndexListResponse) => res.items),
             // equip entity with ID to enforce conformity
-            map(items => items.map(item => {
+            map((items) => items.map((item) => {
                 item.id = item.name;
                 return item;
             })),
@@ -51,7 +51,7 @@ export class ElasticSearchIndexOperations extends ExtendedEntityOperationsBase<'
             tap((items: ElasticSearchIndex<Raw>[]) => {
                 this.entities.addEntities('elasticSearchIndex', items);
                 // display toast notification
-                const i18nMessage = drop ? 'elasticSearchIndex.index_delete_and_rebuild_success' : 'elasticSearchIndex.index_rebuild_success';
+                const i18nMessage = drop ? 'elastic_search_index.index_delete_and_rebuild_success' : 'elastic_search_index.index_rebuild_success';
                 this.notification.show({
                     type: 'success',
                     message: i18nMessage,

@@ -2,8 +2,14 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { componentTest, configureComponentTest } from '@editor-ui/testing';
+import {
+    MockTagPropertyInfo,
+    getExampleValidationSuccess,
+    getMockedTagEditorContext,
+    getMultiValidationResult,
+    mockEditableTag,
+} from '@editor-ui/testing/test-tag-editor-data.mock';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -16,14 +22,8 @@ import {
 } from '@gentics/cms-models';
 import { DropdownContentWrapperComponent, GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
-import { componentTest, configureComponentTest } from '../../../../../testing';
-import {
-    MockTagPropertyInfo,
-    getExampleValidationSuccess,
-    getMockedTagEditorContext,
-    getMultiValidationResult,
-    mockEditableTag,
-} from '../../../../../testing/test-tag-editor-data.mock';
+import { ApplicationStateService } from '../../../../state';
+import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';

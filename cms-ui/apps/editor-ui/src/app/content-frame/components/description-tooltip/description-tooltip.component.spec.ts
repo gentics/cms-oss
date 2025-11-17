@@ -1,8 +1,8 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, waitForAsync } from '@angular/core/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { componentTest } from '../../../../testing';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { DescriptionTooltipComponent } from './description-tooltip.component';
 
 const target = 'testTarget';
@@ -28,7 +28,7 @@ describe('DescriptionTooltipComponent', () => {
                 mockPipes('i18n'),
             ],
             providers: [
-                { provide: I18nNotification, useClass: MockI18Notification },
+                { provide: I18nNotificationService, useClass: MockI18Notification },
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });

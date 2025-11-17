@@ -1,69 +1,68 @@
-<ng-template #defaultButton>
-    <gtx-file-picker
+
+
+@if (assetManagementEnabled && providers.length > 0) {
+  <gtx-dropdown-list
+    data-context-id="asset-management"
+    >
+    <gtx-dropdown-trigger>
+      <gtx-button
         flat
         [size]="btnSize"
         [type]="btnType"
-        [multiple]="multiple"
-        [overrideSlot]="itemType === 'file' ? 'newFileButton' : 'newImageButton'"
-        [overrideParams]="{ FOLDERID: targetFolderId, NODEID: targetNodeId }"
-        [accept]="acceptUploads"
-        (fileSelect)="uploadFiles($event)"
-        (fileSelectReject)="uploadFiles($event)"
-    >
-        <icon left>add</icon> {{ (btnLabel || itemType) | i18n }}
-    </gtx-file-picker>
-</ng-template>
-
-<gtx-dropdown-list
-    *ngIf="assetManagementEnabled && providers.length > 0; else defaultButton"
-    data-context-id="asset-management"
->
-    <gtx-dropdown-trigger>
-        <gtx-button
-            flat
-            [size]="btnSize"
-            [type]="btnType"
-            data-context-trigger
+        data-context-trigger
         >
-            <icon left>add</icon>{{ (btnLabel || itemType) | i18n }}
-        </gtx-button>
+        <icon left>add</icon>{{ (btnLabel || itemType) | gtxI18n }}
+      </gtx-button>
     </gtx-dropdown-trigger>
-
     <gtx-dropdown-content data-context-id="asset-management">
+      @for (singleProvider of providers; track singleProvider) {
         <gtx-dropdown-item
-            *ngFor="let singleProvider of providers"
-            [attr.default-provider]="singleProvider.default"
-            [attr.data-provider-id]="singleProvider.id"
-        >
+          [attr.default-provider]="singleProvider.default"
+          [attr.data-provider-id]="singleProvider.id"
+          >
+          @if (singleProvider.default) {
             <gtx-file-picker
-                *ngIf="singleProvider.default; else externalProvider"
-                flat
-                size="medium"
-                type="secondary"
-                [multiple]="multiple"
-                [disabled]="disabled"
-                [overrideSlot]="itemType === 'file' ? 'newFileButton' : 'newImageButton'"
-                [overrideParams]="{ FOLDERID: targetFolderId, NODEID: targetNodeId }"
-                [accept]="acceptUploads"
-                (fileSelect)="uploadFiles($event)"
-                (fileSelectReject)="uploadFiles($event)"
-            >
-                <icon left>add</icon>
-                <span>{{ 'editor.upload_from_harddrive' | i18n }}</span>
+              flat
+              size="medium"
+              type="secondary"
+              [multiple]="multiple"
+              [disabled]="disabled"
+              [overrideSlot]="itemType === 'file' ? 'newFileButton' : 'newImageButton'"
+              [overrideParams]="{ FOLDERID: targetFolderId, NODEID: targetNodeId }"
+              [accept]="acceptUploads"
+              (fileSelect)="uploadFiles($event)"
+              (fileSelectReject)="uploadFiles($event)"
+              >
+              <icon left>add</icon>
+              <span>{{ 'editor.upload_from_harddrive' | gtxI18n }}</span>
             </gtx-file-picker>
-
-            <ng-template #externalProvider>
-                <gtx-button
-                    flat
-                    size="medium"
-                    type="secondary"
-                    (click)="customUpload(singleProvider)"
-                >
-                    <icon left>add</icon>
-                    <span>{{ singleProvider.label }}</span>
-                </gtx-button>
-            </ng-template>
+          } @else {
+            <gtx-button
+              flat
+              size="medium"
+              type="secondary"
+              (click)="customUpload(singleProvider)"
+              >
+              <icon left>add</icon>
+              <span>{{ singleProvider.label }}</span>
+            </gtx-button>
+          }
         </gtx-dropdown-item>
+      }
     </gtx-dropdown-content>
-
-</gtx-dropdown-list>
+  </gtx-dropdown-list>
+} @else {
+  <gtx-file-picker
+    flat
+    [size]="btnSize"
+    [type]="btnType"
+    [multiple]="multiple"
+    [overrideSlot]="itemType === 'file' ? 'newFileButton' : 'newImageButton'"
+    [overrideParams]="{ FOLDERID: targetFolderId, NODEID: targetNodeId }"
+    [accept]="acceptUploads"
+    (fileSelect)="uploadFiles($event)"
+    (fileSelectReject)="uploadFiles($event)"
+    >
+    <icon left>add</icon> {{ (btnLabel || itemType) | gtxI18n }}
+  </gtx-file-picker>
+}

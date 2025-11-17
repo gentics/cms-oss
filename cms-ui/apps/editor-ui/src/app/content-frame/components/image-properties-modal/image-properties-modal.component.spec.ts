@@ -1,17 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Api, ApiBase } from '@editor-ui/app/core/providers/api';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { SharedModule } from '@editor-ui/app/shared/shared.module';
-import { ApplicationStateService, FolderActionsService, PostUpdateBehavior, STATE_MODULES } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { componentTest } from '@editor-ui/testing';
 import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.mock';
 import {
@@ -43,6 +32,16 @@ import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
+import { Api, ApiBase } from '../../../core/providers/api';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { SharedModule } from '../../../shared/shared.module';
+import { ApplicationStateService, FolderActionsService, PostUpdateBehavior, STATE_MODULES } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
+import { TagEditorService } from '../../../tag-editor';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ImagePropertiesModalComponent } from './image-properties-modal.component';
 
@@ -115,7 +114,6 @@ describe('ImagePropertiesModal', () => {
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
                 { provide: ModalService, useClass: MockModalService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
                 Api,

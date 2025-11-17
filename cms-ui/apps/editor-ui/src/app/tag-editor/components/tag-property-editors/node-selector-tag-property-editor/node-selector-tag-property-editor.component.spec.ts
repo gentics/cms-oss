@@ -15,7 +15,6 @@ import {
     mockEditableTag,
 } from '../../../../../testing/test-tag-editor-data.mock';
 import { EntityResolver } from '../../../../core/providers/entity-resolver/entity-resolver';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '../../../../state';
 import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
@@ -33,9 +32,8 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
                 FormsModule,
             ],
             providers: [
-                { provide: ApplicationStateService, useClass: TestApplicationState},
+                { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: EntityResolver, useClass: MockEntityResolver },
-                { provide: I18nService, useClass: MockI18nService },
                 TagPropertyEditorResolverService,
             ],
             declarations: [
@@ -54,7 +52,7 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
         let appState: TestApplicationState;
 
         beforeEach(() => {
-            appState = TestBed.get(ApplicationStateService);
+            appState = TestBed.inject(ApplicationStateService) as any;
             appState.mockState({
                 folder: {
                     nodes: {
@@ -305,7 +303,6 @@ function getMockedTag(): EditableTag {
     ];
     return mockEditableTag(tagPropInfos);
 }
-
 
 /**
  * We don't add the NodeSelectorTagPropertyEditor directly to the template, but instead have it

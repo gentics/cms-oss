@@ -1,8 +1,6 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { dateToFileSystemString } from '@editor-ui/app/common/utils/date-to-string';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { downloadFromBlob } from '@gentics/cms-components';
+import { I18nNotificationService, downloadFromBlob } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
     Form,
@@ -13,16 +11,16 @@ import {
 } from '@gentics/cms-models';
 import { FormEditorService, FormReportService } from '@gentics/form-generator';
 import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { PaginationInstance } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, interval, throwError } from 'rxjs';
 import { catchError, finalize, map, switchMap, takeWhile } from 'rxjs/operators';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
+import { dateToFileSystemString } from '../../../common/utils/date-to-string';
 import { Api } from '../../../core/providers/api';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
 import { SimpleDeleteModalComponent } from '../simple-delete-modal/simple-delete-modal.component';
-
 
 const STATUS_POLL_INTERVAL_MS = 2_000;
 
@@ -92,11 +90,11 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         private appState: ApplicationStateService,
         private changeDetector: ChangeDetectorRef,
         private modalService: ModalService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
         private formEditorService: FormEditorService,
         private formReportService: FormReportService,
         private entityResolver: EntityResolver,
-        private translation: TranslateService,
+        private translation: I18nService,
     ) { }
 
     public ngOnInit(): void {

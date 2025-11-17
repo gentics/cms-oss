@@ -1,33 +1,35 @@
 <div class="modal-title">
-    <h5>{{ 'modal.copy_construct_title' | i18n:{ entityName: construct?.name } }}</h5>
+  <h5>{{ 'modal.copy_construct_title' | gtxI18n:{ entityName: construct?.name } }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+  <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
 
+  @if (form) {
     <gtx-construct-properties
-        *ngIf="form"
-        [mode]="ConstructPropertiesMode.COPY"
-        [formControl]="form"
-        [supportedLanguages]="supportedLanguages"
+      [mode]="ConstructPropertiesMode.COPY"
+      [formControl]="form"
+      [supportedLanguages]="supportedLanguages"
     ></gtx-construct-properties>
+  }
 </div>
 
 <div class="modal-footer">
+  @if (form) {
     <gtx-button
-        *ngIf="form"
-        type="primary"
-        [disabled]="form.invalid || form.disabled"
-        (click)="buttonCopyEntityClicked()"
-    >
-        {{ 'modal.copy_button' | i18n }}
+      type="primary"
+      [disabled]="form.invalid || form.disabled"
+      (click)="buttonCopyEntityClicked()"
+      >
+      {{ 'modal.copy_button' | gtxI18n }}
     </gtx-button>
+  }
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="closeFn(false)"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="closeFn(false)"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

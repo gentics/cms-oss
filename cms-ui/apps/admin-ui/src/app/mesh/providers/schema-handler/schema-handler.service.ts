@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import {
     EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
@@ -12,6 +12,7 @@ import {
 } from '@admin-ui/mesh/common';
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ListResponse,
     ProjectReference,
@@ -64,7 +65,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public getMapped(uuid: string, params?: SchemaLoadOptions): Promise<MeshSchemaBO> {
-        return this.get(uuid, params).then(schema => this.mapToBusinessObject(schema));
+        return this.get(uuid, params).then((schema) => this.mapToBusinessObject(schema));
     }
 
     public async create(body: SchemaCreateRequest): Promise<SchemaResponse> {
@@ -85,7 +86,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public createMapped(body: SchemaCreateRequest): Promise<MeshSchemaBO> {
-        return this.create(body).then(schema => this.mapToBusinessObject(schema));
+        return this.create(body).then((schema) => this.mapToBusinessObject(schema));
     }
 
     public async update(uuid: string, body: SchemaUpdateRequest): Promise<SchemaResponse> {
@@ -106,7 +107,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public updateMapped(uuid: string, body: SchemaUpdateRequest): Promise<MeshSchemaBO> {
-        return this.update(uuid, body).then(schema => this.mapToBusinessObject(schema));
+        return this.update(uuid, body).then((schema) => this.mapToBusinessObject(schema));
     }
 
     public async delete(uuid: string): Promise<void> {
@@ -139,7 +140,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public listMapped(params?: SchemaListOptions): Promise<ListResponse<MeshSchemaBO>> {
-        return this.list(params).then(res => {
+        return this.list(params).then((res) => {
             return {
                 // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                 _metainfo: res._metainfo,

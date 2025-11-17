@@ -1,12 +1,12 @@
-import { I18nService } from '@admin-ui/core';
 import { Component, OnInit } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 
 @Component({
     selector: 'gtx-confirm-delete-modal',
     templateUrl: './confirm-delete-modal.component.html',
-    standalone: false
+    standalone: false,
 })
 export class ConfirmDeleteModalComponent<T extends NormalizableEntityType> implements IModalDialog, OnInit {
 

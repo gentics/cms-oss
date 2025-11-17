@@ -39,14 +39,14 @@ const splitViewContainerAnimationDuration = 300;
     template: '<ng-content></ng-content>',
     styleUrls: ['./masonry-grid.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MasonryGridComponent implements AfterContentInit, OnDestroy, AfterContentChecked {
 
     @Input() columnWidth: number;
     @Input() gutter = 0;
 
-    masonryLayout: masonry.Layout;
+    masonryLayout: Masonry;
     subscriptions: Subscription[] = [];
     itemOutputSubscriptions = new Subscription();
 
@@ -88,13 +88,14 @@ export class MasonryGridComponent implements AfterContentInit, OnDestroy, AfterC
         setTimeout(() => {
             const masonryLayout = this.masonryLayout;
             masonryLayout.reloadItems();
-            masonryLayout.options.transitionDuration = 0;
+            (masonryLayout as any).options.transitionDuration = 0;
             masonryLayout.layout();
-            masonryLayout.options.transitionDuration = gridAnimationDuration;
+            (masonryLayout as any).options.transitionDuration = gridAnimationDuration;
         });
     }
 
     private initializeMasonryGrid(): void {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.masonryLayout = new Masonry(this.elementRef.nativeElement, {
             itemSelector: 'masonry-item,[masonryItem]',
             columnWidth: Number(this.columnWidth),

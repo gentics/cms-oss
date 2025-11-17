@@ -1,163 +1,172 @@
 <div class="wrapper">
-    <gtx-progress-bar [for]="loading$"></gtx-progress-bar>
+  <gtx-progress-bar [for]="loading$"></gtx-progress-bar>
 
-    <div *ngIf="!(loading$ | async) && !(loadingError$ | async)" class="download-buttons">
-        <div *ngIf="binaryStatus" class="download-group binaries-group">
-            <gtx-button
-                class="download-button"
-                size="small"
-                flat
-                [disabled]="!binaryStatus?.downloadReady"
-                (click)="downloadBinaries()"
+  @if (!(loading$ | async) && !(loadingError$ | async)) {
+    <div class="download-buttons">
+      @if (binaryStatus) {
+        <div class="download-group binaries-group">
+          <gtx-button
+            class="download-button"
+            size="small"
+            flat
+            [disabled]="!binaryStatus?.downloadReady"
+            (click)="downloadBinaries()"
             >
-                <icon left>file_download</icon>{{ 'editor.form_reports_download_binaries_button' | i18n }}
-            </gtx-button>
-
-            <gtx-button
-                class="generate-button"
-                size="small"
-                flat
-                type="warning"
-                [disabled]="binaryStatus?.requestPending"
-                (click)="generateBinaryDownload()"
+            <icon left>file_download</icon>{{ 'editor.form_reports_download_binaries_button' | gtxI18n }}
+          </gtx-button>
+          <gtx-button
+            class="generate-button"
+            size="small"
+            flat
+            type="warning"
+            [disabled]="binaryStatus?.requestPending"
+            (click)="generateBinaryDownload()"
             >
-                <icon left>build</icon>{{ 'editor.form_reports_generate_binary_button' | i18n }}
-            </gtx-button>
-
-            <div *ngIf="binaryStatus?.downloadReady" class="creation-date">
-                {{ 'editor.form_reports_binary_generated_at' | i18n: { date: (binaryStatus.downloadTimestamp | i18nDate:'dateTime' ) } }}
+            <icon left>build</icon>{{ 'editor.form_reports_generate_binary_button' | gtxI18n }}
+          </gtx-button>
+          @if (binaryStatus?.downloadReady) {
+            <div class="creation-date">
+              {{ 'editor.form_reports_binary_generated_at' | gtxI18n: { date: (binaryStatus.downloadTimestamp | gtxI18nDate:'dateTime' ) } }}
             </div>
+          }
         </div>
-
-        <div *ngIf="exportStatus" class="download-group export-group">
-            <gtx-button
-                class="download-button"
-                size="small"
-                flat
-                [disabled]="!exportStatus?.downloadReady"
-                (click)="downloadExport()"
+      }
+      @if (exportStatus) {
+        <div class="download-group export-group">
+          <gtx-button
+            class="download-button"
+            size="small"
+            flat
+            [disabled]="!exportStatus?.downloadReady"
+            (click)="downloadExport()"
             >
-                <icon left>file_download</icon>{{ 'editor.form_reports_download_csv_button' | i18n }}
-            </gtx-button>
-
-            <gtx-button
-                class="generate-button"
-                size="small"
-                flat
-                type="warning"
-                [disabled]="exportStatus?.requestPending"
-                (click)="generateExportDownload()"
+            <icon left>file_download</icon>{{ 'editor.form_reports_download_csv_button' | gtxI18n }}
+          </gtx-button>
+          <gtx-button
+            class="generate-button"
+            size="small"
+            flat
+            type="warning"
+            [disabled]="exportStatus?.requestPending"
+            (click)="generateExportDownload()"
             >
-                <icon left>build</icon>{{ 'editor.form_reports_generate_csv_button' | i18n }}
-            </gtx-button>
-
-            <div *ngIf="exportStatus?.downloadReady" class="creation-date">
-                {{ 'editor.form_reports_csv_generated_at' | i18n: { date: (exportStatus.downloadTimestamp | i18nDate:'dateTime' ) } }}
+            <icon left>build</icon>{{ 'editor.form_reports_generate_csv_button' | gtxI18n }}
+          </gtx-button>
+          @if (exportStatus?.downloadReady) {
+            <div class="creation-date">
+              {{ 'editor.form_reports_csv_generated_at' | gtxI18n: { date: (exportStatus.downloadTimestamp | gtxI18nDate:'dateTime' ) } }}
             </div>
+          }
         </div>
+      }
     </div>
+  }
 
+  @if (loading$ | async) {
     <div
-        *ngIf="loading$ | async"
-        [@fadeAnim]
-        class="loading-info"
-    >
-        <span>{{ 'editor.reports_loading_status_loading' | i18n }}</span>
+      [@fadeAnim]
+      class="loading-info"
+      >
+      <span>{{ 'editor.reports_loading_status_loading' | gtxI18n }}</span>
     </div>
+  }
 
+  @if (result?.entries.length === 0) {
     <div
-        *ngIf="result?.entries.length === 0"
-        [@fadeAnim]
-        class="loading-info"
-    >
-        <span>{{ 'editor.reports_loading_status_empty' | i18n }}</span>
+      [@fadeAnim]
+      class="loading-info"
+      >
+      <span>{{ 'editor.reports_loading_status_empty' | gtxI18n }}</span>
     </div>
+  }
 
+  @if (loadingError$ | async) {
     <div
-        *ngIf="loadingError$ | async"
-        [@fadeAnim]
-        class="loading-info"
-    >
-        <i class="material-icons invalid">warning</i>
-        <span>{{ errorMessage }}</span>
+      [@fadeAnim]
+      class="loading-info"
+      >
+      <i class="material-icons invalid">warning</i>
+      <span>{{ errorMessage }}</span>
     </div>
+  }
 
+  @if (!(loading$ | async) && !(loadingError$ | async) && result?.entries.length > 0) {
     <div
-        *ngIf="!(loading$ | async) && !(loadingError$ | async) && result?.entries.length > 0"
-        [@fadeAnim]
-        class="table-wrapper-outer"
-    >
-        <div class="table-wrapper-inner">
-
-            <table
-                *ngIf="(formElementLabelPropertyI18nValues$ | async) as formElementLabelPropertyI18nValues"
-                class="data-table"
+      [@fadeAnim]
+      class="table-wrapper-outer"
+      >
+      <div class="table-wrapper-inner">
+        @if ((formElementLabelPropertyI18nValues$ | async); as formElementLabelPropertyI18nValues) {
+          <table
+            class="data-table"
             >
-                <thead>
-                    <tr>
-                        <th class="icon-checkbox">
-                            <icon-checkbox
-                                [selected]="allSelected"
-                                [icon]="icon"
-                                (change)="toggleAllSelect()"
-                            ></icon-checkbox>
-                        </th>
-
-                        <ng-container *ngFor="let key of entryKeys">
-                            <th
-                                *ngIf="key !== 'errors' && ((formElementLabelPropertyI18nValues[key] | i18nfg$:'content':'_ui' | async) || key) as entryLabel"
-                                [title]="entryLabel"
+            <thead>
+              <tr>
+                <th class="icon-checkbox">
+                  <icon-checkbox
+                    [selected]="allSelected"
+                    [icon]="icon"
+                    (change)="toggleAllSelect()"
+                  ></icon-checkbox>
+                </th>
+                @for (key of entryKeys; track key) {
+                  @if (key !== 'errors' && ((formElementLabelPropertyI18nValues[key] | translatefg$:'content':'_ui' | async) || key); as entryLabel) {
+                    <th
+                      [title]="entryLabel"
+                      >
+                      <span>{{ entryLabel }}</span>
+                    </th>
+                  }
+                }
+                <th class="delete-icon">
+                  <i
+                    class="material-icons invalid"
+                    [class.disabled]="isNothingSelected()"
+                    (click)="deleteMultipleReports()"
+                  >delete</i>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (result of result?.entries | paginate: paginationConfig; track identify(i, result); let i = $index) {
+                <tr>
+                  <td class="icon-checkbox fixed sticky-left">
+                    <icon-checkbox
+                      [selected]="selected[i] != null"
+                      [icon]="icon"
+                      (change)="changeSelection(i)"
+                    ></icon-checkbox>
+                  </td>
+                  @for (key of entryKeys; track key; let j = $index) {
+                    <td>
+                      @if (entryValues[i]) {
+                        @if (isFile(entryValues[i][j])) {
+                          <a
+                            [href]="getFileHref(entryValues[i][j], result)"
+                            download
                             >
-                                <span>{{ entryLabel }}</span>
-                            </th>
-                        </ng-container>
-
-                        <th class="delete-icon">
-                            <i
-                                class="material-icons invalid"
-                                [class.disabled]="isNothingSelected()"
-                                (click)="deleteMultipleReports()"
-                            >delete</i>
-                        </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr *ngFor="let result of result?.entries | paginate: paginationConfig; trackBy: identify; let i = index">
-                        <td class="icon-checkbox fixed sticky-left">
-                            <icon-checkbox
-                                [selected]="selected[i] != null"
-                                [icon]="icon"
-                                (change)="changeSelection(i)"
-                            ></icon-checkbox>
-                        </td>
-
-                        <td *ngFor="let key of entryKeys; let j = index">
-                            <ng-container *ngIf="entryValues[i]">
-                                <a
-                                    *ngIf="isFile(entryValues[i][j]); else regularValue"
-                                    [href]="getFileHref(entryValues[i][j], result)"
-                                    download
-                                >
-                                    <span>{{ getEntryValue(entryValues[i][j]) }}</span>
-                                </a>
-                                <ng-template #regularValue>
-                                    <span>{{ getEntryValue(entryValues[i][j]) }}</span>
-                                </ng-template>
-                            </ng-container>
-                        </td>
-
-                        <td class="delete-icon fixed sticky-right">
-                            <i (click)="deleteSingleReport(i)" class="material-icons invalid">delete</i>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                            <span>{{ getEntryValue(entryValues[i][j]) }}</span>
+                          </a>
+                        } @else {
+                          <span>{{ getEntryValue(entryValues[i][j]) }}</span>
+                        }
+                      }
+                    </td>
+                  }
+                  <td class="delete-icon fixed sticky-right">
+                    <i (click)="deleteSingleReport(i)" class="material-icons invalid">delete</i>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
     </div>
+  }
 
-    <div class="paginate-wrapper">
-        <paging-controls (pageChange)="pageChanged($event)"></paging-controls>
-    </div>
+  <div class="paginate-wrapper">
+    <paging-controls (pageChange)="pageChanged($event)"></paging-controls>
+  </div>
 
 </div>

@@ -4,6 +4,7 @@ import { AppStateService } from '@admin-ui/state';
 import { OPTIONS_CONFIG } from '@admin-ui/state/state-store.config';
 import { STATE_MODULES } from '@admin-ui/state/state.module';
 import { TestBed } from '@angular/core/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     GcmsNormalizer,
     Normalized,
@@ -21,7 +22,7 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { NgxsModule } from '@ngxs/store';
 import { of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { EntityManagerService, ErrorHandler, I18nNotificationService } from '../..';
+import { EntityManagerService, ErrorHandler } from '../..';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { UserOperations } from './user.operations';
 
@@ -29,7 +30,7 @@ import { UserOperations } from './user.operations';
 function convertRawToNormalizedArray(rawEntities: User<Raw>[]): User<Normalized>[] {
     const normalizer = new GcmsNormalizer();
     const indexedEntities = normalizer.normalize('user', rawEntities).entities.user;
-    const normalizedEntities = Object.keys(indexedEntities).map(key => indexedEntities[key]);
+    const normalizedEntities = Object.keys(indexedEntities).map((key) => indexedEntities[key]);
     return normalizedEntities;
 }
 const MOCK_USERS_RAW: User<Raw>[] = [
@@ -78,9 +79,9 @@ describe('UserOperations', () => {
             ],
         });
 
-        api = TestBed.get(GcmsApi);
-        userOperations = TestBed.get(UserOperations);
-        appState = TestBed.get(AppStateService);
+        api = TestBed.inject(GcmsApi) as any;
+        userOperations = TestBed.inject(UserOperations);
+        appState = TestBed.inject(AppStateService) as any;
 
     });
 
@@ -101,11 +102,11 @@ describe('UserOperations', () => {
         api.user.getUsers.and.returnValue(observableOf(mockResponse));
 
         // check if state does not yet has any user stored
-        const storedUsers$ = appState.select(state => state.entity.user);
+        const storedUsers$ = appState.select((state) => state.entity.user);
         let storedUsers: User<Normalized>[];
         storedUsers$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(users => storedUsers = Object.keys(users).map(key => users[key]));
+        ).subscribe((users) => storedUsers = Object.keys(users).map((key) => users[key]));
         expect(storedUsers).toEqual([]);
 
         const response$ = userOperations.getAll(requestOptions);
@@ -115,13 +116,13 @@ describe('UserOperations', () => {
         let loadedUsers: User<Raw>[];
         response$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(users => loadedUsers = users);
+        ).subscribe((users) => loadedUsers = users);
         expect(loadedUsers).toEqual(MOCK_USERS_RAW);
 
         // check if mock users have been put into store
         storedUsers$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(users => storedUsers = Object.keys(users).map(key => users[key]));
+        ).subscribe((users) => storedUsers = Object.keys(users).map((key) => users[key]));
         expect(storedUsers).toEqual(MOCK_USERS_NORMALIZED);
     });
 
@@ -136,11 +137,11 @@ describe('UserOperations', () => {
         api.user.getUser.and.returnValue(observableOf(mockResponse));
 
         // check if state does not yet has any user stored
-        const storedUser$ = appState.select(state => state.entity.user[MOCKUSER_RAW.id]);
+        const storedUser$ = appState.select((state) => state.entity.user[MOCKUSER_RAW.id]);
         let storedUser: User<Normalized>;
         storedUser$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(user => storedUser = user);
+        ).subscribe((user) => storedUser = user);
         expect(storedUser).toEqual(undefined);
 
         const response$ = userOperations.get(MOCKUSER_RAW.id);
@@ -150,13 +151,13 @@ describe('UserOperations', () => {
         let loadedUser: User<Raw>;
         response$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(user => loadedUser = user);
+        ).subscribe((user) => loadedUser = user);
         expect(loadedUser).toEqual(MOCKUSER_RAW);
 
         // check if mock users have been put into store
         storedUser$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(user => storedUser = user);
+        ).subscribe((user) => storedUser = user);
         expect(storedUser).toEqual(MOCKUSER_NORMALIZED);
     });
 
@@ -184,14 +185,14 @@ describe('UserOperations', () => {
         let loadedUser: User<Raw>;
         getResponse$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(user => loadedUser = user);
+        ).subscribe((user) => loadedUser = user);
 
         // check if state does hold original user
-        const storedUser$ = appState.select(state => state.entity.user[MOCKUSER_ORIGINAL_RAW.id]);
+        const storedUser$ = appState.select((state) => state.entity.user[MOCKUSER_ORIGINAL_RAW.id]);
         let storedUser: User<Normalized>;
         storedUser$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(user => storedUser = user);
+        ).subscribe((user) => storedUser = user);
         expect(storedUser).toEqual(MOCKUSER_ORIGINAL_NORMALIZED);
 
         // update user
@@ -200,7 +201,7 @@ describe('UserOperations', () => {
         let updatedUser: User<Raw>;
         updateResponse$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(user => updatedUser = user);
+        ).subscribe((user) => updatedUser = user);
         expect(updatedUser).toEqual(MOCKUSER_UPDATED_RAW);
         // check if toast notification has been called
         expect(notification.show).toHaveBeenCalledWith({
@@ -212,7 +213,7 @@ describe('UserOperations', () => {
         // check if updated user has been put into store
         storedUser$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(user => storedUser = user);
+        ).subscribe((user) => storedUser = user);
         expect(storedUser).toEqual(MOCKUSER_UPDATED_NORMALIZED);
     });
 
@@ -233,14 +234,14 @@ describe('UserOperations', () => {
         let loadedUsers: User<Raw>[];
         getListResponse$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(users => loadedUsers = users);
+        ).subscribe((users) => loadedUsers = users);
 
         // check if state does hold the users
-        const storedUsers$ = appState.select(state => state.entity.user);
+        const storedUsers$ = appState.select((state) => state.entity.user);
         let storedUsers: User<Normalized>[];
         storedUsers$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(users => storedUsers = Object.keys(users).map(key => users[key]));
+        ).subscribe((users) => storedUsers = Object.keys(users).map((key) => users[key]));
         expect(storedUsers).toEqual(MOCK_USERS_NORMALIZED);
 
         // delete user
@@ -259,8 +260,8 @@ describe('UserOperations', () => {
         // check if deleted user has been removed from store
         storedUsers$.pipe(
             takeUntil(stopper.stopper$),
-        ).subscribe(users => storedUsers = Object.keys(users).map(key => users[key]));
-        expect(storedUsers).toEqual([ MOCK_USERS_NORMALIZED[1] ]);
+        ).subscribe((users) => storedUsers = Object.keys(users).map((key) => users[key]));
+        expect(storedUsers).toEqual([MOCK_USERS_NORMALIZED[1]]);
     });
 
 });

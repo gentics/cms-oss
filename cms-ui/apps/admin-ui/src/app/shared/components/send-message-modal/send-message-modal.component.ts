@@ -1,14 +1,12 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { UntypedFormGroup } from '@angular/forms';
-import { IModalDialog } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
-
-import { I18nNotificationService } from '@admin-ui/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Group, SendMessageRequest, User } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { IModalDialog } from '@gentics/ui-core';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { SendMessageFormComponent, SendMessageFormValue } from '../send-message-form/send-message-form.component';
-
 
 const DEFAULT_INSTANT_TIME_MINUTES = 2;
 
@@ -16,7 +14,7 @@ const DEFAULT_INSTANT_TIME_MINUTES = 2;
     selector: 'gtx-send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
     styleUrls: ['./send-message-modal.scss'],
-    standalone: false
+    standalone: false,
 })
 export class SendMessageModalComponent implements IModalDialog, OnInit, AfterViewInit {
     users$: Observable<User[]>;
@@ -25,13 +23,14 @@ export class SendMessageModalComponent implements IModalDialog, OnInit, AfterVie
     form: UntypedFormGroup;
     @ViewChild(SendMessageFormComponent) private sendMessageForm: SendMessageFormComponent;
 
-    constructor(private api: GcmsApi,
-        private notification: I18nNotificationService) {
-    }
+    constructor(
+        private api: GcmsApi,
+        private notification: I18nNotificationService,
+    ) {}
 
     ngOnInit(): void {
-        this.users$ = this.api.user.getUsers().pipe(map(response => response.items));
-        this.groups$ = this.api.group.getGroupsTree().pipe(map(response => response.groups));
+        this.users$ = this.api.user.getUsers().pipe(map((response) => response.items));
+        this.groups$ = this.api.group.getGroupsTree().pipe(map((response) => response.groups));
     }
 
     ngAfterViewInit(): void {
@@ -44,7 +43,7 @@ export class SendMessageModalComponent implements IModalDialog, OnInit, AfterVie
                 message: 'shared.message_send',
                 type: 'success',
             });
-        }, error => {
+        }, (error) => {
             this.notification.show({
                 message: 'shared.message_sent_error',
                 type: 'alert',
@@ -63,7 +62,7 @@ export class SendMessageModalComponent implements IModalDialog, OnInit, AfterVie
             acc[key].push(value);
             return acc;
         }, {
-            message:  formValues.message,
+            message: formValues.message,
             instantTimeMinutes: INSTANT_TIME,
             toGroupId: [],
             toUserId: [],

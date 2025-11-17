@@ -3,13 +3,13 @@ import {
     DevToolPackageHandlerService,
     DevToolPackageTableLoaderOptions,
     DevToolPackageTableLoaderService,
-    I18nService,
     PermissionsService,
 } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, Package, PackageSyncResponse } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable, combineLatest, interval } from 'rxjs';
 import { debounceTime, filter, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { AssignPackagesToNodeModalComponent } from '../assign-packages-to-node-modal/assign-packages-to-node-modal.component';
@@ -25,7 +25,7 @@ const PACKAGE_CHECK = 'packageCheck';
     templateUrl: './dev-tool-package-table.component.html',
     styleUrls: ['./dev-tool-package-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DevToolPackageTableComponent
     extends BaseEntityTableComponent<Package, DevToolPackageBO, DevToolPackageTableLoaderOptions>
@@ -73,7 +73,7 @@ export class DevToolPackageTableComponent
         },
         {
             id: 'data-sources',
-            label: 'dataSource.dataSource_plural',
+            label: 'data_source.plural',
             fieldPath: 'datasources',
             align: 'right',
             sortable: true,
@@ -89,13 +89,14 @@ export class DevToolPackageTableComponent
         },
         {
             id: 'content-repositories',
-            label: 'contentRepository.contentRepository_plural',
+            label: 'content_repository.plural',
             fieldPath: 'contentRepositories',
             align: 'right',
             sortable: true,
             sortValue: 'cotnentRepositories',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'package';
     protected focusEntityType = EditableEntity.DEV_TOOL_PACKAGE;
 
@@ -138,7 +139,7 @@ export class DevToolPackageTableComponent
             }),
             debounceTime(1_000),
             switchMap(() => this.handler.getSyncState()),
-        ).subscribe(res => {
+        ).subscribe((res) => {
             this.syncEnabled = res.enabled;
             this.syncLoading = false;
             this.changeDetector.markForCheck();
@@ -255,7 +256,7 @@ export class DevToolPackageTableComponent
         this.syncLoading = true;
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(op.subscribe(res => {
+        this.subscriptions.push(op.subscribe((res) => {
             this.syncEnabled = res.enabled;
             this.syncLoading = false;
             this.changeDetector.markForCheck();
@@ -314,6 +315,6 @@ export class DevToolPackageTableComponent
     }
 
     protected performPackageCheck(packageName: string | string[]): Promise<void> {
-        return this.handler.checkOneOrMoreWithSuccessMessage(packageName, { wait: 5_000, checkAll: true }).toPromise()
+        return this.handler.checkOneOrMoreWithSuccessMessage(packageName, { wait: 5_000, checkAll: true }).toPromise();
     }
 }

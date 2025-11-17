@@ -1,5 +1,4 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import {
     BASIC_ENTITY_PERMISSIONS,
@@ -20,6 +19,7 @@ import { Injectable } from '@angular/core';
 import { NodeResponse, Permission } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { TrableRow } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, forkJoin, from, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshGroupHandlerService } from '../mesh-group-handler/mesh-group-handler.service';
@@ -147,50 +147,50 @@ export class MeshRolePermissionsTrableLoaderService
         }
 
         if (parent == null) {
-            return forkJoin(createRoot().map(entry => {
+            return forkJoin(createRoot().map((entry) => {
                 entry[BO_DISPLAY_NAME] = this.i18n.instant(entry[BO_DISPLAY_NAME]);
-                return this.loadEntityRow(entry, options)
+                return this.loadEntityRow(entry, options);
             }));
         }
 
         switch (parent[MBO_TYPE]) {
             case MeshType.USER:
                 return from(this.userHandler.listMapped({ role: options.role })).pipe(
-                    map(page => page.data),
+                    map((page) => page.data),
                 );
 
             case MeshType.GROUP:
                 return from(this.groupHandler.listMapped({ role: options.role })).pipe(
-                    map(page => page.data),
+                    map((page) => page.data),
                 );
 
             case MeshType.ROLE:
                 return from(this.roleHandler.listMapped({ role: options.role })).pipe(
-                    map(page => page.data),
+                    map((page) => page.data),
                 );
 
             case MeshType.PROJECT:
                 if (parent[BO_ID][0] === '_') {
                     return from(this.projectHandler.listMapped({ role: options.role })).pipe(
-                        map(page => page.data),
+                        map((page) => page.data),
                     );
                 }
                 return this.loadProjectRootElements(parent as MeshProjectBO, options);
 
             case MeshType.SCHEMA:
                 return from(this.schemaHandler.listMapped({ role: options.role })).pipe(
-                    map(page => page.data),
+                    map((page) => page.data),
                 );
 
             case MeshType.MICROSCHEMA:
                 return from(this.microHandler.listMapped({ role: options.role })).pipe(
-                    map(page => page.data),
+                    map((page) => page.data),
                 );
 
             case MeshType.TAG_FAMILY:
                 if (parent[BO_ID][0] === '_') {
                     return from(this.tagFamilyHandler.listWithTags(parent[MBO_PROJECT_CONTEXT], { role: options.role })).pipe(
-                        map(page => page.data),
+                        map((page) => page.data),
                     );
                 }
 
@@ -199,7 +199,7 @@ export class MeshRolePermissionsTrableLoaderService
                     (parent as MeshTagFamilyBO).uuid,
                     { role: options.role },
                 )).pipe(
-                    map(page => page.data),
+                    map((page) => page.data),
                 );
 
             case MeshType.NODE:
@@ -213,7 +213,7 @@ export class MeshRolePermissionsTrableLoaderService
     protected loadEntityRow(entity: MeshBusinessObject, options?: MeshRolePermissionsTrableLoaderOptions): Observable<MeshBusinessObject> {
         const clone = { ...entity };
         return from(this.permissions.get(options.role, entity[MBO_PERMISSION_PATH])).pipe(
-            map(res => {
+            map((res) => {
                 clone[MBO_ROLE_PERMISSIONS] = toPermissionArray(res);
                 return clone;
             }),
@@ -264,7 +264,7 @@ export class MeshRolePermissionsTrableLoaderService
 
     protected loadProjectRootElements(project: MeshProjectBO, options: MeshRolePermissionsTrableLoaderOptions): Observable<MeshBusinessObject[]> {
         return forkJoin(createProjectRoot(project)
-            .map(entry => {
+            .map((entry) => {
                 entry[BO_DISPLAY_NAME] = this.i18n.instant(entry[BO_DISPLAY_NAME]);
                 return this.loadEntityRow(entry, options);
             }),
@@ -308,10 +308,10 @@ query($parent: String, $role: String!) {
                 role: options.role,
             },
         }).send()).pipe(
-            map(res => {
+            map((res) => {
                 const children = res.data?.node?.children ?? {};
                 const nodes: NodeResponse[] = children?.elements ?? [];
-                return nodes.map(node => this.nodeHandler.mapToBusinessObject(project, node));
+                return nodes.map((node) => this.nodeHandler.mapToBusinessObject(project, node));
             }),
         );
     }

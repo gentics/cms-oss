@@ -1,9 +1,9 @@
-import { PASSWORD_VALIDATORS, getPatternEmail } from '@admin-ui/shared/utils';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors } from '@angular/forms';
+import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { GroupUserCreateRequest, Normalized, User } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { PASSWORD_VALIDATORS } from '../../../shared/utils';
 import { EntityExistsValidator } from '../../providers/entity-exists-validator/entity-exists-validator.service';
 import { GroupDataService } from '../../providers/group-data/group-data.service';
 
@@ -12,7 +12,7 @@ import { GroupDataService } from '../../providers/group-data/group-data.service'
     templateUrl: './create-user-modal.component.html',
     styleUrls: ['./create-user-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateUserModalComponent extends BaseModal<User<Normalized>> implements OnInit {
 
@@ -35,30 +35,30 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
     get login(): AbstractControl {
         return this.form.get('login');
     }
+
     /** Convenience getter for set password input */
     get password1(): AbstractControl {
         return this.form.get('password1');
     }
+
     /** Convenience getter for confirm password input */
     get password2(): AbstractControl {
         return this.form.get('password2');
-    }
-
-    /** Email regex pattern */
-    get patternEmail(): string {
-        return getPatternEmail();
     }
 
     /** search term for the table to search for */
     set searchTerm(v: string) {
         this._searchTerm.next(v);
     }
+
     get searchTerm(): string {
         return this._searchTerm.getValue();
     }
+
     get searchTerm$(): Observable<string> {
         return this._searchTerm.asObservable();
     }
+
     private _searchTerm = new BehaviorSubject<string>(null);
 
     constructor(
@@ -73,14 +73,14 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
     ngOnInit(): void {
         // instantiate form
         this.form = new UntypedFormGroup({
-            firstName: new UntypedFormControl( null ),
-            lastName: new UntypedFormControl( null ),
-            email: new UntypedFormControl( null ),
-            login: new UntypedFormControl( null, this.entityExistsValidator.validate),
-            description: new UntypedFormControl( null ),
-            password1: new UntypedFormControl( null, PASSWORD_VALIDATORS ),
-            password2: new UntypedFormControl( null, PASSWORD_VALIDATORS),
-        }, this.passwordsDontMatch );
+            firstName: new UntypedFormControl(null),
+            lastName: new UntypedFormControl(null),
+            email: new UntypedFormControl(null, Validators.email),
+            login: new UntypedFormControl(null, this.entityExistsValidator.validate),
+            description: new UntypedFormControl(null),
+            password1: new UntypedFormControl(null, PASSWORD_VALIDATORS),
+            password2: new UntypedFormControl(null, PASSWORD_VALIDATORS),
+        }, this.passwordsDontMatch);
     }
 
     /** Get form validity state */
@@ -122,7 +122,7 @@ export class CreateUserModalComponent extends BaseModal<User<Normalized>> implem
         this.changeDetector.markForCheck();
 
         this.createUser()
-            .then(entityCreated => {
+            .then((entityCreated) => {
                 this.loading = false;
                 this.closeFn(entityCreated);
             }, () => {

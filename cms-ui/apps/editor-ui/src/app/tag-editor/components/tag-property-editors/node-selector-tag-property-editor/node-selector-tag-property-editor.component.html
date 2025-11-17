@@ -1,19 +1,20 @@
-<ng-container *ngIf="tagProperty">
-    <div class="tag-part-editor">
-        <gtx-select
-            [label]="tagPart | tagPropLabel"
-            [required]="tagPart?.mandatory"
-            [disabled]="readOnly"
-            [(ngModel)]="tagProperty.nodeId"
-            [placeholder]="placeholder"
-            clearable
-            (valueCahnge)="onNodeChange($event)"
-        >
-            <gtx-option
-                *ngFor="let item of nodes$ | async"
-                [value]="item.id"
-                [icon]="item.type == 'channel' ? 'input' : ''"
-            >{{ item.name }}</gtx-option>
-        </gtx-select>
-    </div>
-</ng-container>
+@if (tagProperty) {
+  <div class="tag-part-editor">
+    <gtx-select
+      [label]="tagPart | tagPropLabel"
+      [required]="tagPart?.mandatory"
+      [disabled]="readOnly"
+      [(ngModel)]="tagProperty.nodeId"
+      [placeholder]="placeholder"
+      clearable
+      (valueCahnge)="onNodeChange($event)"
+      >
+      @for (item of nodes$ | async; track item) {
+        <gtx-option
+          [value]="item.id"
+          [icon]="item.type == 'channel' ? 'input' : ''"
+        >{{ item.name }}</gtx-option>
+      }
+    </gtx-select>
+  </div>
+}

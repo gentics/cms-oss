@@ -1,25 +1,25 @@
-<form
-    *ngIf="form"
+@if (form) {
+  <form
     [formGroup]="form"
     class="row small-12 medium-12"
->
+    >
     <div class="columns small-12">
-        <gtx-input
-            type="text"
-            [required]="true"
-            [maxlength]="MAX_KEY_LENGTH"
-            [label]="('shared.dataSource_entry_key' | i18n) + ' *'"
-            [placeholder]="'shared.enter_dataSource_entry_key' | i18n"
-            formControlName="key"
-        ></gtx-input>
-
-		<gtx-textarea
-            type="text"
-            [required]="true"
-            [maxlength]="MAX_VALUE_LENGTH"
-            [label]="('shared.dataSource_entry_value' | i18n) + ' *'"
-            [placeholder]="'shared.enter_dataSource_entry_value' | i18n"
-            formControlName="value"
-        ></gtx-textarea>
+      <gtx-input
+        type="text"
+        [required]="true"
+        [maxlength]="MAX_KEY_LENGTH"
+        [label]="('shared.dataSource_entry_key' | gtxI18n) + ' *'"
+        [placeholder]="'shared.enter_dataSource_entry_key' | gtxI18n"
+        formControlName="key"
+      ></gtx-input>
+      <gtx-textarea
+        type="text"
+        [required]="true"
+        [maxlength]="MAX_VALUE_LENGTH"
+        [label]="('shared.dataSource_entry_value' | gtxI18n) + ' *'"
+        [placeholder]="'shared.enter_dataSource_entry_value' | gtxI18n"
+        formControlName="value"
+      ></gtx-textarea>
     </div>
-</form>
+  </form>
+}

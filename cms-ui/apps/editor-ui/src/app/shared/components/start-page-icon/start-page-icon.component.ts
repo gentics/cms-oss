@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import { Component } from '@angular/core';
 
 /**
  * An icon representing the start page of a folder.
@@ -7,12 +7,12 @@ import {Component} from '@angular/core';
     selector: 'start-page-icon',
     template: `
         <span class="startpage-icon"
-              [title]="'editor.start_page_tooltip' | i18n">
-            <i class="material-icons" [attr.translate]="'no'">home</i>
+              [title]="'editor.start_page_tooltip' | translate">
+            <icon>home</icon>
         </span>
     `,
     styleUrls: ['./start-page-icon.scss'],
-    standalone: false
+    standalone: false,
 })
 export class StartPageIcon {
 }

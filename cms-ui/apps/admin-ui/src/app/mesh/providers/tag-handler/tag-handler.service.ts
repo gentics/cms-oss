@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import {
     EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
@@ -13,6 +13,7 @@ import {
 } from '@admin-ui/mesh/common';
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ListResponse,
     NodeListResponse,
@@ -68,7 +69,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public getMapped(project: string, familyUuid: string, uuid: string, params?: TagLoadOptions): Promise<MeshTagBO> {
-        return this.get(project, familyUuid, uuid, params).then(tag => this.mapToBusinessObject(project, familyUuid, tag));
+        return this.get(project, familyUuid, uuid, params).then((tag) => this.mapToBusinessObject(project, familyUuid, tag));
     }
 
     public async create(project: string, familyUuid: string, body: TagCreateRequest): Promise<TagResponse> {
@@ -89,7 +90,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public createMapped(project: string, familyUuid: string, body: TagCreateRequest): Promise<MeshTagBO> {
-        return this.create(project, familyUuid, body).then(tag => this.mapToBusinessObject(project, familyUuid, tag));
+        return this.create(project, familyUuid, body).then((tag) => this.mapToBusinessObject(project, familyUuid, tag));
     }
 
     public async update(project: string, familyUuid: string, uuid: string, body: TagUpdateRequest): Promise<TagResponse> {
@@ -110,7 +111,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public updateMapped(project: string, familyUuid: string, uuid: string, body: TagUpdateRequest): Promise<MeshTagBO> {
-        return this.update(project, familyUuid, uuid, body).then(tag => this.mapToBusinessObject(project, familyUuid, tag));
+        return this.update(project, familyUuid, uuid, body).then((tag) => this.mapToBusinessObject(project, familyUuid, tag));
     }
 
     public async delete(project: string, familyUuid: string, uuid: string): Promise<void> {
@@ -143,7 +144,7 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public listMapped(project: string, familyUuid: string, params?: TagListOptions): Promise<ListResponse<MeshTagBO>> {
-        return this.list(project, familyUuid, params).then(res => {
+        return this.list(project, familyUuid, params).then((res) => {
             return {
                 // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                 _metainfo: res._metainfo,

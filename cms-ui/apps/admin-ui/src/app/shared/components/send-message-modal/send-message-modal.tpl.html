@@ -1,10 +1,10 @@
 <div class="modal-title">
-    <h5>{{ 'modal.send_message_title' | i18n }}</h5>
+    <h5>{{ 'modal.send_message_title' | gtxI18n }}</h5>
 </div>
 <div class="modal-content">
     <gtx-send-message-form [users]="users$ | async" [groups]="groups$ | async"/>
 </div>
 <div class="modal-footer">
-    <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button (click)="okayClicked()">{{ 'common.ok_button' | i18n }}</gtx-button>
+    <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+    <gtx-button (click)="okayClicked()">{{ 'common.okay_button' | gtxI18n }}</gtx-button>
 </div>

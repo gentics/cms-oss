@@ -1,7 +1,8 @@
-import { EntityManagerService, EntityOperationsBase, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { EntityManagerService, EntityOperationsBase } from '@admin-ui/core';
 import {
     AppStateService,
 } from '@admin-ui/state';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     EntityIdType,
     NormalizableEntityType,
@@ -10,6 +11,7 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { ColorThemes } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, of, OperatorFunction, throwError } from 'rxjs';
 import { catchError, mergeMap, switchMap } from 'rxjs/operators';
 import { InitializableServiceBase } from '../initializable-service-base';
@@ -20,7 +22,6 @@ import { InitializableServiceBase } from '../initializable-service-base';
  * An EntityDataService is intended to be used by a component to fetch entities for
  * display. The service encapsulates the logic used for obtaining the data either from
  * the AppState or the REST API (through an `Operations` service).
- *
  * @see /architecture/data-loading.png
  */
 export abstract class EntityDataServiceBase<
@@ -72,7 +73,7 @@ export abstract class EntityDataServiceBase<
      */
     getEntityFromState(entityId: EntityIdType): Observable<T_NORM | void> {
         const getEntityFromState = (id: EntityIdType): Observable<T_NORM> => {
-            return this.state.select(state => state.entity[this.entityIdentifier][id] as T_NORM);
+            return this.state.select((state) => state.entity[this.entityIdentifier][id] as T_NORM);
         };
         return getEntityFromState(entityId).pipe(
             mergeMap((entity: T_NORM) => {

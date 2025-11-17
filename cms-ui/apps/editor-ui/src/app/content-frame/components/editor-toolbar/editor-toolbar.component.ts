@@ -9,17 +9,6 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
-import { EditorState, ITEM_PROPERTIES_TAB, SaveBehaviour } from '@editor-ui/app/common/models';
-import { areItemsSaving } from '@editor-ui/app/common/utils/are-items-saving';
-import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { PageVersionsModal } from '@editor-ui/app/shared/components';
-import { BreadcrumbsService } from '@editor-ui/app/shared/providers';
-import { PublishableStateUtil } from '@editor-ui/app/shared/util/entity-states';
-import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '@editor-ui/app/state';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CmsFormType,
@@ -40,6 +29,17 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ChangesOf, IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
+import { EditorState, ITEM_PROPERTIES_TAB, SaveBehaviour } from '../../../common/models';
+import { areItemsSaving } from '../../../common/utils/are-items-saving';
+import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { PageVersionsModal } from '../../../shared/components';
+import { BreadcrumbsService } from '../../../shared/providers';
+import { PublishableStateUtil } from '../../../shared/util/entity-states';
+import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '../../../state';
 import { AlohaIntegrationService } from '../../providers';
 
 /** Used to define which buttons are visible at a certain moment. */

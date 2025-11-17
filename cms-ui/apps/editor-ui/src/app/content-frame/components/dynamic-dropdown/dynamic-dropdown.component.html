@@ -1,45 +1,49 @@
-<div
-    *ngIf="showOverlay"
+@if (showOverlay) {
+  <div
     class="dropdown-overlay"
     (click)="handleOverlayClick()"
-></div>
+  ></div>
+}
 
 <div
-    class="gtx-context-menu"
-    [class.with-confirm]="configuration?.resolveWithConfirmButton || controlNeedsConfirm"
-    [class.no-header]="hideHeader"
-    [attr.data-ref]="configuration?.openerReference"
->
-    <div class="context-menu-header">
-        <button
-            class="header-abort-button"
-            (click)="handleAbortClick()"
+  class="gtx-context-menu"
+  [class.with-confirm]="configuration?.resolveWithConfirmButton || controlNeedsConfirm"
+  [class.no-header]="hideHeader"
+  [attr.data-ref]="configuration?.openerReference"
+  >
+  <div class="context-menu-header">
+    <button
+      class="header-abort-button"
+      (click)="handleAbortClick()"
+      >
+      <div class="header-abort-label">{{ 'editor.dropdown_abort' | gtxI18n }}</div>
+    </button>
+
+    @if (label) {
+      <div class="header-label">{{ label }}</div>
+    }
+
+    @if (configuration?.resolveWithConfirmButton || controlNeedsConfirm) {
+      <button
+        class="header-confirm-button"
+        [disabled]="!control.valid"
+        (click)="handleConfirmClick()"
         >
-            <div class="header-abort-label">{{ 'editor.dropdown_abort' | i18n }}</div>
-        </button>
+        <div class="header-confirm-label">{{ 'editor.dropdown_confirm' | gtxI18n }}</div>
+      </button>
+    }
+  </div>
 
-        <div *ngIf="label" class="header-label">{{ label }}</div>
-
-        <button
-            *ngIf="configuration?.resolveWithConfirmButton || controlNeedsConfirm"
-            class="header-confirm-button"
-            [disabled]="!control.valid"
-            (click)="handleConfirmClick()"
-        >
-            <div class="header-confirm-label">{{ 'editor.dropdown_confirm' | i18n }}</div>
-        </button>
-    </div>
-
-    <div #content class="context-menu-content">
-        <gtx-aloha-component-renderer
-            [renderContext]="RENDERING_CONTEXT_DROPDOWN"
-            [type]="configuration?.type"
-            [settings]="configuration?.options"
-            [formControl]="control"
-            (requiresConfirm)="updateNeedsConfirm($event)"
-            (manualConfirm)="handleManualComponentConfirm()"
-            (hideHeader)="handleHideHeader($event)"
-            (initialized)="focusFirstElement()"
-        ></gtx-aloha-component-renderer>
-    </div>
+  <div #content class="context-menu-content">
+    <gtx-aloha-component-renderer
+      [renderContext]="RENDERING_CONTEXT_DROPDOWN"
+      [type]="configuration?.type"
+      [settings]="configuration?.options"
+      [formControl]="control"
+      (requiresConfirm)="updateNeedsConfirm($event)"
+      (manualConfirm)="handleManualComponentConfirm()"
+      (hideHeader)="handleHideHeader($event)"
+      (initialized)="focusFirstElement()"
+    ></gtx-aloha-component-renderer>
+  </div>
 </div>

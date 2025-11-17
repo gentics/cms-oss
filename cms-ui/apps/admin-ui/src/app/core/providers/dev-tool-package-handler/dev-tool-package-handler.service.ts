@@ -23,7 +23,16 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { PackageCheckOptions, PackageCheckResult, PackageListOptions, PackageListResponse, PackageSyncOptions, PackageSyncResponse, ResponseCode } from '@gentics/cms-models';
+import { I18nNotificationService } from '@gentics/cms-components';
+import {
+    PackageCheckOptions,
+    PackageCheckResult,
+    PackageListOptions,
+    PackageListResponse,
+    PackageSyncOptions,
+    PackageSyncResponse,
+    ResponseCode,
+} from '@gentics/cms-models';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, Subject, forkJoin, interval, of, throwError } from 'rxjs';
 import { catchError, filter, map, mergeMap, startWith, takeUntil, tap } from 'rxjs/operators';
@@ -31,7 +40,6 @@ import { ActivityManagerService } from '../activity-manager';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { PackageCheckTrableLoaderOptions } from '../dev-tool-check-trable-loader/dev-tool-check-trable-loader.service';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class DevToolPackageHandlerService extends BaseEntityHandlerService
@@ -86,7 +94,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         options?: EntityCreateRequestParams<EditableEntity.DEV_TOOL_PACKAGE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.DEV_TOOL_PACKAGE]> {
         return this.create(data, options).pipe(
-            map(res => this.mapToBusinessObject(res.package)),
+            map((res) => this.mapToBusinessObject(res.package)),
         );
     }
 
@@ -95,7 +103,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         params?: EntityLoadRequestParams<EditableEntity.DEV_TOOL_PACKAGE>,
     ): Observable<EntityLoadResponseModel<EditableEntity.DEV_TOOL_PACKAGE>> {
         return this.api.devTools.getPackage(id).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = res.name;
                 this.nameMap[res.name] = name;
             }),
@@ -105,7 +113,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
 
     getMapped(id: string): Observable<EditableEntityBusinessObjects[EditableEntity.DEV_TOOL_PACKAGE]> {
         return this.get(id).pipe(
-            map(res => this.mapToBusinessObject(res)),
+            map((res) => this.mapToBusinessObject(res)),
         );
     }
 
@@ -158,8 +166,8 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         params?: EntityListRequestParams<EditableEntity.DEV_TOOL_PACKAGE>,
     ): Observable<EntityListResponseModel<EditableEntity.DEV_TOOL_PACKAGE>> {
         return this.api.devTools.getPackages(params).pipe(
-            tap(res => {
-                res.items.forEach(pkg => {
+            tap((res) => {
+                res.items.forEach((pkg) => {
                     const name = this.displayName(pkg);
                     this.nameMap[name] = name;
                 });
@@ -173,7 +181,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         params?: EntityListRequestParams<EditableEntity.DEV_TOOL_PACKAGE>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.DEV_TOOL_PACKAGE]>> {
         return this.list(body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
@@ -196,7 +204,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         };
         let stream: Observable<void>;
         if (Array.isArray(devToolPackages) && devToolPackages.length > 0) {
-            stream = forkJoin(devToolPackages.map(name => request(name))).pipe(
+            stream = forkJoin(devToolPackages.map((name) => request(name))).pipe(
                 discard(),
             );
         }
@@ -224,7 +232,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         };
         let stream: Observable<void>;
         if (Array.isArray(devToolPackages) && devToolPackages.length > 0) {
-            stream = forkJoin(devToolPackages.map(name => request(name))).pipe(
+            stream = forkJoin(devToolPackages.map((name) => request(name))).pipe(
                 discard(),
             );
         }
@@ -242,8 +250,8 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         params?: PackageListOptions,
     ): Observable<PackageListResponse> {
         return this.api.devTools.getPackagesOfNode(nodeId, params).pipe(
-            tap(res => {
-                res.items.forEach(pkg => {
+            tap((res) => {
+                res.items.forEach((pkg) => {
                     const name = this.displayName(pkg);
                     this.nameMap[name] = name;
                 });
@@ -258,7 +266,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         params?: PackageListOptions,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.DEV_TOOL_PACKAGE]>> {
         return this.listFromNode(nodeId, body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
@@ -299,7 +307,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
                 });
             }),
             // Hacky workaround because the backend may not respond with a body
-            map(res => ({
+            map((res) => ({
                 ...(res || {}),
                 enabled: res?.enabled || false,
             } as any)),
@@ -419,7 +427,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         };
         let stream: Observable<void>;
         if (Array.isArray(packageName) && packageName.length > 0) {
-            stream = forkJoin(packageName.map(name => request(name))).pipe(
+            stream = forkJoin(packageName.map((name) => request(name))).pipe(
                 discard(),
             );
         }
@@ -430,7 +438,6 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
             this.catchAndRethrowError(),
         );
     }
-
 
     /**
      * Perform a consistency check on a package.
@@ -446,7 +453,6 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         return this.api.devTools.getCheckResult(packageName);
     }
 
-
     /**
      * Poll the check result
      */
@@ -456,7 +462,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         return interval(10000).pipe(
             startWith(0),
             mergeMap(() => this.isCheckResultAvailable(options)),
-            filter(isAvailable => isAvailable === true),
+            filter((isAvailable) => isAvailable === true),
             tap(() => {
                 pollStop.next();
                 pollStop.complete();
@@ -479,7 +485,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
                     return throwError(err);
                 }),
                 this.catchAndRethrowError(),
-            )
+            );
     }
 
 }

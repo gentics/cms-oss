@@ -19,8 +19,8 @@ describe('AppStateService', () => {
             imports: [ NgxsModule.forRoot(STATE_MODULES) ],
             providers: [ AppStateService ],
         }).compileComponents();
-        store = TestBed.get(Store);
-        appState = TestBed.get(AppStateService);
+        store = TestBed.inject(Store);
+        appState = TestBed.inject(AppStateService) as any;
     }));
 
     it('dispatch() works', () => {

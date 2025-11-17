@@ -1,6 +1,7 @@
 import { EntityTableActionClickEvent } from '@admin-ui/common';
-import { AdminHandlerService, I18nNotificationService, I18nService, NodeOperations, PermissionsService, ScheduleHandlerService } from '@admin-ui/core';
+import { AdminHandlerService, NodeOperations, PermissionsService, ScheduleHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import {
     AccessControlledType,
     DirtQueueEntry,
@@ -89,7 +90,7 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     public loadDirtQueueData(): void {
@@ -288,7 +289,7 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
         const items = event.selection ? event.selectedItems : [event.item];
         if (items.length === 0) {
             this.notification.show({
-                message: 'contentmaintenance.error_no_nodes_selected',
+                message: 'content_maintenance.error_no_nodes_selected',
                 type: 'warning',
             });
             return;
@@ -299,7 +300,7 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
             width: '50%',
         }, {
             modalAction: event.actionId as any,
-            selectedNodeIds: items.map(node => node.id),
+            selectedNodeIds: items.map((node) => node.id),
         });
 
         await modal.open();

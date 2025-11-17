@@ -1,9 +1,9 @@
 /* eslint-disable no-underscore-dangle */
-import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers';
 import { typeIdsToName } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL, API_BASE_URL } from '../../../../common/utils/base-urls';
+import { AlohaIntegrationService } from '../../../../content-frame/providers';
 import { CNIFrameDocument, CNWindow, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 

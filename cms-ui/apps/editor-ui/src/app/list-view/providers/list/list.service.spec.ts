@@ -75,10 +75,10 @@ describe('ListService', () => {
      * in the fake async zone of each test.
      */
     function initListService(): void {
-        listService = TestBed.get(ListService);
-        state = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
-        navigationService = TestBed.get(NavigationService);
+        listService = TestBed.inject(ListService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        navigationService = TestBed.inject(NavigationService) as any;
 
         route = new MockActivatedRoute();
         initialState = {

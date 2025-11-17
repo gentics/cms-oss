@@ -1,9 +1,9 @@
 import { Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { SendMessageForm } from '@editor-ui/app/common/models';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { Group, User } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
+import { SendMessageForm } from '../../../common/models';
 
 @Component({
     selector: 'gtx-message-properties',

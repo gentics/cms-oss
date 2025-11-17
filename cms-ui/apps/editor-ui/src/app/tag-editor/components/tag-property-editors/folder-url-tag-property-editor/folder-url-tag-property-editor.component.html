@@ -1,55 +1,50 @@
 <ng-container>
-    <div class="tag-part-editor">
-        <browse-box
-            [label]="tagPart | tagPropLabel"
-            [displayValue]="displayValue$ | async"
-            [disabled]="readOnly"
-            (clear)="changeSelectedItem(null)"
-            (browse)="browseForItem()"
-        ></browse-box>
+  <div class="tag-part-editor">
+    <browse-box
+      [label]="tagPart | tagPropLabel"
+      [displayValue]="displayValue$ | async"
+      [disabled]="readOnly"
+      (clear)="changeSelectedItem(null)"
+      (browse)="browseForItem()"
+    ></browse-box>
 
-        <ul class="uploaded-files" *ngFor="let file of uploadedFiles">
-            <li>{{ file.name }} ({{ file.fileSize | filesize }})</li>
-        </ul>
+    @for (file of uploadedFiles; track file) {
+      <ul class="uploaded-files">
+        <li>{{ file.name }} ({{ file.fileSize | filesize }})</li>
+      </ul>
+    }
 
-        <ng-container *ngIf="(selectedFolder?.selectedItem$ | async) && !readOnly">
+    @if ((selectedFolder?.selectedItem$ | async) && !readOnly) {
+      <expansion-button
+        #expandUploadButton
+        [label]="'tag_editor.upload_new_file_button' | gtxI18n"
+        >
+      <upload-with-properties
+        [allowFolderSelection]="false"
+        [destinationFolder]="selectedFolder?.selectedItem$ | async"
+        [itemType]="'file'"
+        (upload)="onUpload($event)"
+      ></upload-with-properties>
+    </expansion-button>
+    <expansion-button
+      #expandCreateSubfolderButton
+      [label]="'tag_editor.create_subfolder' | gtxI18n"
+      [tooltip]="'tag_editor.create_subfolder_tooltip' | gtxI18n:{ parent: (selectedFolder?.selectedItem$ | async).name }"
+      >
+      <gtx-input
+        class="subfolder-name"
+        [disabled]="creatingSubfolder"
+        [(ngModel)]="subfolderName"
+        [label]="'tag_editor.name' | gtxI18n"
+      ></gtx-input>
+      <gtx-button
+        [disabled]="!subfolderName || creatingSubfolder"
+        (click)="onCreateSubfolderClick()"
+        >
+        {{ 'tag_editor.create_subfolder' | gtxI18n }}
+      </gtx-button>
+    </expansion-button>
+  }
 
-            <expansion-button
-                #expandUploadButton
-                [label]="'tag_editor.upload_new_file_button' | i18n"
-            >
-
-                <upload-with-properties
-                    [allowFolderSelection]="false"
-                    [destinationFolder]="selectedFolder?.selectedItem$ | async"
-                    [itemType]="'file'"
-                    (upload)="onUpload($event)"
-                ></upload-with-properties>
-
-            </expansion-button>
-
-            <expansion-button
-                #expandCreateSubfolderButton
-                [label]="'tag_editor.create_subfolder' | i18n"
-                [tooltip]="'tag_editor.create_subfolder_tooltip' | i18n:{ parent: (selectedFolder?.selectedItem$ | async).name }"
-            >
-                <gtx-input
-                    class="subfolder-name"
-                    [disabled]="creatingSubfolder"
-                    [(ngModel)]="subfolderName"
-                    [label]="'tag_editor.name' | i18n"
-                ></gtx-input>
-
-                <gtx-button
-                    [disabled]="!subfolderName || creatingSubfolder"
-                    (click)="onCreateSubfolderClick()"
-                >
-                    {{ 'tag_editor.create_subfolder' | i18n }}
-                </gtx-button>
-
-            </expansion-button>
-
-        </ng-container>
-
-    </div>
+</div>
 </ng-container>

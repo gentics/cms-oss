@@ -1,36 +1,38 @@
 <div class="modal-title">
-    <h5>{{ 'shared.assign_users_to_groups' | i18n }}</h5>
+  <h5>{{ 'shared.assign_users_to_groups' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-progress-bar *ngIf="loading"></gtx-progress-bar>
+  @if (loading) {
+    <gtx-progress-bar></gtx-progress-bar>
+  }
 
-    <gtx-group-table
-        class="group-table modal-table"
-        [hideActions]="true"
-        [extraActions]="actions"
-        [disabled]="loading"
-        [useSelectionMap]="true"
-        [(selected)]="selected"
-        (actionClick)="handleActionClick($event)"
-    ></gtx-group-table>
+  <gtx-group-table
+    class="group-table modal-table"
+    [hideActions]="true"
+    [extraActions]="actions"
+    [disabled]="loading"
+    [useSelectionMap]="true"
+    [(selected)]="selected"
+    (actionClick)="handleActionClick($event)"
+  ></gtx-group-table>
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        [disabled]="loading"
-        (click)="handleConfirm()"
+  <gtx-button
+    type="primary"
+    [disabled]="loading"
+    (click)="handleConfirm()"
     >
-        {{ (userIds?.length > 1 ? 'shared.assign_users_to_groups' : 'shared.assign_user_to_groups') | i18n }}
-    </gtx-button>
+    {{ (userIds?.length > 1 ? 'shared.assign_users_to_groups' : 'shared.assign_user_to_groups') | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        [disabled]="loading"
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    [disabled]="loading"
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

@@ -20,8 +20,8 @@ describe('LocalizationsService', () => {
                 { provide: Api, useClass: MockApi },
             ],
         });
-        localizationsService = TestBed.get(LocalizationsService);
-        api = TestBed.get(Api);
+        localizationsService = TestBed.inject(LocalizationsService);
+        api = TestBed.inject(Api);
     });
 
     describe('getLocalizations()', () => {

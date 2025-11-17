@@ -1,69 +1,73 @@
 <div class="repo-list"
-    [ngClass]="itemType || ''"
-    [class.empty]="!contents?.length">
+  [ngClass]="itemType || ''"
+  [class.empty]="!contents?.length">
 
-    <repository-browser-list-header
-        class="list-header"
-        [itemType]="itemType"
-        [itemCount]="contents?.length"
-        [filtering]="filtering"
-        [(collapsed)]="isCollapsed"
-        [showImagesGridView]="showImagesGridView$ | async"
-        (selectDisplayFields)="openDisplayFieldsModal()">
-    </repository-browser-list-header>
+  <repository-browser-list-header
+    class="list-header"
+    [itemType]="itemType"
+    [itemCount]="contents?.length"
+    [filtering]="filtering"
+    [(collapsed)]="isCollapsed"
+    [showImagesGridView]="showImagesGridView$ | async"
+    (selectDisplayFields)="openDisplayFieldsModal()">
+  </repository-browser-list-header>
 
-    <div class="list-body" [class.collapsed]="isCollapsed" [class.can-be-selected]="canBeSelected">
+  <div class="list-body" [class.collapsed]="isCollapsed" [class.can-be-selected]="canBeSelected">
 
-        <ng-container *ngIf="itemType !== 'image' || !(showImagesGridView$ | async)">
-            <item-list-row
-                *ngFor="let item of contents | paginate:{
-                    id: 'repo-browser-list-' + itemType,
-                    itemsPerPage: itemsPerPage,
-                    currentPage: currentPage
-                }; trackBy: trackById"
-                mode="SELECT"
-                [item]="item"
-                [nodeId]="currentNodeId"
-                [icon]="itemType | gtxTypeIcon"
-                [filterTerm]="filterTerm$ | async"
-                [selected]="isSelected(item)"
-                [itemType]="itemType"
-                [startPageId]="startPageId"
-                [activeNode]="currentNode"
-                [expandByDefault]="true"
-                [nodeLanguages]="languages$ | async"
-                [itemsInfo]="getItemsInfo(itemType) | async"
-                [canBeSelected]="canBeSelected"
-                (selectedChange)="toggleSelect(item, $event)"
-                (itemClick)="itemClick.emit(item)"
-                (pageLanguageIconClick)="onPageLanguageIconClicked($event)"
-                (formLanguageIconClick)="onFormLanguageIconClicked($event)"
-            >
-            </item-list-row>
-        </ng-container>
+    @if (itemType !== 'image' || !(showImagesGridView$ | async)) {
+      @for (item of contents | paginate:{
+        id: 'repo-browser-list-' + itemType,
+        itemsPerPage: itemsPerPage,
+        currentPage: currentPage
+        }; track trackById($index, item)) {
+        <item-list-row
+          mode="SELECT"
+          [item]="item"
+          [nodeId]="currentNodeId"
+          [icon]="itemType | gtxTypeIcon"
+          [filterTerm]="filterTerm$ | async"
+          [selected]="isSelected(item)"
+          [itemType]="itemType"
+          [startPageId]="startPageId"
+          [activeNode]="currentNode"
+          [expandByDefault]="true"
+          [nodeLanguages]="languages$ | async"
+          [itemsInfo]="getItemsInfo(itemType) | async"
+          [canBeSelected]="canBeSelected"
+          (selectedChange)="toggleSelect(item, $event)"
+          (itemClick)="itemClick.emit(item)"
+          (pageLanguageIconClick)="onPageLanguageIconClicked($event)"
+          (formLanguageIconClick)="onFormLanguageIconClicked($event)"
+          >
+        </item-list-row>
+      }
+    }
 
-        <masonry-grid *ngIf="itemType === 'image' && (showImagesGridView$ | async)" [gutter]="10" [columnWidth]="280">
-            <repository-browser-list-thumbnail
-                *ngFor="let item of contents | paginate:{
-                    id: 'repo-browser-list-' + itemType,
-                    itemsPerPage: itemsPerPage,
-                    currentPage: currentPage
-                }; trackBy: trackById"
-                masonryItem
-                [attr.data-item-type]="itemType"
-                [attr.data-id]="item.id"
-                [attr.data-global-id]="item.globalId"
-                [item]="item"
-                [itemsInfo]="getItemsInfo(itemType) | async"
-                [nodeId]="currentNodeId"
-                [isSelected]="isSelected(item)"
-                (itemClick)="itemClick.emit(item)"
-                (toggleSelect)="toggleSelect(item, $event)">
-            </repository-browser-list-thumbnail>
-        </masonry-grid>
+    @if (itemType === 'image' && (showImagesGridView$ | async)) {
+      <masonry-grid [gutter]="10" [columnWidth]="280">
+        @for (item of contents | paginate:{
+          id: 'repo-browser-list-' + itemType,
+          itemsPerPage: itemsPerPage,
+          currentPage: currentPage
+          }; track trackById($index, item)) {
+          <repository-browser-list-thumbnail
+            masonryItem
+            [attr.data-item-type]="itemType"
+            [attr.data-id]="item.id"
+            [attr.data-global-id]="item.globalId"
+            [item]="item"
+            [itemsInfo]="getItemsInfo(itemType) | async"
+            [nodeId]="currentNodeId"
+            [isSelected]="isSelected(item)"
+            (itemClick)="itemClick.emit(item)"
+            (toggleSelect)="toggleSelect(item, $event)">
+          </repository-browser-list-thumbnail>
+        }
+      </masonry-grid>
+    }
 
-        <paging-controls id="repo-browser-list-{{ itemType }}" (pageChange)="currentPage = $event"></paging-controls>
+    <paging-controls id="repo-browser-list-{{ itemType }}" (pageChange)="currentPage = $event"></paging-controls>
 
-    </div>
+  </div>
 
 </div>

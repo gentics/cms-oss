@@ -1,25 +1,27 @@
 <gtx-mesh-login-gate
-    [repository]="repository"
-    [loggedIn]="loggedIn"
-    (loggedInChange)="handleMeshLogin($event)"
->
-    <div *ngIf="loggedIn" class="management-container">
-        <div class="management-content">
-            <router-outlet [name]="ROUTE_MANAGEMENT_OUTLET"></router-outlet>
+  [repository]="repository"
+  [loggedIn]="loggedIn"
+  (loggedInChange)="handleMeshLogin($event)"
+  >
+  @if (loggedIn) {
+    <div class="management-container">
+      <div class="management-content">
+        <router-outlet [name]="ROUTE_MANAGEMENT_OUTLET"></router-outlet>
+      </div>
+      <div class="management-controls">
+        <div class="user-information">
+          <div class="user-avatar">
+            <icon>person</icon>
+          </div>
+          <div class="user-name">{{ meName }}</div>
         </div>
-        <div class="management-controls">
-            <div class="user-information">
-                <div class="user-avatar">
-                    <icon>person</icon>
-                </div>
-                <div class="user-name">{{ meName }}</div>
-            </div>
-            <gtx-button
-                size="small"
-                class="logout-button"
-                flat
-                (click)="logout()"
-            >logout</gtx-button>
-        </div>
+        <gtx-button
+          size="small"
+          class="logout-button"
+          flat
+          (click)="logout()"
+        >logout</gtx-button>
+      </div>
     </div>
+  }
 </gtx-mesh-login-gate>

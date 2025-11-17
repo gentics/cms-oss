@@ -1,24 +1,25 @@
 <gtx-input
-    readonly="true"
-    [class.clearable]="clearable"
-    [class.has-addon]="clearable"
-    [placeholder]="placeholder"
-    [value]="displayValue"
-    [label]="label"
-    [disabled]="disabled"
-    (click)="showModal()"
-    (keydown)="handleEnterKey($event)"
-    (blur)="triggerTouch()"
+  readonly="true"
+  [class.clearable]="clearable"
+  [class.has-addon]="clearable"
+  [placeholder]="placeholder"
+  [value]="displayValue"
+  [label]="label"
+  [disabled]="disabled"
+  (click)="showModal()"
+  (keydown)="handleEnterKey($event)"
+  (blur)="triggerTouch()"
 ></gtx-input>
 
-<gtx-button
-    *ngIf="clearable"
+@if (clearable) {
+  <gtx-button
     icon
     class="addon-button clear-button"
     type="secondary"
     [disabled]="disabled"
     (click)="clearDateTime()"
->
+    >
     <icon class="clear-icon">clear</icon>
-</gtx-button>
+  </gtx-button>
+}
 

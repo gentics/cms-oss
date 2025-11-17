@@ -1,154 +1,148 @@
-<form
-    *ngIf="form"
+@if (form) {
+  <form
     [formGroup]="form"
->
+    >
     <div class="row">
-        <div class="input-container small-12 medium-4 columns">
-
-            <!-- partOrder -->
-            <gtx-input
-                [label]="('construct.partOrder' | i18n) + ' *'"
-                [required]="true"
-                formControlName="partOrder"
-                [min]="1"
-                type="number"
-            ></gtx-input>
-
-            <!-- keyword -->
-            <gtx-input
-                [required]="true"
-                [label]="('construct.keyword' | i18n) + ' *'"
-                formControlName="keyword"
-                type="text"
-                maxlength="255"
-            ></gtx-input>
-
-            <!-- typeId -->
-            <gtx-select
-                [label]="('construct.type' | i18n) + ' *'"
-                [required]="true"
-                [clearable]="false"
-                formControlName="typeId"
+      <div class="input-container small-12 medium-4 columns">
+        <!-- partOrder -->
+        <gtx-input
+          [label]="('construct.partOrder' | gtxI18n) + ' *'"
+          [required]="true"
+          formControlName="partOrder"
+          [min]="1"
+          type="number"
+        ></gtx-input>
+        <!-- keyword -->
+        <gtx-input
+          [required]="true"
+          [label]="('construct.keyword' | gtxI18n) + ' *'"
+          formControlName="keyword"
+          type="text"
+          maxlength="255"
+        ></gtx-input>
+        <!-- typeId -->
+        <gtx-select
+          [label]="('construct.type' | gtxI18n) + ' *'"
+          [required]="true"
+          [clearable]="false"
+          formControlName="typeId"
+          >
+          @for (part of VIABLE_CONSTRUCT_PART_TYPES; track part) {
+            <gtx-option [value]="part">{{ ('construct.tagPartType_' + part) | gtxI18n }}</gtx-option>
+          }
+          @if (form?.value?.typeId && REMOVED_CONSTRUCT_PART_TYPES.includes(form?.value?.typeId)) {
+            <gtx-option [value]="form.value.typeId" [disabled]="true">{{ ('construct.tagPartType_' + form.value.typeId) | gtxI18n }}</gtx-option>
+          }
+        </gtx-select>
+        <!-- markupLanguageId -->
+        @if (form.controls.markupLanguageId.enabled) {
+          <gtx-select
+            [label]="('construct.markupLanguage' | gtxI18n)"
+            [clearable]="true"
+            formControlName="markupLanguageId"
             >
-                <gtx-option *ngFor="let part of VIABLE_CONSTRUCT_PART_TYPES" [value]="part">{{ ('construct.tagPartType_' + part) | i18n }}</gtx-option>
-                <ng-container *ngIf="form?.value?.typeId && REMOVED_CONSTRUCT_PART_TYPES.includes(form?.value?.typeId)">
-                    <gtx-option [value]="form.value.typeId" [disabled]="true">{{ ('construct.tagPartType_' + form.value.typeId) | i18n }}</gtx-option>
-                </ng-container>
-            </gtx-select>
-
-            <!-- markupLanguageId -->
-            <gtx-select
-                *ngIf="form.controls.markupLanguageId.enabled"
-                [label]="('construct.markupLanguage' | i18n)"
-                [clearable]="true"
-                formControlName="markupLanguageId"
+            @for (item of markupLanguages; track item) {
+              <gtx-option [value]="item.id">{{ item.name }}</gtx-option>
+            }
+          </gtx-select>
+        }
+        <!-- regex -->
+        @if (form.controls.regex.enabled) {
+          <gtx-select
+            [label]="'construct.regex' | gtxI18n"
+            [clearable]="true"
+            [idPath]="'id'"
+            formControlName="regex"
             >
-                <gtx-option *ngFor="let item of markupLanguages" [value]="item.id">{{ item.name }}</gtx-option>
-            </gtx-select>
-
-            <!-- regex -->
-            <gtx-select
-                *ngIf="form.controls.regex.enabled"
-                [label]="'construct.regex' | i18n"
-                [clearable]="true"
-                [idPath]="'id'"
-                formControlName="regex"
+            @for (item of SORTED_VALIDATOR_CONFIGS; track item) {
+              <gtx-option
+                [value]="item"
+              >{{ item[TRANSLATED_NAME_PROP] }}</gtx-option>
+            }
+          </gtx-select>
+        }
+        <!-- overviewSettings -->
+        @if (form.controls.overviewSettings.enabled) {
+          <gtx-overview-part-settings
+            class="settings-group"
+            [label]="'construct.overviewSettings' | gtxI18n"
+            [initialValue]="initialValue"
+            [pureInitialValue]="true"
+            (initialValueChange)="updateInitialValueFlag($event)"
+            formControlName="overviewSettings"
+          ></gtx-overview-part-settings>
+        }
+        <!-- selectSettings -->
+        @if (form.controls.selectSettings.enabled) {
+          <gtx-select-part-settings
+            [label]="'construct.selectSettings' | gtxI18n"
+            [dataSources]="dataSources"
+            [initialValue]="initialValue"
+            [pureInitialValue]="true"
+            (initialValueChange)="updateInitialValueFlag($event)"
+            formControlName="selectSettings"
+          ></gtx-select-part-settings>
+        }
+        <!-- editable -->
+        <gtx-checkbox
+          [label]="'construct.editable' | gtxI18n"
+          formControlName="editable"
+        ></gtx-checkbox>
+        <!-- mandatory -->
+        <gtx-checkbox
+          [label]="'construct.mandatory' | gtxI18n"
+          formControlName="mandatory"
+        ></gtx-checkbox>
+        <!-- hidden -->
+        <gtx-checkbox
+          [label]="'construct.hidden' | gtxI18n"
+          formControlName="hidden"
+        ></gtx-checkbox>
+        <!-- liveEditable -->
+        <gtx-checkbox
+          [label]="'construct.liveEditable' | gtxI18n"
+          formControlName="liveEditable"
+        ></gtx-checkbox>
+        <!-- hideInEditor -->
+        <gtx-checkbox
+          [label]="'construct.hideInEditor' | gtxI18n"
+          formControlName="hideInEditor"
+        ></gtx-checkbox>
+      </div>
+      <div class="input-container small-12 medium-8 columns">
+        <!-- externalEditorUrl -->
+        <gtx-input
+          [label]="'construct.externalEditorUrl' | gtxI18n"
+          type="text"
+          maxlength="255"
+          formControlName="externalEditorUrl"
+        ></gtx-input>
+        @if (supportedLanguages) {
+          <gtx-i18n-panel-group
+            [label]="'shared.i18n_properties_label' | gtxI18n"
+            [languages]="supportedLanguages"
+            [invalidLanguages]="invalidLanguages"
+            [(activeLanguage)]="activeTabI18nLanguage"
             >
-                <gtx-option
-                    *ngFor="let item of SORTED_VALIDATOR_CONFIGS"
-                    [value]="item"
-                >{{ item[TRANSLATED_NAME_PROP] }}</gtx-option>
-            </gtx-select>
-
-            <!-- overviewSettings -->
-            <gtx-overview-part-settings
-                *ngIf="form.controls.overviewSettings.enabled"
-                class="settings-group"
-                [label]="'construct.overviewSettings' | i18n"
-                [initialValue]="initialValue"
-                [pureInitialValue]="true"
-                (initialValueChange)="updateInitialValueFlag($event)"
-                formControlName="overviewSettings"
-            ></gtx-overview-part-settings>
-
-            <!-- selectSettings -->
-            <gtx-select-part-settings
-                *ngIf="form.controls.selectSettings.enabled"
-                [label]="'construct.selectSettings' | i18n"
-                [dataSources]="dataSources"
-                [initialValue]="initialValue"
-                [pureInitialValue]="true"
-                (initialValueChange)="updateInitialValueFlag($event)"
-                formControlName="selectSettings"
-            ></gtx-select-part-settings>
-
-            <!-- editable -->
-            <gtx-checkbox
-                [label]="'construct.editable' | i18n"
-                formControlName="editable"
-            ></gtx-checkbox>
-
-            <!-- mandatory -->
-            <gtx-checkbox
-                [label]="'construct.mandatory' | i18n"
-                formControlName="mandatory"
-            ></gtx-checkbox>
-
-            <!-- hidden -->
-            <gtx-checkbox
-                [label]="'construct.hidden' | i18n"
-                formControlName="hidden"
-            ></gtx-checkbox>
-
-            <!-- liveEditable -->
-            <gtx-checkbox
-                [label]="'construct.liveEditable' | i18n"
-                formControlName="liveEditable"
-            ></gtx-checkbox>
-
-            <!-- hideInEditor -->
-            <gtx-checkbox
-                [label]="'construct.hideInEditor' | i18n"
-                formControlName="hideInEditor"
-            ></gtx-checkbox>
-
-        </div>
-
-        <div class="input-container small-12 medium-8 columns">
-
-            <!-- externalEditorUrl -->
-            <gtx-input
-                [label]="'construct.externalEditorUrl' | i18n"
-                type="text"
-                maxlength="255"
-                formControlName="externalEditorUrl"
-            ></gtx-input>
-
-            <gtx-i18n-panel-group
-                *ngIf="supportedLanguages"
-                [label]="'shared.i18n_properties_label' | i18n"
-                [languages]="supportedLanguages"
-                [invalidLanguages]="invalidLanguages"
-                [(activeLanguage)]="activeTabI18nLanguage"
-            >
-                <gtx-i18n-input
-                    [label]="('common.name' | i18n) + ' *'"
-                    [language]="activeTabI18nLanguage?.code"
-                    [availableLanguages]="supportedLanguages"
-                    [requiredInCurrentLanguage]="true"
-                    formControlName="nameI18n"
-                ></gtx-i18n-input>
-            </gtx-i18n-panel-group>
-
-            <!-- defaultProperty -->
-            <gtx-construct-part-fill
-                *ngIf="form.controls.defaultProperty.enabled"
-                [label]="'construct.defaultProperty' | i18n"
-                [type]="TagPartTypePropertyType[form?.value?.typeId]"
-                [selectOptions]="form?.value?.selectSettings?.options"
-                formControlName="defaultProperty"
-            ></gtx-construct-part-fill>
-        </div>
+            <gtx-i18n-input
+              [label]="('common.name' | gtxI18n) + ' *'"
+              [language]="activeTabI18nLanguage?.code"
+              [availableLanguages]="supportedLanguages"
+              [requiredInCurrentLanguage]="true"
+              formControlName="nameI18n"
+            ></gtx-i18n-input>
+          </gtx-i18n-panel-group>
+        }
+        <!-- defaultProperty -->
+        @if (form.controls.defaultProperty.enabled) {
+          <gtx-construct-part-fill
+            [label]="'construct.defaultProperty' | gtxI18n"
+            [type]="TagPartTypePropertyType[form?.value?.typeId]"
+            [selectOptions]="form?.value?.selectSettings?.options"
+            formControlName="defaultProperty"
+          ></gtx-construct-part-fill>
+        }
+      </div>
     </div>
-
-</form>
+  </form>
+}

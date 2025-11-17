@@ -6,7 +6,7 @@
         <image-thumbnail [image]="image" [nodeId]="nodeId" [width]="280" [maxHeight]="280"></image-thumbnail>
         <div class="image-info">
             <span>{{ image.fileSize | filesize }}</span>
-            <span>{{ { width: image.sizeX, height: image.sizeY } | imagedimensions | i18n }}</span>
+            <span>{{ { width: image.sizeX, height: image.sizeY } | imagedimensions | gtxI18n }}</span>
         </div>
     </div>
 </div>

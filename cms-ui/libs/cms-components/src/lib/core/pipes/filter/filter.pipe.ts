@@ -6,16 +6,18 @@ const DEFAULT_FILTER: FilterFn = (v) => v != null && (typeof v !== 'number' || (
 
 @Pipe({
     name: 'gtxFilter',
-    standalone: false
+    standalone: false,
 })
 export class FilterPipe implements PipeTransform {
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     transform(value: any, fn: FilterFn = DEFAULT_FILTER): any {
         if (typeof fn !== 'function') {
             return value;
         }
 
         if (Array.isArray(value)) {
-            return value.filter(v => fn(v));
+            return value.filter((v) => fn(v));
         } else if (fn(value)) {
             return value;
         }

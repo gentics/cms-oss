@@ -1,10 +1,10 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { GtxChipSearchPropertyDateOperators, GtxChipSearchSearchFilterMap } from '@editor-ui/app/common/models';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { FolderItemType, GtxCmsQueryOptions } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { first } from 'rxjs/operators';
+import { GtxChipSearchPropertyDateOperators, GtxChipSearchSearchFilterMap } from '../../../../common/models';
+import { ApplicationStateService, STATE_MODULES } from '../../../../state';
+import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { QueryAssemblerGCMSSearchService } from './query-assembler-gcmssearch.service';
 
 describe('QueryAssemblerGCMSSearchService', () => {
@@ -20,7 +20,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
             ],
         });
         queryAssemblerService = TestBed.inject(QueryAssemblerGCMSSearchService);
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
 
         const initialState = {
             entities: {

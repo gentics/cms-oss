@@ -10,7 +10,6 @@ import { SendMessageModal } from '../../../shared/components/send-message-modal/
 import { ApplicationStateService, FolderActionsService, MessageActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
-import { I18nService } from '../../providers/i18n/i18n.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';
 import { PermissionService } from '../../providers/permissions/permission.service';
 import { MessageBody } from '../message-body/message-body.component';
@@ -34,7 +33,6 @@ describe('MessageInboxComponent', () => {
                 { provide: ChangeDetectorRef, useClass: MockChangeDetectorRef },
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: ModalService, useClass: MockModalService },
-                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 ButtonComponent,
@@ -50,8 +48,8 @@ describe('MessageInboxComponent', () => {
             ],
         });
 
-        appState = TestBed.get(ApplicationStateService);
-        modalService = TestBed.get(ModalService);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        modalService = TestBed.inject(ModalService) as any;
     });
 
     it('is created ok',
@@ -85,7 +83,6 @@ class TestComponent {
     navigate(): void { }
 }
 
-
 @Directive({
     selector: '[overrideSlot],[overrideParams]',
     standalone: false,
@@ -101,7 +98,7 @@ class MockPermissionService {}
 
 class MockModalService {
     fromComponent = jasmine.createSpy('ModalService.fromComponent')
-        .and.returnValue(new Promise(neverResolve => {}));
+        .and.returnValue(new Promise((neverResolve) => {}));
 }
 
 class MockI18nService {

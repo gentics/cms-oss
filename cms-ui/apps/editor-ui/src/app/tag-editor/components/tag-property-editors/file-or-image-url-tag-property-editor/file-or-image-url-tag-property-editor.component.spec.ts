@@ -28,7 +28,6 @@ import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testi
 import { FeaturesState } from '../../../../common/models';
 import { ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
 import { FilePropertiesComponent } from '../../../../shared/components/file-properties/file-properties.component';
@@ -134,7 +133,6 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 { provide: ApiBase, useClass: MockApiBase },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: UploadConflictService, useClass: MockUploadConflictService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -224,7 +222,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                             messages: [{
                                 message: 'File with ID 4712 does not exist.',
                                 type: 'CRITICAL',
-                            } ],
+                            }],
                             responseInfo: {
                                 responseCode: ResponseCode.NOT_FOUND,
                                 responseMessage: 'File with ID 4712 does not exist.',
@@ -246,7 +244,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                             messages: [{
                                 message: 'The specified image was not found.',
                                 type: 'CRITICAL',
-                            } ],
+                            }],
                             responseInfo: {
                                 responseCode: ResponseCode.NOT_FOUND,
                                 responseMessage: 'The specified image was not found.',

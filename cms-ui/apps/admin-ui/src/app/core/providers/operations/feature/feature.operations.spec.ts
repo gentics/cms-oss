@@ -45,9 +45,9 @@ describe('FeatureOperations', () => {
             ],
         });
 
-        api = TestBed.get(GcmsApi);
-        appState = TestBed.get(AppStateService);
-        featureOps = TestBed.get(FeatureOperations);
+        api = TestBed.inject(GcmsApi) as any;
+        appState = TestBed.inject(AppStateService) as any;
+        featureOps = TestBed.inject(FeatureOperations);
         stopper = new ObservableStopper();
     });
 

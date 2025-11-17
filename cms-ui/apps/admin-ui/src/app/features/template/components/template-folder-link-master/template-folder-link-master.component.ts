@@ -1,11 +1,12 @@
 /* eslint-disable no-underscore-dangle */
 import { discard } from '@admin-ui/common';
-import { FolderOperations, I18nNotificationService, TemplateOperations } from '@admin-ui/core';
+import { FolderOperations, TemplateOperations } from '@admin-ui/core';
 import { FolderLinkEvent } from '@admin-ui/shared';
 import { SelectState } from '@admin-ui/state';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EntityIdType, Folder, NormalizableEntityType } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import { distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 
@@ -14,7 +15,7 @@ import { distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
     templateUrl: './template-folder-link-master.component.html',
     styleUrls: ['./template-folder-link-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TemplateFolderLinkMasterComponent implements OnInit, OnDestroy {
 
@@ -27,13 +28,13 @@ export class TemplateFolderLinkMasterComponent implements OnInit, OnDestroy {
     @Input()
     public templateName: string;
 
-    @SelectState(state => state.ui.focusEntityType)
+    @SelectState((state) => state.ui.focusEntityType)
     focusedEntityType$: Observable<NormalizableEntityType>;
 
-    @SelectState(state => state.ui.focusEntityId)
+    @SelectState((state) => state.ui.focusEntityId)
     focusedEntityId$: Observable<EntityIdType>;
 
-    @SelectState(state => state.ui.focusEntityNodeId)
+    @SelectState((state) => state.ui.focusEntityNodeId)
     focusedEntityNodeId$: Observable<number>;
 
     loaded$: Observable<boolean>;
@@ -60,7 +61,7 @@ export class TemplateFolderLinkMasterComponent implements OnInit, OnDestroy {
 
         this.subscription.add(this.focusedEntityNodeId$.pipe(
             distinctUntilChanged(isEqual),
-        ).subscribe(nodeId => {
+        ).subscribe((nodeId) => {
             this.currentNodeId = nodeId;
         }));
 
@@ -78,8 +79,8 @@ export class TemplateFolderLinkMasterComponent implements OnInit, OnDestroy {
         this.subscription.add(this._reload.asObservable().pipe(
             tap(() => this.loadComplete.next(false)),
             switchMap(() => this.entityOperations.getLinkedFolders(this.currentTemplateId)),
-        ).subscribe(selectedFolders => {
-            this.selectedIds = new Set(selectedFolders.map(folder =>String(folder.id)));
+        ).subscribe((selectedFolders) => {
+            this.selectedIds = new Set(selectedFolders.map((folder) => String(folder.id)));
             this.loadComplete.next(true);
         }));
     }
@@ -119,7 +120,7 @@ export class TemplateFolderLinkMasterComponent implements OnInit, OnDestroy {
                     },
                 });
             }
-        }, err => {
+        }, (err) => {
             console.error(err);
 
             this.notification.show({
@@ -160,7 +161,7 @@ export class TemplateFolderLinkMasterComponent implements OnInit, OnDestroy {
                     },
                 });
             }
-        }, err => {
+        }, (err) => {
             console.error(err);
 
             this.notification.show({

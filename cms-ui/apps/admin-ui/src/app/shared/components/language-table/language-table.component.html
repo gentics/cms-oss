@@ -1,15 +1,17 @@
-<gtx-search-bar
-    *ngIf="showSearch"
+@if (showSearch) {
+  <gtx-search-bar
     class="search-bar"
     [query]="query"
-    [placeholder]="'shared.search' | i18n"
+    [placeholder]="'shared.search' | gtxI18n"
     (search)="updateSearchQuery($event)"
     (clear)="updateSearchQuery('')"
-></gtx-search-bar>
+  ></gtx-search-bar>
+}
 
-<div *ngIf="(sorting && nodeId)|| !sorting" class="entity-table-actions-bar">
-    <gtx-button
-        *ngIf="!hideActions && !sorting"
+@if ((sorting && nodeId)|| !sorting) {
+  <div class="entity-table-actions-bar">
+    @if (!hideActions && !sorting) {
+      <gtx-button
         class="table-action-button"
         flat
         size="small"
@@ -17,71 +19,75 @@
         [disabled]="disabled"
         [gtxActionAllowed]="'role.createRole'"
         (click)="handleCreateButton()"
-    >
-        <icon left>add</icon> {{ 'shared.create_new_language_button' | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        *ngIf="sorting && nodeId"
+        >
+        <icon left>add</icon> {{ 'shared.create_new_language_button' | gtxI18n }}
+      </gtx-button>
+    }
+    @if (sorting && nodeId) {
+      <gtx-button
         class="table-action-button"
         flat
         size="small"
         type="primary"
         [disabled]="disabled"
         (click)="handleNodeLanguageAssignment()"
-    >
-        <icon left>add</icon> {{ 'shared.assign_languages_to_node' | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        *ngIf="!sorting"
+        >
+        <icon left>add</icon> {{ 'shared.assign_languages_to_node' | gtxI18n }}
+      </gtx-button>
+    }
+    @if (!sorting) {
+      <gtx-button
         class="table-action-button reload-button"
         flat
         size="small"
         type="primary"
         [disabled]="disabled || loading"
         (click)="reload()"
-    >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
-    </gtx-button>
-</div>
+        >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+      </gtx-button>
+    }
+  </div>
+}
 
-<div *ngIf="selectable" class="entity-table-selection">
-    {{ 'shared.info_active_languages' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
-</div>
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'shared.info_active_languages' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
 <gtx-table
-    class="entity-table"
+  class="entity-table"
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [disabled]="disabled"
-    [paginated]="!sorting"
-    [sortable]="!sorting"
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [hideActions]="hideActions"
+  [disabled]="disabled"
+  [paginated]="!sorting"
+  [sortable]="!sorting"
 
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
 
-    [page]="page"
-    [perPage]="perPage"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
 
-    [renderers]="{}"
+  [renderers]="{}"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (select)="forwardSelect($event)"
-    (deselect)="forwardDeselect($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowSelect)="forwardSelect($event)"
+  (rowDeselect)="forwardDeselect($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
 ></gtx-table>

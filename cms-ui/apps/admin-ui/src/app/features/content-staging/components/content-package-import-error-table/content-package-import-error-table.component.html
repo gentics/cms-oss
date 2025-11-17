@@ -1,90 +1,95 @@
 <div class="entity-table-actions-bar">
+  @if (!hideActions) {
     <gtx-button
-        *ngIf="!hideActions"
-        class="trigger-check-btn table-action-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled || loading"
-        (click)="handleCheckButtonClick()"
-    >
-        {{ 'package.consistency_check_no_result_button' | i18n }}
+      class="trigger-check-btn table-action-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled || loading"
+      (click)="handleCheckButtonClick()"
+      >
+      {{ 'package.consistency_check_no_result_button' | gtxI18n }}
     </gtx-button>
+  }
 
-    <gtx-button
-        class="table-action-button reload-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled || loading"
-        (click)="reloadWithPackage()"
+  <gtx-button
+    class="table-action-button reload-button"
+    flat
+    size="small"
+    type="primary"
+    [disabled]="disabled || loading"
+    (click)="reloadWithPackage()"
     >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
-    </gtx-button>
+    <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+  </gtx-button>
 </div>
 
 <div>
-    <span *ngIf="checkResultAvailable && !contentPackage?.import?.running" class="check-time" data-test-id="check-result-available">
-        {{ 'content_staging.content_package_last_check' | i18n }} {{ lastCheckTimestamp }}
+  @if (checkResultAvailable && !contentPackage?.import?.running) {
+    <span class="check-time" data-test-id="check-result-available">
+      {{ 'content_staging.content_package_last_check' | gtxI18n }} {{ lastCheckTimestamp }}
     </span>
-    <span *ngIf="!checkResultAvailable && !contentPackage?.import?.running" class="check-time" data-test-id="check-result-unavailable">
-        {{ 'content_staging.content_package_check_no_result' | i18n }}
+  }
+  @if (!checkResultAvailable && !contentPackage?.import?.running) {
+    <span class="check-time" data-test-id="check-result-unavailable">
+      {{ 'content_staging.content_package_check_no_result' | gtxI18n }}
     </span>
+  }
 
-    <span *ngIf="contentPackage?.import?.running" class="check-time" data-test-id="check-import-running">
-        {{ 'content_staging.content_package_check_running' | i18n }} ({{ contentPackage?.import?.progress?.done}} / {{ contentPackage?.import?.progress?.total }})
+  @if (contentPackage?.import?.running) {
+    <span class="check-time" data-test-id="check-import-running">
+      {{ 'content_staging.content_package_check_running' | gtxI18n }} ({{ contentPackage?.import?.progress?.done}} / {{ contentPackage?.import?.progress?.total }})
     </span>
+  }
 </div>
 
-<div *ngIf="totalCount === 0 && checkResultAvailable" class="check-ok">
-    <span>{{ 'content_staging.content_package_check_ok' | i18n }}</span>
+@if (totalCount === 0 && checkResultAvailable) {
+  <div class="check-ok">
+    <span>{{ 'content_staging.content_package_check_ok' | gtxI18n }}</span>
     <icon>check_circle</icon>
-</div>
+  </div>
+}
 
-<gtx-table
-    *ngIf="totalCount > 0"
+@if (totalCount > 0) {
+  <gtx-table
     class="entity-table"
-
     [selectable]="selectable"
     [hideActions]="hideActions"
     [disabled]="disabled"
-
     [columns]="columns"
     [rows]="rows"
     [actions]="actions"
     [selected]="selected"
     [active]="activeEntity"
     [totalCount]="totalCount"
-
     [renderers]="{
         recommendation: recommendationRenderer,
     }"
-
     [page]="page"
     [perPage]="perPage"
     [sortBy]="sortBy"
     [sortOrder]="sortOrder"
-
     (pageChange)="changePageTo($event)"
     (sortByChange)="updateSortBy($event)"
     (sortOrderChange)="updateSortOrder($event)"
     (selectedChange)="updateSelection($event)"
     (rowClick)="handleRowClick($event)"
     (actionClick)="handleAction($event)"
-/>
+    />
+}
 
 <ng-template #recommendationRenderer let-value="value">
-    <gtx-tooltip
-        [type]="'light'"
-        [position]="'right'"
-        [align]="'top'"
+  <gtx-tooltip
+    [type]="'light'"
+    [position]="'right'"
+    [align]="'top'"
     >
-        <div class="gtx-form-section-title">
-            <icon class="help" gtx-tooltip-trigger>error_outline</icon>
-        </div>
+    <div class="gtx-form-section-title">
+      <icon class="help" gtx-tooltip-trigger>error_outline</icon>
+    </div>
 
-        <div gtx-tooltip-content class="error-recommendation">
-            {{ value }}
-        </div>
-    </gtx-tooltip>
+    <div gtx-tooltip-content class="error-recommendation">
+      {{ value }}
+    </div>
+  </gtx-tooltip>
 </ng-template>

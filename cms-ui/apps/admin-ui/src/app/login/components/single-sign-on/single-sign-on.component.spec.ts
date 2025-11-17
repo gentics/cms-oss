@@ -62,8 +62,8 @@ describe('SingleSignOn', () => {
             ],
         });
 
-        appState = TestBed.get(AppStateService);
-        keycloakService = TestBed.get(KeycloakService);
+        appState = TestBed.inject(AppStateService) as any;
+        keycloakService = TestBed.inject(KeycloakService);
     });
 
     it('call nothing if showSSOButton is true and keycloakEnabled is true',

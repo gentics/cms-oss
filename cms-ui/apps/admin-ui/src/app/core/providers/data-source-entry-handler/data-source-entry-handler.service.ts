@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { EntityList } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     DataSourceEntry,
     DataSourceEntryCreateRequest,
@@ -16,7 +17,6 @@ import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
@@ -39,7 +39,7 @@ export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
         params?: never,
     ): Observable<DataSourceEntryCreateResponse> {
         return this.api.dataSource.createEntry(datasourceId, body).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.entry);
                 this.nameMap[res.entry.id] = name;
 
@@ -61,7 +61,7 @@ export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
         params?: never,
     ): Observable<DataSourceEntry<Raw>> {
         return this.create(datasourceId, body, params).pipe(
-            map(res => res.entry),
+            map((res) => res.entry),
         );
     }
 
@@ -71,7 +71,7 @@ export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
         params?: never,
     ): Observable<DataSourceEntryLoadResponse> {
         return this.api.dataSource.getEntry(datasourceId, entryId).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.entry);
                 this.nameMap[res.entry.id] = name;
             }),
@@ -85,8 +85,8 @@ export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
         params?: never,
     ): Observable<DataSourceEntry<Raw>> {
         return this.get(datasourceId, entryId, params).pipe(
-            map(res => res.entry),
-        )
+            map((res) => res.entry),
+        );
     }
 
     updateAll(
@@ -99,7 +99,7 @@ export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
                 // TODO: Show update message for DS instead?
                 this.notification.show({
                     type: 'success',
-                    message: 'dataSourceEntry.rearranged',
+                    message: 'data_source_entry.rearranged',
                     translationParams: { },
                 });
             }),
@@ -113,7 +113,7 @@ export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
         params?: never,
     ): Observable<EntityList<DataSourceEntry<Raw>>> {
         return this.updateAll(datasourceId, body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items,
                 totalItems: res.numItems,
             })),
@@ -152,8 +152,8 @@ export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
         params?: never,
     ): Observable<DataSourceEntryListResponse> {
         return this.api.dataSource.getEntries(datasourceId).pipe(
-            tap(res => {
-                res.items.forEach(entry => {
+            tap((res) => {
+                res.items.forEach((entry) => {
                     const name = this.displayName(entry);
                     this.nameMap[entry.id] = name;
                 });
@@ -168,7 +168,7 @@ export class DataSourceEntryHandlerService extends BaseEntityHandlerService {
         params?: never,
     ): Observable<EntityList<DataSourceEntry<Raw>>> {
         return this.list(datasourceId, body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items,
                 totalItems: res.numItems,
             })),

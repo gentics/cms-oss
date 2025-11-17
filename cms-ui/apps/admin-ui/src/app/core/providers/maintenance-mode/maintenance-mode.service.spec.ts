@@ -1,4 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { IndexByKey, MaintenanceModeResponse, ResponseCode } from '@gentics/cms-models';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
@@ -11,10 +12,9 @@ import {
     FetchMaintenanceStatusStart,
     FetchMaintenanceStatusSuccess,
 } from '../../../state/maintenance-mode/maintenance-mode.actions';
-import { assembleTestAppStateImports, TestAppState, TEST_APP_STATE } from '../../../state/utils/test-app-state';
+import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
 import { MockErrorHandler } from '../error-handler/error-handler.mock';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotificationService, TranslatedNotificationOptions } from '../i18n-notification/i18n-notification.service';
 import { MaintenanceModeService } from './maintenance-mode.service';
 
 class MockApiBase {
@@ -89,7 +89,7 @@ describe('MaintenanceModeService', () => {
                     FetchMaintenanceStatusStart as ActionType, FetchMaintenanceStatusSuccess as ActionType, FetchMaintenanceStatusError as ActionType,
                 ),
                 takeUntil(stopper.stopper$),
-            ).subscribe(action => actionsDispatched[action.constructor.name] = true);
+            ).subscribe((action) => actionsDispatched[action.constructor.name] = true);
         });
 
         it('requests the maintenance mode status from the API', () => {

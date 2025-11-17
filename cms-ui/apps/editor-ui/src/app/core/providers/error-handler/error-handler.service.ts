@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { LogoutSuccessAction } from '@editor-ui/app/state/modules/auth/auth.actions';
-import { UpdateSearchFilterAction } from '@editor-ui/app/state/modules/folder/folder.actions';
-import { ModalCloseError, ModalClosingReason, wasClosedByUser } from '@gentics/cms-integration-api-models';
+import { I18nNotificationService } from '@gentics/cms-components';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { LogoutSuccessAction } from '../../../state/modules/auth/auth.actions';
+import { UpdateSearchFilterAction } from '../../../state/modules/folder/folder.actions';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
 
 /**
  * A central error handler that shows a notification for occuring errors,
@@ -54,8 +54,8 @@ export class ErrorHandler {
         private appState: ApplicationStateService,
         private router: Router,
         private modalService: ModalService,
-        private translate: TranslateService,
-        private notification: I18nNotification,
+        private translate: I18nService,
+        private notification: I18nNotificationService,
     ) {
 
         this.caughtErrors$ = this.errorList.asObservable();

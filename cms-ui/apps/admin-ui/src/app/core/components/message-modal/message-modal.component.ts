@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { IModalDialog } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
-
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Message, Node, Normalized } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { IModalDialog } from '@gentics/ui-core';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { EntityManagerService, I18nNotificationService } from '../../providers';
+import { EntityManagerService } from '../../providers';
 import { MessageLink } from '../message-body';
 
 @Component({
@@ -13,7 +13,7 @@ import { MessageLink } from '../message-body';
     templateUrl: './message-modal.tpl.html',
     styleUrls: ['./message-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MessageModalComponent implements IModalDialog {
     @Input() message: Message<Normalized>;
@@ -31,7 +31,7 @@ export class MessageModalComponent implements IModalDialog {
     getFullName(userId: number): Observable<string> {
         const user$ = this.entityManager.getEntity('user', userId);
         return user$.pipe(
-            map(user => user ? user.firstName + ' ' + user.lastName : ''),
+            map((user) => user ? user.firstName + ' ' + user.lastName : ''),
         );
     }
 
@@ -41,7 +41,7 @@ export class MessageModalComponent implements IModalDialog {
                 message: 'shared.message_sent',
                 type: 'success',
             });
-        }, error => {
+        }, (error) => {
             this.notification.show({
                 message: 'shared.message_sent_error',
                 type: 'alert',
@@ -54,7 +54,7 @@ export class MessageModalComponent implements IModalDialog {
 
     transformValuesForApi(sendMessageText: string, recipient: number): any {
         return {
-            message:  sendMessageText,
+            message: sendMessageText,
             toUserId: [recipient],
         };
     }

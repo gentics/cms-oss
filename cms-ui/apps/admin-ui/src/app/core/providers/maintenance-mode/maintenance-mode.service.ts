@@ -1,7 +1,7 @@
 import { ObservableStopper } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { combineLatest, Subscription, timer } from 'rxjs';
 import {
     catchError,
@@ -11,17 +11,17 @@ import {
     map,
     skip,
     switchMap,
-    takeUntil
+    takeUntil,
 } from 'rxjs/operators';
 import { ServiceBase } from '../../../shared/providers/service-base/service.base';
 import { AppStateService } from '../../../state';
 import {
     FetchMaintenanceStatusError,
     FetchMaintenanceStatusStart,
-    FetchMaintenanceStatusSuccess
+    FetchMaintenanceStatusSuccess,
 } from '../../../state/maintenance-mode/maintenance-mode.actions';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotificationService, TranslatedNotificationOptions } from '../i18n-notification/i18n-notification.service';
+import { I18nNotificationService, TranslatedNotificationOptions } from '@gentics/cms-components';
 
 @Injectable()
 export class MaintenanceModeService extends ServiceBase {
@@ -57,9 +57,9 @@ export class MaintenanceModeService extends ServiceBase {
         let dismissedForMessage: string | undefined;
 
         const subscription = combineLatest([
-            this.appState.select(state => state.auth.isLoggedIn),
-            this.appState.select(state => state.maintenanceMode),
-            this.appState.select(state => state.ui.language),
+            this.appState.select((state) => state.auth.isLoggedIn),
+            this.appState.select((state) => state.maintenanceMode),
+            this.appState.select((state) => state.ui.language),
         ]).pipe(
             map(([loggedIn, maintenanceMode, uiLanguage]) => ({
                 showNotification: maintenanceMode.active || (maintenanceMode.showBanner && maintenanceMode.message),
@@ -81,7 +81,7 @@ export class MaintenanceModeService extends ServiceBase {
                 const notificationOptions: TranslatedNotificationOptions = {
                     delay: -1,
                     dismissOnClick: false,
-                    type: notificationType as any,
+                    type: notificationType,
                     message: message
                         ? 'dashboard.maintenance_mode_active_custom'
                         : 'dashboard.maintenance_mode_active_default',
@@ -108,14 +108,14 @@ export class MaintenanceModeService extends ServiceBase {
     refresh(): Promise<void> {
         this.appState.dispatch(new FetchMaintenanceStatusStart());
 
-        return new Promise<void>(resolve => {
+        return new Promise<void>((resolve) => {
             this.api.info.getMaintenanceModeStatus()
                 .subscribe(
-                    response => {
+                    (response) => {
                         this.appState.dispatch(new FetchMaintenanceStatusSuccess(response));
                         resolve();
                     },
-                    error => {
+                    (error) => {
                         this.appState.dispatch(new FetchMaintenanceStatusError());
                         resolve();
                     },
@@ -126,9 +126,9 @@ export class MaintenanceModeService extends ServiceBase {
     /** Check maintenance mode when the user is logged out. */
     refreshOnLogout(): Subscription {
         const subscription = this.appState
-            .select(state => state.auth.isLoggedIn).pipe(
+            .select((state) => state.auth.isLoggedIn).pipe(
                 skip(1),
-                filter(loggedIn => !loggedIn),
+                filter((loggedIn) => !loggedIn),
                 takeUntil(this.stopper.stopper$),
             ).subscribe(() => this.refresh());
 
@@ -147,8 +147,8 @@ export class MaintenanceModeService extends ServiceBase {
      * When the maintenance mode is activated on the server, revalidate the user session.
      */
     validateSessionWhenActivated(): Subscription {
-        return this.appState.select(state => state.maintenanceMode.active).pipe(
-            filter(active => active && this.appState.now.auth.isLoggedIn),
+        return this.appState.select((state) => state.maintenanceMode.active).pipe(
+            filter((active) => active && this.appState.now.auth.isLoggedIn),
             switchMap(() =>
                 this.api.auth.validate(this.appState.now.auth.sid).pipe(
                     catchError((err, observable) => {

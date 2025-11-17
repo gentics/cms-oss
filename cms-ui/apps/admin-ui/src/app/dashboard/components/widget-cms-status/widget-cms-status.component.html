@@ -1,27 +1,35 @@
 <gtx-sidebar-item [title]="title">
-    <div class="row">
-        <div class="title">{{ 'widget.cms_status_version_information' | i18n }}</div>
-        {{ (uiState$ | async).cmpVersion?.version }} {{ (uiState$ | async).cmpVersion?.variant }}
-    </div>
+  <div class="row">
+    <div class="title">{{ 'widget.cms_status_version_information' | gtxI18n }}</div>
+    {{ (uiState$ | async).cmpVersion?.version }} {{ (uiState$ | async).cmpVersion?.variant }}
+  </div>
 
-    <div class="row" *ngIf="(updates$ | async) as updates">
-        <div class="title" *ngIf="(updates?.hotfix || updates?.feature)">{{ 'widget.cms_status_updates_available' | i18n }}</div>
+  @if ((updates$ | async); as updates) {
+    <div class="row">
+      @if ((updates?.hotfix || updates?.feature)) {
+        <div class="title">{{ 'widget.cms_status_updates_available' | gtxI18n }}</div>
+      }
+      @if (updates?.hotfix) {
         <a [href]="updates?.hotfix.changelog"
-           target="_blank"
-           *ngIf="updates?.hotfix">
-           {{ 'widget.cms_status_latest_hotfix' | i18n }} {{ updates?.hotfix.version }}
+          target="_blank"
+          >
+          {{ 'widget.cms_status_latest_hotfix' | gtxI18n }} {{ updates?.hotfix.version }}
         </a>
+      }
+      @if (updates?.feature) {
         <a [href]="updates?.feature.changelog"
-           target="_blank"
-           *ngIf="updates?.feature">
-           {{ 'widget.cms_status_latest_release' | i18n }} {{ updates?.feature.version }}
+          target="_blank"
+          >
+          {{ 'widget.cms_status_latest_release' | gtxI18n }} {{ updates?.feature.version }}
         </a>
+      }
     </div>
+  }
 
-    <div class="row">
-        <div class="title">{{ 'widget.cms_status_documentation_title' | i18n }}</div>
-        <a [href]="currentDocsUrl" target="_blank">{{ 'widget.cms_status_version' | i18n }} {{ (uiState$ | async).cmpVersion?.version }}</a>
-        &nbsp;|&nbsp;
-        <a [href]="latestDocsUrl" target="_blank">{{ 'widget.cms_status_latest_version' | i18n }}</a>
-    </div>
+  <div class="row">
+    <div class="title">{{ 'widget.cms_status_documentation_title' | gtxI18n }}</div>
+    <a [href]="currentDocsUrl" target="_blank">{{ 'widget.cms_status_version' | gtxI18n }} {{ (uiState$ | async).cmpVersion?.version }}</a>
+    &nbsp;|&nbsp;
+    <a [href]="latestDocsUrl" target="_blank">{{ 'widget.cms_status_latest_version' | gtxI18n }}</a>
+  </div>
 </gtx-sidebar-item>

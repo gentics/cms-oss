@@ -1,39 +1,32 @@
-import { EventEmitter } from '@angular/core';
-import { GtxI18nPipe } from './i18n.pipe';
+import { EventEmitter, PipeTransform } from '@angular/core';
+import { I18nPipe } from './i18n.pipe';
 
 class MockTranslateService {
     instant = jasmine.createSpy('instant').and.callFake((key: string, params: object) => {
         return `${key}_translated`;
     });
-    onLangChange = new EventEmitter<any>();
-}
 
-class MockTranslatePipe {
-    transform = jasmine.createSpy('transform').and.returnValue('bar');
-    _dispose = jasmine.createSpy('_dispose');
+    onLangChange = new EventEmitter<any>();
 }
 
 describe('I18nPipe', () => {
 
-    let i18nPipe: GtxI18nPipe;
-    let mockTranslatePipe: MockTranslatePipe;
+    let i18nPipe: I18nPipe;
     let mockTranslateService: MockTranslateService;
 
     beforeEach(() => {
-        mockTranslatePipe = new MockTranslatePipe();
         mockTranslateService = new MockTranslateService();
-        i18nPipe = new GtxI18nPipe(mockTranslateService as any, {} as any);
-        i18nPipe.translatePipe = mockTranslatePipe as any;
+        i18nPipe = new I18nPipe(mockTranslateService as any, {} as any);
     });
 
     afterEach(() => {
-        GtxI18nPipe.memoized = {};
+        I18nPipe.memoized = {};
     });
 
     it('passes key and params to TranslatePipe', () => {
         for (let i = 0; i < 100; i++) {
-            let key = Math.random().toString(36);
-            let params = {
+            const key = Math.random().toString(36);
+            const params = {
                 foo: i,
             };
             i18nPipe.transform(key, params);
@@ -44,7 +37,7 @@ describe('I18nPipe', () => {
 
     it('applies shortcuts to common types', () => {
         const commonTypes = ['folder', 'page', 'file', 'image', 'tag', 'template', 'node', 'variant'];
-        for (let type of commonTypes) {
+        for (const type of commonTypes) {
             i18nPipe.transform(type, {});
             expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_${type}`, {});
         }
@@ -52,7 +45,7 @@ describe('I18nPipe', () => {
 
     it('applies shortcuts to common statuses', () => {
         const commonStatuses = ['published', 'edited', 'offline', 'queue', 'timeframe', 'publishat'];
-        for (let status of commonStatuses) {
+        for (const status of commonStatuses) {
             i18nPipe.transform(status, {});
             expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.status_${status}`, {});
         }
@@ -60,17 +53,17 @@ describe('I18nPipe', () => {
 
     it('correctly pluralizes key for common types with count param', () => {
         i18nPipe.transform('folder', { count: -1 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: -1 });
+        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('common.type_folders', { count: -1 });
         i18nPipe.transform('folder', { count: 0 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: 0 });
+        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('common.type_folders', { count: 0 });
         i18nPipe.transform('folder', { count: 1 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folder`, { count: 1 });
+        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('common.type_folder', { count: 1 });
         i18nPipe.transform('folder', { count: 2 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: 2 });
+        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('common.type_folders', { count: 2 });
         i18nPipe.transform('folder', { count: 100 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: 100 });
+        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('common.type_folders', { count: 100 });
         i18nPipe.transform('folder', { count: 1e34 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: 1e34 });
+        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('common.type_folders', { count: 1e34 });
     });
 
     it('does not translate params with no leading underscore', () => {

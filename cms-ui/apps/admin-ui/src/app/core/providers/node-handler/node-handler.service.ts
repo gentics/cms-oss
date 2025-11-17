@@ -1,8 +1,9 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EditableEntity, EntityEditorHandler, EntityList, EntityListHandler, NodeBO } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import { BaseEntityHandlerService } from '@admin-ui/core/providers/base-entity-handler/base-entity-handler';
 import { NodeFeaturesMap } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     Language,
     ModelType,
@@ -48,7 +49,7 @@ export class NodeHandlerService
 
     create(data: NodeCreateRequest, params?: never): Observable<NodeResponse> {
         return this.client.node.create(data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.node);
                 this.nameMap[res.node.id] = name;
 
@@ -66,13 +67,13 @@ export class NodeHandlerService
 
     createMapped(data: NodeCreateRequest, params?: never): Observable<NodeBO> {
         return this.create(data, params).pipe(
-            map(res => this.mapToBusinessObject(res.node)),
+            map((res) => this.mapToBusinessObject(res.node)),
         );
     }
 
     get(id: string | number, options?: never): Observable<NodeResponse> {
         return this.client.node.get(id).pipe(
-            tap(res => {
+            tap((res) => {
                 this.nameMap[res.node.id] = this.displayName(res.node);
             }),
             this.catchAndRethrowError(),
@@ -81,14 +82,14 @@ export class NodeHandlerService
 
     getMapped(id: string | number, options?: never): Observable<NodeBO> {
         return this.get(id, options).pipe(
-            map(res => this.mapToBusinessObject(res.node)),
+            map((res) => this.mapToBusinessObject(res.node)),
         );
     }
 
     update(id: string | number, data: NodeSaveRequest, options?: never): Observable<NodeResponse> {
         return this.client.node.update(id, data).pipe(
             switchMap(() => this.client.node.get(id)),
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.node);
                 this.nameMap[res.node.id] = name;
 
@@ -106,7 +107,7 @@ export class NodeHandlerService
 
     updateMapped(id: string | number, data: NodeSaveRequest, options?: never): Observable<NodeBO> {
         return this.update(id, data, options).pipe(
-            map(res => this.mapToBusinessObject(res.node)),
+            map((res) => this.mapToBusinessObject(res.node)),
         );
     }
 
@@ -134,8 +135,8 @@ export class NodeHandlerService
 
     list(body?: never, params?: NodeListRequestOptions): Observable<NodeListResponse> {
         return this.client.node.list(params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
+            tap((res) => {
+                res.items.forEach((objCat) => {
                     const name = this.displayName(objCat);
                     this.nameMap[objCat.id] = name;
                 });
@@ -146,7 +147,7 @@ export class NodeHandlerService
 
     listMapped(body?: never, params?: NodeListRequestOptions): Observable<EntityList<NodeBO>> {
         return this.list(body, params).pipe(
-            map(res => {
+            map((res) => {
                 const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
 
                 return {
@@ -158,8 +159,8 @@ export class NodeHandlerService
     }
 
     listFeatures(): Observable<NodeFeatureModel[]> {
-        return this.client.node.listFeatures({ sort: [ { attribute: 'id' } ] }).pipe(
-            map(res => res.items),
+        return this.client.node.listFeatures({ sort: [{ attribute: 'id' }] }).pipe(
+            map((res) => res.items),
             this.catchAndRethrowError(),
         );
     }
@@ -169,7 +170,7 @@ export class NodeHandlerService
      */
     getFeatures(nodeId: number): Observable<NodeFeaturesMap> {
         return this.client.node.instanceFeatures(nodeId).pipe(
-            map(res => {
+            map((res) => {
                 return res.items.reduce((acc, feat) => {
                     acc[feat] = true;
                     return acc;
@@ -204,7 +205,7 @@ export class NodeHandlerService
 
     getLanguages(nodeId: number): Observable<Language[]> {
         return this.client.node.listLanguages(nodeId).pipe(
-            map(response => response.items),
+            map((response) => response.items),
             this.catchAndRethrowError(),
         );
     }

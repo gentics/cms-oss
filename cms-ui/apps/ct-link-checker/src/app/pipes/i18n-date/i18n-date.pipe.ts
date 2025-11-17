@@ -40,7 +40,7 @@ export class I18nDatePipe implements OnDestroy, PipeTransform {
     private lastResult: string;
     private formatFunction: (date: Date) => string;
 
-    constructor(private translate: TranslateService,
+    constructor(private translate: I18nService,
                 private changeDetector: ChangeDetectorRef) {
 
         this.subscription = translate.onLangChange.subscribe((event: LangChangeEvent) => {

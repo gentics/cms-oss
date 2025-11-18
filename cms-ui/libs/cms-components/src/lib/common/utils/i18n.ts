@@ -105,17 +105,17 @@ function toRelativeTime(value: number): RelativeTime {
 
 // If we get passed "en" and the user prefers "en-GB" over "en-US", use that.
 function getLocales(locale: string): string[] {
-    let specializedLocale: string;
-    if (locale.indexOf('-') > 0) {
-        specializedLocale = locale;
-    } else {
-        const userLocales = navigator.languages || [navigator.language];
-        const matchingLocale = userLocales.filter((loc) => loc.startsWith(locale + '-'))[0];
-        specializedLocale = matchingLocale || locale;
+    if (locale.includes('-')) {
+        return [locale, 'en'];
     }
 
-    // Always add a fallback to english
-    return [specializedLocale, locale, 'en'];
+    const userLocales = navigator.languages || [navigator.language];
+    const matchingLocale = userLocales.find((loc) => loc.startsWith(locale + '-'));
+    if (matchingLocale) {
+        return [matchingLocale, locale, 'en'];
+    }
+
+    return [locale, 'en'];
 }
 
 function getFormatFunction(lang: string, formatName: KnownDateFormatName): FormatFn {
@@ -127,6 +127,7 @@ function getFormatFunction(lang: string, formatName: KnownDateFormatName): Forma
     }
 
     const locales = getLocales(lang);
+    debugger;
 
     // Use number formatting provided by the format (e.g. 'number' vs '2-digit').
     const formatOptions = KNOWN_FORMATS[formatName] || KNOWN_FORMATS['date'];

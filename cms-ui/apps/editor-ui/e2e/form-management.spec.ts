@@ -19,7 +19,6 @@ import {
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode, getAlohaIFrame } from './helpers';
-import { has } from 'lodash-es';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Form Management', () => {
@@ -125,17 +124,21 @@ test.describe('Form Management', () => {
 
         // Wait for editor to be ready
         const editable = page.locator('.form-editor-form');
-        await editable.waitFor({ timeout: 60_000 });
+        await editable.waitFor();
 
         const dropZone = editable.locator('.form-element-drop-zone');
-        const textInput = page.locator('gtx-form-editor-menu .form-element-type--used-as-title')
+        let textInput = page.locator('gtx-form-editor-menu .form-element-type--used-as-title')
             .getByText('Eingabefeld', { exact: true });
-        await dropZone.waitFor({ timeout: 60_000 });
-        await textInput.waitFor({ timeout: 60_000 });
+        if (await textInput.count() < 1) {
+            textInput = page.locator('gtx-form-editor-menu .form-element-type--used-as-title')
+                .getByText('Input Field', { exact: true });
+        }
+        await dropZone.waitFor();
+        await textInput.waitFor();
         await textInput.dragTo(dropZone);
 
         const formElement = editable.locator('.form-element-container-inner.is-interactive-in-editor');
-        await formElement.waitFor({ timeout: 60_000 });
+        await formElement.waitFor();
         const formElementEditor = formElement.locator('.form-element-properties-editor-container--opened');
         if (!(await formElementEditor.isVisible())) {
             await formElement.locator('icon.form-element-btn-properties-editor-toggle').click();

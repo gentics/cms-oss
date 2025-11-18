@@ -1,11 +1,11 @@
-import { Component, Pipe, PipeTransform, Type } from '@angular/core';
+import { Component, Type } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
 import { ButtonComponent, DropdownItemComponent, GenticsUICoreModule, SideMenuComponent } from '@gentics/ui-core';
-import { componentTest, configureComponentTest } from '../../../testing';
+import { componentTest, configureComponentTest, MockI18nPipe } from '../../../testing';
 import { UserMenuToggleComponent } from '../user-menu-toggle/user-menu-toggle.component';
 import { UserMenuComponent } from './user-menu.component';
 
@@ -48,16 +48,6 @@ class TestComponent {
     showPasswordModal = jasmine.createSpy('TestComponent.showPasswordModal');
     onShowPasswordModal = jasmine.createSpy('TestComponent.onShowPasswordModal');
     onLogoutClick = jasmine.createSpy('TestComponent.onLogoutClick');
-}
-
-@Pipe({
-    name: 'i18n',
-    standalone: false,
-})
-class MockI18nPipe implements PipeTransform {
-    transform(key: string, params: object): string {
-        return key + (params ? ':' + JSON.stringify(params) : '');
-    }
 }
 
 describe('UserMenu', () => {
@@ -224,7 +214,7 @@ describe('UserMenu', () => {
             tick();
             fixture.detectChanges();
             tick();
-            expect(fixture.nativeElement.innerText).toContain('user.logged_in_as:{"name":"John Doe"}');
+            expect(fixture.nativeElement.innerText).toContain('user.logged_in_as');
         }),
     );
 

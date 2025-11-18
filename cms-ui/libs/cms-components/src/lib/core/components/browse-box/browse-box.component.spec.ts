@@ -1,7 +1,7 @@
 import { Component, Pipe, PipeTransform } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { componentTest, configureComponentTest } from '../../../testing';
+import { componentTest, configureComponentTest, MockI18nPipe } from '../../../testing';
 import { BrowseBoxComponent } from './browse-box.component';
 
 const CLEAR_BUTTON = '.browse-box__button--clear';
@@ -216,7 +216,6 @@ describe('BrowseBoxComponent', () => {
 
 });
 
-
 @Component({
     template: `
         <browse-box
@@ -247,14 +246,4 @@ class TestComponent {
     clearCallback: () => void;
     browseCallback: () => void;
     uploadCallback: () => void;
-}
-
-@Pipe({
-    name: 'i18n',
-    standalone: false,
-})
-class MockI18nPipe implements PipeTransform {
-    transform(query: string, ...args: any[]): string {
-        return query;
-    }
 }

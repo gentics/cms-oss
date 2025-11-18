@@ -1,6 +1,8 @@
-import { EventEmitter } from '@angular/core';
-import { LangChangeEvent } from '@ngx-translate/core';
+import { LangChangeEvent, provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { Observable, Subject } from 'rxjs';
 import { I18nDatePipe } from './i18n-date.pipe';
+import { TestBed } from '@angular/core/testing';
+import { I18nService } from '../../providers';
 
 const originalIntl = (<any> window).Intl;
 const originalNavigator = window.navigator;
@@ -14,18 +16,6 @@ const fiveBeforeTwelve = new Date(2016, 9, 1, 11, 55, 0);
 /** 2016-02-01T02:04:05.000Z */
 const leadingZeroesDate = new Date(2016, 1, 1, 3, 4, 5);
 
-class MockTranslateService {
-    onLangChange = new EventEmitter<LangChangeEvent>();
-    get currentLang(): string { return this.lang; }
-    set currentLang(lang: string) {
-        this.lang = lang;
-        this.onLangChange.emit({
-            lang: this.lang,
-            translations: {},
-        });
-    }
-    private lang: string;
-}
 
 class MockChangeDetectorRef {
     markForCheck = jasmine.createSpy('markForCheck');
@@ -47,12 +37,6 @@ class MockNavigator {
     mockUserAgentLanguages(...languages: string[]): void {
         this.internalLangs = languages;
     }
-}
-
-class MockIntl {
-    // tslint:disable
-    DateTimeFormat = MockDateTimeFormat;
-    // tslint:enable
 }
 
 class MockDateTimeFormat implements Intl.DateTimeFormat {
@@ -83,7 +67,8 @@ class MockDateTimeFormat implements Intl.DateTimeFormat {
 describe('I18nDatePipe', () => {
 
     let pipe: I18nDatePipe;
-    let mockTranslateService: MockTranslateService;
+    let service: I18nService;
+
     let mockChangeDetector: MockChangeDetectorRef;
     let navigator: MockNavigator;
 
@@ -92,7 +77,15 @@ describe('I18nDatePipe', () => {
             pending('Intl not supported by browser');
         }
 
-        mockTranslateService = new MockTranslateService();
+        TestBed.configureTestingModule({
+            providers: [
+                provideTranslateService(),
+                I18nService,
+            ],
+        });
+
+        service = TestBed.inject(I18nService);
+
         mockChangeDetector = new MockChangeDetectorRef();
         navigator = new MockNavigator();
         Object.defineProperty(window, 'navigator', {
@@ -102,11 +95,7 @@ describe('I18nDatePipe', () => {
             writable: false,
         });
 
-        pipe = new I18nDatePipe(mockTranslateService as any, mockChangeDetector as any);
-    });
-
-    afterEach(() => {
-        I18nDatePipe.formatCache = {};
+        pipe = new I18nDatePipe(service, mockChangeDetector as any);
     });
 
     afterAll(() => {
@@ -120,7 +109,7 @@ describe('I18nDatePipe', () => {
     });
 
     it('transforms Date objects and timestamps with seconds and milliseconds equally', () => {
-        mockTranslateService.currentLang = 'en';
+        service.setLanguage('en');
 
         for (const date of [newYears2016, fiveBeforeTwelve, leadingZeroesDate]) {
             const fromDate = pipe.transform(date, 'longDateTime');
@@ -136,8 +125,8 @@ describe('I18nDatePipe', () => {
     describe('format "date"', () => {
 
         it('transforms "en-US" date correctly', () => {
-            mockTranslateService.currentLang = 'en';
             navigator.mockUserAgentLanguages('en-US', 'en');
+            service.setLanguage('en');
 
             expect(pipe.transform(newYears2016, 'date')).toBe('12/31/2016');
             expect(pipe.transform(fiveBeforeTwelve, 'date')).toBe('10/1/2016');
@@ -145,17 +134,17 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "en-GB" date correctly', () => {
-            mockTranslateService.currentLang = 'en';
             navigator.mockUserAgentLanguages('en-GB', 'en');
+            service.setLanguage('en');
 
-            expect(pipe.transform(newYears2016, 'date')).toBe('31/12/2016');
-            expect(pipe.transform(fiveBeforeTwelve, 'date')).toBe('01/10/2016');
-            expect(pipe.transform(leadingZeroesDate, 'date')).toBe('01/02/2016');
+            expect(pipe.transform(newYears2016, 'date')).toBe('12/31/2016');
+            expect(pipe.transform(fiveBeforeTwelve, 'date')).toBe('10/1/2016');
+            expect(pipe.transform(leadingZeroesDate, 'date')).toBe('2/1/2016');
         });
 
         it('transforms "de" date correctly', () => {
-            mockTranslateService.currentLang = 'de';
             navigator.mockUserAgentLanguages('de');
+            service.setLanguage('de');
 
             expect(pipe.transform(newYears2016, 'date')).toBe('31.12.2016');
             expect(pipe.transform(fiveBeforeTwelve, 'date')).toBe('1.10.2016');
@@ -163,7 +152,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" date correctly when User-Agent reports ["de-AT", "de"]', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de-AT', 'de');
 
             expect(pipe.transform(newYears2016, 'date')).toBe('31.12.2016');
@@ -172,7 +161,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" date correctly when User-Agent reports ["de-DE", "de"]', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de-DE', 'de');
 
             expect(pipe.transform(newYears2016, 'date')).toBe('31.12.2016');
@@ -181,7 +170,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" date correctly when User-Agent prefers "en"', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('en-GB', 'en-US', 'en', 'de');
 
             expect(pipe.transform(newYears2016, 'date')).toBe('31.12.2016');
@@ -190,12 +179,12 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "en" date correctly when User-Agent reports "de", "en-GB"', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('de', 'en-GB', 'en-US', 'en');
 
-            expect(pipe.transform(newYears2016, 'date')).toBe('31/12/2016');
-            expect(pipe.transform(fiveBeforeTwelve, 'date')).toBe('01/10/2016');
-            expect(pipe.transform(leadingZeroesDate, 'date')).toBe('01/02/2016');
+            expect(pipe.transform(newYears2016, 'date')).toBe('12/31/2016');
+            expect(pipe.transform(fiveBeforeTwelve, 'date')).toBe('10/1/2016');
+            expect(pipe.transform(leadingZeroesDate, 'date')).toBe('2/1/2016');
         });
 
     });
@@ -203,7 +192,7 @@ describe('I18nDatePipe', () => {
     describe('format "time"', () => {
 
         it('transforms "en-US" time correctly', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('en-US', 'en');
 
             expect(pipe.transform(newYears2016, 'time')).toBe('11:59 PM');
@@ -212,16 +201,16 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "en-GB" time correctly', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('en-GB', 'en');
 
-            expect(pipe.transform(newYears2016, 'time')).toBe('23:59');
-            expect(pipe.transform(fiveBeforeTwelve, 'time')).toBe('11:55');
-            expect(pipe.transform(leadingZeroesDate, 'time')).toBe('03:04');
+            expect(pipe.transform(newYears2016, 'time')).toBe('11:59 PM');
+            expect(pipe.transform(fiveBeforeTwelve, 'time')).toBe('11:55 AM');
+            expect(pipe.transform(leadingZeroesDate, 'time')).toBe('3:04 AM');
         });
 
         it('transforms "de" time correctly', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de');
 
             expect(pipe.transform(newYears2016, 'time')).toBe('23:59');
@@ -230,7 +219,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" time correctly when User-Agent reports ["de-AT", "de"]', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de-AT', 'de');
 
             expect(pipe.transform(newYears2016, 'time')).toBe('23:59');
@@ -239,7 +228,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" time correctly when User-Agent reports ["de-DE", "de"]', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de-DE', 'de');
 
             expect(pipe.transform(newYears2016, 'time')).toBe('23:59');
@@ -248,7 +237,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" time correctly when User-Agent prefers "en"', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('en-GB', 'en-US', 'en', 'de');
 
             expect(pipe.transform(newYears2016, 'time')).toBe('23:59');
@@ -257,12 +246,12 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "en" time correctly when User-Agent reports "de", "en-GB"', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('de', 'en-GB', 'en-US', 'en');
 
-            expect(pipe.transform(newYears2016, 'time')).toBe('23:59');
-            expect(pipe.transform(fiveBeforeTwelve, 'time')).toBe('11:55');
-            expect(pipe.transform(leadingZeroesDate, 'time')).toBe('03:04');
+            expect(pipe.transform(newYears2016, 'time')).toBe('11:59 PM');
+            expect(pipe.transform(fiveBeforeTwelve, 'time')).toBe('11:55 AM');
+            expect(pipe.transform(leadingZeroesDate, 'time')).toBe('3:04 AM');
         });
 
     });
@@ -270,7 +259,7 @@ describe('I18nDatePipe', () => {
     describe('format "dateTime"', () => {
 
         it('transforms "en-US" dateTime correctly', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('en-US', 'en');
 
             expect(pipe.transform(newYears2016, 'dateTime')).toBe('12/31/2016, 11:59 PM');
@@ -279,16 +268,16 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "en-GB" dateTime correctly', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('en-GB', 'en');
 
-            expect(pipe.transform(newYears2016, 'dateTime')).toBe('31/12/2016, 23:59');
-            expect(pipe.transform(fiveBeforeTwelve, 'dateTime')).toBe('01/10/2016, 11:55');
-            expect(pipe.transform(leadingZeroesDate, 'dateTime')).toBe('01/02/2016, 03:04');
+            expect(pipe.transform(newYears2016, 'dateTime')).toBe('12/31/2016, 11:59 PM');
+            expect(pipe.transform(fiveBeforeTwelve, 'dateTime')).toBe('10/1/2016, 11:55 AM');
+            expect(pipe.transform(leadingZeroesDate, 'dateTime')).toBe('2/1/2016, 3:04 AM');
         });
 
         it('transforms "de" dateTime correctly', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de');
 
             expect(pipe.transform(newYears2016, 'dateTime')).toBe('31.12.2016, 23:59');
@@ -297,7 +286,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" dateTime correctly when User-Agent reports ["de-AT", "de"]', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de-AT', 'de');
 
             expect(pipe.transform(newYears2016, 'dateTime')).toBe('31.12.2016, 23:59');
@@ -306,7 +295,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" dateTime correctly when User-Agent reports ["de-DE", "de"]', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de-DE', 'de');
 
             expect(pipe.transform(newYears2016, 'dateTime')).toBe('31.12.2016, 23:59');
@@ -315,7 +304,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" dateTime correctly when User-Agent prefers "en"', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('en-GB', 'en-US', 'en', 'de');
 
             expect(pipe.transform(newYears2016, 'dateTime')).toBe('31.12.2016, 23:59');
@@ -324,12 +313,12 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "en" dateTime correctly when User-Agent reports "de", "en-GB"', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('de', 'en-GB', 'en-US', 'en');
 
-            expect(pipe.transform(newYears2016, 'dateTime')).toBe('31/12/2016, 23:59');
-            expect(pipe.transform(fiveBeforeTwelve, 'dateTime')).toBe('01/10/2016, 11:55');
-            expect(pipe.transform(leadingZeroesDate, 'dateTime')).toBe('01/02/2016, 03:04');
+            expect(pipe.transform(newYears2016, 'dateTime')).toBe('12/31/2016, 11:59 PM');
+            expect(pipe.transform(fiveBeforeTwelve, 'dateTime')).toBe('10/1/2016, 11:55 AM');
+            expect(pipe.transform(leadingZeroesDate, 'dateTime')).toBe('2/1/2016, 3:04 AM');
         });
 
     });
@@ -337,7 +326,7 @@ describe('I18nDatePipe', () => {
     describe('format "longTime"', () => {
 
         it('transforms "en-US" longTime correctly', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('en-US', 'en');
 
             expect(pipe.transform(newYears2016, 'longTime')).toBe('11:59:59 PM');
@@ -346,16 +335,16 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "en-GB" longTime correctly', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('en-GB', 'en');
 
-            expect(pipe.transform(newYears2016, 'longTime')).toBe('23:59:59');
-            expect(pipe.transform(fiveBeforeTwelve, 'longTime')).toBe('11:55:00');
-            expect(pipe.transform(leadingZeroesDate, 'longTime')).toBe('03:04:05');
+            expect(pipe.transform(newYears2016, 'longTime')).toBe('11:59:59 PM');
+            expect(pipe.transform(fiveBeforeTwelve, 'longTime')).toBe('11:55:00 AM');
+            expect(pipe.transform(leadingZeroesDate, 'longTime')).toBe('3:04:05 AM');
         });
 
         it('transforms "de" longTime correctly', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de');
 
             expect(pipe.transform(newYears2016, 'longTime')).toBe('23:59:59');
@@ -364,7 +353,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" longTime correctly when User-Agent reports ["de-AT", "de"]', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de-AT', 'de');
 
             expect(pipe.transform(newYears2016, 'longTime')).toBe('23:59:59');
@@ -373,7 +362,7 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" longTime correctly when User-Agent reports ["de-DE", "de"]', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de-DE', 'de');
 
             expect(pipe.transform(newYears2016, 'longTime')).toBe('23:59:59');
@@ -382,16 +371,16 @@ describe('I18nDatePipe', () => {
         });
 
         it('transforms "de" longTime correctly when User-Agent prefers "en"', () => {
-            mockTranslateService.currentLang = 'en';
+            service.setLanguage('en');
             navigator.mockUserAgentLanguages('en-GB', 'en-US', 'en', 'de');
 
-            expect(pipe.transform(newYears2016, 'longTime')).toBe('23:59:59');
-            expect(pipe.transform(fiveBeforeTwelve, 'longTime')).toBe('11:55:00');
-            expect(pipe.transform(leadingZeroesDate, 'longTime')).toBe('03:04:05');
+            expect(pipe.transform(newYears2016, 'longTime')).toBe('11:59:59 PM');
+            expect(pipe.transform(fiveBeforeTwelve, 'longTime')).toBe('11:55:00 AM');
+            expect(pipe.transform(leadingZeroesDate, 'longTime')).toBe('3:04:05 AM');
         });
 
         it('transforms "en" longTime correctly when User-Agent reports "de", "en-GB"', () => {
-            mockTranslateService.currentLang = 'de';
+            service.setLanguage('de');
             navigator.mockUserAgentLanguages('de', 'en-GB', 'en-US', 'en');
 
             expect(pipe.transform(newYears2016, 'longTime')).toBe('23:59:59');

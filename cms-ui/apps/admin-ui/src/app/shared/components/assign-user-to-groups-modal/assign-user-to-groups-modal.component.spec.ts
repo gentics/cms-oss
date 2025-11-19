@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Group, ModelType } from '@gentics/cms-models';
 import { getExampleUserData } from '@gentics/cms-models/testing';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { GenticsUICoreModule, NotificationService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of } from 'rxjs';
 import { componentTest } from '../../../../testing';
@@ -27,7 +27,6 @@ import {
     ContextMenuService,
     GroupDataService,
     GroupUserDataService,
-    NotificationService,
     SubgroupDataService,
     UserDataService,
 } from '../../providers';

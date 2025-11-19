@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { Component, EventEmitter, Injectable, NO_ERRORS_SCHEMA, OnDestroy, Pipe, PipeTransform } from '@angular/core';
+import { Component, Injectable, NO_ERRORS_SCHEMA, OnDestroy, Pipe, PipeTransform } from '@angular/core';
 import { TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
@@ -7,7 +7,7 @@ import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
 import { ModelType, Node, NodeListRequestOptions } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
-import { LangChangeEvent, TranslateModule, TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
 import { BehaviorSubject, NEVER, Observable, Subject, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../testing';
 import { AppComponent } from './app.component';
@@ -128,18 +128,6 @@ class MockModalService {
         .and.returnValue(new Promise((neverResolve) => {}));
 }
 
-@Injectable()
-class MockTranslateService {
-    onLangChange = new EventEmitter<LangChangeEvent>();
-    onTranslationChange: EventEmitter<any> = new EventEmitter();
-    onFallbackLangChange: EventEmitter<any> = new EventEmitter();
-    get(key: string | Array<string>, interpolateParams?: object): Observable<string | any> {
-        return new BehaviorSubject<string>('').asObservable();
-    }
-
-    instant = (str: string) => `translated(${str})`;
-}
-
 @Pipe({
     name: 'i18n',
     standalone: false,
@@ -196,7 +184,6 @@ describe('AppComponent', () => {
                 { provide: GcmsApi, useClass: MockApiBase },
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: USER_ACTION_PERMISSIONS, useValue: USER_ACTION_PERMISSIONS_DEF },
-                { provide: I18nService, useClass: MockTranslateService },
 
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: AuthOperations, useClass: MockAuthOperations },

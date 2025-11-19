@@ -1,9 +1,7 @@
-import { ObservableStopper } from '@admin-ui/common';
-import { InterfaceOf } from '@admin-ui/common/utils/util-types/util-types';
-import { AppStateService } from '@admin-ui/state';
-import { assembleTestAppStateImports, TestAppState } from '@admin-ui/state/utils/test-app-state';
-import { createDelayedError, createDelayedObservable, tickAndGetEmission } from '@admin-ui/testing';
+import { createDelayedError, createDelayedObservable, MockErrorHandler, tickAndGetEmission } from '@admin-ui/testing';
 import { fakeAsync, TestBed } from '@angular/core/testing';
+import { I18nNotificationService, I18nService, TranslatedNotificationOptions } from '@gentics/cms-components';
+import { MockI18nNotificationService, MockI18nService } from '@gentics/cms-components/testing';
 import {
     AccessControlledType,
     GcmsNormalizer,
@@ -34,11 +32,11 @@ import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { Observable, of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ActivityManagerService, EntityManagerService, ErrorHandler } from '../..';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { ObservableStopper } from '../../../../common';
+import { InterfaceOf } from '../../../../common/utils/util-types/util-types';
+import { AppStateService } from '../../../../state';
+import { assembleTestAppStateImports, TestAppState } from '../../../../state/utils/test-app-state';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
-import { MockErrorHandler } from '../../error-handler/error-handler.mock';
-import { TranslatedNotificationOptions } from '../../i18n-notification';
-import { MockI18nNotificationService } from '../../i18n-notification/i18n-notification.service.mock';
 import { GroupOperations } from './group.operations';
 
 function convertNormalizedToRawArray(
@@ -47,7 +45,7 @@ function convertNormalizedToRawArray(
     state: Partial<NormalizedEntityStore>,
 ): (User<Raw> | Group<Raw>)[] {
     const normalizer = new GcmsNormalizer();
-    return Object.keys(normalizedEntities).map(key => normalizer.denormalize(type, normalizedEntities[key], state));
+    return Object.keys(normalizedEntities).map((key) => normalizer.denormalize(type, normalizedEntities[key], state));
 }
 
 function createGroups(count: number, startId: number = 1): Group<Raw>[] {
@@ -147,6 +145,7 @@ describe('GroupOperations', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: GcmsApi, useClass: MockApi },
                 { provide: I18nNotificationService, useClass: MockI18nNotificationService },
+                { provide: I18nService, useClass: MockI18nService },
             ],
         });
 
@@ -157,6 +156,8 @@ describe('GroupOperations', () => {
         groupOperations = TestBed.inject(GroupOperations);
         normalizer = new GcmsNormalizer();
         notification = TestBed.inject(I18nNotificationService) as any;
+
+        spyOn(notification, 'show').and.callThrough();
 
         addEntitySpy = spyOn(entityManager, 'addEntity').and.callThrough();
         addEntitiesSpy = spyOn(entityManager, 'addEntities').and.callThrough();
@@ -187,7 +188,7 @@ describe('GroupOperations', () => {
             [parentGroupId]: parentGroup,
         };
 
-        childGroupIds.forEach(id => {
+        childGroupIds.forEach((id) => {
             groupEntities[id] = {
                 id,
                 name: `Child ${id}`,
@@ -208,7 +209,7 @@ describe('GroupOperations', () => {
 
     function mockStateWithUsersAndGroups(parentGroups: Group<Raw>[], usersCount: number): User<Raw>[] {
         const mockUsersRaw = createUsers(usersCount);
-        mockUsersRaw.forEach(user => user.groups = parentGroups);
+        mockUsersRaw.forEach((user) => user.groups = parentGroups);
         const normalized = normalizer.normalize('user', mockUsersRaw);
 
         appState.mockState({
@@ -218,7 +219,7 @@ describe('GroupOperations', () => {
     }
 
     function assertGroupsAreInState(ids: number[]): void {
-        ids.forEach(id => expect(appState.now.entity.group[id]).toBeTruthy);
+        ids.forEach((id) => expect(appState.now.entity.group[id]).toBeTruthy);
     }
 
     function assertErrorHandlingWorks(operation: () => Observable<any>, apiSpy: jasmine.Spy): void {
@@ -288,7 +289,7 @@ describe('GroupOperations', () => {
             // The group entity state should contain the new group and its parent group should reference it.
             const expectedGroupEntityState = _cloneDeep(appState.now.entity.group);
             expectedGroupEntityState[NEW_GROUP_ID] = normalizer.normalize('group', newGroup).result;
-            expectedGroupEntityState[PARENT_GROUP_ID].children = [ NEW_GROUP_ID ];
+            expectedGroupEntityState[PARENT_GROUP_ID].children = [NEW_GROUP_ID];
 
             runCreateSubgroupTest(expectedGroupEntityState);
         }));
@@ -347,10 +348,10 @@ describe('GroupOperations', () => {
         it('calls the correct API and removes the group from the AppState', fakeAsync(() => {
             mockStateWithChildGroups(PARENT_GROUP_A, CHILD_A1, CHILD_A2);
             mockStateWithChildGroups(PARENT_GROUP_B, CHILD_B1, CHILD_B2);
-            assertGroupsAreInState([ PARENT_GROUP_A, PARENT_GROUP_B, CHILD_A1, CHILD_A2, CHILD_B1, CHILD_B2 ]);
+            assertGroupsAreInState([PARENT_GROUP_A, PARENT_GROUP_B, CHILD_A1, CHILD_A2, CHILD_B1, CHILD_B2]);
 
             const expectedGroupEntities = _cloneDeep(appState.now.entity.group);
-            expectedGroupEntities[PARENT_GROUP_A].children = [ CHILD_A2 ];
+            expectedGroupEntities[PARENT_GROUP_A].children = [CHILD_A2];
             delete expectedGroupEntities[CHILD_A1];
 
             api.group.deleteGroup.and.returnValue(createDelayedObservable(null));
@@ -441,9 +442,9 @@ describe('GroupOperations', () => {
             const groupsFromStateRaw = convertNormalizedToRawArray('group', groupsFromState, appState.now.entity) as Group<Raw>[];
             // remove group children
             const creatingUserGroup: Group<Raw> = Object.keys(groupsFromStateRaw[1])
-                .filter(key => key !== 'children')
+                .filter((key) => key !== 'children')
                 .reduce((result, current) => ({ ...result, [current]: groupsFromStateRaw[1][current] }), {}) as Group<Raw>;
-            mockUserRaw.groups = [ creatingUserGroup ];
+            mockUserRaw.groups = [creatingUserGroup];
             const mockResponse: GroupUserCreateResponse = {
                 responseInfo: { responseCode: ResponseCode.OK },
                 user: mockUserRaw,
@@ -451,8 +452,8 @@ describe('GroupOperations', () => {
             };
             // prepare request payload
             const payload: any = Object.keys(mockUserRaw)
-                .filter(key => key !== 'id')
-                .filter(key => key !== 'groups')
+                .filter((key) => key !== 'id')
+                .filter((key) => key !== 'groups')
                 .reduce((result, current) => ({ ...result, [current]: mockUserRaw[current] }), {});
             payload.password = 'testPassword';
             const USER_CREATE_PAYLOAD: GroupUserCreateRequest = payload;
@@ -465,7 +466,7 @@ describe('GroupOperations', () => {
             let loadedUser: User<Raw>;
             response$.pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(user => loadedUser = user);
+            ).subscribe((user) => loadedUser = user);
             expect(loadedUser).toEqual(mockUserRaw);
 
             // check if mock user has been put into store
@@ -514,7 +515,7 @@ describe('GroupOperations', () => {
             const removeFromGroupId = mockGroups[0].id;
             const expectedEntityState = _cloneDeep(appState.now.entity);
             const targetUser = expectedEntityState.user[users[users.length - 1].id];
-            targetUser.groups = targetUser.groups.filter(id => id !== removeFromGroupId);
+            targetUser.groups = targetUser.groups.filter((id) => id !== removeFromGroupId);
             expect(expectedEntityState).not.toEqual(appState.now.entity);
 
             const result$ = groupOperations.removeUserFromGroup(removeFromGroupId, targetUser.id);
@@ -539,11 +540,11 @@ describe('GroupOperations', () => {
             const expectedResult: RecursivePartial<PermissionsSet>[] = [
                 {
                     type: AccessControlledType.ADMIN,
-                    perms: [ createPermissionInfo(GcmsPermission.READ) ],
+                    perms: [createPermissionInfo(GcmsPermission.READ)],
                 },
                 {
                     type: AccessControlledType.AUTO_UPDATE,
-                    perms: [ createPermissionInfo(GcmsPermission.READ) ],
+                    perms: [createPermissionInfo(GcmsPermission.READ)],
                 },
             ];
             api.group.getGroupPermissions.and.returnValue(createDelayedObservable({ items: expectedResult }));

@@ -1,5 +1,15 @@
-import { InterfaceOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '@admin-ui/common';
+import { MockErrorHandler, createDelayedObservable } from '@admin-ui/testing';
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, NO_ERRORS_SCHEMA, Pipe, PipeTransform, ViewChild } from '@angular/core';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { I18nService } from '@gentics/cms-components';
+import { GcmsPermission, Group, IndexById, ModelType, Normalized } from '@gentics/cms-models';
+import { InterfaceOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../../../../common';
 import {
+    EntityManagerService,
+    ErrorHandler,
     FileOperations,
     FolderOperations,
     FormOperations,
@@ -9,30 +19,17 @@ import {
     PageOperations,
     PermissionsService,
     UserOperations,
-} from '@admin-ui/core';
-import { EntityManagerService } from '@admin-ui/core/providers/entity-manager';
-import { ErrorHandler } from '@admin-ui/core/providers/error-handler';
-import { MockErrorHandler } from '@admin-ui/core/providers/error-handler/error-handler.mock';
+} from '../../../../core/providers';
+import { GroupTrableComponent, LoadingTriggerComponent } from '../../../../shared/components';
+import { ActionAllowedDirective } from '../../../../shared/directives';
 import {
     GroupDataService,
     GroupUserDataService,
     NodeDataService,
-    NotificationService,
     SubgroupDataService,
-} from '@admin-ui/shared';
-import { GroupTrableComponent } from '@admin-ui/shared/components/group-trable/group-trable.component';
-import { LoadingTriggerComponent } from '@admin-ui/shared/components/loading-trigger/loading-trigger.component';
-import { ActionAllowedDirective } from '@admin-ui/shared/directives/action-allowed/action-allowed.directive';
-import { AppStateService } from '@admin-ui/state';
-import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
-import { createDelayedObservable } from '@admin-ui/testing';
-import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, NO_ERRORS_SCHEMA, Pipe, PipeTransform, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { GcmsPermission, Group, IndexById, ModelType, Normalized } from '@gentics/cms-models';
-import { I18nService } from '@gentics/cms-components';
+} from '../../../../shared/providers';
+import { AppStateService } from '../../../../state';
+import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '../../../../state/utils/test-app-state';
 import { GroupMasterComponent } from './group-master.component';
 
 const ROOT_GROUP_ID = 2;
@@ -402,7 +399,6 @@ xdescribe('GroupMasterComponent', () => {
                 { provide: PageOperations, useClass: MockPageOperations },
                 GroupDataService,
                 GroupUserDataService,
-                NotificationService,
                 SubgroupDataService,
                 NodeDataService,
                 TEST_APP_STATE,

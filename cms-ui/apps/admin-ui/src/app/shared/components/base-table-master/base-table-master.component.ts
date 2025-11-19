@@ -1,5 +1,3 @@
-import { AdminUIEntityDetailRoutes, BusinessObject, EditableEntity, ROUTE_ENTITY_LOADED, ROUTE_ENTITY_RESOLVER_KEY } from '@admin-ui/common';
-import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { NormalizableEntityType } from '@gentics/cms-models';
@@ -7,6 +5,14 @@ import { TableRow, getFullPrimaryPath } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { delay, distinctUntilChanged, map } from 'rxjs/operators';
+import {
+    AdminUIEntityDetailRoutes,
+    BusinessObject,
+    EditableEntity,
+    ROUTE_ENTITY_LOADED,
+    ROUTE_ENTITY_RESOLVER_KEY,
+} from '../../../common';
+import { AppStateService, FocusEditor } from '../../../state';
 
 @Component({
     template: '',

@@ -1,9 +1,4 @@
-import { ObservableStopper } from '@admin-ui/common';
-import { MOCK_ENTITIES_NORMALIZED, MOCK_ENTITIES_RAW } from '@admin-ui/common/testing/elastic-search-index.model';
-import { InterfaceOf } from '@admin-ui/common/utils/util-types/util-types';
-import { AppStateService } from '@admin-ui/state';
-import { OPTIONS_CONFIG } from '@admin-ui/state/state-store.config';
-import { STATE_MODULES } from '@admin-ui/state/state.module';
+import { MOCK_ENTITIES_NORMALIZED, MOCK_ENTITIES_RAW } from '@admin-ui/testing';
 import { TestBed } from '@angular/core/testing';
 import { I18nNotificationService } from '@gentics/cms-components';
 import {
@@ -19,6 +14,9 @@ import { NgxsModule } from '@ngxs/store';
 import { of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ElasticSearchIndexOperations, EntityManagerService, ErrorHandler } from '../..';
+import { ObservableStopper } from '../../../../common';
+import { InterfaceOf } from '../../../../common/utils/util-types/util-types';
+import { AppStateService, OPTIONS_CONFIG, STATE_MODULES } from '../../../../state';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 
 class MockApi implements RecursivePartial<InterfaceOf<GcmsApi>> {

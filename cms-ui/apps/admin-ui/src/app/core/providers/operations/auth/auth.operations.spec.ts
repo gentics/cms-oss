@@ -1,5 +1,7 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { MockI18nNotificationService, MockI18nService } from '@gentics/cms-components/testing';
 import { LoginResponse, Raw, Response, ResponseCode, User, ValidateSidResponse } from '@gentics/cms-models';
 import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
@@ -26,9 +28,9 @@ import { assembleTestAppStateImports, TestAppState } from '../../../../state/uti
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
-import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { ErrorHandler } from '../../error-handler/error-handler.service';
 import { AuthOperations } from './auth.operations';
+import { MockErrorHandler } from '@admin-ui/testing';
 
 class MockGcmsApi {
     auth = {
@@ -70,12 +72,14 @@ describe('AuthOperations', () => {
             ],
             providers: [
                 AuthOperations,
-                { provide: AppStateService, useExisting: TestAppState },
-                { provide: EditorUiLocalStorageService, useExisting: MockEditorUiLocalStorage },
-                { provide: EntityManagerService, useExisting: MockEntityManagerService },
-                { provide: ErrorHandler, useExisting: MockErrorHandler },
-                { provide: GcmsApi, useExisting: MockGcmsApi },
+                { provide: AppStateService, useClass: TestAppState },
+                { provide: EditorUiLocalStorageService, useClass: MockEditorUiLocalStorage },
+                { provide: EntityManagerService, useClass: MockEntityManagerService },
+                { provide: ErrorHandler, useClass: MockErrorHandler },
+                { provide: GcmsApi, useClass: MockGcmsApi },
                 { provide: Router, useClass: MockRouter },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
             ],
         }).compileComponents();
 

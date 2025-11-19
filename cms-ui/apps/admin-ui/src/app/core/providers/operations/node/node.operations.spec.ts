@@ -1,5 +1,7 @@
-import { createDelayedError, createDelayedObservable, subscribeSafely } from '@admin-ui/testing';
+import { createDelayedError, createDelayedObservable, MockErrorHandler, subscribeSafely } from '@admin-ui/testing';
 import { TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { MockI18nNotificationService, MockI18nService } from '@gentics/cms-components/testing';
 import {
     Language,
     Node,
@@ -23,7 +25,6 @@ import { ActivityManagerService, GtxActivityManagerActivity } from '../../activi
 import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { ErrorHandler } from '../../error-handler';
-import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { PermissionsService } from '../../permissions';
 import { NodeOperations } from './node.operations';
 
@@ -72,6 +73,7 @@ describe('NodeOperations', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: GcmsApi, useClass: MockApi },
                 { provide: I18nNotificationService, useClass: MockI18nNotificationService },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: PermissionsService, useClass: MockPermissionsService },
             ],
         });
@@ -84,6 +86,8 @@ describe('NodeOperations', () => {
         activityManager = TestBed.inject(ActivityManagerService);
         appState = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
+
+        spyOn(notification, 'show').and.callThrough();
     });
 
     afterEach(() => {

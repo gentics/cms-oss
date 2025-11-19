@@ -1,4 +1,4 @@
-import { MeshModule } from '@admin-ui/mesh';
+import { MeshModule } from '../mesh';
 import { inject, NgModule, Optional, provideAppInitializer, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -9,8 +9,6 @@ import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import DE_TRANSLATIONS from '../../../public/i18n/de.json';
-import EN_TRANSLATIONS from '../../../public/i18n/en.json';
 import { API_BASE_URL, throwIfAlreadyLoaded, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../common';
 import { SharedModule } from '../shared/shared.module';
 import { AppStateService, StateModule } from '../state';
@@ -201,27 +199,7 @@ const PROVIDERS: any[] = [
         useFactory: createSidObservable,
         deps: [AppStateService],
     },
-    provideAppInitializer(() => {
-        const appState = inject(AppStateService);
-        const client = inject(GCMSRestClientService);
-        const keycloak = inject(KeycloakService);
-        const translations = inject(TranslateService);
 
-        translations.setTranslation('de', DE_TRANSLATIONS, true);
-        translations.setTranslation('en', EN_TRANSLATIONS, true);
-
-        client.init({
-            connection: {
-                absolute: false,
-                basePath: '/rest',
-            },
-        });
-        appState.select((state) => state.auth.sid).subscribe((sid) => {
-            client.setSessionId(sid);
-        });
-
-        return keycloak.checkKeycloakAuth();
-    }),
 ];
 
 @NgModule({

@@ -15,6 +15,7 @@ import { RouteEntityResolverService } from '../route-entity-resolver/route-entit
 import { BreadcrumbInfo } from './breadcrumb-info';
 import { BreadcrumbsService } from './breadcrumbs.service';
 import { I18nService } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 
 const DASHBOARD = '';
 const MODULE_A = 'module-a';
@@ -212,13 +213,14 @@ describe('BreadcrumbsService', () => {
                 TestAppState,
                 { provide: RouteEntityResolverService, useClass: MockRouteEntityResolverService },
                 { provide: AppStateService, useExisting: TestAppState },
+                { provide: I18nService, useClass: MockI18nService },
             ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(RootComponent);
         breadcrumbs = TestBed.inject(BreadcrumbsService);
         state = TestBed.inject(TestAppState);
-        i18n = TestBed.inject(TranslateService);
+        i18n = TestBed.inject(I18nService);
         router = TestBed.inject(Router);
         stopper = new ObservableStopper();
 

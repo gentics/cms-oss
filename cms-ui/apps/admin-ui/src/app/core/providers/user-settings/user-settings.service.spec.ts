@@ -1,4 +1,5 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { I18nService } from '@gentics/cms-components';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { of } from 'rxjs';
 import { first, takeUntil } from 'rxjs/operators';
@@ -46,11 +47,8 @@ describe('UserSettingsService', () => {
             ],
             providers: [
                 UserSettingsService,
-                TestAppState,
                 { provide: AppStateService, useExisting: TestAppState },
-                MockEditorLocalStorage,
                 { provide: EditorUiLocalStorageService, useExisting: MockEditorLocalStorage },
-                MockServerStorageService,
                 { provide: ServerStorageService, useExisting: MockServerStorageService },
                 { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },
             ],
@@ -68,12 +66,12 @@ describe('UserSettingsService', () => {
     describe('UI Language', () => {
 
         let editorLocalStorage: MockEditorLocalStorage;
-        let i18n: MockI18nServiceWithSpies;
+        let i18n: I18nService;
 
         beforeEach(() => {
-            editorLocalStorage = TestBed.inject(MockEditorLocalStorage);
-            i18n = TestBed.inject(MockI18nServiceWithSpies);
-            i18n.inferUserLanguage.and.returnValue(I18N_SERVICE_INFERRED_LANGUAGE);
+            editorLocalStorage = TestBed.inject(EditorUiLocalStorageService) as any;
+            i18n = TestBed.inject(I18nService);
+            spyOn(i18n, 'inferUserLanguage').and.returnValue(I18N_SERVICE_INFERRED_LANGUAGE);
         });
 
         it('reads the UI language from the local storage and sets it in the AppState', () => {
@@ -135,7 +133,7 @@ describe('UserSettingsService', () => {
         let dispatchedActions: SetUISettings[];
 
         beforeEach(() => {
-            serverStorage = TestBed.inject(MockServerStorageService);
+            serverStorage = TestBed.inject(ServerStorageService) as any;
             dispatchedActions = [];
 
             appState.trackActions().pipe(

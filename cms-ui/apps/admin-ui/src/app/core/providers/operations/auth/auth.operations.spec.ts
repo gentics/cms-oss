@@ -70,26 +70,21 @@ describe('AuthOperations', () => {
             ],
             providers: [
                 AuthOperations,
-                TestAppState,
                 { provide: AppStateService, useExisting: TestAppState },
-                MockEditorUiLocalStorage,
                 { provide: EditorUiLocalStorageService, useExisting: MockEditorUiLocalStorage },
-                MockEntityManagerService,
                 { provide: EntityManagerService, useExisting: MockEntityManagerService },
-                MockErrorHandler,
                 { provide: ErrorHandler, useExisting: MockErrorHandler },
-                MockGcmsApi,
                 { provide: GcmsApi, useExisting: MockGcmsApi },
                 { provide: Router, useClass: MockRouter },
             ],
         }).compileComponents();
 
-        entities = TestBed.inject(MockEntityManagerService);
-        api = TestBed.inject(MockGcmsApi);
+        entities = TestBed.inject(EntityManagerService) as any;
+        api = TestBed.inject(GcmsApi) as any;
         authOps = TestBed.inject(AuthOperations);
-        editorUiLocalStorage = TestBed.inject(MockEditorUiLocalStorage);
-        errorHandler = TestBed.inject(MockErrorHandler);
-        state = TestBed.inject(TestAppState);
+        editorUiLocalStorage = TestBed.inject(EditorUiLocalStorageService) as any;
+        errorHandler = TestBed.inject(ErrorHandler) as any;
+        state = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
     });
 

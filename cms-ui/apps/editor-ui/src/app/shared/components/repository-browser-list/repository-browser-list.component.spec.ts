@@ -53,7 +53,7 @@ describe('RepositoryBrowserList', () => {
     let state: TestApplicationState;
     let repositoryBrowserClientService: RepositoryBrowserClient;
 
-    let repositoryBrowserOptions: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType, selectMultiple: false };
+    let repositoryBrowserOptions: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType; selectMultiple: false };
 
     beforeEach(() => {
         configureComponentTest({
@@ -75,7 +75,6 @@ describe('RepositoryBrowserList', () => {
             declarations: [
                 RepositoryBrowser,
                 TestComponent,
-                mockPipes('i18n', 'i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });
@@ -164,7 +163,7 @@ function generateTestData(): void {
     }));
 }
 
-function getRepositoryBrowser(fixture: ComponentFixture<TestComponent>): { element: DebugElement, folders: any } {
+function getRepositoryBrowser(fixture: ComponentFixture<TestComponent>): { element: DebugElement; folders: any } {
     const element: DebugElement = fixture.debugElement.query(By.css('repository-browser'));
     // this is always empty, but it should not
     const folders: any = fixture.nativeElement.getElementsByClassName('item-list-row');
@@ -200,9 +199,9 @@ class MockApi {
         // prepare test data
         generateTestData();
 
-        const nodeResponse = { ...this.defaultResponse, folders: [], nodes: testNodes.map(e => this.entityResolver.denormalizeEntity('node', e)) };
-        const folderResponse = { ...this.defaultResponse, folders: testFolders.map(e => this.entityResolver.denormalizeEntity('folder', e)) };
-        const pageResponse = { ...this.defaultResponse, pages: testPages.map(e => this.entityResolver.denormalizeEntity('page', e)) };
+        const nodeResponse = { ...this.defaultResponse, folders: [], nodes: testNodes.map((e) => this.entityResolver.denormalizeEntity('node', e)) };
+        const folderResponse = { ...this.defaultResponse, folders: testFolders.map((e) => this.entityResolver.denormalizeEntity('folder', e)) };
+        const pageResponse = { ...this.defaultResponse, pages: testPages.map((e) => this.entityResolver.denormalizeEntity('page', e)) };
         const fileResponse = { ...this.defaultResponse, files: [] };
         const imageResponse = { ...this.defaultResponse, files: [] };
 
@@ -238,6 +237,7 @@ class MockPermissionService {
     forItemInLanguage(): Observable<any> {
         return NEVER;
     }
+
     forItem(): Observable<any> {
         return NEVER;
     }

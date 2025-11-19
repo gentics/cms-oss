@@ -1,11 +1,11 @@
 import { Component, ViewChild } from '@angular/core';
 import { tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { I18nService } from '@gentics/cms-components';
 import { TagChangedFn, TagEditorResult } from '@gentics/cms-integration-api-models';
 import { EditableTag, StringTagPartProperty, TagPropertyMap } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
-import { I18nService } from '@gentics/cms-components';
 import { cloneDeep } from 'lodash-es';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
@@ -31,6 +31,7 @@ describe('TagEditorHostComponent', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 IFrameStylesService,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 CustomTagEditorHostComponent,
@@ -366,7 +367,7 @@ class MockErrorHandlerService {
     catch(error: Error, options?: { notification: boolean }): void { }
 }
 
-class MockI18nService implements Partial<TranslateService> {
+class MockI18nService implements Partial<I18nService> {
     instant(key: string | string[], params?: any): string {
         return key as string;
     }

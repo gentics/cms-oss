@@ -522,7 +522,7 @@ describe('ContentFrameComponent', () => {
                 NodePropertiesComponent,
                 ItemStatusLabelComponent,
                 TestComponent,
-                mockPipes('i18n', 'i18nDate', 'filesize', 'replaceEscapedCharacters'),
+                mockPipes('filesize', 'replaceEscapedCharacters'),
             ],
             imports: [
                 GenticsUICoreModule.forRoot(),

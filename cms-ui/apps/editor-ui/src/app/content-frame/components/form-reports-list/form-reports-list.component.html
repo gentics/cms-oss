@@ -110,7 +110,7 @@
                   ></icon-checkbox>
                 </th>
                 @for (key of entryKeys; track key) {
-                  @if (key !== 'errors' && ((formElementLabelPropertyI18nValues[key] | translatefg$:'content':'_ui' | async) || key); as entryLabel) {
+                  @if (key !== 'errors' && ((formElementLabelPropertyI18nValues[key] | i18nfg$:'content':'_ui' | async) || key); as entryLabel) {
                     <th
                       [title]="entryLabel"
                       >

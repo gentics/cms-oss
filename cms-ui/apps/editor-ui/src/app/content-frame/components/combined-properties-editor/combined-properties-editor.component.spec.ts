@@ -2,7 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService, TranslateParameters } from '@gentics/cms-components';
 import { EditMode, TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableObjectTag,
@@ -66,6 +66,7 @@ import {
     ID_OBJ_PROP_CATEGORY_OTHERS,
     NAME_OBJ_PROP_CATEGORY_OTHERS,
 } from './combined-properties-editor.component';
+import { provideTranslateService } from '@ngx-translate/core';
 
 const CONTENT_TAG_NAME = 'contenttag0';
 const TAG0_NAME = 'object.tag0';
@@ -97,7 +98,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
     function applyObjectProperties(item: ItemWithObjectTags, objProps: { [name: string]: EditableObjectTag }): void {
         item.tags = cloneDeep(mockObjProps);
-        Object.keys(objProps).forEach(tagName => {
+        Object.keys(objProps).forEach((tagName) => {
             delete (item.tags[tagName] as EditableObjectTag).tagType;
         });
         item.tags[CONTENT_TAG_NAME] = getExampleEditableTag();
@@ -133,7 +134,9 @@ describe('CombinedPropertiesEditorComponent', () => {
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: ResourceUrlBuilder, useClass: MockResourceUrlBuilderService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
-                { provide: UserSettingsService, useClass: MockUserSettingsService},
+                { provide: UserSettingsService, useClass: MockUserSettingsService },
+                { provide: I18nService, useClass: MockI18nService },
+                provideTranslateService(),
             ],
             declarations: [
                 CombinedPropertiesEditorComponent,
@@ -144,7 +147,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 NodePropertiesComponent,
                 ObjectTagNamePipe,
                 TestComponent,
-                mockPipes('i18n', 'i18nDate', 'filesize'),
+                mockPipes('filesize'),
             ],
             imports: [
                 GenticsUICoreModule.forRoot(),
@@ -173,7 +176,7 @@ describe('CombinedPropertiesEditorComponent', () => {
             },
             features: {
                 nodeFeatures: {
-                    [mockNode.id]: [ NodeFeature.ASSET_MANAGEMENT ],
+                    [mockNode.id]: [NodeFeature.ASSET_MANAGEMENT],
                 },
                 [Feature.TAGFILL_LIGHT]: true,
             },
@@ -187,7 +190,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 activeFolder: mockPage.folderId,
                 templates: {
                     fetching: false,
-                    list: [ mockPage.templateId, mockPage.templateId + 1 ],
+                    list: [mockPage.templateId, mockPage.templateId + 1],
                     total: 2,
                 },
             },
@@ -206,8 +209,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                 testComponent.item = mockPage;
                 multiDetectChanges(fixture, 3);
 
-                const expectedLanguages = state.now.folder.activeNodeLanguages.list.map(id => mockLanguage(id));
-                const expectedTemplates = state.now.folder.templates.list.map(id => mockTemplate(id));
+                const expectedLanguages = state.now.folder.activeNodeLanguages.list.map((id) => mockLanguage(id));
+                const expectedTemplates = state.now.folder.templates.list.map((id) => mockTemplate(id));
 
                 expect(folderActions.getFolder).toHaveBeenCalledWith(mockPage.folderId, { construct: true });
                 expect(entityResolver.getLanguage).toHaveBeenCalledTimes(mockNode.languagesId.length);
@@ -309,10 +312,10 @@ describe('CombinedPropertiesEditorComponent', () => {
                 mockObjProp(2),
             ];
             const grouping = groupObjectPropertiesByCategory(objectProperties)
-                .map(group => ({
+                .map((group) => ({
                     id: group.id,
                     name: group.name,
-                    properties: group.objProperties.map(prop => prop.id),
+                    properties: group.objProperties.map((prop) => prop.id),
                 }));
 
             expect(grouping).toEqual([
@@ -336,7 +339,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     name: NAME_OBJ_PROP_CATEGORY_OTHERS,
                     properties: [1, 6],
                 },
-            ])
+            ]);
         });
 
         it('displays one tab for the item properties and one tab for each object property',
@@ -351,8 +354,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                 expect((tabs[0].nativeElement as HTMLElement).innerText.toLowerCase()).toEqual('editor.general_properties_label');
                 expect((tabs[1].nativeElement as HTMLElement).innerText.toLowerCase()).toEqual('editor.tag_list_label');
                 // 'code' and 'info' in this is the material icon name which is being rendered before.
-                const expectedTabLabels = mockObjPropsSorted.map(tag => `info${tag.displayName}`);
-                const actualTabLabels = tabs.slice(2).map(tab => tab.nativeElement.textContent.toLowerCase().trim());
+                const expectedTabLabels = mockObjPropsSorted.map((tag) => `info${tag.displayName}`);
+                const actualTabLabels = tabs.slice(2).map((tab) => tab.nativeElement.textContent.toLowerCase().trim());
                 expect(actualTabLabels).toEqual(expectedTabLabels);
             }),
         );
@@ -738,7 +741,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 };
                 const expectedOptions: FolderSaveRequestOptions = {
                     nodeId: mockFolder.nodeId,
-                    tagsToSubfolders: [ editedObjProp.name ],
+                    tagsToSubfolders: [editedObjProp.name],
                 };
 
                 // Save the object property.
@@ -829,7 +832,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     },
                 };
 
-                const languageVariants = Object.values((mockPage ).languageVariants).map((languageVariant: any) => languageVariant.id);
+                const languageVariants = Object.values((mockPage).languageVariants).map((languageVariant: any) => languageVariant.id);
 
                 // Save the object property.
                 let promiseResolved = false;
@@ -839,7 +842,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         expect(folderActions.updateItemsObjectProperties).toHaveBeenCalledTimes(1);
                         expect(folderActions.updateItemsObjectProperties).toHaveBeenCalledWith(
                             'page',
-                            languageVariants.map(variant => ({
+                            languageVariants.map((variant) => ({
                                 itemId: variant,
                                 updatedObjProps: expectedUpdateToLanguageVariants,
                                 requestOptions: undefined,
@@ -888,7 +891,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         features: {
                             ...state.now.features,
                             nodeFeatures: {
-                                [mockNode.id]: [ ],
+                                [mockNode.id]: [],
                             },
                         },
                     });
@@ -1177,7 +1180,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     };
                     const expectedOptions: FolderSaveRequestOptions = {
                         nodeId: mockFolder.nodeId,
-                        tagsToSubfolders: [ editedObjProp.name ],
+                        tagsToSubfolders: [editedObjProp.name],
                     };
 
                     // Save the object property.
@@ -1255,7 +1258,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     };
 
                     // Save the object property.
-                    const languageVariants = Object.values((editedItem ).languageVariants).map((languageVariant: any) => languageVariant.id);
+                    const languageVariants = Object.values((editedItem).languageVariants).map((languageVariant: any) => languageVariant.id);
                     let promiseResolved = false;
                     testComponent.combinedPropertiesEditor.saveChanges({ applyToLanguageVariants: languageVariants })
                         .then(() => {
@@ -1272,11 +1275,11 @@ describe('CombinedPropertiesEditorComponent', () => {
                             expect(folderActions.updateItemsObjectProperties).toHaveBeenCalledTimes(1);
                             expect(folderActions.updateItemsObjectProperties).toHaveBeenCalledWith(
                                 'page',
-                                languageVariants.map(variant => ({
+                                languageVariants.map((variant) => ({
                                     itemId: variant,
                                     updatedObjProps: expectedUpdateToLanguageVariants,
                                     requestOptions: undefined,
-                                })).filter(variant => variant.itemId !== updatedItem.id),
+                                })).filter((variant) => variant.itemId !== updatedItem.id),
                                 { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
                             );
                             expect(testComponent.combinedPropertiesEditor.item).toBe(updatedItem);
@@ -1467,7 +1470,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
                 expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
-                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map((row) => row.item)).toEqual(contentTags);
             }),
         );
 
@@ -1487,7 +1490,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
                 expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
-                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map((row) => row.item)).toEqual(contentTags);
 
                 // switch to folder item
                 testComponent.item = mockFolder;
@@ -1496,7 +1499,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 tick(100);
                 expect(contentTags).toEqual([]);
                 expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
-                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map((row) => row.item)).toEqual(contentTags);
             }),
         );
 
@@ -1524,11 +1527,10 @@ describe('CombinedPropertiesEditorComponent', () => {
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
                 expect(testComponent.combinedPropertiesEditor.contentTagRows.length).toEqual(contentTags.length);
-                expect(testComponent.combinedPropertiesEditor.contentTagRows.map(row => row.item)).toEqual(contentTags);
+                expect(testComponent.combinedPropertiesEditor.contentTagRows.map((row) => row.item)).toEqual(contentTags);
             }),
         );
     });
-
 
     function mockTagEditorContext(editTagInfo: EditTagInfo): TagEditorContext {
         if (!validateTagSpy) {
@@ -1715,7 +1717,7 @@ class TestComponent {
 
 @Component({
     selector: 'gtx-properties-editor',
-    providers: [ { provide: PropertiesEditorComponent, useClass: MockPropertiesEditor } ],
+    providers: [{ provide: PropertiesEditorComponent, useClass: MockPropertiesEditor }],
     template: '',
     standalone: false,
 })
@@ -1730,7 +1732,7 @@ class MockPropertiesEditor {
 
 @Component({
     selector: 'tag-editor-host',
-    providers: [ { provide: TagEditorHostComponent, useClass: MockTagEditorHost } ],
+    providers: [{ provide: TagEditorHostComponent, useClass: MockTagEditorHost }],
     template: '',
     standalone: false,
 })
@@ -1738,16 +1740,15 @@ class MockTagEditorHost {
     editTagLive = jasmine.createSpy('editTagLive');
 }
 
-
-class MockI18nService {
-    translate(key: string): string {
-        return key;
+class MockI18nService implements Partial<I18nService> {
+    public instant(key: string | string[], _params?: TranslateParameters): string {
+        return key as string;
     }
 }
 
 @Component({
     selector: 'iframe-wrapper',
-    providers: [ { provide: IFrameWrapperComponent, useClass: MockIFrameWrapper } ],
+    providers: [{ provide: IFrameWrapperComponent, useClass: MockIFrameWrapper }],
     template: '',
     standalone: false,
 })

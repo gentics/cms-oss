@@ -1,15 +1,15 @@
 import { HttpClientModule } from '@angular/common/http';
-import { Component, EventEmitter, Injectable, Input, OnDestroy, PipeTransform } from '@angular/core';
+import { Component, Injectable, Input, OnDestroy, PipeTransform } from '@angular/core';
 import { TestBed, discardPeriodicTasks, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentsModule, KeycloakService, WindowRef } from '@gentics/cms-components';
+import { CmsComponentsModule, I18nService, KeycloakService, WindowRef } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { NodeFeature } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { componentTest, configureComponentTest } from '../testing';
 import { AppComponent as OriginalApp } from './app.component';
@@ -141,8 +141,6 @@ class MockUserSettingsService {
 
 class MockErrorHandler {}
 
-class MockI18nService {}
-
 class MockContentStagingActions {}
 
 class MockMaintenanceModeService {
@@ -201,24 +199,6 @@ class MockContentRepositoryActions {
 
 class MockUsersnapService {
     init = jasmine.createSpy('init');
-}
-
-@Injectable()
-class MockTranslatePipe implements PipeTransform, OnDestroy {
-    transform = jasmine.createSpy('transform').and.callFake((val) => val);
-    _dispose = jasmine.createSpy('_dispose');
-    ngOnDestroy(): void {}
-}
-
-class MockTranslateService {
-    onLangChange = new EventEmitter<LangChangeEvent>();
-    onTranslationChange: EventEmitter<any> = new EventEmitter();
-    onFallbackLangChange: EventEmitter<any> = new EventEmitter();
-    get(key: string | Array<string>, interpolateParams?: object): Observable<string | any> {
-        return new BehaviorSubject<string>('').asObservable();
-    }
-
-    instant = (str: string) => `translated(${str})`;
 }
 
 const CLASS_SHOW_ALERTS = 'show-alerts';
@@ -284,9 +264,8 @@ describe('AppComponent', () => {
                 { provide: ContentRepositoryActionsService, useClass: MockContentRepositoryActions },
                 { provide: UsersnapService, useClass: MockUsersnapService },
                 { provide: KeycloakService },
-                { provide: I18nService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: ContentStagingActionsService, useClass: MockContentStagingActions },
-                { provide: TranslatePipe, useClass: MockTranslatePipe },
                 ChipSearchBarConfigService,
                 WindowRef,
             ],

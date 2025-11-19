@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     File as FileModel,
@@ -50,7 +50,8 @@ describe('CustomScriptHostService', () => {
                 { provide: ResourceUrlBuilder, useClass: MockResourceUrlBuilder },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: NavigationService, useClass: MockNavigationService },
-                { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService},
+                { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
+                { provide: I18nService, useClass: MockI18nService },
             ],
         });
 
@@ -103,14 +104,14 @@ describe('CustomScriptHostService', () => {
             expect(filePickerButton.click).toHaveBeenCalled();
         });
 
-        it('returns an observable of the FilePicker fileSelect stream', done => {
+        it('returns an observable of the FilePicker fileSelect stream', (done) => {
             const result = customScriptHostService.openFilePicker('image');
 
             result.subscribe(
-                value => {
+                (value) => {
                     expect(value).toBe('MOCK_FILE' as any);
                 },
-                err => { },
+                (err) => { },
                 () => {
                     // ensure the stream completes
                     done();
@@ -184,7 +185,7 @@ describe('CustomScriptHostService', () => {
             const files: any[] = [{}];
 
             customScriptHostService.uploadForCurrentItem('file', files)
-                .subscribe(result => {
+                .subscribe((result) => {
                     expect(result).toEqual([uploadResponses[0].response.file, uploadResponses[1].response.file]);
                 });
         });
@@ -207,7 +208,7 @@ describe('CustomScriptHostService', () => {
             expect(repositoryBrowserClient.openRepositoryBrowser).toHaveBeenCalledWith(options);
         });
 
-        it('invokes the callback with the selected items once the modal resolves', done => {
+        it('invokes the callback with the selected items once the modal resolves', (done) => {
             const options: RepositoryBrowserOptions = { selectMultiple: true, allowedSelection: 'page' };
             const callback = jasmine.createSpy('callback').and.callFake(() => {
                 expect(callback).toHaveBeenCalledWith(SELECTED_ITEMS);
@@ -262,6 +263,7 @@ class MockContentFrame {
         accept: '',
         fileSelect: of('MOCK_FILE'),
     };
+
     filePickerWrapper = {
         nativeElement: {
             querySelector: (): any => filePickerButton,

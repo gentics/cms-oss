@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { InterpolationParameters, TranslateService } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
-import { JoinOptions } from '../../../common/models';
+import { JoinOptions, TranslateParameters } from '../../../common/models';
 
 const DEFAULT_JOIN_OPTIONS: JoinOptions = {
     withLast: true,
@@ -43,7 +43,7 @@ export class I18nService {
     /**
      * Translate the given key instantly.
      */
-    public instant(key: string | string[], params?: InterpolationParameters): string {
+    public instant(key: string | string[], params?: TranslateParameters): string {
         if (key == null) {
             return '';
         }
@@ -64,7 +64,7 @@ export class I18nService {
      * again whenever the current language is changed with the translation in the
      * respective language.
      */
-    public get(key: string | string[], params?: InterpolationParameters): Observable<string> {
+    public get(key: string | string[], params?: TranslateParameters): Observable<string> {
         const initialTranslation = this.instant(key, params);
         return this.translate.onLangChange.pipe(
             map(() => this.instant(key, params)),
@@ -145,7 +145,7 @@ export class I18nService {
      * rather than `common.type_folder`. In the case of types, it also allows the use of a `count` param to create
      * the correct pluralized translation key.
      */
-    public applyShortcuts(value: string, params?: InterpolationParameters): string {
+    public applyShortcuts(value: string, params?: TranslateParameters): string {
         switch (value) {
             case 'contenttag':
             case 'file':
@@ -180,7 +180,7 @@ export class I18nService {
         }
     }
 
-    public translateParamsInstant(params: InterpolationParameters): InterpolationParameters {
+    public translateParamsInstant(params: TranslateParameters): TranslateParameters {
         const translated: { [key: string]: any } = {};
         for (const key in params) {
             if (key === '_lang' || key === '_language') {
@@ -197,7 +197,7 @@ export class I18nService {
     /**
      * If a param value is one of the common pages, we translate it implicitly.
      */
-    private translateParamValue(value: any, params: InterpolationParameters): any {
+    private translateParamValue(value: any, params: TranslateParameters): any {
         return this.translate.instant(this.applyShortcuts(value, params));
     }
 

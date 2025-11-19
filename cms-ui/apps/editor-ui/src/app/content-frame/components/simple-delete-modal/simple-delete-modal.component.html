@@ -1,7 +1,7 @@
 <div class="modal-title">
   <h5>{{ 'modal.multi_delete_title' | gtxI18n:{
     count: items.length,
-    type: ('common.type_' + itemType + (items.length !== 1 ? 's' : '')) | translate
+    type: ('common.type_' + itemType + (items.length !== 1 ? 's' : '')) |gtxI18n
   } }}</h5>
 </div>
 
@@ -25,7 +25,7 @@
   <gtx-button type="alert" (click)="confirm()" class="confirm-button" [disabled]="deleteCount === 0">
     {{ 'modal.multi_delete_confirm_button' | gtxI18n:{
         count: deleteCount,
-        type: ('common.type_' + itemType + (deleteCount !== 1 ? 's' : '')) | translate
+        type: ('common.type_' + itemType + (deleteCount !== 1 ? 's' : '')) |gtxI18n
     } }}
   </gtx-button>
 </div>

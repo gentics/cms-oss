@@ -1,9 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService, TranslateParameters } from '@gentics/cms-components';
 import { ResponseCode } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
@@ -32,22 +31,18 @@ describe('ErrorHandler', () => {
             imports: [NgxsModule.forRoot(STATE_MODULES)],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: Router, useClass: MockRouter },
+                { provide: ModalService, useClass: MockModalService },
+                { provide: I18nNotificationService, useClass: MockNotificationService },
+                { provide: I18nService, useClass: MockI18nService },
+                ErrorHandler,
             ],
         });
         appState = TestBed.inject(ApplicationStateService) as any;
-
-        modalService = new MockModalService();
-        notification = new MockNotificationService();
-        router = new MockRouter();
-        const translate = new MockTranslateService();
-
-        errorHandler = new ErrorHandler(
-            appState as ApplicationStateService,
-            router as any as Router,
-            modalService as any as ModalService,
-            translate as any as TranslateService,
-            notification as any as I18nNotificationService,
-        );
+        errorHandler = TestBed.inject(ErrorHandler);
+        modalService = TestBed.inject(ModalService) as any;
+        notification = TestBed.inject(I18nNotificationService) as any;
+        router = TestBed.inject(Router) as any;
     });
 
     describe('catch()', () => {
@@ -162,9 +157,11 @@ class MockRouter {
 
 class MockModalService {
     dialog = jasmine.createSpy('dialog')
-        .and.returnValue(new Promise(neverResolve => {}));
+        .and.returnValue(new Promise((neverResolve) => {}));
 }
 
-class MockTranslateService {
-    instant = (str: string) => `translated(${str})`;
+class MockI18nService implements Partial<I18nService> {
+    public instant(key: string | string[], params?: TranslateParameters): string {
+        return `translated(${key})`;
+    }
 }

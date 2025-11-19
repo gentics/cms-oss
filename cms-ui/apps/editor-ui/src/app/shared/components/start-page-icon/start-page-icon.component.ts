@@ -7,7 +7,7 @@ import { Component } from '@angular/core';
     selector: 'start-page-icon',
     template: `
         <span class="startpage-icon"
-              [title]="'editor.start_page_tooltip' | translate">
+              [title]="'editor.start_page_tooltip' | gtxI18n">
             <icon>home</icon>
         </span>
     `,

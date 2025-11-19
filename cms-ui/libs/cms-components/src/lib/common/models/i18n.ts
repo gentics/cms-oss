@@ -1,11 +1,15 @@
-import { IndexByKey } from '@gentics/cms-models';
+import { InterpolationParameters } from '@ngx-translate/core';
+
+export const FALLBACK_LANGUAGE = 'en';
+
+export type TranslateParameters = InterpolationParameters;
 
 export interface ParametizedI18nKey {
     /** The i18n key that will be passed to the I18nService. */
     key: string;
 
     /** Parameters that should be passed to the I18nService. */
-    params: IndexByKey<any>;
+    params: TranslateParameters;
 }
 
 export interface JoinOptions {

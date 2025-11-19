@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, Directive, ViewChild } from '@angular/cor
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 import { ButtonComponent, CheckboxComponent, IconDirective, ModalService } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
@@ -35,6 +36,7 @@ describe('MessageInboxComponent', () => {
                 { provide: ModalService, useClass: MockModalService },
             ],
             declarations: [
+                MockI18nPipe,
                 ButtonComponent,
                 IconDirective,
                 CheckboxComponent,

@@ -13,14 +13,14 @@
                     {{ (filterTerm === '' ? 'editor.item_count_header_selected' : 'editor.item_count_header_selected_matching') | gtxI18n: {
                         selected: selectedItems.length,
                         count: itemsInfo.total,
-                        items: ('common.type_' + itemType + (itemsInfo.total !== 1 ? 's_dative' : '')) | translate,
+                        items: ('common.type_' + itemType + (itemsInfo.total !== 1 ? 's_dative' : '')) |gtxI18n,
                     } }}
                 </span>
             </span>
             <span class="count-part">
                 {{ 'editor.item_count_header_selected_simple' | gtxI18n: {
                     count: selectedItems.length,
-                    items: ('common.type_' + itemType + (itemsInfo.total !== 1 ? 's' : '')) | translate
+                    items: ('common.type_' + itemType + (itemsInfo.total !== 1 ? 's' : '')) |gtxI18n
                 } }}
             </span>
         } @else {
@@ -29,7 +29,7 @@
                     <span class="item-list-status all-items">
                         {{ 'editor.item_count_header_simple' | gtxI18n: {
                             count: itemsInfo.total,
-                            items: ('common.type_' + itemType) | translate
+                            items: ('common.type_' + itemType) |gtxI18n
                         } }}
                     </span>
                 }
@@ -41,7 +41,7 @@
                         {{ 'editor.item_count_header_partial' | gtxI18n: {
                             count: count,
                             total: itemsInfo.total,
-                            items: ('common.type_' + itemType + (count !== 1 ? 's_dative' : '')) | translate,
+                            items: ('common.type_' + itemType + (count !== 1 ? 's_dative' : '')) |gtxI18n,
                         } }}
                     </span>
                 }
@@ -50,7 +50,7 @@
                         @let count = (items | filterItems:filterTerm:itemsInfo.showPath)?.length;
                         {{ 'editor.item_count_header_matching' | gtxI18n: {
                             count: count,
-                            items: ('common.type_' + itemType + (count !== 1 ? 's' : '')) | translate
+                            items: ('common.type_' + itemType + (count !== 1 ? 's' : '')) |gtxI18n
                         } }}
                     </span>
                 }
@@ -58,7 +58,7 @@
             <span class="count-part">
                 {{ 'editor.item_count_header_simple' | gtxI18n: {
                     count: items?.length,
-                    items: ('common.type_' + itemType + (items?.length !== 1 ? 's' : '')) | translate
+                    items: ('common.type_' + itemType + (items?.length !== 1 ? 's' : '')) |gtxI18n
                 } }}
             </span>
         }

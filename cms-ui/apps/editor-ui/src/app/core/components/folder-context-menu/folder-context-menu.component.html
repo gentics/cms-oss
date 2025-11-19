@@ -75,7 +75,7 @@
           <icon left>{{ (stagingMap?.[folder.globalId]?.included ? 'remove' : 'inventory') }}</icon>
           {{ 'editor.' + (stagingMap?.[folder.globalId]?.included ? 'un' : '')  + 'stage_item_label' | gtxI18n:{
           itemType: ('common.type_folder' | gtxI18n),
-          itemTypePlural: 'common.type_folders' | translate
+          itemTypePlural: 'common.type_folders' |gtxI18n
           } }}
         </gtx-dropdown-item>
       }
@@ -83,8 +83,8 @@
         <gtx-dropdown-item (click)="stagingClicked(true)">
           <icon left>input</icon>
           {{ 'editor.stage_item_recursive_label' | gtxI18n:{
-          itemType: 'common.type_folder' | translate,
-          itemTypePlural: 'common.type_folders' | translate
+          itemType: 'common.type_folder' |gtxI18n,
+          itemTypePlural: 'common.type_folders' |gtxI18n
           } }}
         </gtx-dropdown-item>
       }

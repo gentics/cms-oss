@@ -33,6 +33,7 @@
             "@editor-ui/testing/*": ["apps/editor-ui/src/testing/*"],
             "@gentics/aloha-models": ["libs/aloha-models/src/public-api"],
             "@gentics/cms-components": ["libs/cms-components/src/public-api"],
+            "@gentics/cms-components/testing": ["libs/cms-components/src/testing"],
             "@gentics/cms-integration-api-models": [
                 "libs/cms-integration-api-models/src/public-api"
             ],

@@ -1,7 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { I18nNotificationService } from '@gentics/cms-components';
-import { mockPipes } from '@gentics/ui-core/testing';
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 import { componentTest } from '../../../../testing';
 import { DescriptionTooltipComponent } from './description-tooltip.component';
 
@@ -23,9 +23,9 @@ describe('DescriptionTooltipComponent', () => {
     beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
             declarations: [
+                MockI18nPipe,
                 DescriptionTooltipComponent,
                 TestComponent,
-                mockPipes('i18n'),
             ],
             providers: [
                 { provide: I18nNotificationService, useClass: MockI18Notification },

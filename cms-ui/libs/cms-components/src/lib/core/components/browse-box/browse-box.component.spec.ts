@@ -1,7 +1,7 @@
 import { Component, Pipe, PipeTransform } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { componentTest, configureComponentTest, MockI18nPipe } from '../../../testing';
+import { componentTest, configureComponentTest, MockI18nPipe } from '../../../../testing';
 import { BrowseBoxComponent } from './browse-box.component';
 
 const CLEAR_BUTTON = '.browse-box__button--clear';

@@ -30,10 +30,10 @@ export class I18nDatePipe implements OnDestroy, PipeTransform {
     private subscription: Subscription;
 
     constructor(
-        private translate: I18nService,
+        private i18n: I18nService,
         private changeDetector: ChangeDetectorRef,
     ) {
-        this.subscription = translate.onLanguageChange().subscribe(() => {
+        this.subscription = i18n.onLanguageChange().subscribe(() => {
             this.changeDetector.markForCheck();
         });
     }
@@ -43,6 +43,6 @@ export class I18nDatePipe implements OnDestroy, PipeTransform {
     }
 
     transform(value: Date | number, format: KnownDateFormatName = 'date'): string {
-        return formatI18nDate(value, this.translate.getCurrentLanguage(), format);
+        return formatI18nDate(value, this.i18n.getCurrentLanguage(), format);
     }
 }

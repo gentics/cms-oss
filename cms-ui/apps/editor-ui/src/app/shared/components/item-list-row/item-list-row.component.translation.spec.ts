@@ -1,6 +1,7 @@
-
 import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 import {
     AnyModelType,
     Node,
@@ -9,8 +10,6 @@ import {
 } from '@gentics/cms-models';
 import { getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { ModalService } from '@gentics/ui-core';
-import { mockPipe } from '@gentics/ui-core/testing';
-import { I18nService } from '@gentics/cms-components';
 import { WindowRef } from 'ngx-autosize';
 import { ItemLanguageClickEvent } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
@@ -22,7 +21,6 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { ApplicationStateService, FolderActionsService, UsageActionsService, WastebinActionsService } from '../../../state';
 import { ItemListRowComponent } from './item-list-row.component';
 
-
 describe('ItemListRowComponent', () => {
     const nodeId = 1;
     let component: ItemListRowComponent;
@@ -31,11 +29,10 @@ describe('ItemListRowComponent', () => {
     let folderActionsService: jasmine.SpyObj<FolderActionsService>;
     const errorHandlerServiceSpy: jasmine.SpyObj<ErrorHandler> = jasmine.createSpyObj('ErrorHandler', ['catch']);
 
-
     beforeEach(async () => {
-        const mockedNode: jasmine.SpyObj<Node<AnyModelType>> = jasmine.createSpyObj('Node',[], [
-            {id: nodeId},
-        ])
+        const mockedNode: jasmine.SpyObj<Node<AnyModelType>> = jasmine.createSpyObj('Node', [], [
+            { id: nodeId },
+        ]);
         const decisionModalServiceSpy = jasmine.createSpyObj('DecisionModalsService', ['showTranslatePageDialog']);
         const folderActionServiceSpy = jasmine.createSpyObj('FolderActionsService', ['updatePageLanguage', 'refreshList']);
         const modalServiceSpy = jasmine.createSpyObj('ModalService', ['fromComponent', 'open']);
@@ -46,7 +43,10 @@ describe('ItemListRowComponent', () => {
         modalServiceSpy.open.and.returnValue(Promise.resolve({}));
 
         await TestBed.configureTestingModule({
-            declarations: [ItemListRowComponent, mockPipe('i18n')],
+            declarations: [
+                ItemListRowComponent,
+                MockI18nPipe,
+            ],
             providers: [
                 { provide: DecisionModalsService, useValue: decisionModalServiceSpy },
                 { provide: ErrorHandler, useValue: errorHandlerServiceSpy },
@@ -78,32 +78,28 @@ describe('ItemListRowComponent', () => {
     });
 
     it('should call showTranslatePageDialog to open translate-page-modal', () => {
-        const pageEn = getMockedPage()
-        const languageTranslationEvent = getMockedLanguageEvent(pageEn)
+        const pageEn = getMockedPage();
+        const languageTranslationEvent = getMockedLanguageEvent(pageEn);
 
-
-        component.pageLanguageClicked(languageTranslationEvent)
-        expect(decisionModalService.showTranslatePageDialog).toHaveBeenCalledWith(pageEn, nodeId)
+        component.pageLanguageClicked(languageTranslationEvent);
+        expect(decisionModalService.showTranslatePageDialog).toHaveBeenCalledWith(pageEn, nodeId);
     });
 
-
     it('should call updatePageLanguage for page without language set', () => {
-        const pageEn = getMockedPage()
+        const pageEn = getMockedPage();
         pageEn.language = null;
-        const languageTranslationEvent = getMockedLanguageEvent(pageEn)
+        const languageTranslationEvent = getMockedLanguageEvent(pageEn);
 
-
-        component.pageLanguageClicked(languageTranslationEvent)
-        expect(folderActionsService.updatePageLanguage).toHaveBeenCalled()
+        component.pageLanguageClicked(languageTranslationEvent);
+        expect(folderActionsService.updatePageLanguage).toHaveBeenCalled();
     });
 
 });
 
-
 function getMockedPage(): Page {
     return {
         ...getExamplePageDataNormalized({ id: 1 }),
-        languageVariants: [ 1 ],
+        languageVariants: [1],
         online: true,
         language: 'en',
         deleted: {
@@ -120,5 +116,5 @@ function getMockedLanguageEvent(page: Page): ItemLanguageClickEvent<Page<Normali
         compare: false,
         source: true,
         restore: false,
-    }
+    };
 }

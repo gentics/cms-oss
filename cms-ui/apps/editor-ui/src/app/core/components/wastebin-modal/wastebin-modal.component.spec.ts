@@ -1,16 +1,17 @@
 import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { FALLBACK_LANGUAGE, I18nDatePipe, I18nService } from '@gentics/cms-components';
 import { Folder, Normalized } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
+import { NEVER, Observable } from 'rxjs';
 import { configureComponentTest } from '../../../../testing';
 import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.component';
 import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
 import { ImageThumbnailComponent } from '../../../shared/components/image-thumbnail/image-thumbnail.component';
 import { PagingControls } from '../../../shared/components/paging-controls/paging-controls.component';
 import { TypeIconPipe } from '../../../shared/pipes';
-import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
 import { ApplicationStateService, FolderActionsService, WastebinActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
@@ -34,6 +35,7 @@ describe('WastebinModal', () => {
                 { provide: ModalService, useClass: MockModalService },
                 { provide: WastebinActionsService, useClass: MockWastebinActions },
                 { provide: FolderActionsService, useClass: MockFolderActions },
+                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 WastebinModal,
@@ -78,7 +80,7 @@ describe('WastebinModal', () => {
                     folder: { list: [], requesting: true },
                     form: { list: [], requesting: false },
                     page: { list: [], requesting: false },
-                    file: { list: [], requesting: false},
+                    file: { list: [], requesting: false },
                     image: { list: [], requesting: false },
                     lastError: '',
                 },
@@ -96,7 +98,7 @@ describe('WastebinModal', () => {
                     folder: { list: [], requesting: false },
                     form: { list: [], requesting: false },
                     page: { list: [], requesting: false },
-                    file: { list: [], requesting: false},
+                    file: { list: [], requesting: false },
                     image: { list: [], requesting: false },
                     lastError: '',
                 },
@@ -114,7 +116,7 @@ describe('WastebinModal', () => {
                     folder: { list: [1234], requesting: false },
                     form: { list: [], requesting: false },
                     page: { list: [], requesting: false },
-                    file: { list: [], requesting: false},
+                    file: { list: [], requesting: false },
                     image: { list: [], requesting: false },
                     lastError: '',
                 },
@@ -137,7 +139,7 @@ describe('WastebinModal', () => {
                     folder: { list: [], requesting: false },
                     form: { list: [], requesting: false },
                     page: { list: [], requesting: false },
-                    file: { list: [], requesting: false},
+                    file: { list: [], requesting: false },
                     image: { list: [], requesting: false },
                 },
             });
@@ -184,7 +186,6 @@ describe('WastebinModal', () => {
 
 });
 
-
 class MockWastebinActions {
     getWastebinContents(): void {}
 }
@@ -197,12 +198,20 @@ class MockErrorHandler {
 
 class MockModalService {
     fromComponent = jasmine.createSpy('ModalService.fromComponent')
-        .and.returnValue(new Promise(neverResolve => {}));
+        .and.returnValue(new Promise((neverResolve) => {}));
 }
 class MockLocalizationsService {
 }
 
-class MockI18nService {
+class MockI18nService implements Partial<I18nService> {
+    public onLanguageChange(): Observable<string> {
+        return NEVER;
+    }
+
+    public getCurrentLanguage(): string {
+        return FALLBACK_LANGUAGE;
+    }
+
     translate(key: string, params?: any): string {
         return key;
     }

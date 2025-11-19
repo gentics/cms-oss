@@ -133,13 +133,12 @@ describe('FormProperties', () => {
                 declarations: [
                     TestComponent,
                     FormPropertiesComponent,
-                    mockPipes('i18n'),
                 ],
                 schemas: [NO_ERRORS_SCHEMA],
-            })
+            });
             repositoryBrowserClient = new MockRepositoryBrowserClient();
 
-        })
+        });
 
         it('useEmailPageTemplate should only be true if mailsource_pageid is set',
             componentTest(() => FormPropertiesComponent, (fixture, instance) => {
@@ -167,7 +166,7 @@ describe('FormProperties', () => {
         );
 
         it('openRepositoryBrowser returns the correct Promise and setEmailTemplatePage sets the correct ID',
-            componentTest(() => FormPropertiesComponent, fixture => {
+            componentTest(() => FormPropertiesComponent, (fixture) => {
                 const options: RepositoryBrowserOptions = { selectMultiple: false, allowedSelection: 'page' };
                 const instance: FormPropertiesComponent = fixture.componentInstance;
                 instance.ngOnInit();
@@ -181,7 +180,7 @@ describe('FormProperties', () => {
                 expect(instance.dataGroup.controls.mailsource_pageid.value).toBe(111);
             }),
         );
-    })
+    });
 });
 
 @Component({
@@ -198,6 +197,7 @@ describe('FormProperties', () => {
 class TestComponent {
     @ViewChild('propertiesForm', { static: true })
     propertiesForm: FormPropertiesComponent;
+
     isMultiLang = true;
     languages: Language[] = [];
     value = {};
@@ -234,7 +234,7 @@ class MockSelectedItemHelper {
     }
 }
 
-function getExamplePageWithNodeId({ pageId, nodeId }: { pageId: number, nodeId: number }): PageWithNodeId {
+function getExamplePageWithNodeId({ pageId, nodeId }: { pageId: number; nodeId: number }): PageWithNodeId {
     const page: PageWithNodeId = getExamplePageData({ id: pageId }) as any;
     page.nodeId = nodeId;
     return page;

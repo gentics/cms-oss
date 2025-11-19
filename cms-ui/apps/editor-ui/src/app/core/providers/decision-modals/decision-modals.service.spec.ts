@@ -32,6 +32,7 @@ import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { LocalizationsService } from '../localizations/localizations.service';
 import { PermissionService } from '../permissions/permission.service';
 import { DecisionModalsService } from './decision-modals.service';
+import { I18nService, TranslateParameters } from '@gentics/cms-components';
 
 describe('DecisionModalsService', () => {
 
@@ -75,6 +76,7 @@ describe('DecisionModalsService', () => {
                 { provide: Api, useClass: MockApi },
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: ModalService, useClass: MockModalService },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: FeaturesActionsService, useClass: MockFeaturesActions },
@@ -959,9 +961,9 @@ class MockEntityResolver {
     }
 }
 
-class MockI18nService {
-    translate(key: string, params?: any): string {
-        return key;
+class MockI18nService implements Partial<I18nService> {
+    public instant(key: string | string[], params?: TranslateParameters): string {
+        return key as string;
     }
 }
 

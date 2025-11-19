@@ -145,8 +145,8 @@
                                 <icon left>{{ stagingMap?.[langPage?.globalId]?.included ? 'remove' : 'inventory' }}</icon>
                                 {{ 'editor.' + (stagingMap?.[langPage?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | gtxI18n:{
                                     language: language?.name,
-                                    itemType: 'common.type_page' | translate,
-                                    itemTypePlural: 'common.type_pages' | translate
+                                    itemType: 'common.type_page' |gtxI18n,
+                                    itemTypePlural: 'common.type_pages' |gtxI18n
                                 } }}
                             </gtx-dropdown-item>
                         </ng-container>

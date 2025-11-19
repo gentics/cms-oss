@@ -7,7 +7,7 @@
     <span class="type">
       {{ 'editor.item_count_header_matching' | gtxI18n:{
         count: itemCount,
-        items: ('common.type_' + itemType + (itemCount !== 1 ? 's' : '')) | translate
+        items: ('common.type_' + itemType + (itemCount !== 1 ? 's' : '')) |gtxI18n
       } }}
     </span>
   }
@@ -15,7 +15,7 @@
     <span class="type">
       {{ 'editor.item_count_header_simple' | gtxI18n:{
         count: itemCount,
-        items: ('common.type_' + itemType + (itemCount !== 1 ? 's' : '')) | translate
+        items: ('common.type_' + itemType + (itemCount !== 1 ? 's' : '')) |gtxI18n
       } }}
     </span>
   }

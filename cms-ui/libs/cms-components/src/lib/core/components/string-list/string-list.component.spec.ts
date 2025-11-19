@@ -3,7 +3,7 @@ import { tick } from '@angular/core/testing';
 import { UntypedFormControl, UntypedFormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule, InputComponent } from '@gentics/ui-core';
 import { MultiValueValidityState } from '../../../common';
-import { componentTest, configureComponentTest } from '../../../testing';
+import { componentTest, configureComponentTest } from '../../../../testing';
 import { StringListComponent } from './string-list.component';
 
 describe('StringListComponent', () => {

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FALLBACK_LANGUAGE, I18nNotificationService, I18nService, UI_LANGUAGES } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { Favourite, ItemInNode, ItemType, SortField } from '@gentics/cms-models';
 import { isEqual, merge } from 'lodash-es';

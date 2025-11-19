@@ -4,11 +4,11 @@ import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { FormEditorService } from '../../providers/form-editor/form-editor.service';
 
-export type I18nFgSource =
+export type I18nFgSource
 /** Get text for current UI language. */
-'ui' |
+  = 'ui'
 /** Get text for current content language. */
-'content';
+    | 'content';
 
 /**
  * # Gentics Form Generator translation pipe
@@ -32,7 +32,7 @@ export type I18nFgSource =
 @Pipe({
     name: 'i18nfg$',
     pure: false,
-    standalone: false
+    standalone: false,
 })
 export class I18nFgPipe implements PipeTransform {
 
@@ -44,10 +44,10 @@ export class I18nFgPipe implements PipeTransform {
         switch (source) {
             case 'ui':
                 return this.formEditorService.activeUiLanguageCode$.pipe(
-                    switchMap(langCode => {
+                    switchMap((langCode) => {
                         if (fallbackLangCode === '_content') {
                             return this.formEditorService.activeContentLanguageCode$.pipe(
-                                map(contentLangCode => this.getI18n(labelI18n, langCode, contentLangCode)),
+                                map((contentLangCode) => this.getI18n(labelI18n, langCode, contentLangCode)),
                             );
                         }
 
@@ -57,10 +57,10 @@ export class I18nFgPipe implements PipeTransform {
 
             case 'content':
                 return this.formEditorService.activeContentLanguageCode$.pipe(
-                    switchMap(langCode => {
+                    switchMap((langCode) => {
                         if (fallbackLangCode === '_ui') {
                             return this.formEditorService.activeUiLanguageCode$.pipe(
-                                map(uiLangCode => this.getI18n(labelI18n, langCode, uiLangCode)),
+                                map((uiLangCode) => this.getI18n(labelI18n, langCode, uiLangCode)),
                             );
                         }
 

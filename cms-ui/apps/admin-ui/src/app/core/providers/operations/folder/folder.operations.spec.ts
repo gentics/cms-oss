@@ -1,10 +1,12 @@
-import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
 import { createDelayedError, createDelayedObservable } from '@admin-ui/testing';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { MockI18nNotificationService, MockI18nService } from '@gentics/cms-components/testing';
 import { Folder, Raw, RecursivePartial } from '@gentics/cms-models';
 import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { takeUntil } from 'rxjs/operators';
+import { InterfaceOf, ObservableStopper } from '../../../../common';
 import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { ErrorHandler } from '../../error-handler';
@@ -32,6 +34,8 @@ describe('FolderOperations', () => {
                 { provide: EntityManagerService, useClass: MockEntityManagerService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: GcmsApi, useClass: MockApi },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
             ],
         });
 

@@ -13,7 +13,6 @@ export * from './group-data/group-data.service';
 export * from './group-user-data/group-user-data.service';
 export * from './markup-language-data/markup-language-data.service';
 export * from './node-data/node-data.service';
-export * from './notification/notification.service';
 export * from './role-data/role-data.service';
 export * from './schedule-data/schedule-data.service';
 export * from './schedule-execution-data/schedule-execution-data.service';

@@ -1,12 +1,13 @@
-import { InterfaceOf } from '@admin-ui/common';
-import { RouteData } from '@admin-ui/common/models/routing';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { take } from 'rxjs/operators';
 import { createDelayedObservable } from '../../../../testing';
+import { InterfaceOf, RouteData } from '../../../common';
 import { PermissionsService, RequiredPermissions } from '../../providers';
 import { PermissionsGuard } from './permissions.guard';
+import { I18nNotificationService } from '@gentics/cms-components';
+import { MockI18nNotificationService } from '@gentics/cms-components/testing';
 
 const TYPE1 = AccessControlledType.MAINTENANCE;
 const TYPE2 = AccessControlledType.USER_ADMIN;
@@ -33,6 +34,7 @@ describe('PermissionsGuard', () => {
                 PermissionsGuard,
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: Router, useClass: MockRouter },
+                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
                 { provide: ActivatedRoute, useValue: { snapshot } },
             ],
         });

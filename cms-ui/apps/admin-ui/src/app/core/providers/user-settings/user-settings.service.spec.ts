@@ -1,5 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { I18nService } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { of } from 'rxjs';
 import { first, takeUntil } from 'rxjs/operators';
@@ -47,14 +48,15 @@ describe('UserSettingsService', () => {
             ],
             providers: [
                 UserSettingsService,
-                { provide: AppStateService, useExisting: TestAppState },
-                { provide: EditorUiLocalStorageService, useExisting: MockEditorLocalStorage },
-                { provide: ServerStorageService, useExisting: MockServerStorageService },
+                { provide: AppStateService, useClass: TestAppState },
+                { provide: EditorUiLocalStorageService, useClass: MockEditorLocalStorage },
+                { provide: ServerStorageService, useClass: MockServerStorageService },
                 { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },
+                { provide: I18nService, useClass: MockI18nService },
             ],
         });
 
-        appState = TestBed.inject(TestAppState);
+        appState = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
         userSettings = TestBed.inject(UserSettingsService);
     });
@@ -139,7 +141,7 @@ describe('UserSettingsService', () => {
             appState.trackActions().pipe(
                 ofActionDispatched(SetUISettings as ActionType),
                 takeUntil(stopper.stopper$),
-            ).subscribe(action => dispatchedActions.push(action));
+            ).subscribe((action) => dispatchedActions.push(action));
         });
 
         function simulateLogin(userId: number, runTick: boolean = true): void {
@@ -221,7 +223,7 @@ describe('UserSettingsService', () => {
             tick();
 
             expect(serverStorage.set).toHaveBeenCalledTimes(1);
-            expect(serverStorage.set).toHaveBeenCalledWith(`uiLanguage`, 'en');
+            expect(serverStorage.set).toHaveBeenCalledWith('uiLanguage', 'en');
         }));
 
         it('does not save settings, while they are being loaded from the server', fakeAsync(() => {

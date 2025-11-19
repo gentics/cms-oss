@@ -5,10 +5,5 @@ import { I18nNotificationService } from '@gentics/cms-components';
 export class NotificationService {
     constructor(protected notification: I18nNotificationService) {}
 
-    notificationNoneSelected(): void {
-        this.notification.show({
-            type: 'warning',
-            message: 'shared.no_row_selected_warning',
-        });
-    }
+
 }

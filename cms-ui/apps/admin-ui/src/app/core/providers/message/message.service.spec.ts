@@ -1,13 +1,14 @@
 import { AppStateService } from '@admin-ui/state';
 import { discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { TypePermissions, UniformTypePermissions } from '@gentics/cms-components';
+import { I18nService, TypePermissions, UniformTypePermissions } from '@gentics/cms-components';
 import { AccessControlledType } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { GenticsUICoreModule, NotificationService } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
 import { PermissionsService } from '../permissions/permissions.service';
 import { MessageService } from './message.service';
+import { MockI18nService } from '@gentics/cms-components/testing';
 
 class MockGcmsApi {}
 
@@ -45,6 +46,8 @@ describe('MessageService', () => {
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: GcmsApi, useClass: MockGcmsApi },
                 { provide: PermissionsService, useClass: MockPermissionsService },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: NotificationService, }
             ],
         });
 

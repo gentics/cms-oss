@@ -1,5 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, TranslatedNotificationOptions } from '@gentics/cms-components';
 import { IndexByKey, MaintenanceModeResponse, ResponseCode } from '@gentics/cms-models';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
@@ -68,7 +68,9 @@ describe('MaintenanceModeService', () => {
 
     afterEach(() => {
         stopper.stop();
-        if (subscription) { subscription.unsubscribe(); }
+        if (subscription) {
+            subscription.unsubscribe();
+        }
     });
 
     it('does not perform any requests initially', () => {
@@ -269,7 +271,7 @@ describe('MaintenanceModeService', () => {
             subscription = service.displayNotificationWhenActive();
 
             let currentNotification: { dismiss(): void };
-            let clickNotificationButton: Function;
+            let clickNotificationButton: () => void;
             notification.show = jasmine.createSpy('show')
                 .and.callFake((options: TranslatedNotificationOptions) => {
                     clickNotificationButton = options.action.onClick;
@@ -308,7 +310,7 @@ describe('MaintenanceModeService', () => {
             subscription = service.displayNotificationWhenActive();
 
             let currentNotification: { dismiss(): void };
-            let clickNotificationButton: Function;
+            let clickNotificationButton: () => void;
             notification.show = jasmine.createSpy('show')
                 .and.callFake((options: TranslatedNotificationOptions) => {
                     clickNotificationButton = options.action.onClick;

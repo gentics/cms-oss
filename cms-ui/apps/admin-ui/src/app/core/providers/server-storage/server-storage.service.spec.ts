@@ -1,3 +1,4 @@
+import { MockErrorHandler } from '@admin-ui/testing';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
@@ -8,7 +9,6 @@ import { NEVER, of } from 'rxjs';
 import { API_BASE_URL } from '../../../common';
 import { AppStateService } from '../../../state';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
-import { MockErrorHandler } from '../error-handler/error-handler.mock';
 import { ServerStorageService } from './server-storage.service';
 
 const testData = { test: 'data', x: 9 };
@@ -41,7 +41,7 @@ describe('ServerStorage', () => {
         http = TestBed.inject(HttpClient);
         httpTestingController = TestBed.inject(HttpTestingController);
         errorHandler = new MockErrorHandler();
-        const sid$ = appState.select(state => state.auth.sid);
+        const sid$ = appState.select((state) => state.auth.sid);
         const apiBase = new ApiBase(http, {} as any as FileUploaderFactory, API_BASE_URL, sid$, errorHandler as any);
         api = new GcmsApi(apiBase);
         serverStorage = new ServerStorageService(api);
@@ -60,7 +60,7 @@ describe('ServerStorage', () => {
             expect(serverStorage.supported).toBe('unknown');
 
             let result: any;
-            serverStorage.getAll().subscribe(all => result = all);
+            serverStorage.getAll().subscribe((all) => result = all);
 
             expect(api.userData.getAllKeys).toHaveBeenCalled();
             expect(result).toEqual({ key1: 'value1', key2: 1234 });
@@ -78,7 +78,7 @@ describe('ServerStorage', () => {
         it('marks user storage as unsupported if the server responds with a HTTP 500', () => {
             expect(serverStorage.supported).toBe('unknown');
             let result: any;
-            serverStorage.getAll().subscribe(all => result = all);
+            serverStorage.getAll().subscribe((all) => result = all);
             const req = expectOneRequest(httpTestingController, 'user/me/data', 'GET');
             respondTo(req, createApiNotImplementedResponse());
             expect(result).toEqual({});
@@ -90,7 +90,7 @@ describe('ServerStorage', () => {
             serverStorage.supported$.next(false);
 
             let result: any;
-            serverStorage.getAll().subscribe(all => result = all);
+            serverStorage.getAll().subscribe((all) => result = all);
 
             expect(result).toEqual({});
             expect(api.userData.getAllKeys).not.toHaveBeenCalled();
@@ -108,7 +108,7 @@ describe('ServerStorage', () => {
 
             let userData: any;
             serverStorage.get('testData')
-                .subscribe(storedData => { userData = storedData; });
+                .subscribe((storedData) => { userData = storedData; });
 
             expect(api.userData.getKey).toHaveBeenCalledWith('testData');
             expect(userData).toEqual(testData);
@@ -127,7 +127,7 @@ describe('ServerStorage', () => {
             expect(serverStorage.supported).toBe('unknown');
             let userData: any;
             serverStorage.get('testData')
-                .subscribe(storedData => { userData = storedData; });
+                .subscribe((storedData) => { userData = storedData; });
             const req = expectOneRequest(httpTestingController, 'user/me/data/testData', 'GET');
             respondTo(req, createApiNotImplementedResponse());
             expect(userData).toBeNull();
@@ -140,7 +140,7 @@ describe('ServerStorage', () => {
 
             let userData: any;
             serverStorage.get('testData')
-                .subscribe(storedData => { userData = storedData; });
+                .subscribe((storedData) => { userData = storedData; });
             expect(userData).toBeNull();
             expect(api.userData.getKey).not.toHaveBeenCalled();
         });
@@ -157,7 +157,7 @@ describe('ServerStorage', () => {
 
             let userData: any;
             serverStorage.set('testData', testData)
-                .then(result => userData = result);
+                .then((result) => userData = result);
             tick();
 
             expect(api.userData.setKey).toHaveBeenCalledWith('testData', testData);
@@ -168,7 +168,7 @@ describe('ServerStorage', () => {
             expect(serverStorage.supported).toBe('unknown');
             serverStorage.set('testData', testData);
             const req = expectOneRequest(httpTestingController, 'user/me/data/testData', 'POST');
-            respondTo(req, {body: {responseInfo: {responseCode: ResponseCode.OK}}});
+            respondTo(req, { body: { responseInfo: { responseCode: ResponseCode.OK } } });
             tick();
             expect(serverStorage.supported).toBe(true);
         }));
@@ -177,7 +177,7 @@ describe('ServerStorage', () => {
             expect(serverStorage.supported).toBe('unknown');
             let userData: any;
             serverStorage.set('testData', testData)
-                .then(result => { userData = result; });
+                .then((result) => { userData = result; });
             const req = expectOneRequest(httpTestingController, 'user/me/data/testData', 'POST');
             respondTo(req, createApiNotImplementedResponse());
             tick();
@@ -192,8 +192,8 @@ describe('ServerStorage', () => {
             let userData: any;
             let thrownError: any;
             serverStorage.set('testData', testData)
-                .then(result => userData = result)
-                .catch(err => thrownError = err);
+                .then((result) => userData = result)
+                .catch((err) => thrownError = err);
             const req = expectOneRequest(httpTestingController, 'user/me/data/testData', 'POST');
             respondTo(req, createApiNotImplementedResponse());
             tick();
@@ -209,7 +209,7 @@ describe('ServerStorage', () => {
 
             let userData: any;
             serverStorage.set('testData', testData)
-                .then(result => userData = result);
+                .then((result) => userData = result);
             tick();
             expect(userData).toEqual(testData);
             expect(api.userData.setKey).not.toHaveBeenCalled();

@@ -1,5 +1,3 @@
-import { InterfaceOf, MultiModuleUserActionPermissions, USER_ACTION_PERMISSIONS, UserActionPermissions } from '@admin-ui/common';
-import { PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '@admin-ui/core';
 import { componentTest } from '@admin-ui/testing';
 import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
@@ -8,7 +6,16 @@ import { ButtonComponent, GenticsUICoreModule, InputComponent } from '@gentics/u
 import { cloneDeep } from 'lodash-es';
 import { BehaviorSubject } from 'rxjs';
 import { delay } from 'rxjs/operators';
+import {
+    InterfaceOf,
+    MultiModuleUserActionPermissions,
+    USER_ACTION_PERMISSIONS,
+    UserActionPermissions,
+} from '../../../common';
+import { PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '../../../core';
 import { ACTION_HIDDEN_CSS_CLASS, ActionAllowedDirective, DEFAULT_DISABLED_TOOLTIP } from './action-allowed.directive';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 
 function assembleTestTemplate(additionalAttributes: string): string {
     return `<gtx-button #actionButton [gtxActionAllowed]="userAction" ${additionalAttributes}>Action Button</gtx-button>`;
@@ -196,6 +203,7 @@ describe('ActionAllowedDirective', () => {
             providers: [
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: USER_ACTION_PERMISSIONS, useValue: cloneDeep(MOCK_USER_ACTIONS as MultiModuleUserActionPermissions) },
+                { provide: I18nService, useClass: MockI18nService },
             ],
             schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();

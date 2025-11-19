@@ -1,6 +1,8 @@
 import { getTestBed, TestModuleMetadata } from '@angular/core/testing';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nPipe, MockI18nService } from '@gentics/cms-components/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipe } from '@gentics/ui-core/testing';
+import { mockPipes } from '@gentics/ui-core/testing';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -22,8 +24,13 @@ export function configureComponentTest(config: TestModuleMetadata): void {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
         imports: [GenticsUICoreModule.forRoot()],
-        declarations: [mockPipe('translate')],
-        providers: [],
+        declarations: [
+            MockI18nPipe,
+            ...mockPipes('gtxI18nDate'),
+        ],
+        providers: [
+            { provide: I18nService, useClass: MockI18nService },
+        ],
     };
 
     const mergedConfig: TestModuleMetadata = {

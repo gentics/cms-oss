@@ -1,7 +1,3 @@
-import { ConstructorOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '@admin-ui/common';
-import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
-import { AddTypePermissionsMap, AppStateService } from '@admin-ui/state';
-import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
     InstancePermissions,
@@ -23,10 +19,13 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { Observable, throwError, timer } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
-import { createDelayedObservable } from '../../../../testing';
+import { MockErrorHandler, createDelayedObservable } from '../../../../testing';
+import { ConstructorOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF, deepFreeze } from '../../../common';
+import { AddTypePermissionsMap, AppStateService } from '../../../state';
+import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
 import { ErrorHandler } from '../error-handler';
-import { MockErrorHandler } from '../error-handler/error-handler.mock';
 import { PermissionsService, RequiredInstancePermissions, RequiredPermissions, RequiredTypePermissions } from './permissions.service';
+;
 
 const MOCK_PERM_MAP1: PermissionsMapCollection = {
     permissions: {
@@ -122,7 +121,7 @@ describe('PermissionsService', () => {
 
         Object.keys(expectedPermissions.permissions).forEach((perm: GcmsPermission) => {
             const expectedValue = expectedPermissions.permissions[perm];
-            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
             expect(actualPermissions.hasPermission(perm)).toBe(expectedValue, `Expected permission '${perm}' to be ${expectedValue}`);
         });
     }
@@ -141,7 +140,7 @@ describe('PermissionsService', () => {
             appState.trackActions().pipe(
                 ofActionDispatched(AddTypePermissionsMap as ActionType),
                 takeUntil(stopper.stopper$),
-            ).subscribe(action => dispatchedAddActions.push(action));
+            ).subscribe((action) => dispatchedAddActions.push(action));
         });
 
         function assertAddActionDispatched(expectedType: AccessControlledType, expectedPermissions: PermissionsMapCollection): void {
@@ -155,7 +154,7 @@ describe('PermissionsService', () => {
             let permissions: TypePermissions;
             permissionsService.getTypePermissions(type).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(perms => permissions = perms);
+            ).subscribe((perms) => permissions = perms);
 
             expect(permissions).toBeUndefined();
             tick();
@@ -172,7 +171,7 @@ describe('PermissionsService', () => {
             let permissions: TypePermissions;
             permissionsService.getTypePermissions(type).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(perms => permissions = perms);
+            ).subscribe((perms) => permissions = perms);
 
             assertTypePermissionsCorrect(permissions, type, MOCK_PERM_MAP1);
             expect(api.permissions.getPermissionsForType).not.toHaveBeenCalled();
@@ -184,7 +183,7 @@ describe('PermissionsService', () => {
             let permissions: TypePermissions;
             permissionsService.getTypePermissions(type, true).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(perms => permissions = perms);
+            ).subscribe((perms) => permissions = perms);
 
             expect(permissions).toBeUndefined('Permissions should have been refetched.');
             tick();
@@ -203,7 +202,7 @@ describe('PermissionsService', () => {
 
             permissionsService.getTypePermissions(type).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(perms => {
+            ).subscribe((perms) => {
                 permissions = perms;
                 ++emissionCount;
             });
@@ -228,7 +227,7 @@ describe('PermissionsService', () => {
             );
             permissionsService.getTypePermissions(type).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(perms => permissions1 = perms);
+            ).subscribe((perms) => permissions1 = perms);
 
             expect(permissions1).toBeUndefined();
             expect(api.permissions.getPermissionsForType).toHaveBeenCalledTimes(1);
@@ -242,7 +241,7 @@ describe('PermissionsService', () => {
             api.permissions.getPermissionsForType.and.returnValue(mockPermissionsResponse(MOCK_PERM_MAP2));
             permissionsService.getTypePermissions(type).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(perms => permissions2 = perms);
+            ).subscribe((perms) => permissions2 = perms);
 
             expect(permissions2).toBeUndefined();
             expect(api.permissions.getPermissionsForType).toHaveBeenCalledTimes(2);
@@ -273,7 +272,7 @@ describe('PermissionsService', () => {
             let permissions: InstancePermissions;
             permissionsService.getInstancePermissions(type, instanceId, nodeId).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(perms => permissions = perms);
+            ).subscribe((perms) => permissions = perms);
 
             tick();
 
@@ -301,7 +300,7 @@ describe('PermissionsService', () => {
             );
             permissionsService.getInstancePermissions(type, INSTANCE_ID, NODE_ID).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(perms => permissions = perms);
+            ).subscribe((perms) => permissions = perms);
 
             expect(api.permissions.getPermissionsForInstance).toHaveBeenCalledTimes(1);
             tick();
@@ -390,16 +389,16 @@ describe('PermissionsService', () => {
 
         function setUpTypePermissions(mockedPermissions: Partial<Record<AccessControlledType, Partial<GcmsPermissionsMap>>>): void {
             getTypePermissionsSpy.and.callFake(
-                type => createDelayedObservable(new TypePermissionsImpl(type, { permissions: mockedPermissions[type] })),
+                (type) => createDelayedObservable(new TypePermissionsImpl(type, { permissions: mockedPermissions[type] })),
             );
         }
 
         function setUpInstancePermissions(
-            mockedPermissions: { type: AccessControlledType, instanceId: number, nodeId?: number, permissions: Partial<GcmsPermissionsMap> }[],
+            mockedPermissions: { type: AccessControlledType; instanceId: number; nodeId?: number; permissions: Partial<GcmsPermissionsMap> }[],
         ): void {
             getInstancePermissionsSpy.and.callFake((type, instanceId, nodeId) => {
                 const permissions = mockedPermissions.find(
-                    mockedPerms => mockedPerms.type === type && mockedPerms.instanceId === instanceId && mockedPerms.nodeId === nodeId,
+                    (mockedPerms) => mockedPerms.type === type && mockedPerms.instanceId === instanceId && mockedPerms.nodeId === nodeId,
                 );
                 return createDelayedObservable(new InstancePermissionsImpl(type, { permissions: permissions.permissions }, instanceId, nodeId));
             });
@@ -416,7 +415,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(true);
@@ -433,7 +432,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(false);
@@ -451,7 +450,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(true);
@@ -471,7 +470,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(false);
@@ -494,7 +493,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(true);
@@ -516,7 +515,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(false);
@@ -535,7 +534,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(true);
@@ -557,7 +556,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(false);
@@ -576,7 +575,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(true);
@@ -599,7 +598,7 @@ describe('PermissionsService', () => {
                 let permsGranted: boolean;
                 permissionsService.checkPermissions(requiredPerms).pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(result => permsGranted = result);
+                ).subscribe((result) => permsGranted = result);
 
                 tick();
                 expect(permsGranted).toBe(true);
@@ -634,7 +633,7 @@ describe('PermissionsService', () => {
             let emissionsCount = 0;
             permissionsService.checkPermissions(requiredPerms).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 permsGranted = result;
                 ++emissionsCount;
             });

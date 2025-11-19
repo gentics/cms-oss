@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
-import { INotificationOptions, NotificationService } from '@gentics/ui-core';
+import { NotificationService } from '@gentics/ui-core';
+import { TranslatedNotificationOptions } from '../../../common/models';
 import { I18nService } from '../i18n/i18n.service';
-
-export interface TranslatedNotificationOptions extends INotificationOptions {
-    translationParams?: { [key: string]: any };
-}
 
 /**
  * A drop-in replacement for the GUIC Notification service, which is able to transparently

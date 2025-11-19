@@ -1,3 +1,4 @@
+import { INotificationOptions } from '@gentics/ui-core';
 import { InterpolationParameters } from '@ngx-translate/core';
 
 export const FALLBACK_LANGUAGE = 'en';
@@ -10,6 +11,10 @@ export interface ParametizedI18nKey {
 
     /** Parameters that should be passed to the I18nService. */
     params: TranslateParameters;
+}
+
+export interface TranslatedNotificationOptions extends INotificationOptions {
+    translationParams?: { [key: string]: any };
 }
 
 export interface JoinOptions {

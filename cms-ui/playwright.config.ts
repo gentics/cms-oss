@@ -1,4 +1,4 @@
-/* eslint-disable import/no-nodejs-modules,import/order */
+/* eslint-disable import-x/no-nodejs-modules */
 import {
     ENV_E2E_APP_PATH,
     ENV_E2E_APP_URL,
@@ -13,7 +13,7 @@ import {
 import { nxE2EPreset } from '@nx/playwright/preset';
 import { defineConfig, devices, PlaywrightTestConfig } from '@playwright/test';
 import { config } from 'dotenv';
-import { dirname, resolve } from 'path';
+import { dirname, resolve } from 'node:path';
 
 export function createConfiguration(
     originalConfig: string,
@@ -89,9 +89,11 @@ export function createConfiguration(
              * For consistency (and the only way for us right now to run the tests stable in Jenkins),
              * the actual playwright server is being run as container/service in the integration-tests setup.
              */
-            connectOptions: isCI || !useLocalPlaywright ? {
-                wsEndpoint: 'ws://127.0.0.1:3000/',
-            } : null,
+            connectOptions: isCI || !useLocalPlaywright
+                ? {
+                    wsEndpoint: 'ws://127.0.0.1:3000/',
+                }
+                : null,
             bypassCSP: true,
             /* Make sure we have a consistent timezone for our tests. */
             timezoneId: 'Europe/Vienna',

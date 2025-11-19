@@ -1,5 +1,7 @@
 import { TestBed, fakeAsync } from '@angular/core/testing';
 import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.mock';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { TagEditorContext, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -15,7 +17,6 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
 import { NEVER, Observable } from 'rxjs';
@@ -49,7 +50,7 @@ describe('TagEditorService', () => {
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
-                { provide: I18nService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: ModalService, useClass: MockModalService },
                 { provide: ApiBase, useClass: MockBaseApiService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -108,7 +109,7 @@ describe('TagEditorService', () => {
         expect(tagEditorContext.sid).toBe(state.now.auth.sid);
         expect(tagEditorContext.translator instanceof TranslatorImpl).toBeTruthy();
         let actualContext: VariableTagEditorContext = null;
-        tagEditorContext.variableContext.subscribe(context => actualContext = context);
+        tagEditorContext.variableContext.subscribe((context) => actualContext = context);
         expect(actualContext).toEqual(expectedVarContext);
     }
 
@@ -214,9 +215,9 @@ describe('TagEditorService', () => {
     it('createTagEditorContext() handles cyclic references in the page object correctly', fakeAsync(() => {
         const data = getTagEditorContextInitData();
         const expectedData = cloneDeep(data);
-        const pageVariants = [ data.tagOwner ];
+        const pageVariants = [data.tagOwner];
         const languageVariants = { 1: data.tagOwner as any };
-        data.tagOwner.pageVariants = [ ...pageVariants ];
+        data.tagOwner.pageVariants = [...pageVariants];
         data.tagOwner.languageVariants = { ...languageVariants };
 
         let tagEditorContext: TagEditorContext;
@@ -237,7 +238,7 @@ describe('TagEditorService', () => {
         const expectedVarContext: VariableTagEditorContext = { uiLanguage: state.now.ui.language };
         let actualVarContext: VariableTagEditorContext;
         let subscriberCalled = 0;
-        tagEditorContext.variableContext.subscribe(varContext => {
+        tagEditorContext.variableContext.subscribe((varContext) => {
             ++subscriberCalled;
             actualVarContext = varContext;
         });
@@ -251,8 +252,7 @@ describe('TagEditorService', () => {
     }));
 });
 
-
-function getTagEditorInitData(): { tag: Tag, tagType: TagType, page: Page<Raw>} {
+function getTagEditorInitData(): { tag: Tag; tagType: TagType; page: Page<Raw> } {
     const tag = getExampleEditableTag();
     const tagType = tag.tagType;
     delete tag.tagType;
@@ -290,8 +290,6 @@ class MockRepositoryBrowserClient {
     openRepositoryBrowser(): void { }
 }
 
-class MockTranslateService { }
-
 class MockModalService {
     fromComponent(): Promise<void> {
         return Promise.resolve();
@@ -302,11 +300,12 @@ class MockBaseApiService {
     get(): Observable<never> {
         return NEVER;
     }
+
     post(): Observable<never> {
         return NEVER;
     }
+
     delete(): Observable<never> {
         return NEVER;
     }
 }
-

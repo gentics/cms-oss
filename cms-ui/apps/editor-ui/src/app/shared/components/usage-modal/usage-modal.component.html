@@ -1,6 +1,6 @@
 <div class="modal-title">
   <h5>{{ 'modal.object_usage_title' | gtxI18n: {
-    type: ('common.type_' + item.type) | translate,
+    type: ('common.type_' + item.type) |gtxI18n,
     name: item.name
   } }}</h5>
 </div>
@@ -22,7 +22,7 @@
             <div class="type-usage-header">
               {{ usageCountMap[usage] > 1
               ? (('common.type_' + usage + '_counts') | gtxI18n:{ count: usageCountMap[usage] })
-              : ('common.type_' + usage + '_singular') | translate
+              : ('common.type_' + usage + '_singular') |gtxI18n
               }}
             </div>
           }
@@ -56,7 +56,7 @@
               <div class="type-usage-header">
                 {{ linkCountMap[link] > 1
                 ? (('common.type_' + link + '_counts') | gtxI18n:{ count: linkCountMap[link] })
-                : ('common.type_' + link + '_singular') | translate
+                : ('common.type_' + link + '_singular') |gtxI18n
                 }}
               </div>
             }

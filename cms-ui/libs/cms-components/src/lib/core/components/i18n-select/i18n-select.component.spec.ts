@@ -5,7 +5,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { MockI18nPipe } from '../../../testing';
+import { MockI18nPipe } from '../../../../testing';
 import { I18nSelectComponent } from './i18n-select.component';
 
 const DEFAULT_LANGUAGE = 'de';

@@ -1,11 +1,11 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NavigationEnd, Router } from '@angular/router';
-import { KeycloakService, WindowRef } from '@gentics/cms-components';
+import { I18nService, KeycloakService, WindowRef } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { EmbeddedTool } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { Subject } from 'rxjs';
 import { Api, ApiBase } from '../../../core/providers/api';
@@ -30,7 +30,7 @@ describe('EmbeddedToolsService', () => {
                 { provide: ApiBase, useClass: MockApiBase },
                 { provide: ModalService, useClass: MockModalService },
                 { provide: Router, useClass: MockRouter },
-                { provide: I18nService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: ToolApiChannelService, useClass: MockApiChannelService },
                 { provide: WindowRef, useClass: MockWindowRef },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -201,12 +201,6 @@ class MockModalService {
                 this.closeLastDialog = resolve;
             }),
         });
-    }
-}
-
-class MockTranslateService {
-    instant(key: string): string {
-        return key;
     }
 }
 

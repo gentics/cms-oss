@@ -47,7 +47,6 @@ xdescribe('CreatePageModal', () => {
                 DynamicDisableDirective,
                 PagePropertiesComponent,
                 TestComponent,
-                mockPipes('i18nDate'),
             ],
         });
 

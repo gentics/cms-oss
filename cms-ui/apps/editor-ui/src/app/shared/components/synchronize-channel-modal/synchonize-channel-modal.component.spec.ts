@@ -12,6 +12,7 @@ import { EntityResolver } from '../../../core/providers/entity-resolver/entity-r
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { replaceInState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { SynchronizeChannelModal } from './synchonize-channel-modal.component';
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 
 describe('SynchronizeChannelModal', () => {
 
@@ -33,12 +34,13 @@ describe('SynchronizeChannelModal', () => {
                 EntityResolver,
             ],
             declarations: [
+                MockI18nPipe,
                 SynchronizeChannelModal,
                 MockButton,
                 MockCheckbox,
                 MockNodeSelector,
                 MockProgressBar,
-                mockPipes('capitalize', 'i18n', 'truncatePath', 'itemIsLocal', 'itemIsLocalized'),
+                mockPipes('capitalize', 'truncatePath', 'itemIsLocal', 'itemIsLocalized'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });

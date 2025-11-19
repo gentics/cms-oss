@@ -5,7 +5,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
 import { ButtonComponent, DropdownItemComponent, GenticsUICoreModule, SideMenuComponent } from '@gentics/ui-core';
-import { componentTest, configureComponentTest, MockI18nPipe } from '../../../testing';
+import { componentTest, configureComponentTest, MockI18nPipe } from '../../../../testing';
 import { UserMenuToggleComponent } from '../user-menu-toggle/user-menu-toggle.component';
 import { UserMenuComponent } from './user-menu.component';
 

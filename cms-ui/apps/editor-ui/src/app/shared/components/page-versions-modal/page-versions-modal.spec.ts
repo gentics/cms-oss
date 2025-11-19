@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { Page, PageResponse, ResponseCode } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
 import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { componentTest, configureComponentTest } from '../../../../testing';
@@ -35,7 +34,6 @@ describe('PageVersionsModal', () => {
             declarations: [
                 PageVersionsModal,
                 TestComponent,
-                mockPipes('i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });

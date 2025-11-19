@@ -41,7 +41,7 @@
       <span>
         {{ 'modal.create_files_button' | gtxI18n:{
             count: totalFileCount - selectedCount(),
-            type: ('common.type_file' + (totalFileCount - selectedCount() !== 1 ? 's' : '')) | translate
+            type: ('common.type_file' + (totalFileCount - selectedCount() !== 1 ? 's' : '')) |gtxI18n
         } }}
       </span>
     }
@@ -49,7 +49,7 @@
       <span>
         {{ 'modal.replace_files_button' | gtxI18n:{
             count: selectedCount(),
-            type: ('common.type_file' + (selectedCount() !== 1 ? 's' : '')) | translate
+            type: ('common.type_file' + (selectedCount() !== 1 ? 's' : '')) |gtxI18n
         } }}
       </span>
     }

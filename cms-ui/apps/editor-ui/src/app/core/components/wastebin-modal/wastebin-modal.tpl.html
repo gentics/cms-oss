@@ -17,7 +17,7 @@
     <div class="small-12 medium-6 columns selected-actions" [class.disabled]="!itemsSelected()">
       <span class="selection-count">{{ 'modal.selected_count' | gtxI18n:{
             count: selectionCount(),
-            type: 'common.type_object' + (selectionCount() !== 1 ? 's' : '') | translate
+            _type: 'object'
         } }}:</span>
       <gtx-button (click)="restoreSelected()"
         [disabled]="!itemsSelected()"

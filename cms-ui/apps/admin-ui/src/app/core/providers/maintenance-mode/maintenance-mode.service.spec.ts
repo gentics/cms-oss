@@ -61,7 +61,7 @@ describe('MaintenanceModeService', () => {
         }).compileComponents();
 
         appState = TestBed.inject(TestAppState);
-        notification = TestBed.inject(MockI18nNotificationService);
+        notification = TestBed.inject(I18nNotificationService) as any;
         service = TestBed.inject(MaintenanceModeService);
         stopper = new ObservableStopper();
     });

@@ -505,7 +505,6 @@ describe('FolderContentsComponent', () => {
                 TestComponent,
                 TruncatePathPipe,
                 UserFullNamePipe,
-                mockPipes('i18n', 'i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });

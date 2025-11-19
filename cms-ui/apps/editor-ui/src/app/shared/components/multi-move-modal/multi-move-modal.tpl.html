@@ -1,7 +1,7 @@
 <div class="modal-title">
   <h5>{{ 'modal.multi_move_title' | gtxI18n:{
     count: items.length,
-    type: ('common.type_' + itemType + (items.length !== 1 ? 's' : '')) | translate
+    type: ('common.type_' + itemType + (items.length !== 1 ? 's' : '')) |gtxI18n
   } }}</h5>
 </div>
 <div class="modal-content">
@@ -16,7 +16,7 @@
         <p class="lead">
           {{ 'modal.multi_move_can_not_be_moved_header_plural' | gtxI18n:{
           count: canNotBeMoved.length,
-          type: ('common.type_' + itemType + 's') | translate
+          type: ('common.type_' + itemType + 's') |gtxI18n
           } }}
         </p>
       }
@@ -59,7 +59,7 @@
       <p class="lead">
         {{ ('modal.multi_move_will_be_moved_header_' + (willBeMoved.length === 1 ? 'singular' : 'plural')) | gtxI18n:{
         count: willBeMoved.length,
-        type: ('common.type_' + itemType + (willbeMoved.length !== 1 ? 's' : '')) | translate,
+        type: ('common.type_' + itemType + (willbeMoved.length !== 1 ? 's' : '')) |gtxI18n,
         channel: targetNode.name,
         folder: targetFolder.name
         } }}
@@ -83,7 +83,7 @@
     <gtx-button type="default" (click)="confirm()" class="confirm-button">
       {{ 'modal.multi_move_confirm_button' | gtxI18n:{
         count: willBeMoved.length,
-        type: ('common.type_' + itemType + (willbeMoved.length !== 1 ? 's' : '')) | translate
+        type: ('common.type_' + itemType + (willbeMoved.length !== 1 ? 's' : '')) |gtxI18n
       } }}
     </gtx-button>
   }

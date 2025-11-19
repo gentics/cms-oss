@@ -116,7 +116,6 @@ describe('PagePropertiesComponent', () => {
             declarations: [
                 TestComponent,
                 PagePropertiesComponent,
-                ...mockPipes('i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });

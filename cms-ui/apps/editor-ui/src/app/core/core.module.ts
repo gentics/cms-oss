@@ -1,21 +1,19 @@
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
-import { inject, NgModule, Optional, provideAppInitializer, SkipSelf } from '@angular/core';
+import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {
     CmsComponentsModule,
+    FALLBACK_LANGUAGE,
     GCMS_UI_SERVICES_PROVIDER,
     I18nDatePickerFormatService,
-    KeycloakService,
 } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
-import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import DE_TRANSLATIONS from '../../../public/i18n/de.json';
-import EN_TRANSLATIONS from '../../../public/i18n/en.json';
 import { API_BASE_URL } from '../common/utils/base-urls';
 import { throwIfAlreadyLoaded } from '../common/utils/module-import-guard';
 import { EmbeddedToolsModule } from '../embedded-tools/embedded-tools.module';
@@ -148,28 +146,6 @@ const PROVIDERS = [
         useFactory: getSidFromAppState,
         deps: [ApplicationStateService],
     },
-    provideAppInitializer(() => {
-        const client = inject(GCMSRestClientService);
-        const appState = inject(ApplicationStateService);
-        const keycloak = inject(KeycloakService);
-        const translations = inject(TranslateService);
-
-        translations.setTranslation('de', DE_TRANSLATIONS, true);
-        translations.setTranslation('en', EN_TRANSLATIONS, true);
-
-        client.init({
-            connection: {
-                absolute: false,
-                basePath: '/rest',
-            },
-        });
-
-        appState.select((state) => state.auth.sid).subscribe((sid) => {
-            client.setSessionId(sid);
-        });
-
-        return keycloak.checkKeycloakAuth();
-    }),
 ];
 
 @NgModule({
@@ -187,7 +163,7 @@ const PROVIDERS = [
         CmsComponentsModule.forRoot(),
         TagEditorModule,
         TranslateModule.forRoot({
-            fallbackLang: 'en',
+            fallbackLang: FALLBACK_LANGUAGE,
         }),
     ],
     exports: [

@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import {
     ResponseCode,
     UsersnapSettings,
@@ -8,7 +10,6 @@ import {
     VersionCompatibility,
     VersionResponse,
 } from '@gentics/cms-models';
-import { I18nService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { ApplicationStateService } from '..';
@@ -44,10 +45,6 @@ const CMP_VERSION: Version = {
 
 const usersnapSettings: UsersnapSettings = { key: 'test' };
 
-class MockI18nService {
-    use = jasmine.createSpy('setLanguage');
-}
-
 class MockApi extends MockApiBase {
     i18n = {
         setActiveUiLanguage: jasmine.createSpy('setActiveUiLanguage').and.callFake(() => of({})),
@@ -67,7 +64,7 @@ class MockApi extends MockApiBase {
             },
             settings: usersnapSettings,
         })),
-    }
+    };
 }
 
 describe('UiActionsService', () => {
@@ -87,7 +84,8 @@ describe('UiActionsService', () => {
             ],
         });
         state = TestBed.inject(ApplicationStateService) as any;
-        i18n = TestBed.inject(TranslateService) as any;
+        i18n = TestBed.inject(I18nService) as any;
+        spyOn(i18n, 'setLanguage');
         apiBase = TestBed.inject(Api) as any;
         uiActions = TestBed.inject(UIActionsService);
     });
@@ -101,7 +99,7 @@ describe('UiActionsService', () => {
 
         it('changes the language of the i18n service', () => {
             uiActions.setActiveUiLanguageInFrontend('en');
-            expect(i18n.use).toHaveBeenCalledWith('en');
+            expect(i18n.setLanguage).toHaveBeenCalledWith('en');
         });
 
         it('propagates the language change to the backend', () => {

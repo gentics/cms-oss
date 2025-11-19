@@ -1,4 +1,4 @@
-import { Component, ErrorHandler, Pipe, PipeTransform, ViewChild } from '@angular/core';
+import { Component, ErrorHandler, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -16,6 +16,8 @@ import { MockErrorHandler } from '../../../core/providers/error-handler/error-ha
 import { SharedModule } from '../../../shared/shared.module';
 import { ApplicationStateService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
+import { provideTranslateService } from '@ngx-translate/core';
+import { mockPipe } from '@gentics/ui-core/testing';
 
 const MOCK_EXPORT_DOWNLOAD_INFO: FormDownloadInfo = {
     requestPending: false,
@@ -37,16 +39,16 @@ describe('FormReportListComponent', () => {
     beforeEach(() => {
         configureComponentTest({
             providers: [
-                {provide: Api, useClass: MockApi},
-                {provide: ApplicationStateService, useClass: TestApplicationState},
-                {provide: I18nNotificationService, useClass: MockI18nNotification},
-                {provide: FormEditorService, useClass: MockFormEditorService},
-                {provide: FormReportService, useClass: MockFormReportService},
-                {provide: ErrorHandler, useClass: MockErrorHandler},
-                {provide: EntityResolver, useClass: MockEntityResolver},
+                { provide: Api, useClass: MockApi },
+                { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
+                { provide: FormEditorService, useClass: MockFormEditorService },
+                { provide: FormReportService, useClass: MockFormReportService },
+                { provide: ErrorHandler, useClass: MockErrorHandler },
+                { provide: EntityResolver, useClass: MockEntityResolver },
+                provideTranslateService(),
             ],
             declarations: [
-                MockI18nDatePipe,
                 FormReportsListComponent,
                 TestComponent,
             ],
@@ -62,7 +64,7 @@ describe('FormReportListComponent', () => {
             auth: {
                 sid: 123,
             },
-        })
+        });
     });
 
     it('loads the status from the api on init',
@@ -77,7 +79,7 @@ describe('FormReportListComponent', () => {
         }),
     );
 
-})
+});
 
 @Component({
     selector: 'test-component',
@@ -86,7 +88,7 @@ describe('FormReportListComponent', () => {
     standalone: false,
 })
 class TestComponent {
-    @ViewChild(FormReportsListComponent, {static: true})
+    @ViewChild(FormReportsListComponent, { static: true })
     formReportsList: FormReportsListComponent;
 
     form = getExampleFormDataNormalized();
@@ -100,16 +102,6 @@ class MockApi {
     };
 }
 
-@Pipe({
-    name: 'i18nDate',
-    standalone: false,
-})
-class MockI18nDatePipe implements PipeTransform {
-    transform(val: any): any {
-        return val;
-    }
-}
-
 class MockI18nNotification {
     show = jasmine.createSpy('show').and.stub();
 }
@@ -121,12 +113,12 @@ class MockFormEditorService {
 
 class MockFormReportService {
     getFormElementLabelPropertyValues(): any {
-        return of({type: 'input'});
+        return of({ type: 'input' });
     }
 }
 
 class MockEntityResolver {
     getLanguage(): any {
-        return {language: 'en'}
+        return { language: 'en' };
     }
 }

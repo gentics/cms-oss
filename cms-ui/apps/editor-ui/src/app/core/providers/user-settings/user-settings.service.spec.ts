@@ -77,7 +77,6 @@ describe('UserSettingsService', () => {
     let i18nService: MockI18nService;
     let localStorage: MockLocalStorage;
     let serverStorage: MockServerStorage;
-    let inferSpy: jasmine.Spy;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -98,7 +97,6 @@ describe('UserSettingsService', () => {
 
         state = TestBed.inject(ApplicationStateService) as TestApplicationState;
         userSettings = TestBed.inject(UserSettingsService);
-        inferSpy = spyOn(userSettings, 'inferUserLanguage');
         folderActions = TestBed.inject(FolderActionsService) as any;
         publishQueueActions = TestBed.inject(PublishQueueActionsService) as any;
         uiActions = TestBed.inject(UIActionsService) as any;
@@ -116,15 +114,15 @@ describe('UserSettingsService', () => {
         it('sets the user language from localStorage if available', () => {
             localStorage.getUiLanguage.and.returnValue('testLanguage');
             userSettings.loadInitialSettings();
-            expect(i18nService.use).toHaveBeenCalledWith('testLanguage');
+            expect(i18nService.setLanguage).toHaveBeenCalledWith('testLanguage');
             expect(i18nService.inferUserLanguage).not.toHaveBeenCalled();
         });
 
         it('infers the user language if not stored in localStorage', () => {
-            inferSpy.and.returnValue('defaultLanguage');
+            i18nService.inferUserLanguage.and.returnValue('defaultLanguage');
             localStorage.getUiLanguage.and.returnValue(null);
             userSettings.loadInitialSettings();
-            expect(userSettings.inferUserLanguage).toHaveBeenCalled();
+            expect(i18nService.inferUserLanguage).toHaveBeenCalled();
             expect(i18nService.setLanguage).toHaveBeenCalledWith('defaultLanguage');
         });
 
@@ -168,9 +166,15 @@ describe('UserSettingsService', () => {
             });
             serverStorage.getAll.and.returnValue(NEVER);
             localStorage.getForUser.and.callFake((userId: number, key: string): any => {
-                if (key === 'activeLanguage') { return 'testLanguage'; }
-                if (key === 'folderSorting') { return { sortBy: 'cdate', sortOrder: 'desc' }; }
-                if (key === 'fileDisplayFields') { return ['id', 'cdate', 'filename']; }
+                if (key === 'activeLanguage') {
+                    return 'testLanguage';
+                }
+                if (key === 'folderSorting') {
+                    return { sortBy: 'cdate', sortOrder: 'desc' };
+                }
+                if (key === 'fileDisplayFields') {
+                    return ['id', 'cdate', 'filename'];
+                }
             });
 
             userSettings.loadUserSettingsWhenLoggedIn();

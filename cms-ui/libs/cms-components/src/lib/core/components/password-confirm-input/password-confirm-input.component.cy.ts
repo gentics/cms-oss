@@ -1,6 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipe } from '@gentics/ui-core/testing/mock-pipe';
+import { MockI18nPipe } from '../../../../testing/mocks';
 import { PasswordConfirmInputComponent } from './password-confirm-input.component';
 
 const MAIN_INPUT = '[data-cy="main-input"]';
@@ -17,7 +17,7 @@ describe('PasswordConfirmInputComponent', () => {
                 GenticsUICoreModule.forRoot(),
             ],
             providers: [],
-            declarations: [mockPipe('i18n')],
+            declarations: [MockI18nPipe],
             schemas: [NO_ERRORS_SCHEMA],
         });
 

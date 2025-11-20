@@ -12,9 +12,7 @@
             "outputs": ["{projectRoot}/docs.output.json"],
             "options": {
                 "cwd": "apps/ui-core-docs",
-                "commands": [
-                    "tsx ./compile-docs.ts"
-                ]
+                "commands": ["tsx ./compile-docs.ts"]
             }
         },
         "build": {
@@ -86,10 +84,8 @@
                     "buildTarget": "ui-core-docs:build:development"
                 }
             },
-            "defaultConfiguration": "development"
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint"
+            "defaultConfiguration": "development",
+            "continuous": true
         },
         "test": {
             "executor": "nx:noop"

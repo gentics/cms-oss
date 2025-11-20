@@ -1,18 +1,8 @@
 import { Component, DebugElement, Injectable, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { FolderApi } from '@editor-ui/app/core/providers/api';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { MockErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.mock';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelection,
@@ -39,6 +29,15 @@ import {
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { NEVER, Observable } from 'rxjs';
+import { FolderApi } from '../../../core/providers/api';
+import { Api } from '../../../core/providers/api/api.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { RepositoryBrowserClient, RepositoryBrowserDataService } from '../../providers';
 import { RepositoryBrowser } from '../repository-browser/repository-browser.component';
 
@@ -54,7 +53,7 @@ describe('RepositoryBrowserList', () => {
     let state: TestApplicationState;
     let repositoryBrowserClientService: RepositoryBrowserClient;
 
-    let repositoryBrowserOptions: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType, selectMultiple: false };
+    let repositoryBrowserOptions: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType; selectMultiple: false };
 
     beforeEach(() => {
         configureComponentTest({
@@ -66,8 +65,7 @@ describe('RepositoryBrowserList', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 EntityResolver,
                 { provide: ErrorHandler, useClass: MockErrorHandler },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: PermissionService, useClass: MockPermissionService },
                 ModalService,
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
@@ -77,13 +75,12 @@ describe('RepositoryBrowserList', () => {
             declarations: [
                 RepositoryBrowser,
                 TestComponent,
-                mockPipes('i18n', 'i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        repositoryBrowserClientService = TestBed.get(RepositoryBrowserClient);
+        state = TestBed.inject(ApplicationStateService) as any;
+        repositoryBrowserClientService = TestBed.inject(RepositoryBrowserClient);
         expect(state instanceof ApplicationStateService).toBeTruthy();
 
         // prepare test data
@@ -166,7 +163,7 @@ function generateTestData(): void {
     }));
 }
 
-function getRepositoryBrowser(fixture: ComponentFixture<TestComponent>): { element: DebugElement, folders: any } {
+function getRepositoryBrowser(fixture: ComponentFixture<TestComponent>): { element: DebugElement; folders: any } {
     const element: DebugElement = fixture.debugElement.query(By.css('repository-browser'));
     // this is always empty, but it should not
     const folders: any = fixture.nativeElement.getElementsByClassName('item-list-row');
@@ -202,9 +199,9 @@ class MockApi {
         // prepare test data
         generateTestData();
 
-        const nodeResponse = { ...this.defaultResponse, folders: [], nodes: testNodes.map(e => this.entityResolver.denormalizeEntity('node', e)) };
-        const folderResponse = { ...this.defaultResponse, folders: testFolders.map(e => this.entityResolver.denormalizeEntity('folder', e)) };
-        const pageResponse = { ...this.defaultResponse, pages: testPages.map(e => this.entityResolver.denormalizeEntity('page', e)) };
+        const nodeResponse = { ...this.defaultResponse, folders: [], nodes: testNodes.map((e) => this.entityResolver.denormalizeEntity('node', e)) };
+        const folderResponse = { ...this.defaultResponse, folders: testFolders.map((e) => this.entityResolver.denormalizeEntity('folder', e)) };
+        const pageResponse = { ...this.defaultResponse, pages: testPages.map((e) => this.entityResolver.denormalizeEntity('page', e)) };
         const fileResponse = { ...this.defaultResponse, files: [] };
         const imageResponse = { ...this.defaultResponse, files: [] };
 
@@ -240,6 +237,7 @@ class MockPermissionService {
     forItemInLanguage(): Observable<any> {
         return NEVER;
     }
+
     forItem(): Observable<any> {
         return NEVER;
     }

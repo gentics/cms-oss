@@ -1,12 +1,12 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { MockResponseInfo, expectOneRequest, respondTo } from '@gentics/cms-rest-clients-angular/testing';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, of } from 'rxjs';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
+import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { Api, ApiBase, FileUploaderFactory, GcmsApi } from '../api';
 import { MockErrorHandler } from '../error-handler/error-handler.mock';
@@ -33,14 +33,14 @@ describe('ServerStorage', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         state.mockState({
             auth: {
                 sid: 4711,
             },
         });
-        http = TestBed.get(HttpClient);
-        httpTestingController = TestBed.get(HttpTestingController);
+        http = TestBed.inject(HttpClient);
+        httpTestingController = TestBed.inject(HttpTestingController);
         errorHandler = new MockErrorHandler();
         const sid$ = state.select(state => state.auth.sid);
         const apiBase = new ApiBase(http, {} as any as FileUploaderFactory, API_BASE_URL, sid$, errorHandler as any);

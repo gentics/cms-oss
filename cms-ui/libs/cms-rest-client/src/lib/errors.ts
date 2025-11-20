@@ -48,7 +48,7 @@ export class GCMSRestClientRequestError extends Error {
      * @returns If the provided object is an instance of this class.
      */
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static [Symbol.hasInstance](obj: any): boolean {
+    static override [Symbol.hasInstance](obj: any): boolean {
         return obj != null && GCMS_ERROR_INSTANCE in obj;
     }
 }
@@ -94,7 +94,7 @@ export class GCMSRestClientAbortError extends Error {
      * @returns If the provided object is an instance of this class.
      */
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static [Symbol.hasInstance](obj: any): boolean {
+    static override [Symbol.hasInstance](obj: any): boolean {
         return obj != null && GCMS_ABORT_INSTANCE in obj;
     }
 }

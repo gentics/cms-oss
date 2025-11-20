@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { BrowserTestingModule } from '@angular/platform-browser/testing';
 import { OverlayHostComponent } from '../../components/overlay-host/overlay-host.component';
 import { ToastComponent } from '../../components/toast/toast.component';
 import { IconDirective } from '../../directives/icon/icon.directive';
@@ -29,7 +29,7 @@ describe('Notification Service', () => {
             teardown: { destroyAfterEach: false },
         });
 
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
+        TestBed.overrideModule(BrowserTestingModule, {
             set: {
                 declarations: [ToastComponent],
             },
@@ -60,7 +60,7 @@ describe('Notification Service', () => {
         const getToastElement = (fixture: ComponentFixture<TestComponent>): HTMLElement => fixture.nativeElement.querySelector('.gtx-toast');
 
         it('should return an object with a dismiss() method',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 const toast = notificationService.show({ message: 'test', delay: 0 });
                 runShowAsyncTasks(fixture);
@@ -71,7 +71,7 @@ describe('Notification Service', () => {
         );
 
         it('should add Toast component to DOM',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 notificationService.show({ message: 'test', delay: 0 });
                 runShowAsyncTasks(fixture);
@@ -84,7 +84,7 @@ describe('Notification Service', () => {
         );
 
         it('Toast should contain correct message',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 notificationService.show({ message: 'test', delay: 0 });
                 runShowAsyncTasks(fixture);
@@ -97,7 +97,7 @@ describe('Notification Service', () => {
         );
 
         it('should remove Toast when dismiss() is invoked.',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 const toast = notificationService.show({ message: 'test', delay: 0 });
                 runShowAsyncTasks(fixture);
@@ -113,7 +113,7 @@ describe('Notification Service', () => {
         );
 
         it('should remove Toast after timeout specified in "delay" option.',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 notificationService.show({ message: 'test', delay: 500 });
                 runShowAsyncTasks(fixture);
@@ -129,7 +129,7 @@ describe('Notification Service', () => {
         );
 
         it('should not dismiss on click if "dismissOnClick" set to false.',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 notificationService.show({ message: 'test', delay: 0, dismissOnClick: false });
                 runShowAsyncTasks(fixture);
@@ -144,7 +144,7 @@ describe('Notification Service', () => {
         );
 
         it('should dismiss on click if "dismissOnClick" set to true.',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 notificationService.show({ message: 'test', delay: 0, dismissOnClick: true });
                 runShowAsyncTasks(fixture);
@@ -161,7 +161,7 @@ describe('Notification Service', () => {
         describe('action option:', () => {
 
             it('displays the action label',
-                componentTest(() => TestComponent, fixture => {
+                componentTest(() => TestComponent, (fixture) => {
                     fixture.detectChanges();
                     notificationService.show({
                         message: 'test',
@@ -180,7 +180,7 @@ describe('Notification Service', () => {
             );
 
             it('calls the onClick method when clicked',
-                componentTest(() => TestComponent, fixture => {
+                componentTest(() => TestComponent, (fixture) => {
                     fixture.detectChanges();
                     const spy = jasmine.createSpy('spy');
                     notificationService.show({

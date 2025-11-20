@@ -1,117 +1,124 @@
 <div class="modal-title">
-    <h5>{{ 'modal.publish_pages_title' | i18n }}</h5>
+  <h5>{{ 'modal.publish_pages_title' | gtxI18n }}</h5>
 
-    <div *ngIf="pages.length > 1 && selectVariants" class="select-variants-all">
-        <gtx-button
-            flat
-            size="small"
-            type="secondary"
-            (click)="selectAllLanguageVariants()"
+  @if (pages.length > 1 && selectVariants) {
+    <div class="select-variants-all">
+      <gtx-button
+        flat
+        size="small"
+        type="secondary"
+        (click)="selectAllLanguageVariants()"
         >
-            <icon left>check</icon>
-            {{ 'modal.page_select_all_button_title' | i18n }}
-        </gtx-button>
-
-        <gtx-button
-            flat
-            size="small"
-            type="secondary"
-            (click)="resetLanguageVariantSelection()"
+        <icon left>check</icon>
+        {{ 'modal.page_select_all_button_title' | gtxI18n }}
+      </gtx-button>
+      <gtx-button
+        flat
+        size="small"
+        type="secondary"
+        (click)="resetLanguageVariantSelection()"
         >
-            <icon left>replay</icon>
-            {{ 'modal.page_reset_selection_button' | i18n }}
-        </gtx-button>
+        <icon left>replay</icon>
+        {{ 'modal.page_reset_selection_button' | gtxI18n }}
+      </gtx-button>
     </div>
+  }
 </div>
 
 <div class="modal-content">
-    <ng-template [ngIf]="selectVariants" [ngIfElse]="pages_with_language">
-        <table>
-            <ng-container
+  @if (selectVariants) {
+    <table>
+      <ng-container
                 *ngTemplateOutlet="page_variants_table; context: {
                     allPages: pages,
                     filteredPages: pages,
                     i18nSuffix: 'variants'
                 }"
-            ></ng-container>
-        </table>
-    </ng-template>
-
-    <ng-template #pages_with_language>
-        <table>
+      ></ng-container>
+    </table>
+  } @else {
+    <table>
             <ng-container *ngTemplateOutlet="page_variants_table; context: {
                 allPages: pages,
                 filteredPages: pagesWithoutCurrentLanguage,
                 i18nSuffix: 'without_language'
             }"
-        ></ng-container>
-        </table>
-    </ng-template>
+      ></ng-container>
+    </table>
+  }
+
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
-    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
+  >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 
-    <gtx-button
-        type="success"
-        [disabled]="selectCount < 1"
-        (click)="confirm()"
-    >{{ 'modal.publish_pages_button' | i18n }}</gtx-button>
+  <gtx-button
+    type="success"
+    [disabled]="selectCount < 1"
+    (click)="confirm()"
+  >{{ 'modal.publish_pages_button' | gtxI18n }}</gtx-button>
 </div>
 
 <ng-template
-    #page_variants_table
-    let-allPages="allPages"
-    let-filteredPages="filteredPages"
-    let-i18nSuffix="i18nSuffix"
->
-    <thead *ngIf="filteredPages.length > 0">
-        <tr>
-            <th colspan="2">
-                <span class="lead">
-                    {{ 'modal.publish_pages_header_' + (filteredPages.length === 1 ? 'singular_' : 'plural_') + i18nSuffix | i18n: {
-                        some: filteredPages.length,
-                        count: allPages.length,
-                        language: folderLanguage.name
-                    } }}
-                </span>
-            </th>
-            <th class="selected-languages-header">{{ 'modal.publish_selected_languages' | i18n }}:</th>
+  #page_variants_table
+  let-allPages="allPages"
+  let-filteredPages="filteredPages"
+  let-i18nSuffix="i18nSuffix"
+  >
+  @if (filteredPages.length > 0) {
+    <thead>
+      <tr>
+        <th colspan="2">
+          <span class="lead">
+            {{ 'modal.publish_pages_header_' + (filteredPages.length === 1 ? 'singular_' : 'plural_') + i18nSuffix | gtxI18n: {
+            some: filteredPages.length,
+            count: allPages.length,
+            language: folderLanguage.name
+            } }}
+          </span>
+        </th>
+        <th class="selected-languages-header">{{ 'modal.publish_selected_languages' | gtxI18n }}:</th>
+      </tr>
+      @if (!selectVariants) {
+        <tr class="notice-row">
+          <th colspan="3">
+            <span class="notice">
+              {{ 'modal.publish_pages_header_review_notice_' + i18nSuffix | gtxI18n:{ language: folderLanguage.name } }}
+            </span>
+          </th>
         </tr>
-        <tr *ngIf="!selectVariants" class="notice-row">
-            <th colspan="3">
-                <span class="notice">
-                    {{ 'modal.publish_pages_header_review_notice_' + i18nSuffix | i18n:{ language: folderLanguage.name } }}
-                </span>
-            </th>
-        </tr>
+      }
     </thead>
+  }
 
-    <tbody *ngIf="filteredPages.length > 0">
+  @if (filteredPages.length > 0) {
+    <tbody>
+      @for (item of filteredPages; track item) {
         <gtx-contents-list-item
-            *ngFor="let item of filteredPages"
-            [ngClass]="item.type || ''"
-            [class.none-selected]="selectedLanguageVariants[item.id]?.length === 0"
-        >
-            <td class="item-icon">
-                <icon>{{ item.type | gtxTypeIcon }}</icon>
-            </td>
-            <td class="item-primary">
-                <div class="item-name">{{ item.name }}</div>
-            </td>
-            <td>
-                <page-language-selector
-                    [page]="item"
-                    [variants]="variants[item.id]"
-                    [selected]="selectedLanguageVariants[item.id]"
-                    [activeLanguage]="folderLanguage"
-                    (selectionChange)="onLanguageSelectionChange(item.id, $event)"
-                ></page-language-selector>
-            </td>
+          [ngClass]="item.type || ''"
+          [class.none-selected]="selectedLanguageVariants[item.id]?.length === 0"
+          >
+          <td class="item-icon">
+            <icon>{{ item.type | gtxTypeIcon }}</icon>
+          </td>
+          <td class="item-primary">
+            <div class="item-name">{{ item.name }}</div>
+          </td>
+          <td>
+            <page-language-selector
+              [page]="item"
+              [variants]="variants[item.id]"
+              [selected]="selectedLanguageVariants[item.id]"
+              [activeLanguage]="folderLanguage"
+              (selectionChange)="onLanguageSelectionChange(item.id, $event)"
+            ></page-language-selector>
+          </td>
         </gtx-contents-list-item>
+      }
     </tbody>
+  }
 </ng-template>

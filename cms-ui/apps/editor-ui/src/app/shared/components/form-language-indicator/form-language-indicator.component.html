@@ -1,9 +1,9 @@
-<div
-    *ngIf="displayLanguages$ | async as displayLanguages"
+@if (displayLanguages$ | async; as displayLanguages) {
+  <div
     class="language-icons"
->
-    <div
-        *ngFor="let language of displayLanguages; trackBy:identify"
+    >
+    @for (language of displayLanguages; track identify($index, language)) {
+      <div
         @animNgForParent
         class="language-icon"
         [class.statusInfos]="displayStatusInfos$ | async"
@@ -16,82 +16,81 @@
             'mode-select': mode === ItemListRowMode.SELECT
         }"
         (click)="onIconClicked(language)"
-    >
+        >
         <div [title]="language.name">
-            <gtx-dropdown-list width="contents" [disabled]="mode === ItemListRowMode.SELECT">
-                <gtx-dropdown-trigger [@animNgForChild]>
-                    <div class="stateUntranslated" [hidden]="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"></div>
-
-                    <ng-container *ngIf="uiMode === UIMode.EDIT">
-                        <div class="stateDeleted" [hidden]="!(currentLanguage$ | async) || !((stateDeleted$(language?.code) | async) && (displayDeleted$ | async))"></div>
-                        <div class="stateModified" [hidden]="!(currentLanguage$ | async) || !(stateModified$(language?.code) | async)"></div>
-                        <div class="stateInQueue" [hidden]="!(currentLanguage$ | async) || !(stateInQueue$(language?.code) | async)"></div>
-                        <div class="statePlanned" [hidden]="!(currentLanguage$ | async) || !(statePlanned$(language?.code) | async)"></div>
-                    </ng-container>
-
-                    <!-- <ng-container *ngIf="uiMode === UIMode.STAGING">
-                        <div class="stateModified" [hidden]="!stagingMap?.[item?.globalId]?.recent"></div>
-                    </ng-container> -->
-
-                    <a class="language-code">{{ language?.code | uppercase }}</a>
-                </gtx-dropdown-trigger>
-
-                <gtx-dropdown-content>
-                    <ng-container *ngIf="uiMode === UIMode.EDIT">
-                        <gtx-dropdown-item
-                            *ngIf="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"
-                            (click)="languageClicked(language)"
-                        >
-                            {{ 'editor.preview_in_language_label' | i18n:{ _language: language?.code } }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item
-                            *ngIf="!(isAvailable$(language) | async) || (stateDeleted$(language?.code) | async)"
-                            (click)="languageClicked(language, false, false)"
-                        >
-                            {{ 'editor.translate_into_label' | i18n:{ _language: language?.code } }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item
-                            *ngIf="(stateDeleted$(language?.code) | async) && (item | permissions)?.item?.delete"
-                            (click)="languageClicked(language, false, false, true)"
-                        >
-                            <icon left>restore_from_trash</icon>
-                            {{ 'editor.restore_from_wastebin_label' | i18n }}
-                        </gtx-dropdown-item>
-                    </ng-container>
-
-                    <ng-container *ngIf="uiMode === UIMode.STAGING">
-                        <gtx-dropdown-item
-                            *ngIf="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"
-                            (click)="onStageLanguageClick(language)"
-                        >
-                            <icon left>{{ stagingMap?.[item?.globalId]?.included ? 'remove' : 'inventory' }}</icon>
-                            {{ 'editor.' + (stagingMap?.[item?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | i18n:{ _language: language?.code } }}
-                        </gtx-dropdown-item>
-                    </ng-container>
-                </gtx-dropdown-content>
-            </gtx-dropdown-list>
-        </div>
+          <gtx-dropdown-list width="contents" [disabled]="mode === ItemListRowMode.SELECT">
+            <gtx-dropdown-trigger [@animNgForChild]>
+              <div class="stateUntranslated" [hidden]="(isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)"></div>
+              @if (uiMode === UIMode.EDIT) {
+                <div class="stateDeleted" [hidden]="!(currentLanguage$ | async) || !((stateDeleted$(language?.code) | async) && (displayDeleted$ | async))"></div>
+                <div class="stateModified" [hidden]="!(currentLanguage$ | async) || !(stateModified$(language?.code) | async)"></div>
+                <div class="stateInQueue" [hidden]="!(currentLanguage$ | async) || !(stateInQueue$(language?.code) | async)"></div>
+                <div class="statePlanned" [hidden]="!(currentLanguage$ | async) || !(statePlanned$(language?.code) | async)"></div>
+              }
+              <!-- <ng-container *ngIf="uiMode === UIMode.STAGING">
+              <div class="stateModified" [hidden]="!stagingMap?.[item?.globalId]?.recent"></div>
+            </ng-container> -->
+            <a class="language-code">{{ language?.code | uppercase }}</a>
+          </gtx-dropdown-trigger>
+          <gtx-dropdown-content>
+            @if (uiMode === UIMode.EDIT) {
+              @if ((isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)) {
+                <gtx-dropdown-item
+                  (click)="languageClicked(language)"
+                  >
+                  {{ 'editor.preview_in_language_label' | gtxI18n:{ _language: language?.code } }}
+                </gtx-dropdown-item>
+              }
+              @if (!(isAvailable$(language) | async) || (stateDeleted$(language?.code) | async)) {
+                <gtx-dropdown-item
+                  (click)="languageClicked(language, false, false)"
+                  >
+                  {{ 'editor.translate_into_label' | gtxI18n:{ _language: language?.code } }}
+                </gtx-dropdown-item>
+              }
+              @if ((stateDeleted$(language?.code) | async) && (item | permissions)?.item?.delete) {
+                <gtx-dropdown-item
+                  (click)="languageClicked(language, false, false, true)"
+                  >
+                  <icon left>restore_from_trash</icon>
+                  {{ 'editor.restore_from_wastebin_label' | gtxI18n }}
+                </gtx-dropdown-item>
+              }
+            }
+            @if (uiMode === UIMode.STAGING) {
+              @if ((isAvailable$(language) | async) && !(stateDeleted$(language?.code) | async)) {
+                <gtx-dropdown-item
+                  (click)="onStageLanguageClick(language)"
+                  >
+                  <icon left>{{ stagingMap?.[item?.globalId]?.included ? 'remove' : 'inventory' }}</icon>
+                  {{ 'editor.' + (stagingMap?.[item?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | gtxI18n:{ _language: language?.code } }}
+                </gtx-dropdown-item>
+              }
+            }
+          </gtx-dropdown-content>
+        </gtx-dropdown-list>
+      </div>
     </div>
-
-    <div class="expand-toggle">
-        <gtx-button
-            *ngIf="displayMoreIcon$ | async"
-            icon type="secondary"
-            size="small"
-            (click)="toggleExpand(true)"
+  }
+  <div class="expand-toggle">
+    @if (displayMoreIcon$ | async) {
+      <gtx-button
+        icon type="secondary"
+        size="small"
+        (click)="toggleExpand(true)"
         >
-            <icon>more_horiz</icon>
-        </gtx-button>
-
-        <gtx-button
-            *ngIf="displayLessIcon$ | async"
-            icon type="secondary"
-            size="small"
-            (click)="toggleExpand(false)"
+        <icon>more_horiz</icon>
+      </gtx-button>
+    }
+    @if (displayLessIcon$ | async) {
+      <gtx-button
+        icon type="secondary"
+        size="small"
+        (click)="toggleExpand(false)"
         >
-            <icon>arrow_back</icon>
-        </gtx-button>
-    </div>
+        <icon>arrow_back</icon>
+      </gtx-button>
+    }
+  </div>
 </div>
+}

@@ -1,33 +1,34 @@
 <div class="modal-title">
-    <h5>{{ (mode === SchemaPropertiesMode.CREATE ? 'mesh.create_schema' : 'mesh.update_schema') | i18n: { entityName: schema?.name } }}</h5>
+  <h5>{{ (mode === SchemaPropertiesMode.CREATE ? 'mesh.create_schema' : 'mesh.update_schema') | gtxI18n: { entityName: schema?.name } }}</h5>
 </div>
 
 <div class="modal-content">
+  @if (namesLoaded) {
     <gtx-mesh-schema-properties
-        *ngIf="namesLoaded"
-        class="properties"
-        [mode]="mode"
-        [formControl]="form"
-        [tabs]="true"
-        [schemaNames]="schemaNames"
-        [microschemaNames]="microschemaNames"
+      class="properties"
+      [mode]="mode"
+      [formControl]="form"
+      [tabs]="true"
+      [schemaNames]="schemaNames"
+      [microschemaNames]="microschemaNames"
     ></gtx-mesh-schema-properties>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        [disabled]="!form.valid || !form.enabled"
-        (click)="buttonCreateEntityClicked()"
+  <gtx-button
+    type="primary"
+    [disabled]="!form.valid || !form.enabled"
+    (click)="buttonCreateEntityClicked()"
     >
-        {{ (mode === SchemaPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | i18n }}
-    </gtx-button>
+    {{ (mode === SchemaPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

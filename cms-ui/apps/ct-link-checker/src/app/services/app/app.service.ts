@@ -1,5 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { debounceTime, first, publishReplay, refCount, switchMap } from 'rxjs/operators';
 import { AppSettings } from '../../common/models/app-settings';
@@ -9,7 +9,7 @@ import { FilterService } from '../filter/filter.service';
 import { UserSettingsService } from '../user-settings/user-settings.service';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class AppService {
 
@@ -20,10 +20,10 @@ export class AppService {
     public update$: Observable<boolean>;
     public sid$: Observable<string>;
 
-    protected readonly defaultAppSettings: AppSettings = {
+    protected readonly DEFAULT_APP_SETTINGS: AppSettings = {
         sid: null,
         language: 'en',
-        displayFields: []
+        displayFields: [],
     };
 
     protected appSettings: AppSettings & ObjectWithEvents<AppSettings>;
@@ -34,12 +34,10 @@ export class AppService {
 
     constructor(
         private filterService: FilterService,
-        private translate: TranslateService,
+        private i18n: I18nService,
         private gcmsAuthenticationService: GcmsAuthenticationService,
-        private userSettings: UserSettingsService
-    ) {
-        this.translate.setDefaultLang(this.defaultAppSettings.language);
-    }
+        private userSettings: UserSettingsService,
+    ) {}
 
     init(): void {
         if (this.initialized) {
@@ -48,7 +46,7 @@ export class AppService {
 
         this.update$ = this.updateInternal$.pipe(
             publishReplay(1),
-            refCount()
+            refCount(),
         );
 
         this.sid$ = this.gcmsAuthenticationService.getSid();
@@ -66,9 +64,9 @@ export class AppService {
             switchMap(() => {
                 return combineLatest(
                     this.userSettings.getUserSettings().pipe(first()),
-                    this.userSettings.getUserLanguage().pipe(first())
+                    this.userSettings.getUserLanguage().pipe(first()),
                 );
-            })
+            }),
         ).subscribe(([ct, ui]) => {
             if (!!ct.data && !!ct.data.displayFields) {
                 this.settings.displayFields = ct.data.displayFields;
@@ -78,15 +76,15 @@ export class AppService {
                 this.filterService.options.sortOptions = ct.data.sortOptions;
             }
 
-            if (!!ui.data) {
+            if (ui.data) {
                 this.settings.language = ui.data;
-                this.translate.use(ui.data);
+                this.i18n.setLanguage(ui.data);
             }
         });
     }
 
     reset(preset?: Partial<AppSettings>): void {
-        this.appSettings = getSealedProxyObject({ ...this.defaultAppSettings, ...preset }, undefined, this.events$);
+        this.appSettings = getSealedProxyObject({ ...this.DEFAULT_APP_SETTINGS, ...preset }, undefined, this.events$);
         this.setSid();
     }
 
@@ -104,7 +102,7 @@ export class AppService {
      * @param language Language to use
      */
     setLanguage(language: string): void {
-        this.translate.use(language);
+        this.i18n.setLanguage(language);
     }
 
     /**

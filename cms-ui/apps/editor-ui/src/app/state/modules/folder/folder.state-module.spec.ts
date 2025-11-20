@@ -1,5 +1,4 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { folderSchema, pageSchema } from '@editor-ui/app/common/models';
 import {
     FolderItemOrTemplateType,
     Language,
@@ -9,9 +8,6 @@ import {
     Raw,
     User,
 } from '@gentics/cms-models';
-import { NgxsModule } from '@ngxs/store';
-import { normalize } from 'normalizr';
-import { Subscription } from 'rxjs';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
@@ -20,7 +16,10 @@ import {
     getExamplePageDataNormalized,
     getExampleUserData,
 } from '@gentics/cms-models/testing/test-data.mock';
-import { FolderState, ItemsInfo, emptyItemInfo, plural } from '../../../common/models';
+import { NgxsModule } from '@ngxs/store';
+import { normalize } from 'normalizr';
+import { Subscription } from 'rxjs';
+import { FolderState, ItemsInfo, emptyItemInfo, folderSchema, pageSchema, plural } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { getNormalizrSchema } from '../../state-utils';
 import { TestApplicationState } from '../../test-application-state.mock';
@@ -72,7 +71,7 @@ describe('FolderStateModule', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
     });
 
     function mockListState(key: keyof FolderState, listState: Partial<ItemsInfo>): void {

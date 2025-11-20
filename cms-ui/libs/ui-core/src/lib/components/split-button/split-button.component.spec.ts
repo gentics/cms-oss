@@ -2,7 +2,7 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/c
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { BrowserTestingModule } from '@angular/platform-browser/testing';
 import { DropdownTriggerDirective } from '../../directives/dropdown-trigger/dropdown-trigger.directive';
 import { IconDirective } from '../../directives/icon/icon.directive';
 import { ConfigService, defaultConfig } from '../../module.config';
@@ -55,7 +55,7 @@ describe('SplitButtonComponent', () => {
             teardown: { destroyAfterEach: false },
             schemas: [NO_ERRORS_SCHEMA],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
+        TestBed.overrideModule(BrowserTestingModule, {
             set: {
                 declarations: [DropdownContentWrapperComponent, ScrollMaskComponent],
             },
@@ -63,7 +63,7 @@ describe('SplitButtonComponent', () => {
     });
 
     it('is enabled by default',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             assertDisabledState(fixture, false);
@@ -88,7 +88,7 @@ describe('SplitButtonComponent', () => {
 
     it('accepts string values for the "disabled" property',
         componentTest(() => TestComponent, assembleTemplate('disabled="true"'),
-            fixture => {
+            (fixture) => {
                 fixture.detectChanges();
                 tick();
                 assertDisabledState(fixture, true);
@@ -98,7 +98,7 @@ describe('SplitButtonComponent', () => {
 
     it('accepts an empty "disabled" property',
         componentTest(() => TestComponent, assembleTemplate('disabled'),
-            fixture => {
+            (fixture) => {
                 fixture.detectChanges();
                 tick();
                 assertDisabledState(fixture, true);
@@ -108,7 +108,7 @@ describe('SplitButtonComponent', () => {
 
     it('is not flat by default',
         componentTest(() => TestComponent,
-            fixture => {
+            (fixture) => {
                 fixture.detectChanges();
                 tick();
                 assertFlatState(fixture, false);
@@ -118,7 +118,7 @@ describe('SplitButtonComponent', () => {
 
     it('"flat" works',
         componentTest(() => TestComponent, assembleTemplate('flat'),
-            fixture => {
+            (fixture) => {
                 fixture.detectChanges();
                 tick();
                 assertFlatState(fixture, true);
@@ -127,7 +127,7 @@ describe('SplitButtonComponent', () => {
     );
 
     it('shows the dropdown trigger and a spacer line when there are secondary actions',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             expect(fixture.nativeElement.querySelector('.spacer-line')).toBeTruthy();
@@ -202,7 +202,7 @@ describe('SplitButtonComponent', () => {
                 <gtx-split-button-primary-action (click)="onClick(0)">Primary Action</gtx-split-button-primary-action>
             </gtx-split-button>
             <gtx-overlay-host></gtx-overlay-host>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick();
 
@@ -219,7 +219,7 @@ function assertDisabledState(fixture: ComponentFixture<TestComponent>, expectedS
     const buttons: DebugElement[] = fixture.debugElement.queryAll(By.directive(ButtonComponent));
     expect(buttons.length).toBe(2);
     expect(!!fixture.componentInstance.splitButton.disabled).toBe(expectedState);
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
         expect(!!button.componentInstance.disabled).toBe(expectedState);
     });
 }
@@ -228,7 +228,7 @@ function assertFlatState(fixture: ComponentFixture<TestComponent>, expectedState
     const buttons: DebugElement[] = fixture.debugElement.queryAll(By.directive(ButtonComponent));
     expect(buttons.length).toBe(2);
     expect(!!fixture.componentInstance.splitButton.flat).toBe(expectedState);
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
         expect(!!button.componentInstance.flat).toBe(expectedState);
     });
 }

@@ -1,17 +1,27 @@
-<a *ngIf="isAdmin$ | async" class="adminUILink" [href]="adminUILink" (click)="adminUIClicked($event)">
+@if (isAdmin$ | async) {
+  <a class="adminUILink" [href]="adminUILink" (click)="adminUIClicked($event)">
     <div class="tool-icon">
-        <icon class="material-icons" [attr.translate]="'no'">tune</icon>
+      <icon class="material-icons" [attr.translate]="'no'">tune</icon>
     </div>
-    <a class="close-button" *ngIf="toolsService.isAdminUIOpen()" (click)="closeAdminUI($event)">
+    @if (toolsService.isAdminUIOpen()) {
+      <a class="close-button" (click)="closeAdminUI($event)">
         <icon>close</icon>
-    </a>
-    <div class="new-tab-icon" *ngIf="(isAdmin$ | async) && !(toolsService.isAdminUIOpen())">
-        <icon [title]="'common.tool_opens_in_new_tab' | i18n">open_in_new</icon>
-    </div>
+      </a>
+    }
+    @if ((isAdmin$ | async) && !(toolsService.isAdminUIOpen())) {
+      <div class="new-tab-icon">
+        <icon [title]="'common.tool_opens_in_new_tab' | gtxI18n">open_in_new</icon>
+      </div>
+    }
     <div class="tool-name">
-        <span>Administration</span>
+      <span>Administration</span>
     </div>
-</a>
-<hr *ngIf="(tools$ | async).length > 0 && (isAdmin$ | async)">
-<tool-button *ngFor="let tool of tools$ | async" [tool]="tool">
-</tool-button>
+  </a>
+}
+@if ((tools$ | async).length > 0 && (isAdmin$ | async)) {
+  <hr>
+  }
+  @for (tool of tools$ | async; track tool) {
+    <tool-button [tool]="tool">
+    </tool-button>
+  }

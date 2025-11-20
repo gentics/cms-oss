@@ -13,9 +13,7 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { WindowRef } from '@gentics/cms-components';
+import { I18nDatePipe, I18nNotificationService, WindowRef } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File,
@@ -30,12 +28,12 @@ import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { FavouritesService } from '../../../core/providers/favourites/favourites.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { ListSearchService } from '../../../core/providers/list-search/list-search.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
@@ -59,7 +57,6 @@ import { AllItemsSelectedPipe } from '../../../shared/pipes/all-items-selected/a
 import { FileSizePipe } from '../../../shared/pipes/file-size/file-size.pipe';
 import { GetInheritancePipe } from '../../../shared/pipes/get-inheritance/get-inheritance.pipe';
 import { HighlightPipe } from '../../../shared/pipes/highlight/highlight.pipe';
-import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
 import { ImageDimensionsPipe } from '../../../shared/pipes/image-dimensions/image-dimensions.pipe';
 import { IsFavouritePipe } from '../../../shared/pipes/is-favourite/is-favourite.pipe';
 import { IsStartPagePipe } from '../../../shared/pipes/is-start-page/is-start-page.pipe';
@@ -86,7 +83,7 @@ import { ItemListComponent } from './item-list.component';
  */
 const getListItems = (fixture: ComponentFixture<TestComponent>): HTMLElement[] => fixture.debugElement
     .queryAll(By.css('item-list-row'))
-    .map(itemDebugElement => itemDebugElement.nativeElement);
+    .map((itemDebugElement) => itemDebugElement.nativeElement);
 
 /**
  * Returns the name of the item.
@@ -96,7 +93,6 @@ const getItemName = (listItem: Element): string => (listItem.querySelector('.ite
 
 const allPermissions = (): EditorPermissions => // Sorry, but it works.
     JSON.parse(JSON.stringify(getNoPermissions()).replace(/false/g, 'true'));
-
 
 @Component({
     template: `
@@ -125,10 +121,12 @@ class TestComponent implements OnInit {
         { id: 2, name: 'item2', path: 'root/item2', type: 'folder' },
         { id: 3, name: 'item3', path: 'root/item3', type: 'folder' },
     ];
+
     activeNode: any = {
         name: '',
         id: 1,
     };
+
     filterTerm = '';
     itemsInfo$: Observable<ItemsInfo>;
     currentFolderId$: Observable<number>;
@@ -142,8 +140,8 @@ class TestComponent implements OnInit {
     constructor(public appState: ApplicationStateService) { }
 
     ngOnInit(): void {
-        this.itemsInfo$ = this.appState.select(state => state.folder.folders);
-        this.currentFolderId$ = this.appState.select(state => state.folder.activeFolder);
+        this.itemsInfo$ = this.appState.select((state) => state.folder.folders);
+        this.currentFolderId$ = this.appState.select((state) => state.folder.activeFolder);
     }
 }
 
@@ -237,7 +235,7 @@ class MockItemContextMenu {
 class MockWindowRef { }
 
 class MockListSearchService {
-    searchEvent$ = new EventEmitter<{ term: string, nodeId?: number }>(null);
+    searchEvent$ = new EventEmitter<{ term: string; nodeId?: number }>(null);
 }
 
 class MockWastebinActionsService {
@@ -260,7 +258,6 @@ describe('ItemListComponent', () => {
         });
     };
 
-
     beforeEach(() => {
         configureComponentTest({
             imports: [NoopAnimationsModule, GenticsUICoreModule.forRoot(), NgxPaginationModule],
@@ -275,8 +272,7 @@ describe('ItemListComponent', () => {
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: ListSearchService, useClass: MockListSearchService },
                 { provide: ChangeDetectorRef, useClass: MockChangeDetector },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: FavouritesService, useClass: MockFavouritesService },
                 { provide: ResourceUrlBuilder, useClass: MockResourceUrlBuilder },
                 { provide: UsageActionsService, useClass: MockUsageActionsService },
@@ -331,8 +327,8 @@ describe('ItemListComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
         expect(state instanceof ApplicationStateService).toBeTruthy();
         state.mockState({
             auth: {
@@ -413,7 +409,7 @@ describe('ItemListComponent', () => {
     });
 
     it('displays the correct number of items',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             const listItems: HTMLElement[] = getListItems(fixture);
@@ -424,7 +420,7 @@ describe('ItemListComponent', () => {
     it('calls getTotalUsage correct times with the correct parameters',
         componentTest(() => TestComponent, (fixture, instance) => {
             instance.itemType = 'page';
-            instance.itemsInfo$ = state.select(state => state.folder.pages);
+            instance.itemsInfo$ = state.select((state) => state.folder.pages);
             instance.items = [
                 { id: 1, name: 'item1', path: 'root/item1', type: 'page' },
                 { id: 2, name: 'item2', path: 'root/item2', type: 'page' },
@@ -462,7 +458,7 @@ describe('ItemListComponent', () => {
                     },
                     firstChange: false,
                 },
-            }
+            };
             const change = {
                 items: new SimpleChange(previousValue, currentValue, false),
                 itemsInfo: new SimpleChange(itemsInfo.itemsInfo.previousValue, itemsInfo.itemsInfo.currentValue, false),
@@ -475,22 +471,21 @@ describe('ItemListComponent', () => {
         }),
     );
 
-
     it('checks if getTotalUsage gets called with the correct parameters when usage display field is active and the saving state is false',
         componentTest(() => TestComponent, (fixture, instance) => {
             instance.itemType = 'page';
             instance.activeNode = {
                 name: '',
                 id: 33,
-            }
+            };
             const usageActions = TestBed.inject(UsageActionsService);
             state.mockState({
                 folder: {
                     folders: {
-                        list: [11,22],
+                        list: [11, 22],
                     },
                     pages: {
-                        list: [11,22],
+                        list: [11, 22],
                         displayFields: ['usage'],
                     },
                 },
@@ -503,7 +498,7 @@ describe('ItemListComponent', () => {
                 editor: {
                     saving: true,
                 },
-            })
+            });
             tick(200);
             fixture.detectChanges();
             expect(instance.itemList.getTotalUsage).not.toHaveBeenCalled();
@@ -513,12 +508,12 @@ describe('ItemListComponent', () => {
                 editor: {
                     saving: false,
                 },
-            })
+            });
             tick(200);
             fixture.detectChanges();
             expect(instance.itemList.getTotalUsage).toHaveBeenCalled();
             expect(usageActions.getTotalUsage).toHaveBeenCalledTimes(1);
-            expect(usageActions.getTotalUsage).toHaveBeenCalledWith(instance.itemList.itemType, [11,22], 33);
+            expect(usageActions.getTotalUsage).toHaveBeenCalledWith(instance.itemList.itemType, [11, 22], 33);
         }),
     );
 
@@ -675,13 +670,13 @@ describe('ItemListComponent', () => {
         it('copies only selected items that match filterTerm',
             componentTest(() => TestComponent, (fixture, instance) => {
                 instance.itemType = 'page';
-                instance.itemsInfo$ = state.select(state => state.folder.pages);
+                instance.itemsInfo$ = state.select((state) => state.folder.pages);
                 instance.items = [
                     { id: 1, name: 'item1', path: 'root/item1', type: 'page' },
                     { id: 2, name: 'item2', path: 'root/item2', type: 'page' },
                     { id: 3, name: 'item3', path: 'root/item3', type: 'page' },
                 ];
-                const contextMenuService = TestBed.get(ContextMenuOperationsService);
+                const contextMenuService = TestBed.inject(ContextMenuOperationsService);
                 spyOn(contextMenuService, 'copyItems').and.stub();
 
                 fixture.detectChanges();
@@ -702,12 +697,12 @@ describe('ItemListComponent', () => {
                 tick();
                 const copyButton: HTMLElement = fixture.debugElement
                     .queryAll(By.css('item-list-header .group-actions gtx-button button'))
-                    .map(itemDebugElement => itemDebugElement.nativeElement)[0];
+                    .map((itemDebugElement) => itemDebugElement.nativeElement)[0];
                 copyButton.click();
                 fixture.detectChanges();
                 tick();
 
-                expect(contextMenuService.copyItems).toHaveBeenCalledWith('page', [instance.items[1]], state.now.folder.activeNode);
+                expect(contextMenuService.copyItems).toHaveBeenCalledWith('page', [instance.items[1]] as any, state.now.folder.activeNode);
             }),
         );
 
@@ -717,7 +712,7 @@ describe('ItemListComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
             const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
-                .map(checkboxDebugElement => checkboxDebugElement.componentInstance);
+                .map((checkboxDebugElement) => checkboxDebugElement.componentInstance);
             const listItems: HTMLElement[] = getListItems(fixture);
 
             expect(state.now.folder.folders.selected).toEqual([]);
@@ -737,10 +732,10 @@ describe('ItemListComponent', () => {
     );
 
     it('toggles all rows when toggleAll checkbox clicked',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
-                .map(checkboxDebugElement => checkboxDebugElement.componentInstance);
+                .map((checkboxDebugElement) => checkboxDebugElement.componentInstance);
             const toggleAll: HTMLElement = fixture.nativeElement
                 .querySelector('.list-header input[type="checkbox"]');
 
@@ -771,11 +766,11 @@ describe('ItemListComponent', () => {
     );
 
     it('unchecks toggleAll checkbox when a single row is unchecked',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             const listItems: HTMLElement[] = getListItems(fixture);
             const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
-                .map(checkboxDebugElement => checkboxDebugElement.componentInstance);
+                .map((checkboxDebugElement) => checkboxDebugElement.componentInstance);
             const toggleAll: HTMLElement = fixture.nativeElement
                 .querySelector('.list-header input[type="checkbox"]');
 
@@ -791,7 +786,6 @@ describe('ItemListComponent', () => {
             toggleAll.click();
             tick();
             fixture.detectChanges();
-
 
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
             ((listItems[2].querySelector('input[type="checkbox"]')) as any).click();
@@ -870,7 +864,7 @@ describe('ItemListComponent', () => {
 
         it('loads all items of the type when hasMore = true, then emits full selection on state update',
             componentTest(() => TestComponent, (fixture, instance) => {
-                const folderActions: FolderActionsService = TestBed.get(FolderActionsService);
+                const folderActions: FolderActionsService = TestBed.inject(FolderActionsService);
                 spyOn(folderActions, 'getItemsOfTypeInFolder');
                 updateItemsInfoState({
                     hasMore: true,
@@ -935,7 +929,7 @@ describe('ItemListComponent', () => {
 
         it('emits with all items when a single items is clicked and then toggleAll is clicked (with hasMore = true)',
             componentTest(() => TestComponent, (fixture, instance) => {
-                const folderActions: FolderActionsService = TestBed.get(FolderActionsService);
+                const folderActions: FolderActionsService = TestBed.inject(FolderActionsService);
                 spyOn(folderActions, 'getItemsOfTypeInFolder');
                 updateItemsInfoState({
                     hasMore: true,
@@ -977,7 +971,7 @@ describe('ItemListComponent', () => {
 
     });
 
-    ['page', 'image', 'file'].forEach(itemType => {
+    ['page', 'image', 'file'].forEach((itemType) => {
 
         it(`focuses the editor when a ${itemType} item is clicked`,
             componentTest(() => TestComponent, (fixture, instance) => {
@@ -1043,7 +1037,7 @@ describe('ItemListComponent', () => {
             });
 
             instance.isSearching = true;
-            instance.items = [1, 2, 3].map(id => state.now.entities.page[id]);
+            instance.items = [1, 2, 3].map((id) => state.now.entities.page[id]);
             updateItemsInfoState({
                 list: [1, 2, 3],
                 total: 3,
@@ -1054,11 +1048,11 @@ describe('ItemListComponent', () => {
 
             const contextMenus: MockItemContextMenu[] = fixture.debugElement
                 .queryAll(By.directive(MockItemContextMenu))
-                .map(debugElement => debugElement.componentInstance);
+                .map((debugElement) => debugElement.componentInstance);
 
             // __forItem is added by the MockPermissionPipe
             // eslint-disable-next-line no-underscore-dangle
-            const permissionItems = contextMenus.map(menu => (menu.permissions as any).__forItem);
+            const permissionItems = contextMenus.map((menu) => (menu.permissions as any).__forItem);
 
             expect(contextMenus.length).toBe(3);
             expect(permissionItems).toEqual(instance.items);
@@ -1208,7 +1202,7 @@ describe('ItemListComponent', () => {
             fixture.detectChanges();
 
             const backgroundColors = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('gtx-contents-list-item'))
-                .map(itemElement => window.getComputedStyle(itemElement).backgroundColor);
+                .map((itemElement) => window.getComputedStyle(itemElement).backgroundColor);
 
             expect(backgroundColors[0]).toBe(backgroundColors[1]);
             expect(backgroundColors[1]).not.toBe(backgroundColors[2]);
@@ -1248,7 +1242,7 @@ describe('ItemListComponent', () => {
             fixture.detectChanges();
 
             const boxShadows = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('image-thumbnail'))
-                .map(itemElement => window.getComputedStyle(itemElement).boxShadow);
+                .map((itemElement) => window.getComputedStyle(itemElement).boxShadow);
 
             expect(boxShadows[0]).toBe(boxShadows[1]);
             expect(boxShadows[1]).not.toBe(boxShadows[2]);

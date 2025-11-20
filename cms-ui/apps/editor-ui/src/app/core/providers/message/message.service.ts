@@ -1,14 +1,14 @@
 import { Injectable, OnDestroy } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
+import { MessageFromServer } from '@gentics/cms-models';
 import { Subject, Subscription, combineLatest, interval, of } from 'rxjs';
 import { delay, filter, map, mergeMap, startWith } from 'rxjs/operators';
-import { MessageFromServer } from '@gentics/cms-models';
 import {
     ApplicationStateService,
     InstantMessagesDeliveredAction,
     MessageActionsService,
 } from '../../../state';
 import { PermissionService } from '../permissions/permission.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
 
 const DEFAULT_DELAY = 2;
 const DEFAULT_INTERVAL = 30;
@@ -24,7 +24,7 @@ export class MessageService implements OnDestroy {
         private appState: ApplicationStateService,
         private messageActions: MessageActionsService,
         private permissions: PermissionService,
-        private notificationService: I18nNotification,
+        private notificationService: I18nNotificationService,
     ) {}
 
     ngOnDestroy(): void {

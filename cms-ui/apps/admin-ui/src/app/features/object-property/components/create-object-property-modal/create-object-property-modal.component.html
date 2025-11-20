@@ -1,30 +1,31 @@
 <div class="modal-title">
-    <h5>{{ 'modal.create_objectProperty_title' | i18n }}</h5>
+  <h5>{{ 'modal.create_objectProperty_title' | gtxI18n }}</h5>
 </div>
 <div class="modal-content">
-    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+  <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
 
+  @if (form) {
     <gtx-object-property-properties
-        *ngIf="form"
-        [formControl]="form"
-        [mode]="create"
-    >
+      [formControl]="form"
+      [mode]="create"
+      >
     </gtx-object-property-properties>
+  }
 </div>
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        [disabled]="!form || form.disabled || form.invalid || form.pristine || loading"
-        (click)="buttonCreateEntityClicked()"
+  <gtx-button
+    type="primary"
+    [disabled]="!form || form.disabled || form.invalid || form.pristine || loading"
+    (click)="buttonCreateEntityClicked()"
     >
-        {{ 'modal.create_button' | i18n }}
-    </gtx-button>
+    {{ 'modal.create_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

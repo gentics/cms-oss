@@ -10,6 +10,7 @@ import {
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File as FileModel,
@@ -25,7 +26,6 @@ import { map, publishReplay, refCount, startWith, switchMap } from 'rxjs/operato
 import { getFileExtension } from '../../../common/utils/get-file-extension';
 import { isEditableImage } from '../../../common/utils/is-editable-image';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
@@ -69,13 +69,15 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
     private dismissErrorMessage(): void {}
 
-    constructor(private resourceUrlBuilder: ResourceUrlBuilder,
+    constructor(
+        private resourceUrlBuilder: ResourceUrlBuilder,
         private navigationService: NavigationService,
         private appState: ApplicationStateService,
         public permissions: PermissionService,
         private entityResolver: EntityResolver,
-        private notification: I18nNotification,
-        private folderActions: FolderActionsService) {
+        private notification: I18nNotificationService,
+        private folderActions: FolderActionsService
+    ) {
         this.subscriptions.add(
             this.appState.select(state => state.entities).subscribe(entities => {
                 this.hasFileEditPermission$ = this.appState.select(() =>

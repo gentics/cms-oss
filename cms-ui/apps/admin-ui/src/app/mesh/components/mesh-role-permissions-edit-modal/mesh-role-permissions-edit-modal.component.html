@@ -1,69 +1,75 @@
 <div class="modal-title">
-    <h5>{{ 'mesh.manage_role_instance_permissions' | i18n:{ entityName: role.name } }}</h5>
+  <h5>{{ 'mesh.manage_role_instance_permissions' | gtxI18n:{ entityName: role.name } }}</h5>
 </div>
 
 <div class="modal-content">
-    <div [formGroup]="form" class="row">
-        <gtx-checkbox
-            *ngIf="form.get('create').enabled"
-            class="columns small-12"
-            [label]="'mesh.permission_create' | i18n"
-            formControlName="create"
-        ></gtx-checkbox>
+  <div [formGroup]="form" class="row">
+    @if (form.get('create').enabled) {
+      <gtx-checkbox
+        class="columns small-12"
+        [label]="'mesh.permission_create' | gtxI18n"
+        formControlName="create"
+      ></gtx-checkbox>
+    }
 
-        <gtx-checkbox
-            *ngIf="form.get('read').enabled"
-            class="columns small-12"
-            [label]="'mesh.permission_read' | i18n"
-            formControlName="read"
-        ></gtx-checkbox>
+    @if (form.get('read').enabled) {
+      <gtx-checkbox
+        class="columns small-12"
+        [label]="'mesh.permission_read' | gtxI18n"
+        formControlName="read"
+      ></gtx-checkbox>
+    }
 
-        <gtx-checkbox
-            *ngIf="form.get('update').enabled"
-            class="columns small-12"
-            [label]="'mesh.permission_update' | i18n"
-            formControlName="update"
-        ></gtx-checkbox>
+    @if (form.get('update').enabled) {
+      <gtx-checkbox
+        class="columns small-12"
+        [label]="'mesh.permission_update' | gtxI18n"
+        formControlName="update"
+      ></gtx-checkbox>
+    }
 
-        <gtx-checkbox
-            *ngIf="form.get('delete').enabled"
-            class="columns small-12"
-            [label]="'mesh.permission_delete' | i18n"
-            formControlName="delete"
-        ></gtx-checkbox>
+    @if (form.get('delete').enabled) {
+      <gtx-checkbox
+        class="columns small-12"
+        [label]="'mesh.permission_delete' | gtxI18n"
+        formControlName="delete"
+      ></gtx-checkbox>
+    }
 
-        <gtx-checkbox
-            *ngIf="form.get('publish').enabled"
-            class="columns small-12"
-            [label]="'mesh.permission_publish' | i18n"
-            formControlName="publish"
-        ></gtx-checkbox>
+    @if (form.get('publish').enabled) {
+      <gtx-checkbox
+        class="columns small-12"
+        [label]="'mesh.permission_publish' | gtxI18n"
+        formControlName="publish"
+      ></gtx-checkbox>
+    }
 
-        <gtx-checkbox
-            *ngIf="form.get('readPublished').enabled"
-            class="columns small-12"
-            [label]="'mesh.permission_readPublished' | i18n"
-            formControlName="readPublished"
-        ></gtx-checkbox>
-    </div>
+    @if (form.get('readPublished').enabled) {
+      <gtx-checkbox
+        class="columns small-12"
+        [label]="'mesh.permission_readPublished' | gtxI18n"
+        formControlName="readPublished"
+      ></gtx-checkbox>
+    }
+  </div>
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        data-action="confirm"
-        [disabled]="!form.valid"
-        (click)="applyPermissions(false)"
+  <gtx-button
+    type="primary"
+    data-action="confirm"
+    [disabled]="!form.valid"
+    (click)="applyPermissions(false)"
     >
-        {{ 'common.save_button' | i18n }}
-    </gtx-button>
+    {{ 'common.save_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        data-action="cancel"
-        (click)="closeFn(false)"
+  <gtx-button
+    type="secondary"
+    flat
+    data-action="cancel"
+    (click)="closeFn(false)"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

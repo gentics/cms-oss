@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Response as GtxResponse } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { ErrorHandler } from '../error-handler';
-import { I18nService } from '../i18n/i18n.service';
 
 export interface GtxActivityManagerActivity {
     id: number;
@@ -27,7 +27,7 @@ export interface GtxActivityManagerActivityConfig {
 
 export type GtxActivityManagerActivityI18nLabel = string | {
     label: string;
-    params: { [key: string]: string; };
+    params: { [key: string]: string };
     translateParams?: boolean;
 };
 
@@ -41,7 +41,6 @@ export type GtxActivityManagerActivityI18nLabel = string | {
  * be equipped with an asynchronous parameter on whose resolve/rejection the activity will
  * either get status `succeeded: true` or `failed: true`. As all these states are visally
  * indicated the user will know which activitys are still running and which have completed.
- *
  * @example
  * ```
  * constructor(
@@ -54,7 +53,6 @@ export type GtxActivityManagerActivityI18nLabel = string | {
  *     this.http.post('/user', { nameName: 'johndoe' }).toPromise(),
  * );
  * ```
- *
  */
 @Injectable()
 export class ActivityManagerService {
@@ -138,7 +136,7 @@ export class ActivityManagerService {
     }
 
     activityRemove(id: number): void {
-        const allTask = this.activities.filter(t => t.id !== id);
+        const allTask = this.activities.filter((t) => t.id !== id);
         this._activities$.next(allTask);
     }
 
@@ -150,7 +148,7 @@ export class ActivityManagerService {
         id: number,
         property: P,
     ): GtxActivityManagerActivity[P] {
-        const activity = this.activities.find(a => a.id === id);
+        const activity = this.activities.find((a) => a.id === id);
         if (!activity) {
             throw new Error(`Activity with ${id} does not exist.`);
         }
@@ -163,7 +161,7 @@ export class ActivityManagerService {
         value: GtxActivityManagerActivity[P],
     ): void {
         const activitiesUpdated: GtxActivityManagerActivity[] = [...this.activities];
-        activitiesUpdated.forEach(activity => {
+        activitiesUpdated.forEach((activity) => {
             if (activity.id === id) {
                 activity[property] = value;
                 return;
@@ -211,7 +209,7 @@ export class ActivityManagerService {
             return this.i18n.instant(i18nData.label);
         }
 
-        const params: { [key: string]: string; } = { ...i18nData.params };
+        const params: { [key: string]: string } = { ...i18nData.params };
 
         if (i18nData.translateParams) {
             Object.entries(params).forEach(([key, value]) => {
@@ -224,7 +222,7 @@ export class ActivityManagerService {
 
     private getMessageSuccess(response: GtxResponse): string | null {
         if (Array.isArray(response.messages) && response.messages.length > 0) {
-            return response.messages.map(msg => msg.message || '').join('\n');
+            return response.messages.map((msg) => msg.message || '').join('\n');
         } else {
             return null;
         }

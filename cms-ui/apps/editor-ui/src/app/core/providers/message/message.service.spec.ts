@@ -1,13 +1,10 @@
 import { discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { STATE_MODULES } from '@editor-ui/app/state';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { BehaviorSubject, Subscription } from 'rxjs';
-import { ApplicationStateService } from '../../../state';
-import { MessageActionsService } from '../../../state';
+import { ApplicationStateService, MessageActionsService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { PermissionService } from '../permissions/permission.service';
-import { I18nService } from '../i18n/i18n.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
 import { MessageService } from './message.service';
 
 class MockI18nService {}
@@ -32,15 +29,14 @@ describe('MessageService', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: MessageActionsService, useClass: MockMessageActions },
                 { provide: PermissionService, useClass: MockPermissionsService },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
             ],
         });
 
-        service = TestBed.get(MessageService);
-        appState = TestBed.get(ApplicationStateService);
-        messageActions = TestBed.get(MessageActionsService);
-        permissionsService = TestBed.get(PermissionService);
+        service = TestBed.inject(MessageService);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        messageActions = TestBed.inject(MessageActionsService) as any;
+        permissionsService = TestBed.inject(PermissionService) as any;
 
         appState.mockState({
             auth: {

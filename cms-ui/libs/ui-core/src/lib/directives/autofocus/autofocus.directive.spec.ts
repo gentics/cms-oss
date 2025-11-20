@@ -1,7 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { BrowserTestingModule } from '@angular/platform-browser/testing';
 import { AutosizeModule } from 'ngx-autosize';
 import { IModalDialog } from '../../common/modal';
 import { ButtonComponent } from '../../components/button/button.component';
@@ -65,7 +65,7 @@ describe('AutofocusDirective', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
+        TestBed.overrideModule(BrowserTestingModule, {
             set: {
                 declarations: [DropdownContentWrapperComponent, DynamicModal, TestModal, ScrollMaskComponent],
             },
@@ -76,7 +76,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-button label="first"></gtx-button>
             <gtx-button label="second" autofocus></gtx-button>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('button') as HTMLButtonElement[];
             fixture.detectChanges();
             tick(50);
@@ -92,7 +92,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-checkbox label="first"></gtx-checkbox>
             <gtx-checkbox label="second" autofocus></gtx-checkbox>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
@@ -108,7 +108,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-date-time-picker label="first"></gtx-date-time-picker>
             <gtx-date-time-picker label="second" autofocus></gtx-date-time-picker>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
@@ -124,7 +124,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-file-picker label="first"></gtx-file-picker>
             <gtx-file-picker label="second" autofocus></gtx-file-picker>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
@@ -140,7 +140,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-input label="first"></gtx-input>
             <gtx-input label="second" autofocus></gtx-input>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
@@ -156,7 +156,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-radio-button label="first"></gtx-radio-button>
             <gtx-radio-button label="second" autofocus></gtx-radio-button>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
@@ -172,7 +172,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-search-bar label="first"></gtx-search-bar>
             <gtx-search-bar label="second" autofocus></gtx-search-bar>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
@@ -205,7 +205,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-select label="first"></gtx-select>
             <gtx-select label="second" autofocus></gtx-select>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('gtx-select .select-input') as HTMLElement[];
             fixture.detectChanges();
             tick(50);
@@ -220,7 +220,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <gtx-textarea label="first"></gtx-textarea>
             <gtx-textarea label="second" autofocus></gtx-textarea>`,
-        fixture => {
+        (fixture) => {
             const [first, second] = fixture.nativeElement.querySelectorAll('textarea') as HTMLTextAreaElement[];
             fixture.detectChanges();
             tick(50);
@@ -264,7 +264,7 @@ describe('AutofocusDirective', () => {
         (fixture, testComponent) => {
             let opened = false;
             testComponent.modalService.fromComponent(TestModal)
-                .then(modal => {
+                .then((modal) => {
                     modal.open();
                     opened = true;
 
@@ -289,7 +289,7 @@ describe('AutofocusDirective', () => {
         componentTest(() => TestComponent, `
             <div style="height: 9999px"></div>
             <gtx-input autofocus></gtx-input>`,
-        fixture => {
+        (fixture) => {
             const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
 
             expect(isInView(input)).toBe(false);
@@ -308,9 +308,9 @@ function isInView(element: Element): boolean {
     const rect = element.getBoundingClientRect();
     const { clientHeight, clientLeft, clientTop, clientWidth } = document.documentElement;
     return rect.top < (clientTop + clientHeight)
-        && rect.bottom >= clientTop
-        && rect.left < (clientLeft + clientWidth)
-        && rect.right >= clientLeft;
+      && rect.bottom >= clientTop
+      && rect.left < (clientLeft + clientWidth)
+      && rect.right >= clientLeft;
 }
 
 @Component({

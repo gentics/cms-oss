@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
-import { StateModule } from '@editor-ui/app/state/state.module';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import { ItemInNode } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
+import { StateModule } from '../../../state/state.module';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { RepositoryBrowser } from '../../components';
 import { RepositoryBrowserClient } from './repository-browser-client.service';
 

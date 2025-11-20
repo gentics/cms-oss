@@ -73,15 +73,15 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Edit
     readonly OBJECT_TYPES: readonly { id: TagmapEntryPropertiesObjectType; label: string; }[] = [
         {
             id: TagmapEntryPropertiesObjectType.FOLDER,
-            label: 'tagmapEntry.objecttype_folder',
+            label: 'tagmap_entry.objecttype_folder',
         },
         {
             id: TagmapEntryPropertiesObjectType.PAGE,
-            label: 'tagmapEntry.objecttype_page',
+            label: 'tagmap_entry.objecttype_page',
         },
         {
             id: TagmapEntryPropertiesObjectType.FILE,
-            label: 'tagmapEntry.objecttype_file',
+            label: 'tagmap_entry.objecttype_file',
         },
     ] as const;
 

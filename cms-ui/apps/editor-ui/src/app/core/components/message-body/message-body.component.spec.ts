@@ -1,10 +1,10 @@
 import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { tick } from '@angular/core/testing';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { Page } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 import { MessageBody } from './message-body.component';
 

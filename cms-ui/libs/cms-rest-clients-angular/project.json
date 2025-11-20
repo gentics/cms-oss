@@ -13,13 +13,13 @@
                 "project": "libs/cms-rest-clients-angular/ng-package.json"
             },
             "configurations": {
-                "production": {},
+                "production": {
+                    "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.prod.json"
+                },
                 "development": {},
                 "ci": {}
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint"
+            },
+            "defaultConfiguration": "production"
         },
         "test": {
             "executor": "nx:run-commands",
@@ -35,12 +35,6 @@
                     "command": "node ../node_modules/@angular/cli/bin/ng.js test cms-rest-clients-angular --watch=false --configuration=ci",
                     "color": false
                 }
-            }
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/cms-rest-clients-angular"
             }
         }
     }

@@ -10,7 +10,7 @@ import { VersionModalComponent } from '../versions-modal/versions-modal.componen
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class GtxAppVersionLabelComponent implements OnChanges {
+export class AppVersionLabelComponent implements OnChanges {
 
     /** Name of the application */
     @Input()

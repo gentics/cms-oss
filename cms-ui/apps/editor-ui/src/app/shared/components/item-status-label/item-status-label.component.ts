@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { UIMode } from '@editor-ui/app/common/models';
 import { Form, Language, Page, StagedItemsMap } from '@gentics/cms-models';
+import { UIMode } from '../../../common/models';
 import { PublishableStateUtil } from '../../util/entity-states';
 
 enum DisplayLabel {

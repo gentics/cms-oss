@@ -1,5 +1,7 @@
-<div *ngIf="loading" class="gtx-loading-overlay-loader">Loading...</div>
+@if (loading) {
+  <div class="gtx-loading-overlay-loader">Loading...</div>
+}
 
 <div class="content" [hidden]="loading">
-    <ng-content></ng-content>
+  <ng-content></ng-content>
 </div>

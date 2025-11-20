@@ -15,7 +15,6 @@ import { componentTest, configureComponentTest } from '../../../../../testing';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
 import { ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
 import { FilePropertiesComponent } from '../../../../shared/components/file-properties/file-properties.component';
 import { DynamicDisableDirective } from '../../../../shared/directives/dynamic-disable/dynamic-disable.directive';
@@ -99,7 +98,6 @@ describe('PageUrlTagPropertyEditor', () => {
                 { provide: ApiBase, useClass: MockApiBase },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 TagPropertyEditorResolverService,
@@ -161,14 +159,14 @@ describe('PageUrlTagPropertyEditor', () => {
                     // Simulated existing page
                     pageReturnValue = of({
                         page: getExamplePageData({ id: origTagProperty.pageId }),
-                    } as any)
+                    } as any);
                 } else {
                     // Simulated removed page
                     pageReturnValue = throwError({
-                        messages: [ {
+                        messages: [{
                             message: 'The specified page was not found.',
                             type: 'CRITICAL',
-                        } ],
+                        }],
                         responseInfo: {
                             responseCode: ResponseCode.NOT_FOUND,
                             responseMessage: 'The specified page was not found.',
@@ -178,10 +176,10 @@ describe('PageUrlTagPropertyEditor', () => {
             } else {
                 // Simulated removed page
                 pageReturnValue = throwError({
-                    messages: [ {
+                    messages: [{
                         message: 'The specified page was not found.',
                         type: 'CRITICAL',
-                    } ],
+                    }],
                     responseInfo: {
                         responseCode: ResponseCode.NOT_FOUND,
                         responseMessage: 'The specified page was not found.',
@@ -207,7 +205,6 @@ describe('PageUrlTagPropertyEditor', () => {
 
             expect(browseBox.label).toEqual('tag_editor.internal_page');
             expect(browseBox.disabled).toBe(context.readOnly);
-
 
             if (origTagProperty.pageId) {
                 if (origTagProperty.pageId === PAGE_A.id) {

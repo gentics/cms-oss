@@ -1,5 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { LocalStorage } from '@editor-ui/app/core/providers/local-storage/local-storage.service';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import {
     File as FileModel,
     FileUploadResponse,
@@ -29,8 +29,7 @@ import { emptyItemInfo, GtxChipSearchSearchFilterMap, ItemsInfo, plural } from '
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
+import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { QueryAssemblerElasticSearchService, QueryAssemblerGCMSSearchService } from '../../../shared/providers/query-assembler';
@@ -91,7 +90,7 @@ function fileToResponse(file: File): FileUploadResponse {
 }
 
 function fileToUploadResponse(file: File): UploadResponse {
-    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+
     const uid = (uidCounter++) + '';
     uidCache[uid] = {
         file,
@@ -108,7 +107,7 @@ function fileToUploadResponse(file: File): UploadResponse {
         response: fileToResponse(file),
         statusCode: 200,
         uid,
-    }
+    };
 }
 
 class MockModalService {
@@ -140,23 +139,23 @@ describe('FolderActionsService', () => {
                 FolderActionsService,
                 EntityResolver,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: PermissionService, useClass: MockPermissionService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 QueryAssemblerGCMSSearchService,
                 QueryAssemblerElasticSearchService,
                 { provide: ModalService, useClass: MockModalService },
                 { provide: LocalStorage, useClass: MockLocalStorage },
+                { provide: I18nService, useClass: MockI18nService },
             ],
         });
 
-        folderActions = TestBed.get(FolderActionsService);
+        folderActions = TestBed.inject(FolderActionsService);
         client = TestBed.inject(GCMSRestClientService);
-        permissions = TestBed.get(PermissionService);
-        state = TestBed.get(ApplicationStateService);
+        permissions = TestBed.inject(PermissionService) as any;
+        state = TestBed.inject(ApplicationStateService) as any;
 
         initialState = {
             folder: {
@@ -198,33 +197,33 @@ describe('FolderActionsService', () => {
 
         state.mockState(initialState);
 
-        spyOn(client.folder, 'create').and.callFake(props => {
+        spyOn(client.folder, 'create').and.callFake((props) => {
             if (props.name === 'existing') {
                 return throwError({ message: '' });
             } else {
                 return of({ folder: getExampleFolderData() }) as any;
             }
-        })
+        });
         spyOn(client.folder, 'folders').and.returnValue(fakeListResponse('folders'));
         spyOn(client.folder, 'pages').and.returnValue(fakeListResponse('pages'));
-        spyOn(client.folder, 'files').and.returnValue(fakeListResponse('files'))
+        spyOn(client.folder, 'files').and.returnValue(fakeListResponse('files'));
         spyOn(client.folder, 'images').and.returnValue(fakeListResponse('files'));
-        spyOn(client.folder, 'items').and.returnValue(fakeListResponse('items'))
+        spyOn(client.folder, 'items').and.returnValue(fakeListResponse('items'));
         spyOn(client.page, 'update').and.returnValue(fakeListResponse('items'));
         spyOn(client.page, 'approvePublishQueue').and.returnValue(fakeListResponse('pages'));
         spyOn(client.elasticSearch, 'search').and.returnValue(fakeListResponse('items'));
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
         spyOn(client.file, 'upload').and.callFake((file) => of(fileToResponse(file as any)));
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
         spyOn(client.file, 'uploadTo').and.callFake((_, file) => of(fileToResponse(file as any)));
         spyOn(client.image, 'get').and.callFake((id) => of({
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
             image: getExampleImageData({ id: id as any }),
             responseInfo: null,
             messages: [],
         }));
         spyOn(client.file, 'get').and.callFake((id) => of({
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
             file: getExampleFileData({ id: id as any }),
             responseInfo: null,
             messages: [],
@@ -237,12 +236,12 @@ describe('FolderActionsService', () => {
             const payload = {
                 name: 'Test Page',
             };
-            const expectedPage = {...page};
+            const expectedPage = { ...page };
 
             expectedPage.name = payload.name;
             folderActions.getItem = jasmine.createSpy('getItem').and.returnValue(Promise.resolve(expectedPage));
 
-            folderActions.updateItem(page.type, page.id, payload, { }).then(value => {
+            folderActions.updateItem(page.type, page.id, payload, { }).then((value) => {
                 expect(client.page.update).toHaveBeenCalledWith(page.id, { page: payload });
                 expect(folderActions.getItem).toHaveBeenCalledWith(page.id, page.type);
                 expect(value).toEqual(expectedPage);
@@ -256,7 +255,7 @@ describe('FolderActionsService', () => {
                 const payload: any = {
                     niceUrl: null,
                 };
-                const expectedPage = {...page};
+                const expectedPage = { ...page };
                 delete expectedPage.niceUrl;
 
                 folderActions.getItem = jasmine.createSpy('getItem').and.returnValue(Promise.resolve(expectedPage));
@@ -267,7 +266,7 @@ describe('FolderActionsService', () => {
                 // expect(state.actions.folder.fetchItemSuccess).toHaveBeenCalledWith({ type: expectedPage.type, item: expectedPage });
 
                 let promiseResolved = false;
-                result.then(value => {
+                result.then((value) => {
                     promiseResolved = true;
                     expect(value).toEqual(expectedPage);
                 });
@@ -506,10 +505,10 @@ describe('FolderActionsService', () => {
         describe('advanced search', () => {
 
             function setSearchFiltersState(opts: {
-                searchFiltersVisible: boolean,
-                searchFiltersValid: boolean,
-                searchFiltersChanging: boolean,
-                searchFilters: GtxChipSearchSearchFilterMap,
+                searchFiltersVisible: boolean;
+                searchFiltersValid: boolean;
+                searchFiltersChanging: boolean;
+                searchFilters: GtxChipSearchSearchFilterMap;
             }): void {
                 state.mockState({
                     folder: {
@@ -611,7 +610,7 @@ describe('FolderActionsService', () => {
             folderActions.getItems = jasmine.createSpy('getItems');
         });
 
-        folderItemTypes.forEach(type => {
+        folderItemTypes.forEach((type) => {
 
             describe(`${getMethodName(type)}()`, () => {
 
@@ -714,7 +713,7 @@ describe('FolderActionsService', () => {
             expect(folderActions.getImages).toHaveBeenCalledWith(state.now.folder.activeFolder, true, state.now.folder.searchTerm);
         }));
 
-        folderItemTypes.forEach(type => {
+        folderItemTypes.forEach((type) => {
 
             it(`getItemsOfTypeInFolder() calls the right method for ${type}s`, () => {
                 const typeSpecificMethod = getMethodName(type);
@@ -722,7 +721,6 @@ describe('FolderActionsService', () => {
                 folderActions.getAllItemsInFolder(PARENT_ID, '', true);
                 expect(folderActions[typeSpecificMethod]).toHaveBeenCalledWith(PARENT_ID, true, '');
             });
-
 
             it(`getItemsOfTypeInFolder() calls the right method for ${type}s and searchTerm`, () => {
                 const typeSpecificMethod = getMethodName(type);
@@ -769,7 +767,7 @@ describe('FolderActionsService', () => {
                 motherId: folder.motherId,
                 failOnDuplicate: folder.failOnDuplicate,
             };
-        }
+        };
 
         it('creates correct folder', fakeAsync(async () => {
             const folder: FolderCreateRequest = {
@@ -926,5 +924,5 @@ describe('FolderActionsService', () => {
             expect(folderActions.openUploadModals).toHaveBeenCalledTimes(1);
             expect(folderActions.openImageModal).toHaveBeenCalledTimes(2);
         }));
-    })
+    });
 });

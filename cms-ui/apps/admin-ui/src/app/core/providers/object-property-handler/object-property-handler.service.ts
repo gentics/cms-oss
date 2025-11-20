@@ -28,13 +28,13 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EntityIdType, Node, Raw } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class ObjectPropertyHandlerService
@@ -72,7 +72,7 @@ export class ObjectPropertyHandlerService
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityCreateResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.client.objectProperty.create(data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.objectProperty);
                 this.nameMap[res.objectProperty.id] = name;
 
@@ -93,7 +93,7 @@ export class ObjectPropertyHandlerService
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]> {
         return this.create(data, params).pipe(
-            map(res => this.mapToBusinessObject(res.objectProperty)),
+            map((res) => this.mapToBusinessObject(res.objectProperty)),
         );
     }
 
@@ -102,7 +102,7 @@ export class ObjectPropertyHandlerService
         params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityLoadResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.client.objectProperty.get(id).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.objectProperty);
                 this.nameMap[res.objectProperty.id] = name;
             }),
@@ -115,7 +115,7 @@ export class ObjectPropertyHandlerService
         params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]> {
         return this.get(id, params).pipe(
-            map(res => this.mapToBusinessObject(res.objectProperty)),
+            map((res) => this.mapToBusinessObject(res.objectProperty)),
         );
     }
 
@@ -125,7 +125,7 @@ export class ObjectPropertyHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.client.objectProperty.update(id, data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.objectProperty);
                 this.nameMap[res.objectProperty.id] = name;
 
@@ -147,7 +147,7 @@ export class ObjectPropertyHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]> {
         return this.update(id, data, params).pipe(
-            map(res => this.mapToBusinessObject(res.objectProperty)),
+            map((res) => this.mapToBusinessObject(res.objectProperty)),
         );
     }
 
@@ -178,8 +178,8 @@ export class ObjectPropertyHandlerService
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityListResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.client.objectProperty.list(params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
+            tap((res) => {
+                res.items.forEach((objCat) => {
                     const name = this.displayName(objCat);
                     this.nameMap[objCat.id] = name;
                 });
@@ -193,7 +193,7 @@ export class ObjectPropertyHandlerService
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]>> {
         return this.list(body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
@@ -207,7 +207,7 @@ export class ObjectPropertyHandlerService
         return this.client.devTools.assignObjectProperty(devtoolPackage, entityId).pipe(
             discard(() => {
                 this.notification.show({
-                    message: 'objectProperty.objectProperty_successfully_added_to_package',
+                    message: 'object_property.objectProperty_successfully_added_to_package',
                     type: 'success',
                     translationParams: {
                         name: this.nameMap[entityId],
@@ -225,7 +225,7 @@ export class ObjectPropertyHandlerService
         return this.client.devTools.unassignObjectProperty(devtoolPackage, entityId).pipe(
             discard(() => {
                 this.notification.show({
-                    message: 'objectProperty.objectProperty_successfully_removed_from_package',
+                    message: 'object_property.objectProperty_successfully_removed_from_package',
                     type: 'success',
                     translationParams: {
                         name: this.nameMap[entityId],
@@ -242,8 +242,8 @@ export class ObjectPropertyHandlerService
         params?: DevToolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<DevToolEntityListResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.client.devTools.listObjectProperties(devtoolPackage, params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
+            tap((res) => {
+                res.items.forEach((objCat) => {
                     const name = this.displayName(objCat);
                     this.nameMap[objCat.id] = name;
                 });
@@ -258,7 +258,7 @@ export class ObjectPropertyHandlerService
         params?: DevToolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]>> {
         return this.listFromDevTool(devtoolPackage, body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
@@ -267,7 +267,7 @@ export class ObjectPropertyHandlerService
 
     getLinkedNodes(objectPropertyId: EntityIdType): Observable<Node<Raw>[]> {
         return this.client.objectProperty.listNodes(objectPropertyId).pipe(
-            map(res => res.items),
+            map((res) => res.items),
         );
     }
 
@@ -278,7 +278,7 @@ export class ObjectPropertyHandlerService
         }).pipe(discard(() => {
             this.notification.show({
                 type: 'success',
-                message: 'objectProperty.operation_linked_to_nodes_successful',
+                message: 'object_property.operation_linked_to_nodes_successful',
             });
         }));
     }
@@ -290,7 +290,7 @@ export class ObjectPropertyHandlerService
         }).pipe(discard(() => {
             this.notification.show({
                 type: 'success',
-                message: 'objectProperty.operation_linked_to_nodes_successful',
+                message: 'object_property.operation_linked_to_nodes_successful',
             });
         }));
     }

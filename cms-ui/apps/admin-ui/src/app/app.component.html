@@ -1,89 +1,82 @@
-<ng-container *ngIf="isLoggedIn$ | async">
-    <a routerLink="/" class="branding">
-        <svg-icon src="assets/images/gentics-logo-coloured.svg"></svg-icon>
-        <span class="app-title">Administration</span>
-    </a>
-
-    <gtx-top-bar>
-        <gtx-breadcrumbs [routerLinks]="breadcrumbs$ | async" multiline="false"></gtx-breadcrumbs>
-    </gtx-top-bar>
-
-    <gtx-maintenance-mode-indicator></gtx-maintenance-mode-indicator>
-
-    <div class="corner-actions">
-
-        <gtx-button
-            *ngIf="(activitiesCount$ | async) > 0"
-            class="corner-action"
-            [class.animated]="activitiesPending$ | async"
-            icon
-            type="secondary"
-            (click)="displayActivities()"
+@if (isLoggedIn$ | async) {
+  <a routerLink="/" class="branding">
+    <img src="assets/images/gentics-logo-coloured.svg" />
+    <span class="app-title">Administration</span>
+  </a>
+  <gtx-top-bar>
+    <gtx-breadcrumbs [routerLinks]="breadcrumbs$ | async" multiline="false"></gtx-breadcrumbs>
+  </gtx-top-bar>
+  <gtx-maintenance-mode-indicator></gtx-maintenance-mode-indicator>
+  <div class="corner-actions">
+    @if ((activitiesCount$ | async) > 0) {
+      <gtx-button
+        class="corner-action"
+        [class.animated]="activitiesPending$ | async"
+        icon
+        type="secondary"
+        (click)="displayActivities()"
         >
-            <icon>autorenew</icon>
-            <span class="counter">{{ activitiesCount$ | async }}</span>
-        </gtx-button>
-
-        <gtx-button
-            *ngIf="(unreadMessageCount$ | async) > 0"
-            class="corner-action"
-            icon
-            type="secondary"
-            gtxActionAllowed="global.viewInbox"
-            aaHideElement="true"
-            (click)="displayMessages()"
+        <icon>autorenew</icon>
+        <span class="counter">{{ activitiesCount$ | async }}</span>
+      </gtx-button>
+    }
+    @if ((unreadMessageCount$ | async) > 0) {
+      <gtx-button
+        class="corner-action"
+        icon
+        type="secondary"
+        gtxActionAllowed="global.viewInbox"
+        aaHideElement="true"
+        (click)="displayMessages()"
         >
-            <icon>mail_outline</icon>
-            <span class="counter">{{ unreadMessageCount$ | async }}</span>
-        </gtx-button>
-    </div>
-
-    <gtx-user-menu
-        [opened]="userMenuOpened"
-        [user]="currentUser$ | async"
-        [supportedLanguages]="supportedLanguages$ | async"
-        [currentlanguage]="currentLanguage$ | async"
-        (toggle)="userMenuOpened = $event"
-        (setLanguage)="setLanguageConfirmation($event)"
-        (showPasswordModal)="onShowPasswordModal()"
-        (logout)="onLogoutClick()"
+        <icon>mail_outline</icon>
+        <span class="counter">{{ unreadMessageCount$ | async }}</span>
+      </gtx-button>
+    }
+  </div>
+  <gtx-user-menu
+    [opened]="userMenuOpened"
+    [user]="currentUser$ | async"
+    [supportedLanguages]="supportedLanguages$ | async"
+    [currentlanguage]="currentLanguage$ | async"
+    (toggle)="userMenuOpened = $event"
+    (setLanguage)="setLanguageConfirmation($event)"
+    (showPasswordModal)="onShowPasswordModal()"
+    (logout)="onLogoutClick()"
     >
-        <gtx-tabs
-            top
-            hideTitle
-            [activeId]="userMenuActiveTab"
-            (tabChange)="userMenuActiveTab = $event"
+    <gtx-tabs
+      top
+      hideTitle
+      [activeId]="userMenuActiveTab"
+      (tabChange)="userMenuActiveTab = $event"
+      >
+      <gtx-tab
+        icon="mail"
+        [id]="userMenuTabIdMessages"
+        [title]="'dashboard.messages_title' | gtxI18n"
         >
-            <gtx-tab
-                icon="mail"
-                [id]="userMenuTabIdMessages"
-                [title]="'dashboard.messages_title' | i18n"
-            >
-                <gtx-message-inbox></gtx-message-inbox>
-            </gtx-tab>
-
-            <gtx-tab
-                icon="autorenew"
-                [id]="userMenuTabIdActivities"
-                [title]="'dashboard.activities_title' | i18n"
-            >
-                <gtx-activity-manager></gtx-activity-manager>
-            </gtx-tab>
-        </gtx-tabs>
-
-        <gtx-app-version-label
-            bottom
-            appTitle="Gentics CMS"
-            [versionData]="cmpVersion$ | async"
-            [nodes]="loadedNodes"
-        ></gtx-app-version-label>
-
-    </gtx-user-menu>
-</ng-container>
+        <gtx-message-inbox></gtx-message-inbox>
+      </gtx-tab>
+      <gtx-tab
+        icon="autorenew"
+        [id]="userMenuTabIdActivities"
+        [title]="'dashboard.activities_title' | gtxI18n"
+        >
+        <gtx-activity-manager></gtx-activity-manager>
+      </gtx-tab>
+    </gtx-tabs>
+    <gtx-app-version-label
+      bottom
+      appTitle="Gentics CMS"
+      [versionData]="cmpVersion$ | async"
+      [nodes]="loadedNodes"
+    ></gtx-app-version-label>
+  </gtx-user-menu>
+}
 
 <gtx-logging-in-overlay [loggingIn]="showLoginSpinner$ | async"></gtx-logging-in-overlay>
 
 <div class="main-content">
-    <router-outlet></router-outlet>
+  <router-outlet></router-outlet>
 </div>
 <gtx-overlay-host></gtx-overlay-host>

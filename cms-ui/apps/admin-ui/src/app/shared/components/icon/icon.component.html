@@ -1,16 +1,22 @@
-<span *ngIf="name" [ngClass]="['gtx-icon', name]">
-
-    <span *ngIf="matIconPrimary" class="gtx-icon-primary">
-        <icon *ngIf="name !== 'usersnap'; else usersnap">{{ matIconPrimary }}</icon>
-        <ng-template #usersnap>
-            <img *ngIf="name === 'usersnap'" src="../../../../assets/images/usersnap.png" height="20" width="20">
-        </ng-template>
-    </span>
-
-    <span *ngIf="matIconSecondary" class="gtx-icon-secondary-container">
+@if (name) {
+  <span [ngClass]="['gtx-icon', name]">
+    @if (matIconPrimary) {
+      <span class="gtx-icon-primary">
+        @if (name !== 'usersnap') {
+          <icon>{{ matIconPrimary }}</icon>
+        } @else {
+          @if (name === 'usersnap') {
+            <img src="../../../../assets/images/usersnap.png" height="20" width="20">
+          }
+        }
+      </span>
+    }
+    @if (matIconSecondary) {
+      <span class="gtx-icon-secondary-container">
         <span class="gtx-icon-secondary">
-            <icon>{{ matIconSecondary }}</icon>
+          <icon>{{ matIconSecondary }}</icon>
         </span>
-    </span>
-
-</span>
+      </span>
+    }
+  </span>
+}

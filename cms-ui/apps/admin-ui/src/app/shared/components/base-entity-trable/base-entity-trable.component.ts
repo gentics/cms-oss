@@ -1,5 +1,4 @@
 import { BO_ID, BusinessObject, TrableRowReloadOptions } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import {
@@ -12,12 +11,13 @@ import {
     TrableRowExpandEvent,
     coerceInstance,
 } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, Subject, Subscription, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, map, switchMap } from 'rxjs/operators';
 
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
 export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = never> implements OnInit, OnChanges, OnDestroy {
 
@@ -100,7 +100,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         coerceInstance(this, this.booleanInputs, changes);
 
         if (changes.selected) {
-            this.selected = (this.selected || []).map(value => {
+            this.selected = (this.selected || []).map((value) => {
                 if (value != null && typeof value === 'object') {
                     return (value as object)[BO_ID];
                 }
@@ -114,7 +114,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     }
 
     public ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     protected setupActionLoading(): void {
@@ -125,7 +125,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
             this.createTableActionLoading(),
         ]).pipe(
             map(([_, actions]) => actions),
-        ).subscribe(actions => {
+        ).subscribe((actions) => {
             this.applyActions(actions);
             this.changeDetector.markForCheck();
         }));
@@ -150,16 +150,16 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         const options = this.createAdditionalLoadOptions();
 
         // Mark all rows as loading
-        Object.values(this.loadedRows).forEach(row => {
+        Object.values(this.loadedRows).forEach((row) => {
             row.loading = true;
         });
         // Force view refresh
         this.rows = [...this.rows];
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(forkJoin(this.rows.map(rootRow => this.loader.reloadRow(rootRow, options, {
+        this.subscriptions.push(forkJoin(this.rows.map((rootRow) => this.loader.reloadRow(rootRow, options, {
             reloadDescendants: true,
-        }))).subscribe(newRootRows => {
+        }))).subscribe((newRootRows) => {
             this.rows = newRootRows;
             this.loadedRows = newRootRows.reduce((acc, row) => {
                 acc[row.id] = row;
@@ -172,7 +172,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     }
 
     protected loadRootElements(): void {
-        this.subscriptions.push(this.loader.loadRowChildren(null, this.createAdditionalLoadOptions()).subscribe(newRootRows => {
+        this.subscriptions.push(this.loader.loadRowChildren(null, this.createAdditionalLoadOptions()).subscribe((newRootRows) => {
             this.rows = newRootRows;
             this.loadedRows = newRootRows.reduce((acc, row) => {
                 acc[row.id] = row;
@@ -185,7 +185,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     }
 
     protected translateColumns(columns: TableColumn<O>[]): TableColumn<O>[] {
-        return columns.map(column => ({
+        return columns.map((column) => ({
             ...column,
             label: this.i18n.instant(column.label),
         }));
@@ -210,7 +210,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
                 for (const child of children) {
                     updateLoading(child);
                 }
-            }
+            };
             updateLoading(row);
         } else {
             row.loading = true;
@@ -220,14 +220,14 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         this.rows = [...this.rows];
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(this.loader.reloadRow(row, this.createAdditionalLoadOptions(), reloadOptions).subscribe(reloadedRow => {
+        this.subscriptions.push(this.loader.reloadRow(row, this.createAdditionalLoadOptions(), reloadOptions).subscribe((reloadedRow) => {
             // Replace the `row` with the `reloadedRow` in the parent element
             if (row.parent && row.parent.children) {
-                row.parent.children = row.parent.children.map(child => child.id === row.id ? reloadedRow : child);
+                row.parent.children = row.parent.children.map((child) => child.id === row.id ? reloadedRow : child);
                 // Force view refresh
                 this.rows = [...this.rows];
             } else {
-                this.rows = this.rows.map(rootRow => rootRow.id === reloadedRow.id ? reloadedRow : rootRow);
+                this.rows = this.rows.map((rootRow) => rootRow.id === reloadedRow.id ? reloadedRow : rootRow);
             }
             this.loadedRows[row.id] = reloadedRow;
 
@@ -242,7 +242,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         this.rows = [...this.rows];
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions()).subscribe(loadedChildren => {
+        this.subscriptions.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions()).subscribe((loadedChildren) => {
             // Update the row state
             row.loading = false;
             row.loaded = true;

@@ -1,7 +1,5 @@
 /* eslint-disable no-underscore-dangle */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { RepositoryBrowserOptions, TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -19,10 +17,12 @@ import {
     Template,
     TemplateTagTagPartProperty,
 } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable, Subject, Subscription, merge, of } from 'rxjs';
 import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
 import { Api } from '../../../../core/providers/api/api.service';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
+import { RepositoryBrowserClient } from '../../../../shared/providers';
 
 /**
  * Helper class for fetching a Page or a Template depending on the TagPropertyType
@@ -100,8 +100,8 @@ class ContainerWrapper {
             return of(this.container);
         } else {
             return this.api.folders
-                .getItem(pageId, 'page', {folder: false, template: false}).pipe(
-                    map(response => response.page),
+                .getItem(pageId, 'page', { folder: false, template: false }).pipe(
+                    map((response) => response.page),
                 );
         }
     }
@@ -114,7 +114,7 @@ class ContainerWrapper {
             return of(this.container);
         } else {
             return this.api.folders.getItem(templateId, 'template').pipe(
-                map(response => response.template),
+                map((response) => response.template),
             );
         }
     }
@@ -138,7 +138,7 @@ interface AugmentedTagSelection extends TagSelection {
     templateUrl: './tagref-tag-property-editor.component.html',
     styleUrls: ['./tagref-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
@@ -160,7 +160,7 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
     readOnly: boolean;
 
     /** Message to be displayed in tag property input */
-    private loadingError$ = new Subject<{ error: any, item: { itemId: number, nodeId?: number } }>();
+    private loadingError$ = new Subject<{ error: any; item: { itemId: number; nodeId?: number } }>();
 
     /** The onChange function registered by the TagEditor. */
     private onChangeFn: TagPropertiesChangedFn;
@@ -173,8 +173,9 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
     /** The objects representing the selected page/template and the selected tag within it. */
     private selectionSubject = new BehaviorSubject<TagSelection>({ container: null, tag: null });
     private selection$ = this.selectionSubject.asObservable().pipe(
-        switchMap(selection => this.addTagTypeToSelection(selection)),
+        switchMap((selection) => this.addTagTypeToSelection(selection)),
     );
+
     private selectedContainerWrapper: ContainerWrapper;
 
     private subscriptions = new Subscription();
@@ -193,7 +194,7 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
     ngOnInit(): void {
         this.tagDisplayValue$ = merge(
             this.selection$.pipe(
-                tap(selection => {
+                tap((selection) => {
                     this.selectedContainer = selection.container;
                 }),
                 map((selection: AugmentedTagSelection) => {
@@ -209,14 +210,14 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
                          */
                         if (this.tagProperty) {
                             if (this.tagProperty.type === TagPropertyType.PAGETAG) {
-                                return this.i18n.translate(
+                                return this.i18n.instant(
                                     'editor.tag_not_found_in_page',
-                                    { id: this.tagProperty.contentTagId, pageId: this.tagProperty.pageId},
+                                    { id: this.tagProperty.contentTagId, pageId: this.tagProperty.pageId },
                                 );
                             } else {
-                                return this.i18n.translate(
+                                return this.i18n.instant(
                                     'editor.tag_not_found_in_template',
-                                    { id: this.tagProperty.templateTagId , templateId: this.tagProperty.templateId },
+                                    { id: this.tagProperty.templateTagId, templateId: this.tagProperty.templateId },
                                 );
                             }
                         } else {
@@ -228,12 +229,12 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
                          * Also, null is emitted in case a referenced page or template got deleted and the tag property data was refetched.
                          * (Since the pageId or templateId in tagProperty gets removed)
                          */
-                        return this.i18n.translate('editor.tag_no_selection');
+                        return this.i18n.instant('editor.tag_no_selection');
                     }
                 }),
             ),
             this.loadingError$.pipe(
-                map((error: { error: any, item: { itemId: number, nodeId?: number } }) => {
+                map((error: { error: any; item: { itemId: number; nodeId?: number } }) => {
                     /**
                      * When a page or a template that contained a chosen tag and is referenced gets deleted, the pageId or templateId is kept in tagProperty.
                      * When we try to fetch the page or template information we get an error message.
@@ -242,14 +243,14 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
                      */
                     if (this.tagProperty) {
                         if (this.tagProperty.type === TagPropertyType.PAGETAG) {
-                            return this.i18n.translate(
+                            return this.i18n.instant(
                                 'editor.tag_not_found_in_page',
-                                { id: this.tagProperty.contentTagId, pageId: this.tagProperty.pageId},
+                                { id: this.tagProperty.contentTagId, pageId: this.tagProperty.pageId },
                             );
                         } else {
-                            return this.i18n.translate(
+                            return this.i18n.instant(
                                 'editor.tag_not_found_in_template',
-                                { id: this.tagProperty.templateTagId , templateId: this.tagProperty.templateId },
+                                { id: this.tagProperty.templateTagId, templateId: this.tagProperty.templateId },
                             );
                         }
                     } else {
@@ -277,19 +278,19 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
                     if (selection.container) {
                         return this.api.folders.getItem(selection.container.folderId, 'folder')
                             .pipe(
-                                map(response => response.folder),
-                                catchError(err => of(err)),
+                                map((response) => response.folder),
+                                catchError((err) => of(err)),
                                 tap((folder: Folder<Raw>) => {
                                     this.uploadDestination = folder;
                                     this.changeDetector.markForCheck();
                                 }),
-                            )
+                            );
                     }
 
                     return this.api.folders.getItem(this.page.folderId, 'folder')
                         .pipe(
-                            map(response => response.folder),
-                            catchError(err => of(err)),
+                            map((response) => response.folder),
+                            catchError((err) => of(err)),
                             tap((folder: Folder<Raw>) => {
                                 this.uploadDestination = folder;
                                 this.changeDetector.markForCheck();
@@ -375,7 +376,7 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
         if (newValue.type !== TagPropertyType.PAGETAG && newValue.type !== TagPropertyType.TEMPLATETAG) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by TagRefTagPropertyEditor.`);
         }
-        this.tagProperty = newValue ;
+        this.tagProperty = newValue;
 
         const sub = this.selectedContainerWrapper.fetchAndUpdateContainer(this.tagProperty)
             .subscribe(
@@ -407,11 +408,11 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
         }
 
         return tagType$.pipe(
-            map(tagType => ({
+            map((tagType) => ({
                 ...selection,
                 tagType: tagType,
             })),
-            catchError(error => of({
+            catchError((error) => of({
                 ...selection,
                 tagType: null,
             })),

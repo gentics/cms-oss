@@ -3,13 +3,13 @@ import {
     ConstructTableLoaderOptions,
     ConstructTableLoaderService,
     DevToolPackageTableLoaderService,
-    I18nService,
     PermissionsService,
 } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, GcmsPermission, NormalizableEntityTypesMap, TagType } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
@@ -25,7 +25,7 @@ export const COPY_CONSTRUCT_ACTION = 'copyConstruct';
     templateUrl: './construct-table.component.html',
     styleUrls: ['./construct-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ConstructTableComponent
     extends BasePackageEntityTableComponent<TagType, ConstructBO, ConstructTableLoaderOptions>
@@ -56,6 +56,7 @@ export class ConstructTableComponent
             fieldPath: 'categoryId',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'construct';
     protected focusEntityType = EditableEntity.CONSTRUCT;
 
@@ -106,7 +107,7 @@ export class ConstructTableComponent
                         type: 'alert',
                         single: true,
                         multiple: true,
-                    })
+                    });
                 } else {
                     actions.push({
                         id: ASSIGN_CONSTRUCT_TO_NODES_ACTION,

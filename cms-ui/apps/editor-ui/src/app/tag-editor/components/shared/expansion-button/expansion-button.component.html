@@ -1,14 +1,15 @@
 <gtx-button
-    type="secondary"
-    [flat]="expanded"
-    [title]="tooltip"
-    (click)="expanded = !expanded">
-    {{ label }}
-    <icon *ngIf="expanded; else collapsed" right>keyboard_arrow_up</icon>
-    <ng-template #collapsed>
-        <icon right>keyboard_arrow_down</icon>
-    </ng-template>
+  type="secondary"
+  [flat]="expanded"
+  [title]="tooltip"
+  (click)="expanded = !expanded">
+  {{ label }}
+  @if (expanded) {
+    <icon right>keyboard_arrow_up</icon>
+  } @else {
+    <icon right>keyboard_arrow_down</icon>
+  }
 </gtx-button>
 <div class="content" [class.expanded]="expanded">
-    <ng-content></ng-content>
+  <ng-content></ng-content>
 </div>

@@ -1,22 +1,22 @@
 import { HttpClientModule } from '@angular/common/http';
-import { Component, EventEmitter, Input } from '@angular/core';
+import { Component, Injectable, Input, OnDestroy, PipeTransform } from '@angular/core';
 import { TestBed, discardPeriodicTasks, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentsModule, KeycloakService, WindowRef } from '@gentics/cms-components';
+import { CmsComponentsModule, I18nService, KeycloakService, WindowRef } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { NodeFeature } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { componentTest, configureComponentTest } from '../testing';
 import { AppComponent as OriginalApp } from './app.component';
+import { ActionsSelectorComponent } from './core';
 import { LoggingInOverlay } from './core/components/logging-in-overlay/logging-in-overlay.component';
 import { EntityResolver } from './core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from './core/providers/error-handler/error-handler.service';
-import { I18nService } from './core/providers/i18n/i18n.service';
 import { MaintenanceModeService } from './core/providers/maintenance-mode/maintenance-mode.service';
 import { MessageService } from './core/providers/message/message.service';
 import { NavigationService } from './core/providers/navigation/navigation.service';
@@ -38,7 +38,6 @@ import {
     UIActionsService,
 } from './state';
 import { MockAppState, TestApplicationState } from './state/test-application-state.mock';
-import { ActionsSelectorComponent } from './core';
 
 // Override polling method
 class App extends OriginalApp {
@@ -97,6 +96,7 @@ class MockToolSelectorComponent {}
 class MockChipSearchBarComponent {
     @Input()
     chipSearchBarConfig: any;
+
     @Input()
     loading: any;
 }
@@ -140,8 +140,6 @@ class MockUserSettingsService {
 }
 
 class MockErrorHandler {}
-
-class MockI18nService {}
 
 class MockContentStagingActions {}
 
@@ -203,16 +201,6 @@ class MockUsersnapService {
     init = jasmine.createSpy('init');
 }
 
-class MockTranslateService {
-    onLangChange = new EventEmitter<LangChangeEvent>();
-    onTranslationChange: EventEmitter<any> = new EventEmitter();
-    onDefaultLangChange: EventEmitter<any> = new EventEmitter();
-    get(key: string | Array<string>, interpolateParams?: object): Observable<string | any> {
-        return new BehaviorSubject<string>('').asObservable();
-    }
-    instant = (str: string) => `translated(${str})`;
-}
-
 const CLASS_SHOW_ALERTS = 'show-alerts';
 
 describe('AppComponent', () => {
@@ -254,7 +242,6 @@ describe('AppComponent', () => {
                 MockFavouritesListComponent,
                 MockMessageInboxComponent,
                 MockAlertCenterComponent,
-                TranslatePipe,
             ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
@@ -265,7 +252,6 @@ describe('AppComponent', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: FeaturesActionsService, useClass: MockFeaturesActions },
                 { provide: FolderActionsService, useClass: MockFolderActions },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: MaintenanceModeService, useClass: MockMaintenanceModeService },
                 { provide: MessageService, useClass: MockMessageService },
                 { provide: ModalService, useClass: MockModalService },
@@ -278,22 +264,22 @@ describe('AppComponent', () => {
                 { provide: ContentRepositoryActionsService, useClass: MockContentRepositoryActions },
                 { provide: UsersnapService, useClass: MockUsersnapService },
                 { provide: KeycloakService },
-                { provide: TranslateService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: ContentStagingActionsService, useClass: MockContentStagingActions },
                 ChipSearchBarConfigService,
                 WindowRef,
             ],
         });
 
-        uiActions = TestBed.get(UIActionsService);
-        userSettings = TestBed.get(UserSettingsService);
-        featuresActions = TestBed.get(FeaturesActionsService);
-        authActions = TestBed.get(AuthActionsService);
-        maintenanceMode = TestBed.get(MaintenanceModeService);
-        state = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
-        embeddedTools = TestBed.get(EmbeddedToolsService);
-        contentrepositories = TestBed.get(ContentRepositoryActionsService);
+        uiActions = TestBed.inject(UIActionsService) as any;
+        userSettings = TestBed.inject(UserSettingsService) as any;
+        featuresActions = TestBed.inject(FeaturesActionsService) as any;
+        authActions = TestBed.inject(AuthActionsService) as any;
+        maintenanceMode = TestBed.inject(MaintenanceModeService) as any;
+        state = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        embeddedTools = TestBed.inject(EmbeddedToolsService) as any;
+        contentrepositories = TestBed.inject(ContentRepositoryActionsService) as any;
     });
 
     describe('initialization', () => {
@@ -301,7 +287,7 @@ describe('AppComponent', () => {
         describe('before logging in', () => {
 
             function assertMethodCalledOnInit(getMethodsToTest: () => jasmine.Spy[]): () => void {
-                return componentTest(() => App, fixture => {
+                return componentTest(() => App, (fixture) => {
                     fixture.detectChanges();
                     for (const method of getMethodsToTest()) {
                         expect(method).toHaveBeenCalled();
@@ -338,7 +324,7 @@ describe('AppComponent', () => {
                 maintenanceMode.displayNotificationWhenActive,
             ])));
 
-            it('does not display the top bar items', componentTest(() => App, fixture => {
+            it('does not display the top bar items', componentTest(() => App, (fixture) => {
                 tick(DEBOUNCE_INTERVAL); // needed because we use debounce() in the component
                 fixture.detectChanges();
                 const topBar = fixture.debugElement.query(By.css('.top-bar'));
@@ -350,7 +336,7 @@ describe('AppComponent', () => {
                 const fixture = TestBed.createComponent(App);
                 fixture.detectChanges();
 
-                const usersnapService: MockUsersnapService = TestBed.get(UsersnapService);
+                const usersnapService: MockUsersnapService = TestBed.inject(UsersnapService) as any;
                 expect(usersnapService.init).toHaveBeenCalledTimes(1);
             });
 
@@ -397,31 +383,37 @@ describe('AppComponent', () => {
                         features: {
                             ...currentState.features,
                             ...{
-                                nodeFeatures: featureEnabled ? {
-                                    1: [NodeFeature.LINK_CHECKER],
-                                } : {},
+                                nodeFeatures: featureEnabled
+                                    ? {
+                                        1: [NodeFeature.LINK_CHECKER],
+                                    }
+                                    : {},
                             },
                         },
                         tools: {
                             ...currentState.tools,
                             ...{
-                                available: toolAvailable ? [{
-                                    id: 1,
-                                    key: 'linkchecker',
-                                    name: { de: 'Link Checker', en: 'Link Checker' },
-                                    toolUrl: '/tools/link-checker/?sid=15345',
-                                    newtab: false,
-                                }] : [],
+                                available: toolAvailable
+                                    ? [{
+                                        id: 1,
+                                        key: 'linkchecker',
+                                        name: { de: 'Link Checker', en: 'Link Checker' },
+                                        toolUrl: '/tools/link-checker/?sid=15345',
+                                        newtab: false,
+                                    }]
+                                    : [],
                             },
                         },
                         ui: {
                             ...currentState.ui,
                             ...{
-                                alerts: currentAlerts ? {
-                                    linkChecker: {
-                                        brokenLinksCount: numberOfBrokenLinks,
-                                    },
-                                } : {},
+                                alerts: currentAlerts
+                                    ? {
+                                        linkChecker: {
+                                            brokenLinksCount: numberOfBrokenLinks,
+                                        },
+                                    }
+                                    : {},
                             },
                         },
                     },
@@ -459,7 +451,7 @@ describe('AppComponent', () => {
                 state.mockState(mockInitialState);
             });
 
-            it('displays the top bar items', componentTest(() => App, fixture => {
+            it('displays the top bar items', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 fixture.detectChanges();
@@ -472,7 +464,7 @@ describe('AppComponent', () => {
 
             it(
                 'displays the alert center corner action item if link checker feature and tool are available and there are broken links',
-                componentTest(() => App, fixture => {
+                componentTest(() => App, (fixture) => {
                     fixture.detectChanges();
                     simulateLogin();
                     simulateLinkChecker(true, true, true, 4);
@@ -485,7 +477,7 @@ describe('AppComponent', () => {
                     expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBe(true);
                 }));
 
-            it('does not display the alert center corner action item if link checker feature is not enabled', componentTest(() => App, fixture => {
+            it('does not display the alert center corner action item if link checker feature is not enabled', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 simulateLinkChecker(false, true, true, 4);
@@ -498,7 +490,7 @@ describe('AppComponent', () => {
                 expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBeFalsy();
             }));
 
-            it('does not display the alert center corner action item if link checker tool is not available', componentTest(() => App, fixture => {
+            it('does not display the alert center corner action item if link checker tool is not available', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 simulateLinkChecker(true, false, true, 4);
@@ -511,7 +503,7 @@ describe('AppComponent', () => {
                 expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBeFalsy();
             }));
 
-            it('does not display the alert center corner action item if there are no alerts', componentTest(() => App, fixture => {
+            it('does not display the alert center corner action item if there are no alerts', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 simulateLinkChecker(true, true, false, 4);
@@ -524,7 +516,7 @@ describe('AppComponent', () => {
                 expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBeFalsy();
             }));
 
-            it('does not display the alert center corner action item if there are 0 broken links', componentTest(() => App, fixture => {
+            it('does not display the alert center corner action item if there are 0 broken links', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 simulateLinkChecker(true, true, true, 0);
@@ -537,7 +529,7 @@ describe('AppComponent', () => {
                 expect(cornerAction.classes[CLASS_SHOW_ALERTS]).toBeFalsy();
             }));
 
-            it('calls folderActions.getNodes()', componentTest(() => App, fixture => {
+            it('calls folderActions.getNodes()', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 fixture.detectChanges();
@@ -547,7 +539,7 @@ describe('AppComponent', () => {
                 expect(folderActions.getNodes).toHaveBeenCalled();
             }));
 
-            it('calls uiActions.getCmsVersion()', componentTest(() => App, fixture => {
+            it('calls uiActions.getCmsVersion()', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 fixture.detectChanges();
@@ -557,7 +549,7 @@ describe('AppComponent', () => {
                 expect(uiActions.getCmsVersion).toHaveBeenCalled();
             }));
 
-            it('calls authActions.updateAdminState()', componentTest(() => App, fixture => {
+            it('calls authActions.updateAdminState()', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 fixture.detectChanges();
@@ -567,7 +559,7 @@ describe('AppComponent', () => {
                 expect(authActions.updateAdminState).toHaveBeenCalled();
             }));
 
-            it('calls featuresActions.checkAll()', componentTest(() => App, fixture => {
+            it('calls featuresActions.checkAll()', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 fixture.detectChanges();
@@ -577,7 +569,7 @@ describe('AppComponent', () => {
                 expect(featuresActions.checkAll).toHaveBeenCalled();
             }));
 
-            it('displays the Gentics logo', componentTest(() => App, fixture => {
+            it('displays the Gentics logo', componentTest(() => App, (fixture) => {
                 fixture.detectChanges();
                 simulateLogin();
                 fixture.detectChanges();
@@ -588,7 +580,7 @@ describe('AppComponent', () => {
                 expect(logo === null).toBe(false);
             }));
 
-            it('sets the local activeNode value', componentTest(() => App, fixture => {
+            it('sets the local activeNode value', componentTest(() => App, (fixture) => {
                 const instance = fixture.componentInstance;
                 fixture.detectChanges();
                 simulateLogin();
@@ -600,7 +592,7 @@ describe('AppComponent', () => {
                 expect(instance.activeNode.folderId).toBeDefined();
             }));
 
-            it('nodeRootLink$ has the correct value', componentTest(() => App, fixture => {
+            it('nodeRootLink$ has the correct value', componentTest(() => App, (fixture) => {
                 const instance = fixture.componentInstance;
                 fixture.detectChanges();
                 simulateLogin();
@@ -608,8 +600,8 @@ describe('AppComponent', () => {
 
                 tick(DEBOUNCE_INTERVAL);
                 instance.nodeRootLink$.pipe(take(1))
-                    .subscribe(val => {
-                        expect(val).toEqual(['/editor', {outlets: {list: ['node', 1, 'folder', 33]}}]);
+                    .subscribe((val) => {
+                        expect(val).toEqual(['/editor', { outlets: { list: ['node', 1, 'folder', 33] } }]);
                     });
             }));
 

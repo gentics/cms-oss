@@ -1,14 +1,24 @@
 <div
-    class="container"
-    [class.is-clickable]="versionData"
-    (click)="openModal()"
->
-    <div class="label">
-        {{ appTitle }}<span *ngIf="versionData && versionData.version">&nbsp;version {{ versionData.version }}</span>
-    </div>
-    <div class="compatibility-state" [ngSwitch]="compatibilityState">
-        <icon class="not-supported" *ngSwitchCase="'NOT_SUPPORTED'">report_problem</icon>
-        <icon class="supported" *ngSwitchCase="'SUPPORTED'">check_circle</icon>
-        <icon class="unknown" *ngSwitchCase="'UNKNOWN'">error</icon>
-    </div>
+  class="container"
+  [class.is-clickable]="versionData"
+  (click)="openModal()"
+  >
+  <div class="label">
+    {{ appTitle }}@if (versionData && versionData.version) {
+    <span>&nbsp;version {{ versionData.version }}</span>
+  }
+</div>
+<div class="compatibility-state">
+  @switch (compatibilityState) {
+    @case ('NOT_SUPPORTED') {
+      <icon class="not-supported">report_problem</icon>
+    }
+    @case ('SUPPORTED') {
+      <icon class="supported">check_circle</icon>
+    }
+    @case ('UNKNOWN') {
+      <icon class="unknown">error</icon>
+    }
+  }
+</div>
 </div>

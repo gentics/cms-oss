@@ -1,39 +1,42 @@
 <table class="overview-table">
-    <tbody>
-        <tr data-id="status">
-            <td>{{ 'license.status' | i18n }}</td>
-            <td>{{ ('license.status_' + status) | i18n }}</td>
-        </tr>
-        <ng-container *ngIf="license">
-            <tr data-id="uuid">
-                <td>{{ 'license.uuid' | i18n }}</td>
-                <td><code>{{ license.uuid }}</code></td>
-            </tr>
-            <tr data-id="issuedAt">
-                <td>{{ 'license.issuedAt' | i18n }}</td>
-                <td>{{ license.issuedAt | i18nDate }}</td>
-            </tr>
-            <tr data-id="validUntil">
-                <td>{{ 'license.validUntil' | i18n }}</td>
-                <td>{{ license.validUntil ? (license.validUntil | i18nDate) : ('license.unlimitedValidity' | i18n) }}</td>
-            </tr>
-        </ng-container>
-    </tbody>
+  <tbody>
+    <tr data-id="status">
+      <td>{{ 'license.status' | gtxI18n }}</td>
+      <td>{{ ('license.status_' + status) | gtxI18n }}</td>
+    </tr>
+    @if (license) {
+      <tr data-id="uuid">
+        <td>{{ 'license.uuid' | gtxI18n }}</td>
+        <td><code>{{ license.uuid }}</code></td>
+      </tr>
+      <tr data-id="issuedAt">
+        <td>{{ 'license.issuedAt' | gtxI18n }}</td>
+        <td>{{ license.issuedAt | gtxI18nDate }}</td>
+      </tr>
+      <tr data-id="validUntil">
+        <td>{{ 'license.validUntil' | gtxI18n }}</td>
+        <td>{{ license.validUntil ? (license.validUntil | gtxI18nDate) : ('license.unlimitedValidity' | gtxI18n) }}</td>
+      </tr>
+    }
+  </tbody>
 </table>
 
-<section *ngIf="license" class="feature-section">
-    <h2>{{ 'license.features' | i18n }}</h2>
-
+@if (license) {
+  <section class="feature-section">
+    <h2>{{ 'license.features' | gtxI18n }}</h2>
     <table class="feature-table">
-        <thead>
-            <tr>
-                <th>{{ 'license.featureName' | i18n }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let feat of license.features | gtxEntries" [attr.data-id]="feat.key">
-                <td>{{ feat.value }}</td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>{{ 'license.featureName' | gtxI18n }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (feat of license.features | gtxEntries; track feat) {
+          <tr [attr.data-id]="feat.key">
+            <td>{{ feat.value }}</td>
+          </tr>
+        }
+      </tbody>
     </table>
-</section>
+  </section>
+}

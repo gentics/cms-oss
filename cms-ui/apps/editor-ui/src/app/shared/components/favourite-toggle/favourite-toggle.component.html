@@ -3,7 +3,7 @@
     <gtx-button
         icon
         type="secondary"
-        [title]="(active ? 'editor.favourites_remove_label' : 'editor.favourites_add_label') | i18n"
+        [title]="(active ? 'editor.favourites_remove_label' : 'editor.favourites_add_label') | gtxI18n"
         (click)="toggle(item, active)"
     >
         <icon [class.favourite]="active" [class.hollow]="!active">star</icon>

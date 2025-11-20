@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'modal.create_content_package_title' | i18n }}</h5>
+    <h5>{{ 'modal.create_content_package_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
@@ -12,9 +12,9 @@
 
 <div class="modal-footer">
     <gtx-button type="secondary" flat (click)="cancelFn()" [disabled]="loading || form.disabled">
-        {{ 'common.cancel_button' | i18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
     <gtx-button type="primary" (click)="createEntity()" [disabled]="loading || form.disabled || form.pristine || form.invalid">
-        {{ 'common.create_button' | i18n }}
+        {{ 'common.create_button' | gtxI18n }}
     </gtx-button>
 </div>

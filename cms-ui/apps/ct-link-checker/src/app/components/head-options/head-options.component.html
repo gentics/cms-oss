@@ -6,7 +6,7 @@
     >
         <div
             [class.loading]="statsLoading$ | async"
-            [innerHTML]="'common.status_broken_total' | translate:{
+            [innerHTML]="'common.status_broken_total' | gtxI18n:{
                 number: (globalStats$ | async)?.invalid
             }"
         ></div>
@@ -15,17 +15,17 @@
     <span
         class="lastChecked"
         [class.loading]="statsLoading$ | async"
-        [innerHTML]="'common.header_last_checked' | translate:{
+        [innerHTML]="'common.header_last_checked' | gtxI18n:{
             date: (globalStats$ | async)?.lastRun > 0
-                ? ((globalStats$ | async)?.lastRun | i18nDate: 'dateTime')
-                : ('common.not_checked_yet' | translate)
+                ? ((globalStats$ | async)?.lastRun | gtxI18nDate: 'dateTime')
+                : ('common.not_checked_yet' | gtxI18n)
         }"
     ></span>
 
 <!-- We will probably need this button again, but currently it does not make much sense (https://jira.gentics.com/browse/GTXPE-723)
     <gtx-button class="performCheck" flat size="small" type="primary" (click)="updateStatus()">
         <icon left>cached</icon>
-        <span>{{ 'common.header_refresh' | translate }}</span>
+        <span>{{ 'common.header_refresh' | gtxI18n }}</span>
     </gtx-button>
 -->
 </div>

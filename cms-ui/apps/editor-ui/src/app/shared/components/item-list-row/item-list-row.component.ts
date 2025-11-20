@@ -9,14 +9,6 @@ import {
     Output,
     ViewChild,
 } from '@angular/core';
-import { ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
-import {
-    ApplicationStateService,
-    ChangeListSelectionAction,
-    FocusEditorAction,
-    FolderActionsService,
-    WastebinActionsService,
-} from '@editor-ui/app/state';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File,
@@ -34,11 +26,19 @@ import {
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, UIMode } from '../../../common/models';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { EntityStateUtil, PublishableStateUtil } from '../../../shared/util/entity-states';
+import {
+    ApplicationStateService,
+    ChangeListSelectionAction,
+    FocusEditorAction,
+    FolderActionsService,
+    WastebinActionsService,
+} from '../../../state';
 import { TranslatePageModal, TranslatePageModalActions, TranslateResult } from '../translate-page-modal/translate-page-modal.component';
 import { UsageModalComponent } from '../usage-modal/usage-modal.component';
 

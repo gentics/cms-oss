@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { RecentItem } from '@editor-ui/app/common/models';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import { Folder, IndexById, Normalized } from '@gentics/cms-models';
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, switchMap, take } from 'rxjs/operators';
+import { RecentItem } from '../../../common/models';
+import { ApplicationStateService } from '../../../state';
 
 export interface SuggestionItem extends RecentItem {
 

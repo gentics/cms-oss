@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import {
     EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
@@ -12,6 +12,7 @@ import {
 } from '@admin-ui/mesh/common';
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ListResponse,
     MicroschemaCreateRequest,
@@ -66,7 +67,7 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public getMapped(uuid: string, params?: SchemaLoadOptions): Promise<MeshMicroschemaBO> {
-        return this.get(uuid, params).then(schema => this.mapToBusinessObject(schema));
+        return this.get(uuid, params).then((schema) => this.mapToBusinessObject(schema));
     }
 
     public async create(body: MicroschemaCreateRequest): Promise<MicroschemaResponse> {
@@ -87,7 +88,7 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public createMapped(body: SchemaCreateRequest): Promise<MeshMicroschemaBO> {
-        return this.create(body).then(schema => this.mapToBusinessObject(schema));
+        return this.create(body).then((schema) => this.mapToBusinessObject(schema));
     }
 
     public async update(uuid: string, body: MicroschemaUpdateRequest): Promise<MicroschemaResponse> {
@@ -108,7 +109,7 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public updateMapped(uuid: string, body: MicroschemaUpdateRequest): Promise<MeshMicroschemaBO> {
-        return this.update(uuid, body).then(schema => this.mapToBusinessObject(schema));
+        return this.update(uuid, body).then((schema) => this.mapToBusinessObject(schema));
     }
 
     public async delete(uuid: string): Promise<void> {
@@ -141,7 +142,7 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public listMapped(params?: MicroschemaListOptions): Promise<ListResponse<MeshMicroschemaBO>> {
-        return this.list(params).then(res => {
+        return this.list(params).then((res) => {
             return {
                 // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                 _metainfo: res._metainfo,

@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
-import { RecentItem, SETTING_LAST_NODE_ID, plural } from '@editor-ui/app/common/models';
-import { environment } from '@editor-ui/environments/environment';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { Favourite, ItemInNode, ItemType, SortField } from '@gentics/cms-models';
 import { isEqual, merge } from 'lodash-es';
 import { Observable, forkJoin } from 'rxjs';
 import { filter, map, switchMap, take } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
+import { RecentItem, SETTING_LAST_NODE_ID, plural } from '../../../common/models';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import {
     ApplicationStateService,
@@ -23,8 +24,6 @@ import {
 } from '../../../state';
 import { UserSettings, defaultUserSettings, userSettingNames } from '../../models';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
-import { I18nService } from '../i18n/i18n.service';
 import { LocalStorage } from '../local-storage/local-storage.service';
 import { ServerStorage } from '../server-storage/server-storage.service';
 import { Version } from './version.class';
@@ -42,8 +41,8 @@ export class UserSettingsService {
         private folderActions: FolderActionsService,
         private publishQueueActions: PublishQueueActionsService,
         private uiActions: UIActionsService,
-        private i18nService: I18nService,
-        private notification: I18nNotification,
+        private i18n: I18nService,
+        private notification: I18nNotificationService,
         private localStorage: LocalStorage,
         private serverStorage: ServerStorage,
         private errorHandler: ErrorHandler,
@@ -56,24 +55,24 @@ export class UserSettingsService {
     loadInitialSettings(): void {
         let uiLanguage = this.localStorage.getUiLanguage();
         if (!uiLanguage) {
-            uiLanguage = this.i18nService.inferUserLanguage();
+            uiLanguage = this.i18n.inferUserLanguage();
         }
         // preset data to prevent application being without ui language until loaded
         this.appState.dispatch(new SetUILanguageAction(uiLanguage));
-        this.i18nService.setLanguage(uiLanguage);
+        this.i18n.setLanguage(uiLanguage);
     }
 
     /**
      * Watches the app state and loads user settings when a user logs in.
      */
     loadUserSettingsWhenLoggedIn(): void {
-        this.appState.select(state => state.auth.currentUserId).pipe(
-            filter(id => id != null),
-            switchMap(id => this.appState.select(state => state.ui.nodesLoaded).pipe(
-                filter(loaded => loaded),
+        this.appState.select((state) => state.auth.currentUserId).pipe(
+            filter((id) => id != null),
+            switchMap((id) => this.appState.select((state) => state.ui.nodesLoaded).pipe(
+                filter((loaded) => loaded),
                 map(() => id),
             )),
-        ).subscribe(userId => {
+        ).subscribe((userId) => {
             this.currentUserId = userId;
             this.loadUserSettings();
         });
@@ -81,11 +80,11 @@ export class UserSettingsService {
 
     watchForSettingChangesInOtherTabs(): void {
         this.localStorage.change$.pipe(
-            filter(change =>
-                this.currentUserId &&
-                change.key.startsWith(`USER-${this.currentUserId}_`),
+            filter((change) =>
+                this.currentUserId
+                && change.key.startsWith(`USER-${this.currentUserId}_`),
             ),
-        ).subscribe(change => {
+        ).subscribe((change) => {
             const name = change.key.replace(/^USER-\d+_/, '');
             if (name === 'sid') {
                 // nothing ... yet
@@ -96,10 +95,10 @@ export class UserSettingsService {
     }
 
     saveRecentItemsOnUpdate(): void {
-        this.appState.select(state => state.folder.recentItems).pipe(
-            filter(recentItems => recentItems && recentItems.length > 0),
+        this.appState.select((state) => state.folder.recentItems).pipe(
+            filter((recentItems) => recentItems && recentItems.length > 0),
             filter(() => this.appState.now.auth.isLoggedIn),
-        ).subscribe(recentItems => {
+        ).subscribe((recentItems) => {
             const savedInLocalStorage = this.localStorage.getForUser(this.currentUserId, 'recentItems');
             if (!deepEqual(savedInLocalStorage, recentItems)) {
                 this.localStorage.setForUser(this.currentUserId, 'recentItems', recentItems);
@@ -118,7 +117,7 @@ export class UserSettingsService {
 
         const lastNodeIdFromLocalStorage = this.localStorage.getForUser(this.currentUserId, SETTING_LAST_NODE_ID);
 
-        this.serverStorage.getAll().subscribe(settings => {
+        this.serverStorage.getAll().subscribe((settings) => {
             const allNodes = this.appState.now.entities.node;
 
             if ((!lastNodeIdFromLocalStorage || !allNodes[lastNodeIdFromLocalStorage]) && !allNodes[settings[SETTING_LAST_NODE_ID]]) {
@@ -153,8 +152,8 @@ export class UserSettingsService {
 
             for (const key of Object.keys(settings)) {
                 if (userSettingNames.indexOf(key as any) === -1
-                    || settings[key] == null
-                    || deepEqual(settings[key], (<any> currentSettings)[key])
+                  || settings[key] == null
+                  || deepEqual(settings[key], (<any> currentSettings)[key])
                 ) {
                     continue;
                 }
@@ -171,7 +170,7 @@ export class UserSettingsService {
 
             // fetch actual ui language data to override serverstorage data
             this.initializeUiLanguages();
-        }, error => {
+        }, (error) => {
             this.handleError(error);
         });
 
@@ -183,11 +182,10 @@ export class UserSettingsService {
      * UI language used to be hardcoded and is now available via `i18n`endpoint.
      * This method fetches all available and current active UI language and stores it to state and localstorage.
      * In case fetching fails, fallback language logic should be in place by localstorage and browser language.
-     *
      * @see `loadInitialSettings()`
      */
     private initializeUiLanguages(): void {
-        this.appState.select(state => state.ui.language).subscribe(language => {
+        this.appState.select((state) => state.ui.language).subscribe((language) => {
             this.setUiLanguage(language);
         });
         this.uiActions.getAvailableUiLanguages();
@@ -341,14 +339,14 @@ export class UserSettingsService {
         if (this.serverStorage.supported !== false) {
             return this.serverStorage.set(key, value)
                 .then(
-                    result => {
+                    (result) => {
                         if (this.currentUserId) {
                             this.localStorage.setForUser(this.currentUserId, key, value);
                         }
                         this.localStorage.setForAllUsers(key, value);
                         return result;
                     },
-                    err => this.handleError(err),
+                    (err) => this.handleError(err),
                 );
         } else {
             if (this.currentUserId) {
@@ -398,7 +396,7 @@ export class UserSettingsService {
 
             case 'favourites': {
                 const favourites = this.filterAndRemoveNonExistingFavouriteItems(value as Favourite[]);
-                favourites.then(filteredFavourites => {
+                favourites.then((filteredFavourites) => {
                     this.appState.dispatch(new FavouritesLoadedAction(filteredFavourites));
                 });
                 break;
@@ -471,10 +469,10 @@ export class UserSettingsService {
                 break;
 
             case 'lastNodeId':
-                this.appState.select(state => state.entities.node[value]).pipe(
-                    filter(node => !!node),
+                this.appState.select((state) => state.entities.node[value]).pipe(
+                    filter((node) => !!node),
                     take(1),
-                ).subscribe(node => {
+                ).subscribe((node) => {
                     if (this.appState.now.folder.activeNode == null) {
                         this.appState.dispatch(new SetActiveNodeAction(node.id));
                         this.appState.dispatch(new SetActiveFolderAction(node.folderId));
@@ -528,8 +526,8 @@ export class UserSettingsService {
     }
 
     private navigateToFallbackNode(): void {
-        this.appState.select(state => state.folder.nodes.list).pipe(
-            filter(nodes => nodes.length > 0),
+        this.appState.select((state) => state.folder.nodes.list).pipe(
+            filter((nodes) => nodes.length > 0),
             filter(() => !this.appState.now.folder.activeNode),
             take(1),
         ).subscribe(() => {
@@ -555,8 +553,8 @@ export class UserSettingsService {
         });
 
         /* Make the requests per group to check if items are exists */
-        Object.keys(grouppedFavs).forEach(nodeId => {
-            Object.keys(grouppedFavs[nodeId]).forEach(type => {
+        Object.keys(grouppedFavs).forEach((nodeId) => {
+            Object.keys(grouppedFavs[nodeId]).forEach((type) => {
                 const ids = Object.values(grouppedFavs[nodeId][type])
                     .map((fav: Favourite) => fav.id);
                 itemRequests.push(this.folderActions.getExistingItems(ids, parseInt(nodeId, 10), type as ItemType));
@@ -566,13 +564,13 @@ export class UserSettingsService {
         const existingList$ = forkJoin(itemRequests).toPromise();
 
         /* Filter the original favourites list by nodeId and id then return as a Promise */
-        return existingList$.then(checkItems => {
+        return existingList$.then((checkItems) => {
             if (!checkItems) {
                 return [];
             }
 
             const existingItems = checkItems.flatMap((item: ItemInNode[]) =>
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
                 item.map((existingItem: any) => {
                     if ((existingItem).type === 'channel') {
                         existingItem.type = 'folder';
@@ -583,10 +581,10 @@ export class UserSettingsService {
 
                     return {
                         // Get actual nodeId if its a master, channel or localized version
-                        nodeId: !existingItem.channelId ?
+                        nodeId: !existingItem.channelId
                             // eslint-disable-next-line no-underscore-dangle
-                            (existingItem.inherited ? existingItem._checkedNodeId : existingItem.masterNodeId) :
-                            existingItem.channelId,
+                            ? (existingItem.inherited ? existingItem._checkedNodeId : existingItem.masterNodeId)
+                            : existingItem.channelId,
                         type: existingItem.type,
                         id: existingItem.id,
                     };

@@ -23,7 +23,7 @@ describe('IsFavouritePipe', () => {
             ],
             declarations: [TestComponent, IsFavouritePipe],
         });
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
     });
 
     function mockFavouritesState(list: Favourite[]): void {

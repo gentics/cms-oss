@@ -1,56 +1,59 @@
 <div class="gtx-mobile-menu-floater">
-    <gtx-construct-controls
-        class="control-element"
-        [class.active]="activeTab === TAB_ID_CONSTRUCTS"
-        [attr.data-tab-id]="TAB_ID_CONSTRUCTS"
-        [constructs]="constructs"
-        [categories]="constructCategories"
-        [favourites]="constructFavourites"
-        [gcnPlugin]="gcnPlugin"
-        [alohaRef]="alohaRef"
-        [editable]="editable"
-        (favouritesChange)="updateFavourites($event)"
-    ></gtx-construct-controls>
+  <gtx-construct-controls
+    class="control-element"
+    [class.active]="activeTab === TAB_ID_CONSTRUCTS"
+    [attr.data-tab-id]="TAB_ID_CONSTRUCTS"
+    [constructs]="constructs"
+    [categories]="constructCategories"
+    [favourites]="constructFavourites"
+    [gcnPlugin]="gcnPlugin"
+    [alohaRef]="alohaRef"
+    [editable]="editable"
+    (favouritesChange)="updateFavourites($event)"
+  ></gtx-construct-controls>
 
-    <gtx-link-checker-controls
-        class="control-element"
-        [class.active]="activeTab === TAB_ID_LINK_CHECKER"
-        [attr.data-tab-id]="TAB_ID_LINK_CHECKER"
-        [plugin]="linkCheckerPlugin"
-        [brokenLinks]="brokenLinkElements"
-        (updateCount)="updateBrokenLinkCount()"
-    ></gtx-link-checker-controls>
+  <gtx-link-checker-controls
+    class="control-element"
+    [class.active]="activeTab === TAB_ID_LINK_CHECKER"
+    [attr.data-tab-id]="TAB_ID_LINK_CHECKER"
+    [plugin]="linkCheckerPlugin"
+    [brokenLinks]="brokenLinkElements"
+    (updateCount)="updateBrokenLinkCount()"
+  ></gtx-link-checker-controls>
 
-    <ng-container *ngIf="alohaRef && settings">
-        <ng-container *ngFor="let tab of settings?.tabs; trackBy: identifyTab">
-            <div
-                *ngIf="tab.id !== TAB_ID_CONSTRUCTS && tab.id !== TAB_ID_LINK_CHECKER"
-                #mobileMenu
-                class="control-element tab-controls gtx-mobile-menu"
-                data-page="1"
-                [attr.data-tab-id]="tab.id"
-                [class.active]="activeTab === tab.id && tab.hasVisibleGroups"
-            >
-                <ng-container *ngFor="let group of tab.componentGroups; last as last; trackBy: identifyComponentGroup">
-                    <ng-container *ngIf="group.hasVisibleSlots">
-                        <div class="component-group">
-                            <ng-container *ngFor="let slot of group.slots; trackBy: identifySlot">
-                                <gtx-aloha-component-renderer
-                                    *ngIf="slot.visible"
-                                    class="dynamic-component gtx-menu-element"
-                                    [attr.slot]="slot.name"
-                                    [slot]="slot.name"
-                                    [component]="components[slot.name]"
-                                    [disabled]="tagEditorOpen"
-                                ></gtx-aloha-component-renderer>
-                            </ng-container>
-                        </div>
-
-                        <div *ngIf="!last" class="group-separator"></div>
-                    </ng-container>
-                </ng-container>
-            </div>
-        </ng-container>
-    </ng-container>
+  @if (alohaRef && settings) {
+    @for (tab of settings?.tabs; track identifyTab($index, tab)) {
+      @if (tab.id !== TAB_ID_CONSTRUCTS && tab.id !== TAB_ID_LINK_CHECKER) {
+        <div
+          #mobileMenu
+          class="control-element tab-controls gtx-mobile-menu"
+          data-page="1"
+          [attr.data-tab-id]="tab.id"
+          [class.active]="activeTab === tab.id && tab.hasVisibleGroups"
+          >
+          @for (group of tab.componentGroups; track identifyComponentGroup($index, group); let last = $last) {
+            @if (group.hasVisibleSlots) {
+              <div class="component-group">
+                @for (slot of group.slots; track identifySlot($index, slot)) {
+                  @if (slot.visible) {
+                    <gtx-aloha-component-renderer
+                      class="dynamic-component gtx-menu-element"
+                      [attr.slot]="slot.name"
+                      [slot]="slot.name"
+                      [component]="components[slot.name]"
+                      [disabled]="tagEditorOpen"
+                    ></gtx-aloha-component-renderer>
+                  }
+                }
+              </div>
+              @if (!last) {
+                <div class="group-separator"></div>
+              }
+            }
+          }
+        </div>
+      }
+    }
+  }
 </div>
 

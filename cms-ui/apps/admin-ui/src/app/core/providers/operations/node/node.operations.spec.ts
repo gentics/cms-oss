@@ -1,8 +1,7 @@
-import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
-import { AppStateService } from '@admin-ui/state';
-import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
-import { createDelayedError, createDelayedObservable, subscribeSafely } from '@admin-ui/testing';
+import { createDelayedError, createDelayedObservable, MockErrorHandler, subscribeSafely } from '@admin-ui/testing';
 import { TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { MockI18nNotificationService, MockI18nService } from '@gentics/cms-components/testing';
 import {
     Language,
     Node,
@@ -19,15 +18,13 @@ import { getExampleNodeData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { of } from 'rxjs';
 import { first, takeUntil } from 'rxjs/operators';
+import { InterfaceOf, ObservableStopper } from '../../../../common';
+import { AppStateService } from '../../../../state';
+import { TestAppState, assembleTestAppStateImports } from '../../../../state/utils/test-app-state';
 import { ActivityManagerService, GtxActivityManagerActivity } from '../../activity-manager';
 import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { ErrorHandler } from '../../error-handler';
-import { MockErrorHandler } from '../../error-handler/error-handler.mock';
-import { I18nService } from '../../i18n';
-import { I18nNotificationService } from '../../i18n-notification';
-import { MockI18nNotificationService } from '../../i18n-notification/i18n-notification.service.mock';
-import { MockI18nServiceWithSpies } from '../../i18n/i18n.service.mock';
 import { PermissionsService } from '../../permissions';
 import { NodeOperations } from './node.operations';
 
@@ -69,7 +66,6 @@ describe('NodeOperations', () => {
                 assembleTestAppStateImports(),
             ],
             providers: [
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 ActivityManagerService,
                 NodeOperations,
                 { provide: AppStateService, useClass: TestAppState },
@@ -77,18 +73,21 @@ describe('NodeOperations', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: GcmsApi, useClass: MockApi },
                 { provide: I18nNotificationService, useClass: MockI18nNotificationService },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: PermissionsService, useClass: MockPermissionsService },
             ],
         });
 
-        api = TestBed.get(GcmsApi);
-        entityManager = TestBed.get(EntityManagerService);
-        errorHandler = TestBed.get(ErrorHandler);
-        nodeOps = TestBed.get(NodeOperations);
-        notification = TestBed.get(I18nNotificationService);
-        activityManager = TestBed.get(ActivityManagerService);
-        appState = TestBed.get(AppStateService);
+        api = TestBed.inject(GcmsApi) as any;
+        entityManager = TestBed.inject(EntityManagerService) as any;
+        errorHandler = TestBed.inject(ErrorHandler) as any;
+        nodeOps = TestBed.inject(NodeOperations);
+        notification = TestBed.inject(I18nNotificationService) as any;
+        activityManager = TestBed.inject(ActivityManagerService);
+        appState = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
+
+        spyOn(notification, 'show').and.callThrough();
     });
 
     afterEach(() => {
@@ -109,7 +108,7 @@ describe('NodeOperations', () => {
             let result: Node<Raw>[];
             nodeOps.getAll().pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(nodes => result = nodes);
+            ).subscribe((nodes) => result = nodes);
 
             tick();
             expect(api.node.getNodes).toHaveBeenCalledTimes(1);
@@ -138,7 +137,7 @@ describe('NodeOperations', () => {
             let result: Node<Raw>;
             nodeOps.get(NODE_ID).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(node => result = node);
+            ).subscribe((node) => result = node);
 
             tick();
             expect(api.node.getNode).toHaveBeenCalledTimes(1);
@@ -176,7 +175,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 nodeOps.addNode(nodeCreateReq),
                 stopper,
-                newNode => result = newNode,
+                (newNode) => result = newNode,
             );
 
             tick();
@@ -239,7 +238,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 activityManager.activities$,
                 stopper,
-                activities => activitiesQueue = activities,
+                (activities) => activitiesQueue = activities,
             );
 
             tick();
@@ -273,7 +272,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 activityManager.activities$,
                 stopper,
-                activities => activitiesQueue = activities,
+                (activities) => activitiesQueue = activities,
             );
 
             tick();
@@ -306,7 +305,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 nodeOps.update(NODE_ID, saveReq),
                 stopper,
-                node => result = node,
+                (node) => result = node,
             );
 
             tick();
@@ -370,7 +369,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 nodeOps.updateNodeFeatures(NODE_ID, featuresUpdate),
                 stopper,
-                node => result = node,
+                (node) => result = node,
             );
 
             tick();
@@ -420,7 +419,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 nodeOps.getAvailableFeatures(req),
                 stopper,
-                features => result = features,
+                (features) => result = features,
             );
 
             tick();
@@ -452,7 +451,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 nodeOps.getNodeFeatures(NODE_ID),
                 stopper,
-                features => result = features,
+                (features) => result = features,
             );
 
             tick();
@@ -473,8 +472,8 @@ describe('NodeOperations', () => {
 
         it('fetches the node\'s languages', fakeAsync(() => {
             const languages: Language[] = [
-                { id: 1, code: 'en', name: 'English'},
-                { id: 2, code: 'de', name: 'Deutsch'},
+                { id: 1, code: 'en', name: 'English' },
+                { id: 2, code: 'de', name: 'Deutsch' },
             ];
             api.node.getNodeLanguageList.and.returnValue(
                 createDelayedObservable({ items: languages }),
@@ -484,7 +483,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 nodeOps.getNodeLanguages(NODE_ID),
                 stopper,
-                features => result = features,
+                (features) => result = features,
             );
 
             tick();
@@ -505,8 +504,8 @@ describe('NodeOperations', () => {
 
         it('updates the node\'s languages and returns them', fakeAsync(() => {
             const languages: Language[] = [
-                { id: 1, code: 'en', name: 'English'},
-                { id: 2, code: 'de', name: 'Deutsch'},
+                { id: 1, code: 'en', name: 'English' },
+                { id: 2, code: 'de', name: 'Deutsch' },
             ];
             api.node.updateNodeLanguages.and.returnValue(
                 createDelayedObservable({ items: languages }),
@@ -519,7 +518,7 @@ describe('NodeOperations', () => {
             subscribeSafely(
                 nodeOps.updateNodeLanguages(NODE_ID, languages),
                 stopper,
-                features => result = features,
+                (features) => result = features,
             );
 
             tick();
@@ -538,8 +537,8 @@ describe('NodeOperations', () => {
 
         it('notifies the user about errors and rethrows them', fakeAsync(() => {
             const languages: Language[] = [
-                { id: 1, code: 'en', name: 'English'},
-                { id: 2, code: 'de', name: 'Deutsch'},
+                { id: 1, code: 'en', name: 'English' },
+                { id: 2, code: 'de', name: 'Deutsch' },
             ];
 
             const error = new Error('Test Error');

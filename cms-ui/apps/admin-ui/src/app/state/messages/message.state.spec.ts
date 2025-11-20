@@ -1,10 +1,9 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
-
 import { IS_NORMALIZED, MessageFromServer, Raw, User } from '@gentics/cms-models';
+import { NgxsModule } from '@ngxs/store';
 import { EntityStateModule } from '../entity/entity.state';
 import { AppStateService } from '../providers/app-state/app-state.service';
-import { TestAppState, TEST_APP_STATE } from '../utils/test-app-state';
+import { TEST_APP_STATE, TestAppState } from '../utils/test-app-state';
 import {
     ClearMessageState,
     FetchAllMessageError,
@@ -25,7 +24,7 @@ describe('MessageStateModule', () => {
             imports: [NgxsModule.forRoot([EntityStateModule, MessageStateModule])],
             providers: [TEST_APP_STATE],
         }).compileComponents();
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
     }));
 
     /**

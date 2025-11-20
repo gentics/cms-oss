@@ -26,8 +26,8 @@ describe('ApiBase', () => {
         TestBed.configureTestingModule({
             imports: [ HttpClientTestingModule ],
         });
-        http = TestBed.get(HttpClient);
-        httpTestingController = TestBed.get(HttpTestingController);
+        http = TestBed.inject(HttpClient);
+        httpTestingController = TestBed.inject(HttpTestingController);
         uploaderFactory = new MockUploaderFactory();
         errorHandler = new MockErrorHandler();
         sid$ = new BehaviorSubject(TEST_SID);

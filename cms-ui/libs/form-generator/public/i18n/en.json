@@ -1,0 +1,19 @@
+{
+    "form": {
+        "search": "Search",
+        "element_status_missing_translation": "Missing translations",
+        "element_status_property_error": "Error in element property",
+        "element_button_properties_menu_toggle": "Show/hide form element properties",
+        "error_no_or_invalid_formdata": "No or invalid form configuration.",
+        "error_no_formelements_available": "No form elements available.",
+        "error_no_selectable_options": "No selectable options data available.",
+        "error_no_translation": "Missing translation",
+        "error_invalid_element_type": "Forbidden element type",
+        "form_type_generic": "Generic",
+        "form_type_poll": "Poll",
+        "key": "Key/Value",
+        "no_preview_property_configured": "No preview element property configured",
+        "preview_property_empty": "No value entered for element property {{ name }}",
+        "value": "Label"
+    }
+}

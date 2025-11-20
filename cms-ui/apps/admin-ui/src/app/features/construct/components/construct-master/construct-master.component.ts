@@ -1,15 +1,17 @@
 import { BO_PERMISSIONS, ConstructBO, EditableEntity, EntityTableActionClickEvent } from '@admin-ui/common';
-import { ConstructHandlerService, ConstructTableLoaderService, ErrorHandler, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { ConstructHandlerService, ConstructTableLoaderService, ErrorHandler } from '@admin-ui/core';
 import { ASSIGN_CONSTRUCT_TO_CATEGORY_ACTION, ASSIGN_CONSTRUCT_TO_NODES_ACTION, COPY_CONSTRUCT_ACTION } from '@admin-ui/shared';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { GcmsPermission, TagType } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { AssignConstructsToCategoryModalComponent } from '../assign-constructs-to-category-modal/assign-constructs-to-category-modal.component';
 import { AssignConstructsToNodesModalComponent } from '../assign-constructs-to-nodes-modal/assign-constructs-to-nodes-modal.component';
 import { CopyConstructModalComponent } from '../copy-construct-modal/copy-construct-modal.component';
@@ -20,7 +22,7 @@ import { CreateConstructModalComponent } from '../create-construct-modal/create-
     templateUrl: './construct-master.component.html',
     styleUrls: ['./construct-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, ConstructBO> {
 
@@ -120,9 +122,9 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         }
 
         res.valid = true;
-        res.filtered = constructs.filter(con => con);
+        res.filtered = constructs.filter((con) => con);
 
-        res.filtered.forEach(construct => {
+        res.filtered.forEach((construct) => {
             if (construct[BO_PERMISSIONS].includes(perm)) {
                 return;
             }
@@ -181,9 +183,9 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
         }
 
         this.subscriptions.push(
-            combineLatest(constructs.map(con => this.handler.updateMapped(con.id, { categoryId: response }).pipe(
-                map(cat => cat.id),
-                catchError(err => {
+            combineLatest(constructs.map((con) => this.handler.updateMapped(con.id, { categoryId: response }).pipe(
+                map((cat) => cat.id),
+                catchError((err) => {
                     this.notification.show({
                         type: 'alert',
                         delay: 10_000,
@@ -196,9 +198,9 @@ export class ConstructMasterComponent extends BaseTableMasterComponent<TagType, 
                     console.error(err);
                     return of(null);
                 }),
-            ))).subscribe(ids => {
+            ))).subscribe((ids) => {
                 // If at least one has been successfully deleted, then we reload the page
-                if (ids.some(id => id)) {
+                if (ids.some((id) => id)) {
                     this.loader.reload();
                     this.changeDetector.markForCheck();
                 }

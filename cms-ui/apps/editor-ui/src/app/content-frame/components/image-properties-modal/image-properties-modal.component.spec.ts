@@ -1,19 +1,10 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Api, ApiBase } from '@editor-ui/app/core/providers/api';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { SharedModule } from '@editor-ui/app/shared/shared.module';
-import { ApplicationStateService, FolderActionsService, PostUpdateBehavior, STATE_MODULES } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { componentTest } from '@editor-ui/testing';
 import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.mock';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nPipe, MockI18nService } from '@gentics/cms-components/testing';
 import {
     File as CmsFile,
     EditableFileProps,
@@ -41,8 +32,19 @@ import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/test
 import { MockApiBase } from '@gentics/cms-rest-clients-angular/base/api-base.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
+import { Api, ApiBase } from '../../../core/providers/api';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { SharedModule } from '../../../shared/shared.module';
+import { ApplicationStateService, FolderActionsService, PostUpdateBehavior, STATE_MODULES } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
+import { TagEditorService } from '../../../tag-editor';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ImagePropertiesModalComponent } from './image-properties-modal.component';
 
@@ -51,23 +53,34 @@ class MockEntityResolver implements Partial<EntityResolver> {
     getNode(id: number): Node<Normalized> {
         return getExampleNodeDataNormalized();
     }
+
     getFolder(id: number): Folder<Normalized> {
         return getExampleFolderDataNormalized();
     }
 }
 class MockFolderActionsService implements Partial<FolderActionsService> {
-    updateFileProperties(fileId: number, properties: EditableFileProps, postUpdateBehavior?: PostUpdateBehavior): Promise<void | CmsFile<ModelType.Raw>> {
+    updateFileProperties(
+        _fileId: number,
+        _properties: EditableFileProps,
+        _postUpdateBehavior?: PostUpdateBehavior,
+    ): Promise<void | CmsFile<ModelType.Raw>> {
         return Promise.resolve();
     }
-    updateImageProperties(imageId: number, properties: EditableImageProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Image<Raw> | void> {
+
+    updateImageProperties(
+        _imageId: number,
+        _properties: EditableImageProps,
+        _postUpdateBehavior?: PostUpdateBehavior,
+    ): Promise<Image<Raw> | void> {
         return Promise.resolve();
     }
+
     updateItemObjectProperties<T extends FolderItemType, U extends FolderItemTypeMap<ModelType.Raw>[T], R extends FolderItemSaveOptionsMap[T]>(
-        type: T,
-        itemId: number,
-        updatedObjProps: Partial<Tags>,
-        postUpdateBehavior: PostUpdateBehavior & Required<Pick<PostUpdateBehavior, 'fetchForUpdate'>>,
-        requestOptions?: Partial<R>,
+        _type: T,
+        _itemId: number,
+        _updatedObjProps: Partial<Tags>,
+        _postUpdateBehavior: PostUpdateBehavior & Required<Pick<PostUpdateBehavior, 'fetchForUpdate'>>,
+        _requestOptions?: Partial<R>,
     ): Promise<U> {
         return Promise.resolve(getExampleFileData()) as any;
     }
@@ -77,11 +90,6 @@ class MockPermissionService {}
 class MockTagEditorService {}
 class MockModalService {}
 class MockErrorHandler {}
-class MockI18nService {
-    translate(key: string): string {
-        return key;
-    }
-}
 class MockUserSettingsService {}
 
 const NODE_ID = 1;
@@ -96,7 +104,8 @@ describe('ImagePropertiesModal', () => {
             declarations: [
                 ImagePropertiesModalComponent,
                 CombinedPropertiesEditorComponent,
-                mockPipes('i18n', 'i18nDate', 'filesize'),
+                MockI18nPipe,
+                mockPipes('filesize'),
             ],
             imports: [
                 NgxsModule.forRoot(STATE_MODULES),
@@ -115,9 +124,10 @@ describe('ImagePropertiesModal', () => {
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
                 { provide: ModalService, useClass: MockModalService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
+                { provide: I18nService, useClass: MockI18nService },
+                provideTranslateService(),
                 Api,
             ],
             schemas: [NO_ERRORS_SCHEMA],

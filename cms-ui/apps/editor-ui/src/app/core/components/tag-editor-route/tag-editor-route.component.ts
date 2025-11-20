@@ -9,16 +9,6 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import {
-    fileSchema,
-    folderSchema,
-    imageSchema,
-    noItemPermissions,
-    nodeSchema,
-    pageSchema,
-    templateSchema,
-} from '@editor-ui/app/common/models';
-import { MarkObjectPropertiesAsModifiedAction, SetHideExtrasAction, addNormalizedEntities } from '@editor-ui/app/state';
 import { WindowRef } from '@gentics/cms-components';
 import { TagEditorChangeMessage } from '@gentics/cms-integration-api-models';
 import {
@@ -37,7 +27,24 @@ import { cloneDeep, isEqual } from 'lodash-es';
 import { Schema, normalize } from 'normalizr';
 import { Observable, Subscription, combineLatest, from, of, throwError } from 'rxjs';
 import { distinctUntilChanged, filter, map, publishReplay, refCount, startWith, switchMap, tap } from 'rxjs/operators';
-import { ApplicationStateService, EditorActionsService, FolderActionsService, SetNodeFeaturesAction } from '../../../state';
+import {
+    fileSchema,
+    folderSchema,
+    imageSchema,
+    noItemPermissions,
+    nodeSchema,
+    pageSchema,
+    templateSchema,
+} from '../../../common/models';
+import {
+    ApplicationStateService,
+    EditorActionsService,
+    FolderActionsService,
+    MarkObjectPropertiesAsModifiedAction,
+    SetHideExtrasAction,
+    SetNodeFeaturesAction,
+    addNormalizedEntities,
+} from '../../../state';
 import { TagEditorHostComponent, TagEditorService } from '../../../tag-editor';
 import { Api } from '../../providers/api';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';

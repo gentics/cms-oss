@@ -1,8 +1,10 @@
-import { EntityManagerService, GroupOperations, I18nNotificationService, I18nService, UserOperations } from '@admin-ui/core';
+import { EntityManagerService, GroupOperations, UserOperations } from '@admin-ui/core';
 import { AppStateService, SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Group, NormalizableEntityType, Normalized, Raw } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, forkJoin, Observable, of, OperatorFunction } from 'rxjs';
 import { filter, first, map, mergeMap, switchMap } from 'rxjs/operators';
 import { detailLoading } from '../../../common/utils/rxjs-loading-operators/detail-loading.operator';
@@ -11,10 +13,10 @@ import { GroupDataService } from '../group-data/group-data.service';
 @Injectable()
 export class SubgroupDataService extends GroupDataService {
 
-    @SelectState(state => state.ui.focusEntityType)
+    @SelectState((state) => state.ui.focusEntityType)
     focusEntityType$: Observable<NormalizableEntityType>;
 
-    @SelectState(state => state.ui.focusEntityId)
+    @SelectState((state) => state.ui.focusEntityId)
     focusEntityId$: Observable<number>;
 
     constructor(
@@ -91,7 +93,7 @@ export class SubgroupDataService extends GroupDataService {
             )),
             mergeMap((childrenIds: number[]) => {
                 if (childrenIds.length > 0) {
-                    return forkJoin(childrenIds.map(id => this.entityManager.getEntity('group', id).pipe(first())));
+                    return forkJoin(childrenIds.map((id) => this.entityManager.getEntity('group', id).pipe(first())));
                 } else {
                     // return empty array to refresh lists
                     return of([]);
@@ -99,7 +101,7 @@ export class SubgroupDataService extends GroupDataService {
             }),
             map((children: Group<Normalized>[]) => {
                 if (Array.isArray(children) && children.length > 0) {
-                    return children.map(childGroup => this.entityManager.denormalizeEntity('group', childGroup));
+                    return children.map((childGroup) => this.entityManager.denormalizeEntity('group', childGroup));
                 } else {
                     return [];
                 }

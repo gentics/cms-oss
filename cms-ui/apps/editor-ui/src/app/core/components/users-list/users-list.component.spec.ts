@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { CheckboxComponent, GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { UsersList } from './users-list.component';
 
 describe('UsersList', () => {

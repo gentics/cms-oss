@@ -23,9 +23,9 @@ describe('FeaturesActionsService', () => {
                 FeaturesActionsService,
             ],
         });
-        state = TestBed.get(ApplicationStateService);
-        api = TestBed.get(Api);
-        featuresActions = TestBed.get(FeaturesActionsService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        api = TestBed.inject(Api);
+        featuresActions = TestBed.inject(FeaturesActionsService);
     });
 
     describe('checkFeature()', () => {

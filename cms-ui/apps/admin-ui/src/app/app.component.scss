@@ -5,6 +5,7 @@ a.branding {
     display: flex;
     top: 19px;
     left: 22px;
+    align-items: center;
 
     .app-title {
         display: none;
@@ -19,13 +20,8 @@ a.branding {
         }
     }
 
-    svg-icon {
+    img {
         height: 22px;
-
-        & > ::ng-deep svg {
-            height: 22px;
-            width: 19px;
-        }
     }
 }
 

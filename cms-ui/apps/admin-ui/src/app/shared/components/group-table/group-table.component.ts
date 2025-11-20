@@ -1,15 +1,23 @@
 import { GroupBO } from '@admin-ui/common';
-import { ErrorHandler, GroupOperations, GroupTableLoaderOptions, GroupTableLoaderService, I18nService, PermissionsService, UserTableLoaderService } from '@admin-ui/core';
+import {
+    ErrorHandler,
+    GroupOperations,
+    GroupTableLoaderOptions,
+    GroupTableLoaderService,
+    PermissionsService,
+    UserTableLoaderService,
+} from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { AnyModelType, Group, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 import { CreateGroupModalComponent } from '../create-group-modal/create-group-modal.component';
 import { MoveGroupsModalComponent } from '../move-groups-modal/move-groups-modal.component';
-import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 
 const CREATE_SUB_GROUP_ACTION = 'createSubGroup';
 const MOVE_MULTIPLE_GROUPS_ACTION = 'moveGroups';
@@ -21,7 +29,7 @@ const DELETE_ACTION = 'delete';
     templateUrl: './group-table.component.html',
     styleUrls: ['./group-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, GroupBO, GroupTableLoaderOptions> implements OnChanges {
 
@@ -44,6 +52,7 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
             fieldPath: 'description',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'group';
 
     public sortBy = 'name';

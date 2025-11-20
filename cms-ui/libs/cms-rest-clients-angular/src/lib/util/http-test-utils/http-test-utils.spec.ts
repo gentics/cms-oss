@@ -14,8 +14,8 @@ describe('http-test-utils', () => {
         TestBed.configureTestingModule({
             imports: [ HttpClientTestingModule ]
         });
-        http = TestBed.get(HttpClient);
-        httpTestingController = TestBed.get(HttpTestingController);
+        http = TestBed.inject(HttpClient);
+        httpTestingController = TestBed.inject(HttpTestingController);
     });
 
     describe('expectOneRequest()', () => {

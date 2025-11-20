@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import { ContentPackage, IndexById } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
+import { ApplicationStateService } from '../../../state';
 
 @Component({
     selector: 'gtx-content-package-select',

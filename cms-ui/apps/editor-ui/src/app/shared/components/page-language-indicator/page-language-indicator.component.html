@@ -86,7 +86,7 @@
                             data-action="set-source-language"
                             (click)="languageClicked(language, false, true)"
                         >
-                            {{ 'editor.set_as_source_language_label' | i18n:{ language: language?.name } }}
+                            {{ 'editor.set_as_source_language_label' | gtxI18n:{ language: language?.name } }}
                         </gtx-dropdown-item>
 
                         <gtx-dropdown-item
@@ -95,7 +95,7 @@
                             data-action="preview"
                             (click)="languageClicked(language)"
                         >
-                            {{ 'editor.preview_in_language_label' | i18n:{ language: language?.name } }}
+                            {{ 'editor.preview_in_language_label' | gtxI18n:{ language: language?.name } }}
                         </gtx-dropdown-item>
 
                         <gtx-dropdown-item
@@ -105,7 +105,7 @@
                             data-action="compare"
                             (click)="languageClicked(language, true)"
                         >
-                            {{ 'editor.compare_languages_label' | i18n:{
+                            {{ 'editor.compare_languages_label' | gtxI18n:{
                                 language1: (currentLanguage$ | async)?.name,
                                 language2: language?.name
                             } }}
@@ -121,7 +121,7 @@
                             data-action="translate"
                             (click)="languageClicked(language)"
                         >
-                            {{ 'editor.translate_into_label' | i18n:{ language: language?.name } }}
+                            {{ 'editor.translate_into_label' | gtxI18n:{ language: language?.name } }}
                         </gtx-dropdown-item>
 
                         <gtx-dropdown-item
@@ -130,7 +130,7 @@
                             (click)="languageClicked(language, false, false, true)"
                         >
                             <icon left>restore_from_trash</icon>
-                            {{ 'editor.restore_from_wastebin_label' | i18n }}
+                            {{ 'editor.restore_from_wastebin_label' | gtxI18n }}
                         </gtx-dropdown-item>
                     </ng-container>
 
@@ -143,10 +143,10 @@
                                 (click)="onStageLanguageClick(language, langPage, false)"
                             >
                                 <icon left>{{ stagingMap?.[langPage?.globalId]?.included ? 'remove' : 'inventory' }}</icon>
-                                {{ 'editor.' + (stagingMap?.[langPage?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | i18n:{
+                                {{ 'editor.' + (stagingMap?.[langPage?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | gtxI18n:{
                                     language: language?.name,
-                                    itemType: 'common.type_page' | i18n,
-                                    itemTypePlural: 'common.type_pages' | i18n
+                                    itemType: 'common.type_page' |gtxI18n,
+                                    itemTypePlural: 'common.type_pages' |gtxI18n
                                 } }}
                             </gtx-dropdown-item>
                         </ng-container>

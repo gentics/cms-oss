@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import {
     EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
@@ -12,6 +12,7 @@ import {
 } from '@admin-ui/mesh/common';
 import { getUserDisplayName, toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     GroupCreateRequest,
     GroupListOptions,
@@ -67,7 +68,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public getMapped(uuid: string, params?: GroupLoadOptions): Promise<MeshGroupBO> {
-        return this.get(uuid, params).then(group => this.mapToBusinessObject(group));
+        return this.get(uuid, params).then((group) => this.mapToBusinessObject(group));
     }
 
     public async create(body: GroupCreateRequest): Promise<GroupResponse> {
@@ -87,7 +88,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public createMapped(body: GroupCreateRequest): Promise<MeshGroupBO> {
-        return this.create(body).then(group => this.mapToBusinessObject(group));
+        return this.create(body).then((group) => this.mapToBusinessObject(group));
     }
 
     public async update(uuid: string, body: GroupUpdateRequest): Promise<GroupResponse> {
@@ -107,7 +108,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public updateMapped(uuid: string, body: GroupUpdateRequest): Promise<MeshGroupBO> {
-        return this.update(uuid, body).then(group => this.mapToBusinessObject(group));
+        return this.update(uuid, body).then((group) => this.mapToBusinessObject(group));
     }
 
     public async delete(uuid: string): Promise<void> {
@@ -131,7 +132,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         try {
             const res = await this.mesh.groups.list(params).send();
             for (const group of res.data) {
-                this.nameMap[group.uuid] = group.name
+                this.nameMap[group.uuid] = group.name;
             }
             return res;
         } catch (err) {
@@ -140,7 +141,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public listMapped(params?: GroupListOptions): Promise<ListResponse<MeshGroupBO>> {
-        return this.list(params).then(res => {
+        return this.list(params).then((res) => {
             return {
                 // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                 _metainfo: res._metainfo,

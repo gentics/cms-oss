@@ -1,27 +1,26 @@
 <div class="content">
-    <div class="entry">
-        <div class="entry-title">{{ 'widget.task_queue_failed_title' | i18n }}</div>
-        <div
-            class="entry-value"
-            [class.alert]="failedTasks?.length > 0"
-        >{{ failedTasks?.length > 0 ? failedTasks.length : ('widget.task_queue_failed_none' | i18n) }}</div>
-    </div>
+  <div class="entry">
+    <div class="entry-title">{{ 'widget.task_queue_failed_title' | gtxI18n }}</div>
+    <div
+      class="entry-value"
+      [class.alert]="failedTasks?.length > 0"
+    >{{ failedTasks?.length > 0 ? failedTasks.length : ('widget.task_queue_failed_none' | gtxI18n) }}</div>
+  </div>
 
-    <ng-container *ngIf="summary">
-        <ng-container *ngIf="summary.items.length > 0; else noWaitingTasks">
-            <div class="section-title">{{ 'widget.task_queue_waiting_title' | i18n }}</div>
-
-            <div *ngFor="let item of summary.items" class="entry">
-                <div class="entry-title">{{ item.label }}</div>
-                <div class="entry-value">{{ item.count }}</div>
-            </div>
-
-            <ng-template #noWaitingTasks>
-                <div class="entry">
-                    <div class="entry-title">{{ 'widget.task_queue_waiting_title' | i18n }}</div>
-                    <div class="entry-value">{{ 'widget.task_queue_waiting_none' | i18n }}</div>
-                </div>
-            </ng-template>
-        </ng-container>
-    </ng-container>
+  @if (summary) {
+    @if (summary.items.length > 0) {
+      <div class="section-title">{{ 'widget.task_queue_waiting_title' | gtxI18n }}</div>
+      @for (item of summary.items; track item) {
+        <div class="entry">
+          <div class="entry-title">{{ item.label }}</div>
+          <div class="entry-value">{{ item.count }}</div>
+        </div>
+      }
+    } @else {
+      <div class="entry">
+        <div class="entry-title">{{ 'widget.task_queue_waiting_title' | gtxI18n }}</div>
+        <div class="entry-value">{{ 'widget.task_queue_waiting_none' | gtxI18n }}</div>
+      </div>
+    }
+  }
 </div>

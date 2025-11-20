@@ -1,4 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -7,13 +8,11 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
-import { I18nService } from '../i18n/i18n.service';
 import { QuickJumpService } from '../quick-jump/quick-jump.service';
 import { ListSearchService } from './list-search.service';
 
 class MockErrorHandler {
-    catch = jasmine.createSpy('catch')
+    catch = jasmine.createSpy('catch');
 }
 
 class MockFolderActions {
@@ -26,9 +25,11 @@ class MockNavigationService {
     list = jasmine.createSpy('list').and.returnValue({
         commands: jasmine.createSpy('commands').and.returnValue([]),
     });
+
     instruction = jasmine.createSpy('instruction').and.returnValue({
         router: jasmine.createSpy('router'),
-    })
+    });
+
     deserializeOptions = jasmine.createSpy('deserializeOptions').and.returnValue({});
 }
 
@@ -36,8 +37,8 @@ class MockQuickJumpService {
     searchPageById = jasmine.createSpy('searchPageById').and.returnValue(Promise.resolve());
 }
 
-class MockI18nService {
-    translate = jasmine.createSpy('translate').and.returnValue('error_text');
+class MockI18nService implements Partial<I18nService> {
+    instant = jasmine.createSpy('instant').and.returnValue('error_text');
 }
 
 class MockI18Notification {}
@@ -67,15 +68,15 @@ describe('ListSearchService', () => {
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: QuickJumpService, useClass: MockQuickJumpService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: I18nNotificationService, useClass: MockI18Notification },
                 { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18Notification },
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
-        quickJumpService = TestBed.get(QuickJumpService);
-        listSearchService = TestBed.get(ListSearchService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        quickJumpService = TestBed.inject(QuickJumpService) as any;
+        listSearchService = TestBed.inject(ListSearchService);
 
         initialState = {
             auth: {
@@ -100,7 +101,7 @@ describe('ListSearchService', () => {
                 searchTerm: '',
                 filterTerm: '',
                 searchFilters: {
-                    nodeId: [ { value: ACTIVE_NODE_ID, operator: 'IS' } ],
+                    nodeId: [{ value: ACTIVE_NODE_ID, operator: 'IS' }],
                 },
                 searchFiltersVisible: false,
                 folders: emptyItemInfo,
@@ -116,7 +117,7 @@ describe('ListSearchService', () => {
         const testFilterTerm = `https://${NODE_HOST}/${PAGE_URL}`;
         let newSearchTerm;
         spyOn(listSearchService, 'searchLiveUrl').and.callThrough();
-        listSearchService.searchEvent$.pipe(first()).subscribe(searchTerm => newSearchTerm = searchTerm);
+        listSearchService.searchEvent$.pipe(first()).subscribe((searchTerm) => newSearchTerm = searchTerm);
         listSearchService.search(testFilterTerm, ACTIVE_NODE_ID);
         tick();
         expect(newSearchTerm.term).toBe(testFilterTerm);
@@ -129,7 +130,7 @@ describe('ListSearchService', () => {
         const testFilterTerm = `http://${NODE_HOST}/${PAGE_URL}`;
         let newSearchTerm;
         spyOn(listSearchService, 'searchLiveUrl').and.callThrough();
-        listSearchService.searchEvent$.pipe(first()).subscribe(searchTerm => newSearchTerm = searchTerm);
+        listSearchService.searchEvent$.pipe(first()).subscribe((searchTerm) => newSearchTerm = searchTerm);
         listSearchService.search(testFilterTerm, ACTIVE_NODE_ID);
         tick();
         expect(newSearchTerm.term).toBe(testFilterTerm);
@@ -142,7 +143,7 @@ describe('ListSearchService', () => {
         const testFilterTerm = `${NODE_HOST}/${PAGE_URL}`;
         let newSearchTerm;
         spyOn(listSearchService, 'searchLiveUrl').and.callThrough();
-        listSearchService.searchEvent$.pipe(first()).subscribe(searchTerm => newSearchTerm = searchTerm);
+        listSearchService.searchEvent$.pipe(first()).subscribe((searchTerm) => newSearchTerm = searchTerm);
         listSearchService.search(testFilterTerm, ACTIVE_NODE_ID);
         tick();
         expect(newSearchTerm.term).toBe(testFilterTerm);
@@ -154,7 +155,7 @@ describe('ListSearchService', () => {
     it('recognizes jump-to-id syntax', fakeAsync(() => {
         const testFilterTerm = `jump:${PAGE_ID}`;
         let newSearchTerm;
-        listSearchService.searchEvent$.pipe(first()).subscribe(searchTerm => newSearchTerm = searchTerm);
+        listSearchService.searchEvent$.pipe(first()).subscribe((searchTerm) => newSearchTerm = searchTerm);
         listSearchService.search(testFilterTerm, ACTIVE_NODE_ID);
         tick();
         expect(newSearchTerm.term).toBe(testFilterTerm);

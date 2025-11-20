@@ -1,14 +1,14 @@
-<gtx-table-size-input
-    *ngIf="!isDesktop; else select"
+@if (!isDesktop) {
+  <gtx-table-size-input
     [maxColumns]="settings.maxColumns"
     [maxRows]="settings.maxRows"
     [formControl]="control"
-></gtx-table-size-input>
+  ></gtx-table-size-input>
+} @else {
+  <gtx-table-size-select
+    [maxColumns]="settings.maxColumns"
+    [maxRows]="settings.maxRows"
+    [formControl]="control"
+  ></gtx-table-size-select>
+}
 
-<ng-template #select>
-    <gtx-table-size-select
-        [maxColumns]="settings.maxColumns"
-        [maxRows]="settings.maxRows"
-        [formControl]="control"
-    ></gtx-table-size-select>
-</ng-template>

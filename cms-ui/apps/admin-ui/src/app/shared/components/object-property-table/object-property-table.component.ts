@@ -2,7 +2,6 @@ import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@ad
 import {
     DevToolPackageTableLoaderService,
     ErrorHandler,
-    I18nService,
     ObjectPropertyTableLoaderOptions,
     ObjectPropertyTableLoaderService,
     PermissionsService,
@@ -12,6 +11,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { typeIdsToName } from '@gentics/cms-components';
 import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
@@ -28,7 +28,7 @@ const ASSIGN_TO_NODES_ACTION = 'assignToNodes';
     templateUrl: './object-property-table.component.html',
     styleUrls: ['./object-property-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ObjectPropertyTableComponent
     extends BasePackageEntityTableComponent<ObjectProperty, ObjectPropertyBO, ObjectPropertyTableLoaderOptions>
@@ -44,38 +44,39 @@ export class ObjectPropertyTableComponent
     protected rawColumns: TableColumn<ObjectPropertyBO>[] = [
         {
             id: 'name',
-            label: 'objectProperty.name',
+            label: 'object_property.name',
             fieldPath: 'name',
             sortable: true,
         },
         {
             id: 'keyword',
-            label: 'objectProperty.keyword',
+            label: 'object_property.keyword',
             fieldPath: 'keyword',
             sortable: true,
         },
         {
             id: 'restricted',
-            label: 'objectProperty.restricted',
+            label: 'object_property.restricted',
             fieldPath: 'restricted',
             sortable: true,
             align: 'center',
         },
         {
             id: 'category',
-            label: 'objectProperty.objectPropertyCategory_singular',
+            label: 'object_property.objectPropertyCategory_singular',
             fieldPath: 'categoryId',
             sortable: true,
             sortValue: 'category.name',
         },
         {
             id: 'construct',
-            label: 'objectProperty.construct',
+            label: 'object_property.construct',
             fieldPath: 'constructId',
             sortable: true,
             sortValue: 'construct.name',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'objectProperty';
     protected focusEntityType = EditableEntity.OBJECT_PROPERTY;
 
@@ -168,7 +169,7 @@ export class ObjectPropertyTableComponent
         if (this.type == null) {
             newColumns.splice(2, 0, {
                 id: 'type',
-                label: 'objectProperty.type',
+                label: 'object_property.type',
                 fieldPath: 'type',
                 mapper: typeIdsToName,
             });

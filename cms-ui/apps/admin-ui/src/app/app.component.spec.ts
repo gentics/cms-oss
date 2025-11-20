@@ -1,49 +1,47 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { Component, EventEmitter, Injectable, NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { Component, Injectable, NO_ERRORS_SCHEMA, OnDestroy, Pipe, PipeTransform } from '@angular/core';
 import { TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { RouterTestingModule } from '@angular/router/testing';
+import { provideRouter } from '@angular/router';
 import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
+import { ModelType, Node, NodeListRequestOptions } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
-import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { AngularSvgIconModule } from 'angular-svg-icon';
+import { TranslateModule, TranslatePipe } from '@ngx-translate/core';
 import { BehaviorSubject, NEVER, Observable, Subject, of } from 'rxjs';
-import { NodeListRequestOptions, Node, ModelType } from '@gentics/cms-models';
-import { componentTest } from '../testing';
+import { componentTest, configureComponentTest } from '../testing';
 import { AppComponent } from './app.component';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from './common';
 import { InterfaceOf } from './common/utils/util-types/util-types';
 import {
+    ActivityManagerComponent,
+    LoggingInOverlayComponent,
+    MessageBodyComponent,
+    MessageInboxComponent,
+    MessageListComponent,
+} from './core/components';
+import {
     ActivityManagerService,
+    AdminOperations,
+    AuthOperations,
+    BreadcrumbsService,
     EditorUiLocalStorageService,
     EntityManagerService,
     ErrorHandler,
     FeatureOperations,
     GtxActivityManagerActivity,
     LanguageHandlerService,
+    LogoutCleanupService,
+    MaintenanceModeService,
     MarkupLanguageOperations,
     MessageService,
     NodeOperations,
     PermissionsService,
     UserSettingsService,
     UsersnapService,
-} from './core';
-import { ActivityManagerComponent } from './core/components/activity-manager';
-import { LoggingInOverlayComponent } from './core/components/logging-in-overlay/logging-in-overlay.component';
-import { MessageBodyComponent } from './core/components/message-body';
-import { MessageInboxComponent } from './core/components/message-inbox/message-inbox.component';
-import { MessageListComponent } from './core/components/message-list/message-list.component';
-import { BreadcrumbsService } from './core/providers/breadcrumbs/breadcrumbs.service';
-import { I18nService } from './core/providers/i18n/i18n.service';
-import { MockI18nServiceWithSpies } from './core/providers/i18n/i18n.service.mock';
-import { LogoutCleanupService } from './core/providers/logout-cleanup/logout-cleanup.service';
-import { MaintenanceModeService } from './core/providers/maintenance-mode/maintenance-mode.service';
-import { AdminOperations } from './core/providers/operations/admin/admin.operations';
-import { AuthOperations } from './core/providers/operations/auth';
-import { GenericRouterOutletComponent } from './shared/components/generic-router-outlet/generic-router-outlet.component';
-import { IconCheckboxComponent } from './shared/components/icon-checkbox/icon-checkbox.component';
-import { ActionAllowedDirective } from './shared/directives/action-allowed/action-allowed.directive';
+} from './core/providers';
+import { GenericRouterOutletComponent, IconCheckboxComponent } from './shared/components';
+import { ActionAllowedDirective } from './shared/directives';
 import { AppStateService } from './state';
 import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from './state/utils/test-app-state';
 
@@ -128,18 +126,7 @@ class MockErrorHandler {
 @Injectable()
 class MockModalService {
     fromComponent = jasmine.createSpy('ModalService.fromComponent')
-        .and.returnValue(new Promise(neverResolve => {}));
-}
-
-@Injectable()
-class MockTranslateService {
-    onLangChange = new EventEmitter<LangChangeEvent>();
-    onTranslationChange: EventEmitter<any> = new EventEmitter();
-    onDefaultLangChange: EventEmitter<any> = new EventEmitter();
-    get(key: string | Array<string>, interpolateParams?: object): Observable<string | any> {
-        return new BehaviorSubject<string>('').asObservable();
-    }
-    instant = (str: string) => `translated(${str})`;
+        .and.returnValue(new Promise((neverResolve) => {}));
 }
 
 @Pipe({
@@ -158,20 +145,25 @@ class MockI18nPipe implements PipeTransform {
 })
 class TestComponent { }
 
+@Injectable()
+class MockTranslatePipe implements PipeTransform, OnDestroy {
+    transform = jasmine.createSpy('transform').and.callFake((val) => val);
+    _dispose = jasmine.createSpy('_dispose');
+    ngOnDestroy(): void {}
+}
+
 describe('AppComponent', () => {
 
     let appState: TestAppState;
 
     beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
+        configureComponentTest({
             imports: [
                 GenticsUICoreModule.forRoot(),
                 assembleTestAppStateImports(),
                 NoopAnimationsModule,
                 CmsComponentsModule,
-                RouterTestingModule,
-                HttpClientTestingModule,
-                AngularSvgIconModule.forRoot(),
+                TranslateModule.forRoot({}),
             ],
             declarations: [
                 ActionAllowedDirective,
@@ -184,15 +176,15 @@ describe('AppComponent', () => {
                 MessageInboxComponent,
                 MessageListComponent,
                 TestComponent,
-                TranslatePipe,
             ],
             providers: [
+                provideRouter([]),
+                provideHttpClient(),
+
                 TEST_APP_STATE,
                 { provide: GcmsApi, useClass: MockApiBase },
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: USER_ACTION_PERMISSIONS, useValue: USER_ACTION_PERMISSIONS_DEF },
-                { provide: TranslateService, useClass: MockTranslateService },
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
 
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: AuthOperations, useClass: MockAuthOperations },
@@ -200,7 +192,6 @@ describe('AppComponent', () => {
                 { provide: EditorUiLocalStorageService, useClass: MockEditorUiLocalStorageService },
                 { provide: EntityManagerService, useClass: MockEntityManager },
                 { provide: FeatureOperations, useClass: MockFeatureOperations },
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },
                 { provide: LogoutCleanupService, useClass: MockLogoutCleanupService },
                 { provide: MaintenanceModeService, useClass: MockMaintenanceModeService },
@@ -214,11 +205,12 @@ describe('AppComponent', () => {
                 { provide: ActivityManagerService, useClass: MockActivityManagerService },
                 { provide: MarkupLanguageOperations, useClass: MockMarkupLanguageOperations },
                 { provide: NodeOperations, useClass: MockNodeOperations },
+                { provide: TranslatePipe, useClass: MockTranslatePipe },
             ],
             schemas: [NO_ERRORS_SCHEMA],
-        }).compileComponents();
+        });
 
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
 
         appState.mockState({
             auth: {
@@ -229,14 +221,14 @@ describe('AppComponent', () => {
 
     it('initializes services that require initialization',
         componentTest(() => TestComponent, (fixture, instance) => {
-            const breadcrumbs: MockBreadcrumbsService = TestBed.get(BreadcrumbsService);
-            const editorUiLocalStorage: MockEditorUiLocalStorageService = TestBed.get(EditorUiLocalStorageService);
-            const entityManager: MockEntityManager = TestBed.get(EntityManagerService);
-            const logoutCleanup: MockLogoutCleanupService = TestBed.get(LogoutCleanupService);
-            const maintenanceMode: MockMaintenanceModeService = TestBed.get(MaintenanceModeService);
-            const messageService: MessageService = TestBed.get(MessageService);
-            const userSettings: MockUserSettingsService = TestBed.get(UserSettingsService);
-            const usersnapService: MockUsersnapService = TestBed.get(UsersnapService);
+            const breadcrumbs: MockBreadcrumbsService = TestBed.inject(BreadcrumbsService) as any;
+            const editorUiLocalStorage: MockEditorUiLocalStorageService = TestBed.inject(EditorUiLocalStorageService) as any;
+            const entityManager: MockEntityManager = TestBed.inject(EntityManagerService) as any;
+            const logoutCleanup: MockLogoutCleanupService = TestBed.inject(LogoutCleanupService) as any;
+            const maintenanceMode: MockMaintenanceModeService = TestBed.inject(MaintenanceModeService) as any;
+            const messageService: MessageService = TestBed.inject(MessageService);
+            const userSettings: MockUserSettingsService = TestBed.inject(UserSettingsService) as any;
+            const usersnapService: MockUsersnapService = TestBed.inject(UsersnapService) as any;
 
             const spyOnMessageServicePoll = spyOn(messageService, 'poll').and.callThrough();
             messageService.openInbox();
@@ -256,7 +248,7 @@ describe('AppComponent', () => {
             expect(usersnapService.init).toHaveBeenCalledTimes(1);
 
             expect(spyOnMessageServicePoll).toHaveBeenCalledTimes(1);
-            messageService.onOpenInbox$.subscribe(data => {
+            messageService.onOpenInbox$.subscribe((data) => {
                 expect(data).not.toBeUndefined();
             });
         }),
@@ -264,7 +256,7 @@ describe('AppComponent', () => {
 
     it('executes the required tasks on login',
         componentTest(() => TestComponent, (fixture, instance) => {
-            const featureOps: MockFeatureOperations = TestBed.get(FeatureOperations);
+            const featureOps: MockFeatureOperations = TestBed.inject(FeatureOperations) as any;
             fixture.detectChanges();
             tick();
 

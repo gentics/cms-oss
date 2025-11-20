@@ -9,12 +9,12 @@ import {
     OnDestroy,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Page, PageRequestOptions, PageVersion } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { Api } from '../../../core/providers/api/api.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { FolderActionsService } from '../../../state';
 import { PublishableStateUtil } from '../../util/entity-states';
@@ -51,7 +51,7 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
         private router: Router,
         private navigationService: NavigationService,
         private folderActions: FolderActionsService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
         private elementRef: ElementRef,
         private changeDetector: ChangeDetectorRef,
     ) { }

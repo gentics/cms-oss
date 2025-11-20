@@ -1,99 +1,112 @@
 <gtx-dropdown-list
-    width="expand"
-    belowTrigger="false"
-    [sticky]="multiple"
-    [disabled]="disabled"
-    [class.with-label]="label != null"
-    [class.clearable]="clearable"
-    [class.select-all]="selectAll"
-    [class.has-addon]="clearable || selectAll"
-    [attr.data-multiple]="multiple"
-    data-context-id="select-values"
-    (open)="dropdownOpened()"
-    (keydown)="handleKeydown($event)"
->
-    <gtx-dropdown-trigger>
-        <div
-            #viewValueContainer
-            class="view-value select-input"
-            [attr.tabindex]="disabled ? null : 0"
-            [attr.disabled]="disabled ? true : null"
-            [attr.data-value]="valueArray"
-            [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
-            data-context-trigger
-            (blur)="inputBlur($event)"
-        >
-            <div *ngIf="selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)" class="view-value-item">{{ viewValue }}</div>
-            <div *ngIf="placeholder && selectedOptions.length == 0" class="placeholder">{{ placeholder }}</div>
-            <div *ngIf="!placeholder && selectedOptions.length == 0"></div>
-            <icon>arrow_drop_down</icon>
-        </div>
+  width="expand"
+  belowTrigger="false"
+  [sticky]="multiple"
+  [disabled]="disabled"
+  [class.with-label]="label != null"
+  [class.clearable]="clearable"
+  [class.select-all]="selectAll"
+  [class.has-addon]="clearable || selectAll"
+  [attr.data-multiple]="multiple"
+  data-context-id="select-values"
+  (open)="dropdownOpened()"
+  (keydown)="handleKeydown($event)"
+  >
+  <gtx-dropdown-trigger>
+    <div
+      #viewValueContainer
+      class="view-value select-input"
+      [attr.tabindex]="disabled ? null : 0"
+      [attr.disabled]="disabled ? true : null"
+      [attr.data-value]="valueArray"
+      [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
+      data-context-trigger
+      (blur)="inputBlur($event)"
+      >
+      @if (selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)) {
+        <div class="view-value-item">{{ viewValue }}</div>
+      }
+      @if (placeholder && selectedOptions.length == 0) {
+        <div class="placeholder">{{ placeholder }}</div>
+      }
+      @if (!placeholder && selectedOptions.length == 0) {
+        <div></div>
+      }
+      <icon>arrow_drop_down</icon>
+    </div>
 
-        <label *ngIf="label != null" (click)="viewValueContainer.focus()">{{ label }}</label>
-    </gtx-dropdown-trigger>
+    @if (label != null) {
+      <label (click)="viewValueContainer.focus()">{{ label }}</label>
+    }
+  </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content data-context-id="select-values" class="select-context" (keydown)="handleKeydown($event)">
-        <ul
-            class="select-options"
-            (click)="viewValueContainer.focus()"
-            (mouseover)="deselect()"
-        >
-            <ng-template ngFor [ngForOf]="optionGroups" let-group let-groupIndex="index">
-                <li
-                    *ngIf="!group.isDefaultGroup"
-                    class="group-label"
-                >{{ group.label }}</li>
+  <gtx-dropdown-content data-context-id="select-values" class="select-context" (keydown)="handleKeydown($event)">
+    <ul
+      class="select-options"
+      (click)="viewValueContainer.focus()"
+      (mouseover)="deselect()"
+      >
+      @for (group of optionGroups; track group; let groupIndex = $index) {
+        @if (!group.isDefaultGroup) {
+          <li
+            class="group-label"
+          >{{ group.label }}</li>
+        }
+        @for (option of group.options; track option; let optionIndex = $index) {
+          <li
+            class="select-option"
+            [attr.data-id]="idPath ? (option.value | gtxValuePath:idPath) : option.value"
+            [class.disabled]="group.disabled || option.disabled"
+            [class.selected]="selectedIndex[0] === groupIndex && selectedIndex[1] === optionIndex"
+            (click)="selectItem(groupIndex, optionIndex)"
+            >
+            @if (multiple) {
+              <gtx-checkbox
+                [checked]="isSelected(option)"
+                (change)="selectItem(groupIndex, optionIndex)"
+              ></gtx-checkbox>
+            }
+            @if (option.icon) {
+              <icon class="material-icons">{{ option.icon }}</icon>
+            }
+            <span class="option-label">{{ option.viewValue }}</span>
+          </li>
+        }
+      }
 
-                <li
-                    *ngFor="let option of group.options; let optionIndex = index"
-                    class="select-option"
-                    [attr.data-id]="idPath ? (option.value | gtxValuePath:idPath) : option.value"
-                    [class.disabled]="group.disabled || option.disabled"
-                    [class.selected]="selectedIndex[0] === groupIndex && selectedIndex[1] === optionIndex"
-                    (click)="selectItem(groupIndex, optionIndex)"
-                >
-                    <gtx-checkbox
-                        *ngIf="multiple"
-                        [checked]="isSelected(option)"
-                        (change)="selectItem(groupIndex, optionIndex)"
-                    ></gtx-checkbox>
-
-                    <icon *ngIf="option.icon" class="material-icons">{{ option.icon }}</icon>
-
-                    <span class="option-label">{{ option.viewValue }}</span>
-                </li>
-            </ng-template>
-
-            <ng-container *ngIf="disableUnknownValues">
-                <li
-                    *ngFor="let unknownVal of unknownValues"
-                    class="select-option disabled selected"
-                >{{ unknownVal }}</li>
-            </ng-container>
-        </ul>
-    </gtx-dropdown-content>
+      @if (disableUnknownValues) {
+        @for (unknownVal of unknownValues; track unknownVal) {
+          <li
+            class="select-option disabled selected"
+          >{{ unknownVal }}</li>
+        }
+      }
+    </ul>
+  </gtx-dropdown-content>
 </gtx-dropdown-list>
 
-<gtx-button
-    *ngIf="clearable"
+@if (clearable) {
+  <gtx-button
     icon
     class="addon-button clear-button"
     type="secondary"
     [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
     [disabled]="disabled"
     (click)="clearSelection()"
->
+    >
     <icon class="clear-icon">clear</icon>
-</gtx-button>
+  </gtx-button>
+}
 
-<gtx-button
-    *ngIf="selectAll"
+@if (selectAll) {
+  <gtx-button
     icon
     class="addon-button select-all-button"
     type="secondary"
     [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
     [disabled]="disabled"
     (click)="selectAllOptions()"
->
+    >
     <icon>done_all</icon>
-</gtx-button>
+  </gtx-button>
+}

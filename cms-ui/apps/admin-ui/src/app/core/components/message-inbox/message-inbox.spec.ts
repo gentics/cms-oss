@@ -8,7 +8,7 @@ import { IconCheckboxComponent } from '../../../shared/components/icon-checkbox/
 import { SendMessageModalComponent } from '../../../shared/components/send-message-modal/send-message-modal.component';
 import { AppStateService } from '../../../state';
 import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
-import { EntityManagerService, I18nService, MessageService } from '../../providers';
+import { EntityManagerService, MessageService } from '../../providers';
 import { MessageBodyComponent } from '../message-body/message-body.component';
 import { MessageListComponent } from '../message-list/message-list.component';
 import { MessageInboxComponent } from './message-inbox.component';
@@ -29,7 +29,6 @@ class TestComponent {
     navigate(): void { }
 }
 
-
 // tslint:disable-next-line: directive-selector
 @Directive({
     selector: '[overrideSlot],[overrideParams]',
@@ -40,9 +39,8 @@ class MockChangeDetectorRef {}
 
 class MockModalService {
     fromComponent = jasmine.createSpy('ModalService.fromComponent')
-        .and.returnValue(new Promise(neverResolve => {}));
+        .and.returnValue(new Promise((neverResolve) => {}));
 }
-
 
 describe('MessageInbox', () => {
 
@@ -60,7 +58,6 @@ describe('MessageInbox', () => {
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: ChangeDetectorRef, useClass: MockChangeDetectorRef },
                 { provide: ModalService, useClass: MockModalService },
-                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 IconCheckboxComponent,
@@ -72,7 +69,7 @@ describe('MessageInbox', () => {
             ],
         });
 
-        modalService = TestBed.get(ModalService);
+        modalService = TestBed.inject(ModalService) as any;
     });
 
     it('is created ok',

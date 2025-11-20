@@ -1,10 +1,10 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, TestModuleMetadata, getTestBed } from '@angular/core/testing';
-import { STATE_MODULES } from '@editor-ui/app/state';
-import { mockPipe } from '@gentics/ui-core/testing';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nPipe, MockI18nService } from '@gentics/cms-components/testing';
 import { NgxsModule } from '@ngxs/store';
-import { Observable, of } from 'rxjs';
+import { STATE_MODULES } from '../app/state';
+import { mockPipes } from '@gentics/ui-core/testing';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -12,13 +12,7 @@ import { Observable, of } from 'rxjs';
 function mergeUnique(a: any[], b: any[]): any[] {
     const arr1 = a instanceof Array ? a : [];
     const arr2 = b instanceof Array ? b : [];
-    return arr1.concat(arr2.filter(item => arr1.indexOf(item) < 0));
-}
-
-export class MockTranslateService {
-    onTranslationChange = of({});
-    onLangChange = of({});
-    get(): Observable<string> { return of('mocked i18n string'); }
+    return arr1.concat(arr2.filter((item) => arr1.indexOf(item) < 0));
 }
 
 /**
@@ -32,8 +26,13 @@ export function configureComponentTest(config: TestModuleMetadata): TestBed {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
         imports: [NgxsModule.forRoot(STATE_MODULES)],
-        declarations: [mockPipe('i18n')],
-        providers: [{ provide: TranslateService, useClass: MockTranslateService }],
+        declarations: [
+            MockI18nPipe,
+            ...mockPipes('gtxI18nDate'),
+        ],
+        providers: [
+            { provide: I18nService, useClass: MockI18nService },
+        ],
         schemas: [NO_ERRORS_SCHEMA],
     };
 

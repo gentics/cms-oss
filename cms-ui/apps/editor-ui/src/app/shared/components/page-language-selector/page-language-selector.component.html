@@ -1,32 +1,40 @@
-<div class="language-select" *ngIf="1 < variants?.length || canSelectNone();else one_language_text">
-    <gtx-select
-        [value]="selected"
-        (valueChange)="onSelectChange($event)"
-        multiple="true"
-    >
-        <gtx-option
-            *ngFor="let item of variants"
-            [value]="item.id"
-        >{{ item.languageName }}</gtx-option>
-    </gtx-select>
-
-    <gtx-button
-        flat
-        size="small"
-        class="show-on-hover"
-        type="secondary"
-        [title]="toggleTitle | i18n: { current: ('lang.' + page.language | i18n) }"
-        (click)="toggleLanguageVariantSelection()"
-    >
-        <icon left>{{ allVariantsSelected() && canSelectNone() ? 'not_interested' : 'check' }}</icon>
-        <span *ngIf="allVariantsSelected() && !canSelectNone()">{{ page.language }}</span>
-        <span *ngIf="allVariantsSelected() && canSelectNone()">{{ 'modal.page_select_none_button' | i18n }}</span>
-        <span *ngIf="!allVariantsSelected()">{{ 'modal.page_select_all_button' | i18n }}</span>
-    </gtx-button>
-</div>
-
-<ng-template #one_language_text>
+@if (1 < variants?.length || canSelectNone()) {
+    <div class="language-select">
+        <gtx-select
+            [value]="selected"
+            [placeholder]="'common.select_placeholder' | gtxI18n"
+            (valueChange)="onSelectChange($event)"
+            multiple="true"
+        >
+            @for (item of variants; track item) {
+                <gtx-option
+                    [value]="item.id"
+                >{{ item.languageName }}</gtx-option>
+            }
+        </gtx-select>
+        <gtx-button
+            flat
+            size="small"
+            class="show-on-hover"
+            type="secondary"
+            [title]="toggleTitle | gtxI18n: { current: ('lang.' + page.language | gtxI18n) }"
+            (click)="toggleLanguageVariantSelection()"
+        >
+            <icon left>{{ allVariantsSelected() && canSelectNone() ? 'not_interested' : 'check' }}</icon>
+            @if (allVariantsSelected() && !canSelectNone()) {
+                <span>{{ page.language }}</span>
+            }
+            @if (allVariantsSelected() && canSelectNone()) {
+                <span>{{ 'modal.page_select_none_button' | gtxI18n }}</span>
+            }
+            @if (!allVariantsSelected()) {
+                <span>{{ 'modal.page_select_all_button' | gtxI18n }}</span>
+            }
+        </gtx-button>
+    </div>
+} @else {
     <div class="one_language_text">
         <span>{{ page.languageName }}</span>
     </div>
-</ng-template>
+}
+

@@ -10,7 +10,7 @@ export function spyOnDynamicallyCreatedComponent(
     componentTypes: Type<any>[],
     setUpSpyFn: (componentType: Type<any>, componentInstance: ComponentRef<any>) => void
 ): void {
-    const componentFactoryResolver: ComponentFactoryResolver = TestBed.get(ComponentFactoryResolver);
+    const componentFactoryResolver: ComponentFactoryResolver = TestBed.inject(ComponentFactoryResolver);
     const origResolveFn = componentFactoryResolver.resolveComponentFactory.bind(componentFactoryResolver);
 
     spyOn(componentFactoryResolver, 'resolveComponentFactory').and.callFake((componentType: Type<any>) => {

@@ -16,11 +16,6 @@ module.exports = (config, options, targetOptions) => {
         }));
     }
 
-    config.module.rules.push({
-        test: /\.yml/,
-        loader: 'yaml-loader',
-    });
-
     config.resolve.fallback = {
         ...config.resolve.fallback,
         'buffer': false,

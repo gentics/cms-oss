@@ -1,142 +1,141 @@
 <div class="header">
 
-    <ng-container *ngIf="this.waitsForDeleteConfirmation?.unread === true; else unreadTitle">
-        <h3 class="title">
-            <span class="show-warning">
-                {{ 'user.confirm_delete' | i18n }}
-            </span>
-        </h3>
-    </ng-container>
+  @if (this.waitsForDeleteConfirmation?.unread === true) {
+    <h3 class="title">
+      <span class="show-warning">
+        {{ 'user.confirm_delete' | gtxI18n }}
+      </span>
+    </h3>
+  } @else {
+    <icon-checkbox
+      icon="mail"
+      [selected]="isSelectedAllUnread()"
+      [class.hidecheckbox]="!((unreadMessagesCount$ | async) > 0)"
+      (change)="toggleAllUnread()"
+    ></icon-checkbox>
+    @if ((unreadMessagesCount$ | async) > 0 && selectedUnread.length > 0) {
+      <h3 class="title">
+        <span class="show-selected">
+          {{ 'user.messages_read_selected_label' | gtxI18n:{ selected: selectedUnread.length, count: (unreadMessagesCount$ | async) } }}
+        </span>
+      </h3>
+      <div class="message-actions showactions">
+        <icon
+          [title]="'user.archive_selected_messages_title' | gtxI18n"
+          (click)="archiveAllUnread()"
+        >move_to_inbox</icon>
+        <icon
+          [title]="'user.delete_selected_messages_title' | gtxI18n"
+          (click)="deleteAllUnread()"
+        >delete</icon>
+      </div>
+    } @else {
+      <h3 class="title">
+        @if ((unreadMessagesCount$ | async) > 0) {
+          <span>
+            {{ 'editor.messages_unread_count_label' | gtxI18n:{ count: (unreadMessagesCount$ | async) } }}
+          </span>
+        }
+        @if (!(hasMessages$ | async)) {
+          <span class="empty-placeholder">
+            {{ 'editor.no_messages_label' | gtxI18n }}
+          </span>
+        }
+        @if ((hasMessages$ | async) && (unreadMessages$ | async)?.length === 0) {
+          <span class="empty-placeholder">
+            {{ 'editor.no_unread_messages_label' | gtxI18n }}
+          </span>
+        }
+      </h3>
+      <gtx-button
+        icon
+        type="secondary"
+        class="new-message-button"
+        overrideSlot="composeMessageButton"
+        [title]="'editor.messages_send' | gtxI18n"
+        (click)="composeMessage()"
+        >
+        <icon>message</icon>
+      </gtx-button>
+    }
+  }
 
-    <ng-template #unreadTitle>
-        <icon-checkbox
-            icon="mail"
-            [selected]="isSelectedAllUnread()"
-            [class.hidecheckbox]="!((unreadMessagesCount$ | async) > 0)"
-            (change)="toggleAllUnread()"
-        ></icon-checkbox>
-
-        <ng-container *ngIf="(unreadMessagesCount$ | async) > 0 && selectedUnread.length > 0; else unreadTitleNoSelect">
-            <h3 class="title">
-                <span class="show-selected">
-                    {{ 'user.messages_read_selected_label' | i18n:{ selected: selectedUnread.length, count: (unreadMessagesCount$ | async) } }}
-                </span>
-            </h3>
-
-            <div class="message-actions showactions">
-                <icon
-                    [title]="'user.archive_selected_messages_title' | i18n"
-                   (click)="archiveAllUnread()"
-                >move_to_inbox</icon>
-
-                <icon
-                    [title]="'user.delete_selected_messages_title' | i18n"
-                   (click)="deleteAllUnread()"
-                >delete</icon>
-            </div>
-        </ng-container>
-
-        <ng-template #unreadTitleNoSelect>
-            <h3 class="title">
-                <span *ngIf="(unreadMessagesCount$ | async) > 0">
-                    {{ 'editor.messages_unread_count_label' | i18n:{ count: (unreadMessagesCount$ | async) } }}
-                </span>
-
-                <span class="empty-placeholder" *ngIf="!(hasMessages$ | async)">
-                    {{ 'editor.no_messages_label' | i18n }}
-                </span>
-
-                <span class="empty-placeholder" *ngIf="(hasMessages$ | async) && (unreadMessages$ | async)?.length === 0">
-                    {{ 'editor.no_unread_messages_label' | i18n }}
-                </span>
-            </h3>
-
-            <gtx-button
-                icon
-                type="secondary"
-                class="new-message-button"
-                overrideSlot="composeMessageButton"
-                [title]="'editor.messages_send' | i18n"
-                (click)="composeMessage()"
-            >
-                <icon>message</icon>
-            </gtx-button>
-        </ng-template>
-    </ng-template>
 </div>
 
 <div class="content">
-    <message-list
-        class="unread-messages"
-        [nodes]="nodes$ | async"
-        [messages]="unreadMessages$ | async"
-        [selected]="selectedUnread"
-        [waitsForDeleteConfirmation]="waitsForDeleteConfirmation"
-        (messageClick)="showMessage($event, true)"
-        (messageArchive)="archiveMessages($event)"
-        (messageDelete)="deleteMessage($event)"
-        (selectionChange)="selectionUnreadChange($event)"
-    ></message-list>
+  <message-list
+    class="unread-messages"
+    [nodes]="nodes$ | async"
+    [messages]="unreadMessages$ | async"
+    [selected]="selectedUnread"
+    [waitsForDeleteConfirmation]="waitsForDeleteConfirmation"
+    (messageClick)="showMessage($event, true)"
+    (messageArchive)="archiveMessages($event)"
+    (messageDelete)="deleteMessage($event)"
+    (selectionChange)="selectionUnreadChange($event)"
+  ></message-list>
 
-    <ng-container *ngIf="this.waitsForDeleteConfirmation?.unread === false; else readTitle">
-        <div class="read-messages-title" [class.shown]="showReadMessages">
-            <span class="show-warning">
-                {{ 'user.confirm_delete' | i18n }}
-            </span>
-        </div>
-    </ng-container>
-
-    <ng-template #readTitle>
-        <div class="read-messages-title" [class.shown]="showReadMessages">
-            <icon-checkbox
-                *ngIf="(readMessagesCount$ | async) > 0 && showReadMessages"
-                icon="mail"
-                [selected]="isSelectedAllRead()"
-                (change)="toggleAllRead()"
-            ></icon-checkbox>
-
-            <span *ngIf="(readMessagesCount$ | async) > 0 && selectedRead.length > 0; else unreadTitles">
-                {{ 'user.messages_read_selected_label' | i18n:{ selected: selectedRead.length, count: (readMessagesCount$ | async) } }}
-            </span>
-
-            <ng-template #unreadTitles>
-                <span *ngIf="(readMessagesCount$ | async) === 1" (click)="toggleReadMessages()">
-                    {{ 'editor.messages_read_count_one_label' | i18n }}
-                </span>
-
-                <span *ngIf="(readMessagesCount$ | async) > 1" (click)="toggleReadMessages()">
-                    {{ 'editor.messages_read_count_label' | i18n:{ count: (readMessagesCount$ | async) } }}
-                </span>
-            </ng-template>
-
-            <div
-                *ngIf="(readMessagesCount$ | async) > 0 && showReadMessages"
-                class="message-actions"
-                [class.showactions]="selectedRead.length > 0"
-            >
-                <icon
-                    [title]="'user.delete_selected_messages_title' | i18n"
-                   (click)="deleteAllRead()"
-                >delete</icon>
-            </div>
-        </div>
-    </ng-template>
-
-    <div
-        class="read-messages"
-        [class.visible]="showReadMessages"
-        [style.height.em]="2 * (readMessagesCount$ | async)"
-        [style.min-height.em]="2 * (readMessagesCount$ | async)"
-    >
-        <message-list
-            [nodes]="nodes$ | async"
-            [messages]="readMessages$ | async"
-            [selected]="selectedRead"
-            [waitsForDeleteConfirmation]="waitsForDeleteConfirmation"
-            (messageClick)="showMessage($event, false)"
-            (messageDelete)="deleteMessage($event)"
-            (selectionChange)="selectionReadChange($event)"
-        ></message-list>
+  @if (this.waitsForDeleteConfirmation?.unread === false) {
+    <div class="read-messages-title" [class.shown]="showReadMessages">
+      <span class="show-warning">
+        {{ 'user.confirm_delete' | gtxI18n }}
+      </span>
     </div>
+  } @else {
+    <div class="read-messages-title" [class.shown]="showReadMessages">
+      @if ((readMessagesCount$ | async) > 0 && showReadMessages) {
+        <icon-checkbox
+          icon="mail"
+          [selected]="isSelectedAllRead()"
+          (change)="toggleAllRead()"
+        ></icon-checkbox>
+      }
+      @if ((readMessagesCount$ | async) > 0 && selectedRead.length > 0) {
+        <span>
+          {{ 'user.messages_read_selected_label' | gtxI18n:{ selected: selectedRead.length, count: (readMessagesCount$ | async) } }}
+        </span>
+      } @else {
+        @if ((readMessagesCount$ | async) === 1) {
+          <span (click)="toggleReadMessages()">
+            {{ 'editor.messages_read_count_one_label' | gtxI18n }}
+          </span>
+        }
+        @if ((readMessagesCount$ | async) > 1) {
+          <span (click)="toggleReadMessages()">
+            {{ 'editor.messages_read_count_label' | gtxI18n:{ count: (readMessagesCount$ | async) } }}
+          </span>
+        }
+      }
+      @if ((readMessagesCount$ | async) > 0 && showReadMessages) {
+        <div
+          class="message-actions"
+          [class.showactions]="selectedRead.length > 0"
+          >
+          <icon
+            [title]="'user.delete_selected_messages_title' | gtxI18n"
+            (click)="deleteAllRead()"
+          >delete</icon>
+        </div>
+      }
+    </div>
+  }
+
+
+  <div
+    class="read-messages"
+    [class.visible]="showReadMessages"
+    [style.height.em]="2 * (readMessagesCount$ | async)"
+    [style.min-height.em]="2 * (readMessagesCount$ | async)"
+    >
+    <message-list
+      [nodes]="nodes$ | async"
+      [messages]="readMessages$ | async"
+      [selected]="selectedRead"
+      [waitsForDeleteConfirmation]="waitsForDeleteConfirmation"
+      (messageClick)="showMessage($event, false)"
+      (messageDelete)="deleteMessage($event)"
+      (selectionChange)="selectionReadChange($event)"
+    ></message-list>
+  </div>
 
 </div>

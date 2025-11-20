@@ -1,31 +1,36 @@
 <div id="repository" class="breadcrumbs-container" [class.multilineExpanded]="multilineExpanded$ | async">
+  @if (canChangeNode) {
     <node-selector
-        *ngIf="canChangeNode"
-        [nodes]="nodes"
-        [showName]="false"
-        [useLinks]="false"
-        (nodeSelected)="changeNode.emit($event)"
-    >
+      [nodes]="nodes"
+      [showName]="false"
+      [useLinks]="false"
+      (nodeSelected)="changeNode.emit($event)"
+      >
+      @if (hasFavourites) {
         <gtx-dropdown-item
-            *ngIf="hasFavourites"
-            class="favourites"
-            (click)="changeNode.emit('favourites')"
-        >
-            <icon left>star</icon> {{ 'editor.favourites_label' | i18n }}
+          class="favourites"
+          (click)="changeNode.emit('favourites')"
+          >
+          <icon left>star</icon> {{ 'editor.favourites_label' | gtxI18n }}
         </gtx-dropdown-item>
+      }
     </node-selector>
+  }
 
+  @if ((breadcrumbs$ | async); as breadcrumbLinks) {
     <gtx-breadcrumbs
-        *ngIf="(breadcrumbs$ | async) as breadcrumbLinks"
-        class="breadcrumbs"
-        [links]="breadcrumbLinks"
-        [multiline]="true"
-        [class.isInherited]="breadcrumbLinks[0].item.type === 'channel'"
-        [class.notInherited]="breadcrumbLinks[0].item.type !== 'channel'"
-        (linkClick)="changeParent.emit($event.item)"
-        [multilineExpanded]="multilineExpanded$ | async"
-        (multilineExpandedChange)="expandedChanged($event)"
-    >
-        <icon *ngIf="breadcrumbLinks[0].item.type === 'channel'" class="iconChannel">input</icon>
+      class="breadcrumbs"
+      [links]="breadcrumbLinks"
+      [multiline]="true"
+      [class.isInherited]="breadcrumbLinks[0].item.type === 'channel'"
+      [class.notInherited]="breadcrumbLinks[0].item.type !== 'channel'"
+      (linkClick)="changeParent.emit($event.item)"
+      [multilineExpanded]="multilineExpanded$ | async"
+      (multilineExpandedChange)="expandedChanged($event)"
+      >
+      @if (breadcrumbLinks[0].item.type === 'channel') {
+        <icon class="iconChannel">input</icon>
+      }
     </gtx-breadcrumbs>
+  }
 </div>

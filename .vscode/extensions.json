@@ -1,10 +1,9 @@
 {
     "recommendations": [
+        "ms-playwright.playwright",
         "angular.ng-template",
         "asciidoctor.asciidoctor-vscode",
         "dbaeumer.vscode-eslint",
-        "editorconfig.editorconfig",
-        "esbenp.prettier-vscode",
         "sodatea.velocity",
         "redhat.vscode-xml"
     ]

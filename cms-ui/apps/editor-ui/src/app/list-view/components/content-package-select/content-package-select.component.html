@@ -1,27 +1,29 @@
-<gtx-dropdown-list *ngIf="hasPackages" [belowTrigger]="true" [align]="'right'" [disabled]="disabled">
+@if (hasPackages) {
+  <gtx-dropdown-list [belowTrigger]="true" [align]="'right'" [disabled]="disabled">
     <gtx-dropdown-trigger>
-        <gtx-button icon [type]="'default'">
-            <span class="current-package">
-                {{ selectedPackage ? selectedPackage : ('editor.stage_content' | i18n) }}
-            </span>
-            <icon right>arrow_drop_down</icon>
-        </gtx-button>
+      <gtx-button icon [type]="'default'">
+        <span class="current-package">
+          {{ selectedPackage ? selectedPackage : ('editor.stage_content' | gtxI18n) }}
+        </span>
+        <icon right>arrow_drop_down</icon>
+      </gtx-button>
     </gtx-dropdown-trigger>
-
     <gtx-dropdown-content>
+      @if (selectedPackage) {
         <gtx-dropdown-item
-            *ngIf="selectedPackage"
-            class="leave-entry"
-            (click)="onSelectChange(null)"
-        >
-            {{ 'editor.leave_staging_mode' | i18n }}
-            <icon right>exit_to_app</icon>
+          class="leave-entry"
+          (click)="onSelectChange(null)"
+          >
+          {{ 'editor.leave_staging_mode' | gtxI18n }}
+          <icon right>exit_to_app</icon>
         </gtx-dropdown-item>
-
+      }
+      @for (pkg of contentPackages | gtxValues; track pkg) {
         <gtx-dropdown-item
-            *ngFor="let pkg of contentPackages | gtxValues"
-            [class.selected]="selectedPackage === pkg.id"
-            (click)="onSelectChange(pkg.id)"
+          [class.selected]="selectedPackage === pkg.id"
+          (click)="onSelectChange(pkg.id)"
         >{{ pkg.name }}</gtx-dropdown-item>
+      }
     </gtx-dropdown-content>
-</gtx-dropdown-list>
+  </gtx-dropdown-list>
+}

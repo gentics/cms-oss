@@ -8,9 +8,15 @@ import {
     OnInit,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { EditableNodeProps } from '@editor-ui/app/common/models';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { ContentRepository, ContentRepositoryType, Node, NODE_HOSTNAME_PROPERTY_PREFIX, NodeHostnameType, NodeUrlMode } from '@gentics/cms-models';
+import {
+    ContentRepository,
+    ContentRepositoryType,
+    Node,
+    NODE_HOSTNAME_PROPERTY_PREFIX,
+    NodeHostnameType,
+    NodeUrlMode,
+} from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     createPropertyPatternValidator,
@@ -19,6 +25,7 @@ import {
     generateValidatorProvider,
     setControlsEnabled,
 } from '@gentics/ui-core';
+import { EditableNodeProps } from '../../../common/models';
 
 const FS_CONTROLS: (keyof EditableNodeProps)[] = [
     'publishFsPages',

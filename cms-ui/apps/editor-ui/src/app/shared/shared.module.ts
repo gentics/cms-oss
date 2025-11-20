@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/indent */
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -6,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { CmsComponentsModule, WindowRef } from '@gentics/cms-components';
 import { FormGeneratorModule } from '@gentics/form-generator';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { TranslateModule } from '@ngx-translate/core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { FolderContextMenuComponent } from '../core/components/folder-context-menu/folder-context-menu.component';
 import { WastebinList } from '../core/components/wastebin-list/wastebin-list.component';
@@ -19,8 +19,8 @@ import {
     FavouriteToggleComponent,
     FilePropertiesComponent,
     FileStatusLabel,
-    FolderPropertiesComponent,
     FolderPickerComponent,
+    FolderPropertiesComponent,
     FormLanguageIndicatorComponent,
     FormLanguageIndicatorCurrentComponent,
     FormLanguageSelectorComponent,
@@ -58,6 +58,7 @@ import {
     PagingControls,
     ProxyRouteComponent,
     PublishPagesModalComponent,
+    PublishProtocolModalComponent,
     PublishTimeManagedPagesModal,
     RepositoryBrowser,
     RepositoryBrowserBreadcrumbs,
@@ -77,7 +78,6 @@ import {
     TranslatePageModal,
     UploadButtonComponent,
     UsageModalComponent,
-    PublishProtocolModalComponent,
 } from './components';
 import {
     DynamicDisableDirective,
@@ -91,8 +91,6 @@ import {
     FileSizePipe,
     GetInheritancePipe,
     HighlightPipe,
-    I18nDatePipe,
-    I18nPipe,
     ImageDimensionsPipe,
     IsFavouritePipe,
     IsStartPagePipe,
@@ -106,7 +104,7 @@ import {
     TruncateNumberPipe,
     TruncatePathPipe,
     TypeIconPipe,
-    UserFullNamePipe,
+    UserFullNamePipe
 } from './pipes';
 import {
     BreadcrumbsService,
@@ -118,8 +116,8 @@ import {
     QueryAssemblerGCMSSearchService,
     RepositoryBrowserClient,
     SuggestionSearchService,
-    UIOverridesService,
     TranslationActionsService,
+    UIOverridesService,
 } from './providers';
 
 const COMPONENTS = [
@@ -208,8 +206,6 @@ const PIPES = [
     FileSizePipe,
     GetInheritancePipe,
     HighlightPipe,
-    I18nDatePipe,
-    I18nPipe,
     ImageDimensionsPipe,
     IsFavouritePipe,
     IsStartPagePipe,
@@ -228,6 +224,7 @@ const PIPES = [
 ];
 
 const IMPORTS: any[] = [
+    TranslateModule.forChild(),
     CommonModule,
     FormsModule,
     GenticsUICoreModule,

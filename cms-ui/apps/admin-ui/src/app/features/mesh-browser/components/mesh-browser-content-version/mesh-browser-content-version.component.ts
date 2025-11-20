@@ -1,7 +1,6 @@
-
-import { I18nService } from '@admin-ui/core';
 import { Component, Input, OnInit } from '@angular/core';
-import { GtxI18nDatePipe } from '@gentics/cms-components';
+import { formatI18nDate } from '@gentics/cms-components';
+import { I18nService } from '@gentics/cms-components';
 import { PublishedState, SchemaElement } from '../../models/mesh-browser-models';
 
 const ICONS: Record<PublishedState, string> = {
@@ -17,11 +16,12 @@ const TRANSLATIONS: Record<PublishedState, string> = {
     [PublishedState.DRAFT]: 'mesh.published_state_draft',
     [PublishedState.UPDATED]: 'mesh.published_state_updated',
 };
+
 @Component({
     selector: 'gtx-mesh-browser-content-version',
     templateUrl: './mesh-browser-content-version.component.html',
     styleUrls: ['./mesh-browser-content-version.component.scss'],
-    standalone: false
+    standalone: false,
 })
 export class MeshBrowserContentVersionComponent implements OnInit {
 
@@ -36,7 +36,6 @@ export class MeshBrowserContentVersionComponent implements OnInit {
 
     constructor(
         protected i18n: I18nService,
-        protected i18nDate: GtxI18nDatePipe,
     ) { }
 
     ngOnInit(): void {
@@ -47,7 +46,7 @@ export class MeshBrowserContentVersionComponent implements OnInit {
 
         if (this.schemaElement?.versions?.length > 0) {
             const created = this.schemaElement.versions[0].created;
-            const createdDate = this.i18nDate.transform(new Date(created), 'dateTime');
+            const createdDate = formatI18nDate(new Date(created), 'dateTime');
             this.title += '\n' + this.i18n.instant('mesh.published_state_changed', { date: createdDate });
         }
     }
@@ -69,7 +68,7 @@ export class MeshBrowserContentVersionComponent implements OnInit {
             }
             if (RegExp('.0$').exec(version.version)) {
                 // no published but major version => ARCHIVED
-                return PublishedState.ARCHIVED
+                return PublishedState.ARCHIVED;
             }
 
             return PublishedState.DRAFT;

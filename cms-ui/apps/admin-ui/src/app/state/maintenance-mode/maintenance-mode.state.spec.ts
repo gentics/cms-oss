@@ -15,7 +15,7 @@ describe('MaintenanceModeStateModule', () => {
             imports: [NgxsModule.forRoot([MaintenanceModeStateModule])],
             providers: [TEST_APP_STATE],
         }).compileComponents();
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
     }));
 
     it('sets the correct initial state', () => {

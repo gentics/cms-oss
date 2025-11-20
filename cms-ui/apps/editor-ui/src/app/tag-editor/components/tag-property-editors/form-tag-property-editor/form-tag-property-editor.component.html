@@ -1,11 +1,11 @@
-<ng-container *ngIf="tagProperty">
-    <div class="tag-part-editor">
-        <browse-box
-            [label]="'tag_editor.internal_page' | i18n"
-            [displayValue]="internalFormDisplayValue$ | async"
-            [disabled]="readOnly"
-            (clear)="changeSelectedForm(null)"
-            (browse)="browseForForm()"
-        ></browse-box>
-    </div>
-</ng-container>
+@if (tagProperty) {
+  <div class="tag-part-editor">
+    <browse-box
+      [label]="'tag_editor.internal_page' | gtxI18n"
+      [displayValue]="internalFormDisplayValue$ | async"
+      [disabled]="readOnly"
+      (clear)="changeSelectedForm(null)"
+      (browse)="browseForForm()"
+    ></browse-box>
+  </div>
+}

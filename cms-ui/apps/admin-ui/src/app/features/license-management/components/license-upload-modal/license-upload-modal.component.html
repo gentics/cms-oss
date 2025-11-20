@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'license.upload_license' | i18n }}</h5>
+    <h5>{{ 'license.upload_license' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
@@ -8,32 +8,32 @@
             <div class="selection-group">
                 <gtx-radio-button
                     [value]="true"
-                    [label]="'license.upload_file' | i18n"
+                    [label]="'license.upload_file' | gtxI18n"
                 />
 
                 <gtx-file-picker
                     formControlName="licenseFile"
                     [displayFiles]="true"
-                    [selectionLabel]="'license.selected_file' | i18n"
-                >{{ 'license.file_upload_button' | i18n }}</gtx-file-picker>
+                    [selectionLabel]="'license.selected_file' | gtxI18n"
+                >{{ 'license.file_upload_button' | gtxI18n }}</gtx-file-picker>
             </div>
 
             <div class="selection-group">
                 <gtx-radio-button
                     [value]="false"
-                    [label]="'license.enter_license' | i18n"
+                    [label]="'license.enter_license' | gtxI18n"
                 />
 
                 <gtx-textarea
                     formControlName="licenseKey"
-                    [placeholder]="('license.enter_license_plceholder' | i18n)"
+                    [placeholder]="('license.enter_license_plceholder' | gtxI18n)"
                 />
             </div>
 
             <gtx-checkbox
                 class="checkbox-input"
                 formControlName="pushToContentRepositories"
-                [label]="'license.pushToContentRepositories' | i18n"
+                [label]="'license.pushToContentRepositories' | gtxI18n"
             />
         </gtx-radio-group>
     </form>
@@ -46,7 +46,7 @@
         [disabled]="loading || !this.form?.valid"
         (click)="upload()"
     >
-        {{ 'common.upload_button' | i18n }}
+        {{ 'common.upload_button' | gtxI18n }}
     </gtx-button>
 
     <gtx-button
@@ -55,6 +55,6 @@
         data-action="cancel"
         (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
 </div>

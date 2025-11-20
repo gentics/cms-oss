@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CmsComponentsModule } from '@gentics/cms-components';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { TranslateModule } from '@ngx-translate/core';
 import {
     AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
@@ -50,6 +51,7 @@ import {
     PermissionsTrableComponent,
     PropertiesManagerComponent,
     PropertiesTabsComponent,
+    PublishProcessSummaryComponent,
     SendMessageFormComponent,
     SendMessageModalComponent,
     SidebarItemComponent,
@@ -61,7 +63,6 @@ import {
     TemplateFolderLinkTrableComponent,
     TemplateTableComponent,
     UserTableComponent,
-    PublishProcessSummaryComponent,
     WizardComponent,
     WizardModalComponent,
 } from './components';
@@ -75,9 +76,6 @@ import {
     CountRolesPipe,
     EntityDetailRouterLinkPipe,
     EntityNamePipe,
-    I18nDurationPipe,
-    I18nNumberPipe,
-    I18nRelativeDatePipe,
 } from './pipes';
 import {
     ContentItemTrableLoaderService,
@@ -88,10 +86,8 @@ import {
     FolderDataService,
     GroupDataService,
     GroupUserDataService,
-    I18nRelativeDateService,
     MarkupLanguageDataService,
     NodeDataService,
-    NotificationService,
     RoleDataService,
     ScheduleDataService,
     ScheduleExecutionDataService,
@@ -176,9 +172,6 @@ const PIPES: any[] = [
     CountRolesPipe,
     EntityDetailRouterLinkPipe,
     EntityNamePipe,
-    I18nDurationPipe,
-    I18nNumberPipe,
-    I18nRelativeDatePipe,
 ];
 
 const DECLARATIONS: any[] = [
@@ -197,10 +190,8 @@ const PROVIDERS: any[] = [
     FolderDataService,
     GroupDataService,
     GroupUserDataService,
-    I18nRelativeDateService,
     MarkupLanguageDataService,
     NodeDataService,
-    NotificationService,
     PackageCheckTrableLoaderService,
     RoleDataService,
     ScheduleDataService,
@@ -223,6 +214,7 @@ const PROVIDERS: any[] = [
         GenticsUICoreModule.forRoot(),
         CmsComponentsModule,
         ReactiveFormsModule,
+        TranslateModule.forChild(),
         RouterModule,
     ],
     exports: [

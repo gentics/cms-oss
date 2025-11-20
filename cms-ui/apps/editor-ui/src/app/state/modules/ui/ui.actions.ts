@@ -1,7 +1,7 @@
-import { UIOverrides } from '@editor-ui/app/shared/providers/ui-overrides/ui-overrides.model';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { I18nLanguage, UsersnapSettings, Version } from '@gentics/cms-models';
 import { AppState, UIMode } from '../../../common/models';
+import { UIOverrides } from '../../../shared/providers/ui-overrides/ui-overrides.model';
 import { ActionDeclaration } from '../../state-utils';
 
 export const UI_STATE_KEY: keyof AppState = 'ui';

@@ -11,8 +11,6 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { EditableProperties } from '@editor-ui/app/common/models';
-import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import {
     InheritableItem,
     Language,
@@ -23,7 +21,9 @@ import { BaseFormElementComponent, generateFormProvider, setEnabled } from '@gen
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, skip, switchMap, tap } from 'rxjs/operators';
+import { EditableProperties } from '../../../common/models';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '../../../state';
 import { NodePropertiesMode } from '../node-properties/node-properties.component';
 
 @Component({

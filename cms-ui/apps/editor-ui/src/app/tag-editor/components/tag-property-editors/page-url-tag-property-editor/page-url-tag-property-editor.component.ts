@@ -1,8 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
 import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -17,9 +13,13 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { Observable, Subject, Subscription, merge, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
+import { RepositoryBrowserClient } from '../../../../shared/providers';
+import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper/selected-item-helper';
 
 /**
  * Used to edit the following  UrlPage TagParts.
@@ -34,7 +34,7 @@ import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUnt
     templateUrl: './page-url-tag-property-editor.component.html',
     styleUrls: ['./page-url-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
@@ -91,7 +91,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
             distinctUntilChanged(isEqual),
         );
         this.subscriptions.add(
-            blurOrDebouncedChange.subscribe(newValue => this.changeSelectedPage(newValue)),
+            blurOrDebouncedChange.subscribe((newValue) => this.changeSelectedPage(newValue)),
         );
     }
 
@@ -115,12 +115,12 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
                          * Also, null is emitted in case a referenced page got deleted and the tag property data was refetched.
                          * (Since the pageId in tagProperty gets removed).
                          */
-                        return this.i18n.translate('editor.page_no_selection');
+                        return this.i18n.instant('editor.page_no_selection');
                     }
                 }),
             ),
             this.selectedInternalPage.loadingError$.pipe(
-                map((error: { error: any, item: { itemId: number, nodeId?: number } }) => {
+                map((error: { error: any; item: { itemId: number; nodeId?: number } }) => {
                     /**
                      * When a page that is referenced gets deleted, the pageId is kept in tagProperty.
                      * When we try to fetch the page information we get an error message.
@@ -128,10 +128,11 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
                      * (and thus avoid suggesting that a valid page is still selected).
                      */
                     if (this.tagProperty && this.tagProperty.pageId) {
-                        /** additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
+                        /**
+                         * additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
                          * This could trigger an emission before this.tagProperty is set in updateTagProperty
                          */
-                        return this.i18n.translate('editor.page_not_found', { id: this.tagProperty.pageId });
+                        return this.i18n.instant('editor.page_not_found', { id: this.tagProperty.pageId });
                     } else {
                         return '';
                     }
@@ -151,13 +152,13 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
                 if (selectedInternalPage) {
                     return this.client.folder.get(selectedInternalPage.folderId)
                         .pipe(
-                            map(response => response.folder),
-                            catchError(err => of(err)),
+                            map((response) => response.folder),
+                            catchError((err) => of(err)),
                             tap((folder: Folder<Raw>) => {
                                 this.uploadDestination = folder;
                                 this.changeDetector.markForCheck();
                             }),
-                        )
+                        );
                 }
 
                 // If no page is available, fall back to the context folder
@@ -169,8 +170,8 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
 
                 return this.client.folder.get(this.page.folderId)
                     .pipe(
-                        map(response => response.folder),
-                        catchError(err => of(err)),
+                        map((response) => response.folder),
+                        catchError((err) => of(err)),
                         tap((folder: Folder<Raw>) => {
                             this.uploadDestination = folder;
                             this.changeDetector.markForCheck();
@@ -199,18 +200,18 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
      * user input.
      *
      * The API expects three scenarios:
-     * * a) setting an external value:
-     *   * tagProperty.pageId should be not set / null
-     *   * tagProperty.nodeId should be not set / null
-     *   * stringValue should be set to the desired value
+     * a) setting an external value:
+     *   tagProperty.pageId should be not set / null
+     *   tagProperty.nodeId should be not set / null
+     *   stringValue should be set to the desired value
      *
-     * * b) setting an internal page as a reference
-     *   * tagProperty.pageId should be set to the ID of the referenced page
-     *   * tagProperty.nodeId should be set to the nodeId of the node where the referenced page is located
-     *   * stringValue should be an empty string
+     * b) setting an internal page as a reference
+     *   tagProperty.pageId should be set to the ID of the referenced page
+     *   tagProperty.nodeId should be set to the nodeId of the node where the referenced page is located
+     *   stringValue should be an empty string
      *
-     * * c) unsetting / clearing the input
-     *   * tagProperty.pageId should be set to 0
+     * c) unsetting / clearing the input
+     *   tagProperty.pageId should be set to 0
      *   * tagProperty.nodeId should be set to 0
      *   * stringValue should be an empty string
      */
@@ -219,14 +220,14 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         let externalUrl: string;
 
         const newIsExternalValue = typeof newSelectedPage === 'string'
-                                && newSelectedPage.length > 0;
+          && newSelectedPage.length > 0;
         const newIsInternalValue = newSelectedPage instanceof Object
-            && (
-                Number.isInteger((newSelectedPage as unknown as ItemInNode<Page<Raw>>).id)
-                && (newSelectedPage as unknown as ItemInNode<Page<Raw>>).id > 0
-                && Number.isInteger((newSelectedPage as unknown as ItemInNode<Page<Raw>>).nodeId)
-                && (newSelectedPage as unknown as ItemInNode<Page<Raw>>).nodeId > 0
-            );
+          && (
+              Number.isInteger((newSelectedPage as unknown as ItemInNode<Page<Raw>>).id)
+              && (newSelectedPage as unknown as ItemInNode<Page<Raw>>).id > 0
+              && Number.isInteger((newSelectedPage as unknown as ItemInNode<Page<Raw>>).nodeId)
+              && (newSelectedPage as unknown as ItemInNode<Page<Raw>>).nodeId > 0
+          );
         const newIsNoValue = !newIsExternalValue && !newIsInternalValue;
 
         this.tagProperty.pageId = null;
@@ -234,13 +235,13 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         this.tagProperty.stringValue = '';
 
         if (newIsExternalValue) {
-            this.tagProperty.stringValue = newSelectedPage ;
-            externalUrl = newSelectedPage ;
+            this.tagProperty.stringValue = newSelectedPage;
+            externalUrl = newSelectedPage;
 
         } else if (newIsInternalValue) {
-            this.tagProperty.pageId = (newSelectedPage ).id;
-            this.tagProperty.nodeId = (newSelectedPage ).nodeId;
-            selectedInternalPage = newSelectedPage ;
+            this.tagProperty.pageId = (newSelectedPage).id;
+            this.tagProperty.nodeId = (newSelectedPage).nodeId;
+            selectedInternalPage = newSelectedPage;
 
         } else if (newIsNoValue) {
             this.tagProperty.pageId = 0;
@@ -261,7 +262,6 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         // select item using helper service
         this.selectedInternalPage.setSelectedItem(selectedInternalPage);
     }
-
 
     /**
      * Opens the repository browser to allow the user to select an internal page.
@@ -291,7 +291,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         if (newValue.type !== TagPropertyType.PAGE) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by PageUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue ;
+        this.tagProperty = newValue;
 
         this.isInternalPage = !this.tagProperty.stringValue;
         if (this.isInternalPage) {
@@ -320,6 +320,5 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         }
         return breadcrumbsPath;
     }
-
 
 }

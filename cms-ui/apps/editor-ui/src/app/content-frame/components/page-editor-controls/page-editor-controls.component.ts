@@ -12,8 +12,6 @@ import {
     QueryList,
     ViewChildren,
 } from '@angular/core';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaComponent, AlohaEditable, AlohaLinkChangeEvent, AlohaLinkInsertEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
 import {
     GCNAlohaPlugin,
@@ -27,6 +25,8 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ChangesOf } from '@gentics/ui-core';
 import { Subscription, combineLatest, merge, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { ApplicationStateService } from '../../../state';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
     AlohaIntegrationService,

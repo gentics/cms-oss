@@ -1,5 +1,7 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { MockI18nNotificationService, MockI18nService } from '@gentics/cms-components/testing';
 import { LoginResponse, Raw, Response, ResponseCode, User, ValidateSidResponse } from '@gentics/cms-models';
 import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
@@ -26,11 +28,9 @@ import { assembleTestAppStateImports, TestAppState } from '../../../../state/uti
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
-import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { ErrorHandler } from '../../error-handler/error-handler.service';
-import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
-import { MockI18nNotificationService } from '../../i18n-notification/i18n-notification.service.mock';
 import { AuthOperations } from './auth.operations';
+import { MockErrorHandler } from '@admin-ui/testing';
 
 class MockGcmsApi {
     auth = {
@@ -72,27 +72,23 @@ describe('AuthOperations', () => {
             ],
             providers: [
                 AuthOperations,
-                TestAppState,
-                { provide: AppStateService, useExisting: TestAppState },
-                MockEditorUiLocalStorage,
-                { provide: EditorUiLocalStorageService, useExisting: MockEditorUiLocalStorage },
-                MockEntityManagerService,
-                { provide: EntityManagerService, useExisting: MockEntityManagerService },
-                MockErrorHandler,
-                { provide: ErrorHandler, useExisting: MockErrorHandler },
-                MockGcmsApi,
-                { provide: GcmsApi, useExisting: MockGcmsApi },
-                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
+                { provide: AppStateService, useClass: TestAppState },
+                { provide: EditorUiLocalStorageService, useClass: MockEditorUiLocalStorage },
+                { provide: EntityManagerService, useClass: MockEntityManagerService },
+                { provide: ErrorHandler, useClass: MockErrorHandler },
+                { provide: GcmsApi, useClass: MockGcmsApi },
                 { provide: Router, useClass: MockRouter },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
             ],
         }).compileComponents();
 
-        entities = TestBed.inject(MockEntityManagerService);
-        api = TestBed.inject(MockGcmsApi);
+        entities = TestBed.inject(EntityManagerService) as any;
+        api = TestBed.inject(GcmsApi) as any;
         authOps = TestBed.inject(AuthOperations);
-        editorUiLocalStorage = TestBed.inject(MockEditorUiLocalStorage);
-        errorHandler = TestBed.inject(MockErrorHandler);
-        state = TestBed.inject(TestAppState);
+        editorUiLocalStorage = TestBed.inject(EditorUiLocalStorageService) as any;
+        errorHandler = TestBed.inject(ErrorHandler) as any;
+        state = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
     });
 
@@ -229,7 +225,7 @@ describe('AuthOperations', () => {
         });
 
         it('login works for a success response', fakeAsync(() => {
-            const router = TestBed.get(Router) as MockRouter;
+            const router: MockRouter = TestBed.inject(Router) as any;
             api.auth.login.and.returnValue(
                 observableOf<LoginResponse>({
                     responseInfo: { responseCode: ResponseCode.OK },

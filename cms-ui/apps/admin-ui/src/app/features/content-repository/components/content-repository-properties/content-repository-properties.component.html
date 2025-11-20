@@ -1,290 +1,287 @@
-<form
-    *ngIf="form"
+@if (form) {
+  <form
     [formGroup]="form"
     class="gtx-form row small-12 medium-12"
->
+    >
     <div class="input-container small-12 medium-6 columns">
-
-        <gtx-select
-            [label]="('contentRepository.crType' | i18n) + ' *'"
-            formControlName="crType"
-            [clearable]="mode !== ContentRepositoryPropertiesMode.UPDATE"
-            [required]="true"
+      <gtx-select
+        [label]="('content_repository.crType' | gtxI18n) + ' *'"
+        formControlName="crType"
+        [clearable]="mode !== ContentRepositoryPropertiesMode.UPDATE"
+        [required]="true"
         >
-            <gtx-option *ngFor="let crType of crTypes" [value]="crType.id">{{ crType.label | i18n }}</gtx-option>
-        </gtx-select>
-
+        @for (crType of crTypes; track crType) {
+          <gtx-option [value]="crType.id">{{ crType.label | gtxI18n }}</gtx-option>
+        }
+      </gtx-select>
+      <gtx-input
+        type="text"
+        maxlength="255"
+        [label]="('content_repository.name' | gtxI18n) + ' *'"
+        formControlName="name"
+      ></gtx-input>
+      @if (form.get('dbType').enabled) {
         <gtx-input
-            type="text"
-            maxlength="255"
-            [label]="('contentRepository.name' | i18n) + ' *'"
-            formControlName="name"
+          type="text"
+          maxlength="255"
+          [label]="('content_repository.dbType' | gtxI18n) + ' *'"
+          formControlName="dbType"
         ></gtx-input>
-
-        <gtx-input
-            *ngIf="form.get('dbType').enabled"
-            type="text"
-            maxlength="255"
-            [label]="('contentRepository.dbType' | i18n) + ' *'"
-            formControlName="dbType"
-        ></gtx-input>
-
-        <div class="gtx-form-section-title">{{ 'contentRepository.url' | i18n }}</div>
-
-        <gtx-select
-            [label]="('contentRepository.urlType' | i18n) + ' *'"
-            [value]="urlType"
-            [clearable]="false"
-            formControlName="urlType"
+      }
+      <div class="gtx-form-section-title">{{ 'content_repository.url' | gtxI18n }}</div>
+      <gtx-select
+        [label]="('content_repository.urlType' | gtxI18n) + ' *'"
+        [value]="urlType"
+        [clearable]="false"
+        formControlName="urlType"
         >
-            <gtx-option *ngFor="let type of URL_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
-        </gtx-select>
-
+        @for (type of URL_TYPES; track type) {
+          <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+        }
+      </gtx-select>
+      <gtx-input
+        type="text"
+        maxlength="255"
+        [label]="('content_repository.url' | gtxI18n) + ' *'"
+        formControlName="url"
+      ></gtx-input>
+      @if (form.get('urlProperty').enabled) {
         <gtx-input
-            type="text"
-            maxlength="255"
-            [label]="('contentRepository.url' | i18n) + ' *'"
-            formControlName="url"
+          type="text"
+          maxlength="255"
+          [label]="('content_repository.urlProperty' | gtxI18n) + ' *'"
+          formControlName="urlProperty"
         ></gtx-input>
-
-        <gtx-input
-            *ngIf="form.get('urlProperty').enabled"
-            type="text"
-            maxlength="255"
-            [label]="('contentRepository.urlProperty' | i18n) + ' *'"
-            formControlName="urlProperty"
-        ></gtx-input>
-
+      }
+      @if (form.get('urlProperty')?.hasError('pattern')) {
         <span
-            *ngIf="form.get('urlProperty')?.hasError('pattern')"
-            class="container-validator-errors"
-        >
-            {{ 'contentRepository.urlProperty_pattern' | i18n }}
+          class="container-validator-errors"
+          >
+          {{ 'content_repository.urlProperty_pattern' | gtxI18n }}
         </span>
-
+      }
+      @if (form.get('http2').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('http2').enabled"
-            formControlName="http2"
-            [label]="'contentRepository.http2' | i18n"
+          formControlName="http2"
+          [label]="'content_repository.http2' | gtxI18n"
         ></gtx-checkbox>
-
-        <div class="gtx-form-section-title">{{ 'shared.user_name' | i18n }}</div>
-
-        <gtx-select
-            [label]="('contentRepository.usernameType' | i18n) + ' *'"
-            [value]="usernameType"
-            [clearable]="false"
-            formControlName="usernameType"
+      }
+      <div class="gtx-form-section-title">{{ 'shared.user_name' | gtxI18n }}</div>
+      <gtx-select
+        [label]="('content_repository.usernameType' | gtxI18n) + ' *'"
+        [value]="usernameType"
+        [clearable]="false"
+        formControlName="usernameType"
         >
-            <gtx-option *ngFor="let type of USERNAME_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
-        </gtx-select>
-
+        @for (type of USERNAME_TYPES; track type) {
+          <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+        }
+      </gtx-select>
+      <gtx-input
+        type="text"
+        maxlength="255"
+        [label]="('shared.user_name' | gtxI18n)"
+        formControlName="username"
+      ></gtx-input>
+      @if (form.get('usernameProperty').enabled) {
         <gtx-input
-            type="text"
-            maxlength="255"
-            [label]="('shared.user_name' | i18n)"
-            formControlName="username"
+          type="text"
+          maxlength="255"
+          [label]="('content_repository.usernameProperty' | gtxI18n) + ' *'"
+          formControlName="usernameProperty"
         ></gtx-input>
-
-        <gtx-input
-            *ngIf="form.get('usernameProperty').enabled"
-            type="text"
-            maxlength="255"
-            [label]="('contentRepository.usernameProperty' | i18n) + ' *'"
-            formControlName="usernameProperty"
-        ></gtx-input>
-
+      }
+      @if (form.get('usernameProperty')?.hasError('pattern')) {
         <span
-            *ngIf="form.get('usernameProperty')?.hasError('pattern')"
-            class="container-validator-errors"
-        >
-            {{ 'contentRepository.usernameProperty_pattern' | i18n }}
+          class="container-validator-errors"
+          >
+          {{ 'content_repository.usernameProperty_pattern' | gtxI18n }}
         </span>
-
-        <div class="gtx-form-section-title">{{ 'contentRepository.password' | i18n }}</div>
-
+      }
+      <div class="gtx-form-section-title">{{ 'content_repository.password' | gtxI18n }}</div>
+      @if (form.get('passwordType').enabled) {
         <gtx-select
-            *ngIf="form.get('passwordType').enabled"
-            [label]="('contentRepository.passwordType' | i18n) + ' *'"
-            [clearable]="false"
-            formControlName="passwordType"
-        >
-            <gtx-option *ngFor="let type of PASSWORD_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+          [label]="('content_repository.passwordType' | gtxI18n) + ' *'"
+          [clearable]="false"
+          formControlName="passwordType"
+          >
+          @for (type of PASSWORD_TYPES; track type) {
+            <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+          }
         </gtx-select>
-
-        <!-- passwordProperty -->
+      }
+      <!-- passwordProperty -->
+      @if (form.get('passwordProperty').enabled) {
         <gtx-input
-            *ngIf="form.get('passwordProperty').enabled"
-            type="text"
-            maxlength="255"
-            [label]="'contentRepository.passwordProperty' | i18n"
-            formControlName="passwordProperty"
+          type="text"
+          maxlength="255"
+          [label]="'content_repository.passwordProperty' | gtxI18n"
+          formControlName="passwordProperty"
         ></gtx-input>
-
+      }
+      @if (form.get('passwordProperty')?.hasError('pattern')) {
         <span
-            *ngIf="form.get('passwordProperty')?.hasError('pattern')"
-            class="container-validator-errors"
-        >
-            {{ 'contentRepository.passwordProperty_pattern' | i18n }}
+          class="container-validator-errors"
+          >
+          {{ 'content_repository.passwordProperty_pattern' | gtxI18n }}
         </span>
-
+      }
+      @if (form.get('password').enabled) {
         <div
-            *ngIf="form.get('password').enabled"
-            class="gtx-password-box"
-        >
-            <gtx-input
-                type="password"
-                maxlength="255"
-                [label]="'contentRepository.password' | i18n"
-                formControlName="password"
-            ></gtx-input>
-
-            <gtx-input
-                type="password"
-                maxlength="255"
-                [label]="'contentRepository.repeatPassword' | i18n"
-                [value]="passwordRepeat"
-                (valueChange)="updatePasswordRepeat($event)"
-            ></gtx-input>
-
+          class="gtx-password-box"
+          >
+          <gtx-input
+            type="password"
+            maxlength="255"
+            [label]="'content_repository.password' | gtxI18n"
+            formControlName="password"
+          ></gtx-input>
+          <gtx-input
+            type="password"
+            maxlength="255"
+            [label]="'content_repository.repeatPassword' | gtxI18n"
+            [value]="passwordRepeat"
+            (valueChange)="updatePasswordRepeat($event)"
+          ></gtx-input>
+          @if (form.get('password')?.hasError('passwordsDontMatch')) {
             <span
-                *ngIf="form.get('password')?.hasError('passwordsDontMatch')"
-                class="container-validator-errors"
-            >
-                {{ 'shared.passwords_dont_match_error' | i18n }}
+              class="container-validator-errors"
+              >
+              {{ 'shared.passwords_dont_match_error' | gtxI18n }}
             </span>
+          }
         </div>
-
+      }
+      @if (form.get('noFoldersIndex').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('noFoldersIndex').enabled"
-            formControlName="noFoldersIndex"
-            [label]="'contentRepository.noFoldersIndex' | i18n"
+          formControlName="noFoldersIndex"
+          [label]="'content_repository.noFoldersIndex' | gtxI18n"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('noFilesIndex').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('noFilesIndex').enabled"
-            formControlName="noFilesIndex"
-            [label]="'contentRepository.noFilesIndex' | i18n"
+          formControlName="noFilesIndex"
+          [label]="'content_repository.noFilesIndex' | gtxI18n"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('noPagesIndex').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('noPagesIndex').enabled"
-            formControlName="noPagesIndex"
-            [label]="'contentRepository.noPagesIndex' | i18n"
+          formControlName="noPagesIndex"
+          [label]="'content_repository.noPagesIndex' | gtxI18n"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('noFormsIndex').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('noFormsIndex').enabled"
-            formControlName="noFormsIndex"
-            [label]="'contentRepository.noFormsIndex' | i18n"
+          formControlName="noFormsIndex"
+          [label]="'content_repository.noFormsIndex' | gtxI18n"
         ></gtx-checkbox>
+      }
     </div>
-
     <div class="input-container small-12 medium-6 columns">
-
-        <ng-container *ngIf="showBasePath">
-            <gtx-select
-                [label]="('contentRepository.basepathType' | i18n) + ' *'"
-                [value]="basepathType"
-                [clearable]="false"
-                formControlName="basepathType"
-            >
-                <gtx-option *ngFor="let type of BASEPATH_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
-            </gtx-select>
-
-            <gtx-input
-                type="text"
-                maxlength="255"
-                [label]="'contentRepository.basepath' | i18n"
-                formControlName="basepath"
-            ></gtx-input>
-
-            <gtx-input
-                *ngIf="form.get('basepathProperty').enabled"
-                type="text"
-                maxlength="255"
-                [label]="('contentRepository.basepathProperty' | i18n) + ' *'"
-                formControlName="basepathProperty"
-            ></gtx-input>
-        </ng-container>
-
+      @if (showBasePath) {
+        <gtx-select
+          [label]="('content_repository.basepathType' | gtxI18n) + ' *'"
+          [value]="basepathType"
+          [clearable]="false"
+          formControlName="basepathType"
+          >
+          @for (type of BASEPATH_TYPES; track type) {
+            <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+          }
+        </gtx-select>
+        <gtx-input
+          type="text"
+          maxlength="255"
+          [label]="'content_repository.basepath' | gtxI18n"
+          formControlName="basepath"
+        ></gtx-input>
+        @if (form.get('basepathProperty').enabled) {
+          <gtx-input
+            type="text"
+            maxlength="255"
+            [label]="('content_repository.basepathProperty' | gtxI18n) + ' *'"
+            formControlName="basepathProperty"
+          ></gtx-input>
+        }
+      }
+      @if (form.get('basepathProperty')?.hasError('pattern')) {
         <span
-            *ngIf="form.get('basepathProperty')?.hasError('pattern')"
-            class="container-validator-errors"
-        >
-            {{ 'contentRepository.basepathProperty_pattern' | i18n }}
+          class="container-validator-errors"
+          >
+          {{ 'content_repository.basepathProperty_pattern' | gtxI18n }}
         </span>
-
+      }
+      @if (form.get('instantPublishing').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('instantPublishing').enabled"
-            formControlName="instantPublishing"
-            [label]="'contentRepository.instantPublishing' | i18n"
+          formControlName="instantPublishing"
+          [label]="'content_repository.instantPublishing' | gtxI18n"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('diffDelete').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('diffDelete').enabled"
-            formControlName="diffDelete"
-            [label]="'contentRepository.diffDelete' | i18n"
+          formControlName="diffDelete"
+          [label]="'content_repository.diffDelete' | gtxI18n"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('languageInformation').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('languageInformation').enabled"
-            formControlName="languageInformation"
-            [label]="'contentRepository.languageInformation' | i18n"
+          formControlName="languageInformation"
+          [label]="'content_repository.languageInformation' | gtxI18n"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('permissionInformation').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('permissionInformation').enabled"
-            formControlName="permissionInformation"
-            [label]="'contentRepository.permissionInformation' | i18n"
+          formControlName="permissionInformation"
+          [label]="'content_repository.permissionInformation' | gtxI18n"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('permissionProperty').enabled) {
         <gtx-input
-            *ngIf="form.get('permissionProperty').enabled"
-            type="text"
-            maxlength="255"
-            [label]="'contentRepository.permissionProperty' | i18n"
-            formControlName="permissionProperty"
+          type="text"
+          maxlength="255"
+          [label]="'content_repository.permissionProperty' | gtxI18n"
+          formControlName="permissionProperty"
         ></gtx-input>
-
-        <!-- defaultPermission -->
+      }
+      <!-- defaultPermission -->
+      @if (form.get('defaultPermission').enabled) {
         <gtx-input
-            *ngIf="form.get('defaultPermission').enabled"
-            type="text"
-            maxlength="255"
-            [label]="'contentRepository.defaultPermission' | i18n"
-            formControlName="defaultPermission"
+          type="text"
+          maxlength="255"
+          [label]="'content_repository.defaultPermission' | gtxI18n"
+          formControlName="defaultPermission"
         ></gtx-input>
-
-        <!-- projectPerNode -->
+      }
+      <!-- projectPerNode -->
+      @if (form.get('projectPerNode').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('projectPerNode').enabled"
-            formControlName="projectPerNode"
-            [label]="'contentRepository.projectPerNode' | i18n"
+          formControlName="projectPerNode"
+          [label]="'content_repository.projectPerNode' | gtxI18n"
         ></gtx-checkbox>
-
-        <!-- defaultPermission -->
+      }
+      <!-- defaultPermission -->
+      @if (form.get('version').enabled) {
         <gtx-input
-            *ngIf="form.get('version').enabled"
-            type="text"
-            maxlength="255"
-            [label]="'contentRepository.version' | i18n"
-            formControlName="version"
+          type="text"
+          maxlength="255"
+          [label]="'content_repository.version' | gtxI18n"
+          formControlName="version"
         ></gtx-input>
-
-        <!-- elasticsearch -->
+      }
+      <!-- elasticsearch -->
+      @if (form.get('elasticsearch').enabled) {
         <gtx-textarea
-            *ngIf="form.get('elasticsearch').enabled"
-            [label]="'contentRepository.elasticsearch' | i18n"
-            formControlName="elasticsearch"
+          [label]="'content_repository.elasticsearch' | gtxI18n"
+          formControlName="elasticsearch"
         ></gtx-textarea>
-
+      }
+      @if (form.get('elasticsearch')?.hasError('errorIsInvalidJson')) {
         <span
-            *ngIf="form.get('elasticsearch')?.hasError('errorIsInvalidJson')"
-            class="container-validator-errors"
-        >
-            {{ 'shared.error_is_invalid_json' | i18n }}
+          class="container-validator-errors"
+          >
+          {{ 'shared.error_is_invalid_json' | gtxI18n }}
         </span>
-
+      }
     </div>
-</form>
+  </form>
+}

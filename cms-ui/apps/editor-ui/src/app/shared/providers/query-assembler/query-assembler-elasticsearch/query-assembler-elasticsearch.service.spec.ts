@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { GtxChipSearchSearchFilterMap } from '@editor-ui/app/common/models';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { ElasticSearchQuery, FolderItemType, GtxCmsQueryOptions } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { first } from 'rxjs/operators';
+import { GtxChipSearchSearchFilterMap } from '../../../../common/models';
+import { ApplicationStateService, STATE_MODULES } from '../../../../state';
+import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { QueryAssemblerElasticSearchService } from './query-assembler-elasticsearch.service';
 
 describe('QueryAssemblerElasticSearchService', () => {
@@ -22,7 +22,7 @@ describe('QueryAssemblerElasticSearchService', () => {
             ],
         });
         queryAssemblerElasticSearchService = TestBed.inject(QueryAssemblerElasticSearchService);
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
 
         const initialState = {
             entities: {

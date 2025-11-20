@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, OnDestroy, Pipe, PipeTransform } from '@angular/core';
 import { Subscription } from 'rxjs';
-
-import { GtxI18nRelativeDateService } from './i18n-relative-date.service';
+import { formatRelativeI18nDate } from '../../../common/utils';
+import { I18nService } from '../../providers/i18n/i18n.service';
 
 /**
  * Formats a date relative to the current date/time, e.g. "3 minutes ago".
@@ -9,42 +9,34 @@ import { GtxI18nRelativeDateService } from './i18n-relative-date.service';
 @Pipe({
     name: 'gtxI18nRelativeDate',
     pure: false,
-    standalone: false
+    standalone: false,
 })
-export class GtxI18nRelativeDatePipe implements PipeTransform, OnDestroy {
+export class I18nRelativeDatePipe implements PipeTransform, OnDestroy {
 
-    private subscription = new Subscription();
-    private lastInput: Date | string;
-    private lastOutput = '';
+    private subscription: Subscription | null = null;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
-        private relativeDateService: GtxI18nRelativeDateService) { }
+        private translation: I18nService,
+    ) {
+        this.subscription = this.translation.onLanguageChange().subscribe(() => {
+            this.changeDetector.markForCheck();
+        });
+    }
 
     ngOnDestroy(): void {
-        this.subscription.unsubscribe();
+        if (this.subscription) {
+            this.subscription.unsubscribe();
+            this.subscription = null;
+        }
     }
 
-    transform(date: Date | string, direction?: 'past' | 'future', secondsPrecision: number = 1): string {
-        if (date === this.lastInput) {
-            return this.lastOutput;
+    transform(date: Date | string | number): string {
+        if (typeof date === 'string') {
+            date = new Date(date);
         }
 
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
-        const format$ = this.relativeDateService.observableFormat(dateObj, direction, secondsPrecision);
-        this.subscription.unsubscribe();
-        this.lastOutput = '';
-
-        this.subscription = format$.subscribe(formatted => this.textEmitted(formatted));
-
-        return this.lastOutput;
-    }
-
-    private textEmitted(formatted: string): void {
-        if (this.lastOutput && formatted !== this.lastOutput) {
-            this.changeDetector.markForCheck();
-        }
-        this.lastOutput = formatted;
+        return formatRelativeI18nDate(date, this.translation.getCurrentLanguage());
     }
 
 }

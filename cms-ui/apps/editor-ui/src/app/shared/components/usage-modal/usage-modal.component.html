@@ -1,74 +1,88 @@
 <div class="modal-title">
-    <h5>{{ 'modal.object_usage_title' | i18n: { _type: item.type, name: item.name } }}</h5>
+  <h5>{{ 'modal.object_usage_title' | gtxI18n: {
+    type: ('common.type_' + item.type) |gtxI18n,
+    name: item.name
+  } }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-progress-bar [active]="usageIsLoading || (item.type === 'page' && linkIsLoading)"></gtx-progress-bar>
+  <gtx-progress-bar [active]="usageIsLoading || (item.type === 'page' && linkIsLoading)"></gtx-progress-bar>
 
-    <gtx-tabs>
-        <gtx-tab id="used" [title]="'modal.object_usages_label' | i18n: { count: usageCount }">
-            <div class="empty-message" *ngIf="usageCount < 1 && !usageIsLoading">
-                {{ 'modal.object_not_used' | i18n:{ _type: item.type } }}
+  <gtx-tabs>
+    <gtx-tab id="used" [title]="'modal.object_usages_label' | gtxI18n: { count: usageCount }">
+      @if (usageCount < 1 && !usageIsLoading) {
+        <div class="empty-message">
+          {{ 'modal.object_not_used' | gtxI18n:{ type: ('common.type_' + item.type) | gtxI18n } }}
+        </div>
+      }
+
+      @for (usage of USAGE_TYPES; track usage) {
+        <div class="type-usage-wrapper">
+          @if (usageCountMap[usage] > 0) {
+            <div class="type-usage-header">
+              {{ usageCountMap[usage] > 1
+              ? (('common.type_' + usage + '_counts') | gtxI18n:{ count: usageCountMap[usage] })
+              : ('common.type_' + usage + '_singular') |gtxI18n
+              }}
             </div>
+          }
+          <gtx-item-usage-list
+            class="type-usage-list"
+            [type]="usage"
+            [item]="item"
+            [nodeId]="nodeId"
+            [currentLanguageId]="currentLanguageId"
+            [activeNodeId]="currentNodeId"
+            [languages]="languages"
+            (pageLoadStart)="updateUsageLoad(usage, $event)"
+            (pageLoadEnd)="updateUsageOfType(usage, $event)"
+            (itemClick)="itemClicked($event)"
+          ></gtx-item-usage-list>
+        </div>
+      }
 
-            <div *ngFor="let usage of USAGE_TYPES" class="type-usage-wrapper">
-                <div *ngIf="usageCountMap[usage] > 0" class="type-usage-header">
-                    {{ usageCountMap[usage] > 1
-                        ? (('common.type_' + usage + '_counts') | i18n:{ count: usageCountMap[usage] })
-                        : ('common.type_' + usage + '_singular') | i18n
-                    }}
-                </div>
+    </gtx-tab>
 
-                <gtx-item-usage-list
-                    class="type-usage-list"
-                    [type]="usage"
-                    [item]="item"
-                    [nodeId]="nodeId"
-                    [currentLanguageId]="currentLanguageId"
-                    [activeNodeId]="currentNodeId"
-                    [languages]="languages"
-                    (pageLoadStart)="updateUsageLoad(usage, $event)"
-                    (pageLoadEnd)="updateUsageOfType(usage, $event)"
-                    (itemClick)="itemClicked($event)"
-                ></gtx-item-usage-list>
-            </div>
-
-        </gtx-tab>
-
-        <gtx-tab *ngIf="item.type === 'page'" id="linked" [title]="'modal.object_links_label' | i18n: { count: linkCount }">
-            <div class="empty-message" *ngIf="linkCount < 1 && !linkIsLoading">
-                {{ 'modal.object_has_no_links' | i18n:{ _type: item.type } }}
-            </div>
-
-            <div *ngFor="let link of LINK_TYPES" class="type-usage-wrapper">
-                <div *ngIf="linkCountMap[link] > 0" class="type-usage-header">
-                    {{ linkCountMap[link] > 1
-                        ? (('common.type_' + link + '_counts') | i18n:{ count: linkCountMap[link] })
-                        : ('common.type_' + link + '_singular') | i18n
-                    }}
-                </div>
-
-                <gtx-item-usage-list
-                    class="type-usage-list"
-                    [type]="link"
-                    [item]="item"
-                    [nodeId]="nodeId"
-                    [currentLanguageId]="currentLanguageId"
-                    [activeNodeId]="currentNodeId"
-                    [languages]="languages"
-                    (pageLoadStart)="updateLinkLoad(link, $event)"
-                    (pageLoadEnd)="updateLinkOfType(link, $event)"
-                    (itemClick)="itemClicked($event)"
-                ></gtx-item-usage-list>
-            </div>
-        </gtx-tab>
-    </gtx-tabs>
+    @if (item.type === 'page') {
+      <gtx-tab id="linked" [title]="'modal.object_links_label' | gtxI18n: { count: linkCount }">
+        @if (linkCount < 1 && !linkIsLoading) {
+          <div class="empty-message">
+            {{ 'modal.object_has_no_links' | gtxI18n:{ type: ('common.type_' + item.type) | gtxI18n } }}
+          </div>
+        }
+        @for (link of LINK_TYPES; track link) {
+          <div class="type-usage-wrapper">
+            @if (linkCountMap[link] > 0) {
+              <div class="type-usage-header">
+                {{ linkCountMap[link] > 1
+                ? (('common.type_' + link + '_counts') | gtxI18n:{ count: linkCountMap[link] })
+                : ('common.type_' + link + '_singular') |gtxI18n
+                }}
+              </div>
+            }
+            <gtx-item-usage-list
+              class="type-usage-list"
+              [type]="link"
+              [item]="item"
+              [nodeId]="nodeId"
+              [currentLanguageId]="currentLanguageId"
+              [activeNodeId]="currentNodeId"
+              [languages]="languages"
+              (pageLoadStart)="updateLinkLoad(link, $event)"
+              (pageLoadEnd)="updateLinkOfType(link, $event)"
+              (itemClick)="itemClicked($event)"
+            ></gtx-item-usage-list>
+          </div>
+        }
+      </gtx-tab>
+    }
+  </gtx-tabs>
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
-    >{{ 'common.close_button' | i18n }}</gtx-button>
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
+  >{{ 'common.close_button' | gtxI18n }}</gtx-button>
 </div>

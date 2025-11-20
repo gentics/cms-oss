@@ -15,38 +15,6 @@ import {
     ViewChild,
     ViewChildren,
 } from '@angular/core';
-import {
-    EditableNodeProps,
-    EditableProperties,
-    ITEM_PROPERTIES_TAB,
-    ITEM_REPORTS_TAB,
-    ITEM_TAG_LIST_TAB,
-    PropertiesTab,
-    noItemPermissions,
-} from '@editor-ui/app/common/models';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import {
-    AddExpandedTabGroupAction,
-    ApplicationStateService,
-    ChangeTabAction,
-    FolderActionsService,
-    MarkContentAsModifiedAction,
-    MarkObjectPropertiesAsModifiedAction,
-    PostUpdateBehavior,
-    RemoveExpandedTabGroupAction,
-    SaveErrorAction,
-    SaveSuccessAction,
-    StartSavingAction,
-} from '@editor-ui/app/state';
-import {
-    TagEditorHostComponent,
-    TagEditorService,
-} from '@editor-ui/app/tag-editor';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     EditableFileProps,
@@ -86,6 +54,7 @@ import {
     TableSelectAllType,
     TooltipComponent,
 } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { cloneDeep, isEqual, merge } from 'lodash-es';
 import {
     BehaviorSubject,
@@ -107,6 +76,37 @@ import {
     switchMap,
     tap,
 } from 'rxjs/operators';
+import {
+    EditableNodeProps,
+    EditableProperties,
+    ITEM_PROPERTIES_TAB,
+    ITEM_REPORTS_TAB,
+    ITEM_TAG_LIST_TAB,
+    PropertiesTab,
+    noItemPermissions,
+} from '../../../common/models';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import {
+    AddExpandedTabGroupAction,
+    ApplicationStateService,
+    ChangeTabAction,
+    FolderActionsService,
+    MarkContentAsModifiedAction,
+    MarkObjectPropertiesAsModifiedAction,
+    PostUpdateBehavior,
+    RemoveExpandedTabGroupAction,
+    SaveErrorAction,
+    SaveSuccessAction,
+    StartSavingAction,
+} from '../../../state';
+import {
+    TagEditorHostComponent,
+    TagEditorService,
+} from '../../../tag-editor';
 import { generateContentTagList, getItemProperties } from '../../utils';
 
 /** Allows to define additional options for saving. */
@@ -277,19 +277,19 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             {
                 id: 'name',
                 fieldPath: 'name',
-                label: this.i18n.translate('editor.tagname_label'),
+                label: this.i18n.instant('editor.tagname_label'),
                 clickable: true,
             },
             {
                 id: 'type',
                 fieldPath: 'construct.name',
-                label: this.i18n.translate('editor.tagtype_label'),
+                label: this.i18n.instant('editor.tagtype_label'),
                 clickable: true,
             },
             {
                 id: 'active',
                 fieldPath: 'active',
-                label: this.i18n.translate('editor.obj_prop_active_label'),
+                label: this.i18n.instant('editor.obj_prop_active_label'),
                 align: 'center',
                 clickable: true,
             },
@@ -513,7 +513,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 id: ACTION_DELETE,
                 enabled: true,
                 icon: 'delete',
-                label: this.i18n.translate('editor.tagtype_delete_label'),
+                label: this.i18n.instant('editor.tagtype_delete_label'),
                 type: 'alert',
                 single: true,
                 multiple: true,
@@ -525,7 +525,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 id: ACTION_ACTIVATE,
                 enabled: (item) => item == null || !item.active,
                 icon: 'check_circle',
-                label: this.i18n.translate('editor.tagtype_activate_label'),
+                label: this.i18n.instant('editor.tagtype_activate_label'),
                 type: 'success',
                 single: true,
                 multiple: true,
@@ -533,7 +533,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 id: ACTION_DEACTIVATE,
                 enabled: (item) => item == null || item.active,
                 icon: 'cancel',
-                label: this.i18n.translate('editor.tagtype_deactivate_label'),
+                label: this.i18n.instant('editor.tagtype_deactivate_label'),
                 type: 'warning',
                 single: true,
                 multiple: true,
@@ -607,22 +607,22 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         const translateType = count > 1 ? 'plural' : 'singular';
 
         this.modalService.dialog({
-            title: this.i18n.translate(`modal.confirmation_tag_delete_${translateType}_title`),
-            body: this.i18n.translate(`modal.delete_tag_confirm_${translateType}` , {
+            title: this.i18n.instant(`modal.confirmation_tag_delete_${translateType}_title`),
+            body: this.i18n.instant(`modal.delete_tag_confirm_${translateType}` , {
                 count: count,
                 names: `<ul class="browser-default"><li>${tagNames.join('</li><li>')}</li></ul>`,
                 name: tagNames[0],
             }),
             buttons: [
                 {
-                    label: this.i18n.translate('common.cancel_button'),
+                    label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     flat: true,
                     returnValue: false,
                     shouldReject: true,
                 },
                 {
-                    label: this.i18n.translate('common.delete_button'),
+                    label: this.i18n.instant('common.delete_button'),
                     type: 'alert',
                     returnValue: true,
                 },

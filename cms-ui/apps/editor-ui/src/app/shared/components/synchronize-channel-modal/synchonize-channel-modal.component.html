@@ -1,106 +1,111 @@
 <div class="modal-title">
-    <h5>{{ 'modal.sync_channel_title' | i18n }}</h5>
+  <h5>{{ 'modal.sync_channel_title' | gtxI18n }}</h5>
 </div>
 <div class="modal-content">
-    <div class="description">
-        <p>
-            <strong>{{ item.type | i18n | capitalize }}:</strong> {{ item.name }}
-        </p>
-        <p>
-            <strong>{{ 'modal.sync_from_label' | i18n }}:</strong> {{ channel.name }}
-        </p>
-        <p>
-            <strong>{{ 'modal.sync_to_label' | i18n }}:</strong>
-            <span *ngIf="availableMasterNodes.length === 0 && !(loading$ | async)" class="error">
-                {{ 'modal.sync_error_no_node' | i18n }}
-            </span>
-            <span *ngIf="availableMasterNodes.length === 1">{{ targetNode.name }}</span>
-            <node-selector
-                *ngIf="availableMasterNodes.length > 1"
-                [nodes]="availableMasterNodes"
-                [activeNodeId]="targetNode.id"
-                [useLinks]="false"
-                [showName]="true"
-                (nodeSelected)="targetNode = $event"
-            ></node-selector>
-        </p>
-    </div>
+  <div class="description">
+    <p>
+      <strong>{{ item.type | gtxI18n | capitalize }}:</strong> {{ item.name }}
+    </p>
+    <p>
+      <strong>{{ 'modal.sync_from_label' | gtxI18n }}:</strong> {{ channel.name }}
+    </p>
+    <p>
+      <strong>{{ 'modal.sync_to_label' | gtxI18n }}:</strong>
+      @if (availableMasterNodes.length === 0 && !(loading$ | async)) {
+        <span class="error">
+          {{ 'modal.sync_error_no_node' | gtxI18n }}
+        </span>
+      }
+      @if (availableMasterNodes.length === 1) {
+        <span>{{ targetNode.name }}</span>
+      }
+      @if (availableMasterNodes.length > 1) {
+        <node-selector
+          [nodes]="availableMasterNodes"
+          [activeNodeId]="targetNode.id"
+          [useLinks]="false"
+          [showName]="true"
+          (nodeSelected)="targetNode = $event"
+        ></node-selector>
+      }
+    </p>
+  </div>
 
-    <div *ngIf="item?.type === 'folder' || item?.type === 'channel'" class="affected-objects-wrapper">
-        <gtx-progress-bar [active]="loading$ | async"></gtx-progress-bar>
-
-        <gtx-checkbox
-            class="recursive-checkbox row column"
-            [label]="'common.apply_recursively_label' | i18n"
-            [checked]="recursive"
-            (change)="toggleRecursive()"
-        ></gtx-checkbox>
-
+  @if (item?.type === 'folder' || item?.type === 'channel') {
+    <div class="affected-objects-wrapper">
+      <gtx-progress-bar [active]="loading$ | async"></gtx-progress-bar>
+      <gtx-checkbox
+        class="recursive-checkbox row column"
+        [label]="'common.apply_recursively_label' | gtxI18n"
+        [checked]="recursive"
+        (change)="toggleRecursive()"
+      ></gtx-checkbox>
+      @for (object of affectedObjects$ | async; track object?.type) {
         <div
-            *ngFor="let object of affectedObjects$ | async; trackBy: object?.type"
-            class="affected-objects-row"
-            [class.loading]="loading$ | async"
-            [class.expanded]="expanded[object.type]"
-        >
-            <div class="row">
-                <div class="column">
-                    <gtx-checkbox
-                        [label]="object.type | i18n: { count: 2 }"
-                        [checked]="selectedTypes[object.type]"
-                        (change)="toggleSelected(object.type)"
-                    ></gtx-checkbox>
-                    <gtx-button
-                        icon
-                        size="small"
-                        type="secondary"
-                        [disabled]="object.localized + object.local === 0"
-                        (click)="expanded[object.type] = !expanded[object.type]"
-                    >
-                        <icon class="detail-toggle">keyboard_arrow_down</icon>
-                    </gtx-button>
-                </div>
-
-                <div class="column" [class.empty]="object.localized === 0">
-                    <div class="localization-label localized">
-                        {{ 'modal.localized_label' | i18n }}: {{ object.localized}}
-                    </div>
-                </div>
-
-                <div class="column" [class.empty]="object.local === 0">
-                    <div class="localization-label local">
-                        {{ 'modal.local_label' | i18n }}: {{ object.local }}
-                    </div>
-                </div>
+          class="affected-objects-row"
+          [class.loading]="loading$ | async"
+          [class.expanded]="expanded[object.type]"
+          >
+          <div class="row">
+            <div class="column">
+              <gtx-checkbox
+                [label]="object.type | gtxI18n: { count: 2 }"
+                [checked]="selectedTypes[object.type]"
+                (change)="toggleSelected(object.type)"
+              ></gtx-checkbox>
+              <gtx-button
+                icon
+                size="small"
+                type="secondary"
+                [disabled]="object.localized + object.local === 0"
+                (click)="expanded[object.type] = !expanded[object.type]"
+                >
+                <icon class="detail-toggle">keyboard_arrow_down</icon>
+              </gtx-button>
             </div>
-
-            <div class="details">
-                <table class="details">
-                    <ng-template ngFor let-item [ngForOf]="object.items">
-                        <tr *ngIf="(item | itemIsLocal) || (item | itemIsLocalized)">
-                            <td>
-                                <span
-                                    class="localization-indicator"
-                                    [class.local]="item | itemIsLocal"
-                                    [class.localized]="item | itemIsLocalized"
-                                ></span>
-                                {{ item.name }}
-                            </td>
-                            <td [title]="item.path">
-                                {{ item.path | truncatePath:50 }}
-                            </td>
-                        </tr>
-                    </ng-template>
-                </table>
+            <div class="column" [class.empty]="object.localized === 0">
+              <div class="localization-label localized">
+                {{ 'modal.localized_label' | gtxI18n }}: {{ object.localized}}
+              </div>
             </div>
+            <div class="column" [class.empty]="object.local === 0">
+              <div class="localization-label local">
+                {{ 'modal.local_label' | gtxI18n }}: {{ object.local }}
+              </div>
+            </div>
+          </div>
+          <div class="details">
+            <table class="details">
+              @for (item of object.items; track item) {
+                @if ((item | itemIsLocal) || (item | itemIsLocalized)) {
+                  <tr>
+                    <td>
+                      <span
+                        class="localization-indicator"
+                        [class.local]="item | itemIsLocal"
+                        [class.localized]="item | itemIsLocalized"
+                      ></span>
+                      {{ item.name }}
+                    </td>
+                    <td [title]="item.path">
+                      {{ item.path | truncatePath:50 }}
+                    </td>
+                  </tr>
+                }
+              }
+            </table>
+          </div>
         </div>
+      }
     </div>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button flat type="secondary" (click)="cancelFn()">
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
-    <gtx-button type="default" (click)="confirmSettings()" [disabled]="availableMasterNodes.length < 1">
-        {{ 'modal.push_to_master_button' | i18n }}
-    </gtx-button>
+  <gtx-button flat type="secondary" (click)="cancelFn()">
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
+  <gtx-button type="default" (click)="confirmSettings()" [disabled]="availableMasterNodes.length < 1">
+    {{ 'modal.push_to_master_button' | gtxI18n }}
+  </gtx-button>
 </div>

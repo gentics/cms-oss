@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { StageableItem, contentPackageSchema } from '@editor-ui/app/common/models';
-import { Api } from '@editor-ui/app/core/providers/api';
 import { ContentPackageBO, Page } from '@gentics/cms-models';
 import { normalize, schema } from 'normalizr';
 import { map } from 'rxjs/operators';
+import { StageableItem, contentPackageSchema } from '../../../common/models';
+import { Api } from '../../../core/providers/api';
 import {
     AddContentStagingEntryAction,
     AddEntitiesAction,

@@ -15,11 +15,6 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EditorTab, RecentItem } from '@editor-ui/app/common/models';
-import {
-    SuggestionItem,
-    SuggestionSearchService,
-} from '@editor-ui/app/shared/providers/suggestion-search/suggestion-search.service';
 import { ObservableStopper } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, Page } from '@gentics/cms-models';
@@ -38,9 +33,14 @@ import {
     takeUntil,
     tap,
 } from 'rxjs/operators';
+import { EditorTab, RecentItem } from '../../../common/models';
 import { arraysAreEqual } from '../../../common/utils/arrays-are-equal';
 import { fuzzyMatch } from '../../../common/utils/fuzzy-match';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import {
+    SuggestionItem,
+    SuggestionSearchService,
+} from '../../../shared/providers/suggestion-search/suggestion-search.service';
 import { ApplicationStateService, ChangeTabAction, FolderActionsService } from '../../../state';
 import { SearchSuggestionComponent } from '../search-suggestion/search-suggestion.component';
 

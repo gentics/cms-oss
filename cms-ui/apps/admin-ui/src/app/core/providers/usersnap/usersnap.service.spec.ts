@@ -45,9 +45,9 @@ describe('UsersnapService', () => {
             ],
         });
 
-        appState = TestBed.get(AppStateService);
-        adminOps = TestBed.get(AdminOperations);
-        usersnapService = TestBed.get(UsersnapService);
+        appState = TestBed.inject(AppStateService) as any;
+        adminOps = TestBed.inject(AdminOperations) as any;
+        usersnapService = TestBed.inject(UsersnapService) as any;
         usersnapSettings = { key: 'test' };
 
         adminOps.getUsersnapSettings.and.callFake(() => {

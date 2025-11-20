@@ -12,10 +12,10 @@ import { Injectable } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, PRIMARY_OUTLET, Router, UrlSegment } from '@angular/router';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { IBreadcrumbRouterLink } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { has as _has, isEqual as _isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest, of as observableOf } from 'rxjs';
 import { filter, map, switchMap, takeUntil } from 'rxjs/operators';
-import { I18nService } from '../i18n/i18n.service';
 import { RouteEntityResolverService } from '../route-entity-resolver/route-entity-resolver.service';
 import { BreadcrumbInfo } from './breadcrumb-info';
 
@@ -31,7 +31,7 @@ interface RouteSegment {
 @Injectable()
 export class BreadcrumbsService extends InitializableServiceBase {
 
-    @SelectState(state => state.ui.language)
+    @SelectState((state) => state.ui.language)
     private uiLanguage$: Observable<GcmsUiLanguage>;
 
     private currBreadcrumbs$ = new BehaviorSubject<IBreadcrumbRouterLink[]>([]);
@@ -62,7 +62,7 @@ export class BreadcrumbsService extends InitializableServiceBase {
 
     protected onServiceInit(): void {
         const breadcrumbChanges$ = this.router.events.pipe(
-            filter(event => event instanceof NavigationEnd),
+            filter((event) => event instanceof NavigationEnd),
             filter(() => !this.shouldSkipBreadcrumb()),
             switchMap(() => combineLatest([
                 this.collectBreadcrumbsFromRoute(this.activatedRoute),
@@ -70,7 +70,7 @@ export class BreadcrumbsService extends InitializableServiceBase {
                 this.reloadTrigger$,
             ])),
             map(([segments, uiLang]) => this.assembleRouterLinks(segments)),
-            map(routerLinks => routerLinks.filter(
+            map((routerLinks) => routerLinks.filter(
                 // Filter out duplicate breadcrumbs - this can happen if two routes with empty paths are nested.
                 // Since the breadcrumbs are created asynchronously, filtering here is easier than while assembling the breadcrumbs.
                 (currLink, index) => index === 0 || !_isEqual(currLink.route, routerLinks[index - 1].route),
@@ -78,17 +78,17 @@ export class BreadcrumbsService extends InitializableServiceBase {
             takeUntil(this.stopper.stopper$),
         );
 
-        breadcrumbChanges$.subscribe(breadcrumbs => this.currBreadcrumbs$.next(breadcrumbs));
+        breadcrumbChanges$.subscribe((breadcrumbs) => this.currBreadcrumbs$.next(breadcrumbs));
     }
 
     private shouldSkipBreadcrumb(): boolean {
-        const routeSnapshot =  this.activatedRoute.snapshot;
+        const routeSnapshot = this.activatedRoute.snapshot;
         let shouldSkip = routeSnapshot.data[ROUTE_SKIP_BREADCRUMB] ?? false;
 
         let child = routeSnapshot.firstChild;
 
         while (child && !shouldSkip) {
-            shouldSkip = child.data[ROUTE_SKIP_BREADCRUMB]
+            shouldSkip = child.data[ROUTE_SKIP_BREADCRUMB];
             child = child.firstChild;
         }
 
@@ -98,7 +98,7 @@ export class BreadcrumbsService extends InitializableServiceBase {
     public setBreadcrumbs(breadcrumbs: IBreadcrumbRouterLink[]): void {
         this.currBreadcrumbs$.next([
             ...breadcrumbs,
-        ])
+        ]);
     }
 
     private collectBreadcrumbsFromRoute(activatedRoute: ActivatedRoute): Observable<RouteSegment[]> {
@@ -128,18 +128,18 @@ export class BreadcrumbsService extends InitializableServiceBase {
 
         return combineLatest(routeSegments).pipe(
             // Filter out segments that have no breadcrumbs.
-            map(segments => segments.filter(segment => !!segment)),
+            map((segments) => segments.filter((segment) => !!segment)),
         );
     }
 
     private convertUrlToRouterCommands(parentUrl: UrlSegment[], url: UrlSegment[], outlet: string): string[] {
         const route: any[] = [];
-        parentUrl.forEach(segment => route.push(segment.path));
+        parentUrl.forEach((segment) => route.push(segment.path));
 
         if (outlet !== PRIMARY_OUTLET) {
-            route.push({ outlets: { [outlet]: [].concat(url.map(segment => segment.path)) } });
+            route.push({ outlets: { [outlet]: [].concat(url.map((segment) => segment.path)) } });
         } else {
-            url.forEach(segment => route.push(segment.path));
+            url.forEach((segment) => route.push(segment.path));
         }
 
         if (route.length === 0) {
@@ -184,7 +184,7 @@ export class BreadcrumbsService extends InitializableServiceBase {
                                 title: handler.displayName(data[ROUTE_ENTITY_RESOLVER_KEY]),
                                 doNotTranslate: true,
                             },
-                        }
+                        };
                     }
                 }
                 return ret;
@@ -193,7 +193,7 @@ export class BreadcrumbsService extends InitializableServiceBase {
     }
 
     private assembleRouterLinks(segments: RouteSegment[]): IBreadcrumbRouterLink[] {
-        return segments.map(segment => {
+        return segments.map((segment) => {
             const breadcrumb = segment.breadcrumb;
             const translate = !breadcrumb.doNotTranslate;
 

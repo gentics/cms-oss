@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, ElementRef, HostBinding, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { RENDERING_CONTEXT_MODAL } from '@editor-ui/app/common/models';
 import { DynamicFormModalConfiguration } from '@gentics/aloha-models';
 import { BaseModal, FormProperties } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
+import { RENDERING_CONTEXT_MODAL } from '../../../common/models';
 import { applyControl, focusFirst } from '../../utils';
 
 @Component({

@@ -1,8 +1,8 @@
-import { I18nService, TemplateOperations } from '@admin-ui/core';
+import { TemplateOperations } from '@admin-ui/core';
 import { Injectable } from '@angular/core';
 import { Node, Raw, Tag, Template } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { cloneDeep } from 'lodash-es';
-
 
 function cleanTags<T extends Tag>(tags: Record<string, T>): Record<string, T> {
     const out: Record<string, T> = {};
@@ -23,8 +23,7 @@ export class CopyTemplateService {
     constructor(
         protected operations: TemplateOperations,
         protected i18n: I18nService,
-    ) {
-    }
+    ) {}
 
     async createCopy(node: Node, templateToCopy: Template<Raw>): Promise<any> {
         const fullCopy: Template<Raw> = {
@@ -32,7 +31,7 @@ export class CopyTemplateService {
             name: this.generateCopyName(templateToCopy),
             objectTags: cleanTags(templateToCopy.objectTags),
             templateTags: cleanTags(templateToCopy.templateTags),
-        }
+        };
 
         const created = await this.operations.create({
             folderIds: [

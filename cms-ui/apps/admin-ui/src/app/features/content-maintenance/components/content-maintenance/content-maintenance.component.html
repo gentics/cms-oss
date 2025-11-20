@@ -1,10 +1,9 @@
 <div class="maintenance-tab-content" [class.hide-sidebar]="activeTabId !== ContentMaintenanceTabs.GENERAL">
 
     <div class="sidebar sidebar-left">
-        <ng-container *ngIf="activeTabId === ContentMaintenanceTabs.GENERAL">
-
+        @if (activeTabId === ContentMaintenanceTabs.GENERAL) {
             <div class="sidebar-widget">
-                <h2 class="widget-title">{{ 'widget.task_queue_title' | i18n }}</h2>
+                <h2 class="widget-title">{{ 'widget.task_queue_title' | gtxI18n }}</h2>
 
                 <div class="widget-content">
                     <gtx-progress-bar [active]="dirtQueueLoading"></gtx-progress-bar>
@@ -21,7 +20,7 @@
             </div>
 
             <div class="sidebar-widget">
-                <h2 class="widget-title">{{ 'widget.task_publishing_process_title' | i18n }}</h2>
+                <h2 class="widget-title">{{ 'widget.task_publishing_process_title' | gtxI18n }}</h2>
 
                 <div class="widget-content">
                     <gtx-progress-bar [active]="publishProcessLoading"></gtx-progress-bar>
@@ -37,14 +36,14 @@
                     }
                 </div>
             </div>
-        </ng-container>
+        }
     </div>
 
     <div class="main-content">
         <gtx-tabs pure [activeId]="activeTabId">
             <gtx-tab
                 [id]="ContentMaintenanceTabs.GENERAL"
-                [title]="'contentmaintenance.title_general' | i18n"
+                [title]="'contentmaintenance.title_general' | gtxI18n"
                 (select)="changeTab($event)"
             >
                 @if (nodesError == null) {
@@ -63,7 +62,7 @@
 
             <gtx-tab
                 [id]="ContentMaintenanceTabs.FAILED_TASKS"
-                [title]="'contentmaintenance.title_failedTasks' | i18n"
+                [title]="'contentmaintenance.title_failedTasks' | gtxI18n"
                 (select)="changeTab($event)"
             >
                 <gtx-dirt-queue-item-table
@@ -74,7 +73,7 @@
     </div>
 
     <div class="sidebar sidebar-right">
-        <ng-container *ngIf="activeTabId === ContentMaintenanceTabs.GENERAL">
+        @if (activeTabId === ContentMaintenanceTabs.GENERAL) {
             <div class="maintanance-buttons">
                 <gtx-button
                     class="reload-button"
@@ -84,7 +83,7 @@
                     [disabled]="dirtQueueLoading || publishProcessLoading || nodesLoading || publishQueueLoading"
                     (click)="loadData()"
                 >
-                    <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+                    <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
                 </gtx-button>
 
                 <gtx-button
@@ -95,7 +94,7 @@
                     [disabled]="!modifyPermissions || working"
                     (click)="reloadConfiguration()"
                 >
-                    <icon left>settings_applications</icon> {{ 'contentmaintenance.reload_configuration' | i18n }}
+                    <icon left>settings_applications</icon> {{ 'contentmaintenance.reload_configuration' | gtxI18n }}
                 </gtx-button>
 
                 <gtx-button
@@ -106,12 +105,12 @@
                     [disabled]="!modifyPermissions || working"
                     (click)="stopPublishing()"
                 >
-                    <icon left>highlight_off</icon> {{ 'contentmaintenance.stop_publishing' | i18n }}
+                    <icon left>highlight_off</icon> {{ 'contentmaintenance.stop_publishing' | gtxI18n }}
                 </gtx-button>
             </div>
 
             <div class="sidebar-widget">
-                <h2 class="widget-title">{{ 'widget.widget_publishing_process_total_title' | i18n }}</h2>
+                <h2 class="widget-title">{{ 'widget.widget_publishing_process_total_title' | gtxI18n }}</h2>
 
                 <div class="widget-content">
                     <gtx-progress-bar [active]="publishQueueLoading"></gtx-progress-bar>
@@ -126,6 +125,6 @@
                     }
                 </div>
             </div>
-        </ng-container>
+        }
     </div>
 </div>

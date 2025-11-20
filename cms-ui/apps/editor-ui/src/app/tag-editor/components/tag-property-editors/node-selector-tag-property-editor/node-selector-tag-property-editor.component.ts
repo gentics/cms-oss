@@ -9,10 +9,10 @@ import {
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EntityResolver } from '../../../../core/providers/entity-resolver/entity-resolver';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '../../../../state';
 
 /**
@@ -23,7 +23,7 @@ import { ApplicationStateService } from '../../../../state';
     templateUrl: './node-selector-tag-property-editor.component.html',
     styleUrls: ['./node-selector-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class NodeSelectorTagPropertyEditor implements TagPropertyEditor {
 
@@ -54,14 +54,13 @@ export class NodeSelectorTagPropertyEditor implements TagPropertyEditor {
         private i18n: I18nService,
     ) { }
 
-
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
-        this.nodes$ = this.state.select(state => state.folder.nodes.list).pipe(
+        this.nodes$ = this.state.select((state) => state.folder.nodes.list).pipe(
             tap((nodeIds: number[]) => {
                 this.nodeIds = nodeIds;
                 this.updatePlaceholder();
             }),
-            map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id))),
+            map((nodeIds) => nodeIds.map((id) => this.entityResolver.getNode(id))),
         );
 
         this.tagPart = tagPart;
@@ -98,7 +97,7 @@ export class NodeSelectorTagPropertyEditor implements TagPropertyEditor {
         if (newValue.type !== TagPropertyType.NODE) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by NodeSelectorTagPropertyEditor.`);
         }
-        this.tagProperty = newValue ;
+        this.tagProperty = newValue;
         this.updatePlaceholder();
         this.changeDetector.markForCheck();
     }
@@ -112,12 +111,12 @@ export class NodeSelectorTagPropertyEditor implements TagPropertyEditor {
         }
 
         if (!selection.nodeId) {
-            this.placeholder = this.i18n.translate('editor.node_no_selection');
+            this.placeholder = this.i18n.instant('editor.node_no_selection');
             return;
         }
 
         if (!this.nodeIds.includes(selection.nodeId)) {
-            this.placeholder = this.i18n.translate('editor.node_not_found');
+            this.placeholder = this.i18n.instant('editor.node_not_found');
             return;
         }
 

@@ -1,23 +1,27 @@
-<form
-    *ngIf="form"
+@if (form) {
+  <form
     [formGroup]="form"
     class="row small-12 medium-12"
->
-    <div *ngIf="supportedLanguages" class="input-container small-12 medium-12 columns">
-        <gtx-i18n-panel-group
-            *ngIf="supportedLanguages"
-            [label]="'shared.i18n_properties_label' | i18n"
+    >
+    @if (supportedLanguages) {
+      <div class="input-container small-12 medium-12 columns">
+        @if (supportedLanguages) {
+          <gtx-i18n-panel-group
+            [label]="'shared.i18n_properties_label' | gtxI18n"
             [languages]="supportedLanguages"
             [invalidLanguages]="invalidLanguages"
             [(activeLanguage)]="activeTabI18nLanguage"
-        >
+            >
             <gtx-i18n-input
-                [label]="('common.name' | i18n) + ' *'"
-                formControlName="nameI18n"
-                [requiredInCurrentLanguage]="true"
-                [language]="activeTabI18nLanguage?.code"
-                [availableLanguages]="supportedLanguages"
+              [label]="('common.name' | gtxI18n) + ' *'"
+              formControlName="nameI18n"
+              [requiredInCurrentLanguage]="true"
+              [language]="activeTabI18nLanguage?.code"
+              [availableLanguages]="supportedLanguages"
             ></gtx-i18n-input>
-        </gtx-i18n-panel-group>
-    </div>
-</form>
+          </gtx-i18n-panel-group>
+        }
+      </div>
+    }
+  </form>
+}

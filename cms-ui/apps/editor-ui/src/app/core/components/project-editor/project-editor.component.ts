@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { EditorOutlet, EditorState } from '@editor-ui/app/common/models';
 import { isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { distinctUntilChanged, filter } from 'rxjs/operators';
+import { EditorOutlet, EditorState } from '../../../common/models';
 import { PresentationService } from '../../../shared/providers/presentation/presentation.service';
 import { ApplicationStateService, FocusEditorAction, FocusListAction } from '../../../state';
 

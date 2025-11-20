@@ -1,29 +1,34 @@
 <gtx-dropdown-list>
-    <gtx-dropdown-trigger>
-        <button class="selector">
-            <icon class="collapse-icon">keyboard_arrow_down</icon>
-            <span class="item-name">{{ project }}</span>
-        </button>
-    </gtx-dropdown-trigger>
+  <gtx-dropdown-trigger>
+    <button class="selector">
+      <icon class="collapse-icon">keyboard_arrow_down</icon>
+      <span class="item-name">{{ project }}</span>
+    </button>
+  </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content>
-        <gtx-dropdown-item *ngFor="let project of availableProjects" (click)="projectChangeHandler(project)">
-            {{ project }}
-        </gtx-dropdown-item>
-    </gtx-dropdown-content>
+  <gtx-dropdown-content>
+    @for (project of availableProjects; track project) {
+      <gtx-dropdown-item (click)="projectChangeHandler(project)">
+        {{ project }}
+      </gtx-dropdown-item>
+    }
+  </gtx-dropdown-content>
 </gtx-dropdown-list>
 
-<gtx-dropdown-list *ngIf="availableBranches?.length > 1" class="branch-dropdown">
+@if (availableBranches?.length > 1) {
+  <gtx-dropdown-list class="branch-dropdown">
     <gtx-dropdown-trigger>
-        <button class="selector">
-            <icon class="collapse-icon">keyboard_arrow_down</icon>
-            <span class="item-name">{{ branch.name }}</span>
-        </button>
+      <button class="selector">
+        <icon class="collapse-icon">keyboard_arrow_down</icon>
+        <span class="item-name">{{ branch.name }}</span>
+      </button>
     </gtx-dropdown-trigger>
-
     <gtx-dropdown-content>
-        <gtx-dropdown-item *ngFor="let branch of availableBranches" (click)="branchChangeHandler(branch)">
-            {{ branch.name }}
+      @for (branch of availableBranches; track branch) {
+        <gtx-dropdown-item (click)="branchChangeHandler(branch)">
+          {{ branch.name }}
         </gtx-dropdown-item>
+      }
     </gtx-dropdown-content>
-</gtx-dropdown-list>
+  </gtx-dropdown-list>
+}

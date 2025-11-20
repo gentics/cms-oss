@@ -1,42 +1,44 @@
 <div class="modal-title">
-    <h5>{{ 'modal.create_cr_fragment_title' | i18n }}</h5>
+  <h5>{{ 'modal.create_cr_fragment_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+  <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
 
-    <form *ngIf="form" autocomplete="off" [formGroup]="form" class="gtx-create-cr-fragment-modal-tab-content-body-form">
-        <div class="input-container small-12 medium-12 row">
-            <div class="input-container small-12 medium-12 columns">
-                <gtx-input
-                    type="text"
-                    [required]="true"
-                    maxlength="50"
-                    [label]="('shared.crfragment_name' | i18n) + ' *'"
-                    [placeholder]="'shared.crfragment_name' | i18n"
-                    formControlName="name"
-                >
-                </gtx-input>
-            </div>
+  @if (form) {
+    <form autocomplete="off" [formGroup]="form" class="gtx-create-cr-fragment-modal-tab-content-body-form">
+      <div class="input-container small-12 medium-12 row">
+        <div class="input-container small-12 medium-12 columns">
+          <gtx-input
+            type="text"
+            [required]="true"
+            maxlength="50"
+            [label]="('shared.crfragment_name' | gtxI18n) + ' *'"
+            [placeholder]="'shared.crfragment_name' | gtxI18n"
+            formControlName="name"
+            >
+          </gtx-input>
         </div>
+      </div>
     </form>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        [disabled]="!form.valid || loading"
-        (click)="buttonCreateEntityClicked()"
-        gtxActionAllowed="dataSource.createDataSource"
+  <gtx-button
+    type="primary"
+    [disabled]="!form.valid || loading"
+    (click)="buttonCreateEntityClicked()"
+    gtxActionAllowed="dataSource.createDataSource"
     >
-        {{ 'modal.create_cr_fragment_button' | i18n }}
-    </gtx-button>
+    {{ 'modal.create_cr_fragment_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

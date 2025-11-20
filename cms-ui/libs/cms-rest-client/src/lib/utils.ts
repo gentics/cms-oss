@@ -32,7 +32,7 @@ export function parseJSONSafe(data: any): any {
 
 type SortOptions<T> = {
     sort?: PagingSortOption<T> | PagingSortOption<T>[] | string;
-}
+};
 
 /**
  * Stringifies the `sort` property of a `BaseListOptionsWithPaging` for use
@@ -45,8 +45,8 @@ export function stringifyPagingSortOptions<T>(options?: SortOptions<T>): void {
 
     const sortOptions = Array.isArray(options.sort) ? options.sort : [options.sort];
     const sortStrings = sortOptions
-        .filter(val => val != null && (typeof val === 'string' || typeof val === 'object'))
-        .map(sortOption => {
+        .filter((val) => val != null && (typeof val === 'string' || typeof val === 'object'))
+        .map((sortOption) => {
             if (typeof sortOption === 'string') {
                 return sortOption;
             }
@@ -70,9 +70,9 @@ export function stringifyEmbedOptions<T>(options: EmbedListOptions<T>): void {
 
 function isResponseObject(value: any): value is Response {
     return value != null
-        && typeof value === 'object'
-        && value.responseInfo != null
-        && typeof value.responseInfo === 'object';
+      && typeof value === 'object'
+      && value.responseInfo != null
+      && typeof value.responseInfo === 'object';
 }
 
 /**
@@ -82,7 +82,6 @@ function isResponseObject(value: any): value is Response {
  *
  * If the response-code is not OK, then it indicates an error.
  * This function *will throw* an error in that case.
- *
  * @param request The request that has been sent
  * @param response The parsed response data
  * @param statusCode The response http status code

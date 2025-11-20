@@ -1,42 +1,43 @@
 <gtx-trable
-    class="entity-trable"
+  class="entity-trable"
 
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [multiple]="multiple"
-    [inlineExpansion]="inlineExpansion"
-    [inlineSelection]="inlineSelection"
+  [selectable]="selectable"
+  [hideActions]="hideActions"
+  [multiple]="multiple"
+  [inlineExpansion]="inlineExpansion"
+  [inlineSelection]="inlineSelection"
 
-    [columns]="columns"
-    [rows]="rows"
-    [active]="activeEntity"
-    [selected]="selected"
+  [columns]="columns"
+  [rows]="rows"
+  [active]="activeEntity"
+  [selected]="selected"
 
     [renderers]="{
         name: nameRenderer,
         '__fallback__': permissionRenderer
     }"
 
-    (loadRow)="loadRow($event)"
-    (rowClick)="handleRowClick($event)"
-    (rowExpand)="updateRowExpansion($event)"
-    (actionClick)="handleActionClick($event)"
-    (selectedChange)="updateSelection($event)"
-    (select)="forwardSelect($event)"
-    (deselect)="forwardDeselect($event)"
+  (loadRow)="loadRow($event)"
+  (rowClick)="handleRowClick($event)"
+  (rowExpand)="updateRowExpansion($event)"
+  (actionClick)="handleActionClick($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowSelect)="forwardSelect($event)"
+  (rowDeselect)="forwardDeselect($event)"
 ></gtx-trable>
 
 <ng-template #nameRenderer let-value="value" let-row="row">
-    <div class="name-wrapper" [style]="'--indent-level: ' + row.level">
-        <gtx-icon class="gtx-type-icon type-icon" [name]="'group'"></gtx-icon>
-        <span class="name">{{ value }}</span>
-    </div>
+  <div class="name-wrapper" [style]="'--indent-level: ' + row.level">
+    <gtx-icon class="gtx-type-icon type-icon" [name]="'group'"></gtx-icon>
+    <span class="name">{{ value }}</span>
+  </div>
 </ng-template>
 
 <ng-template #permissionRenderer let-value="value">
+  @for (perm of value; track perm) {
     <gtx-permission-icon
-        *ngFor="let perm of value"
-        class="gtx-perm-icon"
-        [permission]="perm"
+      class="gtx-perm-icon"
+      [permission]="perm"
     ></gtx-permission-icon>
+  }
 </ng-template>

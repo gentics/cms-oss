@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'modal.create_construct_part_title' | i18n }}</h5>
+    <h5>{{ 'modal.create_construct_part_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
@@ -20,7 +20,7 @@
         [disabled]="form.invalid || form.disabled || form.pristine"
         (click)="buttonCreateEntityClicked()"
     >
-        {{ 'modal.create_button' | i18n }}
+        {{ 'modal.create_button' | gtxI18n }}
     </gtx-button>
 
     <gtx-button
@@ -28,6 +28,6 @@
         flat
         (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
 </div>

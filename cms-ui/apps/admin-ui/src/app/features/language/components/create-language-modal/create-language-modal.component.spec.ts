@@ -1,23 +1,13 @@
-import { InterfaceOf } from '@admin-ui/common';
-import { I18nService, LanguageHandlerService } from '@admin-ui/core';
-import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
 import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { of } from 'rxjs';
+import { InterfaceOf } from '../../../../common';
+import { LanguageHandlerService } from '../../../../core';
 import { LanguagePropertiesComponent } from '../language-properties/language-properties.component';
 import { CreateLanguageModalComponent } from './create-language-modal.component';
-
-@Pipe({
-    name: 'i18n',
-    standalone: false,
-})
-class MockI18nPipe implements PipeTransform {
-    transform(key: string, params: object): string {
-        return key + (params ? ':' + JSON.stringify(params) : '');
-    }
-}
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 
 class MockLanguageOperations implements Partial<InterfaceOf<LanguageHandlerService>> {
     createMapped = jasmine.createSpy('createMapped').and.returnValue(of({}));
@@ -40,7 +30,6 @@ describe('CreateLanguageModalComponent', () => {
                 LanguagePropertiesComponent,
             ],
             providers: [
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 { provide: LanguageHandlerService, useClass: MockLanguageOperations },
             ],
             schemas: [NO_ERRORS_SCHEMA],

@@ -1,4 +1,5 @@
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     EntityIdType,
     Normalized,
@@ -16,7 +17,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager/entity-manager.service';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()
@@ -46,9 +46,9 @@ export class ContentRepositoryTagmapEntryOperations extends ExtendedEntityOperat
         return this.api.contentrepositories.getContentRepositoryTagmapEntries(contentRepositoryId, options).pipe(
             map((res: TagmapEntryListResponse) => {
                 // fake entity's `id` property to enforce internal application entity uniformity
-                return res.items.map(item => Object.assign(item, { id: `${item.id}` }) as TagmapEntryBO<Raw>);
+                return res.items.map((item) => Object.assign(item, { id: `${item.id}` }) as TagmapEntryBO<Raw>);
             }),
-            tap(items => this.entityManager.addEntities('tagmapEntry', items)),
+            tap((items) => this.entityManager.addEntities('tagmapEntry', items)),
             this.catchAndRethrowError(),
         );
     }
@@ -63,10 +63,10 @@ export class ContentRepositoryTagmapEntryOperations extends ExtendedEntityOperat
         tagmapId: string,
     ): Observable<TagmapEntryBO<Normalized>> {
         return this.api.contentrepositories.getContentRepositoryTagmapEntry(contentRepositoryId, tagmapId).pipe(
-            map(res => res.entry),
+            map((res) => res.entry),
             // fake entity's `id` property to enforce internal application entity uniformity
             map((item: TagmapEntry<Raw>) => Object.assign(item, { id: `${item.id}` })),
-            tap(contentRepository => this.entityManager.addEntity('tagmapEntry', contentRepository)),
+            tap((contentRepository) => this.entityManager.addEntity('tagmapEntry', contentRepository)),
             this.catchAndRethrowError(),
         );
     }

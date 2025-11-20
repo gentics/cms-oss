@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { Language } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
 import { Observable, combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, mergeMap, publishReplay, refCount } from 'rxjs/operators';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { PageLanguageIndicatorComponent } from '../page-language-indicator/page-language-indicator.component';
 

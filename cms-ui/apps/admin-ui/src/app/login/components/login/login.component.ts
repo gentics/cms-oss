@@ -26,7 +26,7 @@ export class LoginComponent implements OnInit {
         private route: ActivatedRoute,
         private authOps: AuthOperations,
     ) {
-        const navigation = this.router.getCurrentNavigation();
+        const navigation = this.router.currentNavigation();
 
         if (navigation?.extras?.state) {
             this.keycloakError = navigation?.extras?.state[KEYCLOAK_ERROR_KEY];

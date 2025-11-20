@@ -1,26 +1,29 @@
 <div
-    #wrapper
-    class="icon-checkbox-wrapper"
-    [class.checked]="selected"
-    [class.disabled]="disabled"
->
-    <div class="item-icon">
-        <icon *ngIf="icon || !image; else showImage">{{ icon }}</icon>
-        <ng-template #showImage>
-            <image-thumbnail
-                [image]="image"
-                [nodeId]="nodeId"
-                [width]="wrapper.clientWidth"
-                [maxHeight]="wrapper.clientHeight" >
-            </image-thumbnail>
-        </ng-template>
-    </div>
+  #wrapper
+  class="icon-checkbox-wrapper"
+  [class.checked]="selected"
+  [class.disabled]="disabled"
+  >
+  <div class="item-icon">
+    @if (icon || !image) {
+      <icon>{{ icon }}</icon>
+    } @else {
+      <image-thumbnail
+        [image]="image"
+        [nodeId]="nodeId"
+        [width]="wrapper.clientWidth"
+        [maxHeight]="wrapper.clientHeight" >
+      </image-thumbnail>
+    }
+  </div>
 
-    <div *ngIf="selected || !disabled" class="item-checkbox">
-        <gtx-checkbox
-            [checked]="selected"
-            [disabled]="disabled"
-            (change)="checkboxClicked($event)"
-        ></gtx-checkbox>
+  @if (selected || !disabled) {
+    <div class="item-checkbox">
+      <gtx-checkbox
+        [checked]="selected"
+        [disabled]="disabled"
+        (change)="checkboxClicked($event)"
+      ></gtx-checkbox>
     </div>
+  }
 </div>

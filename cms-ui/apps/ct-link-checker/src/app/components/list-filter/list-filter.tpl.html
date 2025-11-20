@@ -1,9 +1,10 @@
-<gtx-input
-    *ngIf="displayFilter"
+@if (displayFilter) {
+  <gtx-input
     #filterInput
     class="filter-input"
     [label]="label"
     (click)="onClick($event)"
     (valueChange)="onInput($event)"
-></gtx-input>
+  ></gtx-input>
+}
 <ng-content></ng-content>

@@ -1,15 +1,18 @@
 import { tick } from '@angular/core/testing';
+import { Mocked } from '@gentics/ui-core/testing';
 import { Observable, Subscription } from 'rxjs';
+import { ErrorHandler } from './error-handler.service';
 
 /**
  * Mocks the most commonly used parts of the ErrorHandler service
  * and a provides utility method for validating the user of `notifyAndRethrow()`.
+ * @deprecated Use the Mock from `testing` instead
  */
-export class MockErrorHandler {
+export class MockErrorHandler implements Mocked<ErrorHandler> {
     catch = jasmine.createSpy('ErrorHandler.catch');
 
     notifyAndRethrow = jasmine.createSpy('ErrorHandler.notifyAndRethrow')
-        .and.callFake(error => { throw error; });
+        .and.callFake((error) => { throw error; });
 
     notifyAndReturnErrorMessage = jasmine.createSpy('ErrorHandler.notifyAndReturnErrorMessage')
         .and.callFake(() => 'fakeErrorMessage');
@@ -27,12 +30,14 @@ export class MockErrorHandler {
             let actualError: any;
             sub = action$.subscribe(
                 () => fail('This observable should emit an error'),
-                error => actualError = error,
+                (error) => actualError = error,
             );
 
             tick();
-            expect(this.notifyAndRethrow).toHaveBeenCalledTimes(1);
-            expect(this.notifyAndRethrow).toHaveBeenCalledWith(expectedError);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            (expect(this.notifyAndRethrow) as any).toHaveBeenCalledTimes(1);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            (expect(this.notifyAndRethrow) as any).toHaveBeenCalledWith(expectedError);
             expect(actualError).toEqual(expectedError);
         } finally {
             if (sub) {

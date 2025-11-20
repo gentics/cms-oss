@@ -1,10 +1,10 @@
 import { ActionLogEntryBO } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActionLogEntry, AnyModelType, LogsListRequest, LogTypeListItem, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { ActionLogEntryLoaderService } from '../../providers';
 
 @Component({
@@ -12,7 +12,7 @@ import { ActionLogEntryLoaderService } from '../../providers';
     templateUrl: './action-log-entry-table.component.html',
     styleUrls: ['./action-log-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry, ActionLogEntryBO, LogsListRequest> implements OnInit {
 
@@ -48,6 +48,7 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
             fieldPath: 'timestamp',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'logs';
 
     public logTypes: LogTypeListItem[] = [];
@@ -55,6 +56,7 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
     public startMax: Date | null = null;
     public endMin: Date | null = null;
 
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -81,7 +83,7 @@ export class LogsTableComponent extends BaseEntityTableComponent<ActionLogEntry,
         const [logTypes, logActions] = await Promise.all([
             (this.loader as ActionLogEntryLoaderService).getActionLogTypes(),
             (this.loader as ActionLogEntryLoaderService).getActions(),
-        ])
+        ]);
         this.logTypes = logTypes;
         this.logActions = logActions;
         this.changeDetector.markForCheck();

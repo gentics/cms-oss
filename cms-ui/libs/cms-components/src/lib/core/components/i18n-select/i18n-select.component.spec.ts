@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, Pipe, PipeTransform } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
+import { MockI18nPipe } from '../../../../testing';
 import { I18nSelectComponent } from './i18n-select.component';
 
 const DEFAULT_LANGUAGE = 'de';
@@ -161,15 +162,5 @@ class TestComponent implements OnInit, OnDestroy {
 
     valueChangeHandler(value: Record<string, string>): void {
         this.currentValue = value;
-    }
-}
-
-@Pipe({
-    name: 'i18n',
-    standalone: false,
-})
-class MockI18nPipe implements PipeTransform {
-    transform(value: string): string {
-        return value;
     }
 }

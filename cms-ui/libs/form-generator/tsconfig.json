@@ -1,6 +1,16 @@
 {
+    "extends": "../../tsconfig.base.json",
     "files": [],
     "include": [],
+    "angularCompilerOptions": {
+        "annotateForClosureCompiler": true,
+        "skipTemplateCodegen": false,
+        "strictMetadataEmit": true,
+        "strictTemplates": false,
+        "strictInjectionParameters": true,
+        "enableResourceInlining": false,
+        "compilationMode": "partial"
+    },
     "references": [
         {
             "path": "./tsconfig.lib.json"
@@ -11,15 +21,5 @@
         {
             "path": "./cypress/tsconfig.json"
         }
-    ],
-    "extends": "../../tsconfig.json",
-    "angularCompilerOptions": {
-        "annotateForClosureCompiler": true,
-        "skipTemplateCodegen": false,
-        "strictMetadataEmit": true,
-        "strictTemplates": false,
-        "strictInjectionParameters": true,
-        "enableResourceInlining": false,
-        "compilationMode": "partial"
-    }
+    ]
 }

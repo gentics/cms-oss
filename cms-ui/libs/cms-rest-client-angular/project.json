@@ -4,28 +4,32 @@
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "libs/cms-rest-client-angular/src",
-    "tags": ["lib", "angular", "publish"],
+    "tags": [
+        "lib",
+        "angular",
+        "publish"
+    ],
     "targets": {
         "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
+            "executor": "@nx/angular:package",
+            "outputs": [
+                "{workspaceRoot}/dist/{projectRoot}"
+            ],
             "options": {
                 "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.json",
                 "project": "libs/cms-rest-client-angular/ng-package.json"
             },
             "configurations": {
-                "production": {},
+                "production": {
+                    "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.prod.json"
+                },
                 "development": {},
                 "ci": {}
-            }
+            },
+            "defaultConfiguration": "production"
         },
         "test": {
             "executor": "nx:noop"
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/cms-rest-client-angular"
-            }
         }
     }
 }

@@ -83,7 +83,7 @@ export interface CmsFeatureInfo extends Response {
 /**
  * Response from endpoint `/admin/content/publishqueue`.
  */
- export interface PublishQueue extends Response {
+export interface PublishQueue extends Response {
     nodes: {
         /** property string */
         [nodeId: string]: PublishQueueNode;
@@ -127,7 +127,7 @@ export interface DirtQueueEntry {
     objType: number;
     objId: number;
     timestamp: number;
-    label: string,
+    label: string;
     failed: boolean;
     failReason: string;
 }

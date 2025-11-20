@@ -1,9 +1,18 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-      "declaration": true,
-      "types": ["node", "jquery"]
+        "declaration": true,
+        "types": [
+            "node",
+            "jquery"
+        ]
     },
-    "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
-    "include": ["src/**/*.ts"]
-  }
+    "exclude": [
+        "jest.config.ts",
+        "src/**/*.spec.ts",
+        "src/**/*.test.ts"
+    ],
+    "include": [
+        "src/**/*.ts"
+    ]
+}

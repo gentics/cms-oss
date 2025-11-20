@@ -6,24 +6,34 @@
     "tags": ["lib", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/js:tsc",
+            "executor": "@nx/esbuild:esbuild",
             "outputs": ["{options.outputPath}"],
+            "defaultConfiguration": "production",
             "options": {
-                "outputPath": "dist/libs/cms-rest-client",
-                "tsConfig": "libs/cms-rest-client/tsconfig.lib.json",
-                "packageJson": "libs/cms-rest-client/package.json",
-                "main": "libs/cms-rest-client/src/public-api.ts",
-                "assets": ["libs/cms-rest-client/*.md"]
+                "main": "{projectRoot}/src/public-api.ts",
+                "outputPath": "dist/{projectRoot}",
+                "outputFileName": "main.js",
+                "tsConfig": "{projectRoot}/tsconfig.lib.json",
+                "platform": "node",
+                "generatePackageJson": true,
+                "format": ["esm", "cjs"],
+                "assets": []
             },
             "configurations": {
-                "production": {},
-                "development": {},
-                "ci": {}
+                "development": {
+                    "minify": false
+                },
+                "production": {
+                    "minify": true
+                },
+                "ci": {
+                    "minify": true
+                }
             }
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/libs/cms-rest-client"],
+            "outputs": ["{workspaceRoot}/.reports/libs/cms-rest-client"],
             "options": {
                 "jestConfig": "libs/cms-rest-client/jest.config.ts"
             },
@@ -32,15 +42,8 @@
                     "watch": true
                 },
                 "ci": {
-                    "color": false,
-                    "jestConfig": "libs/cms-rest-client/jest.config.ci.ts"
+                    "color": false
                 }
-            }
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/cms-rest-client"
             }
         }
     }

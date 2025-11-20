@@ -93,25 +93,27 @@ export class GCMSRestClient implements GCMSRootAPI {
         stringifyPagingSortOptions(queryParams);
         stringifyEmbedOptions(queryParams);
 
-        const data: GCMSRestClientInterceptorData = this.config.connection.absolute ? {
-            method: requestMethod,
-            protocol: typeof this.config.connection.ssl === 'boolean'
-                ? (this.config.connection.ssl ? 'https' : 'http')
-                : null,
-            host: this.config.connection.host,
-            port: this.config.connection.port,
-            path: buildPath,
-            params: queryParams,
-            headers: requestHeaders,
-        } : {
-            method: requestMethod,
-            protocol: null,
-            host: null,
-            port: null,
-            path: buildPath,
-            params: queryParams,
-            headers: requestHeaders,
-        };
+        const data: GCMSRestClientInterceptorData = this.config.connection.absolute
+            ? {
+                method: requestMethod,
+                protocol: typeof this.config.connection.ssl === 'boolean'
+                    ? (this.config.connection.ssl ? 'https' : 'http')
+                    : null,
+                host: this.config.connection.host,
+                port: this.config.connection.port,
+                path: buildPath,
+                params: queryParams,
+                headers: requestHeaders,
+            }
+            : {
+                method: requestMethod,
+                protocol: null,
+                host: null,
+                port: null,
+                path: buildPath,
+                params: queryParams,
+                headers: requestHeaders,
+            };
 
         const { method, protocol, host, port, path: finalPath, params, headers } = this.handleInterceptors(data);
 
@@ -421,7 +423,7 @@ export class GCMSRestClient implements GCMSRootAPI {
                 data.append('folderId', options.folderId.toString());
             }
             if (options.nodeId) {
-                data.append('nodeId', options.nodeId.toString())
+                data.append('nodeId', options.nodeId.toString());
             }
             return this.executeMappedFormRequest(POST, `/file/save/${id}`, data, options);
         },
@@ -914,5 +916,5 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (body) => this.executeMappedJsonRequest(POST, 'license/update', body),
         contentRepositories: (options) => this.executeMappedJsonRequest(GET, 'license/contentRepositories', null, options),
         push: (body) => this.executeMappedJsonRequest(POST, 'license/push', body),
-    }
+    };
 }

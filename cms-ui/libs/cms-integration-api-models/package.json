@@ -15,8 +15,5 @@
     "@gentics/cms-rest-client": "^6.3.9",
     "@types/jquery": "^3.5.19",
     "rxjs": "^7.8.1"
-  },
-  "publishConfig": {
-    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

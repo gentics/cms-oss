@@ -1,4 +1,8 @@
 /* eslint-disable import-x/no-nodejs-modules */
+import { nxE2EPreset } from '@nx/playwright/preset';
+import { defineConfig, devices, PlaywrightTestConfig } from '@playwright/test';
+import { config } from 'dotenv';
+import { dirname, resolve } from 'node:path';
 import {
     ENV_E2E_APP_PATH,
     ENV_E2E_APP_URL,
@@ -9,11 +13,7 @@ import {
     ENV_SKIP_E2E_LOCAL_APP_LAUNCH,
     isCIEnvironment,
     isEnvBool,
-} from '@gentics/e2e-utils';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { defineConfig, devices, PlaywrightTestConfig } from '@playwright/test';
-import { config } from 'dotenv';
-import { dirname, resolve } from 'node:path';
+} from './libs/e2e-utils/src/lib/config';
 
 export function createConfiguration(
     originalConfig: string,

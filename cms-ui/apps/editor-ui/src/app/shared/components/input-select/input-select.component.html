@@ -22,12 +22,12 @@
             data-action="open-context"
             [class.disabled]="disabled"
             [disabled]="disabled"
-            [title]="labelGetByValue(value) | i18n"
+            [title]="labelGetByValue(value) | gtxI18n"
             (click)="dropDownMenuTrigger($event)"
             (keydown.space)="dropDownMenuTrigger($event)"
             (keydown.escape)="dropDownMenuClose()"
         >
-            <span class="default-trigger-label">{{ labelGetByValue(value) | i18n }}</span> <icon right>arrow_drop_down</icon>
+            <span class="default-trigger-label">{{ labelGetByValue(value) | gtxI18n }}</span> <icon right>arrow_drop_down</icon>
         </button>
     } @else {
         <div class="default-trigger no-input">

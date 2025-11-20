@@ -9,7 +9,7 @@
 }
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'shared.info_selected_nodes' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+    {{ 'shared.info_selected_nodes' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <div class="content-wrapper">

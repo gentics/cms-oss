@@ -21,10 +21,10 @@ import { WizardStepDirective } from '../../directives/wizard-step/wizard-step.di
  *
  * @example
  * ```
- * <gtx-wizard [title]="'example.title' | i18n">
+ * <gtx-wizard [title]="'example.title' | gtxI18n">
  *
  *     <gtx-wizard-step
- *         [title]="'example.step_one' | i18n"
+ *         [title]="'example.step_one' | gtxI18n"
  *         [nextEnabled]="myFrom.valid"
  *         (activate)="onStepOneActivate($event)"
  *         [nextClick]="onStepOneNextClick"

@@ -1,9 +1,5 @@
 {
     "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "types": ["node", "jquery"],
-        "moduleResolution": "bundler"
-    },
     "files": ["src/main.ts", "src/polyfills.ts"],
     "exclude": [
         "src/test.ts",
@@ -13,6 +9,7 @@
         "**/*.worker.ts",
         "cypress/**/*",
         "cypress.config.ts",
+        "e2e/**/*",
         "**/*.cy.ts",
         "**/*.cy.js",
         "**/*.cy.tsx",

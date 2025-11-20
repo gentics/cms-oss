@@ -1,15 +1,14 @@
-import { SendMessageModalComponent } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
+import { I18nService, MessageLink } from '@gentics/cms-components';
 import { Message, Node, Normalized } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap, withLatestFrom } from 'rxjs/operators';
+import { SendMessageModalComponent } from '../../../shared/components';
 import { MessageStateModel } from '../../../state/messages/message.state';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 import { MessageService } from '../../providers';
-import { MessageLink } from '../message-body/message-parsing';
 import { MessageModalComponent } from '../message-modal/message-modal.component';
 
 @Component({

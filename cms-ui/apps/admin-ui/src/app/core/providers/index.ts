@@ -25,6 +25,7 @@ export * from './group-table-loader/group-table-loader.service';
 export * from './group-trable-loader/group-trable-loader';
 export * from './language-handler/language-handler.service';
 export * from './language-table-loader/language-table-loader.service';
+export * from './logout-cleanup/logout-cleanup.service';
 export * from './maintenance-mode/maintenance-mode.service';
 export * from './message/message.service';
 export * from './node-handler/node-handler.service';
@@ -43,3 +44,4 @@ export * from './template-table-loader/template-table-loader.service';
 export * from './user-settings/user-settings.service';
 export * from './user-table-loader/user-table-loader.service';
 export * from './usersnap/usersnap.service';
+

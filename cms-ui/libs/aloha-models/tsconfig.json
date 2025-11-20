@@ -1,7 +1,11 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "module": "commonjs"
+        "module": "commonjs",
+        "types": [
+            "node",
+            "jquery"
+        ]
     },
     "files": [],
     "include": [],

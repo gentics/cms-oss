@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, IndexById, Message, Node, Normalized, Page } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
+import { I18nService, MessageLink } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, publishReplay, refCount, take, tap } from 'rxjs/operators';
@@ -12,7 +12,6 @@ import { SendMessageModal } from '../../../shared/components/send-message-modal/
 import { ApplicationStateService, FolderActionsService, MessageActionsService } from '../../../state';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 import { NavigationService } from '../../providers/navigation/navigation.service';
-import { MessageLink } from '../message-body/message-parsing';
 import { MessageModal } from '../message-modal/message-modal.component';
 
 @Component({

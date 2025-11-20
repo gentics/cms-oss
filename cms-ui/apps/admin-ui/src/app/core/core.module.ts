@@ -1,15 +1,15 @@
-import { MeshModule } from '../mesh';
-import { inject, NgModule, Optional, provideAppInitializer, SkipSelf } from '@angular/core';
+import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
-import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { CmsComponentsModule } from '@gentics/cms-components';
+import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL, throwIfAlreadyLoaded, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../common';
+import { MeshModule } from '../mesh';
 import { SharedModule } from '../shared/shared.module';
 import { AppStateService, StateModule } from '../state';
 import {
@@ -28,6 +28,8 @@ import { AuthGuard, DiscardChangesGuard, PermissionsGuard } from './guards';
 import {
     ActivityManagerService,
     AdminHandlerService,
+    AdminOperations,
+    AuthOperations,
     BreadcrumbResolver,
     BreadcrumbsService,
     ConstructCategoryHandlerService,
@@ -48,7 +50,9 @@ import {
     DevToolPackageTableLoaderService,
     EditorCloserService,
     EditorTabTrackerService,
+    EditorUiLocalStorageService,
     ElasticSearchIndexOperations,
+    EntityManagerService,
     ErrorHandler,
     FeatureOperations,
     FileOperations,
@@ -61,9 +65,12 @@ import {
     ImageOperations,
     LanguageHandlerService,
     LanguageTableLoaderService,
+    LogoutCleanupService,
+    MaintenanceModeService,
     MarkupLanguageOperations,
     MessageService,
     NodeHandlerService,
+    NodeOperations,
     NodeTableLoaderService,
     ObjectPropertyCategoryHandlerService,
     ObjectPropertyHandlerService,
@@ -84,17 +91,10 @@ import {
     TemplateTagOperations,
     TemplateTagStatusOperations,
     UserOperations,
+    UserSettingsService,
     UsersnapService,
     UserTableLoaderService,
 } from './providers';
-import { EditorUiLocalStorageService } from './providers/editor-ui-local-storage/editor-ui-local-storage.service';
-import { EntityManagerService } from './providers/entity-manager/entity-manager.service';
-import { LogoutCleanupService } from './providers/logout-cleanup/logout-cleanup.service';
-import { MaintenanceModeService } from './providers/maintenance-mode/maintenance-mode.service';
-import { AdminOperations } from './providers/operations/admin/admin.operations';
-import { AuthOperations } from './providers/operations/auth/auth.operations';
-import { NodeOperations } from './providers/operations/node';
-import { UserSettingsService } from './providers/user-settings/user-settings.service';
 
 export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select((state) => state.auth.sid);
 

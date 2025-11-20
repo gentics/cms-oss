@@ -17,6 +17,7 @@
         ],
         "version": {
             "git": {
+                "stageChanges": true,
                 "commit": false,
                 "push": false,
                 "tag": false
@@ -32,6 +33,7 @@
         },
         "changelog": {
             "git": {
+                "stageChanges": false,
                 "commit": false,
                 "push": false,
                 "tag": false

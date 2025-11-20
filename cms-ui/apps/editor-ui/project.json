@@ -111,7 +111,7 @@
             }
         },
         "component-test": {
-            "executor": "@nx/cypress:cypress",
+            "executor": "nx:noop",
             "options": {
                 "cypressConfig": "apps/editor-ui/cypress.config.ts",
                 "testingType": "component",

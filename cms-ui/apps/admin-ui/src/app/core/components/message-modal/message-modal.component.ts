@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, MessageLink } from '@gentics/cms-components';
 import { Message, Node, Normalized } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EntityManagerService } from '../../providers';
-import { MessageLink } from '../message-body';
 
 @Component({
     selector: 'gtx-message-modal',

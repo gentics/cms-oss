@@ -14,33 +14,34 @@ import { AppComponent } from './app.component';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from './common';
 import { InterfaceOf } from './common/utils/util-types/util-types';
 import {
+    ActivityManagerComponent,
+    LoggingInOverlayComponent,
+    MessageBodyComponent,
+    MessageInboxComponent,
+    MessageListComponent,
+} from './core/components';
+import {
     ActivityManagerService,
+    AdminOperations,
+    AuthOperations,
+    BreadcrumbsService,
     EditorUiLocalStorageService,
     EntityManagerService,
     ErrorHandler,
     FeatureOperations,
     GtxActivityManagerActivity,
     LanguageHandlerService,
+    LogoutCleanupService,
+    MaintenanceModeService,
     MarkupLanguageOperations,
     MessageService,
     NodeOperations,
     PermissionsService,
     UserSettingsService,
     UsersnapService,
-} from './core';
-import { ActivityManagerComponent } from './core/components/activity-manager';
-import { LoggingInOverlayComponent } from './core/components/logging-in-overlay/logging-in-overlay.component';
-import { MessageBodyComponent } from './core/components/message-body';
-import { MessageInboxComponent } from './core/components/message-inbox/message-inbox.component';
-import { MessageListComponent } from './core/components/message-list/message-list.component';
-import { BreadcrumbsService } from './core/providers/breadcrumbs/breadcrumbs.service';
-import { LogoutCleanupService } from './core/providers/logout-cleanup/logout-cleanup.service';
-import { MaintenanceModeService } from './core/providers/maintenance-mode/maintenance-mode.service';
-import { AdminOperations } from './core/providers/operations/admin/admin.operations';
-import { AuthOperations } from './core/providers/operations/auth';
-import { GenericRouterOutletComponent } from './shared/components/generic-router-outlet/generic-router-outlet.component';
-import { IconCheckboxComponent } from './shared/components/icon-checkbox/icon-checkbox.component';
-import { ActionAllowedDirective } from './shared/directives/action-allowed/action-allowed.directive';
+} from './core/providers';
+import { GenericRouterOutletComponent, IconCheckboxComponent } from './shared/components';
+import { ActionAllowedDirective } from './shared/directives';
 import { AppStateService } from './state';
 import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from './state/utils/test-app-state';
 

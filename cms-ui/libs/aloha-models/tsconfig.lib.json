@@ -1,11 +1,7 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "declaration": true,
-        "types": [
-            "node",
-            "jquery"
-        ]
+        "declaration": true
     },
     "exclude": [
         "jest.config.ts",

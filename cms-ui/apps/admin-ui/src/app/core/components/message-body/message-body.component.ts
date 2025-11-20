@@ -7,8 +7,8 @@ import {
     OnChanges,
     Output,
 } from '@angular/core';
+import { MessageLink, parseMessage } from '@gentics/cms-components';
 import { ChangesOf } from '@gentics/ui-core';
-import { MessageLink, parseMessage } from './message-parsing';
 
 /**
  * A component that parses a message's body and inserts links where appropriate.
@@ -18,7 +18,7 @@ import { MessageLink, parseMessage } from './message-parsing';
     templateUrl: './message-body.tpl.html',
     styleUrls: ['./message-body.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MessageBodyComponent implements OnChanges {
 
@@ -29,7 +29,7 @@ export class MessageBodyComponent implements OnChanges {
      * The list of nodes the current user can see.
      * Used to parse links in messages.
      */
-    @Input() nodes: { id: number, name: string }[];
+    @Input() nodes: { id: number; name: string }[];
 
     /** Keep the message body in a single line */
     @Input() set singleLine(val: boolean) {

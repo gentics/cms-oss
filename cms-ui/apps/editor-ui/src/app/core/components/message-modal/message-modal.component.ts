@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, MessageLink } from '@gentics/cms-components';
 import { Message, Node, Normalized } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -7,7 +7,6 @@ import { map } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 import { Api } from '../../providers/api/api.service';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
-import { MessageLink } from '../message-body';
 
 @Component({
     selector: 'message-modal',

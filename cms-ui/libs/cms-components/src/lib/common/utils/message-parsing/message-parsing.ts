@@ -1,23 +1,14 @@
-export interface MessageLink {
-    type: 'page';
-    id: number;
-    textBefore: string;
-    name: string;
-    nodeName: string;
-    fullPath: string;
-}
+import { MessageLink, MessageLinkInfos } from '../../models';
 
-
-// tslint:disable
 /**
  * Some messages contain a link to a page or pages and need to be parsed.
  * Sorry.
  *
  * Source:
- *   https://git.gentics.com/psc/contentnode/blob/dev/contentnode-lib/src/main/resources/contentnode_de_DE.properties
- *   https://git.gentics.com/psc/contentnode/blob/dev/contentnode-lib/src/main/resources/contentnode_en_EN.properties
+ * cms-core/src/main/resources/contentnode_de_DE.properties
+ * cms-core/src/main/resources/contentnode_en_EN.properties
  */
-const knownMessagePatterns = [
+const KNOWN_MESSAGE_PATTERNS = [
     'The translation master {{page}} of page {{page}} has changed.',
     'The page {{page}} has been taken into revision.',
     'The page {{page}} has been taken into revision.\n\n--\n\n{{message}}',
@@ -42,38 +33,37 @@ const knownMessagePatterns = [
     'Die Seite {{page}} wurde veröffentlicht.',
     ' möchte die Seite {{page}} veröffentlichen.',
     ' hat Ihnen die Seite {{page}} zugewiesen.',
-    'Der Link-Tag "{{tag}}" in der Seite {{page}} ist nicht mehr gültig, da die Zielseite {{page}} {{status}} wurde.'
+    'Der Link-Tag "{{tag}}" in der Seite {{page}} ist nicht mehr gültig, da die Zielseite {{page}} {{status}} wurde.',
 ].map(placeholderStringToRegExp);
 // tslint:enable
 
-const placeholderPatterns: {[k: string]: RegExp} = {
-    'date': /[0-9.:\-AMP,\/]+( [0-9.:\-AMP,\/]+)*/,
-    'folder': /\([^\n]+\)|[^\n]+/,
-    'id': /([0-9]*)/,
-    'node': /\([^\n]+\)|[^\n]+/,
-    'message': /[\s\S]+/,
-    'page': /(([^/\n]+)[^\n]*?\/([^/\n]+?)) \((\d+)\)|\((\d+)\) (([^/\n]+)[^\n]*?\/([^/\n]+?))/,
-    'status': /[\w ]+/,
-    'tag': /[a-zA-Z0-9_\-]+/,
-    'user': /[^\n]+ [^\n]+/
+const placeholderPatterns: { [k: string]: RegExp } = {
+    date: /[0-9.:\-AMP,/]+( [0-9.:\-AMP,/]+)*/,
+    folder: /\([^\n]+\)|[^\n]+/,
+    id: /([0-9]*)/,
+    node: /\([^\n]+\)|[^\n]+/,
+    message: /[\s\S]+/,
+    page: /(([^/\n]+)[^\n]*?\/([^/\n]+?)) \((\d+)\)|\((\d+)\) (([^/\n]+)[^\n]*?\/([^/\n]+?))/,
+    status: /[\w ]+/,
+    tag: /[a-zA-Z0-9_-]+/,
+    user: /[^\n]+ [^\n]+/,
 };
-
 
 /**
  * Extracts the information from a message received by the backend and transforms it into links.
  */
-export function parseMessage(message: string, nodes?: { id: number, name: string }[]): { links: MessageLink[], textAfterLinks: string } {
+export function parseMessage(message: string, nodes?: { id: number; name: string }[]): { links: MessageLink[]; textAfterLinks: string } {
     message = message.toString();
     // Iterate over all known patterns and try to find one that might match (fast)
     // and then check if its parts also match (slow but exact).
-    for (let pattern of knownMessagePatterns) {
-        let matched = message.match(pattern.regExp);
+    for (const pattern of KNOWN_MESSAGE_PATTERNS) {
+        const matched = message.match(pattern.regExp);
 
         if (matched) {
-            let matchedGroups: string[] = matched.slice(1);
-            let placeholderGroups: string[][] = [];
-            let allPlaceholdersMatch = pattern.placeholders.every((groupName, groupIndex) => {
-                let placeholder = matchPlaceholder(groupName, matchedGroups[2 * groupIndex + 1]);
+            const matchedGroups: string[] = matched.slice(1);
+            const placeholderGroups: string[][] = [];
+            const allPlaceholdersMatch = pattern.placeholders.every((groupName, groupIndex) => {
+                const placeholder = matchPlaceholder(groupName, matchedGroups[2 * groupIndex + 1]);
                 if (placeholder.isMatch) {
                     placeholderGroups.push(placeholder.matches);
                 }
@@ -99,29 +89,32 @@ export function parseMessage(message: string, nodes?: { id: number, name: string
  * Creates links for pages and ids, ignores other placeholders
  * @internal
  */
-function extractLinkInfo(matchedGroups: string[], placeholderGroups: string[][], placeholderNames: string[]):
-        { links: MessageLink[], textAfterLinks: string } {
+function extractLinkInfo(
+    matchedGroups: string[],
+    placeholderGroups: string[][],
+    placeholderNames: string[],
+): MessageLinkInfos {
 
     let textBefore = '';
-    let links: MessageLink[] = [];
+    const links: MessageLink[] = [];
 
     placeholderNames.forEach((placeholderName, index) => {
         textBefore += matchedGroups[index * 2];
-        let groupText = matchedGroups[index * 2 + 1];
+        const groupText = matchedGroups[index * 2 + 1];
 
         if (placeholderName === 'id') {
-            let groups = placeholderGroups[index];
+            const groups = placeholderGroups[index];
 
-            let id = Number(groups[0]);
+            const id = Number(groups[0]);
 
             links.push({ type: 'page', id, textBefore, name: null, nodeName: '', fullPath: '' });
             textBefore = '';
         } else if (placeholderName === 'page') {
-            let groups = placeholderGroups[index];
-            let fullPath = groups[0] || groups[5];
-            let nodeName = groups[1] || groups[6] || '';
-            let name = groups[2] || groups[7] || '';
-            let id = Number(groups[3] != null ? groups[3] : groups[4]);
+            const groups = placeholderGroups[index];
+            const fullPath = groups[0] || groups[5];
+            const nodeName = groups[1] || groups[6] || '';
+            const name = groups[2] || groups[7] || '';
+            const id = Number(groups[3] != null ? groups[3] : groups[4]);
 
             links.push({ type: 'page', id, textBefore, name, nodeName, fullPath });
             textBefore = '';
@@ -130,20 +123,20 @@ function extractLinkInfo(matchedGroups: string[], placeholderGroups: string[][],
         }
     });
 
-    let textAfterLinks = textBefore + matchedGroups[matchedGroups.length - 1];
+    const textAfterLinks = textBefore + matchedGroups[matchedGroups.length - 1];
     return { links, textAfterLinks };
 }
 
 /** @internal */
-export function matchPlaceholder(name: string, text: string): { isMatch: boolean, matches?: string[] } {
-    let pattern: RegExp = placeholderPatterns[name];
+export function matchPlaceholder(name: string, text: string): { isMatch: boolean; matches?: string[] } {
+    const pattern: RegExp = placeholderPatterns[name];
     if (pattern) {
-        let rx = new RegExp('^(?:' + pattern.source + ')$');
-        let matches = text.toString().match(rx);
+        const rx = new RegExp('^(?:' + pattern.source + ')$');
+        const matches = text.toString().match(rx);
         if (matches) {
             return {
                 isMatch: true,
-                matches: matches.slice(1)
+                matches: matches.slice(1),
             };
         }
     }
@@ -154,15 +147,15 @@ export function matchPlaceholder(name: string, text: string): { isMatch: boolean
  * Parses "Hello {{name}}!" to { pattern: /^(Hello )(.+?)(!)/, placeholders: ["name"] }
  * @internal
  */
-export function placeholderStringToRegExp(str: string): { regExp: RegExp, placeholders: string[] } {
-    let placeholders: string[] = [];
-    let regexParts = ['^'];
-    let findGroupsRegEx = /([\s\S]*?)\{\{\s*([^\}\s]+)\s*\}\}/g;
+export function placeholderStringToRegExp(str: string): { regExp: RegExp; placeholders: string[] } {
+    const placeholders: string[] = [];
+    const regexParts = ['^'];
+    const findGroupsRegEx = /([\s\S]*?)\{\{\s*([^}\s]+)\s*\}\}/g;
     let startOfRemainingText = 0;
-    let match: RegExpExecArray;
+    let match: RegExpExecArray | null = null;
 
     // Matches Text before a group name and the group name
-    while (match = findGroupsRegEx.exec(str)) {
+    while ((match = findGroupsRegEx.exec(str)) != null) {
         regexParts.push('(', replaceRegExpSpecialChars(match[1]), ')');
         placeholders.push(match[2]);
         regexParts.push('([\\s\\S]*?)');
@@ -172,7 +165,7 @@ export function placeholderStringToRegExp(str: string): { regExp: RegExp, placeh
     regexParts.push('(', replaceRegExpSpecialChars(str.substr(startOfRemainingText)), ')');
     regexParts.push('$');
 
-    let regExp = new RegExp(regexParts.join(''));
+    const regExp = new RegExp(regexParts.join(''));
     return { regExp, placeholders };
 }
 
@@ -180,28 +173,28 @@ export function placeholderStringToRegExp(str: string): { regExp: RegExp, placeh
  * Replaces special characters for a string to be used in `new RegExp(userInput)`
  */
 export function replaceRegExpSpecialChars(input: string): string {
-    return input.replace(/[\^\$\[\]\(\)\{\}\.\+\*\?\|]/g, '\\$&').replace(/\n/g, '\\n');
+    return input.replace(/[\^$[\](){}.+*?|]/g, '\\$&').replace(/\n/g, '\\n');
 }
 
 /**
  * Finds links by a pattern like "Node name/Folder1/Folder2/Page name" (15)
- *   or (15) "Node name/Folder1/Folder2/Page name"
+ * or (15) "Node name/Folder1/Folder2/Page name"
  */
-export function findPageLinks(input: string, nodes: { id: number, name: string }[]): { links: MessageLink[], textAfterLinks: string } {
+export function findPageLinks(input: string, nodes: { id: number; name: string }[]): { links: MessageLink[]; textAfterLinks: string } {
 
     // Matches any node name
     const nodeNamePattern = nodes
-        .filter(node => node != null)
-        .map(node => replaceRegExpSpecialChars(node.name)).join('|');
+        .filter((node) => node != null)
+        .map((node) => replaceRegExpSpecialChars(node.name)).join('|');
 
     // Matches "/folder/", "/some folder/", "/folder a/folder b/"
-    const pathPattern = `/(?:[^/\\n]+?/)*?`;
+    const pathPattern = '/(?:[^/\\n]+?/)*?';
 
     // Matches "page", "a page", "some page", ...
-    const pageNamePattern = `[^/\\n]+?`;
+    const pageNamePattern = '[^/\\n]+?';
 
     // Matches "(15)", "(155124)"
-    const idPattern = `\\((\\d+)\\)`;
+    const idPattern = '\\((\\d+)\\)';
 
     // Matches "nodeName/folderName/pageName"
     const fullPathPattern = `((${nodeNamePattern})${pathPattern}(${pageNamePattern}))`;
@@ -209,24 +202,24 @@ export function findPageLinks(input: string, nodes: { id: number, name: string }
     // Matches '"nodeName/folderName/pageName" (id)' or '(id) "nodeName/folderName/pageName"'
     const pageLinkPattern = `"${fullPathPattern}" ${idPattern}|${idPattern} "${fullPathPattern}"`;
 
-    let linkRx = new RegExp(pageLinkPattern, 'g');
+    const linkRx = new RegExp(pageLinkPattern, 'g');
 
-    let links: MessageLink[] = [];
+    const links: MessageLink[] = [];
     let lastMatchEnd = 0;
-    let matched: RegExpExecArray;
+    let matched: RegExpExecArray | null = null;
 
-    while (matched = linkRx.exec(input)) {
-        let textBefore = input.substring(lastMatchEnd, matched.index);
-        let fullPath = matched[1] || matched[6];
-        let nodeName = matched[2] || matched[7] || '';
-        let name = matched[3] || matched[8] || '';
-        let id = Number(matched[4] != null ? matched[4] : matched[5]);
+    while ((matched = linkRx.exec(input)) != null) {
+        const textBefore = input.substring(lastMatchEnd, matched.index);
+        const fullPath = matched[1] || matched[6];
+        const nodeName = matched[2] || matched[7] || '';
+        const name = matched[3] || matched[8] || '';
+        const id = Number(matched[4] != null ? matched[4] : matched[5]);
 
         links.push({ type: 'page', id, textBefore, name, nodeName, fullPath });
         lastMatchEnd = linkRx.lastIndex;
     }
 
-    let textAfterLinks = input.substr(lastMatchEnd);
+    const textAfterLinks = input.substr(lastMatchEnd);
 
     return { links, textAfterLinks };
 }

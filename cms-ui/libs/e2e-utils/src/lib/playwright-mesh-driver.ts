@@ -1,13 +1,14 @@
 import { GenericErrorResponse } from '@gentics/mesh-models';
 import {
     MeshClientDriver,
+    MeshRestClientAbortError,
     MeshRestClientRequestData,
     MeshRestClientRequestError,
     MeshRestClientResponse,
 } from '@gentics/mesh-rest-client';
 import { APIRequestContext, APIResponse } from '@playwright/test';
 
-export async function parseFetchErrorFromAPI(request: MeshRestClientRequestData, res: APIResponse): Promise<never> {
+async function parseFetchErrorFromAPI(request: MeshRestClientRequestData, res: APIResponse): Promise<never> {
     let raw: string;
     let parsed: GenericErrorResponse;
     let bodyError: Error;
@@ -33,39 +34,39 @@ export async function parseFetchErrorFromAPI(request: MeshRestClientRequestData,
     );
 }
 
-export async function jsonFetchResponseHandler<T>(request: MeshRestClientRequestData, res: APIResponse): Promise<T> {
+async function jsonFetchResponseHandler<T>(request: MeshRestClientRequestData, res: APIResponse): Promise<T> {
     if (res.ok) {
         return res.json()
-            .catch(err => {
+            .catch((err) => {
                 if (err instanceof SyntaxError) {
-                    return res.text().then(data => {
+                    return res.text().then((data) => {
                         if (!data) {
                             return {};
                         }
                         throw err;
-                    })
+                    });
                 }
                 throw err;
             });
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    return await parseFetchErrorFromAPI(request, res);
 }
 
-export async function textFetchResponseHandler(request: MeshRestClientRequestData, res: APIResponse): Promise<string> {
+async function textFetchResponseHandler(request: MeshRestClientRequestData, res: APIResponse): Promise<string> {
     if (res.ok) {
         return res.text();
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    return await parseFetchErrorFromAPI(request, res);
 }
 
-export async function blobFetchResponseHandler(request: MeshRestClientRequestData, res: APIResponse): Promise<Blob> {
+async function blobFetchResponseHandler(request: MeshRestClientRequestData, res: APIResponse): Promise<Blob> {
     if (res.ok) {
-        return res.body().then(buffer => new Blob([buffer]));
+        return res.body().then((buffer) => new Blob([buffer as any]));
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    return await parseFetchErrorFromAPI(request, res);
 }
 
 interface RequestData {
@@ -75,7 +76,7 @@ interface RequestData {
     method?: string;
 }
 
-export class MeshPlaywrightDriver implements MeshClientDriver {
+export class PlaywrightMeshDriver implements MeshClientDriver {
 
     /**
      * The session secret which should be sent when this driver is `encapsulated`.
@@ -164,7 +165,6 @@ export class MeshPlaywrightDriver implements MeshClientDriver {
      * Interceptor function which can be overriden.
      * Useful for modifications from/to the response data (Headers, Response-Code, etc) which would be
      * absent from the parsed JSON body.
-     *
      * @param request The request that has been sent.
      * @param response The response from the API without any prior handling.
      * @returns The response that should be processed/forwarded to the client.
@@ -185,7 +185,7 @@ export class MeshPlaywrightDriver implements MeshClientDriver {
 
             Object.entries(request.params).forEach(([key, value]) => {
                 if (Array.isArray(value)) {
-                    value.forEach(v => q.append(key, v));
+                    value.forEach((v) => q.append(key, v));
                 } else {
                     q.append(key, value);
                 }
@@ -215,14 +215,13 @@ export class MeshPlaywrightDriver implements MeshClientDriver {
                 headers: options.headers,
                 method: options.method,
             })
-                .then(res => handler(res));
+                .then((res) => handler(res));
 
             return sentRequest;
-        }
+        };
 
         return {
-            // TODO: Create abort class
-            cancel: () => abortController.abort(/*new MeshRestClientRequestError(request)*/),
+            cancel: () => abortController.abort(new MeshRestClientAbortError(request)),
             send: () => sendRequest(),
         };
     }

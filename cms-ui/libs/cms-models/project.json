@@ -3,32 +3,45 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/cms-models/src",
     "projectType": "library",
-    "tags": ["lib", "models", "publish"],
+    "tags": [
+        "lib",
+        "models",
+        "publish"
+    ],
     "targets": {
         "build": {
-            "executor": "@nx/js:tsc",
-            "outputs": ["{options.outputPath}"],
+            "executor": "@nx/esbuild:esbuild",
+            "outputs": [
+                "{options.outputPath}"
+            ],
+            "defaultConfiguration": "production",
             "options": {
-                "outputPath": "dist/libs/cms-models",
-                "tsConfig": "libs/cms-models/tsconfig.lib.json",
-                "packageJson": "libs/cms-models/package.json",
-                "main": "libs/cms-models/src/public-api.ts",
+                "main": "{projectRoot}/src/public-api.ts",
+                "outputPath": "dist/{projectRoot}",
+                "outputFileName": "main.js",
+                "tsConfig": "{projectRoot}/tsconfig.lib.json",
+                "platform": "node",
+                "generatePackageJson": true,
+                "format": [
+                    "esm",
+                    "cjs"
+                ],
                 "assets": []
             },
             "configurations": {
-                "production": {},
-                "development": {},
-                "ci": {}
+                "development": {
+                    "minify": false
+                },
+                "production": {
+                    "minify": true
+                },
+                "ci": {
+                    "minify": true
+                }
             }
         },
         "test": {
             "executor": "nx:noop"
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/cms-models"
-            }
         }
     }
 }

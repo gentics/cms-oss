@@ -12,8 +12,33 @@
     "useInferencePlugins": false,
     "defaultBase": "dev",
     "release": {
-        "projectsRelationship": "independent",
-        "projects": ["tag:lib"]
+        "projects": [
+            "tag:publish"
+        ],
+        "version": {
+            "git": {
+                "commit": false,
+                "push": false,
+                "tag": false
+            },
+            "preVersionCommand": "npm run nx -- run-many -t build",
+            "currentVersionResolver": "registry",
+            "versionPrefix": "^",
+            "manifestRootsToUpdate": [
+                "{workspaceRoot}/{projectRoot}",
+                "{workspaceRoot}/dist/{projectRoot}"
+            ],
+            "preserveLocalDependencyProtocols": false
+        },
+        "changelog": {
+            "git": {
+                "commit": false,
+                "push": false,
+                "tag": false
+            },
+            "projectChangelogs": false,
+            "workspaceChangelog": false
+        }
     },
     "plugins": [
         {
@@ -35,7 +60,7 @@
             "style": "scss",
             "linter": "eslint",
             "unitTestRunner": "jest",
-            "e2eTestRunner": "cypress"
+            "e2eTestRunner": "playwright"
         },
         "@nx/angular:library": {
             "linter": "eslint",
@@ -171,7 +196,10 @@
         "lint": {
             "executor": "@nx/eslint:lint",
             "cache": true,
-            "inputs": ["default", "linting"],
+            "inputs": [
+                "default",
+                "linting"
+            ],
             "options": {
                 "lintFilePatterns": [
                     "{projectRoot}/**/*.[jt]s"
@@ -181,19 +209,55 @@
             }
         },
         "serve": {
-            "inputs": ["default", "^default"]
+            "inputs": [
+                "default",
+                "^default"
+            ]
         },
         "build": {
-            "dependsOn": ["^build"],
-            "inputs": ["production", "^production"],
+            "dependsOn": [
+                "^build"
+            ],
+            "inputs": [
+                "production",
+                "^production"
+            ],
             "cache": true
         },
+        "@nx/js:tsc": {
+            "cache": true,
+            "dependsOn": [
+                "^build"
+            ],
+            "inputs": [
+                "production",
+                "^production"
+            ]
+        },
+        "@nx/esbuild:esbuild": {
+            "cache": true,
+            "dependsOn": [
+                "^build"
+            ],
+            "inputs": [
+                "production",
+                "^production"
+            ]
+        },
         "test": {
-            "inputs": ["default", "karmaTests", "^default"],
+            "inputs": [
+                "default",
+                "karmaTests",
+                "^default"
+            ],
             "cache": true
         },
         "@nx/jest:jest": {
-            "inputs": ["default", "jestTests", "^default"],
+            "inputs": [
+                "default",
+                "jestTests",
+                "^default"
+            ],
             "cache": true,
             "options": {
                 "passWithNoTests": true
@@ -206,7 +270,11 @@
             }
         },
         "@nx/cypress:cypress": {
-            "inputs": ["default", "cypressTests", "^default"],
+            "inputs": [
+                "default",
+                "cypressTests",
+                "^default"
+            ],
             "cache": true,
             "parallelism": false,
             "configurations": {
@@ -216,7 +284,11 @@
             }
         },
         "@nx/playwright:playwright": {
-            "inputs": ["default", "playwrightTests", "^default"],
+            "inputs": [
+                "default",
+                "playwrightTests",
+                "^default"
+            ],
             "cache": false,
             "parallelism": false,
             "configurations": {
@@ -224,6 +296,11 @@
                     "watch": true
                 },
                 "ci": {}
+            }
+        },
+        "nx-release-publish": {
+            "options": {
+                "packageRoot": "dist/{projectRoot}"
             }
         }
     }

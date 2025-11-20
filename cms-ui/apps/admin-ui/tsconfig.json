@@ -1,10 +1,19 @@
 {
+    "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "outDir": "../../dist/out-tsc",
-        "target": "es2022"
+        "moduleResolution": "bundler",
+        "module": "preserve"
     },
     "files": [],
     "include": [],
+    "angularCompilerOptions": {
+        "annotateForClosureCompiler": true,
+        "skipTemplateCodegen": false,
+        "strictMetadataEmit": true,
+        "strictTemplates": false,
+        "strictInjectionParameters": true,
+        "enableResourceInlining": false
+    },
     "references": [
         {
             "path": "./tsconfig.app.json"
@@ -16,13 +25,4 @@
             "path": "./cypress/tsconfig.json"
         }
     ],
-    "extends": "../../tsconfig.json",
-    "angularCompilerOptions": {
-        "annotateForClosureCompiler": true,
-        "skipTemplateCodegen": false,
-        "strictMetadataEmit": true,
-        "strictTemplates": false,
-        "strictInjectionParameters": true,
-        "enableResourceInlining": false
-    }
 }

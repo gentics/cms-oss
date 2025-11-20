@@ -4,6 +4,7 @@ import { Response as GCMSResponse } from '@gentics/cms-models';
 import {
     GCMSClientDriver,
     GCMSRestClientAbortError,
+    GCMSRestClientRequest,
     GCMSRestClientRequestData,
     GCMSRestClientRequestError,
     validateResponseObject,
@@ -34,9 +35,9 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
 
         Object.entries(request.params).forEach(([key, value]) => {
             if (Array.isArray(value)) {
-                value.forEach((v, i) => q = (i === 0 ? q.set(key, v) : q.append(key, v)));
+                value.forEach((v, i) => q = (i === 0 ? q.set(key, `${v}`) : q.append(key, `${v}`)));
             } else {
-                q = q.set(key, value);
+                q = q.set(key, `${value}`);
             }
         });
 
@@ -47,7 +48,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
             observe: 'response',
             responseType: 'text',
         }).pipe(
-            map(res => {
+            map((res) => {
                 if (res.ok) {
                     return bodyHandler(res.body, res.status);
                 }
@@ -75,7 +76,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
             observe: 'response',
             responseType: 'blob',
         }).pipe(
-            map(res => {
+            map((res) => {
                 if (res.ok) {
                     return res.body;
                 }
@@ -93,7 +94,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
     }
 
     protected errorHandler<T>(request: GCMSRestClientRequestData): OperatorFunction<T, T> {
-        return catchError(err => {
+        return catchError((err) => {
             if (!(err instanceof HttpErrorResponse)) {
                 return throwError(() => new Error(`Unexpected error while performing request "${request.method} ${request.url}"`, { cause: err }));
             }
@@ -113,9 +114,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
                 bodyError = err;
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             return throwError(() => new GCMSRestClientRequestError(
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `Request "${request.method} ${request.url}" responded with error code ${err.status}: "${err.statusText}"`,
                 request,
                 err.status,
@@ -130,8 +129,11 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         let promiseSub: Subscription;
         let canceled = false;
 
-        return {
-            rx: () => obs,
+        /*
+         * This hack only exists, because otherwise ng-packagr won't build,
+         * as it apparently just can't handle types correctly.
+         */
+        const tmp: GCMSRestClientRequest<T> = {
             send: () => {
                 if (canceled) {
                     return Promise.reject(new GCMSRestClientAbortError(request));
@@ -168,6 +170,13 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
                 canceled = true;
             },
         };
+
+        const obj: NGGCMSRestClientRequest<T> = {
+            ...tmp,
+            rx: () => obs,
+        };
+
+        return obj;
     }
 
     performMappedRequest<T>(

@@ -50,12 +50,6 @@
                     "devServerTarget": "editor-ui:build:ci"
                 }
             }
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/form-generator"
-            }
         }
     }
 }

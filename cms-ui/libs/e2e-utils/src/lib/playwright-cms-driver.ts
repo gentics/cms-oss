@@ -9,7 +9,7 @@ import {
 } from '@gentics/cms-rest-client';
 import { APIRequestContext, APIResponse } from '@playwright/test';
 
-export async function parseFetchErrorFromAPI(request: GCMSRestClientRequestData, res: APIResponse): Promise<never> {
+async function parseFetchErrorFromAPI(request: GCMSRestClientRequestData, res: APIResponse): Promise<never> {
     let raw: string;
     let parsed: GCMSResponse;
     let bodyError: Error;
@@ -35,7 +35,7 @@ export async function parseFetchErrorFromAPI(request: GCMSRestClientRequestData,
     );
 }
 
-export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequestData, res: APIResponse): Promise<T> {
+async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequestData, res: APIResponse): Promise<T> {
     if (!res.ok) {
         await parseFetchErrorFromAPI(request, res);
     }
@@ -48,7 +48,7 @@ export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequest
         if (!(err instanceof SyntaxError)) {
             throw err;
         }
-        return res.text().then(data => {
+        return res.text().then((data) => {
             // Edge-case when the API responds in non-json.
             // Either old endpoint (see `auth/ssologin`), or some kind of proxy error
             if (!data) {
@@ -59,20 +59,20 @@ export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequest
     }
 }
 
-export async function textFetchResponseHandler(request: GCMSRestClientRequestData, res: APIResponse): Promise<string> {
+async function textFetchResponseHandler(request: GCMSRestClientRequestData, res: APIResponse): Promise<string> {
     if (res.ok) {
         return res.text();
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    return await parseFetchErrorFromAPI(request, res);
 }
 
-export async function blobFetchResponseHandler(request: GCMSRestClientRequestData, res: APIResponse): Promise<Blob> {
+async function blobFetchResponseHandler(request: GCMSRestClientRequestData, res: APIResponse): Promise<Blob> {
     if (res.ok) {
-        return res.body().then(buffer => new Blob([buffer]));
+        return res.body().then((buffer) => new Blob([buffer as any]));
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    return await parseFetchErrorFromAPI(request, res);
 }
 
 interface RequestData {
@@ -82,7 +82,7 @@ interface RequestData {
     method?: string;
 }
 
-export class GCMSPlaywrightDriver implements GCMSClientDriver {
+export class PlaywrightGCMSDriver implements GCMSClientDriver {
 
     /**
      * The session secret which should be sent when this driver is `encapsulated`.
@@ -171,7 +171,6 @@ export class GCMSPlaywrightDriver implements GCMSClientDriver {
      * Interceptor function which can be overriden.
      * Useful for modifications from/to the response data (Headers, Response-Code, etc) which would be
      * absent from the parsed JSON body.
-     *
      * @param request The request that has been sent.
      * @param response The response from the API without any prior handling.
      * @returns The response that should be processed/forwarded to the client.
@@ -192,7 +191,7 @@ export class GCMSPlaywrightDriver implements GCMSClientDriver {
 
             Object.entries(request.params).forEach(([key, value]) => {
                 if (Array.isArray(value)) {
-                    value.forEach(v => q.append(key, v));
+                    value.forEach((v) => q.append(key, v));
                 } else {
                     q.append(key, value);
                 }
@@ -222,10 +221,10 @@ export class GCMSPlaywrightDriver implements GCMSClientDriver {
                 headers: options.headers,
                 method: options.method,
             })
-                .then(res => handler(res));
+                .then((res) => handler(res));
 
             return sentRequest;
-        }
+        };
 
         return {
             cancel: () => abortController.abort(new GCMSRestClientAbortError(request)),

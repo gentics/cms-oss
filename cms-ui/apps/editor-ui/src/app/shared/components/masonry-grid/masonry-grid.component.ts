@@ -96,7 +96,7 @@ export class MasonryGridComponent implements AfterContentInit, OnDestroy, AfterC
 
     private initializeMasonryGrid(): void {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.masonryLayout = new Masonry(this.elementRef.nativeElement, {
+        this.masonryLayout = new (Masonry as any)(this.elementRef.nativeElement, {
             itemSelector: 'masonry-item,[masonryItem]',
             columnWidth: Number(this.columnWidth),
             fitWidth: true,

@@ -50,7 +50,7 @@ export class NodeApi {
      */
     getNodes(options?: NodeListRequestOptions): Observable<PermissionListResponse<Node<Raw>>> {
         if (options?.sort) {
-            const copy: any = {...options };
+            const copy: any = { ...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);
             options = copy;
         }
@@ -60,7 +60,6 @@ export class NodeApi {
 
     /**
      * Create a new node. See NodeResourceImpl#checkCreateRequest for a detailed list of constraints on the given request.
-     *
      * @see https://gentics.com/infoportal/guides/restapi/resource_NodeResource.html#resource_NodeResource_add_PUT
      */
     addNode(payload: NodeCreateRequest): Observable<NodeResponse> {
@@ -72,7 +71,7 @@ export class NodeApi {
      */
     getNodeFeatureList(options?: NodeFeatureListRequestOptions): Observable<FeatureModelListResponse> {
         if (options?.sort) {
-            const copy: any = {...options };
+            const copy: any = { ...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);
             options = copy;
         }
@@ -95,7 +94,6 @@ export class NodeApi {
 
     /**
      * Saves the values specified in the request to the node.
-     *
      * @see https://gentics.com/infoportal/guides/restapi/resource_NodeResource.html#resource_NodeResource_update_POST
      */
     updateNode(nodeId: number, payload: NodeSaveRequest): Observable<ItemSaveResponse> {
@@ -118,7 +116,6 @@ export class NodeApi {
 
     /**
      * Set ordered list of languages
-     *
      * @see https://gentics.com/infoportal/guides/restapi/resource_NodeResource.html#resource_NodeResource_setLanguages_POST
      */
     updateNodeLanguages(nodeId: number, payload: Language[]): Observable<NodeLanguagesListResponse> {
@@ -141,7 +138,6 @@ export class NodeApi {
 
     /**
      * Load settings specific to the specified node.
-     *
      * @see https://gentics.com/infoportal/guides/restapi/resource_NodeResource.html#resource_NodeResource_settings_GET
      */
     getNodeSettings(nodeId: number): Observable<NodeSettingsResponse> {
@@ -152,14 +148,14 @@ export class NodeApi {
      * Deactivate the feature for the node
      */
     deactivateNodeFeature(nodeId: number, feature: keyof NodeFeatures): Observable<ItemDeleteResponse> {
-        return this.apiBase.delete(`node/${nodeId}/features/${feature}`);
+        return this.apiBase.delete(`node/${nodeId}/features/${feature as any}`);
     }
 
     /**
      * Activate the feature for the node
      */
     activateNodeFeature(nodeId: number, feature: keyof NodeFeatures): Observable<ItemSaveResponse> {
-        return this.apiBase.put(`node/${nodeId}/features/${feature}`, undefined);
+        return this.apiBase.put(`node/${nodeId}/features/${feature as any}`, undefined);
     }
 
     /**
@@ -195,7 +191,7 @@ export class NodeApi {
      */
     getNodeTemplates(nodeId: number, options?: TemplateListRequest): Observable<PermissionListResponse<Template>> {
         if (options?.sort) {
-            const copy: any = {...options };
+            const copy: any = { ...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);
             options = copy;
         }
@@ -216,7 +212,6 @@ export class NodeApi {
 
     /**
      * Remove a template from a node.
-     *
      * @see https://gentics.com/infoportal/guides/restapi/resource_NodeResource.html#resource_NodeResource_removeTemplate_DELETE
      */
     removeNodeTemplate(nodeId: number | string, templateId: EntityIdType): Observable<ItemDeleteResponse> {

@@ -2,28 +2,29 @@
 /* eslint-disable import/no-nodejs-modules */
 import { Variant } from '@gentics/cms-models';
 import {
-    ENV_CI,
-    ENV_E2E_CMS_IMPORTER_PASSWORD,
-    ENV_E2E_CMS_IMPORTER_USERNAME,
-    ENV_E2E_CMS_VARIANT,
     FormattedText,
     FORMATTING_NODES,
     LoginInformation,
 } from './common';
+import {
+    ENV_E2E_CMS_IMPORTER_PASSWORD,
+    ENV_E2E_CMS_IMPORTER_USERNAME,
+    ENV_E2E_CMS_VARIANT,
+} from './config';
 
 export function envAll(env: string | string[]): boolean;
 export function envAll(...vars: string[]): boolean {
-    return vars.every(envName => process.env[envName]);
+    return vars.every((envName) => process.env[envName]);
 }
 
 export function envAny(env: string | string[]): boolean;
 export function envAny(...vars: string[]): boolean {
-    return vars.some(envName => process.env[envName]);
+    return vars.some((envName) => process.env[envName]);
 }
 
 export function envNone(env: string | string[]): boolean;
 export function envNone(...vars: string[]): boolean {
-    return vars.every(envName => !process.env[envName]);
+    return vars.every((envName) => !process.env[envName]);
 }
 
 export function isVariant(variant: Variant): boolean {
@@ -135,7 +136,6 @@ export function arrayEqual<T>(arr1: T[], arr2: T[], eqFn?: (a: T, b: T) => boole
  * windows selection.
  * If you wish to replace the selection, then call the `window.getSelection().removeAllRanges()`,
  * to clear the previous selection before calling this function.
- *
  * @param element The element in which the selection should be applied
  * @param start The starting index/offset from where the selection should start
  * @param end The ending index/offset until where the selection should be set.
@@ -242,7 +242,6 @@ export function selectRange(element: HTMLElement, start: number, end: number | n
  * Wrapper for `selectRange`, where the `start` and `end` position are based on the
  * `indexOf` from the `element`'s `textContent`.
  * If the text can't be found at all (i.E. `indexOf` === -1), then it returns `false`.
- *
  * @param element The element in which the selection should be applied
  * @param text The text to search and select.
  * @returns If the text was successfully selected.
@@ -274,7 +273,6 @@ export function trimAlohaEmpty(content: string): string {
 
 /**
  * Updates the selection handler in Aloha to properly select the range.
- *
  * @param win Window object where the Aloha object is available.
  * @param range The new range that should be applied/updated.
  */
@@ -310,14 +308,12 @@ combinationMatrix([1, 2, 3, 4])
 ```
  * As you can see, the matrix multiplies all variations (ignoring order),
  * and exponentionally increases the multiplications, so be careful how many items you provide.
- *
  * @param elements The elements which should be combined to build the matrix
  * @returns A fully combined matrix
  */
 export function combinationMatrix<T>(elements: T[]): T[][] {
     const out: T[][] = [];
 
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of
     for (let i = 0; i < elements.length; i++) {
         out.push([elements[i]]);
 
@@ -330,7 +326,7 @@ export function combinationMatrix<T>(elements: T[]): T[][] {
                     continue;
                 }
 
-                /** This will be filled with the range from start to end, to be appended before each entry.*/
+                /** This will be filled with the range from start to end, to be appended before each entry. */
                 const buffer: T[] = [elements[i], ...elements.slice(start, end)];
 
                 for (let k = end; k < elements.length; k++) {
@@ -367,8 +363,8 @@ export function combinationMatrix<T>(elements: T[]): T[][] {
  * @returns If the `str` value matches against the `globPattern`
  */
 export function globMatch(globPattern: string, str: string): boolean {
-    const globParts = globPattern.split('/').filter(part => part !== '');
-    const matchParts = str.split('/').filter(part => part !== '');
+    const globParts = globPattern.split('/').filter((part) => part !== '');
+    const matchParts = str.split('/').filter((part) => part !== '');
 
     let matchIdx = 0;
     let hadDeepWildcard = false;
@@ -450,20 +446,6 @@ export function hasMatchingParams(input: URLSearchParams | URL | string, params:
 
 export function matchesUrl(url: URL | string, path: string | RegExp, params?: Record<string, string>): boolean {
     return matchesPath(url, path) && (!params || hasMatchingParams(url, params));
-}
-
-/**
- * Simple helper function to convert/"parse" a environment value as bool.
- * Checks for `1`, `"1"`, `true`, and `"true"`.
- * @param value The value of the environment value
- * @returns A properly checked/converted boolean from the value.
- */
-export function isEnvBool(value: string | number | boolean): boolean {
-    return value === 1 || value === '1' || value === true || value === 'true';
-}
-
-export function isCIEnvironment(): boolean {
-    return isEnvBool(process.env[ENV_CI]);
 }
 
 export function getDefaultSystemLogin(): LoginInformation {

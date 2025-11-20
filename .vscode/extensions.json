@@ -1,5 +1,6 @@
 {
     "recommendations": [
+        "ms-playwright.playwright",
         "angular.ng-template",
         "asciidoctor.asciidoctor-vscode",
         "dbaeumer.vscode-eslint",

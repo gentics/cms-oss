@@ -44,7 +44,7 @@ describe('FetchDriver', () => {
                 text: () => Promise.resolve(JSON.stringify(RESPONSE_DATA)),
                 json: () => Promise.resolve(RESPONSE_DATA),
             });
-        })  as any;
+        }) as any;
 
         const req = driver.performMappedRequest({
             headers: {},
@@ -216,7 +216,7 @@ describe('FetchDriver', () => {
 
         try {
             await res;
-            expect.fail('Should not resolve!')
+            expect.fail('Should not resolve!');
         } catch (err) {
             // Don't use `toBeInstanceOf`, doesn't work!
             expect(err instanceof GCMSRestClientAbortError).toEqual(true);

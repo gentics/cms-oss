@@ -49,12 +49,6 @@
                     "devServerTarget": "image-editor-demo:build:ci"
                 }
             }
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/ui-core"
-            }
         }
     }
 }

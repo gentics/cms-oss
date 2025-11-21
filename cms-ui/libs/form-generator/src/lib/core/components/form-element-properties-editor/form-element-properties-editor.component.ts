@@ -89,12 +89,18 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
     }
 
     private trimValues(values: any): any {
-        if (values != null && typeof values === 'object') {
+        if (values == null) {
+            return null;
+        } else if (Array.isArray(values)) {
+            return values.map(value => typeof value === 'string' ? value.trim() : value);
+        } else if (typeof values === 'object') {
             return Object.fromEntries(
-                Object.entries(values).map(e => [e[0], (typeof e[1] === 'string') ? e[1].trim() : e[1] as any]),
+                Object.entries(values).map(entry => [entry[0], (typeof entry[1] === 'string') ? entry[1].trim() : entry[1]]),
             );
-        } else {
+        } else if (typeof values === 'string') {
             return values?.trim();
+        } else {
+            return values;
         }
     }
 

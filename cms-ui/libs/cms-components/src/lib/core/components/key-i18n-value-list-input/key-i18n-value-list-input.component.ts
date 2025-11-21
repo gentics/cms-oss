@@ -53,9 +53,9 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
 
     i18nArray = new UntypedFormArray([]);
 
-    private cvaChange: (_: any) => void;
-    public cvaTouch: any;
-    private validationChange: () => void;
+    private cvaChange: (_: any) => void = () => {};
+    public cvaTouch: () => void = () => {};
+    private validationChange: () => void = () => {};
 
     // private i18nData: CmsFormElementKeyI18nValuePair[];
     private valueChangesSubscription: Subscription;
@@ -91,6 +91,10 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     }
 
     writeValue(i18nData: CmsFormElementKeyI18nValuePair[]): void {
+        if (!Array.isArray(i18nData)) {
+            return;
+        }
+
         const data = cloneDeep(i18nData ? i18nData : []);
 
         if (data.length === this.i18nArray.length) {

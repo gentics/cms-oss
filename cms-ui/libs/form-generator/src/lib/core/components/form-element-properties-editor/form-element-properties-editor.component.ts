@@ -10,6 +10,29 @@ import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { FormEditorService } from '../../providers';
 
+/**
+ * Helper function to trim all strings recursively.
+ * If a value is not a string, it'll leave it as is.
+ * For objects, it's going through all property values, and for arrays,
+ * through all entries recursively.
+ * @param values The value to trim
+ */
+function trimRecursive(values: any): any {
+    if (values == null) {
+        return null;
+    } else if (Array.isArray(values)) {
+        return values.map(arrValue => trimRecursive(arrValue));
+    } else if (typeof values === 'object') {
+        return Object.fromEntries(
+            Object.entries(values).map(([objKey, objValue]) => [objKey, trimRecursive(objValue)]),
+        );
+    } else if (typeof values === 'string') {
+        return values.trim();
+    } else {
+        return values;
+    }
+}
+
 @Component({
     selector: 'gtx-form-element-properties-editor',
     templateUrl: './form-element-properties-editor.component.html',
@@ -89,22 +112,6 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
         }
     }
 
-    private trimValues(values: any): any {
-        if (values == null) {
-            return null;
-        } else if (Array.isArray(values)) {
-            return values.map(value => typeof value === 'string' ? value.trim() : value);
-        } else if (typeof values === 'object') {
-            return Object.fromEntries(
-                Object.entries(values).map(entry => [entry[0], (typeof entry[1] === 'string') ? entry[1].trim() : entry[1]]),
-            );
-        } else if (typeof values === 'string') {
-            return values?.trim();
-        } else {
-            return values;
-        }
-    }
-
     private createFormGroup(
         properties: CmsFormElementProperty[],
     ): void {
@@ -143,7 +150,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
             (this.properties || []).forEach((property: CmsFormElementProperty) => {
                 switch (property.type) {
                     case CmsFormElementPropertyType.SELECTABLE_OPTIONS:
-                        property.value = this.trimValues(formValues[property.name]);
+                        property.value = trimRecursive(formValues[property.name]);
                         break;
                     case CmsFormElementPropertyType.REPOSITORY_BROWSER:
                         property.value = formValues[property.name]?.id;
@@ -153,7 +160,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
                     case CmsFormElementPropertyType.SELECT:
                     case CmsFormElementPropertyType.NUMBER:
                     case CmsFormElementPropertyType.STRING:
-                        property.value_i18n = this.trimValues(formValues[property.name]);
+                        property.value_i18n = trimRecursive(formValues[property.name]);
                         break;
                 }
             });

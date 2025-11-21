@@ -1,4 +1,4 @@
-import { CmsFormElementI18nValue, CmsFormElementKeyI18nValuePair, FormSaveRequest, NodeFeature, Variant } from '@gentics/cms-models';
+import { CmsFormElementI18nValue, CmsFormElementKeyI18nValuePair, Form, FormSaveRequest, NodeFeature, Variant } from '@gentics/cms-models';
 import {
     clickNotificationAction,
     EntityImporter,
@@ -325,8 +325,8 @@ test.describe('Form Management', () => {
         }]
     }, async ({ page }) => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
-        const KEY_TEXT = '  Hello World  ';
-        const VALUE_TEXT = '\t Foo Bar Content! \n  ';
+        const KEY_TEXT = ' \n Hello World \t ';
+        const VALUE_TEXT = ' \tFoo Bar Content! \n  ';
 
         await test.step('Generic Setup', async () => {
             await navigateToApp(page);
@@ -345,6 +345,8 @@ test.describe('Form Management', () => {
             const menu = editor.locator('gtx-form-editor-menu');
             const list = editor.locator('.form-editor-form > gtx-form-editor-element-list');
 
+            await page.waitForTimeout(2_000);
+
             const menuEl = menu.locator('.form-editor-elements-container .form-editor-menu-element').nth(3);
             await menuEl.dragTo(list.locator('gtx-form-element-drop-zone').first());
 
@@ -356,9 +358,16 @@ test.describe('Form Management', () => {
             const options = elEditor.locator('[data-control="options"]');
 
             await options.locator('.add-button').click();
+
+            await page.waitForTimeout(2_000);
+
             const entry = options.locator('gtx-sortable-list .list-entry-inputs');
             // Key
             entry.locator('> gtx-input input').fill(KEY_TEXT);
+
+            // No idea why we need a timeout for this, but otherwise the key content
+            // is getting put into the value sometimes
+            await page.waitForTimeout(500);
             // Value
             entry.locator('gtx-i18n-input input').fill(VALUE_TEXT);
         });
@@ -377,7 +386,7 @@ test.describe('Form Management', () => {
             expect(Array.isArray(options)).toBe(true);
             expect(options).toHaveLength(1);
             expect(options[0].key).toEqual(KEY_TEXT.trim());
-            expect(options[0].value_i18n[LANGUAGE_DE]).toEqual(VALUE_TEXT.trim());
+            expect(options[0].value_i18n[EDITING_FORM.languages[0]]).toEqual(VALUE_TEXT.trim());
         });
     });
 });

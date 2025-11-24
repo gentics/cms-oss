@@ -1,4 +1,4 @@
-import { MOVE_DOWN_ACTION, MOVE_TO_TOP_ACTION, MOVE_UP_ACTION } from '@admin-ui/common/models/tables';
+import { MOVE_DOWN_ACTION, MOVE_TO_TOP_ACTION, MOVE_UP_ACTION } from '../src/app/common/models/tables';
 import {
     Construct,
     ConstructCategoryListResponse,
@@ -162,10 +162,6 @@ test.describe('Constructs Module', () => {
     });
 
     test.describe('Categories', () => {
-        /**
-         *
-         * @param id
-         */
         function createCategoryData(id: number): ConstructCategoryImportData {
             return {
                 [IMPORT_TYPE]: 'construct-category',
@@ -177,12 +173,6 @@ test.describe('Constructs Module', () => {
             };
         }
 
-        /**
-         *
-         * @param table
-         * @param row
-         * @param index
-         */
         async function rowShouldHaveOrder(table: Locator, row: Locator, index: number): Promise<void> {
             // Text should be correct
             await expect(row.locator('.data-column[data-id="sortorder"]')).toHaveText(new RegExp(`\\s*${index + 1}\\s*`));

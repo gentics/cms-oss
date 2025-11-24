@@ -1,14 +1,14 @@
-import { BO_NEW_SORT_ORDER, BO_ORIGINAL_SORT_ORDER, ConstructCategoryBO, EditableEntity, createMoveActions } from '@admin-ui/common';
-import { PermissionsService } from '@admin-ui/core';
-import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { AnyModelType, ConstructCategory, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { BO_NEW_SORT_ORDER, BO_ORIGINAL_SORT_ORDER, ConstructCategoryBO, EditableEntity, createMoveActions } from '../../../../common';
+import { PermissionsService } from '../../../../core';
+import { BaseSortableEntityTableComponent, DELETE_ACTION } from '../../../../shared';
+import { AppStateService } from '../../../../state';
 import { ConstructCategoryTableLoaderService } from '../../providers';
 import { ConstructCategorySortModal } from '../construct-category-sort-modal/construct-category-sort-modal.component';
 
@@ -20,6 +20,9 @@ import { ConstructCategorySortModal } from '../construct-category-sort-modal/con
     standalone: false,
 })
 export class ConstructCategoryTableComponent extends BaseSortableEntityTableComponent<ConstructCategory, ConstructCategoryBO> {
+
+    public readonly BO_NEW_SORT_ORDER = BO_NEW_SORT_ORDER;
+    public readonly BO_ORIGINAL_SORT_ORDER = BO_ORIGINAL_SORT_ORDER;
 
     protected rawColumns: TableColumn<ConstructCategoryBO>[] = [
         {

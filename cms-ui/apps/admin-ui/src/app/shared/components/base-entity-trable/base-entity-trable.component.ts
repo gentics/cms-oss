@@ -1,6 +1,5 @@
-import { BO_ID, BusinessObject, TrableRowReloadOptions } from '@admin-ui/common';
-import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import {
     CoerceOption,
     FALLBACK_TABLE_COLUMN_RENDERER,
@@ -11,9 +10,10 @@ import {
     TrableRowExpandEvent,
     coerceInstance,
 } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { Observable, Subject, Subscription, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, map, switchMap } from 'rxjs/operators';
+import { BO_ID, BusinessObject, TrableRowReloadOptions } from '../../../common';
+import { BaseTrableLoaderService } from '../../../core/providers/base-trable-loader/base-trable-loader.service';
 
 @Component({
     template: '',
@@ -57,10 +57,10 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     public selectedChange = new EventEmitter<string[]>();
 
     @Output()
-    public select = new EventEmitter<TrableRow<O>>();
+    public rowSelect = new EventEmitter<TrableRow<O>>();
 
     @Output()
-    public deselect = new EventEmitter<TrableRow<O>>();
+    public rowDeselect = new EventEmitter<TrableRow<O>>();
 
     protected abstract rawColumns: TableColumn<O>[];
 
@@ -277,11 +277,11 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     }
 
     public forwardSelect(row: TrableRow<O>): void {
-        this.select.emit(row);
+        this.rowSelect.emit(row);
     }
 
     public forwardDeselect(row: TrableRow<O>): void {
-        this.deselect.emit(row);
+        this.rowDeselect.emit(row);
     }
 
     protected onLoad(): void {}

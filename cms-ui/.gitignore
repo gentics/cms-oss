@@ -4,6 +4,7 @@
 /coverage
 /.angular
 /.nx
+/.playwright
 
 # JUnit test reports
 /.reports

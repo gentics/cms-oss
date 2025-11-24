@@ -8,6 +8,7 @@ import {
     File,
     Folder,
     FolderCreateRequest,
+    Form,
     Group,
     GroupCreateRequest,
     GroupUserCreateRequest,
@@ -513,6 +514,7 @@ export interface ImportEntityMapping extends Record<ImportType, any> {
     [ITEM_TYPE_PAGE]: Page;
     [ITEM_TYPE_IMAGE]: Image;
     [ITEM_TYPE_FILE]: File;
+    [ITEM_TYPE_FORM]: Form;
 
     [IMPORT_TYPE_NODE]: Node;
     [IMPORT_TYPE_PAGE_TRANSLATION]: Page;

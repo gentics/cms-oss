@@ -1,38 +1,35 @@
 @if (useRichEditor) {
-  <gtx-rich-content-editor
-    [value]="value?.[language] || ''"
-    [label]="label"
-    [disabled]="disabled"
-    (valueChange)="handleInputChange($event)"
-  ></gtx-rich-content-editor>
+    <gtx-rich-content-editor
+        [value]="value?.[language] || ''"
+        [label]="label"
+        [disabled]="disabled"
+        (valueChange)="handleInputChange($event)"
+    ></gtx-rich-content-editor>
 } @else {
-  <gtx-input
-    [value]="value?.[language] || ''"
-    [label]="label"
-    [type]="type"
-    [required]="requiredInCurrentLanguage"
-    [class.untranslated]="!isTranslated"
-    [disabled]="disabled"
-    (valueChange)="handleInputChange($event)"
-    (blur)="triggerTouch()"
-  ></gtx-input>
+    <gtx-input
+        [value]="value?.[language] || ''"
+        [label]="label"
+        [type]="type"
+        [required]="requiredInCurrentLanguage"
+        [class.untranslated]="!isTranslated"
+        [disabled]="disabled"
+        (valueChange)="handleInputChange($event)"
+        (blur)="triggerTouch()"
+    ></gtx-input>
 }
-
 
 @if (!isTranslated && requiredInCurrentLanguage) {
   <div class="translation-suggestions">
     <div>{{ 'gtxFormGenerator.error_no_translation' | gtxI18n }}:&nbsp;</div>
     <div class="translation-suggestions__values">
-      <div class="translation-suggestions__value">[{{ translationSuggestions[0]?.language | uppercase }}] {{ translationSuggestions[0]?.value }}</div>
-      <div class="translation-suggestions__additional-values">
-        @for (translationSuggestion of translationSuggestions; track translationSuggestion; let first = $first) {
-          @if (!first) {
-            <div>
-              [{{ translationSuggestion.language | uppercase }}] {{ translationSuggestion.value }}
-            </div>
-          }
-        }
-      </div>
+        <div class="translation-suggestions__value">[{{ translationSuggestions[0]?.language | uppercase }}] {{ translationSuggestions[0]?.value }}</div>
+        <div class="translation-suggestions__additional-values">
+            @for (translationSuggestion of translationSuggestions; track (translationSuggestion.language + translationSuggestion.value); let first = $first) {
+                @if (!first) {
+                    <div>[{{ translationSuggestion.language | uppercase }}] {{ translationSuggestion.value }}</div>
+                }
+            }
+        </div>
     </div>
   </div>
 }

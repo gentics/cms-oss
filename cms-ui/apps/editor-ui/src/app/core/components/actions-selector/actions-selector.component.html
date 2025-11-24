@@ -13,14 +13,14 @@
 
   <gtx-dropdown-content data-context-id="actions-menu">
     <div class="action-buttons-dropdown-content">
-      @for (group of buttonGroups; track group) {
+      @for (group of buttonGroups; track group.i18nLabel) {
         <div class="action-button-group">
           <div class="action-button-group-label">
             {{ group.i18nLabel | gtxI18n }}
           </div>
           @for (btnGroup of group.buttons; track btnGroup) {
             <div class="action-button-group-content">
-              @for (btn of btnGroup; track btn) {
+              @for (btn of btnGroup; track btn.id) {
                 @if (btn.type === ActionButtonType.TOOL) {
                   @if (!btn.newTab) {
                     <a

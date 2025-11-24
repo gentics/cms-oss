@@ -27,7 +27,7 @@
             <gtx-button flat icon><i class="material-icons" [attr.translate]="'no'">arrow_drop_down</i></gtx-button>
           </gtx-dropdown-trigger>
           <gtx-dropdown-content>
-            @for (variant of languageVariants; track variant) {
+            @for (variant of languageVariants; track variant.id) {
               <gtx-dropdown-item (click)="selectVariant(variant)">
                 {{ 'lang.' + variant.language | gtxI18n }}
               </gtx-dropdown-item>
@@ -58,7 +58,7 @@
 
   @if (selectedPageVariant?.versions?.length > 0) {
     <div class="version-list">
-      @for (version of selectedPageVariant.versions; track version) {
+      @for (version of selectedPageVariant.versions; track version.number) {
         <gtx-contents-list-item>
           <div class="item-primary">
             <span class="item-name">{{ 'modal.page_versions_item' | gtxI18n:{ version: version.number } }}</span>

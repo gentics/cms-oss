@@ -1,4 +1,4 @@
-@for (branch of branches; track branch) {
+@for (branch of branches; track branch.node.id) {
   <gtx-dropdown-item [ngClass]="'depth-' + depth"
     (click)="nodeSelected.emit(branch.node)">
     <a (click)="nodeSelected.emit(branch.node)">

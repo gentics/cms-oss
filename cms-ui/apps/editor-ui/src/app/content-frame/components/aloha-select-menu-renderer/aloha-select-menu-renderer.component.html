@@ -7,7 +7,7 @@
   [class.has-right-icons]="hasRightIcon"
   >
   <div class="select-menu-entries-container">
-    @for (entry of (settings?.options || []); track entry) {
+    @for (entry of (settings?.options || []); track entry.id) {
       <button
         class="select-menu-entry"
         tabindex="0"

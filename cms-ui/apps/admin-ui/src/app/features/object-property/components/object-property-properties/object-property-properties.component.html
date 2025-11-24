@@ -16,7 +16,7 @@
         formControlName="type"
         [clearable]="false"
         >
-        @for (item of OBJECT_TYPES; track item) {
+        @for (item of OBJECT_TYPES; track item.id) {
           <gtx-option [value]="item.id">{{ item.label | gtxI18n }}</gtx-option>
         }
       </gtx-select>
@@ -25,7 +25,7 @@
         [clearable]="true"
         formControlName="categoryId"
         >
-        @for (item of (objectPropertyCategories$ | async); track item) {
+        @for (item of (objectPropertyCategories$ | async); track item.id) {
           <gtx-option [value]="item.id">{{ item.name }}</gtx-option>
         }
       </gtx-select>
@@ -34,7 +34,7 @@
         [clearable]="false"
         formControlName="constructId"
         >
-        @for (item of (constructs$ | async); track item) {
+        @for (item of (constructs$ | async); track item.id) {
           <gtx-option [value]="item.id">{{ item.name }}</gtx-option>
         }
       </gtx-select>

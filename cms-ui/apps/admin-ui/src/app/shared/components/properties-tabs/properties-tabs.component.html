@@ -14,7 +14,7 @@
     [activeId]="selectedTab"
     (tabChange)="selectTab($event)"
     >
-    @for (tab of items; track tab) {
+    @for (tab of items; track tab.id) {
       @if (!tab.isGroup) {
         <gtx-tab-pane [id]="tab.id">
           <ng-template gtx-tab-label>
@@ -28,7 +28,7 @@
           [expanded]="tab.expanded"
           (tabGroupToggle)="toggleGroup($event)"
           >
-          @for (groupItem of tab.tabs; track groupItem) {
+          @for (groupItem of tab.tabs; track groupItem.id) {
             <gtx-tab-pane [id]="groupItem.id">
               <ng-template gtx-tab-label>
                 <ng-container

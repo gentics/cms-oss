@@ -11,7 +11,7 @@
         [(ngModel)]="tagProperty.overview.listType"
         (valueChange)="onSelectedListOrSelectTypeChange()"
         >
-        @for (listType of allowedListTypes; track listType) {
+        @for (listType of allowedListTypes; track listType.value) {
           <gtx-option [value]="listType.value">
             {{ listType.label | gtxI18n }}
           </gtx-option>
@@ -26,7 +26,7 @@
         [(ngModel)]="tagProperty.overview.selectType"
         (valueChange)="onSelectedListOrSelectTypeChange()"
         >
-        @for (selectType of allowedSelectTypes; track selectType) {
+        @for (selectType of allowedSelectTypes; track selectType.value) {
           <gtx-option [value]="selectType.value">
             {{ selectType.label | gtxI18n }}
           </gtx-option>
@@ -42,7 +42,7 @@
           [(ngModel)]="tagProperty.overview.orderBy"
           (valueChange)="onUserChange()"
           >
-          @for (orderByType of allowedOrderByTypes; track orderByType) {
+          @for (orderByType of allowedOrderByTypes; track orderByType.value) {
             <gtx-option [value]="orderByType.value">
               {{ orderByType.label | gtxI18n }}
             </gtx-option>
@@ -57,7 +57,7 @@
           [(ngModel)]="tagProperty.overview.orderDirection"
           (valueChange)="onUserChange()"
           >
-          @for (orderDirection of allowedOrderDirections; track orderDirection) {
+          @for (orderDirection of allowedOrderDirections; track orderDirection.value) {
             <gtx-option [value]="orderDirection.value">
               {{ orderDirection.label | gtxI18n }}
             </gtx-option>

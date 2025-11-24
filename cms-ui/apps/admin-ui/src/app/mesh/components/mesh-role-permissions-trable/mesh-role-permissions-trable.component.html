@@ -38,7 +38,7 @@
 
 <ng-template #permissionRenderer let-value="value" let-row="row">
   <div class="permissions-wrapper">
-    @for (perm of (Permission | gtxEntries); track perm) {
+    @for (perm of (Permission | gtxEntries); track perm.value) {
       @if (row.item[MBO_AVILABLE_PERMISSIONS] | gtxIncludes:perm.value) {
         <div
           class="permission-icon"

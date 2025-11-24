@@ -49,7 +49,7 @@
 <div class="gtxct-page-status-filter">
   <span class="gtxct-page-status-filter-title">{{ 'common.page_status_label' | gtxI18n }}</span>
   <gtx-select [value]="pageStatusFilter" (valueChange)="setPageStatusFilter($event)">
-    @for (option of pageStatusOptions; track option) {
+    @for (option of pageStatusOptions; track option.value) {
       <gtx-option
         [value]="option.value"
       >{{ option.label | gtxI18n }}</gtx-option>
@@ -60,7 +60,7 @@
 <div class="gtxct-link-filter">
   <span class="gtxct-link-filter-title">{{ 'common.link_filter_label' | gtxI18n }}</span>
   <gtx-select [value]="linkFilter" (valueChange)="setLinkFilter($event)">
-    @for (option of filterOptions; track option) {
+    @for (option of filterOptions; track option.value) {
       <gtx-option
         [value]="option.value"
       >{{ option.label | gtxI18n }}</gtx-option>

@@ -1,4 +1,4 @@
-@for (branch of branches; track branch) {
+@for (branch of branches; track branch.node.id) {
   @if (useLinks) {
     <gtx-dropdown-item
       [ngClass]="'depth-' + depth"

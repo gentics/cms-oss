@@ -109,7 +109,7 @@
           >
           <div class="aspect-ratios-large" [class.hidden-controls]="!(isAspectRatioControlsFits$ | async)">
             <div class="aspect-ratio-label">{{ 'aspect_ratio' | translate }}</div>
-            @for (aspectRatio of filterShowAspectRatio(availableAspectRatios, 'radio'); track aspectRatio) {
+            @for (aspectRatio of filterShowAspectRatio(availableAspectRatios, 'radio'); track aspectRatio.kind) {
               <gtx-radio-button
                 [value]="aspectRatio"
                 [label]="aspectRatio.label | translate"
@@ -121,7 +121,7 @@
                 [(ngModel)]="cropAspectRatio"
                 (ngModelChange)="onAspectRatioChange()"
                 >
-                @for (aspectRatio of filterShowAspectRatio(availableAspectRatios, 'select'); track aspectRatio) {
+                @for (aspectRatio of filterShowAspectRatio(availableAspectRatios, 'select'); track aspectRatio.kind) {
                   <gtx-option
                     [value]="aspectRatio"
                   >{{ aspectRatio.label | translate }}</gtx-option>
@@ -137,7 +137,7 @@
                 [(ngModel)]="cropAspectRatio"
                 (ngModelChange)="onAspectRatioChange()"
                 >
-                @for (aspectRatio of filterShowAspectRatio(availableAspectRatios); track aspectRatio) {
+                @for (aspectRatio of filterShowAspectRatio(availableAspectRatios); track aspectRatio.kind) {
                   <gtx-option
                     [value]="aspectRatio"
                   >{{ aspectRatio.label | translate }}</gtx-option>

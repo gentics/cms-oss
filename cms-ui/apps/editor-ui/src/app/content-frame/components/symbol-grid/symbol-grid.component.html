@@ -1,6 +1,6 @@
 <div class="gtx-symbol-grid">
   <div class="symbol-grid-content">
-    @for (singleSymbol of symbols; track singleSymbol) {
+    @for (singleSymbol of symbols; track singleSymbol.symbol) {
       <button
         class="symbol-grid-cell"
         [class.active]="singleSymbol.symbol === (value?.symbol || value)"

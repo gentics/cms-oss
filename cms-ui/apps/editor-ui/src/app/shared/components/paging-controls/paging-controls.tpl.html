@@ -17,7 +17,7 @@
         }
       </li>
     }
-    @for (page of p.pages; track page) {
+    @for (page of p.pages; track page.value) {
       <li [class.current]="p.getCurrent() === page.value">
         @if (p.getCurrent() !== page.value) {
           <a (click)="p.setCurrent(page.value)">

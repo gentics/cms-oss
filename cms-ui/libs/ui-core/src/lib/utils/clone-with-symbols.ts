@@ -14,6 +14,8 @@ export function copySymbols<T extends object>(source: T, target: T, shallow: boo
     }
 }
 
+type Writeable<T> = { -readonly [P in keyof T]: Writeable<T[P]> };
+
 /**
  * Uses {@link structuredClone} to create a clone of the provided element.
  * Will also copy over all symbols which are attached to this or nested elements,
@@ -22,7 +24,7 @@ export function copySymbols<T extends object>(source: T, target: T, shallow: boo
  * @param source Source element to clone
  * @param shallow If it should only clone the symbols of the root element.
  */
-export function cloneWithSymbols<T extends object>(source: T, shallow: boolean = false): T {
+export function cloneWithSymbols<T extends object>(source: T, shallow: boolean = false): Writeable<T> {
     const clone = structuredClone(source);
     copySymbols(source, clone, shallow);
 

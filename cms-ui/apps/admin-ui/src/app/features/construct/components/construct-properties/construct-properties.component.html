@@ -18,7 +18,7 @@
           [multiple]="true"
           formControlName="nodeIds"
           >
-          @for (node of nodes$ | async; track node) {
+          @for (node of nodes$ | async; track node.id) {
             <gtx-option
               [value]="node.id"
             >{{ node.name }}</gtx-option>
@@ -39,7 +39,7 @@
           formControlName="categoryId"
           [clearable]="true"
           >
-          @for (item of constructCategories$ | async; track item) {
+          @for (item of constructCategories$ | async; track item.id) {
             <gtx-option
               [value]="item.id"
             >{{ item.nameI18n?.[activeTabI18nLanguage?.code] ?? item.name }}</gtx-option>
@@ -51,7 +51,7 @@
         [label]="('construct.editorControlStyle' | gtxI18n) + ' *'"
         [required]="true"
         >
-        @for (style of (EditorControlStyle | gtxEntries); track style) {
+        @for (style of (EditorControlStyle | gtxEntries); track style.key) {
           <gtx-option
             [value]="style.key"
           >{{ ('construct.editorControlStyle_' + style.value) | gtxI18n }}</gtx-option>

@@ -16,7 +16,7 @@
         </gtx-button>
       </gtx-dropdown-trigger>
       <gtx-dropdown-content>
-        @for (language of supportedLanguages; track language) {
+        @for (language of supportedLanguages; track language.code) {
           <gtx-dropdown-item
             (click)="setLanguageClicked(language.code)"
             class="language-option"

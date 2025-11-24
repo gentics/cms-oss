@@ -4,7 +4,7 @@
 
 <div #content class="modal-content">
   <div class="form-wrapper" [formGroup]="control">
-    @for (ctrl of (configuration.controls | gtxEntries); track ctrl; let index = $index) {
+    @for (ctrl of (configuration.controls | gtxEntries); track ctrl.key; let index = $index) {
       <gtx-aloha-component-renderer
         class="dynamic-control"
         [attr.data-slot]="ctrl.key"

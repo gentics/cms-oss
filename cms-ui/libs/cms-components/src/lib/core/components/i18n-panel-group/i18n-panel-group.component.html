@@ -11,7 +11,7 @@
     [activeId]="activeLanguage?.id"
     (tabChange)="setActiveLanguage($event)"
     >
-    @for (language of languages; track language) {
+    @for (language of languages; track language.id) {
       <gtx-tab-pane
         [id]="language?.id"
         [readonly]="disabled"

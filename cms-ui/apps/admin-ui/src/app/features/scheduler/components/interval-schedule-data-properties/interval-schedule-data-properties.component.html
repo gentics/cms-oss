@@ -12,7 +12,7 @@
     [required]="true"
     formControlName="unit"
     >
-    @for (unit of IntervalUnit | gtxEntries; track unit) {
+    @for (unit of IntervalUnit | gtxEntries; track unit.value) {
       <gtx-option
         [value]="unit.value"
       >{{ ('scheduler.interval_unitType_' + unit.value) | gtxI18n }}</gtx-option>

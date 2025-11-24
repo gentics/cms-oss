@@ -6,7 +6,7 @@
     </gtx-optgroup>
     -->
     <gtx-optgroup [label]="('modal.send_message_users' | gtxI18n)">
-      @for (user of users; track user) {
+      @for (user of users; track user.id) {
         <gtx-option [value]="'toUserId_'+user.id">{{ user?.firstName }} {{ user?.lastName }}</gtx-option>
       }
     </gtx-optgroup>

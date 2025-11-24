@@ -9,7 +9,7 @@
         [(ngModel)]="selectedSingleOptionId"
         (valueChange)="onSingleSelectChange($event)"
         >
-        @for (item of tagProperty.options; track item) {
+        @for (item of tagProperty.options; track item.id) {
           <gtx-option
             [value]="item.id"
           >{{ item.key }}</gtx-option>
@@ -26,7 +26,7 @@
         [(ngModel)]="selectedMultipleOptionsIds"
         (valueChange)="onMultipleSelectChange($event)"
         >
-        @for (item of tagProperty.options; track item) {
+        @for (item of tagProperty.options; track item.id) {
           <gtx-option
             [value]="item.id"
           >{{ item.key }}</gtx-option>

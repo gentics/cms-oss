@@ -126,7 +126,7 @@ export class PagePropertiesComponent
         }));
 
         if (this.item?.fileName) {
-            this.form.controls.fileName.markAsDirty();
+            // this.form.controls.fileName.markAsDirty();
         }
 
         this.subscriptions.push(this.form.valueChanges.pipe(

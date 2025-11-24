@@ -31,7 +31,7 @@
           (blur)="triggerTouch()"
           formControlName="markupLanguage"
           >
-          @for (markupLang of (markupLanguages | gtxValues); track markupLang) {
+          @for (markupLang of (markupLanguages | gtxValues); track markupLang.id) {
             <gtx-option
               [value]="(markupLang.id + '')"
               >

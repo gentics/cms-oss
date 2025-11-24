@@ -1,6 +1,6 @@
 <div class="grouped-tabs">
   <ul class="collapsible expandable" [class.wrap-tab-title]="wrap">
-    @for (tabItem of tabs$ | async; track tabItem) {
+    @for (tabItem of tabs$ | async; track (tabItem.id || tabItem.UNIQUE_ID)) {
       @if (tabItem.expand != null) {
         <li
           class="tab-group"
@@ -14,7 +14,7 @@
           <div class="collapsible-body">
             @if (tabItem.tabs.length > 0) {
               <ul class="tab-links">
-                @for (tab of tabItem.tabs; track tab) {
+                @for (tab of tabItem.tabs; track (tab.id || tab.UNIQUE_ID)) {
                   <ng-container *ngTemplateOutlet="tabItemTemplate;context:{tabItem: tab}"></ng-container>
                 }
               </ul>

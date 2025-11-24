@@ -28,7 +28,7 @@
         property-name="target"
         formControlName="target"
         >
-        @for (target of AVAILABLE_TARGETS; track target) {
+        @for (target of AVAILABLE_TARGETS; track target.value) {
           <gtx-option
             [value]="target.value"
           >{{ target.label | gtxI18n }}</gtx-option>

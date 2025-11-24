@@ -127,7 +127,6 @@ function getFormatFunction(lang: string, formatName: KnownDateFormatName): Forma
     }
 
     const locales = getLocales(lang);
-    debugger;
 
     // Use number formatting provided by the format (e.g. 'number' vs '2-digit').
     const formatOptions = KNOWN_FORMATS[formatName] || KNOWN_FORMATS['date'];

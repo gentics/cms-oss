@@ -23,7 +23,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (item of pagesToTakeOffline; track item) {
+          @for (item of pagesToTakeOffline; track (item.type + item.id)) {
             <gtx-contents-list-item [ngClass]="item.type || ''" [class.none-selected]="selectedLanguageVariants[item.id]?.length === 0">
               <td class="item-icon">
                 <icon>{{ item.type | gtxTypeIcon }}</icon>

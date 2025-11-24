@@ -27,7 +27,7 @@
         [clearable]="false"
         (valueChange)="updateHostnameType($event)"
         >
-        @for (type of HOSTNAME_TYPES; track type) {
+        @for (type of HOSTNAME_TYPES; track type.id) {
           <gtx-option
             [value]="type.id"
           >{{ type.label | gtxI18n }}</gtx-option>

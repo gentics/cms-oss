@@ -6,7 +6,7 @@
   </div>
 }
 
-@for (page of pages; track page) {
+@for (page of pages; track page.id) {
   <gtx-contents-list-item>
     @if (!readOnly) {
       <gtx-checkbox class="row-checkbox"

@@ -1,7 +1,7 @@
-@for (link of links; track link) {
-  @if (link.textBefore) {
-    <span>{{ link.textBefore }}</span
-      >
-      }<a (click)="linkClick.emit(link)" [title]="link.fullPath">{{ link.name }}</a
-      >
-      }<span>{{ textAfterLinks }}</span>
+@for (link of links; track link.name) {
+    @if (link.textBefore) {
+        <span>{{ link.textBefore }}</span>
+    }
+    <a (click)="linkClick.emit(link)" [title]="link.fullPath">{{ link.name }}</a>
+}
+<span>{{ textAfterLinks }}</span>

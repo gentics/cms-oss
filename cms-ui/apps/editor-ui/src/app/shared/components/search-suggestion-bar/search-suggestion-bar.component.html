@@ -1,13 +1,13 @@
 <div class="suggestions" [hidden]="!areSuggestionsCurrentlyShown()">
   @if ((matchingSuggestionItems$ | async)?.length > 0 && suggestionVisible) {
-    @for (item of matchingSuggestionItems$ | async; track item) {
+    @for (item of matchingSuggestionItems$ | async; track (item.type + item.id)) {
       <search-suggestion
         [icon]="item.type | gtxTypeIcon"
       (use)="goToItem(item)">{{ 'common.search_found_object_with_id' | gtxI18n:{ id: item.id } }}</search-suggestion>
     }
   }
   @if ((matchingRecentItems$ | async)?.length > 0 && recentVisible) {
-    @for (item of matchingRecentItems$ | async; track item) {
+    @for (item of matchingRecentItems$ | async; track (item.type + item.id)) {
       <search-suggestion
         [icon]="item.type | gtxTypeIcon"
         iconSecondary="history"

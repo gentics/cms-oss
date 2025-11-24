@@ -10,7 +10,7 @@
   @if (summary) {
     @if (summary.items.length > 0) {
       <div class="section-title">{{ 'widget.task_queue_waiting_title' | gtxI18n }}</div>
-      @for (item of summary.items; track item) {
+      @for (item of summary.items; track item.label) {
         <div class="entry">
           <div class="entry-title">{{ item.label }}</div>
           <div class="entry-value">{{ item.count }}</div>

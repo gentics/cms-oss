@@ -9,7 +9,7 @@
     [disabled]="form.controls.length < 2"
     (dragEnd)="sortFields($event)"
     >
-    @for (ctl of form.controls; track ctl; let index = $index; let first = $first; let last = $last) {
+    @for (ctlEntry of form.controls | gtxEntries; track ctlEntry.key; let index = $index; let first = $first; let last = $last) {
       <gtx-sortable-item>
         <div class="field-wrapper">
           <div class="movement-group">
@@ -20,7 +20,7 @@
               size="small"
               [title]="'mesh.move_to_top' | gtxI18n"
               [disabled]="first"
-              (click)="moveControl(ctl, index, 0)"
+              (click)="moveControl(ctlEntry.value, index, 0)"
               >
               <icon>north</icon>
             </gtx-button>
@@ -31,7 +31,7 @@
               size="small"
               [title]="'mesh.move_up' | gtxI18n"
               [disabled]="first"
-              (click)="moveControl(ctl, index, index - 1)"
+              (click)="moveControl(ctlEntry.value, index, index - 1)"
               >
               <icon>keyboard_arrow_up</icon>
             </gtx-button>
@@ -43,7 +43,7 @@
               size="small"
               [title]="'mesh.move_down' | gtxI18n"
               [disabled]="last"
-              (click)="moveControl(ctl, index, index + 1)"
+              (click)="moveControl(ctlEntry.value, index, index + 1)"
               >
               <icon>keyboard_arrow_down</icon>
             </gtx-button>
@@ -54,14 +54,14 @@
               size="small"
               [title]="'mesh.move_to_bottom' | gtxI18n"
               [disabled]="last"
-              (click)="moveControl(ctl, index, form.controls.length - 1)"
+              (click)="moveControl(ctlEntry.value, index, form.controls.length - 1)"
               >
               <icon>south</icon>
             </gtx-button>
           </div>
           <gtx-mesh-schema-field-properties
             class="field"
-            [formControl]="ctl"
+            [formControl]="ctlEntry.value"
             [type]="type"
             [ownName]="ownName"
             [schemaNames]="schemaNames"

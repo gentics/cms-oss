@@ -20,7 +20,7 @@
           } }}
         </p>
       }
-      @for (item of canNotBeMoved; track item) {
+      @for (item of canNotBeMoved; track (item.type + item.id)) {
         <gtx-contents-list-item [ngClass]="itemType || ''">
           <div class="item-icon">
             <icon>{{ itemType | gtxTypeIcon }}</icon>
@@ -64,7 +64,7 @@
         folder: targetFolder.name
         } }}
       </p>
-      @for (item of willBeMoved; track item) {
+      @for (item of willBeMoved; track (item.type + item.id)) {
         <gtx-contents-list-item [ngClass]="itemType || ''">
           <div class="item-icon">
             <icon>{{ itemType | gtxTypeIcon }}</icon>

@@ -57,7 +57,7 @@
                 [clearable]="!property.required"
                 [availableLanguages]="formEditorService.formLanguages$ | async"
                 >
-                @for (option of options; track option) {
+                @for (option of options; track option.key) {
                   <gtx-option
                     [value]="option.key"
                     >

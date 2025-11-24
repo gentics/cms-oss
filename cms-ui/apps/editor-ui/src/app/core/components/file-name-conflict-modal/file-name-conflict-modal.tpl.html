@@ -10,7 +10,7 @@
 </div>
 <div class="modal-content">
   <div class="list">
-    @for (item of conflictingFiles; track item) {
+    @for (item of conflictingFiles; track getKey(item)) {
       <div>
         <gtx-contents-list-item [ngClass]="item.type || ''">
           <div class="item-icon">

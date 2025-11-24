@@ -85,7 +85,7 @@
   [hidden]="isInProgressInternal$ | async"
   >
   @if (!(noTemplatesLinked$ | async)) {
-    @for (nodeTemplate of (nodeTemplates$ | async); track nodeTemplate) {
+    @for (nodeTemplate of (nodeTemplates$ | async); track nodeTemplate.id) {
       <gtx-contents-list-item
         class="item-row icon-checkbox-trigger"
         [class.selected]="templateIsLinked(nodeTemplate.id)"

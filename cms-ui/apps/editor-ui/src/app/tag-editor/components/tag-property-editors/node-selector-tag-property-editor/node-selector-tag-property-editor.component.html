@@ -9,7 +9,7 @@
       clearable
       (valueCahnge)="onNodeChange($event)"
       >
-      @for (item of nodes$ | async; track item) {
+      @for (item of nodes$ | async; track item.id) {
         <gtx-option
           [value]="item.id"
           [icon]="item.type == 'channel' ? 'input' : ''"

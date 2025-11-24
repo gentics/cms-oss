@@ -7,7 +7,7 @@
     <div class="gtx-delete-nodes-modal-body row">
       <p>{{ 'modal.delete_nodes_body' | gtxI18n: { count: nodesToBeDeleted?.length } }}</p>
     </div>
-    @for (node of nodesToBeDeleted; track node) {
+    @for (node of nodesToBeDeleted; track node.id) {
       <div
         class="gtx-delete-nodes-modal row"
         >

@@ -22,7 +22,7 @@
           [placeholder]="viewTemplatesAllowed ? null : item?.template?.name"
           formControlName="templateId"
           >
-          @for (template of templates; track template) {
+          @for (template of templates; track template.id) {
             <gtx-option
               [value]="template?.id"
             >{{ template?.name }}</gtx-option>
@@ -53,7 +53,7 @@
             [label]="('editor.item_language_label' | gtxI18n) + '*'"
             formControlName="language"
             >
-            @for (language of languages; track language) {
+            @for (language of languages; track language.code) {
               <gtx-option
                 [value]="language.code"
               >{{ language?.name }}</gtx-option>

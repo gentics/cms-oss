@@ -76,7 +76,7 @@
 
 <ng-template #tagsRenderer let-value="value">
   <div class="tags-wrapper">
-    @for (tag of value.tags; track tag; let last = $last) {
+    @for (tag of value.tags; track tag.uuid; let last = $last) {
       <div class="tag">
         <div class="tag-label">{{ tag.name }}</div>
         @if (manageTags && (tag[BO_PERMISSIONS] | gtxIncludes:Permission.UPDATE)) {

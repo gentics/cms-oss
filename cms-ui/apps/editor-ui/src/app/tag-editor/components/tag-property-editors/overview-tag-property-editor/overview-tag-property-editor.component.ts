@@ -12,6 +12,7 @@ import {
     Folder,
     FolderItemType,
     Image,
+    InheritableItem,
     Item,
     ItemInNode,
     ListType,
@@ -208,7 +209,8 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                 // Remove newItems, which already exist in the selectedItems.
                 newItems = newItems.filter((newItem) =>
                     !this.selectedItems.find((existingItem) =>
-                        existingItem.id === newItem.id && existingItem.nodeId === newItem.nodeId || this.isAlreadyAddedItem(existingItem, newItem),
+                        (existingItem.id === newItem.id && existingItem.nodeId === newItem.nodeId)
+                        || this.isAlreadyAddedItem(existingItem, newItem),
                     ),
                 );
                 this.updatePath(newItems);
@@ -363,13 +365,18 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
     }
 
     private updatePath(selectedItems: OverviewItem[]): void {
-        if (!this.isStickyChannelEnabled) {
-            selectedItems.forEach((item) => {
-                if (this.state.now.entities.node[this.state.now.editor.nodeId].masterNodeId === item.masterNodeId) {
-                    item.path = item.path.replace(item.masterNode, this.nodeName);
-                }
-            });
+        if (this.isStickyChannelEnabled) {
+            return;
         }
+        const currentMasterId = this.state.now.entities.node[this.state.now.editor.nodeId].masterNodeId;
+
+        selectedItems.forEach((item) => {
+            if (currentMasterId === item.masterNodeId) {
+                // FIXME: This shouldn't be used at all - either fix it in the template,
+                // assign it as new property, or have it fixed in the backend.
+                (item as any).path = item.path.replace(item.masterNode, this.nodeName);
+            }
+        });
     }
 
     /**
@@ -501,14 +508,23 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                             return resultNodes.some((resultNode) => resultNode.id === itemId || resultNode.origId === itemId);
                         });
                         // if item is not existing, insert error object to be displayed instead
-                        const itemLoaded: OverviewItem = Array.isArray(itemsForNodeItems) && itemsForNodeItems.find((item) => {
-                            return item.id === itemId || item.origId === itemId || (item.item != null && item.item.masterId === itemId);
-                        }).item as OverviewItem
-                        || {
-                            id: itemId,
-                            name: this.i18n.instant('editor.item_not_found', { id: itemId }),
-                            nodeId,
-                        } as OverviewItem;
+                        let itemLoaded: OverviewItem;
+
+                        if (Array.isArray(itemsForNodeItems)) {
+                            itemLoaded = itemsForNodeItems.find((item) => {
+                                return item.id === itemId
+                                  || item.origId === itemId
+                                  || (item.item != null && (item.item as any as InheritableItem).masterId === itemId);
+                            }).item as OverviewItem;
+                        }
+
+                        if (!itemLoaded) {
+                            itemLoaded = {
+                                id: itemId,
+                                name: this.i18n.instant('editor.item_not_found', { id: itemId }),
+                                nodeId,
+                            } as OverviewItem;
+                        }
 
                         if (nodeId === -1) {
                             /**

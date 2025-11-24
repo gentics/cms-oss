@@ -22,7 +22,7 @@
         [label]="('tagmap_entry.objType' | gtxI18n) + ' *'"
         [clearable]="false"
         >
-        @for (objectType of OBJECT_TYPES; track objectType) {
+        @for (objectType of OBJECT_TYPES; track objectType.id) {
           <gtx-option [value]="objectType.id">{{ objectType.label | gtxI18n }}</gtx-option>
         }
       </gtx-select>
@@ -31,7 +31,7 @@
         [label]="('tagmap_entry.attributeType' | gtxI18n) + ' *'"
         [clearable]="false"
         >
-        @for (attributeType of attributes; track attributeType) {
+        @for (attributeType of attributes; track attributeType.id) {
           <gtx-option [value]="attributeType.id">{{ attributeType.label | gtxI18n }}</gtx-option>
         }
       </gtx-select>
@@ -61,7 +61,7 @@
             [label]="('tagmap_entry.targettype' | gtxI18n) + ' *'"
             [clearable]="false"
             >
-            @for (objectType of OBJECT_TYPES; track objectType) {
+            @for (objectType of OBJECT_TYPES; track objectType.id) {
               <gtx-option [value]="objectType.id">{{ objectType.label | gtxI18n }}</gtx-option>
             }
           </gtx-select>

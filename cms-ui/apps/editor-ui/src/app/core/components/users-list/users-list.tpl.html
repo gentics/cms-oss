@@ -7,7 +7,7 @@
 </div>
 
 <div class="list-body" [style.maxHeight]="maxHeight">
-  @for (user of users; track user) {
+  @for (user of users; track user.id) {
     <gtx-contents-list-item
       class="user-entry"
       [attr.data-id]="user.id"

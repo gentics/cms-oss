@@ -17,7 +17,7 @@
     }
     @if (pages.length > 0) {
       <tbody>
-        @for (item of pages; track item) {
+        @for (item of pages; track (item.type + item.id)) {
           <gtx-contents-list-item [ngClass]="item.type || ''">
             <td class="item-icon">
               <icon>{{ item.type | gtxTypeIcon }}</icon>

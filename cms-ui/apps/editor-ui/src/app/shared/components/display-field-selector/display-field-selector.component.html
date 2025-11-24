@@ -13,7 +13,7 @@
     </gtx-contents-list-item>
   }
   <gtx-sortable-list (dragEnd)="sortList($event)">
-    @for (field of availableFields; track field) {
+    @for (field of availableFields; track field.name) {
       <gtx-sortable-item>
         <gtx-contents-list-item>
           <div class="item-primary">

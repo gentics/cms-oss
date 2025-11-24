@@ -15,7 +15,7 @@
             <icon class="collapse">keyboard_arrow_down</icon>
           </gtx-dropdown-trigger>
           <gtx-dropdown-content data-context-id="language-select">
-            @for (variant of languageVariants; track variant) {
+            @for (variant of languageVariants; track variant.code) {
               <gtx-dropdown-item
                 [attr.data-id]="variant.code"
                 (click)="selectPageVariant(variant)"
@@ -48,7 +48,7 @@
 
   @if (publishLogEntries?.length > 0) {
     <div class="entries">
-      @for (entry of publishLogEntries; track entry) {
+      @for (entry of publishLogEntries; track (entry.type + entry.objId)) {
         <gtx-contents-list-item>
           <div class="publish-entry">
             <span class="state" [class]="entry.state.toString().toLocaleLowerCase()">{{ entry.state }}</span>

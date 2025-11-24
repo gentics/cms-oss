@@ -87,7 +87,7 @@
 
 <ng-template #groupRenderer let-row="row">
   <div class="gtx-table-cell-text">
-    @for (group of row.item.groups; track group; let last = $last) {
+    @for (group of row.item.groups; track group.id; let last = $last) {
       @if (linkGroups) {
         <a
           class="gtx-entity-grid-link group-link"

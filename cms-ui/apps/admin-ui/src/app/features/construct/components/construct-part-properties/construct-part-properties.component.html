@@ -41,7 +41,7 @@
             [clearable]="true"
             formControlName="markupLanguageId"
             >
-            @for (item of markupLanguages; track item) {
+            @for (item of markupLanguages; track item.id) {
               <gtx-option [value]="item.id">{{ item.name }}</gtx-option>
             }
           </gtx-select>
@@ -54,7 +54,7 @@
             [idPath]="'id'"
             formControlName="regex"
             >
-            @for (item of SORTED_VALIDATOR_CONFIGS; track item) {
+            @for (item of SORTED_VALIDATOR_CONFIGS; track item.id) {
               <gtx-option
                 [value]="item"
               >{{ item[TRANSLATED_NAME_PROP] }}</gtx-option>

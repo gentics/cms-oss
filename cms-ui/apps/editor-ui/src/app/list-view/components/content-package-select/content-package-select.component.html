@@ -18,7 +18,7 @@
           <icon right>exit_to_app</icon>
         </gtx-dropdown-item>
       }
-      @for (pkg of contentPackages | gtxValues; track pkg) {
+      @for (pkg of contentPackages | gtxValues; track pkg.id) {
         <gtx-dropdown-item
           [class.selected]="selectedPackage === pkg.id"
           (click)="onSelectChange(pkg.id)"

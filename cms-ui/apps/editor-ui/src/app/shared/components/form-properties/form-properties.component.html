@@ -32,7 +32,7 @@
           [multiple]="false"
           [required]="true"
           >
-          @for (option of formConfig?.form_properties?.template_context_options; track option) {
+          @for (option of formConfig?.form_properties?.template_context_options; track option.key) {
             <gtx-option
               [value]="option.key"
               >
@@ -80,7 +80,7 @@
         required
         [multiple]="true"
         >
-        @for (language of languages; track language) {
+        @for (language of languages; track language.code) {
           <gtx-option
             [value]="language.code"
             >
@@ -151,7 +151,7 @@
               (change)="setEmailTemplateOption($event)"
               formControlName="mailtemp_i18n"
               >
-              @for (option of formConfig?.form_properties?.admin_mail_options; track option) {
+              @for (option of formConfig?.form_properties?.admin_mail_options; track option.key) {
                 <gtx-option
                   [value]="option.key"
                   >

@@ -1,4 +1,4 @@
-@for (activity of (activities$ | async); track activity) {
+@for (activity of (activities$ | async); track activity.id) {
   <div
     class="gtx-activity-manager-activity"
     [class.expanded]="activity.expanded"

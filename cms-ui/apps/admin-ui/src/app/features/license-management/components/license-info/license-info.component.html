@@ -31,7 +31,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (feat of license.features | gtxEntries; track feat) {
+        @for (feat of license.features | gtxEntries; track feat.key) {
           <tr [attr.data-id]="feat.key">
             <td>{{ feat.value }}</td>
           </tr>

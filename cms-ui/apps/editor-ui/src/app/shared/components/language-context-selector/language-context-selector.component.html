@@ -5,7 +5,7 @@
     </gtx-button>
   </gtx-dropdown-trigger>
   <gtx-dropdown-content class="language-context">
-    @for (language of availableLanguages; track language) {
+    @for (language of availableLanguages; track language.code) {
       <gtx-dropdown-item
         data-action="select-language-context"
         [attr.data-lang-code]="language.code"

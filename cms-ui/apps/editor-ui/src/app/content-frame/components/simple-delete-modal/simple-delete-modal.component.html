@@ -6,7 +6,7 @@
 </div>
 
 <div class="modal-content">
-  @for (item of items; track item) {
+  @for (item of items; track item[idProperty]) {
     <gtx-contents-list-item>
       <div class="item-icon">
         <icon>{{ iconString }}</icon>

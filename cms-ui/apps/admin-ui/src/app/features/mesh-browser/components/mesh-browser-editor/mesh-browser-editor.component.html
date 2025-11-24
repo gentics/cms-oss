@@ -77,7 +77,7 @@
             }
             @case (FieldType.MICRO_NODE) {
               <div class="micronode-container value-container">
-                @for (field of field.value.fields | keyvalue; track field) {
+                @for (field of field.value.fields | keyvalue; track field.key) {
                   <div class="micronode-field">
                     <label class="field-label">{{ field.key }}</label>
                     @if (!field.value['uuid']) {

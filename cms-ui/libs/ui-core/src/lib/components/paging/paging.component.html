@@ -20,7 +20,7 @@
       </span>
     </button>
     <div class="pages">
-      @for (singlePage of p.pages; track singlePage) {
+      @for (singlePage of p.pages; track singlePage.value) {
         @if (p.getCurrent() !== singlePage.value) {
           <button
             type="button"

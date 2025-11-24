@@ -104,7 +104,7 @@
       [value]="filters.object"
       (valueChange)="applyFilterValue('object', $event)"
       >
-      @for (item of logTypes; track item) {
+      @for (item of logTypes; track item.name) {
         <gtx-option
           [value]="item.name"
         >{{ item.label }}</gtx-option>
@@ -122,7 +122,7 @@
       [value]="filters.action"
       (valueChange)="applyFilterValue('action', $event)"
       >
-      @for (item of logActions; track item) {
+      @for (item of logActions; track item.name) {
         <gtx-option
           [value]="item.name"
         >{{ item.label }}</gtx-option>

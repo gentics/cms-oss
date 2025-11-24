@@ -18,7 +18,7 @@
               [placeholder]=""
               formControlName="inheritedFromId"
               >
-              @for (node of nodes; track node) {
+              @for (node of nodes; track node.id) {
                 <gtx-option
                   [value]="node.id"
                 >{{ node.name }}</gtx-option>
@@ -54,7 +54,7 @@
             [clearable]="false"
             formControlName="previewType"
             >
-            @for (type of MESH_PREVIEWURL_TYPES; track type) {
+            @for (type of MESH_PREVIEWURL_TYPES; track type.id) {
               <gtx-option
                 [value]="type.id"
               >{{ type.label | gtxI18n }}</gtx-option>
@@ -100,7 +100,7 @@
           [clearable]="false"
           formControlName="hostType"
           >
-          @for (type of HOSTNAME_TYPES; track type) {
+          @for (type of HOSTNAME_TYPES; track type.id) {
             <gtx-option
               [value]="type.id"
             >{{ type.label | gtxI18n }}</gtx-option>

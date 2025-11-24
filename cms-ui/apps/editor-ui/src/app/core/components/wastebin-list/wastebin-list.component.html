@@ -18,7 +18,7 @@
       }
     </div>
     <div class="list">
-      @for (item of filteredItems | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage }; track item) {
+      @for (item of filteredItems | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage }; track (item.type + item.id)) {
         <div>
           <gtx-contents-list-item>
             <gtx-checkbox
@@ -30,7 +30,7 @@
               <span class="item-name">{{ item.name }}</span>
               @if (item.type === 'page' || item.type === 'form') {
                 <div class="languages">
-                  @for (language of getLanguages(item); track language) {
+                  @for (language of getLanguages(item); track language.code) {
                     <div [title]="language.name">
                       {{ language.code }}
                     </div>
@@ -52,7 +52,7 @@
               </gtx-contents-list-item>
               @if (item.type === 'page') {
                 <div class="language-variants" [class.expanded]="isSelected(item) && 1 < getVariants(item).length">
-                  @for (variant of getVariants(item); track variant) {
+                  @for (variant of getVariants(item); track variant.id) {
                     <div class="variant">
                       <gtx-checkbox
                         [checked]="selected[variant.id]"

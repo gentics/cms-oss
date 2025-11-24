@@ -1,5 +1,5 @@
 <div class="breadcrumb-container">
-  @for (entry of entries; track entry; let first = $first) {
+  @for (entry of entries; track entry.uuid; let first = $first) {
     @if (!first) {
       <icon class="separator">keyboard_arrow_right</icon>
     }

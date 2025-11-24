@@ -8,7 +8,7 @@
       (browse)="browseForItem()"
     ></browse-box>
 
-    @for (file of uploadedFiles; track file) {
+    @for (file of uploadedFiles; track file.name) {
       <ul class="uploaded-files">
         <li>{{ file.name }} ({{ file.fileSize | filesize }})</li>
       </ul>

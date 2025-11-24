@@ -9,7 +9,7 @@
     [multiple]="false"
     [formControl]="form"
     >
-    @for (cat of categories$ | async; track cat) {
+    @for (cat of categories$ | async; track cat.id) {
       <gtx-option [value]="cat.id">{{ cat.name }}</gtx-option>
     }
   </gtx-select>

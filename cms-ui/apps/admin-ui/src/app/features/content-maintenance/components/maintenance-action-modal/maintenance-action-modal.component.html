@@ -31,7 +31,7 @@
               [selectAll]="true"
               formControlName="contentRepositories"
               >
-              @for (cr of crs; track cr) {
+              @for (cr of crs; track cr.id) {
                 <gtx-option [value]="cr.id">
                   {{ cr.name }}
                 </gtx-option>

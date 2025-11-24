@@ -8,7 +8,7 @@
     [placeholder]="settings.placeholder"
     (valueChange)="triggerChange($event)"
     >
-    @for (option of (settings?.options || []); track option) {
+    @for (option of (settings?.options || []); track option.id) {
       <gtx-option
         [value]="option.id"
       >{{ option.label }}</gtx-option>

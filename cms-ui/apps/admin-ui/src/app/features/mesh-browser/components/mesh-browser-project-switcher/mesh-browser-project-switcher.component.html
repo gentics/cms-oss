@@ -7,9 +7,9 @@
   </gtx-dropdown-trigger>
 
   <gtx-dropdown-content>
-    @for (project of availableProjects; track project) {
-      <gtx-dropdown-item (click)="projectChangeHandler(project)">
-        {{ project }}
+    @for (singleProject of availableProjects; track singleProject) {
+      <gtx-dropdown-item (click)="projectChangeHandler(singleProject)">
+        {{ singleProject }}
       </gtx-dropdown-item>
     }
   </gtx-dropdown-content>
@@ -24,9 +24,9 @@
       </button>
     </gtx-dropdown-trigger>
     <gtx-dropdown-content>
-      @for (branch of availableBranches; track branch) {
-        <gtx-dropdown-item (click)="branchChangeHandler(branch)">
-          {{ branch.name }}
+      @for (singleBranch of availableBranches; track singleBranch) {
+        <gtx-dropdown-item (click)="branchChangeHandler(singleBranch)">
+          {{ singleBranch }}
         </gtx-dropdown-item>
       }
     </gtx-dropdown-content>

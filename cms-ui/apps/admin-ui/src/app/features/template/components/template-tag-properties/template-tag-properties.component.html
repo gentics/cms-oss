@@ -23,7 +23,7 @@
           (blur)="touchFn()"
           formControlName="constructId"
           >
-          @for (construct of constructs; track construct) {
+          @for (construct of constructs; track construct.constructId) {
             <gtx-option
               [value]="construct.constructId"
             >{{ construct.name }}</gtx-option>

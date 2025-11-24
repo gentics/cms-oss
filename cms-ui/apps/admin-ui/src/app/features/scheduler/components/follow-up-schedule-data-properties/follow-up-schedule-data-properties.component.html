@@ -6,7 +6,7 @@
     [multiple]="true"
     formControlName="scheduleId"
     >
-    @for (schedule of schedules$ | async; track schedule) {
+    @for (schedule of schedules$ | async; track schedule.id) {
       <gtx-option [value]="schedule.id">{{ schedule.name }}</gtx-option>
     }
   </gtx-select>

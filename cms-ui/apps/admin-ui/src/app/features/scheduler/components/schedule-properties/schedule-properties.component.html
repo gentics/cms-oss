@@ -25,7 +25,7 @@
         [required]="true"
         formControlName="taskId"
         >
-        @for (task of tasks$ | async; track task) {
+        @for (task of tasks$ | async; track task.id) {
           <gtx-option [value]="task.id">{{ task.name }}</gtx-option>
         }
       </gtx-select>

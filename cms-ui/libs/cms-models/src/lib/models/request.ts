@@ -457,121 +457,120 @@ export interface FileListOptions extends FolderListOptions {
 }
 
 /** Collection of all query parameters allowed by GCMS entities Folder, Form, File, Image, Item */
-export type GtxCmsQueryOptions = FolderListOptions & PageListOptions   & FormListOptions &
-{
-    /** path (e.g. /_search) */
-    path?: string;
-    /** true to add content tags to pages */
-    contenttags?: boolean;
-    /** true to add the folder to search hits */
-    folder?: boolean;
-    /** optional: folderId to restrict search to specific folder(s) */
-    folderId?: number;
-    /** true to add language variants to pages */
-    langvars?: boolean;
-    /** optional: nodeId to restrict search to a specific node / default = 0 */
-    nodeId?: number;
-    /** true to add object tags to search hits */
-    objecttags?: boolean;
-    /** true to add privilege maps to folders */
-    privilegeMap?: boolean;
-    /** true to add privilege information to folders */
-    privileges?: boolean;
-    /** flag for restricting search to given folderIds and their subfolders */
-    recursive?: boolean;
-    /** true to add the template to pages */
-    template?: boolean;
-    /** true to add the translation status to pages */
-    translationstatus?: boolean;
-    /** code of the language in which the pages shall be fetched. */
-    language?: string | string[];
-    /** timestamp to search pages, which were created before a given time (0 for all pages) */
-    ceatedbefore?: number;
-    /** timestamp to search pages, which were created since a given time (0 for all pages) */
-    createdsince?: number;
-    /** pattern for restricting pages by creator */
-    creator?: number;
-    /** timestamp to search pages, which were edited before a given time (0 for all pages) */
-    editedbefore?: number;
-    /** timestamp to search pages, which were edited since a given time (0 for all pages) */
-    editedsince?: number;
-    /**
-     * (optional) search string for filenames (may be empty)
-     *
-     * @Note
-     * compared to advanced search there are no "is not" option ... on "contains" wildcards need to be set as "%"
-     */
-    filename?: string;
-    /** true to restrict to modified pages, false to restrict to unmodified pages */
-    modified?: boolean;
-    /** regular expression to get pages with a nice URL. */
-    niceurl?: string;
-    /** true to restrict to online pages, false to restrict to offline pages */
-    online?: boolean;
-    /** true to restrict to planned pages, false to restrict to unplanned pages */
-    planned?: boolean;
-    /** priority of the page */
-    priority?: number;
-    /** timestamp to search pages, which were published before a given time (0 for all pages) */
-    publishedbefore?: number;
-    /** timestamp to search pages, which were published since a given time (0 for all pages) */
-    publishedsince?: number;
-    /** pattern for restricting pages by publisher */
-    publisher?: number;
-    /** pattern for restricting pages by editor */
-    editor?: number;
-    /** true to restrict to queued pages, false to restrict to unqueued pages */
-    queued?: boolean;
-    /** true, if also the content shall be searched, false if not */
-    searchcontent?: boolean;
-    /** list of template ids */
-    template_id?: number;
-    /** exclude (default) to exclude deleted objects, include to include deleted objects, only to return only deleted objects */
-    wastebin?: 'exclude' | 'include' | 'only';
-    /** true to only return inherited folders in the given node, false to only get local/localized folders, null to get local and inherited folders */
-    inherited?: boolean;
-    /** true to only return broken files (where the binary data is missing), false to only get non-broken files, null to get both */
-    broken?: boolean;
-    /**
-     * true if only used files that are referenced somewhere shall be fetched,
-     * false for unused files. If "usedIn" is not specified, this filter will only check in the current channel.
-     */
-    used?: boolean;
-    /** list of channel IDs for extending the "used" filter to multiple channels. */
-    usedIn?: number[];
+export type GtxCmsQueryOptions = FolderListOptions & PageListOptions & FormListOptions
+  & {
+      /** path (e.g. /_search) */
+      path?: string;
+      /** true to add content tags to pages */
+      contenttags?: boolean;
+      /** true to add the folder to search hits */
+      folder?: boolean;
+      /** optional: folderId to restrict search to specific folder(s) */
+      folderId?: number;
+      /** true to add language variants to pages */
+      langvars?: boolean;
+      /** optional: nodeId to restrict search to a specific node / default = 0 */
+      nodeId?: number;
+      /** true to add object tags to search hits */
+      objecttags?: boolean;
+      /** true to add privilege maps to folders */
+      privilegeMap?: boolean;
+      /** true to add privilege information to folders */
+      privileges?: boolean;
+      /** flag for restricting search to given folderIds and their subfolders */
+      recursive?: boolean;
+      /** true to add the template to pages */
+      template?: boolean;
+      /** true to add the translation status to pages */
+      translationstatus?: boolean;
+      /** code of the language in which the pages shall be fetched. */
+      language?: string | string[];
+      /** timestamp to search pages, which were created before a given time (0 for all pages) */
+      ceatedbefore?: number;
+      /** timestamp to search pages, which were created since a given time (0 for all pages) */
+      createdsince?: number;
+      /** pattern for restricting pages by creator */
+      creator?: number;
+      /** timestamp to search pages, which were edited before a given time (0 for all pages) */
+      editedbefore?: number;
+      /** timestamp to search pages, which were edited since a given time (0 for all pages) */
+      editedsince?: number;
+      /**
+       * (optional) search string for filenames (may be empty)
+       * @Note
+       * compared to advanced search there are no "is not" option ... on "contains" wildcards need to be set as "%"
+       */
+      filename?: string;
+      /** true to restrict to modified pages, false to restrict to unmodified pages */
+      modified?: boolean;
+      /** regular expression to get pages with a nice URL. */
+      niceurl?: string;
+      /** true to restrict to online pages, false to restrict to offline pages */
+      online?: boolean;
+      /** true to restrict to planned pages, false to restrict to unplanned pages */
+      planned?: boolean;
+      /** priority of the page */
+      priority?: number;
+      /** timestamp to search pages, which were published before a given time (0 for all pages) */
+      publishedbefore?: number;
+      /** timestamp to search pages, which were published since a given time (0 for all pages) */
+      publishedsince?: number;
+      /** pattern for restricting pages by publisher */
+      publisher?: number;
+      /** pattern for restricting pages by editor */
+      editor?: number;
+      /** true to restrict to queued pages, false to restrict to unqueued pages */
+      queued?: boolean;
+      /** true, if also the content shall be searched, false if not */
+      searchcontent?: boolean;
+      /** list of template ids */
+      template_id?: number;
+      /** exclude (default) to exclude deleted objects, include to include deleted objects, only to return only deleted objects */
+      wastebin?: 'exclude' | 'include' | 'only';
+      /** true to only return inherited folders in the given node, false to only get local/localized folders, null to get local and inherited folders */
+      inherited?: boolean;
+      /** true to only return broken files (where the binary data is missing), false to only get non-broken files, null to get both */
+      broken?: boolean;
+      /**
+       * true if only used files that are referenced somewhere shall be fetched,
+       * false for unused files. If "usedIn" is not specified, this filter will only check in the current channel.
+       */
+      used?: boolean;
+      /** list of channel IDs for extending the "used" filter to multiple channels. */
+      usedIn?: number[];
 
-    /**
-     * convention "legacy":
-     * search string to search for in name, null if not searching
-     * - this will filter the results if either the ID,
-     * the name (partial match or the description (partial match) matches the given search string.
-     */
-    search?: string;
-    /**
-     * convention "new":
-     * search string to search for in name, null if not searching
-     * - this will filter the results if either the ID,
-     * the name (partial match or the description (partial match) matches the given search string.
-     */
-    q?: string;
+      /**
+       * convention "legacy":
+       * search string to search for in name, null if not searching
+       * - this will filter the results if either the ID,
+       * the name (partial match or the description (partial match) matches the given search string.
+       */
+      search?: string;
+      /**
+       * convention "new":
+       * search string to search for in name, null if not searching
+       * - this will filter the results if either the ID,
+       * the name (partial match or the description (partial match) matches the given search string.
+       */
+      q?: string;
 
-    /** maximum number of items to be returned, set to -1 for returning all items */
-    maxItems?: number;
-    /** Only acknowledged by `form`. */
-    pageSize?: number;
-    // -- sorting parameter convention "legacy" --
-    /** get results using from as offset */
-    from?: number;
-    /** The field to sort on. */
-    sortby?: SortField;
-    // -- sorting parameter convention "new" --
-    /** number of items to be skipped, set to 0 for skipping no items */
-    skipCount?: number;
-    /** Sorting order, defaults to "asc" */
-    sortorder?: SortOrder;
-    /** Whether to allow language fallback for search results. */
-    langfallback?: boolean;
-}
+      /** maximum number of items to be returned, set to -1 for returning all items */
+      maxItems?: number;
+      /** Only acknowledged by `form`. */
+      pageSize?: number;
+      // -- sorting parameter convention "legacy" --
+      /** get results using from as offset */
+      from?: number;
+      /** The field to sort on. */
+      sortby?: SortField;
+      // -- sorting parameter convention "new" --
+      /** number of items to be skipped, set to 0 for skipping no items */
+      skipCount?: number;
+      /** Sorting order, defaults to "asc" */
+      sortorder?: SortOrder;
+      /** Whether to allow language fallback for search results. */
+      langfallback?: boolean;
+  };
 
 /**
  * Query parameters for listing the pages in a folder
@@ -977,8 +976,8 @@ export enum ContentMaintenanceType {
 
 // ENTITIES /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-/** * Request object used to configure the behaviour of the
+/**
+ * Request object used to configure the behaviour of the
  * `folder/create` endpoint.
  */
 export interface FolderCreateRequest extends EditableFolderProps {
@@ -1047,12 +1046,12 @@ export interface FormCreateRequest extends EditableFormProps {
  * `POST /file/create` endpoint, requesting CMS to fetch binary response fom `sourceURL`.
  */
 export interface FileCreateRequest {
-    overwriteExisting: boolean,
-    folderId: number,
-    nodeId: number,
-    name: string,
-    description: string,
-    sourceURL: string,
+    overwriteExisting: boolean;
+    folderId: number;
+    nodeId: number;
+    name: string;
+    description: string;
+    sourceURL: string;
     niceURL?: string;
     alternateURLs?: string[];
     properties?: { [key: string]: any };
@@ -1112,7 +1111,7 @@ export interface PageCopyRequest {
     sourcePageIds: number[];
 
     /** The list of target folder in which the pages should be copied. */
-    targetFolders: { id: number, channelId: number }[];
+    targetFolders: { id: number; channelId: number }[];
 }
 
 export interface PagePreviewRequest {
@@ -1161,7 +1160,7 @@ export interface CancelPageEditOptions {
 export interface PageAssignRequest {
     message: string;
     pageIds: number[];
-    userIds: number[]
+    userIds: number[];
 }
 
 export interface PagePublishRequest {
@@ -1630,23 +1629,23 @@ export interface FormSaveRequestOptions {
  * If not set otherwise, a new version will be created (if necessary) and the form will remain locked for the user.
  */
 export type FormSaveRequest = Partial<Omit<Form,
-'creator' |
-'deleted' |
-'edate' |
-'editor' |
-'folder' |
-'folderDeleted' |
-'locked' |
-'lockedBy' |
-'lockedSince' |
-'master' |
-'masterDeleted' |
-'modified' |
-'online' |
-'published' |
-'publisher' |
-'usage' |
-'versions'
+  'creator'
+  | 'deleted'
+  | 'edate'
+  | 'editor'
+  | 'folder'
+  | 'folderDeleted'
+  | 'locked'
+  | 'lockedBy'
+  | 'lockedSince'
+  | 'master'
+  | 'masterDeleted'
+  | 'modified'
+  | 'online'
+  | 'published'
+  | 'publisher'
+  | 'usage'
+  | 'versions'
 >>;
 
 /** Used to map item types to their save request options for use in generic methods. */
@@ -1712,7 +1711,7 @@ export interface UserGroupsRequestOptions extends BaseListOptionsWithPaging<Grou
  */
 export type UserUpdateRequest = Partial<User<Raw>> & {
     password?: string;
-}
+};
 
 /**
  * Request object used to create a new group using the `group/{id}/groups` endpoint.
@@ -1726,7 +1725,8 @@ export type GroupCreateRequest = Omit<Group<Raw>, 'id' | 'children'>;
  */
 export type GroupUpdateRequest = Omit<Group<Raw>, 'id' | 'children'>;
 
-/** * Request object used to configure the behaviour of the
+/**
+ * Request object used to configure the behaviour of the
  * `group/id/users` endpoint.
  *
  * Users can only be created within a group.
@@ -1839,7 +1839,6 @@ export type DataSourceCreateRequest = Partial<DataSource<Raw>>;
 
 export type DataSourceUpdateRequest = DataSourceCreateRequest;
 
-
 /**
  * Request used for saving a `DataSource Entry`.
  */
@@ -1868,20 +1867,16 @@ export interface PackageCheckFilter {
     filter?: PackageCheckCompletenessFilter;
 }
 
-
 export enum PackageCheckCompletenessFilter {
     ALL = 'ALL',
     INCOMPLETE = 'INCOMPLETE',
 }
 
-
-
 export interface PackageCheckOptions extends PackageSyncOptions {
     wait?: number;
     checkAll?: boolean;
-    filter?: PackageCheckFilter | string
+    filter?: PackageCheckFilter | string;
 }
-
 
 /**
  * Request used for saving a `Package`.
@@ -2149,7 +2144,6 @@ export interface UpdateExternalLinkRequestOptions {
     wait?: number;
 }
 
-
 // MAINTENANCE MODE /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export interface MaintenanceModeRequestOptions {
@@ -2408,7 +2402,7 @@ export interface SetPermissionsRequest {
     groupId: number;
     subGroups: boolean;
     subObjects: boolean;
-    roleIds: number[]
+    roleIds: number[];
 }
 
 export interface SetPermissionsOptions {

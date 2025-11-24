@@ -48,7 +48,7 @@
           [label]="'node.content_repository' | gtxI18n"
           [clearable]="true"
           >
-          @for (cr of contentRepositories; track cr) {
+          @for (cr of contentRepositories; track cr.id) {
             <gtx-option
               [value]="cr.id"
             >{{ cr.name }}</gtx-option>
@@ -96,7 +96,7 @@
               formControlName="urlRenderWayPages"
               [label]="'node.pub_url_pages' | gtxI18n"
               >
-              @for (item of URL_MODES | gtxEntries; track item) {
+              @for (item of URL_MODES | gtxEntries; track item.key) {
                 <gtx-option
                   [value]="+item.key"
                 >{{ item.value | gtxI18n }}</gtx-option>
@@ -108,7 +108,7 @@
               [label]="'node.pub_url_files_images' | gtxI18n"
               formControlName="urlRenderWayFiles"
               >
-              @for (item of URL_MODES | gtxEntries; track item) {
+              @for (item of URL_MODES | gtxEntries; track item.key) {
                 <gtx-option
                   [value]="+item.key"
                 >{{ item.value | gtxI18n }}</gtx-option>
@@ -131,7 +131,7 @@
               formControlName="pageLanguageCode"
               [label]="'node.page_language_code' | gtxI18n"
               >
-              @for (item of NodePageLanguageCode | gtxEntries; track item) {
+              @for (item of NodePageLanguageCode | gtxEntries; track item.key) {
                 <gtx-option
                   [value]="item.key"
                 >{{ item.value }}</gtx-option>

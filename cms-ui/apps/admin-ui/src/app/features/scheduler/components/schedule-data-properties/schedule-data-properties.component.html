@@ -5,7 +5,7 @@
     [required]="true"
     formControlName="type"
     >
-    @for (type of ScheduleType | gtxEntries; track type) {
+    @for (type of ScheduleType | gtxEntries; track type.value) {
       <gtx-option [value]="type.value">{{ ('scheduler.scheduleType_' + type.value) | gtxI18n }}</gtx-option>
     }
   </gtx-select>

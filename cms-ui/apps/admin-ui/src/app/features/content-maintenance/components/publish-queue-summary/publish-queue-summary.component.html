@@ -1,6 +1,6 @@
 @if (publishQueue) {
   <table class="summary-table">
-    @for (entry of PUBLISH_PLURAL_MAPPING | gtxEntries; track entry) {
+    @for (entry of PUBLISH_PLURAL_MAPPING | gtxEntries; track entry.key) {
       <tr class="type-header-row">
         <th colspan="3">{{ ('common.' + entry.value + '_plural') | gtxI18n }}</th>
       </tr>
@@ -10,7 +10,7 @@
           <td class="value-column">{{ totals[entry.key][property] }}</td>
           <td class="progress-column"></td>
         </tr>
-        @for (node of nodes; track node) {
+        @for (node of nodes; track node.id) {
           @if (publishQueue.nodes?.[node.id]; as nodeData) {
             @if (nodeData?.[entry.key]?.[property] > 0) {
               <tr

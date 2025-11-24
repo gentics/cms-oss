@@ -9,7 +9,7 @@
 </div>
 
 <div class="modal-footer">
-  @for (button of config.buttons; track button) {
+  @for (button of config.buttons; track button.id) {
     <gtx-button
       [attr.data-action]="button.id"
       [type]="button.type"

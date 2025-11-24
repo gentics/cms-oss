@@ -10,7 +10,7 @@
         [clearable]="mode !== ContentRepositoryPropertiesMode.UPDATE"
         [required]="true"
         >
-        @for (crType of crTypes; track crType) {
+        @for (crType of crTypes; track crType.id) {
           <gtx-option [value]="crType.id">{{ crType.label | gtxI18n }}</gtx-option>
         }
       </gtx-select>
@@ -35,7 +35,7 @@
         [clearable]="false"
         formControlName="urlType"
         >
-        @for (type of URL_TYPES; track type) {
+        @for (type of URL_TYPES; track type.id) {
           <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
         }
       </gtx-select>
@@ -73,7 +73,7 @@
         [clearable]="false"
         formControlName="usernameType"
         >
-        @for (type of USERNAME_TYPES; track type) {
+        @for (type of USERNAME_TYPES; track type.id) {
           <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
         }
       </gtx-select>
@@ -105,7 +105,7 @@
           [clearable]="false"
           formControlName="passwordType"
           >
-          @for (type of PASSWORD_TYPES; track type) {
+          @for (type of PASSWORD_TYPES; track type.id) {
             <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
           }
         </gtx-select>
@@ -185,7 +185,7 @@
           [clearable]="false"
           formControlName="basepathType"
           >
-          @for (type of BASEPATH_TYPES; track type) {
+          @for (type of BASEPATH_TYPES; track type.id) {
             <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
           }
         </gtx-select>

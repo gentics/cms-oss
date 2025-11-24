@@ -30,9 +30,9 @@ import {
     Tag,
     Template,
     TemplateResponse,
-    TotalUsageResponse,
-    Usage,
+    TotalUsageResponse
 } from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
@@ -434,19 +434,20 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                 }),
             ).subscribe((result: TotalUsageResponse) => {
                 // similar to implementation in usage-state-actions.ts
-                const usage: { [id: number]: Usage } = result.infos;
+                const usage = result.infos;
                 // all object keys are ids as numbers
                 const idsWithUsage: number[] = Object.keys(usage)
                     .map((key) => parseInt(key, 10))
                     .filter((key: number) => !isNaN(key));
 
                 const updatedItems: RepoItem[] = this.items$.value.map((item: RepoItem) => {
-                    if (item.type === type) {
-                        if (idsWithUsage.includes(item.id)) {
-                            item.usage = usage[item.id];
+                    const clone = cloneWithSymbols(item);
+                    if (clone.type === type) {
+                        if (idsWithUsage.includes(clone.id)) {
+                            clone.usage = usage[clone.id];
                         }
                     }
-                    return Object.assign({}, item);
+                    return clone;
                 });
 
                 this.items$.next(updatedItems);

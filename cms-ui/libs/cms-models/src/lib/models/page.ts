@@ -29,10 +29,10 @@ export interface TimeManagement {
     version?: PageVersion;
 
     /* The user that planned to publish */
-    futurePublisher?: User,
+    futurePublisher?: User;
 
     /* The user that planned to upublish */
-    futureUnpublisher?: User,
+    futureUnpublisher?: User;
 }
 
 /** Superinterface for queued TimeManagement actions/ */
@@ -56,7 +56,6 @@ export interface QueuedActionPublish extends QueuedActionTakeOffline {
 
 /** Queued time management for taking a page offline */
 export interface QueuedActionTakeOffline extends QueuedAction { }
-
 
 export interface QueuedActionRequestPublishAt {
     at: number;
@@ -140,7 +139,7 @@ export interface PageWorkflow {
  * The user-editable properties of a Page object.
  */
 export type EditablePageProps = Partial<Pick<Page, 'name' | 'fileName' | 'description' | 'niceUrl'
-| 'alternateUrls' |'language' | 'templateId' | 'priority' | 'customCdate' | 'customEdate' | 'tags'>>;
+  | 'alternateUrls' | 'language' | 'templateId' | 'priority' | 'customCdate' | 'customEdate' | 'tags'>>;
 
 /**
  * External Link Checker page list item, contains the page and the external links
@@ -161,7 +160,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
     type: 'page';
 
     /* BASICS
-     * ----------------------------------------------------------------------*/
+     * ---------------------------------------------------------------------- */
 
     /** Filename */
     fileName: string;
@@ -205,7 +204,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
     customEdate?: number;
 
     /* COMMON META-DATA
-     * ----------------------------------------------------------------------*/
+     * ---------------------------------------------------------------------- */
 
     /** Folder path to the page */
     readonly path: string;
@@ -244,7 +243,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
     readonly channelSetId: number;
 
     /* MULTICHANNELLING
-     * ----------------------------------------------------------------------*/
+     * ---------------------------------------------------------------------- */
 
     /** Whether this page is a master page */
     readonly master: boolean;
@@ -256,7 +255,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
     readonly localizationType?: LocalizationType;
 
     /* PUBLISH META-DATA
-     * ----------------------------------------------------------------------*/
+     * ---------------------------------------------------------------------- */
 
     /** Whether the page is currently online. */
     readonly online: boolean;
@@ -286,7 +285,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
     readonly timeManagement: TimeManagement;
 
     /* VARIANTS
-     * ----------------------------------------------------------------------*/
+     * ---------------------------------------------------------------------- */
 
     /** This page's ID in the {@link pageVariants} */
     readonly contentSetId: number;
@@ -304,7 +303,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
     readonly languageVariants?: IndexById<Normalizable<T, Page<Raw>, number>>;
 
     /* INLINE REFERENCES
-     * ----------------------------------------------------------------------*/
+     * ---------------------------------------------------------------------- */
 
     /**
      * Template of the Page.

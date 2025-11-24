@@ -5,12 +5,12 @@
 @if (form?.controls) {
   <div class="options-wrapper">
     <gtx-sortable-list [disabled]="disabled" (dragEnd)="sortOptions($event)">
-      @for (control of form.controls; track control; let index = $index) {
+      @for (ctlEntry of form.controls | gtxEntries; track ctlEntry.key; let index = $index) {
         <gtx-sortable-item>
           <gtx-contents-list-item class="list-item">
             <div class="item-primary">
               <gtx-select-option-input
-                [formControl]="control"
+                [formControl]="ctlEntry.value"
               ></gtx-select-option-input>
             </div>
             <gtx-button

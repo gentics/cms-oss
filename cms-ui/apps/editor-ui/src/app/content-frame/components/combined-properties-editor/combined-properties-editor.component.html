@@ -32,14 +32,14 @@
         ></gtx-tab-pane>
       }
       @if (item.type !== 'node' && item.type !== 'channel') {
-        @for (category of objectPropertiesGrouped; track category) {
+        @for (category of objectPropertiesGrouped; track category.id) {
           <gtx-tab-group
             [label]="category.name | gtxI18n"
             [id]="category.id"
             [expanded]="expandedObjectPropertyCategories | gtxIncludes:category.id"
             (tabGroupToggle)="tabGroupToggled($event, category.id)"
             >
-            @for (objProp of category.objProperties; track objProp) {
+            @for (objProp of category.objProperties; track objProp.name) {
               <gtx-tab-pane
                 [id]="objProp.name"
                 [readonly]="objProp.readOnly"

@@ -83,7 +83,7 @@ export type ItemNormalized = Page<Normalized> | FileModel<Normalized> | Folder<N
 export interface Item<T extends ModelType = DefaultModelType> extends NormalizableEntity<T> {
 
     /* BASICS
-     * ----------------------------------------------------------------------*/
+     * ---------------------------------------------------------------------- */
 
     /** ID of the item */
     readonly id: number;
@@ -95,7 +95,7 @@ export interface Item<T extends ModelType = DefaultModelType> extends Normalizab
     name: string;
 
     /* COMMON META-DATA
-     * ----------------------------------------------------------------------*/
+     * ---------------------------------------------------------------------- */
 
     /** Creator of the item */
     readonly creator: Normalizable<T, User<Raw>, number>;
@@ -165,7 +165,6 @@ export interface InheritableItem<T extends ModelType = DefaultModelType> extends
      * NOTE: This property does not exist by default, but is created
      * after calling the `<type>/disinherit/<id>` endpoint, at which
      * point it is merged into the item.
-     *
      * @deprecated Business-logic, move to appropiate app instead
      */
     readonly disinherit?: number[];
@@ -176,7 +175,6 @@ export interface InheritableItem<T extends ModelType = DefaultModelType> extends
      * NOTE: This property does not exist by default, but is created
      * after calling the `<type>/disinherit/<id>` endpoint, at which
      * point it is merged into the item.
-     *
      * @deprecated Business-logic, move to appropiate app instead
      */
     readonly inheritable?: number[];
@@ -209,6 +207,6 @@ export type ItemWithContentTags<T extends ModelType = DefaultModelType> = Page<T
  * for the root folder, comparing the type alone is not sufficient.
  */
 export function isFolderOrNode(input: any): input is Folder {
-    return (typeof input === 'object' && input &&
-        (input.type === 'folder' || input.type === 'node' || input.type === 'channel'));
+    return (typeof input === 'object' && input
+      && (input.type === 'folder' || input.type === 'node' || input.type === 'channel'));
 }

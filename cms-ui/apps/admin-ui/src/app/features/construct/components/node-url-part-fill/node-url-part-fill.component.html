@@ -7,7 +7,7 @@
   [value]="value?.nodeId"
   (valueChange)="nodeSelected($event)"
   >
-  @for (node of nodes$ | async; track node) {
+  @for (node of nodes$ | async; track node.id) {
     <gtx-option
       [value]="node.id"
     >{{ node.name }}</gtx-option>

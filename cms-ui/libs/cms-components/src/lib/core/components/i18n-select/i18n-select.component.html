@@ -23,7 +23,7 @@
     <div class="translation-suggestions__values">
       <div class="translation-suggestions__value">[{{ translationSuggestions[0]?.language | uppercase }}] {{ translationSuggestions[0]?.value }}</div>
       <div class="translation-suggestions__additional-values">
-        @for (translationSuggestion of translationSuggestions; track translationSuggestion; let first = $first) {
+        @for (translationSuggestion of translationSuggestions; track (translationSuggestion.language + translationSuggestion.value); let first = $first) {
           @if (!first) {
             <div>
               [{{ translationSuggestion.language | uppercase }}] {{ translationSuggestion.value }}

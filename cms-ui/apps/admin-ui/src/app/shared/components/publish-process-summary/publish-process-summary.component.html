@@ -13,7 +13,7 @@
         <div class="entry-value">{{ info.phase }}</div>
       </div>
     }
-    @for (typed of typedStatus; track typed) {
+    @for (typed of typedStatus; track typed.type) {
       <div class="entry typed-entry">
         <div class="entry-title">
           <icon class="type-icon">{{ typed.icon }}</icon>

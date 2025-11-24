@@ -6,7 +6,7 @@
             (valueChange)="onSelectChange($event)"
             multiple="true"
         >
-            @for (item of variants; track item) {
+            @for (item of variants; track item.id) {
                 <gtx-option
                     [value]="item.id"
                 >{{ item.languageName }}</gtx-option>

@@ -46,13 +46,13 @@
       (click)="viewValueContainer.focus()"
       (mouseover)="deselect()"
       >
-      @for (group of optionGroups; track group; let groupIndex = $index) {
+      @for (group of optionGroups; track group.isDefaultGroup ? '' : group.label; let groupIndex = $index) {
         @if (!group.isDefaultGroup) {
           <li
             class="group-label"
           >{{ group.label }}</li>
         }
-        @for (option of group.options; track option; let optionIndex = $index) {
+        @for (option of group.options; track option.viewValue; let optionIndex = $index) {
           <li
             class="select-option"
             [attr.data-id]="idPath ? (option.value | gtxValuePath:idPath) : option.value"

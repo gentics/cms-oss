@@ -11,7 +11,7 @@
       [value]="form.value.datasourceId"
       (valueChange)="loadEntries($event)"
       >
-      @for (dsEntry of (dataSourceMap | gtxEntries); track dsEntry) {
+      @for (dsEntry of (dataSourceMap | gtxEntries); track dsEntry.value.id) {
         <gtx-option
           [value]="dsEntry.value.id"
         >{{ dsEntry.value.name }}</gtx-option>

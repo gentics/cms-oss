@@ -7,7 +7,7 @@
   [value]="multiple ? selectedEntries : selectedEntries?.[0]"
   (valueChange)="selectChanged($event)"
   >
-  @for (entry of entries; track entry) {
+  @for (entry of entries; track entry.dsId) {
     <gtx-option [value]="entry.dsId || entry.id">{{ entry.key }}</gtx-option>
   }
 </gtx-select>

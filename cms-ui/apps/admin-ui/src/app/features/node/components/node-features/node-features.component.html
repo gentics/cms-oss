@@ -1,6 +1,6 @@
 @if (form) {
   <div class="features-content columns gtx-form" [formGroup]="form">
-    @for (feature of availableFeatures; track feature) {
+    @for (feature of availableFeatures; track feature.id) {
       <div class="feature-container">
         <gtx-tooltip
           [type]="'light'"

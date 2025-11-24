@@ -8,7 +8,7 @@
       </gtx-button>
     </gtx-dropdown-trigger>
     <gtx-dropdown-content>
-      @for (item of editors; track item) {
+      @for (item of editors; track item.label) {
         <gtx-dropdown-item (click)="select(item)">{{ item.label | gtxI18n }}</gtx-dropdown-item>
       }
     </gtx-dropdown-content>

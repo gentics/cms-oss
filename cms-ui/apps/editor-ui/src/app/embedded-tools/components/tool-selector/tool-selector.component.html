@@ -32,7 +32,7 @@
         @if ((tools$ | async).length > 0 && (isAdmin$ | async)) {
           <hr>
           }
-          @for (tool of tools$ | async; track tool) {
+          @for (tool of tools$ | async; track tool.id) {
             <tool-button [tool]="tool">
             </tool-button>
           }

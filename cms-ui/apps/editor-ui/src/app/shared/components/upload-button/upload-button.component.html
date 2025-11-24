@@ -15,7 +15,7 @@
       </gtx-button>
     </gtx-dropdown-trigger>
     <gtx-dropdown-content data-context-id="asset-management">
-      @for (singleProvider of providers; track singleProvider) {
+      @for (singleProvider of providers; track singleProvider.default ? -1 : singleProvider.id) {
         <gtx-dropdown-item
           [attr.default-provider]="singleProvider.default"
           [attr.data-provider-id]="singleProvider.id"

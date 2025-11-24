@@ -9,7 +9,7 @@
       <div class="overview-table-wrapper">
         <table  class="overview-table">
           <tbody>
-            @for (entry of (serverInfo | gtxEntries); track entry) {
+            @for (entry of (serverInfo | gtxEntries); track entry.key) {
               <tr>
                 <td>{{ ('mesh.serverInfo_' + entry.key) | gtxI18n }}</td>
                 <td>{{ entry.value }}</td>
@@ -36,7 +36,7 @@
       <div class="overview-table-wrapper">
         <table class="overview-table">
           <tbody>
-            @for (entry of (serverConfig | gtxEntries); track entry) {
+            @for (entry of (serverConfig | gtxEntries); track entry.key) {
               <tr>
                 <td>{{ entry.key }}</td>
                 <td>{{ entry.value }}</td>
@@ -88,7 +88,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (plugin of plugins; track plugin) {
+            @for (plugin of plugins; track plugin.id) {
               <tr>
                 <td>{{ plugin.id }}</td>
                 <td>{{ plugin.name }}</td>

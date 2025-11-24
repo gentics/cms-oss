@@ -8,7 +8,7 @@
           (click)="selectPaletteColor(null)"
         ></button>
       }
-      @for (paletteColor of normalizedPalette; track paletteColor) {
+      @for (paletteColor of normalizedPalette; track paletteColor.color) {
         <button
           class="palette-entry"
           [attr.data-color]="paletteColor.color"

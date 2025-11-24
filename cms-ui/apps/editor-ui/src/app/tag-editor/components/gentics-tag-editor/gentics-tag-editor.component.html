@@ -13,7 +13,7 @@
   }
 
   <div class="tag-property-editors">
-    @for (tagPart of editableTagParts; track tagPart) {
+    @for (tagPart of editableTagParts; track tagPart.keyword) {
       <div
         class="tag-property-editor-row"
         [ngClass]="tagPart?.keyword ? 'gtx-tag-part-keyword__' + tagPart.keyword : 'gtx-tag-part-keyword__no-keyword'"

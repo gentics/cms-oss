@@ -111,9 +111,7 @@
                 </th>
                 @for (key of entryKeys; track key) {
                   @if (key !== 'errors' && ((formElementLabelPropertyI18nValues[key] | i18nfg$:'content':'_ui' | async) || key); as entryLabel) {
-                    <th
-                      [title]="entryLabel"
-                      >
+                    <th [title]="entryLabel">
                       <span>{{ entryLabel }}</span>
                     </th>
                   }

@@ -1,7 +1,6 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -25,15 +24,14 @@ import com.gentics.contentnode.job.LocalizeRootTagCallable;
 import com.gentics.contentnode.job.PushToMasterJob;
 import com.gentics.contentnode.job.UnlocalizeJob;
 import com.gentics.contentnode.job.UnlocalizeTagJob;
-import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.model.LocalizationType;
 import com.gentics.contentnode.rest.model.request.DisinheritRequest;
 import com.gentics.contentnode.rest.model.request.MultiPushToMasterRequest;
 import com.gentics.contentnode.rest.model.request.MultiUnlocalizeRequest;
@@ -216,7 +214,7 @@ public class MCPageResourceImpl implements MCPageResource {
 										"the specified page does not exist"));
 			}
 
-			var partial = Boolean.TRUE.equals(request.getPartial());
+			var partial = request.getLocalizationType() == LocalizationType.PARTIAL;
 
 			if (partial && !Feature.PARTIAL_MULTICHANNELLING.isActivated(page.getNode())) {
 				logger.error("Ignoring flag for partial localization of page {" + id + "} in channel {" + request.getChannelId() + "}: Feature PARTIAL_MULTICHANNELLING not available");

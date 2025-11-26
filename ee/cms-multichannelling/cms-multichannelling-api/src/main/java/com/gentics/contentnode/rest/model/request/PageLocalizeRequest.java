@@ -2,6 +2,8 @@ package com.gentics.contentnode.rest.model.request;
 
 import java.io.Serial;
 
+import com.gentics.contentnode.rest.model.LocalizationType;
+
 public class PageLocalizeRequest extends LocalizeRequest {
 
 	@Serial
@@ -10,23 +12,23 @@ public class PageLocalizeRequest extends LocalizeRequest {
 	/**
 	 * Whether the localization is for tags or the whole page.
 	 */
-	private Boolean partial;
+	private LocalizationType localizationType;
 
 	/**
-	 * Whether the localization is for tags or the whole page.
-	 * @return Whether the localization is for tags or the whole page.
+	 * The localization type.
+	 * @return The localization type.
 	 */
-	public Boolean getPartial() {
-		return partial;
+	public LocalizationType getLocalizationType() {
+		return localizationType;
 	}
 
 	/**
-	 * Set whether the localization is for tags or the whole page.
-	 * @param partial Whether the localization is for tags or the whole page.
+	 * Set the localization type.
+	 * @param localizationType The localization type.
 	 * @return Fluent API
 	 */
-	public PageLocalizeRequest setPartial(Boolean partial) {
-		this.partial = partial;
+	public PageLocalizeRequest setLocalizationType(LocalizationType localizationType) {
+		this.localizationType = localizationType;
 
 		return this;
 	}

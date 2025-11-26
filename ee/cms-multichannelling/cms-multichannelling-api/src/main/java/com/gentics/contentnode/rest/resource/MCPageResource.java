@@ -103,7 +103,7 @@ public interface MCPageResource {
 	 * Localize the specified tag for the given page.
 	 *
 	 * <p>
-	 *     Note that the page must already be {@link PageLocalizeRequest#getPartial() partially localized}.
+	 *     Note that the page must already be {@link PageLocalizeRequest#getLocalizationType() partially localized}.
 	 * </p>
 	 *
 	 * @param pageId The ID of the page to localize the tag for.

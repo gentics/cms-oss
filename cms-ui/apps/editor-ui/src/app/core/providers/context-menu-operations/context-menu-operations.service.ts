@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { I18nNotificationService, InitializableServiceBase } from '@gentics/cms-components';
+import { I18nNotificationService, InitializableServiceBase, I18nService } from '@gentics/cms-components';
 import {
     EditMode,
     ModalCloseError,
@@ -26,13 +26,13 @@ import {
     ItemInNode,
     ItemsGroupedByChannelId,
     Node,
+    NodeFeature,
     Normalized,
     Page,
     Raw,
     Template,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, take, takeUntil } from 'rxjs/operators';
@@ -619,36 +619,66 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     localize(item: InheritableItem, activeNodeId: number): void {
-        const localizingEditedItem: boolean = item.id === this.state.now.editor.itemId;
+        const localizingEditedItem = item.id === this.state.now.editor.itemId;
+        const partialLocalizeEnabled = this.state.now.features.nodeFeatures[activeNodeId].includes(NodeFeature.PARTIAL_MULTICHANNELLING);
+
+        if (!partialLocalizeEnabled || item.type !== 'page') {
+            this.folderActions.localizeItem(item.type, item.id, activeNodeId)
+                .then((item: InheritableItem) => {
+                    this.folderActions.refreshList(item.type);
+                    if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
+                        this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();
+                    }
+                });
+            return;
+        }
+
         this.modalService.dialog({
-            title: 'Lokalisierung wählen',
-            body: `Bitte wählen Sie eine Art der Lokaliserung.<br>
-Eine Volle Lokaliserung erstellt eine lokale Seite des Originals in den Channel,<br>
-in dem änderungen gänzlich angegeben werden müssen.<br><br>
-Bei einer Teil Lokalisierung, werden nur bestimmte Teile einer Seite lokalisiert,<br>
-wodurch man nur diesen teil bearbeiten muss.
-`,
+            title: this.i18n.instant('editor.choose_localization_type_title'),
+            body: this.i18n.instant('editor.choose_localization_type_body'),
             buttons: [
                 {
-                    label: 'Volle Lokalisierung',
+                    id: 'full',
+                    label: this.i18n.instant('editor.localization_type_full'),
                     type: 'default',
+                    returnValue: 'full',
                 },
                 {
-                    label: 'Teils Lokalisieren',
+                    id: 'partial',
+                    label: this.i18n.instant('editor.localization_type_partial'),
                     type: 'default',
+                    returnValue: 'partial',
                 },
                 {
-                    label: 'Abbrechen',
+                    id: 'cancel',
+                    label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
+                    returnValue: false,
                 },
             ],
         })
-            .then(dialog => dialog.open())
-            .then(() => this.folderActions.localizeItem(item.type, item.id, activeNodeId))
-            .then((item: InheritableItem) => {
+            .then((dialog) => dialog.open())
+            .then((type) => {
+                switch (type) {
+                    case 'full':
+                        return this.folderActions.localizeItem(item.type, item.id, activeNodeId)
+                            .then((item) => [item, type]);
+                    case 'partial':
+                        return this.folderActions.localizePagePartially(item.id, activeNodeId)
+                            .then((item) => [item, type]);
+                    default:
+                        return Promise.resolve([null, null]);
+                }
+            })
+            .then(([item, type]: [Page, 'full' | 'partial' | null]) => {
+                if (item == null) {
+                    return;
+                }
+
                 this.folderActions.refreshList(item.type);
                 if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
-                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();
+                    const targetMode = type === 'full' ? EditMode.PREVIEW : EditMode.EDIT_INHERITANCE;
+                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, targetMode).navigate();
                 }
             });
     }

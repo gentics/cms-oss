@@ -724,6 +724,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         preview: (body) => this.executeMappedJsonRequest(POST, '/page/preview', body),
         render: (body, options) => this.executeMappedJsonRequest(POST, '/page/render', body, options),
+        renderById: (id, options) => this.executeMappedJsonRequest(GET, `/page/render/${id}`, null, options),
         renderTag: (id, keyword, body, options) => this.executeMappedJsonRequest(POST, `/page/renderTag/${id}/${keyword}`, body, options),
 
         suggestFileName: (body) => this.executeMappedJsonRequest(POST, '/page/suggest/filename', body),
@@ -742,6 +743,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         createTag: (id, body) => this.executeMappedJsonRequest(POST, `/page/newtag/${id}`, body),
         createMultipleTags: (id, body) => this.executeMappedJsonRequest(POST, `/page/newtags/${id}`, body),
         restoreTag: (id, keyword, options) => this.executeMappedJsonRequest(POST, `/page/restoreTag/${id}/${keyword}`, null, options),
+        localizeTag: (id, tagId) => this.executeMappedJsonRequest(POST, `/page/localize/${id}/tags/${tagId}`),
+        unlocalizeTag: (id, tagId, body) => this.executeMappedJsonRequest(POST, `/page/unlocalize/${id}/tags/${tagId}`, body),
 
         workflowDecline: (id) => this.executeMappedJsonRequest(POST, `/page/workflow/decline/${id}`),
         workflowRevoke: (id) => this.executeMappedJsonRequest(POST, `/page/workflow/revoke/${id}`),

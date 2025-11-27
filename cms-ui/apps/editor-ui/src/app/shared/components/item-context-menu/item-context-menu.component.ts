@@ -8,6 +8,7 @@ import {
     InheritableItem,
     Item,
     ItemPermissions,
+    LocalizationType,
     Node as NodeModel,
     Page,
     StagedItemsMap,
@@ -52,7 +53,7 @@ export interface ContextMenuButtonsMap {
     templateUrl: './item-context-menu.component.html',
     styleUrls: ['./item-context-menu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -99,12 +100,12 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     ) { }
 
     ngOnInit(): void {
-        this.subscriptions.push(this.state.select(state => state.features[Feature.WASTEBIN]).subscribe(enabled => {
+        this.subscriptions.push(this.state.select((state) => state.features[Feature.WASTEBIN]).subscribe((enabled) => {
             this.wastebinEnabled = enabled;
             this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
         }));
-        this.subscriptions.push(this.state.select(state => state.features[Feature.MULTICHANNELLING]).subscribe(enabled => {
+        this.subscriptions.push(this.state.select((state) => state.features[Feature.MULTICHANNELLING]).subscribe((enabled) => {
             this.multiChannelingEnabled = enabled;
             this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
@@ -118,7 +119,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     /**
@@ -191,13 +192,13 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     takeOfflineClicked(item: Page | Form): void {
         switch (item.type) {
             case 'page': {
-                const page: Page = item ;
+                const page: Page = item;
                 this.contextMenuOperations.takePagesOffline([page]);
                 break;
             }
 
             case 'form': {
-                const form: Form = item ;
+                const form: Form = item;
                 this.contextMenuOperations.takeFormsOffline([form]);
                 break;
             }
@@ -214,13 +215,13 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
         switch (item.type) {
             case 'page': {
-                const page: Page = item ;
+                const page: Page = item;
                 this.contextMenuOperations.publishPages([page]);
                 break;
             }
 
             case 'form': {
-                const form: Form = item ;
+                const form: Form = item;
                 this.contextMenuOperations.publishForms([form]);
                 break;
             }
@@ -257,7 +258,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
         }
 
         this.contextMenuOperations.deleteItems(item.type, [item], this.activeNode.id)
-            .then(removedItemIds => this.folderActions.refreshList(item.type));
+            .then((removedItemIds) => this.folderActions.refreshList(item.type));
     }
 
     restoreClicked(item: InheritableItem): void {
@@ -296,7 +297,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
         const pages = [];
 
         if (page?.languageVariants) {
-            Object.values(page.languageVariants).forEach(pageId => {
+            Object.values(page.languageVariants).forEach((pageId) => {
                 const page = this.entityResolver.getPage(pageId);
                 if (page.queued === true) {
                     pages.push(page);
@@ -332,32 +333,32 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
         const isFile = type === 'file';
         const isImage = type === 'image';
         const inherited = this.item ? this.item.inherited : false;
-        let isMaster = this.item ? ((<Folder>this.item).isMaster || (<Page>this.item).master) : false;
+        let isMaster = this.item ? ((<Folder> this.item).isMaster || (<Page> this.item).master) : false;
         if (type === 'file' || type === 'image') {
             // Files don't provide isMaster/master properties
             isMaster = isMaster || (!inherited && this.item.inheritedFrom === this.item.masterNode);
         }
 
         const isLocalized = !isMaster && !inherited;
-        const userCan: ItemPermissions = (<any>this.permissions)[type];
+        const userCan: ItemPermissions = (<any> this.permissions)[type];
         const canPublish = (isPage || isForm) && userCan.edit && !inherited;
         const templatePermissions = this.permissions['template'];
 
         // Items can be synchronized to master when they are inside a folder
         // of an inherited channel and are not inherited (localized & local is both OK!).
         const canBeSynchronizedToParentNode = !inherited
-            && this.permissions.synchronizeChannel
-            && this.activeNode
-            && (this.activeNode.id !== this.activeNode.inheritedFromId);
+          && this.permissions.synchronizeChannel
+          && this.activeNode
+          && (this.activeNode.id !== this.activeNode.inheritedFromId);
 
         const showEditButton = (isPage || isImage || isForm)
-            && userCan.edit
-            && isEditableImage(this.item as Image);
+          && userCan.edit
+          && isEditableImage(this.item as Image);
 
         const showRequestTranslationButton = isPage
-            && this.activeNode.languagesId
-            && this.activeNode.languagesId.length > 1
-            && this.state.now.tools.available.some(tool => tool.key.startsWith('task-management'));
+          && this.activeNode.languagesId
+          && this.activeNode.languagesId.length > 1
+          && this.state.now.tools.available.some((tool) => tool.key.startsWith('task-management'));
 
         return {
             edit: !this.isDeleted && showEditButton,
@@ -365,11 +366,15 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
             copy: !this.isDeleted && (isPage || isFile || isImage || isForm),
             createVariation: isPage && !this.isDeleted && userCan.create,
             pageVersions: isPage && !this.isDeleted && userCan.view,
-            publishProtocol: isPage || isForm && !this.isDeleted && userCan.view,
+            publishProtocol: (isPage || isForm) && !this.isDeleted && userCan.view,
             setAsStartpage: isPage && !this.isDeleted && isPage && !this.isFolderStartPage && this.permissions.folder.edit,
             localize: this.multiChannelingEnabled && !isForm && !this.isDeleted && inherited && userCan.localize,
-            // TODO: Check for partial inheritance
-            editInheritance: this.multiChannelingEnabled && isPage && !this.isDeleted && isLocalized && userCan.edit,
+            editInheritance: this.multiChannelingEnabled
+              && isPage
+              && !this.isDeleted
+              && isLocalized
+              && userCan.edit,
+              // && (this.item as Page).localizationType === LocalizationType.PARTIAL,
             editInParent: this.multiChannelingEnabled && !isForm && !this.isDeleted && showEditButton && (inherited || isLocalized),
             move: !this.isDeleted && (isForm || (isMaster && !inherited)) && userCan.delete,
             inheritanceSettings: this.multiChannelingEnabled && !isForm && !this.isDeleted && isMaster && !inherited && userCan.inherit,
@@ -382,7 +387,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
             takeOffline: this.hasOnlineItem(this.item, isPage, isForm, inherited) && canPublish,
             publish: !this.isDeleted && ((isPage && canPublish) || (isForm && this.permissions.form.publish)),
             publishLanguageVariants: !isForm && isPage && !this.isDeleted && this.hasLanguageVariants(this.item as Page) && canPublish,
-            timeManagement: (isForm && this.permissions.form.publish || isPage) && !this.isDeleted && userCan.edit,
+            timeManagement: ((isForm && this.permissions.form.publish) || isPage) && !this.isDeleted && userCan.edit,
             stage: !this.isDeleted && userCan.view,
             stageRecursive: !this.isDeleted && userCan.view && isFolder,
             stageAllLanguages: !this.isDeleted && userCan.view && (isPage || isForm),
@@ -398,7 +403,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
         }
         let hasOnlineItem = false;
         if (isPage && (item as Page)?.languageVariants) {
-            Object.values((item as Page).languageVariants).every(pageId => {
+            Object.values((item as Page).languageVariants).every((pageId) => {
                 if (hasOnlineItem) {
                     return false;
                 }

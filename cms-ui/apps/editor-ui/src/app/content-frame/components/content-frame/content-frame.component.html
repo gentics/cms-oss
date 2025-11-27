@@ -1,132 +1,143 @@
 <div class="content-frame-container">
 
-  @if (currentItem && currentNode) {
-    <gtx-editor-toolbar
-      [nodeInherited]="isInherited$ | async"
-      [currentNode]="currentNode"
-      [currentItem]="currentItem"
-      [editorState]="editorState$ | async"
-      [showSave]="saveButtonVisible"
-      [saveDisabled]="saveButtonIsDisabled"
-      [copyDisabled]="saveAsCopyButtonIsDisabled"
-      [locked]="isLocked"
-      [itemPermissions]="itemPermissions"
-      [itemLanguage]="itemLanguage"
-      (close)="closeEditor()"
-      (save)="handleItemSave($event)"
-      (timeManagement)="showTimeManagement($event)"
-    ></gtx-editor-toolbar>
-  }
+    @if (currentItem && currentNode) {
+        <gtx-editor-toolbar
+            [nodeInherited]="isInherited$ | async"
+            [currentNode]="currentNode"
+            [currentItem]="currentItem"
+            [editorState]="editorState$ | async"
+            [showSave]="saveButtonVisible"
+            [saveDisabled]="saveButtonIsDisabled"
+            [copyDisabled]="saveAsCopyButtonIsDisabled"
+            [locked]="isLocked"
+            [itemPermissions]="itemPermissions"
+            [itemLanguage]="itemLanguage"
+            (close)="closeEditor()"
+            (save)="handleItemSave($event)"
+            (timeManagement)="showTimeManagement($event)"
+        ></gtx-editor-toolbar>
+    }
 
-  @if (editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')) {
-    <gtx-tabs
-      pure
-      class="properties-tabs"
-      [activeId]="propertiesTab$ | async"
-      >
-      <gtx-tab
-        id="preview"
-        [title]="'editor.preview_label' | gtxI18n"
-        (select)="changePropertiesTab('preview')"
-      ></gtx-tab>
-      <gtx-tab
-        id="properties"
-        [title]="'editor.properties_label' | gtxI18n"
-        (select)="changePropertiesTab('properties')"
-      ></gtx-tab>
-    </gtx-tabs>
-  }
+    @if (editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')) {
+        <gtx-tabs
+            pure
+            class="properties-tabs"
+            [activeId]="propertiesTab$ | async"
+        >
+            <gtx-tab
+                id="preview"
+                [title]="'editor.preview_label' | gtxI18n"
+                (select)="changePropertiesTab('preview')"
+            ></gtx-tab>
+            <gtx-tab
+                id="properties"
+                [title]="'editor.properties_label' | gtxI18n"
+                (select)="changePropertiesTab('properties')"
+            ></gtx-tab>
+        </gtx-tabs>
+    }
 
-  @if (editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')) {
-    <div
-      class="preview-form"
-      [class.hidden]="(propertiesTab$ | async) !== 'preview'"
-      >
-      <file-preview
-        [file]="currentItem"
-        (imageLoading)="isImageLoading = $event"
-      ></file-preview>
+    @if (editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')) {
+        <div
+            class="preview-form"
+            [class.hidden]="(propertiesTab$ | async) !== 'preview'"
+        >
+            <file-preview
+                [file]="currentItem"
+                (imageLoading)="isImageLoading = $event"
+            ></file-preview>
+        </div>
+    }
+
+    @if (editMode === EditMode.EDIT_PROPERTIES) {
+        <div
+            class="properties-form"
+            [class.hidden]="(propertiesTab$ | async) !== 'properties'"
+        >
+            <combined-properties-editor
+                [item]="currentItem"
+                [isDisabled]="!saveButtonVisible"
+                [(itemClean)]="currentItemClean"
+            ></combined-properties-editor>
+        </div>
+    }
+
+    @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form') {
+        <div class="form-editor">
+            <gtx-form-editor
+                class="form-editor"
+                [form]="currentItem"
+                [activeUiLanguageCode]="activeUiLanguageCode$ | async"
+                [activeContentLanguageCode]="itemLanguage?.code"
+                [readonly]="editMode !== EditMode.EDIT"
+                (formModified)="formChange($event)"
+                (validityChange)="setItemValidity($event)"
+            ></gtx-form-editor>
+        </div>
+    }
+
+    @if (editMode === EditMode.EDIT_INHERITANCE) {
+        <gtx-inheritance-editor
+            [pageId]="currentItem.id"
+            [nodeId]="currentItem.masterNodeId"
+            [modifiedTags]="modifiedTags"
+            (modifiedTagsChange)="updateTagInheritance($event)"
+        />
+    }
+
+    <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE || currentItem?.type === 'form'">
+        <gtx-progress-bar
+            class="frame-requesting"
+            [active]="!windowLoaded
+                || (
+                    (editMode === EditMode.EDIT)
+                    && pageComparisonLanguage == null
+                    && !alohaWindowLoaded
+                )"
+        ></gtx-progress-bar>
+
+        <gtx-loading-spinner
+            [visible]="!windowLoaded
+                || (
+                    (editMode === EditMode.EDIT)
+                    && pageComparisonLanguage == null
+                    && !alohaWindowLoaded
+                )"
+            [message]="((editMode === EditMode.EDIT) ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| gtxI18n"
+            [longerMessage]="'editor.loading_takes_more_time' | gtxI18n"
+        ></gtx-loading-spinner>
+
+        <div class="frame-language-container" [class.hidden]="!comparePageId">
+            <iframe
+                #diffFrame
+                class="frame diff-frame"
+                name="diff-frame"
+            ></iframe>
+            <div class="frame-language-indicator">{{ pageComparisonLanguage?.name }}</div>
+        </div>
+
+        <div class="frame-language-container">
+            <iframe
+                #iframe
+                class="frame master-frame"
+                [class.hidden]="editMode === EditMode.EDIT_INHERITANCE"
+                [attr.data-item-type]="currentItem?.type"
+                [attr.data-edit-mode]="editMode"
+                [attr.loaded]="windowLoaded
+                    && !(
+                        (editMode === EditMode.EDIT)
+                        && pageComparisonLanguage == null
+                        && !alohaWindowLoaded
+                    )"
+                name="master-frame"
+                aria-hidden="false"
+            ></iframe>
+
+            <div class="frame-language-indicator" [class.hidden]="!comparePageId">{{ itemLanguage?.name }}</div>
+        </div>
     </div>
-  }
 
-  @if (editMode === EditMode.EDIT_PROPERTIES) {
-    <div
-      class="properties-form"
-      [class.hidden]="(propertiesTab$ | async) !== 'properties'"
-      >
-      <combined-properties-editor
-        [item]="currentItem"
-        [isDisabled]="!saveButtonVisible"
-        [(itemClean)]="currentItemClean"
-      ></combined-properties-editor>
+    <div class="hidden-file-picker" #filePickerWrapper>
+        <gtx-file-picker></gtx-file-picker>
     </div>
-  }
-
-  @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form') {
-    <div class="form-editor">
-      <gtx-form-editor
-        class="form-editor"
-        [form]="currentItem"
-        [activeUiLanguageCode]="activeUiLanguageCode$ | async"
-        [activeContentLanguageCode]="itemLanguage?.code"
-        [readonly]="editMode !== EditMode.EDIT"
-        (formModified)="formChange($event)"
-        (validityChange)="setItemValidity($event)"
-      ></gtx-form-editor>
-    </div>
-  }
-
-  <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || currentItem?.type === 'form'">
-    <gtx-progress-bar
-      class="frame-requesting"
-      [active]="!windowLoaded
-        || (
-            (editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE)
-            && pageComparisonLanguage == null
-            && !alohaWindowLoaded
-        )"
-    ></gtx-progress-bar>
-
-    <gtx-loading-spinner
-      [visible]="!windowLoaded
-        || (
-            (editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE)
-            && pageComparisonLanguage == null
-            && !alohaWindowLoaded
-        )"
-      [message]="((editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE) ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| gtxI18n"
-      [longerMessage]="'editor.loading_takes_more_time' | gtxI18n"
-    ></gtx-loading-spinner>
-
-    <div class="frame-language-container" [class.hidden]="!comparePageId">
-      <iframe
-        #diffFrame
-        class="frame diff-frame"
-        name="diff-frame"
-      ></iframe>
-      <div class="frame-language-indicator">{{ pageComparisonLanguage?.name }}</div>
-    </div>
-
-    <div class="frame-language-container">
-      <iframe
-        #iframe
-        class="frame master-frame"
-        [attr.data-item-type]="currentItem?.type"
-        [attr.data-edit-mode]="editMode"
-        [attr.loaded]="windowLoaded
-            && !(
-                (editMode === EditMode.EDIT || editMode === EditMode.EDIT_INHERITANCE)
-                && pageComparisonLanguage == null
-                && !alohaWindowLoaded
-            )"
-        name="master-frame"
-        aria-hidden="false"
-      ></iframe>
-      <div class="frame-language-indicator" [class.hidden]="!comparePageId">{{ itemLanguage?.name }}</div>
-    </div>
-  </div>
-
-  <div class="hidden-file-picker" #filePickerWrapper>
-    <gtx-file-picker></gtx-file-picker>
-  </div>
 </div>

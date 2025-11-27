@@ -5,12 +5,12 @@ import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { MockResponseInfo, expectOneRequest, respondTo } from '@gentics/cms-rest-clients-angular/testing';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, of } from 'rxjs';
-import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { Api, ApiBase, FileUploaderFactory, GcmsApi } from '../api';
 import { MockErrorHandler } from '../error-handler/error-handler.mock';
 import { ServerStorage } from './server-storage.service';
+import { API_BASE_URL } from '@gentics/cms-components';
 
 const testData = { test: 'data', x: 9 };
 

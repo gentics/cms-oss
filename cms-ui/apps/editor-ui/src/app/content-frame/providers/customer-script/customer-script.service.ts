@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
+import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '@gentics/cms-components';
 import {
     ExposedPartialState,
     GcmsUiBridge,
@@ -22,7 +23,6 @@ import { Subscription, of } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
 import { AppState } from '../../../common/models/app-state';
-import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '../../../common/utils/base-urls';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { stripLeadingSlash } from '../../../common/utils/strip';
 import { ApiBase } from '../../../core/providers/api';

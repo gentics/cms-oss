@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
+import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { File as FileModel, Folder, Form, Image, Node, Page } from '@gentics/cms-models';
 import { EditorState } from '../../../common/models';
-import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '../../../common/utils/base-urls';
 import { BLANK_PAGE, BLANK_PROPERTIES_PAGE } from '../../../content-frame/models/content-frame';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
@@ -160,7 +160,6 @@ export class ResourceUrlBuilder {
         switch (editorState.editMode) {
             case EditMode.PREVIEW:
             case EditMode.EDIT:
-            case EditMode.EDIT_INHERITANCE:
                 if (editorState.itemType !== 'page') {
                     break;
                 }
@@ -169,6 +168,9 @@ export class ResourceUrlBuilder {
                 } else {
                     return this.pageEditor(itemId, nodeId);
                 }
+
+            case EditMode.EDIT_INHERITANCE:
+                return 'about:blank';
 
             case EditMode.EDIT_PROPERTIES:
                 return BLANK_PROPERTIES_PAGE;

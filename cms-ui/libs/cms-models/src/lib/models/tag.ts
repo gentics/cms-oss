@@ -37,7 +37,7 @@ export interface Tag {
      * If the tag is a root element, and therefore {@link inherited} can be changed.
      * @readonly
      */
-    root: boolean;
+    rootTag: boolean;
     /**
      * If this tag is inherited or not.
      * @readonly

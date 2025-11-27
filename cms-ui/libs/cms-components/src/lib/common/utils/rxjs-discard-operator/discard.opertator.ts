@@ -9,7 +9,6 @@ type DiscardHandlerFn<T> = (value: T) => any;
  * Used for operations where the result should be consumed.
  * @param handler Handler which may handle the value.
  * @returns A new discarding operator.
- * @deprecated Use the one from `@gentics/cms-components` instead
  */
 export function discard<T>(handler?: DiscardHandlerFn<T>): OperatorFunction<T, void> {
     return (source$: Observable<T>) => {

@@ -3,6 +3,7 @@ import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {
+    API_BASE_URL,
     CmsComponentsModule,
     FALLBACK_LANGUAGE,
     GCMS_UI_SERVICES_PROVIDER,
@@ -14,7 +15,6 @@ import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClient
 import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import { API_BASE_URL } from '../common/utils/base-urls';
 import { throwIfAlreadyLoaded } from '../common/utils/module-import-guard';
 import { EmbeddedToolsModule } from '../embedded-tools/embedded-tools.module';
 import { EmbeddedToolsService } from '../embedded-tools/providers/embedded-tools/embedded-tools.service';

@@ -1,5 +1,5 @@
 @if (editorState) {
-    <div class="editor-toolbar">
+    <div class="editor-toolbar" [ngClass]="'mode-' + editorState.editMode">
         <div
             class="element-toolbar"
             [class.regular]="currentItem?.type !== 'page' || (editorState?.editMode !== EditMode.EDIT && editorState?.editMode !== EditMode.EDIT_INHERITANCE)"

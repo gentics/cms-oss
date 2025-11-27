@@ -1256,6 +1256,13 @@ export interface LocalizeRequest {
     foregroundTime?: number;
 }
 
+export interface PageLocalizeRequest extends LocalizeRequest {
+    /**
+     * Whether the localization is for tags or the whole page.
+     */
+    partial?: boolean;
+}
+
 export interface LocalizationInfoOptions {
     nodeId?: number;
 }

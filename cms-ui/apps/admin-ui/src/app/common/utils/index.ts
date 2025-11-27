@@ -1,5 +1,4 @@
 export * from './apply-instance-permissions/apply-instance-permissions';
-export * from './base-urls/base-urls';
 export * from './business-objects/business-objects';
 export * from './deep-freeze/deep-freeze';
 export * from './detail-routes/detail-routes';

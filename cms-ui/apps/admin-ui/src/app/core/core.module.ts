@@ -1,14 +1,14 @@
 import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CmsComponentsModule } from '@gentics/cms-components';
+import { API_BASE_URL, CmsComponentsModule } from '@gentics/cms-components';
 import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, throwIfAlreadyLoaded, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../common';
+import { throwIfAlreadyLoaded, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../common';
 import { MeshModule } from '../mesh';
 import { SharedModule } from '../shared/shared.module';
 import { AppStateService, StateModule } from '../state';

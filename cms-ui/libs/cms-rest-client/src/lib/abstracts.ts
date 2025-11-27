@@ -248,6 +248,7 @@ import {
     PageDeleteOptions,
     PageListOptions,
     PageListResponse,
+    PageLocalizeRequest,
     PageOfflineOptions,
     PageOfflineRequest,
     PagePreviewRequest,
@@ -895,6 +896,7 @@ export interface AbstractPageAPI extends BasicAPI {
 
     preview: (body: PagePreviewRequest) => PagePreviewResponse;
     render: (body: Page<Raw>, options?: PageRenderOptions) => PageRenderResponse;
+    renderById: (id: number | string, options?: PageRenderOptions) => PageRenderResponse;
     renderTag: (id: number | string, tagKeyword: string, body: Page<Raw>, options?: PageTagRenderOptions) => PageRenderResponse;
 
     suggestFileName: (body: SuggestPageFileNameRequest) => SuggestPageFileNameResponse;
@@ -913,6 +915,8 @@ export interface AbstractPageAPI extends BasicAPI {
     createTag: (id: number | string, body: ContentTagCreateRequest) => TagCreateResponse;
     createMultipleTags: (id: number | string, body: MultiTagCreateRequest) => MultiTagCreateResponse;
     restoreTag: (id: number | string, tagKeyword: string, options: TagRestoreOptions) => PageTagListResponse;
+    localizeTag: (id: number | string, tagId: string) => Response;
+    unlocalizeTag: (id: number | string, tagId: string, body: UnlocalizeRequest) => Response;
 
     workflowDecline: (id: number | string) => Response;
     workflowRevoke: (id: number | string) => Response;
@@ -927,7 +931,7 @@ export interface AbstractPageAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: LocalizeRequest) => Response;
+    localize: (id: number | string, body: PageLocalizeRequest) => Response;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 

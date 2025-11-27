@@ -2242,6 +2242,26 @@ export class FolderActionsService {
         }
     }
 
+    async localizePagePartially(pageId: number, nodeId: number): Promise<Page> {
+        try {
+            await this.client.page.localize(pageId, {
+                channelId: nodeId,
+                partial: true,
+            }).toPromise();
+
+            this.notification.show({
+                type: 'success',
+                message: 'message.page_partial_localized',
+            });
+
+            await this.appState.dispatch(new ListSavingSuccessAction('page')).toPromise();
+            return this.getPage(pageId, { nodeId });
+        } catch (error) {
+            await this.appState.dispatch(new ListSavingErrorAction('page', error.message)).toPromise();
+            this.errorHandler.catch(error);
+        }
+    }
+
     /**
      * Gets a report of all the objects (folders, pages, files, images, templates) which will be
      * affected by a "push to master" operation on a folder from a channel.

@@ -8,7 +8,6 @@ import {
     InheritableItem,
     Item,
     ItemPermissions,
-    LocalizationType,
     Node as NodeModel,
     Page,
     StagedItemsMap,
@@ -373,8 +372,8 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
               && isPage
               && !this.isDeleted
               && isLocalized
-              && userCan.edit,
-              // && (this.item as Page).localizationType === LocalizationType.PARTIAL,
+              && userCan.edit
+              && (this.item as Page).partiallyLocalized,
             editInParent: this.multiChannelingEnabled && !isForm && !this.isDeleted && showEditButton && (inherited || isLocalized),
             move: !this.isDeleted && (isForm || (isMaster && !inherited)) && userCan.delete,
             inheritanceSettings: this.multiChannelingEnabled && !isForm && !this.isDeleted && isMaster && !inherited && userCan.inherit,

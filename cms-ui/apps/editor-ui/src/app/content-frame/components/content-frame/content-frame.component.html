@@ -77,12 +77,16 @@
     }
 
     @if (editMode === EditMode.EDIT_INHERITANCE) {
-        <gtx-inheritance-editor
-            [pageId]="currentItem.id"
-            [nodeId]="currentItem.masterNodeId"
-            [modifiedTags]="modifiedTags"
-            (modifiedTagsChange)="updateTagInheritance($event)"
-        />
+        @if (currentItem.type !== 'page' || !currentItem.partiallyLocalized) {
+            <div class="edit-inheritance-error">{{ 'editor.invalid_state_edit_inheritance' | gtxI18n }}</div>
+        } @else {
+            <gtx-inheritance-editor
+                [pageId]="currentItem.id"
+                [nodeId]="currentNode.id"
+                [modifiedTags]="modifiedTags"
+                (modifiedTagsChange)="updateTagInheritance($event)"
+            />
+        }
     }
 
     <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE || currentItem?.type === 'form'">

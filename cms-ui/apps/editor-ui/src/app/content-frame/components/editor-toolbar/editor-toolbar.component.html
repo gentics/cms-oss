@@ -216,6 +216,15 @@
                                 </gtx-dropdown-item>
                             }
 
+                            @if(buttons.editInheritance) {
+                                <gtx-dropdown-item
+                                    (click)="editInheritance(item)"
+                                >
+                                    <icon left>rule_settings</icon>
+                                    {{ 'editor.edit_inheritance_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
                             @if (buttons.previewPage) {
                                 <gtx-dropdown-item
                                     data-action="preview"

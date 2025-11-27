@@ -14,7 +14,7 @@ import {
 import { ALOHAPAGE_URL, I18nService } from '@gentics/cms-components';
 import { Page, PageResponse } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ChangesOf } from '@gentics/ui-core';
+import { cancelEvent, ChangesOf } from '@gentics/ui-core';
 import { forkJoin, Subscription } from 'rxjs';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ApplicationStateService } from '../../../state';
@@ -111,7 +111,9 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
             return;
         }
         // Prevent the default aloha check if it's allowed
-        this.iframe.nativeElement.contentWindow.onbeforeunload = () => {};
+        this.iframe.nativeElement.contentWindow.onbeforeunload = (event) => {
+            cancelEvent(event);
+        };
     }
 
     private loadPageContent(pageId: number, nodeId: number): void {
@@ -166,6 +168,13 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
             el.remove();
         });
 
+        // Disable all clicks on anchors or buttons which would cause a navigation
+        pageDoc.querySelectorAll('a, button').forEach((el) => {
+            el.addEventListener('click', (event) => {
+                cancelEvent(event);
+            });
+        });
+
         // Add custom styles
         const styleEl = pageDoc.createElement('style');
         styleEl.textContent = STYLES;
@@ -178,7 +187,7 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
                 return;
             }
 
-            const el = pageDoc.querySelector(`.GENTICS_tagname_${tag.name}`);
+            const el = pageDoc.querySelector(`.GENTICS_tagname_${tag.name}, [data-gcn-tagid="${tag.id}"]`);
             if (el == null) {
                 console.warn(`Could not find root tag "${tag.name}" in document!`);
                 return;
@@ -194,7 +203,8 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
             el.setAttribute(ATTR_INHERITED_LABEL, this.i18n.instant('editor.tag_inheritance_inherited'));
             el.setAttribute(ATTR_LOCALIZED_LABEL, this.i18n.instant('editor.tag_inheritance_localized'));
 
-            el.addEventListener('click', () => {
+            el.addEventListener('click', (event) => {
+                cancelEvent(event);
                 el.classList.toggle(CLASS_INHERITED);
                 this.setTagInheritance(key, !el.classList.contains(CLASS_INHERITED));
             });

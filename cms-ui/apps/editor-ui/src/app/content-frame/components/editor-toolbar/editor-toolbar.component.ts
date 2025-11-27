@@ -143,42 +143,42 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.uploadInProgress$ = this.appState.select(state => state.editor).pipe(
-            map(editorState => editorState.uploadInProgress),
+        this.uploadInProgress$ = this.appState.select((state) => state.editor).pipe(
+            map((editorState) => editorState.uploadInProgress),
             publishReplay(1),
             refCount(),
         );
 
         this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.editor.focusMode),
-            this.appState.select(state => state.editor.editMode),
-            this.appState.select(state => state.editor.editorIsOpen),
-            this.appState.select(state => state.editor.editorIsFocused),
+            this.appState.select((state) => state.editor.focusMode),
+            this.appState.select((state) => state.editor.editMode),
+            this.appState.select((state) => state.editor.editorIsOpen),
+            this.appState.select((state) => state.editor.editorIsFocused),
         ]).subscribe(([active, editMode, open, focused]) => {
             this.focusMode = active && editMode === EditMode.EDIT && open && focused;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.ui.contentFrameBreadcrumbsExpanded).subscribe(expanded => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.contentFrameBreadcrumbsExpanded).subscribe((expanded) => {
             this.multilineExpanded = expanded;
             this.changeDetector.markForCheck();
         }));
 
         // TODO: this is wrong - the contentFrame may be open when another node is navigated to,
         // so the list of languages would be wrong. Need another way to get the list for the current editor node.
-        this.subscriptions.push(this.appState.select(state => state.folder.activeNodeLanguages.list).pipe(
-            map(languageIds => languageIds.map(id => this.entityResolver.getLanguage(id))),
-        ).subscribe(languages => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeNodeLanguages.list).pipe(
+            map((languageIds) => languageIds.map((id) => this.entityResolver.getLanguage(id))),
+        ).subscribe((languages) => {
             this.activeNodeLanguages = languages;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(areItemsSaving).subscribe(isSaving => {
+        this.subscriptions.push(this.appState.select(areItemsSaving).subscribe((isSaving) => {
             this.isSaving = isSaving;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
+        this.subscriptions.push(this.aloha.ready$.subscribe((ready) => {
             this.alohaReady = ready;
             this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
@@ -202,7 +202,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     logoClick(): void {
@@ -230,16 +230,16 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             return;
         }
         this.subscriptions.push(this.client.folder.breadcrumbs(folderId, { nodeId }).pipe(
-            map(response => response.folders.map((folder) => ({
+            map((response) => response.folders.map((folder) => ({
                 text: folder.name,
-                route: ['/editor', { outlets: { list: ['node', nodeId, 'folder', folder.id] }} ],
+                route: ['/editor', { outlets: { list: ['node', nodeId, 'folder', folder.id] } }],
             } as IBreadcrumbLink | IBreadcrumbRouterLink))),
             map((breadcrumbs) => !this.multilineExpanded
                 ? this.breadcrumbsService.addTooltip(breadcrumbs)
                 : breadcrumbs,
             ),
-        ).subscribe(breadcrumbs => {
-            this.breadcrumbs = breadcrumbs ;
+        ).subscribe((breadcrumbs) => {
+            this.breadcrumbs = breadcrumbs;
             this.changeDetector.markForCheck();
         }));
     }
@@ -252,8 +252,8 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
         const page = this.currentItem as Page;
         this.subscriptions.push(this.permissions.forItem(page.id, 'page', this.currentNode.id).pipe(
-            map(permissions => permissions.publish && PublishableStateUtil.stateInQueue(page)),
-        ).subscribe(inQueue => {
+            map((permissions) => permissions.publish && PublishableStateUtil.stateInQueue(page)),
+        ).subscribe((inQueue) => {
             this.inQueue = inQueue;
             this.changeDetector.markForCheck();
         }));
@@ -309,7 +309,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     showPageVersionsModal(): void {
         const options = { page: this.currentItem as Page, nodeId: this.currentNode.id };
         this.modalService.fromComponent(PageVersionsModal, null, options)
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 
     showTimeManagement(): void {
@@ -337,7 +337,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         switch (this.currentItem.type) {
             case 'page':
                 this.decisionModals.showInheritedDialog(this.currentItem, this.currentNode.id)
-                    .then(({item, nodeId}) => this.navigationService.detailOrModal(nodeId, 'page', item.id, EditMode.EDIT).navigate());
+                    .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, 'page', item.id, EditMode.EDIT).navigate());
                 break;
             case 'form':
                 this.editForm();
@@ -384,7 +384,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         switch (this.currentItem.type) {
             case 'page':
                 this.decisionModals.selectPagesToTakeOffline([this.currentItem as Page<Normalized>])
-                    .then(result => this.folderActions.takePagesOffline(result));
+                    .then((result) => this.folderActions.takePagesOffline(result));
                 break;
 
             case 'form':
@@ -414,12 +414,15 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
             compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
             editItem: (editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE)
-                && (isPage || isForm)
-                && userCan.edit
-                && !this.locked,
+              && (isPage || isForm)
+              && userCan.edit
+              && !this.locked,
             edit: (isPage || isForm) && previewing && userCan.edit && !this.locked,
-            // TODO: Check for partial inheritance
-            editInheritance: isPage && userCan.edit && editMode !== EditMode.EDIT_INHERITANCE && !isInherited,
+            editInheritance: isPage
+              && userCan.edit
+              && editMode !== EditMode.EDIT_INHERITANCE
+              && !isInherited
+              && (this.currentItem as Page).partiallyLocalized,
             editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
             lockedEdit: (isPage || isForm) && this.locked && userCan.edit && !this.showSave,
             previewPage: (isPage || isForm) && !previewing && userCan.view,

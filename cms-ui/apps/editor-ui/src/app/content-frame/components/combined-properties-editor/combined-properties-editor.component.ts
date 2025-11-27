@@ -15,6 +15,7 @@ import {
     ViewChild,
     ViewChildren,
 } from '@angular/core';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     EditableFileProps,
@@ -34,7 +35,6 @@ import {
     ItemWithContentTags,
     ItemWithObjectTags,
     Language,
-    LocalizationType,
     Node,
     ObjectTag,
     Page,
@@ -55,7 +55,6 @@ import {
     TableSelectAllType,
     TooltipComponent,
 } from '@gentics/ui-core';
-import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { cloneDeep, isEqual, merge } from 'lodash-es';
 import {
     BehaviorSubject,
@@ -301,7 +300,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             },
         ];
 
-        if (this.item.type === 'page' && this.item.localizationType === LocalizationType.PARTIAL) {
+        if (this.item.type === 'page' && this.item.partiallyLocalized) {
             this.contentTagColumns.push({
                 id: 'inherited',
                 fieldPath: 'inherited',
@@ -558,7 +557,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             });
         }
 
-        if (this.item.type === 'page' && this.item.localizationType === LocalizationType.PARTIAL) {
+        if (this.item.type === 'page' && this.item.partiallyLocalized) {
             this.contentTagActions.unshift({
                 id: ACTION_LOCALIZE_TAG,
                 enabled: (tag) => this.itemPermissions.edit && (tag == null || !tag.inherited),

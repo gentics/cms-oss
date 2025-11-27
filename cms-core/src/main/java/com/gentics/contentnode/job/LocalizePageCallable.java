@@ -116,7 +116,7 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 				localCopy.unlock();
 			}
 
-			I18nString message = new CNI18nString("page.localize.success");
+			I18nString message = new CNI18nString(partial ? "page.partially_localize.success" : "page.localize.success");
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, message.toString()));
 		}
 	}

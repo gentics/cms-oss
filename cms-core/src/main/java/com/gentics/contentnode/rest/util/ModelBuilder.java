@@ -21,6 +21,7 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.gentics.contentnode.rest.model.LocalizationType;
 import org.apache.logging.log4j.Level;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1195,7 +1196,9 @@ public class ModelBuilder {
 
 		restPage.setPublishPath(renderPublishPath(nodePage));
 
-		restPage.setPartiallyLocalized(nodePage.getContent().isPartiallyLocalized());
+		if (!nodePage.isMaster() && !nodePage.isInherited()) {
+			restPage.setLocalizationType(nodePage.getContent().isPartiallyLocalized() ? LocalizationType.PARTIAL : LocalizationType.FULL);
+		}
 
 		// eventually fill references
 		if (fillRefs != null) {

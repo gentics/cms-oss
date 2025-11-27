@@ -277,7 +277,7 @@ public class Page extends PublishableContentItem implements Serializable {
 	/**
 	 * Whether this page has been partially localized.
 	 */
-	private Boolean partiallyLocalized;
+	private LocalizationType localizationType;
 
 	/**
 	 * Constructor used by JAXB
@@ -1069,12 +1069,12 @@ public class Page extends PublishableContentItem implements Serializable {
 		this.customEdate = customEdate;
 	}
 
-	public Boolean getPartiallyLocalized() {
-		return partiallyLocalized;
+	public LocalizationType getLocalizationType() {
+		return localizationType;
 	}
 
-	public Page setPartiallyLocalized(Boolean partiallyLocalized) {
-		this.partiallyLocalized = partiallyLocalized;
+	public Page setLocalizationType(LocalizationType localizationType) {
+		this.localizationType = localizationType;
 
 		return this;
 	}

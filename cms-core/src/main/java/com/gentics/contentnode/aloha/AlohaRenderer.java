@@ -1516,6 +1516,8 @@ public class AlohaRenderer implements TemplateRenderer {
 						// annotate the tag
 						startTag = startTag.replaceFirst(rootTagName, rootTagName + " " + renderTagAnnotations(page, tag));
 						code = startTag + rest;
+					} else if (tag.isLocalizable() && editMode != RenderType.EM_PUBLISH) {
+						code = "<div " + renderTagAnnotations(page, tag) + ">" + code + "</div>";
 					}
 				}
 			}

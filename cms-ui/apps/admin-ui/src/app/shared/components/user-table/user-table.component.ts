@@ -253,15 +253,15 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
             `,
             buttons: [
                 {
-                    label: this.i18n.instant('modal.confirm_remove_users_button', { userAmount: userNames?.length }),
-                    returnValue: true,
-                    type: 'alert',
-                },
-                {
                     label: this.i18n.instant('common.cancel_button'),
                     returnValue: false,
                     flat: true,
                     type: 'secondary',
+                },
+                {
+                    label: this.i18n.instant('modal.confirm_remove_users_button', { userAmount: userNames?.length }),
+                    returnValue: true,
+                    type: 'alert',
                 },
             ],
         }, {

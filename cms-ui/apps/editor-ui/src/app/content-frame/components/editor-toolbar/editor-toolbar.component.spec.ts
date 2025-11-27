@@ -4,7 +4,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
+import { componentTest } from '../../../../testing/component-test';
+import { configureComponentTest } from '../../../../testing/configure-component-test';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, FolderListResponse, Form, FormPermissions, Node, Page, PagePermissions } from '@gentics/cms-models';
@@ -222,7 +223,7 @@ describe('EditorToolbarComponent', () => {
                 unlocalize: false,
                 view: false,
             } as PagePermissions;
-            (instance.currentItem as Page).online = true;
+            (instance.currentItem as any).online = true;
 
             const buttons = instance.determineVisibleButtons();
 
@@ -242,7 +243,7 @@ describe('EditorToolbarComponent', () => {
                 unlocalize: false,
                 view: false,
             } as PagePermissions;
-            (instance.currentItem as Page).online = true;
+            (instance.currentItem as any).online = true;
 
             const buttons = instance.determineVisibleButtons();
 
@@ -449,9 +450,11 @@ class MockPermissionService {
     forItemInLanguage(): Observable<any> {
         return NEVER;
     }
+
     forItem(): Observable<any> {
         return NEVER;
     }
+
     forFolder(): Observable<any> {
         return NEVER;
     }

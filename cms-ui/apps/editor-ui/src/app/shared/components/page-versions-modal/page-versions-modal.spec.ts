@@ -109,7 +109,7 @@ describe('PageVersionsModal', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(fixture.nativeElement.querySelectorAll('gtx-contents-list-item')[0]
+                expect((fixture.nativeElement as HTMLElement).querySelectorAll('gtx-contents-list-item')[0]
                     .querySelector('.item-indicators span').className).toContain('current');
             });
     }),

@@ -55,6 +55,7 @@ import {
     ItemType,
     ItemTypeMap,
     Language,
+    LocalizationType,
     MultiObjectMoveRequest,
     MultiPushToMasterRequest,
     MultiUnlocalizeRequest,
@@ -2246,12 +2247,12 @@ export class FolderActionsService {
         try {
             await this.client.page.localize(pageId, {
                 channelId: nodeId,
-                partial: true,
+                localizationType: LocalizationType.PARTIAL,
             }).toPromise();
 
             this.notification.show({
                 type: 'success',
-                message: 'message.page_partial_localized',
+                message: 'tag_inheritance.localize_success',
             });
 
             await this.appState.dispatch(new ListSavingSuccessAction('page')).toPromise();

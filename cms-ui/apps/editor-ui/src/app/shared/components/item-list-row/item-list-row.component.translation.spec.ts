@@ -68,7 +68,7 @@ describe('ItemListRowComponent', () => {
         fixture = TestBed.createComponent(ItemListRowComponent);
         component = fixture.componentInstance;
         component.activeNode = mockedNode;
-        component.activeNode.id = nodeId;
+        (component.activeNode as any).id = nodeId;
         decisionModalService = TestBed.inject(DecisionModalsService) as jasmine.SpyObj<DecisionModalsService>;
         folderActionsService = TestBed.inject(FolderActionsService) as jasmine.SpyObj<FolderActionsService>;
     });

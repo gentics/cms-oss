@@ -1,14 +1,11 @@
 import {
-    AfterContentInit,
     AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    ElementRef,
     Input,
     OnDestroy,
 } from '@angular/core';
-import { Router } from '@angular/router';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Page, PageRequestOptions, PageVersion } from '@gentics/cms-models';
@@ -34,7 +31,7 @@ function sortVersionsByDate(a: PageVersion, b: PageVersion): number {
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterContentInit, OnDestroy {
+export class PageVersionsModal implements IModalDialog, AfterViewInit, OnDestroy {
 
     @Input() page: Page;
     @Input() nodeId: number;
@@ -51,32 +48,20 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
     private compareBaseVersion: PageVersion;
     private subscription = new Subscription();
     private timeout: ReturnType<typeof setTimeout>;
-    private current: PageVersion;
-    private published: PageVersion;
-    private planned: boolean;
+    public current: PageVersion;
+    public published: PageVersion;
+    public planned: boolean;
 
     constructor(
         private api: Api,
-        private router: Router,
         private navigationService: NavigationService,
         private folderActions: FolderActionsService,
         private notification: I18nNotificationService,
-        private elementRef: ElementRef,
         private changeDetector: ChangeDetectorRef,
     ) { }
 
     ngAfterViewInit(): void {
         this.fetchFromServer();
-    }
-
-    ngAfterContentInit(): void {
-        // Hacky fix for a bug with Internet Explorer's reflow.
-        // Please accept my sincere apologies.
-        this.timeout = setTimeout(() => {
-            const element = this.elementRef.nativeElement as HTMLElement;
-            element.style.maxWidth = '100px';
-            (element.offsetWidth || 1) && (element.style.maxWidth = '');
-        }, 100);
     }
 
     ngOnDestroy(): void {

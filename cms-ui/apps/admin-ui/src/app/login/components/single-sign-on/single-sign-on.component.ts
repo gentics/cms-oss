@@ -1,20 +1,19 @@
-import { API_BASE_URL } from '@admin-ui/common/utils/base-urls/base-urls';
-import { ObservableStopper } from '@admin-ui/common/utils/observable-stopper/observable-stopper';
-import { AuthOperations, ErrorHandler } from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { KeycloakService } from '@gentics/cms-components';
+import { API_BASE_URL, KeycloakService } from '@gentics/cms-components';
 import { BehaviorSubject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
+import { ObservableStopper } from '../../../common/utils';
+import { AuthOperations, ErrorHandler } from '../../../core/providers';
+import { AppStateService } from '../../../state';
 
 @Component({
     selector: 'gtx-single-sign-on',
     templateUrl: './single-sign-on.component.html',
     styleUrls: ['./single-sign-on.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class SingleSignOnComponent implements OnInit, OnDestroy {
 
@@ -60,8 +59,8 @@ export class SingleSignOnComponent implements OnInit, OnDestroy {
         this.keycloakService.attemptCmsLogin().subscribe((result: string) => {
             this.handleSsoResponse(result);
             const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
-            const onLogin$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
-                filter(isLoggedIn => !!isLoggedIn),
+            const onLogin$ = this.appState.select((state) => state.auth.isLoggedIn).pipe(
+                filter((isLoggedIn) => !!isLoggedIn),
                 takeUntil(this.stopper.stopper$),
             );
             onLogin$.subscribe(() => {
@@ -71,10 +70,10 @@ export class SingleSignOnComponent implements OnInit, OnDestroy {
     }
 
     attemptSsoWithIframe(): void {
-        this.appState.select(state => state.auth).pipe(
-            filter(auth => !!auth),
+        this.appState.select((state) => state.auth).pipe(
+            filter((auth) => !!auth),
             take(1),
-            filter(auth => !auth.isLoggedIn),
+            filter((auth) => !auth.isLoggedIn),
         ).subscribe(() => {
             this.url = this.domSanitizer.bypassSecurityTrustResourceUrl(`${API_BASE_URL}/auth/ssologin?ts=${Date.now()}`);
             this.enabled$.next(true);

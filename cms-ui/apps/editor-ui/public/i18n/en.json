@@ -507,6 +507,15 @@
         "preview_mode_loading": "Loading preview ...",
         "loading_takes_more_time": "This may take a while..."
     },
+    "tag_inheritance": {
+        "edit_settings": "Edit localization settings",
+        "indicator_inherited": "Inherited",
+        "indicator_localized": "Localized",
+        "save_success": "Localization saved",
+        "localize_success": "Page successfull localized",
+        "type_full": "Full localization",
+        "type_partial": "Partial localization"
+    },
     "search": {
         "all": "All",
         "template_id": "Template",
@@ -718,21 +727,6 @@
         "confirmation_message_delete_title": "Delete messages",
         "confirmation_tag_delete_singular_title": "Delete tag",
         "confirmation_tag_delete_plural_title": "Delete tags",
-        "debug_tool_title": "Debug Tool",
-        "debug_tool_introduction": "<strong>Help us to improve Gentics CMS.</strong> This tool is for analysis purposes in case something unexpected happens in the Gentics CMS user interface.",
-        "debug_tool_usage_title": "Usage",
-        "debug_tool_usage_steps": [
-            "Create a report when a problem occurs. The report will be saved as a file on your device.",
-            "Clear local data of the application on your browser. After logging in again, please check if the problem persists.",
-            "Submit the report to support@gentics.com with a description of the problem."
-        ],
-        "debug_tool_privacy_details": "The report contains information about the current state of the application, some of which is stored locally in your browser, and information about the browser & operating system used.<br>We do not intentionally collect your name, email, or any other form of personally identifiable information. However, the debug report may contain customer-specific information, which will not be used and will be treated confidentially.",
-        "debug_tool_screenshot_consent": "Include screenshot in report",
-        "debug_tool_generate_button": "Create Report",
-        "debug_tool_clear_button": "Clear local data",
-        "debug_tool_clear_modal_title": "Are you sure?",
-        "debug_tool_clear_modal_body": "Clearing local data will log you out and any unsaved data will be lost!",
-        "debug_tool_clear_modal_clear_button": "Clear",
         "delete_page_title": "Delete Page",
         "delete_pages_title": "Delete Pages",
         "delete_message_confirm_read": "Are you sure you want to delete {{count}} archived messages?",
@@ -957,7 +951,11 @@
         "link_template_title": "Link template to Folder",
         "link_template_body": "Please select how you want to apply the changes:<br>\n<ul>\n    <li><b>{{labelAppend}}</b>: Link the selected Templates without additional changes</li>\n    <li><b>{{labelApply}}</b>: Apply the current selection and unlink not selected Templates</li>\n</ul>\n",
         "select_content_package_title": "Select Content Package",
-        "image_properties_title": "Properties of \"{{fileName}}\""
+        "image_properties_title": "Properties of \"{{fileName}}\"",
+        "choose_localization_type_title": "Choose localization type",
+        "choose_localization_type_body": "Please choose the type of localization.<br><ul><li><b>Full localization</b>: The entire page with all it's contents is localized and can be edited.</li><li><b>Partial localization</b>: Root-Tags can be localized individually, all other content is being inherited.</li></ul>",
+        "save_tag_inheritance_title": "Save changes to inheritance?",
+        "save_tag_inheritance_body": "Changes to existing inheritance settings may lead to the loss of already localized content.<br>Do you wish to continue?"
     },
     "lang": {
         "ar": "Arabic",

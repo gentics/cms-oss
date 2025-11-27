@@ -507,6 +507,15 @@
         "preview_mode_loading": "Lade Vorschaumodus ...",
         "loading_takes_more_time": "Das kann etwas dauern..."
     },
+    "tag_inheritance": {
+        "edit_settings": "Lokalisierungseinstellungen bearbeiten",
+        "indicator_inherited": "Vererbt",
+        "indicator_localized": "Lokalisiert",
+        "save_success": "Lokalisierungen gespeichert",
+        "localize_success": "Seite erfolgreich lokalisiert",
+        "type_full": "Volle Lokalisierung",
+        "type_partial": "Partielle Lokalisierung"
+    },
     "search": {
         "all": "Alles",
         "template_id": "Vorlage",
@@ -717,21 +726,6 @@
         "confirmation_message_delete_title": "Nachrichten löschen",
         "confirmation_tag_delete_singular_title": "Tag löschen",
         "confirmation_tag_delete_plural_title": "Tags löschen",
-        "debug_tool_title": "Analyse Tool",
-        "debug_tool_introduction": "<strong>Helfen Sie uns Gentics CMS zu verbessern.</strong> Dieses Tool dient Analyse-Zwecken, im Falle von fehlerhaftem Verhalten der Gentics CMS Oberfläche.",
-        "debug_tool_usage_title": "Verwendung",
-        "debug_tool_usage_steps": [
-            "Erstellen Sie einen Bericht, wenn ein Problem auftritt. Der Bericht wird als Datei auf Ihrem Gerät abgelegt.",
-            "Löschen Sie lokale Daten der Anwendung auf Ihrem Browser. Nach erneutem Login prüfen Sie bitte, ob das Problem weiterhin auftritt.",
-            "Senden Sie den Bericht an support@gentics.com mit einer Beschreibung des Problems."
-        ],
-        "debug_tool_privacy_details": "Der Bericht enthält Informationen zum aktuellen Zustand der Anwendung, die zum Teil lokal in Ihrem Browser gespeichert sind sowie Informationen zum verwendeten Browser & Betriebssystem.<br>Personenbezogene Daten, wie beispielsweise Ihr Name oder Ihre E-Mail Adresse, werden nicht vorsätzlich erfasst. Der Analyse Bericht kann jedoch kundenspezifische Informationen enthalten, die von uns nicht verwendet und in jedem Fall vertraulich behandelt werden.",
-        "debug_tool_screenshot_consent": "Screenshot im Bericht inkludieren",
-        "debug_tool_generate_button": "Bericht erstellen",
-        "debug_tool_clear_button": "Lokale Daten löschen",
-        "debug_tool_clear_modal_title": "Sind Sie sicher?",
-        "debug_tool_clear_modal_body": "Beim Löschen der lokalen Daten gehen nicht gesicherte Daten verloren und Sie werden aus dem System ausloggt.",
-        "debug_tool_clear_modal_clear_button": "Löschen",
         "delete_page_title": "Seite löschen",
         "delete_pages_title": "Seiten löschen",
         "delete_message_confirm_read": "Sind Sie sicher, dass Sie {{count}} archivierte Nachrichten löschen möchten?",
@@ -955,7 +949,11 @@
         "wastebin_are_you_sure_body_plural": "{{count}} Objekte werden aus dem Papierkorb entfernt!",
         "link_template_body": "Bitte wählen Sie aus, wie die Vorlagen verknüpft werden sollen:<br>\n<ul>\n    <li><b>{{labelAppend}}</b>: Verknüpft die ausgewählten Vorlagen ohne weitere Änderungen</li>\n    <li><b>{{labelApply}}</b>: Wendet die Auswahl auf den Ordner an und entfernt nicht ausgewählte Vorlagen</li>\n</ul>\n",
         "select_content_package_title": "Contentpaket auswählen",
-        "image_properties_title": "Eigenschaften von \"{{fileName}}\""
+        "image_properties_title": "Eigenschaften von \"{{fileName}}\"",
+        "choose_localization_type_title": "Lokalisierungart auswählen",
+        "choose_localization_type_body": "Bitte wählen Sie die art der Lokalsierung aus.<br><ul><li><b>Volle Lokalisierung</b>: Die gesamte Seite mit dem gesamten Inhalt wird lokalisiert und steht zur bearbeitung zur verfügung.</li><li><b>Partielle Lokalisierung</b>: Haupt-Tags der Seite können individuell lokalisiert werden, alle anderen Inhalte werden vererbt.</li></ul>",
+        "save_tag_inheritance_title": "Lokaliserungseinstellungen speichern?",
+        "save_tag_inheritance_body": "Änderungen an den Lokalisierungseinstellungen können bereits lokalisierte Daten löschen.<br>Möchten Sie fortfahren?"
     },
     "lang": {
         "ar": "Arabisch",

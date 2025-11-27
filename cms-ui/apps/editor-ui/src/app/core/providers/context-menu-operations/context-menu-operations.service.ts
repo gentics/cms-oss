@@ -620,7 +620,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     localize(item: InheritableItem, activeNodeId: number): void {
         const localizingEditedItem = item.id === this.state.now.editor.itemId;
-        const partialLocalizeEnabled = this.state.now.features.nodeFeatures[activeNodeId].includes(NodeFeature.PARTIAL_MULTICHANNELLING);
+        const nodeFeatures = this.state.now.features.nodeFeatures[activeNodeId] || [];
+        const partialLocalizeEnabled = nodeFeatures.includes(NodeFeature.PARTIAL_MULTICHANNELLING);
 
         if (!partialLocalizeEnabled || item.type !== 'page') {
             this.folderActions.localizeItem(item.type, item.id, activeNodeId)
@@ -634,26 +635,26 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         }
 
         this.modalService.dialog({
-            title: this.i18n.instant('editor.choose_localization_type_title'),
-            body: this.i18n.instant('editor.choose_localization_type_body'),
+            title: this.i18n.instant('modal.choose_localization_type_title'),
+            body: this.i18n.instant('modal.choose_localization_type_body'),
             buttons: [
-                {
-                    id: 'full',
-                    label: this.i18n.instant('editor.localization_type_full'),
-                    type: 'default',
-                    returnValue: 'full',
-                },
-                {
-                    id: 'partial',
-                    label: this.i18n.instant('editor.localization_type_partial'),
-                    type: 'default',
-                    returnValue: 'partial',
-                },
                 {
                     id: 'cancel',
                     label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     returnValue: false,
+                },
+                {
+                    id: 'full',
+                    label: this.i18n.instant('tag_inheritance.type_full'),
+                    type: 'default',
+                    returnValue: 'full',
+                },
+                {
+                    id: 'partial',
+                    label: this.i18n.instant('tag_inheritance.type_partial'),
+                    type: 'default',
+                    returnValue: 'partial',
                 },
             ],
         })
@@ -676,9 +677,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 }
 
                 this.folderActions.refreshList(item.type);
-                if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
-                    const targetMode = type === 'full' ? EditMode.PREVIEW : EditMode.EDIT_INHERITANCE;
-                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, targetMode).navigate();
+
+                if (type === 'partial') {
+                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.EDIT_INHERITANCE).navigate();
+                } else if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
+                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();
                 }
             });
     }

@@ -42,7 +42,7 @@ describe('ItemBreadcrumbsComponent', () => {
 
         page = getExamplePageData();
         folder = getExampleFolderData();
-        page.folder = folder;
+        (page as any).folder = folder;
         expect(folder.breadcrumbs.length >= 2).toBeTruthy();
     });
 
@@ -75,7 +75,7 @@ describe('ItemBreadcrumbsComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             const normalizedPage = getExamplePageDataNormalized();
             const normalizedFolder = getExampleFolderDataNormalized();
-            normalizedPage.folder = normalizedFolder.id;
+            (normalizedPage as any).folder = normalizedFolder.id;
             expect(normalizedFolder.breadcrumbs.length >= 2).toBeTruthy();
             const entityResolver: MockEntityResolver = TestBed.inject(EntityResolver) as any;
             entityResolver.getFolder.and.returnValue(normalizedFolder);

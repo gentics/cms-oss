@@ -66,61 +66,95 @@
             <span class="item-editor">{{ 'modal.page_versions_editor_label' | gtxI18n:{ name: version.editor.firstName + ' ' + version.editor.lastName } }}</span>
           </div>
           <div class="item-indicators">
-            @if (version === published) {
-              <span [title]="'modal.page_versions_tooltip_published_version' | gtxI18n:{ _language: selectedPageVariant.language }"
-                class="published">
-                <i class="material-icons" [attr.translate]="'no'">cloud_upload</i>{{ 'modal.page_versions_published_label' | gtxI18n }}
-              </span>
+            @if (version.number === published?.number) {
+                <span
+                    [title]="'modal.page_versions_tooltip_published_version' | gtxI18n:{ _language: selectedPageVariant.language }"
+                    class="published"
+                >
+                    <icon>cloud_upload</icon>{{ 'modal.page_versions_published_label' | gtxI18n }}
+                </span>
             }
-            @if (planned && version === current && (plannedOfflineDate > 0 && plannedOnlineDate === 0 || plannedOfflineDate > 0 && plannedOnlineDate > 0 && plannedOfflineDate < plannedOnlineDate)) {
-              <span [title]="'modal.page_versions_tooltip_planned_offline_version' | gtxI18n:{ _language: selectedPageVariant.language }"
-                class="planned_offline">
-                <i class="material-icons" [attr.translate]="'no'">cloud_off</i>{{ 'modal.page_version_planned_offline_date' | gtxI18n:{ date: (plannedOfflineDate | gtxI18nDate)} }}
-              </span>
+            @if (
+                planned
+                && version.number === current?.number
+                && (
+                    (plannedOfflineDate > 0 && plannedOnlineDate === 0)
+                    || (plannedOfflineDate > 0 && plannedOnlineDate > 0 && plannedOfflineDate < plannedOnlineDate)
+                )
+            ) {
+                <span
+                    [title]="'modal.page_versions_tooltip_planned_offline_version' | gtxI18n:{ _language: selectedPageVariant.language }"
+                    class="planned_offline"
+                >
+                    <icon>cloud_off</icon>
+                    {{ 'modal.page_version_planned_offline_date' | gtxI18n:{ date: (plannedOfflineDate | gtxI18nDate)} }}
+                </span>
             }
-            @if (planned && version.number === plannedVersion && (plannedOnlineDate > 0 && plannedOfflineDate === 0 || plannedOfflineDate > 0 && plannedOnlineDate > 0 && plannedOnlineDate < plannedOfflineDate)) {
-              <span [title]="'modal.page_versions_tooltip_planned_online_version' | gtxI18n:{ _language: selectedPageVariant.language }"
-                class="planned_online">
-                <i class="material-icons" [attr.translate]="'no'">cloud_off</i>{{ 'modal.page_version_planned_online_date' | gtxI18n:{ date: (plannedOnlineDate | gtxI18nDate)} }}
-              </span>
+            @if (
+                planned
+                && version.number === plannedVersion
+                && (
+                    (plannedOnlineDate > 0 && plannedOfflineDate === 0)
+                    || (plannedOfflineDate > 0 && plannedOnlineDate > 0 && plannedOnlineDate < plannedOfflineDate)
+                )
+            ) {
+                <span
+                    [title]="'modal.page_versions_tooltip_planned_online_version' | gtxI18n:{ _language: selectedPageVariant.language }"
+                    class="planned_online"
+                >
+                    <icon>cloud_off</icon>
+                    {{ 'modal.page_version_planned_online_date' | gtxI18n:{ date: (plannedOnlineDate | gtxI18nDate)} }}
+                </span>
             }
-            @if (version === current) {
-              <span [title]="'modal.page_versions_tooltip_current_version' | gtxI18n:{ _language: selectedPageVariant.language }"
-                class="current">{{ 'modal.page_versions_current_label' | gtxI18n }}
-              </span>
+            @if (version.number === current?.number) {
+                <span
+                    [title]="'modal.page_versions_tooltip_current_version' | gtxI18n:{ _language: selectedPageVariant.language }"
+                    class="current"
+                >{{ 'modal.page_versions_current_label' | gtxI18n }}</span>
             }
           </div>
           @if (!compareBaseVersion) {
             <div class="item-actions">
               <div class="action-buttons">
-                <gtx-button flat type="primary" size="small" (click)="previewVersion(version)"
-                  [title]="'page_versions_tooltip_preview' | gtxI18n:{ version: version.number }">
-                  <i class="material-icons left" [attr.translate]="'no'">pageview</i>
-                  <span> {{ 'modal.page_versions_preview_button' | gtxI18n }}</span>
+                <gtx-button
+                    flat
+                    type="primary"
+                    size="small"
+                    (click)="previewVersion(version)"
+                    [title]="'page_versions_tooltip_preview' | gtxI18n:{ version: version.number }"
+                >
+                    <icon left>pageview</icon>
+                    <span> {{ 'modal.page_versions_preview_button' | gtxI18n }}</span>
                 </gtx-button>
                 @if (selectedPageVariant.versions.length >= 2) {
-                  <gtx-button flat type="primary" size="small"
-                    (click)="compareFromVersion(version)"
+                    <gtx-button
+                        flat
+                        type="primary"
+                        size="small"
+                        (click)="compareFromVersion(version)"
                     >
-                    <i class="material-icons left" [attr.translate]="'no'">compare_arrows</i> {{ 'modal.page_versions_compare_button' | gtxI18n }}
-                  </gtx-button>
+                        <icon left>compare_arrows</icon>
+                        {{ 'modal.page_versions_compare_button' | gtxI18n }}
+                    </gtx-button>
                 }
               </div>
               <gtx-dropdown-list align="right">
                 <gtx-dropdown-trigger>
                   <gtx-button icon type="secondary">
-                    <i class="material-icons" [attr.translate]="'no'">more_vert</i>
+                    <icon>more_vert</icon>
                   </gtx-button>
                 </gtx-dropdown-trigger>
+
                 <gtx-dropdown-content>
                   @if (version === current) {
                     <gtx-dropdown-item class="disabled" [title]="'modal.page_versions_tooltip_already_current_version' | gtxI18n">
-                      <i class="material-icons left" [attr.translate]="'no'">settings_backup_restore</i> {{ 'modal.page_versions_restore_button' | gtxI18n }}
+                      <icon left>settings_backup_restore</icon>
+                      {{ 'modal.page_versions_restore_button' | gtxI18n }}
                     </gtx-dropdown-item>
-                  }
-                  @if (version !== current) {
+                  } @else {
                     <gtx-dropdown-item (click)="restoreVersion(version)">
-                      <i class="material-icons left" [attr.translate]="'no'">settings_backup_restore</i> {{ 'modal.page_versions_restore_button' | gtxI18n }}
+                      <icon left>settings_backup_restore</icon>
+                      {{ 'modal.page_versions_restore_button' | gtxI18n }}
                     </gtx-dropdown-item>
                   }
                 </gtx-dropdown-content>
@@ -135,7 +169,8 @@
           @if (compareBaseVersion != null && version !== compareBaseVersion) {
             <div class="item-actions">
               <gtx-button flat size="small" (click)="compareWithVersion(version)">
-                <i class="material-icons left" [attr.translate]="'no'">compare_arrows</i> {{ 'modal.page_versions_compare_button' | gtxI18n }}
+                <icon left>compare_arrows</icon>
+                {{ 'modal.page_versions_compare_button' | gtxI18n }}
               </gtx-button>
             </div>
           }

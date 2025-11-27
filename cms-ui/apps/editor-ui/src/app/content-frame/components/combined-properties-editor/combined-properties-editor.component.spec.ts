@@ -289,6 +289,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     required: false,
                     sortOrder: counter,
                     type: 'OBJECTTAG',
+                    rootTag: false,
+                    inherited: false,
                     construct: {
                         id: 123,
                         keyword: 'example',

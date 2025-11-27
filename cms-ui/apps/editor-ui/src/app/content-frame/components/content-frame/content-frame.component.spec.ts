@@ -112,7 +112,7 @@ class MockNavigationService implements Partial<NavigationService> {
         }
     }
 
-    serializeOptions(options: any): { options: string; } {
+    serializeOptions(options: any): { options: string } {
         return { options: JSON.stringify(options) };
     }
 }
@@ -144,9 +144,11 @@ class MockPermissionService {
     forItemInLanguage(): Observable<any> {
         return NEVER;
     }
+
     forItem(): Observable<any> {
         return NEVER;
     }
+
     forFolder(): Observable<any> {
         return NEVER;
     }
@@ -260,14 +262,14 @@ function openPropertiesOfAFolder(fixture: ComponentFixture<any>, editorIsOpen: b
                 },
             },
             node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
+                [ITEM_NODE]: getExampleNodeDataNormalized({ id: ITEM_NODE }),
             },
             language: getExampleLanguageData(),
         },
         folder: {
             activeNode: ITEM_NODE,
             activeNodeLanguages: {
-                list: [ 1, 2 ],
+                list: [1, 2],
             },
             folders: {
                 saving: false,
@@ -313,7 +315,7 @@ function openPropertiesOfAPage(fixture: ComponentFixture<any>, pageId: number = 
     appState.mockState({
         entities: {
             node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
+                [ITEM_NODE]: getExampleNodeDataNormalized({ id: ITEM_NODE }),
             },
             page: {
                 [pageId]: getExamplePageDataNormalized({ id: pageId }),
@@ -323,7 +325,7 @@ function openPropertiesOfAPage(fixture: ComponentFixture<any>, pageId: number = 
         folder: {
             activeNode: ITEM_NODE,
             activeNodeLanguages: {
-                list: [ 1 ],
+                list: [1],
             },
             folders: {
                 saving: false,
@@ -370,7 +372,7 @@ function openEditModeOfAPage(fixture: ComponentFixture<any>, pageId: number = IT
     appState.mockState({
         entities: {
             node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
+                [ITEM_NODE]: getExampleNodeDataNormalized({ id: ITEM_NODE }),
             },
             page: {
                 [pageId]: getExamplePageDataNormalized({ id: pageId, userId: 3 }),
@@ -380,7 +382,7 @@ function openEditModeOfAPage(fixture: ComponentFixture<any>, pageId: number = IT
         folder: {
             activeNode: ITEM_NODE,
             activeNodeLanguages: {
-                list: [ 1 ],
+                list: [1],
             },
             folders: {
                 saving: false,
@@ -423,7 +425,7 @@ function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = IT
     appState.mockState({
         entities: {
             node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
+                [ITEM_NODE]: getExampleNodeDataNormalized({ id: ITEM_NODE }),
             },
             form: {
                 [formId]: getExampleFormDataNormalized({ id: formId }),
@@ -433,7 +435,7 @@ function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = IT
         folder: {
             activeNode: ITEM_NODE,
             activeNodeLanguages: {
-                list: [ 1 ],
+                list: [1],
             },
             folders: {
                 saving: false,
@@ -753,7 +755,7 @@ describe('ContentFrameComponent', () => {
                 instance.contentFrame.masterFrameLoaded = false;
                 const currentState = appState.now;
                 currentState.editor.contentModified = true;
-                currentState.entities.page[ITEM_ID].locked = false;
+                (currentState.entities.page[ITEM_ID] as any).locked = false;
                 appState.mockState(currentState);
                 tick();
                 fixture.detectChanges();
@@ -768,7 +770,7 @@ describe('ContentFrameComponent', () => {
             instance.contentFrame.masterFrameLoaded = true;
             const currentState = appState.now;
             currentState.editor.contentModified = false;
-            currentState.entities.page[ITEM_ID].locked = false;
+            (currentState.entities.page[ITEM_ID] as any).locked = false;
             appState.mockState(currentState);
             tick();
             fixture.detectChanges();
@@ -781,13 +783,13 @@ describe('ContentFrameComponent', () => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
             instance.contentFrame.masterFrameLoaded = true;
-            (instance.contentFrame.currentItem as Page).locked = true;
-            (instance.contentFrame.currentItem as Page).lockedBy = OTHER_USER_ID;
+            (instance.contentFrame.currentItem as any).locked = true;
+            (instance.contentFrame.currentItem as any).lockedBy = OTHER_USER_ID;
             const currentState = appState.now;
             currentState.editor.contentModified = true;
-            currentState.entities.page[ITEM_ID].locked = true;
+            (currentState.entities.page[ITEM_ID] as any).locked = true;
             // CurrentUserId is 1, so use another one
-            currentState.entities.page[ITEM_ID].lockedBy = 2;
+            (currentState.entities.page[ITEM_ID] as any).lockedBy = 2;
             appState.mockState(currentState);
             tick();
             fixture.detectChanges();
@@ -796,20 +798,19 @@ describe('ContentFrameComponent', () => {
 
         }));
 
-
         it('is enabled when a non-form item is edited and aloha editor is ready as well as master frame is loaded'
-             + ', content has been modified and it is not locked by another user', componentTest(() => TestComponent, (fixture, instance) => {
+          + ', content has been modified and it is not locked by another user', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
             instance.contentFrame.masterFrameLoaded = true;
             const currentState = appState.now;
             currentState.editor.contentModified = true;
-            currentState.entities.page[ITEM_ID].locked = false;
+            (currentState.entities.page[ITEM_ID] as any).locked = false;
             appState.mockState(currentState);
             tick();
             fixture.detectChanges();
 
             expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
-        }))
+        }));
     });
 });

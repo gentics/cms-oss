@@ -911,18 +911,20 @@ span.diff-html-added {
         return this.modalService.dialog({
             title: this.i18n.instant('modal.save_tag_inheritance_title'),
             body: this.i18n.instant('modal.save_tag_inheritance_body'),
-            buttons: [{
-                id: 'cancel',
-                type: 'secondary',
-                label: this.i18n.instant('common.cancel_button'),
-                returnValue: false,
-            },
-            {
-                id: 'confirm',
-                type: 'default',
-                label: this.i18n.instant('common.save_button'),
-                returnValue: true,
-            }],
+            buttons: [
+                {
+                    id: 'cancel',
+                    type: 'secondary',
+                    label: this.i18n.instant('common.cancel_button'),
+                    returnValue: false,
+                },
+                {
+                    id: 'confirm',
+                    type: 'default',
+                    label: this.i18n.instant('common.save_button'),
+                    returnValue: true,
+                },
+            ],
         })
             .then((dialog) => dialog.open())
             .then((accept) => {
@@ -939,8 +941,9 @@ span.diff-html-added {
                 })).pipe(
                     discard(() => {
                         this.notification.show({
+                            id: `tag-inheritance-save-success:${this.currentItem.id}`,
                             type: 'success',
-                            message: 'editor.tag_inhertiance_save_success',
+                            message: 'tag_inheritance.save_success',
                         });
                         this.modifiedTags = null;
                         this.markContentAsModifiedInState(false);

@@ -131,16 +131,16 @@ export class MeshRolePermissionsTrableComponent
             body: this.i18n.instant('mesh.apply_permissions_recursive_body'),
             buttons: [
                 {
-                    id: 'confirm',
-                    label: this.i18n.instant('shared.confirm_button'),
-                    type: 'default',
-                    returnValue: true,
-                },
-                {
                     id: 'cancel',
                     label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     returnValue: false,
+                },
+                {
+                    id: 'confirm',
+                    label: this.i18n.instant('shared.confirm_button'),
+                    type: 'default',
+                    returnValue: true,
                 },
             ],
         });

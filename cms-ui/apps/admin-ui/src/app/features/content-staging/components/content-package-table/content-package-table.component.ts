@@ -226,8 +226,8 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
                 }),
             }),
             buttons: [
-                { label: this.i18n.instant('common.okay_button'), returnValue: true },
                 { label: this.i18n.instant('common.cancel_button'), returnValue: false },
+                { label: this.i18n.instant('common.okay_button'), returnValue: true },
             ],
         });
         const doImport = await dialog.open();

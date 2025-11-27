@@ -305,8 +305,8 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     /**
      * Tracking function for ngFor for better performance.
      */
-    identify(index: number, item: Item): number {
-        return item?.id ?? index;
+    identify(index: number, item: Item): number | string {
+        return item?.globalId ?? item?.id ?? index;
     }
 
     /**

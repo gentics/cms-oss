@@ -217,8 +217,8 @@ describe('TagEditorService', () => {
         const expectedData = cloneDeep(data);
         const pageVariants = [data.tagOwner];
         const languageVariants = { 1: data.tagOwner as any };
-        data.tagOwner.pageVariants = [...pageVariants];
-        data.tagOwner.languageVariants = { ...languageVariants };
+        (data.tagOwner as any).pageVariants = [...pageVariants];
+        (data.tagOwner as any).languageVariants = { ...languageVariants };
 
         let tagEditorContext: TagEditorContext;
         expect(() => tagEditorContext = tagEditorService.createTagEditorContext(data)).not.toThrow();
@@ -257,8 +257,8 @@ function getTagEditorInitData(): { tag: Tag; tagType: TagType; page: Page<Raw> }
     const tagType = tag.tagType;
     delete tag.tagType;
     const page = getExamplePageData();
-    delete page.pageVariants;
-    delete page.languageVariants;
+    delete (page as any).pageVariants;
+    delete (page as any).languageVariants;
     return {
         tag,
         tagType,

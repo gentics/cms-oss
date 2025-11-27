@@ -481,8 +481,8 @@ describe('FolderStateModule', () => {
 
             emittedIDs = [] as number[][];
             subscription = state
-                .select(state => state.folder.pages.list)
-                .subscribe(list => emittedIDs.push(list));
+                .select((state) => state.folder.pages.list)
+                .subscribe((list) => emittedIDs.push(list));
         });
 
         afterEach(() => {
@@ -1005,7 +1005,7 @@ describe('FolderStateModule', () => {
         };
         // Sometimes the GCMS REST API returns a restored page as not being locked.
         if (typeof restoredPage.lockedBy !== 'undefined') {
-            delete restoredPage.lockedBy;
+            delete (restoredPage as any).lockedBy;
         }
 
         state.dispatch(new UpdateEntitiesAction({
@@ -1210,9 +1210,9 @@ describe('FolderStateModule', () => {
             },
         ];
 
-        types.forEach(type => {
+        types.forEach((type) => {
             // Test all entries
-            testEntries.forEach(entry => {
+            testEntries.forEach((entry) => {
                 // Reset the type value to empty
                 mockListState(plural[type], { displayFields: [] });
                 // Set tht test data and check it
@@ -1341,9 +1341,9 @@ describe('FolderStateModule', () => {
             },
         ];
 
-        types.forEach(type => {
+        types.forEach((type) => {
             // Test all entries
-            testEntries.forEach(entry => {
+            testEntries.forEach((entry) => {
                 // Reset the type value to empty
                 mockListState(plural[type], { sortBy: null, sortOrder: null });
                 // Set tht test data and check it
@@ -1366,7 +1366,7 @@ describe('FolderStateModule', () => {
 
     it('takePagesOfflineSuccess works', fakeAsync(() => {
         const page = getExamplePageDataNormalized({ id: 1234 });
-        page.online = true;
+        (page as any).online = true;
         state.mockState({
             folder: {
                 pages: {
@@ -1423,7 +1423,7 @@ describe('FolderStateModule', () => {
         const english: Language = { id: 2, code: 'en', name: 'English' };
 
         const originalPage = getExamplePageDataNormalized({ id: 1234 });
-        originalPage.languageVariants = { [german.id]: 1234 };
+        (originalPage as any).languageVariants = { [german.id]: 1234 };
 
         state.mockState({
             folder: {
@@ -1446,9 +1446,9 @@ describe('FolderStateModule', () => {
         // Translate page from german to english
         const translatedPage = getExamplePageData({ id: 5555 });
         translatedPage.language = english.code;
-        translatedPage.languageName = english.name;
+        (translatedPage as any).languageName = english.name;
         // The GCMS API does not return this data
-        translatedPage.languageVariants = undefined;
+        (translatedPage as any).languageVariants = undefined;
 
         state.dispatch(new ListCreatingSuccessAction('page'));
         tick();
@@ -1538,9 +1538,9 @@ describe('FolderStateModule', () => {
 
     it('updateInheritanceSuccess works', fakeAsync(() => {
         const folder = getExampleFolderDataNormalized({ id: 1234 });
-        folder.disinherit = [];
-        folder.disinheritDefault = false;
-        folder.excluded = false;
+        (folder as any).disinherit = [];
+        (folder as any).disinheritDefault = false;
+        (folder as any).excluded = false;
 
         state.mockState({
             folder: {
@@ -1605,8 +1605,8 @@ describe('FolderStateModule', () => {
             page = getExamplePageDataNormalized({ id: 1234, userId: 111 });
             page.description = 'No description';
             page.fileName = 'page.html';
-            page.creator = 111 as any;
-            page.editor = 111 as any;
+            (page as any).creator = 111 as any;
+            (page as any).editor = 111 as any;
 
             state.mockState({
                 folder: {

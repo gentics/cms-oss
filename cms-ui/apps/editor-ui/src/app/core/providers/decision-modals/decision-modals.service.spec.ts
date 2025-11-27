@@ -214,7 +214,7 @@ describe('DecisionModalsService', () => {
             const DEFAULT_LANG = LANG_EN;
 
             async function testModalNotRequiredWithPage(page: Partial<Page>): Promise<void> {
-                page.folderId = FOLDER;
+                (page as any).folderId = FOLDER;
                 let langId: number = DEFAULT_LANG.id;
                 if (page.language && LANG_MAP[page.language]) {
                     langId = LANG_MAP[page.language];

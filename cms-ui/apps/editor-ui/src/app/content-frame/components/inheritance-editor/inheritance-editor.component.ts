@@ -25,23 +25,35 @@ const ATTR_INHERITED_LABEL = 'data-gcmsui-inherited';
 const ATTR_LOCALIZED_LABEL = 'data-gcmsui-localized';
 
 const STYLES = `
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 100%;
+  src: url('./Roboto-VariableFont.ttf') format('truetype');
+}
+
 .${CLASS_EDITABLE} {
   position: relative;
-  margin-top: 1.7rem;
-  outline-style: solid;
+  outline: 2px solid #0096dc;
   background-color: #0096dc2b;
   transition: 200ms;
   user-select: none;
+  min-height: 24px;
 
   &::before {
     content: attr(${ATTR_LOCALIZED_LABEL});
-    background: #d6d6d6;
+    background: #0096dc;
+    color: #f5f5f5;
     font-size: 14px;
-    padding: 2px 5px;
+    padding: 2px 5px 4px 7px;
     border-bottom-left-radius: 5px;
     position: absolute;
     right: 0;
     top: 0;
+    line-height: 1.1;
+    font-family: 'Roboto';
+    transition: 200ms;
   }
 
   &.${CLASS_INHERITED} {
@@ -51,6 +63,7 @@ const STYLES = `
     &::before {
       content: attr(${ATTR_INHERITED_LABEL});
       background: #d6d6d6;
+      color: #222;
     }
   }
 }`;
@@ -180,6 +193,9 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
         styleEl.textContent = STYLES;
         pageDoc.head.append(styleEl);
 
+        const inheritedLabel = this.i18n.instant('tag_inheritance.indicator_inherited');
+        const localizedLabel = this.i18n.instant('tag_inheritance.indicator_localized');
+
         // Handle all the tags
         Object.entries(this.loadedPage.tags).forEach(([key, tag]) => {
             // Only handle root/template-tags
@@ -200,8 +216,8 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
             }
 
             // Add translated labels as attributes
-            el.setAttribute(ATTR_INHERITED_LABEL, this.i18n.instant('editor.tag_inheritance_inherited'));
-            el.setAttribute(ATTR_LOCALIZED_LABEL, this.i18n.instant('editor.tag_inheritance_localized'));
+            el.setAttribute(ATTR_INHERITED_LABEL, inheritedLabel);
+            el.setAttribute(ATTR_LOCALIZED_LABEL, localizedLabel);
 
             el.addEventListener('click', (event) => {
                 cancelEvent(event);

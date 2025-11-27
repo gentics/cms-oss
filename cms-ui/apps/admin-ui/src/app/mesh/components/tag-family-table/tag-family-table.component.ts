@@ -146,14 +146,14 @@ export class TagFamilyTableComponent extends BaseEntityTableComponent<TagFamily,
             body: this.i18n.instant('mesh.delete_tag_warning', { entityName: tag.name }),
             buttons: [
                 {
-                    label: this.i18n.instant('shared.confirm_button'),
-                    type: 'alert',
-                    returnValue: true,
-                },
-                {
                     label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     returnValue: false,
+                },
+                {
+                    label: this.i18n.instant('shared.confirm_button'),
+                    type: 'alert',
+                    returnValue: true,
                 },
             ],
         });

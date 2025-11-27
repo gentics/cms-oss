@@ -1,6 +1,7 @@
 import { BoolQuery } from 'elastic-types/queries';
 import { DirtQueueEntry, Jobs } from './admin-info';
 import { EditableFormProps, Form, FormStatus } from './cms-form';
+import { LocalizationType } from './common';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage, EditableContentPackage } from './content-package';
 import { CRElasticsearchModel, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType } from './content-repository';
@@ -1258,9 +1259,9 @@ export interface LocalizeRequest {
 
 export interface PageLocalizeRequest extends LocalizeRequest {
     /**
-     * Whether the localization is for tags or the whole page.
+     * Which type of localization should be used
      */
-    partial?: boolean;
+    localizationType?: LocalizationType;
 }
 
 export interface LocalizationInfoOptions {

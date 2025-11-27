@@ -179,14 +179,14 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
             }),
             buttons: [
                 {
-                    label: this.i18n.instant('shared.confirm_button'),
-                    type: 'warning',
-                    returnValue: true,
-                },
-                {
                     label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     returnValue: false,
+                },
+                {
+                    label: this.i18n.instant('shared.confirm_button'),
+                    type: 'warning',
+                    returnValue: true,
                 },
             ],
         });

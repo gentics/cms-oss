@@ -372,6 +372,8 @@ export const PAGE_ONE: PageImportData = {
             name: 'content',
             active: true,
             type: 'CONTENTTAG',
+            rootTag: true,
+            inherited: false,
             properties: {
                 text: {
                     type: TagPropertyType.RICHTEXT,
@@ -401,6 +403,8 @@ export const PAGE_ONE_DE = createPageTranslation(PAGE_ONE, 'Eins', LANGUAGE_DE, 
             name: 'content',
             active: true,
             type: 'CONTENTTAG',
+            rootTag: true,
+            inherited: false,
             properties: {
                 text: {
                     type: TagPropertyType.RICHTEXT,

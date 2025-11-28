@@ -1,3 +1,4 @@
+import { LocalizationType } from './common';
 import { ExternalLink } from './external-link';
 import { Folder } from './folder';
 import { Group } from './group';
@@ -251,7 +252,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
     readonly channelId?: number;
 
     /** If the page is partially localized (only certain tags). */
-    readonly partiallyLocalized?: boolean;
+    readonly localizationType?: LocalizationType;
 
     /* PUBLISH META-DATA
      * ---------------------------------------------------------------------- */

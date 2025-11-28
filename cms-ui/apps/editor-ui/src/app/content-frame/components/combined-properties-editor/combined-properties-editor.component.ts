@@ -35,6 +35,7 @@ import {
     ItemWithContentTags,
     ItemWithObjectTags,
     Language,
+    LocalizationType,
     Node,
     ObjectTag,
     Page,
@@ -300,7 +301,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             },
         ];
 
-        if (this.item?.type === 'page' && this.item.partiallyLocalized) {
+        if (this.item?.type === 'page' && this.item.localizationType === LocalizationType.PARTIAL) {
             this.contentTagColumns.push({
                 id: 'inherited',
                 fieldPath: 'inherited',
@@ -557,7 +558,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             });
         }
 
-        if (this.item?.type === 'page' && this.item.partiallyLocalized) {
+        if (this.item?.type === 'page' && this.item.localizationType === LocalizationType.PARTIAL) {
             this.contentTagActions.unshift({
                 id: ACTION_LOCALIZE_TAG,
                 enabled: (tag) => this.itemPermissions.edit && (tag == null || !tag.inherited),

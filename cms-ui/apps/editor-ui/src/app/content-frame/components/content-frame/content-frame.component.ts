@@ -25,6 +25,7 @@ import {
     ItemPermissions,
     ItemWithObjectTags,
     Language,
+    LocalizationType,
     Node,
     Normalized,
     Page,
@@ -124,6 +125,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
     public readonly CMS_FORM_TYPE = CmsFormType;
     public readonly EditMode = EditMode;
+    public readonly LocalizationType = LocalizationType;
 
     @ViewChild('iframe', { static: true })
     private iframe: ElementRef<HTMLIFrameElement>;

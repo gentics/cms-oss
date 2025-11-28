@@ -21,6 +21,7 @@ import {
     ItemNormalized,
     ItemPermissions,
     Language,
+    LocalizationType,
     Node,
     Normalized,
     Page,
@@ -422,7 +423,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
               && userCan.edit
               && editMode !== EditMode.EDIT_INHERITANCE
               && !isInherited
-              && (this.currentItem as Page).partiallyLocalized,
+              && (this.currentItem as Page).localizationType === LocalizationType.PARTIAL,
             editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
             lockedEdit: (isPage || isForm) && this.locked && userCan.edit && !this.showSave,
             previewPage: (isPage || isForm) && !previewing && userCan.view,

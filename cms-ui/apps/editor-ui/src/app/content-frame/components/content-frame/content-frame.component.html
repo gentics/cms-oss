@@ -77,7 +77,7 @@
     }
 
     @if (editMode === EditMode.EDIT_INHERITANCE) {
-        @if (currentItem.type !== 'page' || !currentItem.partiallyLocalized) {
+        @if (currentItem.type !== 'page' || !currentItem.localizationType === LocalizationType.PARTIAL) {
             <div class="edit-inheritance-error">{{ 'editor.invalid_state_edit_inheritance' | gtxI18n }}</div>
         } @else {
             <gtx-inheritance-editor

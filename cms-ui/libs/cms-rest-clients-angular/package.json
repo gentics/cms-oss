@@ -1,6 +1,6 @@
 {
   "name": "@gentics/cms-rest-clients-angular",
-  "version": "6.2.21",
+  "version": "6.2.22",
   "license": "Apache-2.0",
   "dependencies": {},
   "peerDependencies": {
@@ -11,7 +11,7 @@
   "devDependencies": {
     "@angular/common": ">=18.0.0",
     "@angular/core": ">=18.0.0",
-    "@gentics/cms-models": "^6.2.21"
+    "@gentics/cms-models": "^6.2.22"
   },
   "publishConfig": {
     "registry": "https://repo.gentics.com/repository/npm-products/"

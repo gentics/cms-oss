@@ -512,9 +512,16 @@
         "indicator_inherited": "Inherited",
         "indicator_localized": "Localized",
         "save_success": "Localization saved",
-        "localize_success": "Page successfull localized",
+        "page_localize_success": "Page successfull localized",
+        "tag_multi_localize_success": "Tags successfully localized",
+        "tag_localize_success": "Tag {{name}} successfully localized",
+        "tag_multi_unlocalize_success": "Localizations of the Tags successfully deleted",
+        "tag_unlocalize_success": "Localization of Tag {{name}} successfully deleted",
         "type_full": "Full localization",
-        "type_partial": "Partial localization"
+        "type_partial": "Partial localization",
+        "table_column_localized": "Localized",
+        "action_localize": "Localize",
+        "action_delete_localization": "Delete localization"
     },
     "search": {
         "all": "All",

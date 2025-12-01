@@ -106,7 +106,7 @@ export class TagEditorService {
             tagType: tagType,
             tagOwner: page,
             node: node,
-            readOnly: false, // openTagEditor() is called when a page is in edit mode, so the user has edit permissions.
+            readOnly: tag.rootTag && tag.inherited,
             withDelete: options?.withDelete ?? tagType.editorControlStyle === EditorControlStyle.CLICK,
             tagOwnerFromIFrame: true,
         });

@@ -513,8 +513,15 @@
         "indicator_localized": "Lokalisiert",
         "save_success": "Lokalisierungen gespeichert",
         "localize_success": "Seite erfolgreich lokalisiert",
+        "tag_multi_localize_success": "Tags erfolgreich lokalisiert",
+        "tag_localize_success": "Tag {{name}} erfolgreich lokalisiert",
+        "tag_multi_unlocalize_success": "Lokalisierungen der Tags erfolgreich gelöscht",
+        "tag_unlocalize_success": "Lokalisierung von Tag {{name}} erfolgreich gelöscht",
         "type_full": "Volle Lokalisierung",
-        "type_partial": "Partielle Lokalisierung"
+        "type_partial": "Partielle Lokalisierung",
+        "table_column_localized": "Lokalisiert",
+        "action_localize": "Lokalisieren",
+        "action_delete_localization": "Lokalisierung löschen"
     },
     "search": {
         "all": "Alles",

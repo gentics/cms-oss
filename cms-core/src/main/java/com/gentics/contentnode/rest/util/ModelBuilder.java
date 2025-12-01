@@ -989,7 +989,25 @@ public class ModelBuilder {
 					nodePage.getObjectTags().remove(objectTagNameWithoutObject);
 				} else {
 					// this is a content tag
-					nodePage.getContent().getTags().remove(toDelete);
+					var content = nodePage.getContent();
+					var tags = content.getContentTags();
+					var tagToDelete = content.getTags().get(toDelete);
+					var allTagsToDelete = new ArrayList<String>();
+
+					allTagsToDelete.add(toDelete);
+
+					if (Feature.PARTIAL_MULTICHANNELLING.isActivated(nodePage.getNode())
+							&& tagToDelete instanceof ContentTag removedContentTag
+							&& removedContentTag.comesFromTemplate()
+							&& !removedContentTag.isInherited()) {
+						var embeddedTagNames = MiscUtils.getEmbeddedTagNames(tags, removedContentTag.getName());
+
+						allTagsToDelete.addAll(embeddedTagNames);
+					}
+
+					for (var tagName: allTagsToDelete) {
+						tags.remove(tagName);
+					}
 				}
 			}
 		}

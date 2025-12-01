@@ -1,0 +1,7 @@
+<gtx-loading-spinner
+    [visible]="loading"
+    [message]="'editor.edit_mode_loading' | gtxI18n"
+    [longerMessage]="'editor.loading_takes_more_time' | gtxI18n"
+></gtx-loading-spinner>
+
+<iframe #iframe (load)="cleanupHooks()"></iframe>

@@ -1,70 +1,80 @@
 <div class="wrapper">
-    <gtx-top-bar class="top-bar">
-        <div class="gentics-logo">
-            <img src="assets/gentics-logo.svg" />
-        </div>
-
-        <h1>
-            <a class="title" [routerLink]="['index']">Gentics UI Core Docs</a>
-        </h1>
-
-        <a href="https://www.gentics.com/cmp/changelog/" target="_blank">
-            <span
-                class="version-info"
-                title="Click to see changelog"
-            >
-                <icon>manage_history</icon>Changelog
-            </span>
-        </a>
-
-        <a
-            class="gtx-top-bar-right github-logo"
-            title="Gentics UI Core on GitHub"
-            href="https://github.com/gentics/cms-oss/tree/dev/cms-ui/libs/ui-core"
-            target="_blank"
-        >
-           <img src="assets/github-logo.svg" />
-        </a>
-    </gtx-top-bar>
-
-    <div class="container">
-        <gtx-search-bar
-            [(ngModel)]="searchQuery"
-            (change)="filterContentItems($event)"
-            (clear)="resetFilter()"
-        ></gtx-search-bar>
+  <gtx-top-bar class="top-bar">
+    <div class="gentics-logo">
+      <img src="assets/gentics-logo.svg" />
     </div>
 
-    <gtx-split-view-container
-        class="split-view-container"
-        [initialSplit]="35"
-        [minPanelSizePixels]="320"
-        [rightPanelVisible]="hasContent"
-        [(focusedPanel)]="splitFocus"
+    <h1>
+      <a class="title" [routerLink]="['index']">Gentics UI Core Docs</a>
+    </h1>
+
+    <a href="https://www.gentics.com/cmp/changelog/" target="_blank">
+      <span
+        class="version-info"
+        title="Click to see changelog"
+        >
+        <icon>manage_history</icon>Changelog
+      </span>
+    </a>
+
+    <a
+      class="gtx-top-bar-right github-logo"
+      title="Gentics UI Core on GitHub"
+      href="https://github.com/gentics/cms-oss/tree/dev/cms-ui/libs/ui-core"
+      target="_blank"
+      >
+      <img src="assets/github-logo.svg" />
+    </a>
+  </gtx-top-bar>
+
+  <div class="container">
+    <gtx-search-bar
+      [(ngModel)]="searchQuery"
+      (change)="filterContentItems($event)"
+      (clear)="resetFilter()"
+    ></gtx-search-bar>
+  </div>
+
+  <gtx-split-view-container
+    class="split-view-container"
+    [initialSplit]="35"
+    [minPanelSizePixels]="320"
+    [rightPanelVisible]="hasContent"
+    [(focusedPanel)]="splitFocus"
     >
-        <div class="list-pane" left>
-            <gtx-contents-list-item *ngFor="let item of filteredContentItems">
-                <div class="item-avatar" [ngSwitch]="item.type">
-                    <i class="material-icons" *ngSwitchCase="'css'">style</i>
-                    <i class="material-icons" *ngSwitchCase="'info'">info</i>
-                    <i class="material-icons" *ngSwitchCase="'component'">code</i>
-                    <i class="material-icons" *ngSwitchCase="'service'">share</i>
-                </div>
+    <div class="list-pane" left>
+      @for (item of filteredContentItems; track item.type) {
+        <gtx-contents-list-item>
+          <div class="item-avatar">
+            @switch (item.type) {
+              @case ('css') {
+                <i class="material-icons">style</i>
+              }
+              @case ('info') {
+                <i class="material-icons">info</i>
+              }
+              @case ('component') {
+                <i class="material-icons">code</i>
+              }
+              @case ('service') {
+                <i class="material-icons">share</i>
+              }
+            }
+          </div>
+          <div class="item-primary">
+            <a [routerLink]="[item.route]" (click)="focusRightPanel()">
+              <strong>{{ item.title }}</strong>
+            </a>
+          </div>
+          <div class="type-label" [ngClass]="item.type">{{ item.type }}</div>
+        </gtx-contents-list-item>
+      }
+    </div>
 
-                <div class="item-primary">
-                    <a [routerLink]="[item.route]" (click)="focusRightPanel()">
-                        <strong>{{ item.title }}</strong>
-                    </a>
-                </div>
-
-                <div class="type-label" [ngClass]="item.type">{{ item.type }}</div>
-            </gtx-contents-list-item>
-        </div>
-
-        <div class="content-pane" right>
-            <router-outlet></router-outlet>
-        </div>
-    </gtx-split-view-container>
+    <div class="content-pane" right>
+      <router-outlet></router-outlet>
+    </div>
+  </gtx-split-view-container>
 </div>
 
 <gtx-overlay-host></gtx-overlay-host>

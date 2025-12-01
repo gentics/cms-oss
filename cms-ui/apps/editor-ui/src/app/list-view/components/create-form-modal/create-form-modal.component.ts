@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditableFormProps, Form, FormCreateRequest, IndexById, Language } from '@gentics/cms-models';
 import { BaseModal, setEnabled } from '@gentics/ui-core';
 import { Subscription, combineLatest } from 'rxjs';
@@ -40,7 +40,7 @@ export class CreateFormModalComponent
         private changeDetector: ChangeDetectorRef,
         private folderActions: FolderActionsService,
         private appState: ApplicationStateService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) {
         super();
     }

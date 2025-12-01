@@ -356,7 +356,7 @@ describe('Breadcrumbs:', () => {
                 ]'>
                 </gtx-breadcrumbs>`,
             fixture => {
-                const router: MockRouter = getTestBed().get(Router);
+                const router = getTestBed().inject(Router) as any as MockRouter;
                 router.createUrlTree = (commands: string[], options: any) => commands;
                 router.navigateByUrl = jasmine.createSpy('navigateByUrl');
 
@@ -385,7 +385,7 @@ describe('Breadcrumbs:', () => {
                 ]">
                 </gtx-breadcrumbs>`,
             (fixture, testComponent) => {
-                const router: MockRouter = getTestBed().get(Router);
+                const router = getTestBed().inject(Router) as any as MockRouter;
                 router.createUrlTree = (commands: string[], options: any) => commands;
                 router.navigateByUrl = jasmine.createSpy('navigateByUrl');
 

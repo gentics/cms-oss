@@ -1,5 +1,4 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { MeshMicroschemaBO, MeshProjectBO } from '@admin-ui/mesh/common';
 import { MicroschemaHandlerService, MicroschemaTableLoaderService } from '@admin-ui/mesh/providers';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
@@ -7,6 +6,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { Microschema, Permission } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MicroschemaModal } from '../microschema-modal/microschema-modal.component';
@@ -23,7 +23,7 @@ const UNASSIGN_FROM_PROJECTS_ACTION = 'unassignFromProjects';
     templateUrl: './microschema-table.component.html',
     styleUrls: ['./microschema-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MicroschemaTableComponent extends BaseEntityTableComponent<Microschema, MeshMicroschemaBO> {
 
@@ -40,6 +40,7 @@ export class MicroschemaTableComponent extends BaseEntityTableComponent<Microsch
             fieldPath: 'description',
         },
     ];
+
     protected entityIdentifier = 'microschema' as any;
 
     constructor(

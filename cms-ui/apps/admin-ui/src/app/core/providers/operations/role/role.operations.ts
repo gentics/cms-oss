@@ -1,5 +1,6 @@
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     DefaultModelType,
     ModelType,
@@ -15,7 +16,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 /**
@@ -42,10 +42,10 @@ export class RoleOperations extends ExtendedEntityOperationsBase<'role'> {
      */
     getAll(options?: RoleListOptions): Observable<RoleBO<ModelType.Raw>[]> {
         return this.api.role.getRoles(options).pipe(
-            map(res => {
-                return res.items.map(item => this.mapToBusinessObject(item));
+            map((res) => {
+                return res.items.map((item) => this.mapToBusinessObject(item));
             }),
-            tap(roles => {
+            tap((roles) => {
                 this.entities.addEntities(this.entityIdentifier, roles);
             }),
             this.catchAndRethrowError(),
@@ -57,8 +57,8 @@ export class RoleOperations extends ExtendedEntityOperationsBase<'role'> {
      */
     get(roleId: string): Observable<RoleBO<ModelType.Raw>> {
         return this.api.role.getRole(roleId).pipe(
-            map(res => this.mapToBusinessObject(res.role)),
-            tap(role => {
+            map((res) => this.mapToBusinessObject(res.role)),
+            tap((role) => {
                 this.entities.addEntity(this.entityIdentifier, role);
             }),
             this.catchAndRethrowError(),
@@ -75,8 +75,8 @@ export class RoleOperations extends ExtendedEntityOperationsBase<'role'> {
          * Thus, we call the API directly ourselves for now.
          */
         return this.api.role.createRole(role).pipe(
-            map(res => this.mapToBusinessObject(res.role)),
-            tap(role => {
+            map((res) => this.mapToBusinessObject(res.role)),
+            tap((role) => {
                 this.entities.addEntity(this.entityIdentifier, role);
 
                 if (notification) {
@@ -88,7 +88,7 @@ export class RoleOperations extends ExtendedEntityOperationsBase<'role'> {
                 }
             }),
             this.catchAndRethrowError(),
-        )
+        );
     }
 
     /**
@@ -101,9 +101,9 @@ export class RoleOperations extends ExtendedEntityOperationsBase<'role'> {
          * Thus, we call the API directly ourselves for now.
          */
         return this.api.role.updateRole(roleId, payload).pipe(
-            map(res => this.mapToBusinessObject(res.role)),
+            map((res) => this.mapToBusinessObject(res.role)),
             // display toast notification
-            tap(role => {
+            tap((role) => {
                 // update state with server response
                 this.entities.addEntity(this.entityIdentifier, role);
 
@@ -147,7 +147,7 @@ export class RoleOperations extends ExtendedEntityOperationsBase<'role'> {
      */
     getPermissions(roleId: string): Observable<RolePermissions> {
         return this.api.role.getRolePermissions(roleId).pipe(
-            map(res => res.perm),
+            map((res) => res.perm),
             this.catchAndRethrowError(),
         );
     }
@@ -157,7 +157,7 @@ export class RoleOperations extends ExtendedEntityOperationsBase<'role'> {
      */
     updatePermissions(roleId: string, payload: RolePermissions, notification: boolean = true): Observable<RolePermissions> {
         return this.api.role.updateRolePermissions(roleId, payload).pipe(
-            map(res => res.perm),
+            map((res) => res.perm),
             // display toast notification
             tap(() => {
                 if (notification) {

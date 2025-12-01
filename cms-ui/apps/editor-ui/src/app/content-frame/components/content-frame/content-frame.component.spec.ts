@@ -14,7 +14,7 @@ import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
 import {
@@ -36,8 +36,6 @@ import { Api } from '../../../core/providers/api/api.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
@@ -48,6 +46,7 @@ import { InheritedLocalizedIcon } from '../../../shared/components/inherited-loc
 import { ItemStatusLabelComponent } from '../../../shared/components/item-status-label/item-status-label.component';
 import { DynamicDisableDirective } from '../../../shared/directives/dynamic-disable/dynamic-disable.directive';
 import { ItemIsLocalizedPipe } from '../../../shared/pipes/item-is-localized/item-is-localized.pipe';
+import { RepositoryBrowserClient } from '../../../shared/providers';
 import { BreadcrumbsService } from '../../../shared/providers/breadcrumbs.service';
 import { ApplicationStateService, EditorActionsService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
@@ -113,7 +112,7 @@ class MockNavigationService implements Partial<NavigationService> {
         }
     }
 
-    serializeOptions(options: any): { options: string; } {
+    serializeOptions(options: any): { options: string } {
         return { options: JSON.stringify(options) };
     }
 }
@@ -145,9 +144,11 @@ class MockPermissionService {
     forItemInLanguage(): Observable<any> {
         return NEVER;
     }
+
     forItem(): Observable<any> {
         return NEVER;
     }
+
     forFolder(): Observable<any> {
         return NEVER;
     }
@@ -261,14 +262,14 @@ function openPropertiesOfAFolder(fixture: ComponentFixture<any>, editorIsOpen: b
                 },
             },
             node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
+                [ITEM_NODE]: getExampleNodeDataNormalized({ id: ITEM_NODE }),
             },
             language: getExampleLanguageData(),
         },
         folder: {
             activeNode: ITEM_NODE,
             activeNodeLanguages: {
-                list: [ 1, 2 ],
+                list: [1, 2],
             },
             folders: {
                 saving: false,
@@ -314,7 +315,7 @@ function openPropertiesOfAPage(fixture: ComponentFixture<any>, pageId: number = 
     appState.mockState({
         entities: {
             node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
+                [ITEM_NODE]: getExampleNodeDataNormalized({ id: ITEM_NODE }),
             },
             page: {
                 [pageId]: getExamplePageDataNormalized({ id: pageId }),
@@ -324,7 +325,7 @@ function openPropertiesOfAPage(fixture: ComponentFixture<any>, pageId: number = 
         folder: {
             activeNode: ITEM_NODE,
             activeNodeLanguages: {
-                list: [ 1 ],
+                list: [1],
             },
             folders: {
                 saving: false,
@@ -371,7 +372,7 @@ function openEditModeOfAPage(fixture: ComponentFixture<any>, pageId: number = IT
     appState.mockState({
         entities: {
             node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
+                [ITEM_NODE]: getExampleNodeDataNormalized({ id: ITEM_NODE }),
             },
             page: {
                 [pageId]: getExamplePageDataNormalized({ id: pageId, userId: 3 }),
@@ -381,7 +382,7 @@ function openEditModeOfAPage(fixture: ComponentFixture<any>, pageId: number = IT
         folder: {
             activeNode: ITEM_NODE,
             activeNodeLanguages: {
-                list: [ 1 ],
+                list: [1],
             },
             folders: {
                 saving: false,
@@ -424,7 +425,7 @@ function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = IT
     appState.mockState({
         entities: {
             node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
+                [ITEM_NODE]: getExampleNodeDataNormalized({ id: ITEM_NODE }),
             },
             form: {
                 [formId]: getExampleFormDataNormalized({ id: formId }),
@@ -434,7 +435,7 @@ function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = IT
         folder: {
             activeNode: ITEM_NODE,
             activeNodeLanguages: {
-                list: [ 1 ],
+                list: [1],
             },
             folders: {
                 saving: false,
@@ -498,8 +499,7 @@ describe('ContentFrameComponent', () => {
                 EditorActionsService,
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: PermissionService, useValue: permissionService },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
                 { provide: CustomScriptHostService, useClass: MockCustomScriptHostService },
                 { provide: CustomerScriptService, useClass: MockCustomerScriptService },
@@ -524,7 +524,7 @@ describe('ContentFrameComponent', () => {
                 NodePropertiesComponent,
                 ItemStatusLabelComponent,
                 TestComponent,
-                mockPipes('i18n', 'i18nDate', 'filesize', 'replaceEscapedCharacters'),
+                mockPipes('filesize', 'replaceEscapedCharacters'),
             ],
             imports: [
                 GenticsUICoreModule.forRoot(),
@@ -533,10 +533,10 @@ describe('ContentFrameComponent', () => {
             ],
         });
 
-        appState = TestBed.get(ApplicationStateService);
-        api = TestBed.get(Api);
-        folderActions = TestBed.get(FolderActionsService);
-        canSaveService = TestBed.get(MockCanSaveService);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        api = TestBed.inject(Api) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        canSaveService = TestBed.inject(MockCanSaveService);
         route = TestBed.inject(ActivatedRoute) as any;
 
         // Make sure we're marking the test as logged in, otherwise nothing will be displayed/rendered
@@ -755,7 +755,7 @@ describe('ContentFrameComponent', () => {
                 instance.contentFrame.masterFrameLoaded = false;
                 const currentState = appState.now;
                 currentState.editor.contentModified = true;
-                currentState.entities.page[ITEM_ID].locked = false;
+                (currentState.entities.page[ITEM_ID] as any).locked = false;
                 appState.mockState(currentState);
                 tick();
                 fixture.detectChanges();
@@ -770,7 +770,7 @@ describe('ContentFrameComponent', () => {
             instance.contentFrame.masterFrameLoaded = true;
             const currentState = appState.now;
             currentState.editor.contentModified = false;
-            currentState.entities.page[ITEM_ID].locked = false;
+            (currentState.entities.page[ITEM_ID] as any).locked = false;
             appState.mockState(currentState);
             tick();
             fixture.detectChanges();
@@ -783,13 +783,13 @@ describe('ContentFrameComponent', () => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
             instance.contentFrame.masterFrameLoaded = true;
-            (instance.contentFrame.currentItem as Page).locked = true;
-            (instance.contentFrame.currentItem as Page).lockedBy = OTHER_USER_ID;
+            (instance.contentFrame.currentItem as any).locked = true;
+            (instance.contentFrame.currentItem as any).lockedBy = OTHER_USER_ID;
             const currentState = appState.now;
             currentState.editor.contentModified = true;
-            currentState.entities.page[ITEM_ID].locked = true;
+            (currentState.entities.page[ITEM_ID] as any).locked = true;
             // CurrentUserId is 1, so use another one
-            currentState.entities.page[ITEM_ID].lockedBy = 2;
+            (currentState.entities.page[ITEM_ID] as any).lockedBy = 2;
             appState.mockState(currentState);
             tick();
             fixture.detectChanges();
@@ -798,20 +798,19 @@ describe('ContentFrameComponent', () => {
 
         }));
 
-
         it('is enabled when a non-form item is edited and aloha editor is ready as well as master frame is loaded'
-             + ', content has been modified and it is not locked by another user', componentTest(() => TestComponent, (fixture, instance) => {
+          + ', content has been modified and it is not locked by another user', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
             instance.contentFrame.alohaReady = true;
             instance.contentFrame.masterFrameLoaded = true;
             const currentState = appState.now;
             currentState.editor.contentModified = true;
-            currentState.entities.page[ITEM_ID].locked = false;
+            (currentState.entities.page[ITEM_ID] as any).locked = false;
             appState.mockState(currentState);
             tick();
             fixture.detectChanges();
 
             expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
-        }))
+        }));
     });
 });

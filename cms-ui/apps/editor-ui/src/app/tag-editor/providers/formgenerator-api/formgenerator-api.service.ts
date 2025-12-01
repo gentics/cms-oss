@@ -1,12 +1,15 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { CONTENTNODE_FORMGENERATOR_URL } from '@gentics/cms-components';
 import { FormgeneratorListResponse, GtxFormCreateRequest, GtxFormListOptions, GtxFormResponse, GtxFormWithUuid } from '@gentics/cms-models';
 import { combineLatest, Observable, of, OperatorFunction } from 'rxjs';
 import { catchError, map, switchMap, withLatestFrom } from 'rxjs/operators';
 import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
 import { ApplicationStateService } from '../../../state';
-import { CONTENTNODE_FORMGENERATOR_URL } from '../../util/base-urls';
 
+/**
+ * @deprecated Feature is not available anymore, but here for legacy reasons.
+ */
 @Injectable()
 export class FormgeneratorApiService {
 

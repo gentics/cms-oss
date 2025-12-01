@@ -1,21 +1,21 @@
 import { TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { TypeIconPipe } from '@editor-ui/app/shared/pipes';
+import { FALLBACK_LANGUAGE, I18nDatePipe, I18nService } from '@gentics/cms-components';
 import { Folder, Normalized } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
+import { NEVER, Observable } from 'rxjs';
 import { configureComponentTest } from '../../../../testing';
 import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.component';
 import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
 import { ImageThumbnailComponent } from '../../../shared/components/image-thumbnail/image-thumbnail.component';
 import { PagingControls } from '../../../shared/components/paging-controls/paging-controls.component';
-import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
+import { TypeIconPipe } from '../../../shared/pipes';
 import { ApplicationStateService, FolderActionsService, WastebinActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../providers/error-handler/error-handler.service';
-import { I18nService } from '../../providers/i18n/i18n.service';
 import { LocalizationsService } from '../../providers/localizations/localizations.service';
 import { WastebinList } from '../wastebin-list/wastebin-list.component';
 import { SortingModal } from './../../../shared/components/sorting-modal/sorting-modal.component';
@@ -49,7 +49,7 @@ describe('WastebinModal', () => {
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         state.mockState({
             entities: {
                 folder: {
@@ -80,13 +80,13 @@ describe('WastebinModal', () => {
                     folder: { list: [], requesting: true },
                     form: { list: [], requesting: false },
                     page: { list: [], requesting: false },
-                    file: { list: [], requesting: false},
+                    file: { list: [], requesting: false },
                     image: { list: [], requesting: false },
                     lastError: '',
                 },
             });
 
-            let fixture = TestBed.createComponent(WastebinModal);
+            const fixture = TestBed.createComponent(WastebinModal);
             fixture.detectChanges();
 
             expect(fixture.nativeElement.querySelector('.empty-message')).toBeNull();
@@ -98,13 +98,13 @@ describe('WastebinModal', () => {
                     folder: { list: [], requesting: false },
                     form: { list: [], requesting: false },
                     page: { list: [], requesting: false },
-                    file: { list: [], requesting: false},
+                    file: { list: [], requesting: false },
                     image: { list: [], requesting: false },
                     lastError: '',
                 },
             });
 
-            let fixture = TestBed.createComponent(WastebinModal);
+            const fixture = TestBed.createComponent(WastebinModal);
             fixture.detectChanges();
 
             expect(fixture.nativeElement.querySelector('.empty-message')).not.toBeNull();
@@ -116,13 +116,13 @@ describe('WastebinModal', () => {
                     folder: { list: [1234], requesting: false },
                     form: { list: [], requesting: false },
                     page: { list: [], requesting: false },
-                    file: { list: [], requesting: false},
+                    file: { list: [], requesting: false },
                     image: { list: [], requesting: false },
                     lastError: '',
                 },
             });
 
-            let fixture = TestBed.createComponent(WastebinModal);
+            const fixture = TestBed.createComponent(WastebinModal);
             fixture.detectChanges();
 
             expect(fixture.nativeElement.querySelector('.empty-message')).toBeNull();
@@ -139,15 +139,15 @@ describe('WastebinModal', () => {
                     folder: { list: [], requesting: false },
                     form: { list: [], requesting: false },
                     page: { list: [], requesting: false },
-                    file: { list: [], requesting: false},
+                    file: { list: [], requesting: false },
                     image: { list: [], requesting: false },
                 },
             });
         });
 
         it('changes the icon if sort order changed', () => {
-            let fixture = TestBed.createComponent(WastebinModal);
-            let component = fixture.componentInstance;
+            const fixture = TestBed.createComponent(WastebinModal);
+            const component = fixture.componentInstance;
             fixture.detectChanges();
 
             let arrowIcon = fixture.debugElement.query(By.css('.filter-wrapper gtx-button icon'));
@@ -166,16 +166,16 @@ describe('WastebinModal', () => {
         });
 
         it('opens modal to select the sorting if button clicked', () => {
-            let fixture = TestBed.createComponent(WastebinModal);
+            const fixture = TestBed.createComponent(WastebinModal);
             fixture.detectChanges();
-            let component = fixture.componentInstance;
+            const component = fixture.componentInstance;
 
             spyOn(component, 'selectSorting').and.callThrough();
             const button = fixture.debugElement.query(By.css('.filter-wrapper gtx-button'));
             button.triggerEventHandler('click', {});
             expect(component.selectSorting).toHaveBeenCalled();
 
-            const modalService: MockModalService = TestBed.get(ModalService);
+            const modalService: MockModalService = TestBed.inject(ModalService) as any;
             expect(modalService.fromComponent).toHaveBeenCalledWith(SortingModal, {}, {
                 itemType: 'wastebin',
                 sortBy: 'name',
@@ -185,7 +185,6 @@ describe('WastebinModal', () => {
     });
 
 });
-
 
 class MockWastebinActions {
     getWastebinContents(): void {}
@@ -199,12 +198,20 @@ class MockErrorHandler {
 
 class MockModalService {
     fromComponent = jasmine.createSpy('ModalService.fromComponent')
-        .and.returnValue(new Promise(neverResolve => {}));
+        .and.returnValue(new Promise((neverResolve) => {}));
 }
 class MockLocalizationsService {
 }
 
-class MockI18nService {
+class MockI18nService implements Partial<I18nService> {
+    public onLanguageChange(): Observable<string> {
+        return NEVER;
+    }
+
+    public getCurrentLanguage(): string {
+        return FALLBACK_LANGUAGE;
+    }
+
     translate(key: string, params?: any): string {
         return key;
     }

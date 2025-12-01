@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { userSchema } from '@editor-ui/app/common/models';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { AccessControlledType } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { normalize } from 'normalizr';
+import { userSchema } from '../../../common/models';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
 import {
     ChangePasswordAction,
@@ -33,7 +33,7 @@ export class AuthActionsService {
         private appState: ApplicationStateService,
         private router: Router,
         private localStorage: LocalStorage,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
         private errorHandler: ErrorHandler,
         private client: GCMSRestClientService,
         private folderActions: FolderActionsService,

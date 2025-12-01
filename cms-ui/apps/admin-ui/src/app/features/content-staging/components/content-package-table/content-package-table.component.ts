@@ -1,10 +1,11 @@
-import { BO_ID, ContentPackageBO, EntityTableActionClickEvent } from '@admin-ui/common';
-import { ContentPackageOperations, ErrorHandler, I18nService, PermissionsService } from '@admin-ui/core';
+import { BO_ID, ContentPackageBO } from '@admin-ui/common';
+import { ContentPackageOperations, ErrorHandler, PermissionsService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, ContentPackage, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContentPackageTableLoaderService } from '../../providers';
@@ -21,7 +22,7 @@ const IMPORT_PACKAGE_ACTION = 'importPackage';
     templateUrl: './content-package-table.component.html',
     styleUrls: ['./content-package-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ContentPackageTableComponent extends BaseEntityTableComponent<ContentPackage, ContentPackageBO> {
 
@@ -59,6 +60,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
             fieldPath: 'import.progress.finished',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'contentPackage';
 
     constructor(
@@ -89,11 +91,11 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
                 'updateContentPackage',
                 'deleteContentPackage',
                 'modifyContentPackageContent',
-            ].map(actionId => this.permissions.checkPermissions(
+            ].map((actionId) => this.permissions.checkPermissions(
                 this.permissions.getUserActionPermsForId(`content_staging.${actionId}`).typePermissions),
             ),
         ]).pipe(
-            map(([_, ...perms]) => perms as boolean[]),
+            map(([_, ...perms]) => perms),
             map(([canCreate, canRead, canUpdate, canDelete, canModifyContent]) => {
                 this.canCreate = canCreate;
 
@@ -207,7 +209,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
         }
 
         // TODO: Permission checks?
-        packages = packages.filter(pkg => pkg);
+        packages = packages.filter((pkg) => pkg);
 
         if (packages.length === 0) {
             return;
@@ -217,15 +219,15 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
             title: this.i18n.instant('modal.import_content_package_title'),
             body: this.i18n.instant(`modal.import_content_package_${packages.length === 1 ? 'singular' : 'plural'}`, {
                 packageName: packages[0].name,
-                packageNames: this.i18n.join(packages.map(pkg => pkg.name), {
+                packageNames: this.i18n.join(packages.map((pkg) => pkg.name), {
                     quoted: true,
                     withLast: false,
                     separator: '</li><li>',
                 }),
             }),
             buttons: [
-                { label: this.i18n.instant('common.ok_button'), returnValue: true },
                 { label: this.i18n.instant('common.cancel_button'), returnValue: false },
+                { label: this.i18n.instant('common.okay_button'), returnValue: true },
             ],
         });
         const doImport = await dialog.open();
@@ -235,7 +237,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
         }
 
         this.subscriptions.push(combineLatest(packages
-            .map(pkg => this.operations.importFromFileSystem(pkg[BO_ID], { wait: 5_000 })),
+            .map((pkg) => this.operations.importFromFileSystem(pkg[BO_ID], { wait: 5_000 })),
         ).subscribe());
         this.reload();
     }
@@ -246,7 +248,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
         }
 
         // TODO: Permission checks?
-        packages = packages.filter(pkg => pkg);
+        packages = packages.filter((pkg) => pkg);
 
         if (packages.length === 0) {
             return;
@@ -256,14 +258,14 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
             title: this.i18n.instant(`modal.export_content_package_title_${packages.length === 1 ? 'singular' : 'plural'}`),
             body: this.i18n.instant(`modal.export_content_package_body_${packages.length === 1 ? 'singular' : 'plural'}`, {
                 packageName: packages[0].name,
-                packageNames: this.i18n.join(packages.map(pkg => pkg.name), {
+                packageNames: this.i18n.join(packages.map((pkg) => pkg.name), {
                     quoted: true,
                     withLast: false,
                     separator: '</li><li>',
                 }),
             }),
             buttons: [
-                { label: this.i18n.instant('common.ok_button'), returnValue: true },
+                { label: this.i18n.instant('common.okay_button'), returnValue: true },
                 { label: this.i18n.instant('common.cancel_button'), returnValue: false },
             ],
         });
@@ -274,7 +276,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
         }
 
         this.subscriptions.push(combineLatest(packages
-            .map(pkg => this.operations.exportToFileSystem(pkg[BO_ID], { wait: 5_000 })),
+            .map((pkg) => this.operations.exportToFileSystem(pkg[BO_ID], { wait: 5_000 })),
         ).subscribe());
     }
 }

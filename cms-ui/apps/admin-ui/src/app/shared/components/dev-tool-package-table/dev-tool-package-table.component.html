@@ -1,15 +1,17 @@
-<gtx-search-bar
-    *ngIf="showSearch"
+@if (showSearch) {
+  <gtx-search-bar
     class="search-bar"
     [query]="query"
-    [placeholder]="'shared.search' | i18n"
+    [placeholder]="'shared.search' | gtxI18n"
     (search)="updateSearchQuery($event)"
     (clear)="updateSearchQuery('')"
-></gtx-search-bar>
+  ></gtx-search-bar>
+}
 
-<div *ngIf="!hideActions || nodeId" class="entity-table-actions-bar">
-    <gtx-button
-        *ngIf="!hideActions && !nodeId"
+@if (!hideActions || nodeId) {
+  <div class="entity-table-actions-bar">
+    @if (!hideActions && !nodeId) {
+      <gtx-button
         data-action="create"
         class="table-action-button"
         flat
@@ -18,12 +20,12 @@
         [disabled]="disabled"
         [gtxActionAllowed]="'contentadmin.updateContent'"
         (click)="handleCreateButton()"
-    >
-        <icon left>add</icon> {{ 'package.package_create' | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        *ngIf="nodeId"
+        >
+        <icon left>add</icon> {{ 'package.package_create' | gtxI18n }}
+      </gtx-button>
+    }
+    @if (nodeId) {
+      <gtx-button
         class="table-action-button"
         data-action="assign-to-node"
         flat
@@ -31,12 +33,12 @@
         type="primary"
         [disabled]="disabled || !isMasterNode"
         (click)="handleAssignToNode()"
-    >
-        <icon left>link</icon> {{ 'shared.assign_packages_to_node' | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        *ngIf="!hideSync"
+        >
+        <icon left>link</icon> {{ 'shared.assign_packages_to_node' | gtxI18n }}
+      </gtx-button>
+    }
+    @if (!hideSync) {
+      <gtx-button
         data-action="toggle-sync"
         flat
         size="small"
@@ -44,14 +46,14 @@
         [type]="syncEnabled ? 'success' : 'alert'"
         [disabled]="!(canEdit$ | async) || syncLoading"
         (click)="toggleSync()"
-    >
+        >
         <icon left>{{ syncEnabled ? 'play_arrow' : 'pause' }}</icon>
-        {{ 'package.autosync_label' | i18n }}:
-        {{ (syncEnabled ? 'package.autosync_active' : 'package.autosync_inactive') | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        *ngIf="!hideActions"
+        {{ 'package.autosync_label' | gtxI18n }}:
+        {{ (syncEnabled ? 'package.autosync_active' : 'package.autosync_inactive') | gtxI18n }}
+      </gtx-button>
+    }
+    @if (!hideActions) {
+      <gtx-button
         class="table-action-button reload-button"
         data-action="reload"
         flat
@@ -59,36 +61,40 @@
         type="primary"
         [disabled]="disabled || loading"
         (click)="reload()"
-    >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
-    </gtx-button>
-</div>
+        >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+      </gtx-button>
+    }
+  </div>
+}
 
-<div *ngIf="selectable" class="entity-table-selection">
-    {{ 'package.info_selected_packages' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
-</div>
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'package.info_selected_packages' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
 <gtx-table
-    class="entity-table"
+  class="entity-table"
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [disabled]="disabled"
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [hideActions]="hideActions"
+  [disabled]="disabled"
 
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
 
-    [page]="page"
-    [perPage]="perPage"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
 
     [renderers]="{
         constructs: numberRenderer,
@@ -98,16 +104,16 @@
         'content-repositories': numberRenderer
     }"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
 ></gtx-table>
 
 <ng-template #numberRenderer let-value="value">
-    <span class="gtx-table-cell-text">
-        {{ value | gtxI18nNumber }}
-    </span>
+  <span class="gtx-table-cell-text">
+    {{ value | gtxI18nNumber }}
+  </span>
 </ng-template>

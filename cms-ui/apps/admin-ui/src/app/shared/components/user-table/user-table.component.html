@@ -1,27 +1,28 @@
-<gtx-search-bar
-    *ngIf="showSearch"
+@if (showSearch) {
+  <gtx-search-bar
     class="search-bar"
     [query]="query"
-    [placeholder]="'shared.search' | i18n"
+    [placeholder]="'shared.search' | gtxI18n"
     (search)="updateSearchQuery($event)"
     (clear)="updateSearchQuery('')"
-></gtx-search-bar>
+  ></gtx-search-bar>
+}
 
-<div *ngIf="!hideActions" class="entity-table-actions-bar">
+@if (!hideActions) {
+  <div class="entity-table-actions-bar">
     <gtx-button
-        class="table-action-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled"
-        [gtxActionAllowed]="'user.createUser'"
-        (click)="handleCreateButton()"
-    >
-        <icon left>add</icon> {{ (group ? 'shared.create_new_user_in_group_button' : 'shared.create_new_user_button') | i18n }}
+      class="table-action-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled"
+      [gtxActionAllowed]="'user.createUser'"
+      (click)="handleCreateButton()"
+      >
+      <icon left>add</icon> {{ (group ? 'shared.create_new_user_in_group_button' : 'shared.create_new_user_button') | gtxI18n }}
     </gtx-button>
-
-    <gtx-button
-        *ngIf="group"
+    @if (group) {
+      <gtx-button
         class="table-action-button"
         flat
         size="small"
@@ -29,72 +30,75 @@
         [disabled]="disabled"
         [gtxActionAllowed]="'user.assignUserToGroup'"
         (click)="handleAssignUsersButton()"
-    >
-        <icon left>link</icon> {{ 'shared.assign_users' | i18n }}
-    </gtx-button>
-
+        >
+        <icon left>link</icon> {{ 'shared.assign_users' | gtxI18n }}
+      </gtx-button>
+    }
     <gtx-button
-        class="table-action-button reload-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled || loading"
-        (click)="reload()"
-    >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+      class="table-action-button reload-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled || loading"
+      (click)="reload()"
+      >
+      <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
     </gtx-button>
-</div>
+  </div>
+}
 
-<div *ngIf="selectable" class="entity-table-selection">
-    {{ 'shared.info_selected_users' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
-</div>
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'shared.info_selected_users' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
 <gtx-table
-    class="entity-table"
+  class="entity-table"
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [disabled]="disabled"
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [hideActions]="hideActions"
+  [disabled]="disabled"
 
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
 
-    [page]="page"
-    [perPage]="perPage"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
 
-    [renderers]="{ groups: groupRenderer }"
+  [renderers]="{ groups: groupRenderer }"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
 ></gtx-table>
 
 <ng-template #groupRenderer let-row="row">
-    <div class="gtx-table-cell-text">
-        <ng-container *ngFor="let group of row.item.groups; last as last">
-            <ng-template #groupNameTemplate>
-                <span class="gtx-table-cell-text">
-                    {{ group.name }}
-                </span>
-            </ng-template>
-            <a
-                *ngIf="linkGroups; else groupNameTemplate"
-                class="gtx-entity-grid-link group-link"
-                [routerLink]="AdminUIEntityDetailRoutes.GROUP | gtxEntityDetailRouterLink:group.id"
-                (click)="cancelEvent($event)"
-            >{{ group.name }}</a>{{ !last ? ',&nbsp;' : '' }}
-        </ng-container>
+  <div class="gtx-table-cell-text">
+    @for (group of row.item.groups; track group.id; let last = $last) {
+      @if (linkGroups) {
+        <a
+          class="gtx-entity-grid-link group-link"
+          [routerLink]="AdminUIEntityDetailRoutes.GROUP | gtxEntityDetailRouterLink:group.id"
+          (click)="cancelEvent($event)"
+        >{{ group.name }}</a>
+      } @else {
+        <span class="gtx-table-cell-text">
+          {{ group.name }}
+        </span>
+        }{{ !last ? ',&nbsp;' : '' }}
+      }
     </div>
-</ng-template>
+  </ng-template>

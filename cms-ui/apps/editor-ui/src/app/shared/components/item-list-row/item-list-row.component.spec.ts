@@ -2,7 +2,6 @@ import {
     ChangeDetectorRef,
     Component,
     DebugElement,
-    EventEmitter,
     NO_ERRORS_SCHEMA,
     Pipe,
     PipeTransform,
@@ -11,16 +10,7 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
-import {
-    ApplicationStateService,
-    FolderActionsService,
-    SetDisplayAllLanguagesAction,
-    SetDisplayStatusIconsAction,
-    UsageActionsService,
-    WastebinActionsService,
-} from '@editor-ui/app/state';
-import { WindowRef } from '@gentics/cms-components';
+import { I18nDatePipe, I18nService, WindowRef } from '@gentics/cms-components';
 import { Favourite, File, Folder, GcmsPermission, Image, Page, PermissionsMapCollection } from '@gentics/cms-models';
 import {
     getExampleFolderDataNormalized,
@@ -28,14 +18,14 @@ import {
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
+import { provideTranslateService } from '@ngx-translate/core';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { EditorPermissions, getNoPermissions, ItemsInfo } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { FavouritesService } from '../../../core/providers/favourites/favourites.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import {
     FavouriteToggleComponent,
@@ -52,7 +42,6 @@ import {
     FileSizePipe,
     GetInheritancePipe,
     HighlightPipe,
-    I18nDatePipe,
     IsFavouritePipe,
     ItemIsLocalizedPipe,
     ItemPathPipe,
@@ -61,6 +50,14 @@ import {
     TruncatePathPipe,
     UserFullNamePipe,
 } from '../../../shared/pipes';
+import {
+    ApplicationStateService,
+    FolderActionsService,
+    SetDisplayAllLanguagesAction,
+    SetDisplayStatusIconsAction,
+    UsageActionsService,
+    WastebinActionsService,
+} from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { IsStartPagePipe } from '../../pipes/is-start-page/is-start-page.pipe';
 import { ItemContextMenuComponent } from '../item-context-menu/item-context-menu.component';
@@ -98,9 +95,11 @@ class TestComponent {
         type: 'file',
         deleted: { at: 0, by: null },
     };
+
     activeNode: any = {
         name: '',
     };
+
     itemsInfo: ItemsInfo = {
         list: [1, 2, 3],
         selected: [],
@@ -115,6 +114,7 @@ class TestComponent {
         showPath: true,
         itemsPerPage: 0,
     };
+
     startPageId: number = Number.NaN;
     itemInEditor: any = undefined;
     linkPaths = false;
@@ -170,21 +170,6 @@ class MockChangeDetector {
     detectChanges(): void { }
 }
 
-class MockI18nService {}
-
-class MockTranslateService {
-    onLangChange = new EventEmitter<LangChangeEvent>();
-    get currentLang(): string { return this.lang; }
-    set currentLang(lang: string) {
-        this.lang = lang;
-        this.onLangChange.emit({
-            lang: lang,
-            translations: {},
-        });
-    }
-    private lang: string;
-}
-
 class MockWindowRef { }
 
 class MockUsageActions {
@@ -211,7 +196,7 @@ const elementStateIsActive = (
 ): boolean => !(debugElement.query(By.css(cssClass))?.nativeElement?.hasAttribute?.('hidden') ?? true);
 
 function getExampleFolderWithPermissions(
-    { id, userId, publishDir }: { id: number, userId?: number, publishDir?: string } = { id: 115, userId: 3, publishDir: '/' },
+    { id, userId, publishDir }: { id: number; userId?: number; publishDir?: string } = { id: 115, userId: 3, publishDir: '/' },
 ) {
     const folder = getExampleFolderDataNormalized({ id, userId, publishDir });
     folder.permissionsMap = getDefaultTestPermissions();
@@ -236,7 +221,7 @@ function getDefaultTestPermissions(): PermissionsMapCollection {
 describe('ItemListRow', () => {
 
     let state: TestApplicationState;
-    let mockTranslateService: MockTranslateService;
+    let i18n: I18nService;
 
     beforeEach(() => {
         configureComponentTest({
@@ -245,6 +230,7 @@ describe('ItemListRow', () => {
                 GenticsUICoreModule.forRoot(),
             ],
             providers: [
+                provideTranslateService(),
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: ChangeDetectorRef, useClass: MockChangeDetector },
                 { provide: ContextMenuOperationsService, useClass: MockContextMenuOperationsService },
@@ -252,12 +238,11 @@ describe('ItemListRow', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: FavouritesService, useClass: MockFavouritesService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
-                { provide: TranslateService, useClass: MockTranslateService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: UsageActionsService, useClass: MockUsageActions },
                 { provide: WastebinActionsService, useClass: MockWastebinActionsService },
                 { provide: WindowRef, useClass: MockWindowRef },
+                I18nService,
                 EntityResolver,
             ],
             declarations: [
@@ -290,9 +275,9 @@ describe('ItemListRow', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         expect(state instanceof ApplicationStateService).toBeTruthy();
-        mockTranslateService = TestBed.get(TranslateService);
+        i18n = TestBed.inject(I18nService);
         state.mockState({
             entities: {
                 folder: {
@@ -305,7 +290,7 @@ describe('ItemListRow', () => {
     });
 
     it('binds the item name',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             expect(getItemName(fixture.nativeElement)).toContain('item1');
@@ -319,7 +304,7 @@ describe('ItemListRow', () => {
             fixture.detectChanges();
             tick();
 
-            const getImageStatus = (el: Element) => ( el.querySelector('.online'));
+            const getImageStatus = (el: Element) => (el.querySelector('.online'));
             expect(getImageStatus(fixture.nativeElement)).toBeTruthy();
         }),
     );
@@ -331,17 +316,17 @@ describe('ItemListRow', () => {
             fixture.detectChanges();
             tick();
 
-            const getImageStatus = (el: Element) => ( el.querySelector('.online'));
+            const getImageStatus = (el: Element) => (el.querySelector('.online'));
             expect(getImageStatus(fixture.nativeElement)).toBeFalsy();
         }),
     );
 
     it('binds the item path',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-            const getItemFilename = (el: Element) => ( el.querySelector('.file-name') as any).innerText;
+            const getItemFilename = (el: Element) => (el.querySelector('.file-name') as any).innerText;
             expect(getItemFilename(fixture.nativeElement)).toContain('root/item1');
         }),
     );
@@ -372,7 +357,7 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = {
                     ...getExamplePageData({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     deleted: {
                         at: 0,
@@ -399,7 +384,7 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = {
                     ...getExamplePageData({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: false,
                     modified: true,
                     queued: false,
@@ -430,7 +415,7 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = {
                     ...getExamplePageData({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: true,
                     queued: false,
@@ -461,7 +446,7 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = {
                     ...getExamplePageData({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: true,
                     queued: false,
@@ -498,7 +483,7 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = {
                     ...getExamplePageData({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: false,
                     queued: true,
@@ -535,7 +520,7 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = {
                     ...getExamplePageData({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: false,
                     queued: false,
@@ -572,7 +557,7 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = {
                     ...getExamplePageData({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: false,
                     queued: false,
@@ -608,7 +593,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const pageEN = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     language: 'en',
                     deleted: {
@@ -618,7 +603,7 @@ describe('ItemListRow', () => {
                 };
                 const pageDE = {
                     ...getExamplePageDataNormalized({ id: 2 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: false,
                     language: 'de',
                     deleted: {
@@ -647,10 +632,10 @@ describe('ItemListRow', () => {
                     },
                     folder: {
                         activeNodeLanguages: {
-                            list: [ 1, 2, 3 ],
+                            list: [1, 2, 3],
                         },
                         pages: {
-                            list: [ 1, 2 ],
+                            list: [1, 2],
                         },
                     },
                 });
@@ -664,11 +649,11 @@ describe('ItemListRow', () => {
                 const pageLanguageIndicatorLanguageIcons = fixture.debugElement.queryAll(By.css('page-language-indicator .language-icon'));
 
                 const pageLanguageIndicatorLanguageIconEN = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN');
                 const pageLanguageIndicatorLanguageIconDE = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE');
                 const pageLanguageIndicatorLanguageIconFR = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR');
 
                 expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
                 // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
@@ -691,7 +676,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const pageEN = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: true,
                     planned: false,
@@ -704,7 +689,7 @@ describe('ItemListRow', () => {
                 };
                 const pageDE = {
                     ...getExamplePageDataNormalized({ id: 2 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: false,
                     planned: false,
@@ -742,11 +727,11 @@ describe('ItemListRow', () => {
                 const pageLanguageIndicatorLanguageIcons = fixture.debugElement.queryAll(By.css('page-language-indicator .language-icon'));
 
                 const pageLanguageIndicatorLanguageIconEN = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN');
                 const pageLanguageIndicatorLanguageIconDE = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE');
                 const pageLanguageIndicatorLanguageIconFR = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR');
 
                 expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
 
@@ -782,7 +767,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const pageEN = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: false,
                     planned: true,
@@ -795,7 +780,7 @@ describe('ItemListRow', () => {
                 };
                 const pageDE = {
                     ...getExamplePageDataNormalized({ id: 2 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: false,
                     planned: false,
@@ -833,11 +818,11 @@ describe('ItemListRow', () => {
                 const pageLanguageIndicatorLanguageIcons = fixture.debugElement.queryAll(By.css('page-language-indicator .language-icon'));
 
                 const pageLanguageIndicatorLanguageIconEN = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN');
                 const pageLanguageIndicatorLanguageIconDE = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE');
                 const pageLanguageIndicatorLanguageIconFR = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR');
 
                 expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
 
@@ -873,7 +858,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const pageEN = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: false,
                     planned: false,
@@ -886,7 +871,7 @@ describe('ItemListRow', () => {
                 };
                 const pageDE = {
                     ...getExamplePageDataNormalized({ id: 2 }),
-                    languageVariants: [ 1, 2 ],
+                    languageVariants: [1, 2],
                     online: true,
                     modified: false,
                     planned: false,
@@ -924,11 +909,11 @@ describe('ItemListRow', () => {
                 const pageLanguageIndicatorLanguageIcons = fixture.debugElement.queryAll(By.css('page-language-indicator .language-icon'));
 
                 const pageLanguageIndicatorLanguageIconEN = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN');
                 const pageLanguageIndicatorLanguageIconDE = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE');
                 const pageLanguageIndicatorLanguageIconFR = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR' );
+                    .find((languageIcon) => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR');
 
                 expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
 
@@ -965,14 +950,14 @@ describe('ItemListRow', () => {
     describe('start page', () => {
 
         beforeEach(() => {
-            mockTranslateService.currentLang = 'en';
+            i18n.setLanguage('en');
         });
 
         it('shows no start page icon if startPageId is not set',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const item: Partial<Page> = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1 ],
+                    languageVariants: [1],
                     online: true,
                     modified: false,
                     planned: false,
@@ -992,7 +977,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const item: Partial<Page> = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1, 2, 3 ],
+                    languageVariants: [1, 2, 3],
                     online: true,
                     modified: false,
                     planned: false,
@@ -1012,7 +997,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const item: Partial<Page> = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1 ],
+                    languageVariants: [1],
                     online: true,
                     modified: false,
                     planned: false,
@@ -1032,7 +1017,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const item: Partial<Page> = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1, 2, 3 ],
+                    languageVariants: [1, 2, 3],
                     online: true,
                     modified: false,
                     planned: false,
@@ -1052,14 +1037,14 @@ describe('ItemListRow', () => {
     describe('start page', () => {
 
         beforeEach(() => {
-            mockTranslateService.currentLang = 'en';
+            i18n.setLanguage('en');
         });
 
         it('shows no start page icon if startPageId is not set',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const item: Partial<Page> = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1 ],
+                    languageVariants: [1],
                     online: true,
                     modified: false,
                     planned: false,
@@ -1079,7 +1064,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const item: Partial<Page> = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1, 2, 3 ],
+                    languageVariants: [1, 2, 3],
                     online: true,
                     modified: false,
                     planned: false,
@@ -1099,7 +1084,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const item: Partial<Page> = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1 ],
+                    languageVariants: [1],
                     online: true,
                     modified: false,
                     planned: false,
@@ -1119,7 +1104,7 @@ describe('ItemListRow', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 const item: Partial<Page> = {
                     ...getExamplePageDataNormalized({ id: 1 }),
-                    languageVariants: [ 1, 2, 3 ],
+                    languageVariants: [1, 2, 3],
                     online: true,
                     modified: false,
                     planned: false,
@@ -1142,10 +1127,10 @@ describe('ItemListRow', () => {
         let favourites: MockFavouritesService;
 
         beforeEach(() => {
-            state = TestBed.get(ApplicationStateService);
+            state = TestBed.inject(ApplicationStateService) as any;
             expect(state instanceof TestApplicationState).toBe(true);
 
-            favourites = TestBed.get(FavouritesService);
+            favourites = TestBed.inject(FavouritesService) as any;
             expect(favourites instanceof MockFavouritesService).toBe(true);
         });
 

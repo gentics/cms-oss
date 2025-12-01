@@ -1,0 +1,28 @@
+{
+    "name": "e2e-utils",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/e2e-utils/src",
+    "projectType": "library",
+    "tags": ["lib"],
+    "targets": {
+        "build": {
+            "executor": "@nx/esbuild:esbuild",
+            "outputs": ["{options.outputPath}"],
+            "defaultConfiguration": "production",
+            "options": {
+                "main": "{projectRoot}/src/index.ts",
+                "outputPath": "dist/{projectRoot}",
+                "outputFileName": "main.js",
+                "tsConfig": "{projectRoot}/tsconfig.lib.json",
+                "platform": "node",
+                "format": ["esm", "cjs"],
+                "assets": []
+            },
+            "configurations": {
+                "development": {},
+                "production": {},
+                "ci": {}
+            }
+        }
+    }
+}

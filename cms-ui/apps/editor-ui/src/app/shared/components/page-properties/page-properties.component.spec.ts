@@ -2,9 +2,16 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/c
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { EditorPermissions } from '@editor-ui/app/common/models';
 import { CoreModule } from '@gentics/cms-components';
-import { EditablePageProps, Feature, Language, PermissionListResponse, ResponseCode, SuggestPageFileNameResponse, Template } from '@gentics/cms-models';
+import {
+    EditablePageProps,
+    Feature,
+    Language,
+    PermissionListResponse,
+    ResponseCode,
+    SuggestPageFileNameResponse,
+    Template,
+} from '@gentics/cms-models';
 import {
     getExampleFolderDataNormalized,
     getExamplePageData,
@@ -18,6 +25,7 @@ import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
+import { EditorPermissions } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -108,7 +116,6 @@ describe('PagePropertiesComponent', () => {
             declarations: [
                 TestComponent,
                 PagePropertiesComponent,
-                ...mockPipes('i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });

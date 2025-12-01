@@ -18,8 +18,8 @@ describe('NavigationService', () => {
                 { provide: Location, useClass: MockLocation },
             ],
         });
-        navigationService = TestBed.get(NavigationService);
-        router = TestBed.get(Router);
+        navigationService = TestBed.inject(NavigationService);
+        router = TestBed.inject(Router) as any;
         encodeOptions = navigationService.serializeOptions.bind(navigationService);
     });
 
@@ -152,7 +152,7 @@ describe('NavigationService', () => {
         let instruction: InstructionActions;
 
         beforeEach(() => {
-            location = TestBed.get(Location);
+            location = TestBed.inject(Location);
             instruction = navigationService.instruction({
                 list: {
                     nodeId: 3,

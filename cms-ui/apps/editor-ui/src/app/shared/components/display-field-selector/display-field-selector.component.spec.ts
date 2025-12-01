@@ -2,9 +2,9 @@ import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { GetInheritancePipe } from '../../pipes/get-inheritance/get-inheritance.pipe';
 import { DisplayFieldSelectorModal } from './display-field-selector.component';
 

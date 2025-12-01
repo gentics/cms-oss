@@ -1,37 +1,44 @@
 <div class="hidden-file-wrapper">
-    <input
-        #fileInput
-        type="file"
-        class="hidden-file-input"
-        tabindex="-1"
-        [accept]="inputAccept"
-        [disabled]="disabled"
-        [multiple]="multiple"
-        (change)="handleFileChange()"
+  <input
+    #fileInput
+    type="file"
+    class="hidden-file-input"
+    tabindex="-1"
+    [accept]="inputAccept"
+    [disabled]="disabled"
+    [multiple]="multiple"
+    (change)="handleFileChange()"
     />
 </div>
 
 <gtx-button
-    [disabled]="disabled"
-    [size]="size"
-    [icon]="icon"
-    [type]="dropArea?.pageDragHovered ? 'success' : type"
-    [flat]="flat || dropArea?.dragHovered"
-    (click)="openFilePicker()"
->
-    <ng-content></ng-content>
+  [disabled]="disabled"
+  [size]="size"
+  [icon]="icon"
+  [type]="dropArea?.pageDragHovered ? 'success' : type"
+  [flat]="flat || dropArea?.dragHovered"
+  (click)="openFilePicker()"
+  >
+  <ng-content></ng-content>
 </gtx-button>
 
-<div
-    *ngIf="displayFiles && value.length > 0"
+@if (displayFiles && value.length > 0) {
+  <div
     class="selection"
     [class.multiple]="multiple"
->
+    >
     <div class="label-wrapper">
-        <span class="selected-label">{{ selectionLabel }}</span>
-        <span *ngIf="!multiple" class="file-name">:&nbsp;{{ value[0].name }}</span>
+      <span class="selected-label">{{ selectionLabel }}</span>
+      @if (!multiple) {
+        <span class="file-name">:&nbsp;{{ value[0].name }}</span>
+      }
     </div>
-    <ul *ngIf="multiple" class="file-list">
-        <li *ngFor="let f of value" class="file-name">{{ f.name }}</li>
-    </ul>
-</div>
+    @if (multiple) {
+      <ul class="file-list">
+        @for (f of value; track f.name) {
+          <li class="file-name">{{ f.name }}</li>
+        }
+      </ul>
+    }
+  </div>
+}

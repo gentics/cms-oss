@@ -1,11 +1,13 @@
 <gtx-select
-    [label]="label"
-    [multiple]="multiple"
-    [required]="required"
-    [disabled]="disabled"
-    [clearable]="clearable"
-    [value]="multiple ? selectedEntries : selectedEntries?.[0]"
-    (valueChange)="selectChanged($event)"
->
-    <gtx-option *ngFor="let entry of entries" [value]="entry.dsId || entry.id">{{ entry.key }}</gtx-option>
+  [label]="label"
+  [multiple]="multiple"
+  [required]="required"
+  [disabled]="disabled"
+  [clearable]="clearable"
+  [value]="multiple ? selectedEntries : selectedEntries?.[0]"
+  (valueChange)="selectChanged($event)"
+  >
+  @for (entry of entries; track entry.dsId) {
+    <gtx-option [value]="entry.dsId || entry.id">{{ entry.key }}</gtx-option>
+  }
 </gtx-select>

@@ -1,10 +1,11 @@
 import { discard, TemplateBO } from '@admin-ui/common';
-import { FolderOperations, FolderTrableLoaderService, I18nNotificationService, TemplateOperations } from '@admin-ui/core';
+import { FolderOperations, FolderTrableLoaderService, TemplateOperations } from '@admin-ui/core';
 import { FolderLinkEvent } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EntityIdType, Folder } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { intersection } from'lodash-es'
+import { intersection } from 'lodash-es';
 import { combineLatest, Observable, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -13,7 +14,7 @@ import { catchError, map } from 'rxjs/operators';
     templateUrl: './assign-templates-to-folders-modal.component.html',
     styleUrls: ['./assign-templates-to-folders-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class AssignTemplatesToFoldersModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
 
@@ -42,19 +43,19 @@ export class AssignTemplatesToFoldersModalComponent extends BaseModal<void> impl
 
     ngOnInit(): void {
         this.subscriptions.push(combineLatest(
-            this.templates.map(template => {
+            this.templates.map((template) => {
                 return this.templateOperations.getLinkedFolders(template.id).pipe(
-                    map(folders => folders.map(folder => folder.id)),
+                    map((folders) => folders.map((folder) => folder.id)),
                 );
             }),
-        ).subscribe(selectedFolders => {
+        ).subscribe((selectedFolders) => {
             this.selectedIds = new Set(intersection(...selectedFolders));
             this.changeDetector.markForCheck();
         }));
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     onLinkEvent(event: FolderLinkEvent): void {
@@ -106,14 +107,14 @@ export class AssignTemplatesToFoldersModalComponent extends BaseModal<void> impl
     }
 
     linkFolder(folder: Folder, recursive: boolean): Observable<void> {
-        return combineLatest(this.templates.map(template => {
+        return combineLatest(this.templates.map((template) => {
             return this.templateOperations.linkFolders(template.id, {
                 folderIds: [folder.id],
                 nodeId: this.nodeId,
                 recursive,
                 delete: true,
             }).pipe(
-                catchError(err => {
+                catchError((err) => {
                     console.log('assign error', template, err);
 
                     this.notification.show({
@@ -139,14 +140,14 @@ export class AssignTemplatesToFoldersModalComponent extends BaseModal<void> impl
     }
 
     unlinkFolder(folder: Folder, recursive: boolean): Observable<void> {
-        return combineLatest(this.templates.map(template => {
+        return combineLatest(this.templates.map((template) => {
             return this.templateOperations.unlinkFolders(template.id, {
                 folderIds: [folder.id],
                 nodeId: this.nodeId,
                 recursive,
                 delete: true,
             }).pipe(
-                catchError(err => {
+                catchError((err) => {
                     console.log('unassign error', template, err);
 
                     this.notification.show({

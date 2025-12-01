@@ -6,11 +6,6 @@ import {
     OnInit,
     ViewChild,
 } from '@angular/core';
-import { EditableProperties } from '@editor-ui/app/common/models';
-import {
-    CombinedPropertiesEditorComponent,
-} from '@editor-ui/app/content-frame/components/combined-properties-editor/combined-properties-editor.component';
-import { TagValidatorImpl } from '@editor-ui/app/tag-editor/validation/tag-validator-impl';
 import { TagValidator } from '@gentics/cms-integration-api-models';
 import {
     FileOrImage,
@@ -19,6 +14,11 @@ import {
 } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
+import { EditableProperties } from '../../../common/models';
+import {
+    CombinedPropertiesEditorComponent,
+} from '../../../content-frame/components/combined-properties-editor/combined-properties-editor.component';
+import { TagValidatorImpl } from '../../../tag-editor/validation/tag-validator-impl';
 import { getItemProperties } from '../../utils';
 
 function isObjectProperty(tag: Tag): tag is ObjectTag {

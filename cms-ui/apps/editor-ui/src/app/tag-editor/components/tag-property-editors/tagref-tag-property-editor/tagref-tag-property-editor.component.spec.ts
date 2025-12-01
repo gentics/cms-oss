@@ -13,7 +13,6 @@ import { componentTest, configureComponentTest } from '../../../../../testing';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
 import { Api, ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../../state';
@@ -88,7 +87,6 @@ describe('TagRefTagPropertyEditor', () => {
                 { provide: ApiBase, useClass: MockApiBase },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 Api,
                 TagPropertyEditorResolverService,
@@ -105,7 +103,7 @@ describe('TagRefTagPropertyEditor', () => {
     });
 
     beforeEach(() => {
-        const api = TestBed.get(Api) as Api;
+        const api = TestBed.inject(Api);
         getItemSpy = spyOn(api.folders, 'getItem');
         getTagTypeSpy = spyOn(api.tagType, 'getTagType');
     });
@@ -150,20 +148,20 @@ describe('TagRefTagPropertyEditor', () => {
                         // Simulated removed page
                         getItemReturnValues.push(
                             throwError({
-                                messages: [ {
+                                messages: [{
                                     message: 'The specified page was not found.',
                                     type: 'CRITICAL',
-                                } ],
+                                }],
                                 responseInfo: {
                                     responseCode: ResponseCode.NOT_FOUND,
                                     responseMessage: 'The specified page was not found.',
                                 },
                             }),
                             throwError({
-                                messages: [ {
+                                messages: [{
                                     message: 'The specified page was not found.',
                                     type: 'CRITICAL',
-                                } ],
+                                }],
                                 responseInfo: {
                                     responseCode: ResponseCode.NOT_FOUND,
                                     responseMessage: 'The specified page was not found.',
@@ -175,10 +173,10 @@ describe('TagRefTagPropertyEditor', () => {
                     // Simulated removed page
                     getItemReturnValues.push(
                         throwError({
-                            messages: [ {
+                            messages: [{
                                 message: 'The specified page was not found.',
                                 type: 'CRITICAL',
-                            } ],
+                            }],
                             responseInfo: {
                                 responseCode: ResponseCode.NOT_FOUND,
                                 responseMessage: 'The specified page was not found.',
@@ -204,20 +202,20 @@ describe('TagRefTagPropertyEditor', () => {
                         // Simulated removed template
                         getItemReturnValues.push(
                             throwError({
-                                messages: [ {
+                                messages: [{
                                     message: `Could not find template with ID ${origTagProperty.templateId}.`,
                                     type: 'WARNING',
-                                } ],
+                                }],
                                 responseInfo: {
                                     responseCode: ResponseCode.NOT_FOUND,
                                     responseMessage: `Could not find template with ID ${origTagProperty.templateId}.`,
                                 },
                             }),
                             throwError({
-                                messages: [ {
+                                messages: [{
                                     message: `Could not find template with ID ${origTagProperty.templateId}.`,
                                     type: 'WARNING',
-                                } ],
+                                }],
                                 responseInfo: {
                                     responseCode: ResponseCode.NOT_FOUND,
                                     responseMessage: `Could not find template with ID ${origTagProperty.templateId}.`,
@@ -229,10 +227,10 @@ describe('TagRefTagPropertyEditor', () => {
                     // Simulated removed template
                     getItemReturnValues.push(
                         throwError({
-                            messages: [ {
+                            messages: [{
                                 message: `Could not find template with ID ${origTagProperty.templateId}.`,
                                 type: 'WARNING',
-                            } ],
+                            }],
                             responseInfo: {
                                 responseCode: ResponseCode.NOT_FOUND,
                                 responseMessage: `Could not find template with ID ${origTagProperty.templateId}.`,
@@ -281,7 +279,6 @@ describe('TagRefTagPropertyEditor', () => {
 
                 expect(getItemSpy.calls.count()).toBe(callIndex);
 
-
             } else if (origTagProperty.type === TagPropertyType.TEMPLATETAG) {
                 if (origTagProperty.templateId) {
                     const tag = TEMPLATE_A.templateTags['content'];
@@ -306,7 +303,6 @@ describe('TagRefTagPropertyEditor', () => {
 
                 expect(getItemSpy.calls.count()).toBe(callIndex);
             }
-
 
             getItemSpy.and.stub();
             getItemSpy.calls.reset();

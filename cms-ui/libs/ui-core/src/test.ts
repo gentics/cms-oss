@@ -1,21 +1,21 @@
-import 'zone.js';
-import 'zone.js/testing';
 import { getTestBed } from '@angular/core/testing';
 import {
-    BrowserDynamicTestingModule,
-    platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing';
+    BrowserTestingModule,
+    platformBrowserTesting,
+} from '@angular/platform-browser/testing';
 import 'hammerjs';
-import { getInstance, setInstance } from './lib/common';
 import 'moment-timezone';
+import 'zone.js';
+import 'zone.js/testing';
+import { getInstance, setInstance } from './lib/common';
 
 // Correct the timezone, as in the CI it might be different
 setInstance(getInstance().tz('Europe/Vienna'));
 
 // First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(
-    BrowserDynamicTestingModule,
-    platformBrowserDynamicTesting(), {
+    BrowserTestingModule,
+    platformBrowserTesting(), {
         teardown: { destroyAfterEach: false },
     },
 );

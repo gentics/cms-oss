@@ -1,31 +1,36 @@
 <gtx-select
-    [formControl]="i18nSelect"
-    [label]="label"
-    [disabled]="disabled"
-    [multiple]="multiple"
-    [clearable]="clearable"
-    [required]="requiredInCurrentLanguage"
-    [class.untranslated]="!isTranslated"
-    [class.invalid-selection]="invalidSelection"
-    (blur)="cvaTouch()"
->
+  [formControl]="i18nSelect"
+  [label]="label"
+  [disabled]="disabled"
+  [multiple]="multiple"
+  [clearable]="clearable"
+  [required]="requiredInCurrentLanguage"
+  [class.untranslated]="!isTranslated"
+  [class.invalid-selection]="invalidSelection"
+  (blur)="cvaTouch()"
+  >
+  @for (selectOption of selectOptions; track selectOption) {
     <gtx-option
-        *ngFor="let selectOption of selectOptions"
-        [value]="selectOption.value"
-    >
-        {{ selectOption.viewValue }}
+      [value]="selectOption.value"
+      >
+      {{ selectOption.viewValue }}
     </gtx-option>
+  }
 </gtx-select>
-<div *ngIf="!isTranslated" class="translation-suggestions">
-    <div>{{ 'gtxFormGenerator.error_no_translation' | i18n }}:&nbsp;</div>
+@if (!isTranslated) {
+  <div class="translation-suggestions">
+    <div>{{ 'gtxFormGenerator.error_no_translation' | gtxI18n }}:&nbsp;</div>
     <div class="translation-suggestions__values">
-        <div class="translation-suggestions__value">[{{ translationSuggestions[0]?.language | uppercase }}] {{ translationSuggestions[0]?.value }}</div>
-        <div class="translation-suggestions__additional-values">
-            <ng-container *ngFor="let translationSuggestion of translationSuggestions; let first = first">
-                <div *ngIf="!first">
-                    [{{ translationSuggestion.language | uppercase }}] {{ translationSuggestion.value }}
-                </div>
-            </ng-container>
-        </div>
+      <div class="translation-suggestions__value">[{{ translationSuggestions[0]?.language | uppercase }}] {{ translationSuggestions[0]?.value }}</div>
+      <div class="translation-suggestions__additional-values">
+        @for (translationSuggestion of translationSuggestions; track (translationSuggestion.language + translationSuggestion.value); let first = $first) {
+          @if (!first) {
+            <div>
+              [{{ translationSuggestion.language | uppercase }}] {{ translationSuggestion.value }}
+            </div>
+          }
+        }
+      </div>
     </div>
-</div>
+  </div>
+}

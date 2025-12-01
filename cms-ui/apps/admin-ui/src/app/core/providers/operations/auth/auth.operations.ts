@@ -15,10 +15,10 @@ import {
 } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
 import { OperationsBase } from '../operations.base';
 
 @Injectable()
@@ -43,7 +43,7 @@ export class AuthOperations extends OperationsBase {
         this.appState.dispatch(new ValidateStart());
 
         this.api.auth.validate(sid)
-            .subscribe(res => {
+            .subscribe((res) => {
                 this.appState.dispatch(new ValidateSuccess(sid, res.user));
                 if (this.readSidFromEditorUi() !== sid) {
                     this.storeSidForEditorUi(sid);
@@ -76,7 +76,7 @@ export class AuthOperations extends OperationsBase {
         this.appState.dispatch(new LoginStart());
 
         this.api.auth.login(username, password)
-            .subscribe(res => {
+            .subscribe((res) => {
                 this.storeSidForEditorUi(res.sid);
                 this.appState.dispatch(new LoginSuccess(res.sid, res.user));
                 if (returnUrl) {
@@ -94,7 +94,7 @@ export class AuthOperations extends OperationsBase {
         this.appState.dispatch(new LogoutStart());
 
         return this.api.auth.logout(sid).toPromise()
-            .then(res => {
+            .then((res) => {
                 this.storeSidForEditorUi(null);
                 this.appState.dispatch(new LogoutSuccess());
             },
@@ -111,7 +111,7 @@ export class AuthOperations extends OperationsBase {
         this.appState.dispatch(new ChangePasswordStart());
 
         return this.api.auth.changePassword(userId, newPassword).toPromise()
-            .then(res => {
+            .then((res) => {
                 this.storeSidForEditorUi(null);
                 this.notification.show({
                     message: 'modal.updated_password',
@@ -119,7 +119,7 @@ export class AuthOperations extends OperationsBase {
                 });
                 this.appState.dispatch(new ChangePasswordSuccess());
             })
-            .catch(error => {
+            .catch((error) => {
                 this.appState.dispatch(new ChangePasswordError(error.message || error));
                 this.errorHandler.catch(error);
             });

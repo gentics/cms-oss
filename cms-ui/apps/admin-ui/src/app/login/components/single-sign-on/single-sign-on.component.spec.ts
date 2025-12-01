@@ -3,9 +3,8 @@ import { TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { KeycloakService } from '@gentics/cms-components';
 import { Store } from '@ngxs/store';
-import { componentTest, configureComponentTest } from '../../../../testing';
+import { componentTest, configureComponentTest, MockErrorHandler } from '../../../../testing';
 import { ErrorHandler } from '../../../core/providers/error-handler';
-import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { AuthOperations } from '../../../core/providers/operations/auth/auth.operations';
 import { AppStateService } from '../../../state';
 import { TestAppState } from '../../../state/utils/test-app-state';
@@ -62,8 +61,8 @@ describe('SingleSignOn', () => {
             ],
         });
 
-        appState = TestBed.get(AppStateService);
-        keycloakService = TestBed.get(KeycloakService);
+        appState = TestBed.inject(AppStateService) as any;
+        keycloakService = TestBed.inject(KeycloakService);
     });
 
     it('call nothing if showSSOButton is true and keycloakEnabled is true',

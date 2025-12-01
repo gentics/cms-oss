@@ -3,10 +3,10 @@
 <h2>Demos</h2>
 
 <gtx-demo-block demoTitle="Basic Modal">
-    <div class="demo-result">
-        <gtx-button (click)="showBasicDialog()">Confirm Delete</gtx-button>
-    </div>
-    <div class="demo-code">
+  <div class="demo-result">
+    <gtx-button (click)="showBasicDialog()">Confirm Delete</gtx-button>
+  </div>
+  <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
                <gtx-button (click)="showBasicDialog()">Confirm Delete</gtx-button>
            '></gtx-highlighted-code>
@@ -25,20 +25,20 @@
                        .catch(reason => console.log("rejected", reason));
                }
            '></gtx-highlighted-code>
-    </div>
+</div>
 </gtx-demo-block>
 
 <gtx-demo-block demoTitle="Modal Options">
-    <div class="demo-result">
-        <div class="row">
-            <div class="column"><gtx-input [(ngModel)]="width" label="width"></gtx-input></div>
-            <div class="column"><gtx-checkbox [(ngModel)]="padding" label="Padding"></gtx-checkbox></div>
-            <div class="column"><gtx-checkbox [(ngModel)]="closeOnOverlayClick" label="closeOnOverlayClick"></gtx-checkbox></div>
-            <div class="column"><gtx-checkbox [(ngModel)]="closeOnEscape" label="closeOnEscape"></gtx-checkbox></div>
-        </div>
-        <gtx-button (click)="showDialogWithOptions()">Confirm Delete</gtx-button>
+  <div class="demo-result">
+    <div class="row">
+      <div class="column"><gtx-input [(ngModel)]="width" label="width"></gtx-input></div>
+      <div class="column"><gtx-checkbox [(ngModel)]="padding" label="Padding"></gtx-checkbox></div>
+      <div class="column"><gtx-checkbox [(ngModel)]="closeOnOverlayClick" label="closeOnOverlayClick"></gtx-checkbox></div>
+      <div class="column"><gtx-checkbox [(ngModel)]="closeOnEscape" label="closeOnEscape"></gtx-checkbox></div>
     </div>
-    <div class="demo-code">
+    <gtx-button (click)="showDialogWithOptions()">Confirm Delete</gtx-button>
+  </div>
+  <div class="demo-code">
         <gtx-highlighted-code language="TypeScript" code='
            showDialogWithOptions(): void {
                const options: IModalOptions = {
@@ -58,15 +58,15 @@
                    .catch(reason => console.log("error: ", reason));
            }
            '></gtx-highlighted-code>
-    </div>
+</div>
 </gtx-demo-block>
 
 
 <gtx-demo-block demoTitle="Custom Modals with .fromComponent()">
-    <div class="demo-result">
-        <gtx-button (click)="showCustomModal()">Custom Modal</gtx-button>
-    </div>
-    <div class="demo-code">
+  <div class="demo-result">
+    <gtx-button (click)="showCustomModal()">Custom Modal</gtx-button>
+  </div>
+  <div class="demo-code">
         <gtx-highlighted-code language="TypeScript" code='
             @Component({
                 selector: "my-modal-component",
@@ -102,19 +102,21 @@
                     .catch(reason => console.log("error: ", reason));
             }
         '></gtx-highlighted-code>
-    </div>
+</div>
 </gtx-demo-block>
 
 <gtx-demo-block demoTitle="openModals">
-    <div class="demo-result">
-        <p>Open Modals:</p>
-        <ul>
-            <li *ngFor="let openModal of modalService.openModals">
-                <pre>{{ openModal.instance }}</pre>
-            </li>
-        </ul>
-    </div>
-    <div class="demo-code">
+  <div class="demo-result">
+    <p>Open Modals:</p>
+    <ul>
+      @for (openModal of modalService.openModals; track openModal) {
+        <li>
+          <pre>{{ openModal.instance }}</pre>
+        </li>
+      }
+    </ul>
+  </div>
+  <div class="demo-code">
         <gtx-highlighted-code language="TypeScript" code='
             <ul>
                 <li *ngFor="let openModal of modalService.openModals">
@@ -122,5 +124,5 @@
                 </li>
             </ul>
         '></gtx-highlighted-code>
-    </div>
+  </div>
 </gtx-demo-block>

@@ -1,6 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { EditorPermissions } from '@editor-ui/app/common/models';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import {
     Folder,
     FolderPermissions,
@@ -13,6 +11,8 @@ import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, Observable, of as observableOf, of } from 'rxjs';
 import { first } from 'rxjs/operators';
+import { EditorPermissions } from '../../../common/models';
+import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { Api } from '../api/api.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
@@ -300,7 +300,7 @@ describe('PermissionService', () => {
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         api = new MockApi();
         entityResolver = new EntityResolver(state);
         permissions = new PermissionService(

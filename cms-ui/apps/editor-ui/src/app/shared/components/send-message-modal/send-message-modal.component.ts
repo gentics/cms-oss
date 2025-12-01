@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { SendMessageForm } from '@editor-ui/app/common/models';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Group, SendMessageRequest, User } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
+import { SendMessageForm } from '../../../common/models';
 
 const DEFAULT_INSTANT_TIME_MINUTES = 2;
 
@@ -28,7 +28,7 @@ export class SendMessageModal extends BaseModal<boolean> implements OnInit, OnDe
     constructor(
         private changeDetector: ChangeDetectorRef,
         private client: GCMSRestClientService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) {
         super();
     }

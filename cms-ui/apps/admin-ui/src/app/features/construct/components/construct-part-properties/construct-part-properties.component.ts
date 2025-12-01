@@ -2,7 +2,6 @@ import {
     createBlacklistValidator,
     createI18nRequiredValidator,
 } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -32,6 +31,7 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 
 export interface TagPartPropertiesFormData {
     globalId?: string;
@@ -136,7 +136,7 @@ const TRANSLATED_NAME_PROP = Symbol('translated-name');
         generateFormProvider(ConstructPartPropertiesComponent),
         generateValidatorProvider(ConstructPartPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class ConstructPartPropertiesComponent
     extends BasePropertiesComponent<TagPartPropertiesFormData>
@@ -178,13 +178,13 @@ export class ConstructPartPropertiesComponent
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private i18n: I18nService,
+        i18n: I18nService,
     ) {
         super(changeDetector);
 
         this.SORTED_VALIDATOR_CONFIGS = Object.values(TagPartValidatorConfigs)
         // Translate the name once, so we don't have to do it everytime while sorting and then in the template as well.
-            .map(config => ({
+            .map((config) => ({
                 ...config,
                 [TRANSLATED_NAME_PROP]: i18n.instant('construct.' + config.name),
             }))
@@ -231,9 +231,9 @@ export class ConstructPartPropertiesComponent
             // i18n Object
             nameI18n: new FormControl({}, createI18nRequiredValidator(
                 () => {
-                    return (this.supportedLanguages || []).map(l => l.code);
+                    return (this.supportedLanguages || []).map((l) => l.code);
                 },
-                langs => {
+                (langs) => {
                     this.invalidLanguages = langs;
                     this.changeDetector.markForCheck();
                 }),

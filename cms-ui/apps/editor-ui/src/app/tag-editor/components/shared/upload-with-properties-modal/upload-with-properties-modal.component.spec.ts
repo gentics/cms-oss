@@ -1,10 +1,10 @@
 import { Component, DebugElement, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { Folder, FileUpload } from '@gentics/cms-models';
+import { FileUpload, Folder } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../../testing';
+import { ApplicationStateService } from '../../../../state';
 import { TestApplicationState, TwoLevelsPartial } from '../../../../state/test-application-state.mock';
 import { UploadWithPropertiesModalComponent } from './upload-with-properties-modal.component';
 

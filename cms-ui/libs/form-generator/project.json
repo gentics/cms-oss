@@ -18,9 +18,6 @@
                 "ci": {}
             }
         },
-        "lint": {
-            "executor": "@nx/eslint:lint"
-        },
         "test": {
             "executor": "nx:run-commands",
             "options": {
@@ -52,12 +49,6 @@
                     "cypressConfig": "libs/form-generator/cypress.config.ci.ts",
                     "devServerTarget": "editor-ui:build:ci"
                 }
-            }
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/form-generator"
             }
         }
     }

@@ -1,18 +1,24 @@
-<h3 class="title">{{ 'editor.alert_center_title' | i18n }}</h3>
-<div class="empty-placeholder" *ngIf="!(alertCount$ | async) || (alertCount$ | async) === 0">
-    <icon>done</icon> {{ 'editor.no_alerts_label' | i18n }}
-</div>
+<h3 class="title">{{ 'editor.alert_center_title' | gtxI18n }}</h3>
+@if (!(alertCount$ | async) || (alertCount$ | async) === 0) {
+  <div class="empty-placeholder">
+    <icon>done</icon> {{ 'editor.no_alerts_label' | gtxI18n }}
+  </div>
+}
 
-<ng-container *ngIf="alerts$ | async as alerts">
-    <div class="alert-block" *ngIf="alerts?.linkChecker">
-        <h4>{{ 'common.external_links_title' | i18n }}</h4>
-        <gtx-button routerLink="/tools/linkchecker"
-            (click)="openLinkChecker($event)"
-            size="small"
-            flat
-            [disabled]="!((toolsAvailable$ | async).find(hasLinkCheckerTool))">{{ 'common.open_link_checker_button' | i18n }}</gtx-button>
-        <div *ngIf="alerts?.linkChecker?.brokenLinksCount">
-            <span>{{ 'common.broken_links_overall' | i18n }}:</span> {{ alerts?.linkChecker?.brokenLinksCount }}
+@if (alerts$ | async; as alerts) {
+  @if (alerts?.linkChecker) {
+    <div class="alert-block">
+      <h4>{{ 'common.external_links_title' | gtxI18n }}</h4>
+      <gtx-button routerLink="/tools/linkchecker"
+        (click)="openLinkChecker($event)"
+        size="small"
+        flat
+      [disabled]="!((toolsAvailable$ | async).find(hasLinkCheckerTool))">{{ 'common.open_link_checker_button' | gtxI18n }}</gtx-button>
+      @if (alerts?.linkChecker?.brokenLinksCount) {
+        <div>
+          <span>{{ 'common.broken_links_overall' | gtxI18n }}:</span> {{ alerts?.linkChecker?.brokenLinksCount }}
         </div>
+      }
     </div>
-</ng-container>
+  }
+}

@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'modal.image_properties_title' | i18n:{ fileName: file.name } }}</h5>
+    <h5>{{ 'modal.image_properties_title' | gtxI18n:{ fileName: file.name } }}</h5>
 </div>
 
 <div class="modal-content">
@@ -19,11 +19,11 @@
         type="secondary"
         flat
         (click)="cancelFn()"
-    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+    >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 
     <gtx-button
         type="primary"
         [disabled]="!objPropValid || !propertiesValid"
         (click)="saveAndClose()"
-    >{{ 'modal.save_changes' | i18n }}</gtx-button>
+    >{{ 'modal.save_changes' | gtxI18n }}</gtx-button>
 </div>

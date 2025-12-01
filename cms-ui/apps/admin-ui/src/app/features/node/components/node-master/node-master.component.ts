@@ -1,15 +1,17 @@
 import { BO_PERMISSIONS, EntityTableActionClickEvent, NodeBO } from '@admin-ui/common';
-import { I18nNotificationService, I18nService, NodeOperations, NodeTableLoaderService, TranslatedNotificationOptions } from '@admin-ui/core';
+import { NodeOperations, NodeTableLoaderService } from '@admin-ui/core';
 import { WizardService } from '@admin-ui/shared';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { I18nNotificationService, TranslatedNotificationOptions } from '@gentics/cms-components';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { AnyModelType, GcmsPermission, Node, NodeCopyRequest, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { CopyNodesModalComponent } from '../copy-nodes-modal/copy-nodes-modal.component';
 import { CreateNodeWizardComponent } from '../create-node-wizard/create-node-wizard.component';
-import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 
 const COPY_ACTION = 'copy';
 
@@ -17,7 +19,7 @@ const COPY_ACTION = 'copy';
     selector: 'gtx-node-master',
     templateUrl: './node-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class NodeMasterComponent extends BaseTableMasterComponent<Node, NodeBO> implements OnInit {
 
@@ -107,7 +109,7 @@ export class NodeMasterComponent extends BaseTableMasterComponent<Node, NodeBO> 
             null,
             { nodesToBeCopied: nodes },
         );
-        const userInput: { nodeId: number, requestPayload: NodeCopyRequest }[] = await dialog.open();
+        const userInput: { nodeId: number; requestPayload: NodeCopyRequest }[] = await dialog.open();
 
         if (userInput.length === 0) {
             const notificationOptions: TranslatedNotificationOptions = {

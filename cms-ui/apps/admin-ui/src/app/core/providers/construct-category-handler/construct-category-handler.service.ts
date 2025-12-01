@@ -24,12 +24,12 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class ConstructCategoryHandlerService
@@ -68,7 +68,7 @@ export class ConstructCategoryHandlerService
         options?: EntityCreateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
     ): Observable<EntityCreateResponseModel<EditableEntity.CONSTRUCT_CATEGORY>> {
         return this.api.constructCategory.createConstructCategoryCategory(data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.constructCategory);
                 this.nameMap[res.constructCategory.id] = name;
 
@@ -89,13 +89,13 @@ export class ConstructCategoryHandlerService
         options?: EntityCreateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY]> {
         return this.create(data, options).pipe(
-            map(res => this.mapToBusinessObject(res.constructCategory)),
+            map((res) => this.mapToBusinessObject(res.constructCategory)),
         );
     }
 
     get(id: string | number): Observable<EntityLoadResponseModel<EditableEntity.CONSTRUCT_CATEGORY>> {
         return this.api.constructCategory.getConstructCategoryCategory(id).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.constructCategory);
                 this.nameMap[res.constructCategory.id] = name;
             }),
@@ -105,7 +105,7 @@ export class ConstructCategoryHandlerService
 
     getMapped(id: string | number): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY]> {
         return this.get(id).pipe(
-            map(res => this.mapToBusinessObject(res.constructCategory)),
+            map((res) => this.mapToBusinessObject(res.constructCategory)),
         );
     }
 
@@ -115,7 +115,7 @@ export class ConstructCategoryHandlerService
         parms?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.CONSTRUCT_CATEGORY>> {
         return this.api.constructCategory.updateConstructCategoryCategory(id, data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.constructCategory);
                 this.nameMap[res.constructCategory.id] = name;
 
@@ -137,7 +137,7 @@ export class ConstructCategoryHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY]> {
         return this.update(id, data).pipe(
-            map(res => this.mapToBusinessObject(res.constructCategory)),
+            map((res) => this.mapToBusinessObject(res.constructCategory)),
         );
     }
 
@@ -168,8 +168,8 @@ export class ConstructCategoryHandlerService
         params?: EntityListRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
     ): Observable<EntityListResponseModel<EditableEntity.CONSTRUCT_CATEGORY>> {
         return this.api.constructCategory.getConstructCategoryCategories(params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
+            tap((res) => {
+                res.items.forEach((objCat) => {
                     const name = this.displayName(objCat);
                     this.nameMap[objCat.id] = name;
                 });
@@ -182,7 +182,7 @@ export class ConstructCategoryHandlerService
         params?: EntityListRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY]>> {
         return this.list(body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: (res.items || []).map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),

@@ -25,7 +25,7 @@ import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
  *           <gtx-tab
  *               [id]="userMenuTabIdMessages"
  *               icon="mail"
- *               [title]="'dashboard.messages_title' | i18n"
+ *               [title]="'dashboard.messages_title' | translate"
  *           >
  *               <gtx-message-inbox>
  *               </gtx-message-inbox>
@@ -34,7 +34,7 @@ import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
  *           <gtx-tab
  *               [id]="userMenuTabIdActivities"
  *               icon="autorenew"
- *               [title]="'dashboard.activities_title' | i18n"
+ *               [title]="'dashboard.activities_title' | translate"
  *           >
  *               <gtx-activity-manager>
  *               </gtx-activity-manager>
@@ -56,7 +56,7 @@ import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class GtxUserMenuComponent {
+export class UserMenuComponent {
     /** If TRUE, this user menu is rendered as open. */
     @Input() opened = false;
     /** The current user whose name is dispalyed. */

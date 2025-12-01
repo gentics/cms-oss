@@ -1,9 +1,9 @@
-import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
-import { ObservableStopper } from '@admin-ui/common/utils/observable-stopper/observable-stopper';
-import { AppStateService } from '@admin-ui/state';
-import { AddEntities, UpdateEntities } from '@admin-ui/state/entity/entity.actions';
-import { EntityStateModel, INITIAL_ENTITY_STATE } from '@admin-ui/state/entity/entity.state';
-import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
+import { deepFreeze } from '../../../common/utils/deep-freeze/deep-freeze';
+import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
+import { AddEntities, UpdateEntities } from '../../../state/entity/entity.actions';
+import { EntityStateModel, INITIAL_ENTITY_STATE } from '../../../state/entity/entity.state';
+import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state/test-app-state.mock';
 import { Injectable } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
@@ -55,8 +55,8 @@ class EntityManagerWithAccessibleInternals extends EntityManagerService {
 
 function isObservable<T>(value: any): value is Observable<T> {
     return value != null
-        && typeof value === 'object'
-        && typeof value.subscribe === 'function';
+      && typeof value === 'object'
+      && typeof value.subscribe === 'function';
 }
 
 interface EntityNormalizationPair<T extends NormalizableEntity<Raw>> {
@@ -150,7 +150,7 @@ describe('EntityManagerService', () => {
 
                 result$.pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(entity => {
+                ).subscribe((entity) => {
                     ++emissionCount;
                     page = entity;
                 });
@@ -166,7 +166,7 @@ describe('EntityManagerService', () => {
                 const result$ = entityManager.getEntity('user', USER_A_ID);
                 result$.pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(entity => {
+                ).subscribe((entity) => {
                     ++emissionCount;
                     user = entity;
                 });
@@ -182,7 +182,7 @@ describe('EntityManagerService', () => {
                 const page$ = entityManager.getEntity('page', PAGE_A_ID);
                 page$.pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(entity => {
+                ).subscribe((entity) => {
                     ++emissionCount;
                     page = entity;
                 });
@@ -213,7 +213,7 @@ describe('EntityManagerService', () => {
                 const page$ = entityManager.getEntity('page', NEW_PAGE_ID);
                 page$.pipe(
                     takeUntil(stopper.stopper$),
-                ).subscribe(entity => {
+                ).subscribe((entity) => {
                     ++emissionCount;
                     page = entity;
                 });
@@ -373,7 +373,7 @@ describe('EntityManagerService', () => {
 
         function getDenormalizedPages(normalizedEntities: Partial<NormalizedEntityStore>): Page<Raw>[] {
             return Object.keys(normalizedEntities.page).map(
-                key => normalizer.denormalize('page', normalizedEntities.page[key], normalizedEntities),
+                (key) => normalizer.denormalize('page', normalizedEntities.page[key], normalizedEntities),
             );
         }
 
@@ -381,7 +381,7 @@ describe('EntityManagerService', () => {
             normalizer = new GcmsNormalizer();
             entityManager.init();
             denormalizeEntitySpy = spyOn(entityManager, 'denormalizeEntity').and.callThrough();
-            cleanupDebounceTime = (entityManager ).CLEANUP_DEBOUNCE + 1;
+            cleanupDebounceTime = (entityManager).CLEANUP_DEBOUNCE + 1;
 
             const entities = generateTestPages(ENTITIES_COUNT);
             appState.mockState({
@@ -396,7 +396,7 @@ describe('EntityManagerService', () => {
 
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result;
             });
@@ -420,19 +420,19 @@ describe('EntityManagerService', () => {
 
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result;
             });
 
             expect(emissionCount).toBe(1);
             expect(actualResult).toEqual(expectedDenormalizedPages);
-            const firstResult = [ ...actualResult ];
+            const firstResult = [...actualResult];
             denormalizeEntitySpy.calls.reset();
 
             const changedEntity = cloneDeep(actualResult[0]);
             changedEntity.name = changedEntity.name + ' changed';
-            delete changedEntity.languageVariants;
+            delete (changedEntity as any).languageVariants;
             entityManager.addEntity('page', changedEntity);
 
             // Get a denormalized version of the changed entity with the language variants.
@@ -458,14 +458,14 @@ describe('EntityManagerService', () => {
 
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result;
             });
 
             expect(emissionCount).toBe(1);
             expect(actualResult).toEqual(expectedDenormalizedPages);
-            const firstResult = [ ...actualResult ];
+            const firstResult = [...actualResult];
             denormalizeEntitySpy.calls.reset();
 
             const firstNewEntityId = actualResult.length + 1;
@@ -478,7 +478,8 @@ describe('EntityManagerService', () => {
             tick();
 
             // Get the denormalized versions of the new entities.
-            const newEntitiesDenormalized = newEntities.map(entity => normalizer.denormalize('page', appState.now.entity.page[entity.id], appState.now.entity));
+            const newEntitiesDenormalized = newEntities
+                .map((entity) => normalizer.denormalize('page', appState.now.entity.page[entity.id], appState.now.entity));
 
             // Only the new entities should have been denormalized, the others should have the same references as before.
             expect(emissionCount).toBe(2);
@@ -502,7 +503,7 @@ describe('EntityManagerService', () => {
             // Subscription A
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCountSubA;
                 actualResultSubA = result;
             });
@@ -514,7 +515,7 @@ describe('EntityManagerService', () => {
             // Subscription B
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCountSubB;
                 actualResultSubB = result;
             });
@@ -535,7 +536,7 @@ describe('EntityManagerService', () => {
 
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result;
             });
@@ -546,7 +547,7 @@ describe('EntityManagerService', () => {
 
             // Remove the first and the last page.
             const expectedSecondResult = actualResult.slice(1, actualResult.length - 1);
-            entityManager.deleteEntities('page', [ actualResult[0].id, actualResult[actualResult.length - 1].id ]);
+            entityManager.deleteEntities('page', [actualResult[0].id, actualResult[actualResult.length - 1].id]);
 
             expect(emissionCount).toBe(2);
             expect(denormalizeEntitySpy.calls.count()).toBe(0);
@@ -565,17 +566,17 @@ describe('EntityManagerService', () => {
             // Subscription A
             const subA = entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => ++emissionCountSubA);
+            ).subscribe((result) => ++emissionCountSubA);
             expect(emissionCountSubA).toBe(1);
 
             // Subscription B
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => ++emissionCountSubB);
+            ).subscribe((result) => ++emissionCountSubB);
             expect(emissionCountSubB).toBe(1);
 
             subA.unsubscribe();
-            entityManager.deleteEntities('page', [ expectedDenormalizedPages[0].id ]);
+            entityManager.deleteEntities('page', [expectedDenormalizedPages[0].id]);
 
             // Subscription B should continue to emit, but subscription A should not.
             expect(emissionCountSubB).toBe(2);
@@ -592,7 +593,7 @@ describe('EntityManagerService', () => {
             // Subscription A
             const subA = entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => actualResultSubA = result);
+            ).subscribe((result) => actualResultSubA = result);
 
             expect(actualResultSubA).toEqual(expectedDenormalizedPages);
             denormalizeEntitySpy.calls.reset();
@@ -611,7 +612,7 @@ describe('EntityManagerService', () => {
             // Create a new subscription (sub B).
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCountSubB;
                 actualResultSubB = result;
             });
@@ -634,17 +635,17 @@ describe('EntityManagerService', () => {
 
             entityManager.watchDenormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result;
             });
             expect(emissionCount).toBe(1);
 
-            const cache: Map<any, any> = (entityManager ).createDenormalizedCacheSpy.calls.mostRecent().returnValue;
+            const cache: Map<any, any> = (entityManager).createDenormalizedCacheSpy.calls.mostRecent().returnValue;
             expect(cache.size).toBe(ENTITIES_COUNT);
 
             // Remove the a page.
-            entityManager.deleteEntities('page', [ actualResult[0].id ]);
+            entityManager.deleteEntities('page', [actualResult[0].id]);
             expect(emissionCount).toBe(2);
             expect(cache.size).toBe(ENTITIES_COUNT);
 
@@ -675,7 +676,7 @@ describe('EntityManagerService', () => {
 
         function getNormalizedPages(normalizedEntities: Partial<NormalizedEntityStore>): Page<Normalized>[] {
             return Object.keys(normalizedEntities.page).map(
-                key => normalizedEntities.page[key],
+                (key) => normalizedEntities.page[key],
             );
         }
 
@@ -696,7 +697,7 @@ describe('EntityManagerService', () => {
 
             entityManager.watchNormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result;
             });
@@ -711,7 +712,7 @@ describe('EntityManagerService', () => {
 
             entityManager.watchNormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result.slice();
             });
@@ -735,7 +736,7 @@ describe('EntityManagerService', () => {
 
             entityManager.watchNormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result;
             });
@@ -760,7 +761,7 @@ describe('EntityManagerService', () => {
 
             entityManager.watchNormalizedEntitiesList('page').pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(result => {
+            ).subscribe((result) => {
                 ++emissionCount;
                 actualResult = result;
             });
@@ -770,7 +771,7 @@ describe('EntityManagerService', () => {
 
             // Remove an entity.
             const removedEntity = expectedNormalizedPages[10];
-            entityManager.deleteEntities('page', [ removedEntity.id ]);
+            entityManager.deleteEntities('page', [removedEntity.id]);
             expectedNormalizedPages.splice(10, 1);
             expect(expectedNormalizedPages.length).toBe(ENTITIES_COUNT - 1);
 
@@ -812,7 +813,7 @@ describe('EntityManagerService', () => {
                     userId,
                     idVariant1: variantId,
                 });
-                page.folder = getExampleFolderData({ id: pageId, userId });
+                (page as any).folder = getExampleFolderData({ id: pageId, userId });
                 Object.freeze(page);
                 rawPages.push(page);
             }
@@ -842,17 +843,17 @@ describe('EntityManagerService', () => {
         function assertIdsAreInEntityState(
             ids: EntityIds = { pages: pageIds, users: userIds, folders: folderIds },
         ): void {
-            ids.pages.forEach(id => {
+            ids.pages.forEach((id) => {
                 const page = appState.now.entity.page[id];
                 expect(page).toBeTruthy();
                 expect(page[IS_NORMALIZED]).toBe(true, `Page ${id} does not have IS_NORMALIZED symbol.`);
             });
-            ids.users.forEach(id => {
+            ids.users.forEach((id) => {
                 const user = appState.now.entity.user[id];
                 expect(user).toBeTruthy();
                 expect(user[IS_NORMALIZED]).toBe(true, `User ${id} does not have IS_NORMALIZED symbol.`);
             });
-            ids.folders.forEach(id => {
+            ids.folders.forEach((id) => {
                 const folder = appState.now.entity.folder[id];
                 expect(folder).toBeTruthy();
                 expect(folder[IS_NORMALIZED]).toBe(true, `Folder ${id} does not have IS_NORMALIZED symbol.`);
@@ -910,7 +911,7 @@ describe('EntityManagerService', () => {
 
         describe('addEntities()', () => {
 
-            it('works for undefined', done => {
+            it('works for undefined', (done) => {
                 const done$ = entityManager.addEntities('page', undefined);
 
                 done$.then(() => {
@@ -919,7 +920,7 @@ describe('EntityManagerService', () => {
                 });
             });
 
-            it('works for null', done => {
+            it('works for null', (done) => {
                 const done$ = entityManager.addEntities('page', null);
 
                 done$.then(() => {
@@ -928,7 +929,7 @@ describe('EntityManagerService', () => {
                 });
             });
 
-            it('works for an empty array', done => {
+            it('works for an empty array', (done) => {
                 const done$ = entityManager.addEntities('page', []);
 
                 done$.then(() => {
@@ -937,7 +938,7 @@ describe('EntityManagerService', () => {
                 });
             });
 
-            it('works for a single entity without using the web worker', done => {
+            it('works for a single entity without using the web worker', (done) => {
                 generateTestPages(1);
                 const done$ = entityManager.addEntities('page', rawPages);
 
@@ -951,7 +952,7 @@ describe('EntityManagerService', () => {
                 });
             });
 
-            it('works for an array that is smaller than maxSyncBatchSize without using the web worker', done => {
+            it('works for an array that is smaller than maxSyncBatchSize without using the web worker', (done) => {
                 const count = 10;
                 expect(count).toBeLessThan(maxSyncBatchSize);
                 generateTestPages(count);
@@ -966,7 +967,7 @@ describe('EntityManagerService', () => {
                 });
             });
 
-            it('works for an array that has exactly maxSyncBatchSize', done => {
+            it('works for an array that has exactly maxSyncBatchSize', (done) => {
                 generateTestPages(maxSyncBatchSize);
                 const done$ = entityManager.addEntities('page', rawPages);
 
@@ -978,7 +979,7 @@ describe('EntityManagerService', () => {
                 });
             });
 
-            it('works for an array that is larger than maxSyncBatchSize and uses the web worker for it', done => {
+            it('works for an array that is larger than maxSyncBatchSize and uses the web worker for it', (done) => {
                 const count = 3 * maxSyncBatchSize;
                 generateTestPages(count);
                 const done$ = entityManager.addEntities('page', rawPages);
@@ -999,7 +1000,7 @@ describe('EntityManagerService', () => {
                 });
             });
 
-            it('increments the IDs of requests to the web worker', done => {
+            it('increments the IDs of requests to the web worker', (done) => {
                 const count = 4 * maxSyncBatchSize;
                 generateTestPages(count);
                 const rawPages1 = rawPages.slice(0, 2 * maxSyncBatchSize);
@@ -1033,18 +1034,20 @@ describe('EntityManagerService', () => {
                 });
             });
 
-            it('forwards errors during normalization when not using the web worker', done => {
+            it('forwards errors during normalization when not using the web worker', (done) => {
                 const count = maxSyncBatchSize;
                 generateTestPages(count);
 
                 const expectedError = new Error('Expected Error');
-                spyOn(entityManager.normalizer, 'normalize').and.callFake(() => { throw expectedError; });
+                spyOn(entityManager.normalizer, 'normalize').and.callFake(() => {
+                    throw expectedError;
+                });
 
                 const done$ = entityManager.addEntities('page', rawPages);
 
                 done$
                     .then(() => fail('normalization should have failed here.'))
-                    .catch(error => {
+                    .catch((error) => {
                         expect(error).toBe(expectedError);
                         done();
                     });
@@ -1071,12 +1074,12 @@ describe('EntityManagerService', () => {
                 generateTestPages(1);
                 entityManager.addEntities('page', rawPages);
                 expect(Object.keys(appState.now.entity.page).length).toBe(2);
-                entityManager.deleteEntities('page', [ rawPages[0].id ]);
+                entityManager.deleteEntities('page', [rawPages[0].id]);
 
                 expect(Object.keys(appState.now.entity.page).length).toBe(1);
                 expect(Object.keys(appState.now.entity.user).length).toBe(1);
                 expect(Object.keys(appState.now.entity.folder).length).toBe(1);
-                const pageIdsModified = pageIds.filter(id => id !== rawPages[0].id);
+                const pageIdsModified = pageIds.filter((id) => id !== rawPages[0].id);
                 const expectedEntityStateIds: EntityIds = { pages: pageIdsModified, users: userIds, folders: folderIds };
                 assertIdsAreInEntityState(expectedEntityStateIds);
             });
@@ -1085,16 +1088,15 @@ describe('EntityManagerService', () => {
                 generateTestPages(2);
                 entityManager.addEntities('page', rawPages);
                 expect(Object.keys(appState.now.entity.page).length).toBe(4);
-                entityManager.deleteEntities('page', [ rawPages[0].id, rawPages[1].id ]);
+                entityManager.deleteEntities('page', [rawPages[0].id, rawPages[1].id]);
 
                 expect(Object.keys(appState.now.entity.page).length).toBe(2);
                 expect(Object.keys(appState.now.entity.user).length).toBe(2);
                 expect(Object.keys(appState.now.entity.folder).length).toBe(2);
-                const pageIdsModified = pageIds.filter(id => id !== rawPages[0].id).filter(id => id !== rawPages[1].id);
+                const pageIdsModified = pageIds.filter((id) => id !== rawPages[0].id).filter((id) => id !== rawPages[1].id);
                 const expectedEntityStateIds: EntityIds = { pages: pageIdsModified, users: userIds, folders: folderIds };
                 assertIdsAreInEntityState(expectedEntityStateIds);
             });
-
 
         });
 

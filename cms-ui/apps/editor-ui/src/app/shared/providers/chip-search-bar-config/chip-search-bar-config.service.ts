@@ -1,20 +1,5 @@
 import { Injectable } from '@angular/core';
 import {
-    GtxChipInputSelectOption,
-    GtxChipSearchChipOperatorOption,
-    GtxChipSearchChipPropertyOption,
-    GtxChipSearchConfig,
-    GtxChipSearchPropertyKeys,
-    GtxChipSearchSearchFilterMap,
-} from '@editor-ui/app/common/models';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import {
-    QueryAssemblerElasticSearchService,
-    QueryAssemblerGCMSSearchService,
-} from '@editor-ui/app/shared/providers/query-assembler';
-import { FolderActionsService } from '@editor-ui/app/state';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import {
     ItemType,
     Language,
     Node,
@@ -23,7 +8,7 @@ import {
     Template,
     User,
 } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
     Observable,
@@ -31,12 +16,25 @@ import {
     of,
 } from 'rxjs';
 import {
-    debounceTime,
     distinctUntilChanged,
     filter,
     map,
-    switchMap,
+    switchMap
 } from 'rxjs/operators';
+import {
+    GtxChipInputSelectOption,
+    GtxChipSearchChipOperatorOption,
+    GtxChipSearchChipPropertyOption,
+    GtxChipSearchConfig,
+    GtxChipSearchPropertyKeys,
+    GtxChipSearchSearchFilterMap,
+} from '../../../common/models';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import {
+    QueryAssemblerElasticSearchService,
+    QueryAssemblerGCMSSearchService,
+} from '../../../shared/providers/query-assembler';
+import { ApplicationStateService, FolderActionsService } from '../../../state';
 import {
     ChipPropertyOptionValueElasticsearch,
     ChipPropertyOptionValueGcmssearch,

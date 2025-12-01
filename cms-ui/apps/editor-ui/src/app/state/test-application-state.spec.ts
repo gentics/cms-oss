@@ -15,7 +15,7 @@ describe('TestApplicationState', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
     });
 
     describe('mockState', () => {

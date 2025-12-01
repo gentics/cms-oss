@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { Language, Page, TimeManagement, User } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { getFormattedTimeMgmtValue } from '../../../core/providers/i18n/i18n-utils';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
-import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
+import { getFormattedTimeMgmtValue } from '../../../core/utils/i18n';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { PageLanguageIndicatorComponent } from '../page-language-indicator/page-language-indicator.component';
 
@@ -21,8 +20,7 @@ const SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;
     templateUrl: './item-state-contextmenu.component.html',
     styleUrls: ['./item-state-contextmenu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [I18nDatePipe],
-    standalone: false
+    standalone: false,
 })
 export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponent implements OnInit {
 
@@ -35,7 +33,6 @@ export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponen
         folderActions: FolderActionsService,
         contextMenuOperations: ContextMenuOperationsService,
         private i18n: I18nService,
-        private i18nDate: I18nDatePipe,
     ) {
         super(
             appState,
@@ -50,8 +47,8 @@ export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponen
     }
 
     getUserById$(id: number): Observable<User> {
-        return this.appState.select(state => state.entities.user).pipe(
-            map(allUsers => allUsers[id]),
+        return this.appState.select((state) => state.entities.user).pipe(
+            map((allUsers) => allUsers[id]),
         );
     }
 
@@ -69,7 +66,7 @@ export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponen
         }
 
         return this.getUserById$(typeof value === 'number' ? value : value.id).pipe(
-            map(user => `${user.firstName} ${user.lastName}`),
+            map((user) => `${user.firstName} ${user.lastName}`),
         );
     }
 
@@ -78,7 +75,6 @@ export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponen
      */
     timeAgo(previous: number): string {
         const current = Math.round(Date.now() / 1000);
-
 
         const elapsed = current - previous;
         const parts = {
@@ -103,14 +99,14 @@ export class ItemStateContextMenuComponent extends PageLanguageIndicatorComponen
             parts.key = 1 < days ? 'editor.time_ago_days' : 'editor.time_ago_day';
         }
 
-        return this.i18n.translate(parts.key, { elapsed: parts.elapsed });
+        return this.i18n.instant(parts.key, { elapsed: parts.elapsed });
     }
 
     getFormattedTimeMgmtValue$(page: Page, field: keyof TimeManagement): Observable<string | boolean> {
         if (!this.activeNodeId) {
             return of(false);
         }
-        return getFormattedTimeMgmtValue(page, field, this.activeNodeId, this.i18n, this.i18nDate, this.folderActions);
+        return getFormattedTimeMgmtValue(page, field, this.activeNodeId, this.i18n, this.folderActions);
     }
 
 }

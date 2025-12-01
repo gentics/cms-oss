@@ -1,15 +1,14 @@
 import { AppStateService } from '@admin-ui/state';
 import { discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { TypePermissions, UniformTypePermissions } from '@gentics/cms-components';
+import { I18nService, TypePermissions, UniformTypePermissions } from '@gentics/cms-components';
 import { AccessControlledType } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { GenticsUICoreModule, NotificationService } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
-import { I18nService } from '../i18n';
-import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
 import { PermissionsService } from '../permissions/permissions.service';
 import { MessageService } from './message.service';
+import { MockI18nService } from '@gentics/cms-components/testing';
 
 class MockGcmsApi {}
 
@@ -47,14 +46,15 @@ describe('MessageService', () => {
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: GcmsApi, useClass: MockGcmsApi },
                 { provide: PermissionsService, useClass: MockPermissionsService },
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: NotificationService, }
             ],
         });
 
-        poller = TestBed.get(MessageService);
-        appState = TestBed.get(AppStateService);
-        gcmsApi = TestBed.get(GcmsApi);
-        permissionsService = TestBed.get(PermissionsService);
+        poller = TestBed.inject(MessageService);
+        appState = TestBed.inject(AppStateService) as any;
+        gcmsApi = TestBed.inject(GcmsApi);
+        permissionsService = TestBed.inject(PermissionsService) as any;
 
         fetchAllMessages = spyOn(poller, 'fetchAllMessages');
         fetchUnreadMessages = spyOn(poller, 'fetchUnreadMessages');

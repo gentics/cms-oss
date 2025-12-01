@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'shared.assign_objectProperty_to_nodes_title' | i18n }}</h5>
+    <h5>{{ 'shared.assign_objectProperty_to_nodes_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
@@ -16,11 +16,11 @@
     <gtx-button
         type="primary"
         (click)="buttonAssignNodeRestrictonsClicked()"
-    >{{ 'common.ok_button' | i18n }}</gtx-button>
+    >{{ 'common.okay_button' | gtxI18n }}</gtx-button>
 
     <gtx-button
         type="secondary"
         flat
         (click)="cancelFn()"
-    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+    >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 </div>

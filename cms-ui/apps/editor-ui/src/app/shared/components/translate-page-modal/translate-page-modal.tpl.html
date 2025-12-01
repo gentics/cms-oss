@@ -1,56 +1,57 @@
 <gtx-progress-bar [active]="loading"></gtx-progress-bar>
 
 <div class="modal-title">
-    <h5>{{ 'modal.translate_page_title' | i18n:{ _language: defaultProps?.language } }}</h5>
+  <h5>{{ 'modal.translate_page_title' | gtxI18n:{ _language: defaultProps?.language } }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-page-properties
-        [enableFileNameSuggestion]="true"
-        [folderId]="folderId"
-        [nodeId]="nodeId"
-        [disabled]="loading"
-        [languages]="languages"
-        [formControl]="control"
-        [disableLanguageSelect]="true"
-        [autoUpdateFileName]="false"
-        [templates]="templates"
-    ></gtx-page-properties>
+  <gtx-page-properties
+    [enableFileNameSuggestion]="true"
+    [folderId]="folderId"
+    [nodeId]="nodeId"
+    [disabled]="loading"
+    [languages]="languages"
+    [formControl]="control"
+    [disableLanguageSelect]="true"
+    [autoUpdateFileName]="false"
+    [templates]="templates"
+  ></gtx-page-properties>
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        [disabled]="loading"
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    [disabled]="loading"
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="primary"
-        [disabled]="loading || !control?.valid"
-        (click)="handleConfirm(TranslatePageModalActions.EDIT_PAGE)"
+  <gtx-button
+    type="primary"
+    [disabled]="loading || !control?.valid"
+    (click)="handleConfirm(TranslatePageModalActions.EDIT_PAGE)"
     >
-        {{ 'modal.translate_and_edit_button' | i18n }}
-    </gtx-button>
+    {{ 'modal.translate_and_edit_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="primary"
-        [disabled]="loading || !control?.valid"
-        (click)="handleConfirm(TranslatePageModalActions.EDIT_PAGE_COMPARE_WITH_LANGUAGE)"
+  <gtx-button
+    type="primary"
+    [disabled]="loading || !control?.valid"
+    (click)="handleConfirm(TranslatePageModalActions.EDIT_PAGE_COMPARE_WITH_LANGUAGE)"
     >
-        {{ 'modal.translate_and_compare_button' | i18n }}
-    </gtx-button>
+    {{ 'modal.translate_and_compare_button' | gtxI18n }}
+  </gtx-button>
 
+  @if (autoTranslationEnabled) {
     <gtx-button
-        *ngIf="autoTranslationEnabled"
-        data-action="auto-translate"
-        type="primary"
-        [disabled]="loading || !control?.valid"
-        (click)="createAutomaticallyTranslatedPage()"
-    >
-        {{ 'modal.translate_automatically' | i18n }}
+      data-action="auto-translate"
+      type="primary"
+      [disabled]="loading || !control?.valid"
+      (click)="createAutomaticallyTranslatedPage()"
+      >
+      {{ 'modal.translate_automatically' | gtxI18n }}
     </gtx-button>
+  }
 </div>

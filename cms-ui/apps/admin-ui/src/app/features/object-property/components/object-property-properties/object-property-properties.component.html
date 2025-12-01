@@ -1,101 +1,99 @@
-<form
-    *ngIf="form"
+@if (form) {
+  <form
     [formGroup]="form"
     class="row small-12 medium-12"
->
+    >
     <div class="input-container small-12 medium-4 columns">
-
-        <gtx-input
-            type="text"
-            maxlength="255"
-            [label]="('objectProperty.keyword' | i18n) + ' *'"
-            formControlName="keyword"
+      <gtx-input
+        type="text"
+        maxlength="255"
+        [label]="('object_property.keyword' | gtxI18n) + ' *'"
+        formControlName="keyword"
         >
-        </gtx-input>
-
-        <gtx-select
-            [label]="('objectProperty.type' | i18n) + ' *'"
-            formControlName="type"
-            [clearable]="false"
+      </gtx-input>
+      <gtx-select
+        [label]="('object_property.type' | gtxI18n) + ' *'"
+        formControlName="type"
+        [clearable]="false"
         >
-            <gtx-option *ngFor="let item of OBJECT_TYPES" [value]="item.id">{{ item.label | i18n }}</gtx-option>
-        </gtx-select>
-
-        <gtx-select
-            [label]="'objectProperty.objectPropertyCategory_singular' | i18n"
-            [clearable]="true"
-            formControlName="categoryId"
+        @for (item of OBJECT_TYPES; track item.id) {
+          <gtx-option [value]="item.id">{{ item.label | gtxI18n }}</gtx-option>
+        }
+      </gtx-select>
+      <gtx-select
+        [label]="'object_property.objectPropertyCategory_singular' | gtxI18n"
+        [clearable]="true"
+        formControlName="categoryId"
         >
-            <gtx-option *ngFor="let item of (objectPropertyCategories$ | async)" [value]="item.id">{{ item.name }}</gtx-option>
-        </gtx-select>
-
-        <gtx-select
-            [label]="('objectProperty.construct' | i18n) + ' *'"
-            [clearable]="false"
-            formControlName="constructId"
+        @for (item of (objectPropertyCategories$ | async); track item.id) {
+          <gtx-option [value]="item.id">{{ item.name }}</gtx-option>
+        }
+      </gtx-select>
+      <gtx-select
+        [label]="('object_property.construct' | gtxI18n) + ' *'"
+        [clearable]="false"
+        formControlName="constructId"
         >
-            <gtx-option *ngFor="let item of (constructs$ | async)" [value]="item.id">{{ item.name }}</gtx-option>
-        </gtx-select>
-
+        @for (item of (constructs$ | async); track item.id) {
+          <gtx-option [value]="item.id">{{ item.name }}</gtx-option>
+        }
+      </gtx-select>
+      <gtx-checkbox
+        [label]="'object_property.required' | gtxI18n"
+        formControlName="required"
+      ></gtx-checkbox>
+      <gtx-checkbox
+        [label]="'object_property.restricted' | gtxI18n"
+        formControlName="restricted"
+      ></gtx-checkbox>
+      @if (form.get('inheritable').enabled) {
         <gtx-checkbox
-            [label]="'objectProperty.required' | i18n"
-            formControlName="required"
+          [label]="'object_property.inheritable' | gtxI18n"
+          formControlName="inheritable"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('syncContentset').enabled) {
         <gtx-checkbox
-            [label]="'objectProperty.restricted' | i18n"
-            formControlName="restricted"
+          [label]="'object_property.syncContentset' | gtxI18n"
+          formControlName="syncContentset"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('syncChannelset').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('inheritable').enabled"
-            [label]="'objectProperty.inheritable' | i18n"
-            formControlName="inheritable"
+          [label]="'object_property.syncChannelset' | gtxI18n"
+          formControlName="syncChannelset"
         ></gtx-checkbox>
-
+      }
+      @if (form.get('syncVariants').enabled) {
         <gtx-checkbox
-            *ngIf="form.get('syncContentset').enabled"
-            [label]="'objectProperty.syncContentset' | i18n"
-            formControlName="syncContentset"
+          [label]="'object_property.syncVariants' | gtxI18n"
+          formControlName="syncVariants"
         ></gtx-checkbox>
-
-        <gtx-checkbox
-            *ngIf="form.get('syncChannelset').enabled"
-            [label]="'objectProperty.syncChannelset' | i18n"
-            formControlName="syncChannelset"
-        ></gtx-checkbox>
-
-        <gtx-checkbox
-            *ngIf="form.get('syncVariants').enabled"
-            [label]="'objectProperty.syncVariants' | i18n"
-            formControlName="syncVariants"
-        ></gtx-checkbox>
-
+      }
     </div>
-
     <div class="input-container small-12 medium-8 columns">
-
+      @if (languages$ | async; as languagesAsync) {
         <gtx-i18n-panel-group
-            *ngIf="languages$ | async as languagesAsync"
-            [label]="'shared.i18n_properties_label' | i18n"
-            [languages]="languagesAsync"
-            [invalidLanguages]="invalidLanguages"
-            [(activeLanguage)]="activeTabI18nLanguage"
-        >
-            <gtx-i18n-input
-                [label]="('common.name' | i18n) + ' *'"
-                formControlName="nameI18n"
-                [language]="activeTabI18nLanguage?.code"
-                [requiredInCurrentLanguage]="true"
-                [availableLanguages]="languages"
-            ></gtx-i18n-input>
-
-            <gtx-i18n-input
-                [label]="'common.description' | i18n"
-                formControlName="descriptionI18n"
-                [language]="activeTabI18nLanguage?.code"
-                [availableLanguages]="languages"
-            ></gtx-i18n-input>
+          [label]="'shared.i18n_properties_label' | gtxI18n"
+          [languages]="languagesAsync"
+          [invalidLanguages]="invalidLanguages"
+          [(activeLanguage)]="activeTabI18nLanguage"
+          >
+          <gtx-i18n-input
+            [label]="('common.name' | gtxI18n) + ' *'"
+            formControlName="nameI18n"
+            [language]="activeTabI18nLanguage?.code"
+            [requiredInCurrentLanguage]="true"
+            [availableLanguages]="languages"
+          ></gtx-i18n-input>
+          <gtx-i18n-input
+            [label]="'common.description' | gtxI18n"
+            formControlName="descriptionI18n"
+            [language]="activeTabI18nLanguage?.code"
+            [availableLanguages]="languages"
+          ></gtx-i18n-input>
         </gtx-i18n-panel-group>
+      }
     </div>
-</form>
+  </form>
+}

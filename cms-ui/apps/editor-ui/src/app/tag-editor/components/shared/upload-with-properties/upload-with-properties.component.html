@@ -1,29 +1,29 @@
 <gtx-progress-bar [active]="uploadInProgress"></gtx-progress-bar>
 
-<gtx-file-drop-area
-    *ngIf="destinationFolder"
+@if (destinationFolder) {
+  <gtx-file-drop-area
     [gtxFileDropArea]="fileDropAreaOptions"
     (fileDrop)="onFilesSelected($event)"
->
-    <div *ngIf="itemType === 'image' && fileToUpload" class="image-preview-container">
+    >
+    @if (itemType === 'image' && fileToUpload) {
+      <div class="image-preview-container">
         <image-preview [file]="fileToUpload"></image-preview>
-    </div>
-
+      </div>
+    }
     <div class="file-drop-info-container">
-        <span class="drop-area-label">
-            {{ (itemType === 'image' ? 'tag_editor.drop_image_here_or' : 'tag_editor.drop_file_here_or') | i18n }}
-        </span>
-
-        <upload-button
-            [disabled]="uploadInProgress"
-            [itemType]="itemType"
-            [acceptUploads]="fileDropAreaOptions.accept"
-            [multiple]="false"
-            [targetNodeId]="destinationFolder?.nodeId"
-            [targetFolderId]="destinationFolder?.id"
-            [instantUpload]="false"
-            btnSize="large"
-            btnType="primary"
+      <span class="drop-area-label">
+        {{ (itemType === 'image' ? 'tag_editor.drop_image_here_or' : 'tag_editor.drop_file_here_or') | gtxI18n }}
+      </span>
+      <upload-button
+        [disabled]="uploadInProgress"
+        [itemType]="itemType"
+        [acceptUploads]="fileDropAreaOptions.accept"
+        [multiple]="false"
+        [targetNodeId]="destinationFolder?.nodeId"
+        [targetFolderId]="destinationFolder?.id"
+        [instantUpload]="false"
+        btnSize="large"
+        btnType="primary"
             [btnLabel]="(fileToUpload ?
                 (itemType === 'image'
                     ? 'tag_editor.different_image'
@@ -33,41 +33,45 @@
                     'tag_editor.pick_image'
                     : 'tag_editor.pick_file'
                 )
-            ) | i18n"
-            (filesSelected)="onFilesSelected($event)"
-            (assetsSelected)="onAssetsSelected($event)"
-            (uploadInProgress)="uploadInProgress = $event"
-        ></upload-button>
+            ) | gtxI18n"
+        (filesSelected)="onFilesSelected($event)"
+        (assetsSelected)="onAssetsSelected($event)"
+        (uploadInProgress)="uploadInProgress = $event"
+      ></upload-button>
     </div>
-</gtx-file-drop-area>
+  </gtx-file-drop-area>
+}
 
-<gtx-file-properties
-    *ngIf="fileToUpload || selectionToUpload"
+@if (fileToUpload || selectionToUpload) {
+  <gtx-file-properties
     [disabled]="uploadInProgress"
     [value]="fileProperties"
     (valueChange)="filePropertiesChanged($event)">
-</gtx-file-properties>
+  </gtx-file-properties>
+}
 
-<browse-box
-    *ngIf="allowFolderSelection"
+@if (allowFolderSelection) {
+  <browse-box
     [disabled]="uploadInProgress"
-    [label]="'tag_editor.destination_folder' | i18n"
+    [label]="'tag_editor.destination_folder' | gtxI18n"
     [displayValue]="destinationFolder?.name"
     [clearable]="false"
     (browse)="browseForFolder()"
-></browse-box>
+  ></browse-box>
+}
 
-<ng-container *ngIf="fileToUpload">
-    <div class="file-size">
-        <span>{{ 'tag_editor.file_size' | i18n }}:</span>
-        {{ fileToUpload.size | filesize }}
-    </div>
+@if (fileToUpload) {
+  <div class="file-size">
+    <span>{{ 'tag_editor.file_size' | gtxI18n }}:</span>
+    {{ fileToUpload.size | filesize }}
+  </div>
+  @if (showUploadButton) {
     <gtx-button
-        *ngIf="showUploadButton"
-        class="upload-button"
-        [disabled]="uploadInProgress"
-        (click)="onUploadClick()"
-    >
-        {{ 'tag_editor.upload' | i18n }}
-    </gtx-button>
-</ng-container>
+      class="upload-button"
+      [disabled]="uploadInProgress"
+      (click)="onUploadClick()"
+      >
+    {{ 'tag_editor.upload' | gtxI18n }}
+  </gtx-button>
+}
+}

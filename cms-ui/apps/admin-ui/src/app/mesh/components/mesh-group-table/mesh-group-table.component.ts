@@ -1,5 +1,4 @@
 import { BO_PERMISSIONS, BusinessObject } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { MeshGroupBO, MeshRoleBO, MeshUserBO } from '@admin-ui/mesh/common';
 import {
     MeshGroupHandlerService,
@@ -15,6 +14,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { Group, GroupResponse, Permission } from '@gentics/mesh-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshGroupModal } from '../mesh-group-modal/mesh-group-modal.component';
@@ -33,7 +33,7 @@ const MANAGE_ROLES_ACTION = 'manageRoles';
     templateUrl: './mesh-group-table.component.html',
     styleUrls: ['./mesh-group-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MeshGroupTableComponent
     extends BaseEntityTableComponent<Group, MeshGroupBO, MeshGroupTableLoaderOptions>
@@ -52,16 +52,17 @@ export class MeshGroupTableComponent
         {
             id: 'users',
             label: 'common.user_plural',
-            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-            mapper: (group: MeshGroupBO) => (group.users || []).map(getUserDisplayName).filter(name => !!name).join(', '),
+
+            mapper: (group: MeshGroupBO) => (group.users || []).map(getUserDisplayName).filter((name) => !!name).join(', '),
         },
         {
             id: 'roles',
             label: 'common.role_plural',
-            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-            mapper: (group: MeshGroupBO) => (group.roles || []).map(role => role.name).filter(name => !!name).join(', '),
+
+            mapper: (group: MeshGroupBO) => (group.roles || []).map((role) => role.name).filter((name) => !!name).join(', '),
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'group';
 
     constructor(
@@ -192,19 +193,19 @@ export class MeshGroupTableComponent
     }
 
     protected async manageRoleAssignment(group: MeshGroupBO): Promise<void> {
-        const assignedRoleIds = group.roles.map(role => role.uuid);
+        const assignedRoleIds = group.roles.map((role) => role.uuid);
 
         const dialog = await this.modalService.fromComponent(SelectRoleModal, {}, {
             title: 'mesh.manage_role_assignment',
             multiple: true,
-            selected: (group.roles || []).map(role => role.uuid),
+            selected: (group.roles || []).map((role) => role.uuid),
         });
 
         const roles: MeshRoleBO[] = await dialog.open();
-        const newRoleIds = roles.map(role => role.uuid);
+        const newRoleIds = roles.map((role) => role.uuid);
 
-        const toAssign = roles.filter(role => !assignedRoleIds.includes(role.uuid));
-        const toRemove = group.roles.filter(role => !newRoleIds.includes(role.uuid));
+        const toAssign = roles.filter((role) => !assignedRoleIds.includes(role.uuid));
+        const toRemove = group.roles.filter((role) => !newRoleIds.includes(role.uuid));
 
         // Nothing to do
         if (toAssign.length === 0 && toRemove.length === 0) {
@@ -223,19 +224,19 @@ export class MeshGroupTableComponent
     }
 
     protected async manageUserAssignment(group: MeshGroupBO): Promise<void> {
-        const assignedUserIds = group.users.map(user => user.uuid);
+        const assignedUserIds = group.users.map((user) => user.uuid);
 
         const dialog = await this.modalService.fromComponent(SelectUserModal, {}, {
             title: 'mesh.manage_user_assignment',
             multiple: true,
-            selected: (group.users || []).map(user => user.uuid),
+            selected: (group.users || []).map((user) => user.uuid),
         });
 
         const users: MeshUserBO[] = await dialog.open();
-        const newUserIds = users.map(user => user.uuid);
+        const newUserIds = users.map((user) => user.uuid);
 
-        const toAssign = users.filter(user => !assignedUserIds.includes(user.uuid));
-        const toRemove = group.users.filter(user => !newUserIds.includes(user.uuid));
+        const toAssign = users.filter((user) => !assignedUserIds.includes(user.uuid));
+        const toRemove = group.users.filter((user) => !newUserIds.includes(user.uuid));
 
         // Nothing to do
         if (toAssign.length === 0 && toRemove.length === 0) {

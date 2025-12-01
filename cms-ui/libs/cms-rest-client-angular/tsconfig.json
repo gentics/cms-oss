@@ -1,8 +1,21 @@
 {
-    "extends": "../../tsconfig.json",
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "strict": false,
+        "strictNullChecks": false,
+        "target": "es2022",
+        "moduleResolution": "bundler",
+        "module": "preserve"
+    },
     "angularCompilerOptions": {
-        "enableResourceInlining": true,
-        "skipTemplateCodegen": true,
-        "compilationMode": "partial"
-    }
+        "enableI18nLegacyMessageIdFormat": false
+    },
+    "references": [
+        {
+            "path": "./tsconfig.lib.json"
+        },
+        {
+            "path": "./tsconfig.spec.json"
+        }
+    ]
 }

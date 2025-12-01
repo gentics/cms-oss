@@ -1,17 +1,17 @@
-import { DataSourceBO, EditableEntity } from '@admin-ui/common';
-import {
-    DataSourceTableLoaderOptions,
-    DataSourceTableLoaderService,
-    DevToolPackageTableLoaderService,
-    I18nService,
-    PermissionsService,
-} from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { AnyModelType, DataSource, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { DataSourceBO, EditableEntity } from '../../../common';
+import {
+    DataSourceTableLoaderOptions,
+    DataSourceTableLoaderService,
+    DevToolPackageTableLoaderService,
+    PermissionsService,
+} from '../../../core';
+import { AppStateService } from '../../../state';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
@@ -21,7 +21,7 @@ import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '.
     templateUrl: './data-source-table.component.html',
     styleUrls: ['./data-source-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DataSourceTableComponent
     extends BasePackageEntityTableComponent<DataSource, DataSourceBO, DataSourceTableLoaderOptions> {
@@ -29,11 +29,12 @@ export class DataSourceTableComponent
     protected rawColumns: TableColumn<DataSourceBO>[] = [
         {
             id: 'name',
-            label: 'dataSource.name',
+            label: 'data_source.name',
             fieldPath: 'name',
             sortable: true,
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'dataSource';
     protected focusEntityType = EditableEntity.DATA_SOURCE;
 
@@ -77,7 +78,7 @@ export class DataSourceTableComponent
                         type: 'alert',
                         single: true,
                         multiple: true,
-                    })
+                    });
                 } else {
                     actions.push({
                         id: DELETE_ACTION,

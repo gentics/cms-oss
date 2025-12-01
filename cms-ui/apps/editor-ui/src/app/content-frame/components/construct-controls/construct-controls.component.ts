@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { AlohaEditable } from '@gentics/aloha-models';
 import { GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
 import { Construct, ConstructCategory } from '@gentics/cms-models';
 import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { AlohaGlobal } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../../providers';
@@ -26,7 +26,7 @@ const UNCATEGORIZED_LABEL = 'editor.construct_no_category';
     templateUrl: './construct-controls.component.html',
     styleUrls: ['./construct-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ConstructControlsComponent implements OnChanges {
 
@@ -144,7 +144,7 @@ export class ConstructControlsComponent implements OnChanges {
         }
 
         this.gcnPlugin.insertNewTag(construct.id)
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
             });
 
@@ -166,16 +166,16 @@ export class ConstructControlsComponent implements OnChanges {
     protected updateAvailableConstructs(): void {
         this.availableConstructs = this.constructs
             // Only allow constructs which can actually be added
-            .filter(construct => construct.visibleInMenu && construct.mayBeSubtag)
+            .filter((construct) => construct.visibleInMenu && construct.mayBeSubtag)
             // The "magiclink" construct (aloha-link) has to be removed all the time
-            .filter(construct => this.gcnPlugin?.settings?.magiclinkconstruct !== construct.id)
+            .filter((construct) => this.gcnPlugin?.settings?.magiclinkconstruct !== construct.id)
             // Sort them by name to be nicely displayed
             .sort((a, b) => a.name.localeCompare(b.name));
     }
 
     protected updateFavouriteConstructs(): void {
         this.favouriteConstructs = this.availableConstructs
-            .filter(construct => (this.favourites || []).includes(construct.keyword));
+            .filter((construct) => (this.favourites || []).includes(construct.keyword));
 
         if (this.currentlyOpenDropdown != null && this.dropdownIsFavourites) {
             if (this.favourites.length === 0) {
@@ -188,8 +188,8 @@ export class ConstructControlsComponent implements OnChanges {
 
     protected updateDisplayGroups(): void {
         const haystack = (this.filterText || '').toLocaleLowerCase();
-        const newIds = this.availableConstructs.map(c => c.id);
-        const catIds = this.categories.map(c => c.id);
+        const newIds = this.availableConstructs.map((c) => c.id);
+        const catIds = this.categories.map((c) => c.id);
 
         // Nothing has changed in the constructs or in the term, so we don't need to rebuild the groups
         if (
@@ -207,7 +207,7 @@ export class ConstructControlsComponent implements OnChanges {
         const constructMap: Record<number, Construct> = this.availableConstructs
             // Filter out all constructs which do not match the current search/filtering.
             // Only do this for the grouped constructs, as these are shown in the dropdown.
-            .filter(construct => haystack.length > 1
+            .filter((construct) => haystack.length > 1
                 ? construct.name.toLocaleLowerCase().includes(haystack)
                 || construct.keyword.toLocaleLowerCase().includes(haystack)
                 : true,
@@ -217,9 +217,9 @@ export class ConstructControlsComponent implements OnChanges {
                 return agg;
             }, {});
 
-        const groups: DisplayGroup[] = this.categories.map(category => {
+        const groups: DisplayGroup[] = this.categories.map((category) => {
             // Filter out all constructs which aren't allowed
-            const allowed: Construct[] = Object.values(category.constructs).filter(construct => {
+            const allowed: Construct[] = Object.values(category.constructs).filter((construct) => {
                 const found = constructMap[construct.id] != null;
                 // Delete for later lookup
                 delete constructMap[construct.id];
@@ -236,7 +236,7 @@ export class ConstructControlsComponent implements OnChanges {
                 label: category.name,
                 constructs: allowed.sort((a, b) => a.name.localeCompare(b.name)),
             };
-        }).filter(group => group != null);
+        }).filter((group) => group != null);
 
         const uncategorized = Object.values(constructMap);
 
@@ -244,7 +244,7 @@ export class ConstructControlsComponent implements OnChanges {
             groups.unshift({
                 globalId: null,
                 id: UNCATEGORIZED_ID,
-                label: this.i18n.translate(UNCATEGORIZED_LABEL),
+                label: this.i18n.instant(UNCATEGORIZED_LABEL),
                 order: -1,
                 constructs: uncategorized.sort((a, b) => a.name.localeCompare(b.name)),
             });

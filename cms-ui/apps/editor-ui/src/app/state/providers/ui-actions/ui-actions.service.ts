@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { ExternalLinkStatistics, I18nLanguage, NodeFeature, Version } from '@gentics/cms-models';
 import { of } from 'rxjs';
 import { filter, map, switchMap, take, tap } from 'rxjs/operators';
 import { Api } from '../../../core/providers/api/api.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import {
     BreadcrumbLocation,
     SetAvailableUILanguageAction,
@@ -54,7 +54,6 @@ export class UIActionsService {
      *
      * __Important Note__: For frontend language fully changed, frontend application must reload.
      * Thus, call `windowRef.nativeWindow.location.reload()` in `callback` argument.
-     *
      * @param language new ui language
      * @param callBack optional callback after successful request
      */
@@ -67,7 +66,7 @@ export class UIActionsService {
 
     getActiveUiLanguage(): void {
         this.api.i18n.getActiveUiLanguage().pipe(
-            map(response => response.code),
+            map((response) => response.code),
         ).subscribe((language: GcmsUiLanguage) => {
             this.appState.dispatch(new SetBackendLanguageAction(language));
             this.setActiveUiLanguageInFrontend(language);
@@ -76,26 +75,26 @@ export class UIActionsService {
 
     getAvailableUiLanguages(): void {
         this.api.i18n.getAvailableUiLanguages().pipe(
-            map(response => response.items),
+            map((response) => response.items),
         ).subscribe((languages: I18nLanguage[]) => {
             this.appState.dispatch(new SetAvailableUILanguageAction(languages));
         });
     }
 
     getAlerts(): void {
-        const featureLinkcheckerEnabled$ = this.appState.select(state => state.features.nodeFeatures).pipe(
-            filter(nodeFeatures => nodeFeatures instanceof Object),
+        const featureLinkcheckerEnabled$ = this.appState.select((state) => state.features.nodeFeatures).pipe(
+            filter((nodeFeatures) => nodeFeatures instanceof Object),
             // check if at least one node has NodeFeature.linkChecker activated
-            map(nodeFeatures => {
-                return Object.values(nodeFeatures).some(nodeFeaturesOfNode => {
-                    return nodeFeaturesOfNode.find(feature => feature === NodeFeature.LINK_CHECKER) ? true : false;
+            map((nodeFeatures) => {
+                return Object.values(nodeFeatures).some((nodeFeaturesOfNode) => {
+                    return nodeFeaturesOfNode.find((feature) => feature === NodeFeature.LINK_CHECKER) ? true : false;
                 });
             }),
-            filter(status => status),
+            filter((status) => status),
             take(1),
         );
 
-        featureLinkcheckerEnabled$.subscribe(linkCheckerEnabled => {
+        featureLinkcheckerEnabled$.subscribe((linkCheckerEnabled) => {
             // Only check for alerts of Link Checker if at least one Node has this enabled
             if (linkCheckerEnabled) {
                 this.getAlertLinkCheckerBrokenLinks();
@@ -104,9 +103,9 @@ export class UIActionsService {
     }
 
     getAlertLinkCheckerBrokenLinks(): void {
-        this.appState.select(state => state.folder.activeNode).pipe(
-            switchMap(activeNodeId => this.appState.select(state => state.features.nodeFeatures[activeNodeId])),
-            map((activeNodeFeatures: NodeFeature[]) => activeNodeFeatures && !activeNodeFeatures.some(f => f === NodeFeature.LINK_CHECKER)),
+        this.appState.select((state) => state.folder.activeNode).pipe(
+            switchMap((activeNodeId) => this.appState.select((state) => state.features.nodeFeatures[activeNodeId])),
+            map((activeNodeFeatures: NodeFeature[]) => activeNodeFeatures && !activeNodeFeatures.some((f) => f === NodeFeature.LINK_CHECKER)),
             switchMap((linkCheckerIsEnabled: boolean) => {
                 if (!linkCheckerIsEnabled) {
                     return of<ExternalLinkStatistics>();
@@ -114,15 +113,15 @@ export class UIActionsService {
 
                 return this.api.linkChecker.getStats();
             }),
-            filter(stats => !!stats),
-            tap(stats => {
+            filter((stats) => !!stats),
+            tap((stats) => {
                 this.appState.dispatch(new SetBrokenLinksCountAction(stats.invalid));
             }),
         ).toPromise();
     }
 
     getCmsVersion(): void {
-        this.api.admin.getVersion().subscribe(res => {
+        this.api.admin.getVersion().subscribe((res) => {
             const version: Version = {
                 cmpVersion: res.cmpVersion,
                 version: res.version,
@@ -130,7 +129,7 @@ export class UIActionsService {
                 nodeInfo: res.nodeInfo,
             };
             this.appState.dispatch(new SetCMPVersionAction(version));
-        }, err => {
+        }, (err) => {
             console.error('Error while loading CMS Version!', err);
         });
     }
@@ -140,7 +139,7 @@ export class UIActionsService {
     }
 
     getUsersnapSettings(): void {
-        this.api.admin.getUsersnapSettings().subscribe(res => {
+        this.api.admin.getUsersnapSettings().subscribe((res) => {
             this.appState.dispatch(new SetUsersnapSettingsAction(res.settings));
         });
     }

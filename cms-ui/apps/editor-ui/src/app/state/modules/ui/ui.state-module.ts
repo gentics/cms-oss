@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
+import { FALLBACK_LANGUAGE } from '@gentics/cms-components';
 import { StateContext } from '@ngxs/store';
 import { iif, patch } from '@ngxs/store/operators';
-import { FALLBACK_LANGUAGE } from '../../../common/config/config';
 import { Alert, Alerts, UIMode, UIState } from '../../../common/models';
 import { ActionDefinition, AppStateBranch } from '../../state-utils';
 import {

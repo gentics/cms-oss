@@ -1,4 +1,5 @@
-FROM docker.gentics.com/maven:3.9.2-amazoncorretto-17-debian-bullseye
+FROM docker.gentics.com/maven:3.9.11-amazoncorretto-17-debian-trixie
+
 LABEL maintainer="Peter Nyari <p.nyari@gentics.com>"
 
 ARG GIT_USER_NAME="Maven Release Manager"
@@ -7,32 +8,60 @@ ARG USER_NAME="jenkins"
 ARG NODE_VERSION=22.15.0
 
 # Version makes it possible to force rebuild the image and bypass caching by changing this variable (eg.: when ca-certificates needs update)
-ARG VERSION="20220711.0"
-ARG DEBIAN_RELEASE="bullseye"
+ARG VERSION="20251201.0"
+ARG DEBIAN_RELEASE="trixie"
 
-# Add repositories and install
-RUN echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE} main contrib non-free" > /etc/apt/sources.list \
- && echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE}-backports main" >> /etc/apt/sources.list \
- && echo "deb http://security.debian.org/debian-security ${DEBIAN_RELEASE}-security main" >> /etc/apt/sources.list \
- && echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE}-updates main" >> /etc/apt/sources.list \
- && apt-get update \
- && apt-get upgrade --assume-yes \
- && apt-get install --assume-yes lsb-release wget curl apt-transport-https ca-certificates \
-		gnupg2 software-properties-common dirmngr jq \
- && curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
- && curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
- && add-apt-repository "deb https://download.docker.com/linux/debian ${DEBIAN_RELEASE} stable" \
- && add-apt-repository "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
- && apt-get update \
- && apt-get install --assume-yes eatmydata \
-  		doxygen mariadb-client git-core gawk sed parallel build-essential sudo \
-  		less vim tar sed psmisc file pwgen locales zip unzip nmap pkg-config libtool libtool-bin bison \
-  		debhelper lintian devscripts unp bzip2 rsync docker-ce=5:20* docker-ce-cli=5:20* python2.7 \
-		# Cypress Dependencies
-		# From https://docs.cypress.io/guides/getting-started/installing-cypress#UbuntuDebian
-		# And https://github.com/cypress-io/cypress-docker-images/blob/master/factory/factory.Dockerfile
-		libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb libgbm1 libcups2 libatk-bridge2.0-0 libatk1.0-0 \
- && apt-get install --assume-yes --allow-unauthenticated google-chrome-beta
+# Setup debian channels
+RUN echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE} main contrib non-free" > /etc/apt/sources.list
+RUN echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE}-backports main" >> /etc/apt/sources.list
+RUN echo "deb http://security.debian.org/debian-security ${DEBIAN_RELEASE}-security main" >> /etc/apt/sources.list
+RUN echo "deb http://ftp.at.debian.org/debian ${DEBIAN_RELEASE}-updates main" >> /etc/apt/sources.list
+
+# Update the system
+RUN apt-get update \
+ && apt-get upgrade --assume-yes
+
+# Install basic packages
+RUN apt-get install --assume-yes \
+	lsb-release wget curl apt-transport-https ca-certificates \
+	gnupg2 dirmngr jq eatmydata doxygen mariadb-client git-core \
+	gawk sed parallel build-essential sudo less vim tar sed psmisc file pwgen locales zip unzip \
+	nmap pkg-config libtool libtool-bin bison debhelper lintian devscripts unp bzip2 rsync
+	# software-properties-common
+
+# Docker
+RUN install -m 0755 -d /etc/apt/keyrings
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+RUN chmod a+r /etc/apt/keyrings/docker.asc
+RUN tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$DEBIAN_RELEASE")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+RUN apt update
+RUN apt install --assume-yes docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Google chrome
+RUN wget -q -O /etc/apt/keyrings/linux_signing_key.pub https://dl-ssl.google.com/linux/linux_signing_key.pub
+RUN tee /etc/apt/sources.list.d/google-chrome.sources > /dev/null <<EOF
+Types: deb
+URIs: http://dl.google.com/linux/chrome/deb/
+Suites: stable
+Components: main
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/linux_signing_key.pub
+EOF
+RUN apt update
+RUN apt install --assume-yes google-chrome-stable
+
+# Cypress Dependencies
+# From https://docs.cypress.io/guides/getting-started/installing-cypress#UbuntuDebian
+# And https://github.com/cypress-io/cypress-docker-images/blob/master/factory/factory.Dockerfile
+RUN apt-get install --assume-yes \
+	libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb libgbm1 libcups2 libatk-bridge2.0-0 libatk1.0-0
+RUN apt-get install --assume-yes --allow-unauthenticated google-chrome-beta
 
  # "fake" dbus address to prevent errors
 # https://github.com/SeleniumHQ/docker-selenium/issues/87
@@ -45,21 +74,22 @@ ENV LANG=en_US.UTF-8 \
 	LANGUAGE=en_US:en \
 	LC_ALL=en_US.UTF-8
 
-# Set Environment variable for python2
-RUN sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python2.7 20 \
- && sudo chmod +x /usr/local/bin/python
-ENV PYTHON /usr/local/bin/python
+# Python 2 - Do we still need this?
+# RUN apt install --assume-yes python2.7
+# RUN sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python2.7 20 \
+#  && sudo chmod +x /usr/local/bin/python
+# ENV PYTHON /usr/local/bin/python
 
 # Install docker-compose v2 and compatibility for v1
-RUN mkdir -p /usr/local/lib/docker/cli-plugins/ \
- && sudo curl -L "https://github.com/docker/compose/releases/download/v2.6.1/docker-compose-$(uname -s)-$(uname -m)" \
-		-o /usr/local/lib/docker/cli-plugins/docker-compose \
- && sudo curl -L "https://github.com/docker/compose-switch/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
- 		-o /usr/local/bin/compose-switch \
- && sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose \
- && sudo chmod +x /usr/local/bin/compose-switch \
- && update-alternatives --install /usr/local/bin/docker-compose docker-compose /usr/local/bin/compose-switch 99 \
- && sudo chmod +x /usr/local/bin/docker-compose
+# RUN mkdir -p /usr/local/lib/docker/cli-plugins/ \
+#  && sudo curl -L "https://github.com/docker/compose/releases/download/v2.6.1/docker-compose-$(uname -s)-$(uname -m)" \
+# 		-o /usr/local/lib/docker/cli-plugins/docker-compose \
+#  && sudo curl -L "https://github.com/docker/compose-switch/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+#  		-o /usr/local/bin/compose-switch \
+#  && sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose \
+#  && sudo chmod +x /usr/local/bin/compose-switch \
+#  && update-alternatives --install /usr/local/bin/docker-compose docker-compose /usr/local/bin/compose-switch 99 \
+#  && sudo chmod +x /usr/local/bin/docker-compose
 
 # Update public keys for node installs.
 RUN set -ex \
@@ -108,7 +138,7 @@ RUN curl -sSL https://rvm.io/mpapis.asc | gpg2 --import - \
 
 # Install Guides
 ADD ./build/guides-wrapper.sh /usr/local/bin/guides
-RUN rvm-exec 2.3 gem install guides -- --with-cflags="-O2 -pipe -march=native -w" \
+RUN rvm-exec 2.3 gem install guides -- --with-cflags="-O2 -pipe -march=native -w -Wno-error=implicit-function-declaration" \
  &&	chmod +x /usr/local/bin/guides
 
 # Add user

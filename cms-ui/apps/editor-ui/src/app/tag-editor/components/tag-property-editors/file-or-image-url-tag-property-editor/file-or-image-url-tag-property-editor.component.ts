@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
-import { ApplicationStateService } from '@editor-ui/app/state/index';
-import { RepositoryBrowserOptions, TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
+import {
+    RepositoryBrowserOptions,
+    TagEditorContext,
+    TagEditorError,
+    TagPropertiesChangedFn,
+    TagPropertyEditor,
+} from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     FileOrImage,
@@ -23,8 +24,13 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, Subscription, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
+import { RepositoryBrowserClient } from '../../../../shared/providers';
+import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper/selected-item-helper';
+import { ApplicationStateService } from '../../../../state';
 import { UploadWithPropertiesModalComponent } from '../../shared/upload-with-properties-modal/upload-with-properties-modal.component';
 
 /**
@@ -38,7 +44,7 @@ import { UploadWithPropertiesModalComponent } from '../../shared/upload-with-pro
     templateUrl: './file-or-image-url-tag-property-editor.component.html',
     styleUrls: ['./file-or-image-url-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
@@ -91,12 +97,12 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
     ) { }
 
     ngOnInit(): void {
-        this.imageManipulationEnabled$ = this.appState.select(state => state.features.imagemanipulation2);
-        this.imageUploadInTagfillEnabled$ = this.appState.select(state => state.features.enable_image_upload_in_tagfill);
+        this.imageManipulationEnabled$ = this.appState.select((state) => state.features.imagemanipulation2);
+        this.imageUploadInTagfillEnabled$ = this.appState.select((state) => state.features.enable_image_upload_in_tagfill);
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
@@ -129,9 +135,9 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
                          */
                         switch (tagProperty.type) {
                             case TagPropertyType.FILE:
-                                return this.i18n.translate('editor.file_no_selection');
+                                return this.i18n.instant('editor.file_no_selection');
                             case TagPropertyType.IMAGE:
-                                return this.i18n.translate('editor.image_no_selection');
+                                return this.i18n.instant('editor.image_no_selection');
                             default:
                                 return '';
                         }
@@ -139,7 +145,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
                 }),
             ),
             this.selectedItem.loadingError$.pipe(
-                map((error: { error: any, item: { itemId: number, nodeId?: number } }) => {
+                map((error: { error: any; item: { itemId: number; nodeId?: number } }) => {
                     /**
                      * When a file or an image that is referenced gets deleted, the fileId or imageId is kept in tagProperty.
                      * When we try to fetch the file or image information we get an error message.
@@ -147,14 +153,15 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
                      * (and thus avoid suggesting that a valid file or image is still selected).
                      */
                     if (this.tagProperty) {
-                        /** additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
+                        /**
+                         * additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
                          * This could trigger an emission before this.tagProperty is set in updateTagProperty
                          */
                         switch (this.tagProperty.type) {
                             case TagPropertyType.FILE:
-                                return this.i18n.translate('editor.file_not_found', { id: this.tagProperty.fileId });
+                                return this.i18n.instant('editor.file_not_found', { id: this.tagProperty.fileId });
                             case TagPropertyType.IMAGE:
-                                return this.i18n.translate('editor.image_not_found', { id: this.tagProperty.imageId });
+                                return this.i18n.instant('editor.image_not_found', { id: this.tagProperty.imageId });
                             default:
                                 return '';
                         }
@@ -198,10 +205,10 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
     changeSelectedItem(newSelectedItem: ItemInNode<FileOrImage<Raw>>): void {
         const idProp: keyof (FileTagPartProperty & ImageTagPartProperty) = this.tagProperty.type === TagPropertyType.FILE ? 'fileId' : 'imageId';
         if (newSelectedItem) {
-            (<any>this.tagProperty)[idProp] = newSelectedItem.id;
+            (<any> this.tagProperty)[idProp] = newSelectedItem.id;
             this.tagProperty.nodeId = newSelectedItem.nodeId;
         } else {
-            (<any>this.tagProperty)[idProp] = 0;
+            (<any> this.tagProperty)[idProp] = 0;
             this.tagProperty.nodeId = 0;
         }
 
@@ -245,7 +252,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
                 itemType: this.itemType,
             },
         )
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             .then((uploadedItem: FileUpload) => {
                 if (!uploadedItem) {
                     return;
@@ -264,7 +271,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
             nodeId = this.context.node.id;
         }
         this.editorOverlayService.editImage({ nodeId: nodeId, itemId: imageId })
-            .then(newImage => {
+            .then((newImage) => {
                 if (!newImage) {
                     return;
                 }
@@ -341,9 +348,9 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
             folderObj = context.folder;
         }
 
-        this.selectedItem.selectedItem$.subscribe(selectedItem => {
+        this.selectedItem.selectedItem$.subscribe((selectedItem) => {
             if (selectedItem) {
-                const sub = this.client.folder.get(selectedItem.folderId, { nodeId: selectedItem.nodeId }).subscribe(res => {
+                const sub = this.client.folder.get(selectedItem.folderId, { nodeId: selectedItem.nodeId }).subscribe((res) => {
                     this.uploadDestination = res.folder;
                     this.changeDetector.markForCheck();
                 });
@@ -352,7 +359,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
                 this.uploadDestination = folderObj;
                 this.changeDetector.markForCheck();
             } else {
-                const sub = this.client.folder.get(folderId, { nodeId: context.node?.id }).subscribe(res => {
+                const sub = this.client.folder.get(folderId, { nodeId: context.node?.id }).subscribe((res) => {
                     this.uploadDestination = res.folder;
                     this.changeDetector.markForCheck();
                 });

@@ -1,10 +1,11 @@
-<iframe
+@if (iframeUrl) {
+  <iframe
     #iframe
-    *ngIf="iframeUrl"
     class="iframe-element"
     [src]="iframeUrl"
     [attr.data-frame-id]="currentId"
     [style.width.px]="size?.width"
     [style.height.px]="size?.height"
     (load)="handleIFrameLoad($event)"
-></iframe>
+  ></iframe>
+}

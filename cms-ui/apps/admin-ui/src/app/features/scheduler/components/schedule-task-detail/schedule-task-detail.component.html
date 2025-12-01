@@ -3,11 +3,11 @@
         <gtx-tab
             [id]="ScheduleTaskDetailTabs.PROPERTIES"
             gtxDetailTabLink
-            [title]="'shared.title_properties' | i18n"
+            [title]="'shared.title_properties' | gtxI18n"
         >
             <div class="detail-tab-wrapper">
                 <gtx-entity-detail-header
-                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    [title]="'shared.title_properties_of_entity' | gtxI18n: { entityName: currentEntity?.name }"
                     saveActionAllowedId="scheduler.updateTask"
                     [saveActionAllowedInstanceId]="currentEntity?.id"
                     [saveDisabled]="fgPropertiesSaveDisabled$ | async"

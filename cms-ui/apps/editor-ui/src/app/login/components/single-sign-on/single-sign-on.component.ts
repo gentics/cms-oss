@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { API_BASE_URL, KeycloakService } from '@gentics/cms-components';
 import { BehaviorSubject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
-import { KeycloakService } from '@gentics/cms-components';
 import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
-import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
 import { ApplicationStateService, AuthActionsService } from '../../../state';

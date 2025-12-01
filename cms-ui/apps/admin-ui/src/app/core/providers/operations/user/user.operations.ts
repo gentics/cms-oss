@@ -1,5 +1,6 @@
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     Group,
     GroupResponse,
@@ -19,7 +20,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()
@@ -43,8 +43,8 @@ export class UserOperations extends ExtendedEntityOperationsBase<'user'> {
      */
     getAll(options?: UserListOptions): Observable<User<Raw>[]> {
         return this.api.user.getUsers(options).pipe(
-            map(res => res.items),
-            tap(users => this.entities.addEntities('user', users)),
+            map((res) => res.items),
+            tap((users) => this.entities.addEntities('user', users)),
             this.catchAndRethrowError(),
         );
     }

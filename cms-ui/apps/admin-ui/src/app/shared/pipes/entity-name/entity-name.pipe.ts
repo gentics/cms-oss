@@ -1,6 +1,6 @@
 import { ContentItem, PickableEntity } from '@admin-ui/common';
-import { I18nService, JoinOptions } from '@admin-ui/core';
 import { Pipe, PipeTransform } from '@angular/core';
+import { I18nService, JoinOptions } from '@gentics/cms-components';
 
 type DisplayableEntity = PickableEntity | ContentItem;
 
@@ -15,7 +15,7 @@ function isPickableEntity(value: any): value is PickableEntity {
 
 @Pipe({
     name: 'entityName',
-    standalone: false
+    standalone: false,
 })
 export class EntityNamePipe implements PipeTransform {
 
@@ -27,7 +27,7 @@ export class EntityNamePipe implements PipeTransform {
         }
 
         if (Array.isArray(value)) {
-            return this.i18n.join(value.map(entity => this.getEntityName(entity)), options?.join);
+            return this.i18n.join(value.map((entity) => this.getEntityName(entity)), options?.join);
         }
 
         return this.getEntityName(value);

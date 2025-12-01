@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'modal.upload_title_single' | i18n: { type: itemType } }}</h5>
+    <h5>{{ 'modal.upload_title_single' | gtxI18n: { type: itemType } }}</h5>
 </div>
 
 <div class="modal-content">
@@ -19,12 +19,12 @@
         type="secondary"
         flat
         (click)="cancelFn()"
-    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+    >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 
     <gtx-button
         id="upload-button"
         type="primary"
         [disabled]="!uploadPossible"
         (click)="onUploadClick()"
-    >{{ 'tag_editor.upload' | i18n }}</gtx-button>
+    >{{ 'tag_editor.upload' | gtxI18n }}</gtx-button>
 </div>

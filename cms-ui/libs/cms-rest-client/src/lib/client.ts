@@ -93,25 +93,27 @@ export class GCMSRestClient implements GCMSRootAPI {
         stringifyPagingSortOptions(queryParams);
         stringifyEmbedOptions(queryParams);
 
-        const data: GCMSRestClientInterceptorData = this.config.connection.absolute ? {
-            method: requestMethod,
-            protocol: typeof this.config.connection.ssl === 'boolean'
-                ? (this.config.connection.ssl ? 'https' : 'http')
-                : null,
-            host: this.config.connection.host,
-            port: this.config.connection.port,
-            path: buildPath,
-            params: queryParams,
-            headers: requestHeaders,
-        } : {
-            method: requestMethod,
-            protocol: null,
-            host: null,
-            port: null,
-            path: buildPath,
-            params: queryParams,
-            headers: requestHeaders,
-        };
+        const data: GCMSRestClientInterceptorData = this.config.connection.absolute
+            ? {
+                method: requestMethod,
+                protocol: typeof this.config.connection.ssl === 'boolean'
+                    ? (this.config.connection.ssl ? 'https' : 'http')
+                    : null,
+                host: this.config.connection.host,
+                port: this.config.connection.port,
+                path: buildPath,
+                params: queryParams,
+                headers: requestHeaders,
+            }
+            : {
+                method: requestMethod,
+                protocol: null,
+                host: null,
+                port: null,
+                path: buildPath,
+                params: queryParams,
+                headers: requestHeaders,
+            };
 
         const { method, protocol, host, port, path: finalPath, params, headers } = this.handleInterceptors(data);
 
@@ -421,7 +423,7 @@ export class GCMSRestClient implements GCMSRootAPI {
                 data.append('folderId', options.folderId.toString());
             }
             if (options.nodeId) {
-                data.append('nodeId', options.nodeId.toString())
+                data.append('nodeId', options.nodeId.toString());
             }
             return this.executeMappedFormRequest(POST, `/file/save/${id}`, data, options);
         },
@@ -722,6 +724,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         preview: (body) => this.executeMappedJsonRequest(POST, '/page/preview', body),
         render: (body, options) => this.executeMappedJsonRequest(POST, '/page/render', body, options),
+        renderById: (id, options) => this.executeMappedJsonRequest(GET, `/page/render/${id}`, null, options),
         renderTag: (id, keyword, body, options) => this.executeMappedJsonRequest(POST, `/page/renderTag/${id}/${keyword}`, body, options),
 
         suggestFileName: (body) => this.executeMappedJsonRequest(POST, '/page/suggest/filename', body),
@@ -740,6 +743,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         createTag: (id, body) => this.executeMappedJsonRequest(POST, `/page/newtag/${id}`, body),
         createMultipleTags: (id, body) => this.executeMappedJsonRequest(POST, `/page/newtags/${id}`, body),
         restoreTag: (id, keyword, options) => this.executeMappedJsonRequest(POST, `/page/restoreTag/${id}/${keyword}`, null, options),
+        localizeTag: (id, tagId) => this.executeMappedJsonRequest(POST, `/page/localize/${id}/tags/${tagId}`),
+        unlocalizeTag: (id, tagId, body) => this.executeMappedJsonRequest(POST, `/page/unlocalize/${id}/tags/${tagId}`, body),
 
         workflowDecline: (id) => this.executeMappedJsonRequest(POST, `/page/workflow/decline/${id}`),
         workflowRevoke: (id) => this.executeMappedJsonRequest(POST, `/page/workflow/revoke/${id}`),
@@ -914,5 +919,5 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (body) => this.executeMappedJsonRequest(POST, 'license/update', body),
         contentRepositories: (options) => this.executeMappedJsonRequest(GET, 'license/contentRepositories', null, options),
         push: (body) => this.executeMappedJsonRequest(POST, 'license/push', body),
-    }
+    };
 }

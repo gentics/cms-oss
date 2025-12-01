@@ -31,15 +31,15 @@ export async function parseFetchErrorFromAPI(request: GCMSRestClientRequestData,
 
 export async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequestData, res: Response): Promise<T> {
     if (res.ok) {
-        return res.json().then(json => {
+        return res.json().then((json) => {
             validateResponseObject(request, json, res.status);
             return json;
-        }).catch(err => {
+        }).catch((err) => {
             throw new Error(`Unexpected error while parsing response-data from "${request.method} ${request.url}"`, { cause: err });
         });
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    return await parseFetchErrorFromAPI(request, res);
 }
 
 export async function textFetchResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<string> {
@@ -47,7 +47,7 @@ export async function textFetchResponseHandler(request: GCMSRestClientRequestDat
         return res.text();
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    return await parseFetchErrorFromAPI(request, res);
 }
 
 export async function blobFetchResponseHandler(request: GCMSRestClientRequestData, res: Response): Promise<Blob> {
@@ -55,7 +55,7 @@ export async function blobFetchResponseHandler(request: GCMSRestClientRequestDat
         return res.blob();
     }
 
-    await parseFetchErrorFromAPI(request, res);
+    return await parseFetchErrorFromAPI(request, res);
 }
 
 export class GCMSFetchDriver implements GCMSClientDriver {
@@ -155,7 +155,6 @@ export class GCMSFetchDriver implements GCMSClientDriver {
      * Interceptor function which can be overriden.
      * Useful for modifications from/to the response data (Headers, Response-Code, etc) which would be
      * absent from the parsed JSON body.
-     *
      * @param request The request that has been sent.
      * @param response The response from the API without any prior handling.
      * @returns The response that should be processed/forwarded to the client.
@@ -176,7 +175,7 @@ export class GCMSFetchDriver implements GCMSClientDriver {
 
             Object.entries(request.params).forEach(([key, value]) => {
                 if (Array.isArray(value)) {
-                    value.forEach(v => q.append(key, v));
+                    value.forEach((v) => q.append(key, v));
                 } else {
                     q.append(key, value);
                 }
@@ -208,10 +207,10 @@ export class GCMSFetchDriver implements GCMSClientDriver {
             // }
 
             sentRequest = fetch(options)
-                .then(res => handler(res));
+                .then((res) => handler(res));
 
             return sentRequest;
-        }
+        };
 
         return {
             cancel: () => abortController.abort(new GCMSRestClientAbortError(request)),

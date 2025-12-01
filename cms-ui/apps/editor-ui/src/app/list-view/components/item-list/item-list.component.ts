@@ -10,7 +10,6 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { EditorPermissions, ItemsInfo, UIMode, getNoPermissions } from '@editor-ui/app/common/models';
 import {
     FolderItemType,
     FolderItemTypePlural,
@@ -24,6 +23,7 @@ import { isEqual } from 'lodash-es';
 import { PaginationInstance, PaginationService } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith } from 'rxjs/operators';
+import { EditorPermissions, ItemsInfo, UIMode, getNoPermissions } from '../../../common/models';
 import { areItemsLoading } from '../../../common/utils/are-items-loading';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { UploadProgressReporter } from '../../../core/providers/api';
@@ -305,8 +305,8 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     /**
      * Tracking function for ngFor for better performance.
      */
-    identify(index: number, item: Item): number {
-        return item?.id ?? index;
+    identify(index: number, item: Item): number | string {
+        return item?.globalId ?? item?.id ?? index;
     }
 
     /**

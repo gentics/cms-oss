@@ -9,9 +9,9 @@ import {
     TableLoadResponse,
     TableLoadStartEvent,
 } from '@admin-ui/common';
-import { BaseTableLoaderService, I18nService } from '@admin-ui/core/providers';
+import { BaseTableLoaderService } from '@admin-ui/core/providers';
 import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
 import {
     BaseComponent,
@@ -28,6 +28,7 @@ import {
     coerceInstance,
     toSelectionArray,
 } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-delete-modal.component';
@@ -36,9 +37,9 @@ export const DELETE_ACTION = 'delete';
 
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
-export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = never> extends BaseComponent implements  OnInit, OnChanges {
+export abstract class BaseEntityTableComponent<T, O = T & BusinessObject, A = never> extends BaseComponent implements OnInit, OnChanges {
 
     public readonly TableSelectAllType = TableSelectAllType;
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -81,10 +82,10 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public selectedChange = new EventEmitter<string[] | TableSelection>();
 
     @Output()
-    public select = new EventEmitter<TableRow<O>>();
+    public rowSelect = new EventEmitter<TableRow<O>>();
 
     @Output()
-    public deselect = new EventEmitter<TableRow<O>>();
+    public rowDeselect = new EventEmitter<TableRow<O>>();
 
     @Output()
     public createClick = new EventEmitter<void>();
@@ -138,7 +139,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public ngOnInit(): void {
         // Default the sort-by id to the first sortable one
         if (this.sortBy == null) {
-            const canSort = this.rawColumns.find(col => col.sortable);
+            const canSort = this.rawColumns.find((col) => col.sortable);
             if (canSort) {
                 this.sortBy = canSort.id;
             }
@@ -224,11 +225,11 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     }
 
     public forwardSelect(row: TableRow<O>): void {
-        this.select.emit(row);
+        this.rowSelect.emit(row);
     }
 
     public forwardDeselect(row: TableRow<O>): void {
-        this.deselect.emit(row);
+        this.rowDeselect.emit(row);
     }
 
     public handleRowClick(row: TableRow<O>): void {
@@ -236,7 +237,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     }
 
     protected translateColumns(columns: TableColumn<O>[]): TableColumn<O>[] {
-        return columns.map(column => ({
+        return columns.map((column) => ({
             ...column,
             label: this.i18n.instant(column.label),
         }));
@@ -271,7 +272,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
                 this.loadStart.emit({ options, additionalOptions });
 
                 return this.loadTablePage(options, additionalOptions).pipe(
-                    tap(res => {
+                    tap((res) => {
                         this.hasError = res.hasError ?? false;
                         this.loading = false;
                         this.changeDetector.markForCheck();
@@ -296,7 +297,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
                     }),
                 );
             }),
-        ).subscribe(page => {
+        ).subscribe((page) => {
             this.rows = page.rows || [];
             for (const row of this.rows) {
                 this.loadedRows[row.id] = row;
@@ -304,7 +305,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
             this.totalCount = page.totalCount || page.rows?.length || 0;
             this.changeDetector.markForCheck();
-        }, error => {
+        }, (error) => {
             console.error(error);
 
             this.rows = [];
@@ -323,7 +324,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
             this.createTableActionLoading(),
         ]).pipe(
             map(([_, actions]) => actions),
-        ).subscribe(actions => {
+        ).subscribe((actions) => {
             this.applyActions(actions);
             this.changeDetector.markForCheck();
         }));
@@ -341,7 +342,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         // Therefore use the sortValue in case it exists and use that one instead.
         let sortValue = this.sortBy;
         if (sortValue) {
-            const column = this.columns.find(col => col.id === sortValue);
+            const column = this.columns.find((col) => col.id === sortValue);
             if (column && column.sortValue) {
                 sortValue = column.sortValue;
             }
@@ -366,7 +367,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         additionalOptions?: A,
     ): Observable<TableLoadResponse<O>> {
         return this.loader.loadTablePage(options, additionalOptions).pipe(
-            switchMap(res => {
+            switchMap((res) => {
                 // Edge-case: When the resolved page has no items, buit there're items present,
                 // then we probably forgot somewhere to reset the pagination. So we do it here.
                 if (res.rows?.length === 0 && res.totalCount > 0 && options.page > 0) {
@@ -398,7 +399,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
         switch (event.actionId) {
             case DELETE_ACTION:
-                this.deleteEntities(this.getAffectedEntityIds(event)).then(didDelete => {
+                this.deleteEntities(this.getAffectedEntityIds(event)).then((didDelete) => {
                     if (didDelete && event.selection) {
                         this.selected = [];
                     }
@@ -412,8 +413,8 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
     public getEntitiesByIds(ids: string[] | TableSelection): O[] {
         return toSelectionArray(ids)
-            .map(id => this.loadedRows[id]?.item)
-            .filter(item => item != null);
+            .map((id) => this.loadedRows[id]?.item)
+            .filter((item) => item != null);
     }
 
     public getSelectedEntities(): O[] {
@@ -473,7 +474,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
             return false;
         }
 
-        const entityNames = entities.map(entity => entity[BO_DISPLAY_NAME]);
+        const entityNames = entities.map((entity) => entity[BO_DISPLAY_NAME]);
 
         // open modal to confirm deletion
         const dialog = await this.modalService.fromComponent(
@@ -499,7 +500,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         }
 
         // Remove the items from the selection, as they have been deleted
-        this.removeFromSelection(entities.map(singleEntity => singleEntity[BO_ID]));
+        this.removeFromSelection(entities.map((singleEntity) => singleEntity[BO_ID]));
 
         return true;
     }

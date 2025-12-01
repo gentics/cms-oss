@@ -1,15 +1,15 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
+import { I18nNotificationService, TranslatedNotificationOptions } from '@gentics/cms-components';
 import { MaintenanceModeResponse, ResponseCode } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { Subject, Subscription, throwError } from 'rxjs';
 import { take } from 'rxjs/operators';
+import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { ApiBase, ApiError, GcmsApi } from '../api';
 import { MockApiBase } from '../api/api-base.mock';
 import { Api } from '../api/api.service';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotification, TranslatedNotificationOptions } from '../i18n-notification/i18n-notification.service';
 import { MaintenanceModeService } from './maintenance-mode.service';
 
 describe('MaintenanceModeService', () => {
@@ -29,14 +29,14 @@ describe('MaintenanceModeService', () => {
             providers: [
                 { provide: Api, useValue: api },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: I18nNotification, useClass: MockNotificationService },
+                { provide: I18nNotificationService, useClass: MockNotificationService },
                 { provide: ErrorHandler, useClass: SpyErrorHandler },
                 MaintenanceModeService,
             ],
         });
 
         appState = TestBed.inject(ApplicationStateService) as any;
-        notification = TestBed.inject(I18nNotification) as any;
+        notification = TestBed.inject(I18nNotificationService) as any;
         service = TestBed.inject(MaintenanceModeService);
     });
 

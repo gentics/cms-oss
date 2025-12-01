@@ -1,99 +1,99 @@
-<div *ngIf="label" class="label">{{ label }}</div>
+@if (label) {
+  <div class="label">{{ label }}</div>
+}
 
-<gtx-sortable-list
-    *ngIf="form"
+@if (form) {
+  <gtx-sortable-list
     class="field-list"
     [handles]="true"
     [disabled]="form.controls.length < 2"
     (dragEnd)="sortFields($event)"
->
-    <gtx-sortable-item *ngFor="let ctl of form.controls; let index = index; let first = first; let last = last">
+    >
+    @for (ctlEntry of form.controls | gtxEntries; track ctlEntry.key; let index = $index; let first = $first; let last = $last) {
+      <gtx-sortable-item>
         <div class="field-wrapper">
-            <div class="movement-group">
-                <gtx-button
-                    class="move-top"
-                    icon
-                    type="secondary"
-                    size="small"
-                    [title]="'mesh.move_to_top' | i18n"
-                    [disabled]="first"
-                    (click)="moveControl(ctl, index, 0)"
-                >
-                    <icon>north</icon>
-                </gtx-button>
-
-                <gtx-button
-                    class="move-up"
-                    icon
-                    type="secondary"
-                    size="small"
-                    [title]="'mesh.move_up' | i18n"
-                    [disabled]="first"
-                    (click)="moveControl(ctl, index, index - 1)"
-                >
-                    <icon>keyboard_arrow_up</icon>
-                </gtx-button>
-
-                <gtx-drag-handle class="drag-handle"></gtx-drag-handle>
-
-                <gtx-button
-                    class="move-down"
-                    icon
-                    type="secondary"
-                    size="small"
-                    [title]="'mesh.move_down' | i18n"
-                    [disabled]="last"
-                    (click)="moveControl(ctl, index, index + 1)"
-                >
-                    <icon>keyboard_arrow_down</icon>
-                </gtx-button>
-
-                <gtx-button
-                    class="move-bottom"
-                    icon
-                    type="secondary"
-                    size="small"
-                    [title]="'mesh.move_to_bottom' | i18n"
-                    [disabled]="last"
-                    (click)="moveControl(ctl, index, form.controls.length - 1)"
-                >
-                    <icon>south</icon>
-                </gtx-button>
-            </div>
-
-            <gtx-mesh-schema-field-properties
-                class="field"
-                [formControl]="ctl"
-                [type]="type"
-                [ownName]="ownName"
-                [schemaNames]="schemaNames"
-                [microschemaNames]="microschemaNames"
-            ></gtx-mesh-schema-field-properties>
-
+          <div class="movement-group">
             <gtx-button
-                icon
-                type="alert"
-                size="small"
-                [title]="'mesh.schema_fields_remove' | i18n"
-                (click)="remove(index)"
-            >
-                <icon left>delete</icon>
+              class="move-top"
+              icon
+              type="secondary"
+              size="small"
+              [title]="'mesh.move_to_top' | gtxI18n"
+              [disabled]="first"
+              (click)="moveControl(ctlEntry.value, index, 0)"
+              >
+              <icon>north</icon>
             </gtx-button>
+            <gtx-button
+              class="move-up"
+              icon
+              type="secondary"
+              size="small"
+              [title]="'mesh.move_up' | gtxI18n"
+              [disabled]="first"
+              (click)="moveControl(ctlEntry.value, index, index - 1)"
+              >
+              <icon>keyboard_arrow_up</icon>
+            </gtx-button>
+            <gtx-drag-handle class="drag-handle"></gtx-drag-handle>
+            <gtx-button
+              class="move-down"
+              icon
+              type="secondary"
+              size="small"
+              [title]="'mesh.move_down' | gtxI18n"
+              [disabled]="last"
+              (click)="moveControl(ctlEntry.value, index, index + 1)"
+              >
+              <icon>keyboard_arrow_down</icon>
+            </gtx-button>
+            <gtx-button
+              class="move-bottom"
+              icon
+              type="secondary"
+              size="small"
+              [title]="'mesh.move_to_bottom' | gtxI18n"
+              [disabled]="last"
+              (click)="moveControl(ctlEntry.value, index, form.controls.length - 1)"
+              >
+              <icon>south</icon>
+            </gtx-button>
+          </div>
+          <gtx-mesh-schema-field-properties
+            class="field"
+            [formControl]="ctlEntry.value"
+            [type]="type"
+            [ownName]="ownName"
+            [schemaNames]="schemaNames"
+            [microschemaNames]="microschemaNames"
+          ></gtx-mesh-schema-field-properties>
+          <gtx-button
+            icon
+            type="alert"
+            size="small"
+            [title]="'mesh.schema_fields_remove' | gtxI18n"
+            (click)="remove(index)"
+            >
+            <icon left>delete</icon>
+          </gtx-button>
         </div>
-
-        <hr *ngIf="!last" class="separator" />
-    </gtx-sortable-item>
-</gtx-sortable-list>
+        @if (!last) {
+          <hr class="separator" />
+        }
+      </gtx-sortable-item>
+    }
+  </gtx-sortable-list>
+}
 
 <div class="add-button-wrapper">
-    <gtx-button
-        class="add-button"
-        size="small"
-        type="primary"
-        flat="true"
-        [title]="'mesh.schema_fieldsAdd' | i18n"
-        (click)="add()"
+  <gtx-button
+    class="add-button"
+    size="small"
+    type="primary"
+    flat="true"
+    [title]="'mesh.schema_fieldsAdd' | gtxI18n"
+    (click)="add()"
     >
-        <icon left>add</icon> {{ 'mesh.schema_fields_add' | i18n }}
-    </gtx-button>
+    <icon left>add</icon> {{ 'mesh.schema_fields_add' | gtxI18n }}
+  </gtx-button>
 </div>

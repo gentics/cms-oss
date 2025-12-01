@@ -2,13 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { TagEditorContext } from '@gentics/cms-integration-api-models';
-import { EditableTag, StringTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
-import { GenticsUICoreModule, InputComponent, TextareaComponent } from '@gentics/ui-core';
-import { cloneDeep } from 'lodash-es';
-import { componentTest, configureComponentTest } from '../../../../../testing';
+import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import {
     getExampleEditableTag,
     getExampleNaturalNumberValidationInfo,
@@ -16,7 +10,13 @@ import {
     getExampleValidationSuccess,
     getMockedTagEditorContext,
     getMultiValidationResult,
-} from '../../../../../testing/test-tag-editor-data.mock';
+} from '@editor-ui/testing/test-tag-editor-data.mock';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
+import { EditableTag, StringTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
+import { GenticsUICoreModule, InputComponent, TextareaComponent } from '@gentics/ui-core';
+import { cloneDeep } from 'lodash-es';
+import { ApplicationStateService } from '../../../../state';
+import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';

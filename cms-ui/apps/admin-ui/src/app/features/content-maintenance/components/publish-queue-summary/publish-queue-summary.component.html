@@ -1,35 +1,36 @@
-<table *ngIf="publishQueue" class="summary-table">
-    <ng-container *ngFor="let entry of PUBLISH_PLURAL_MAPPING | gtxEntries">
-        <tr class="type-header-row">
-            <th colspan="3">{{ ('common.' + entry.value + '_plural') | i18n }}</th>
+@if (publishQueue) {
+  <table class="summary-table">
+    @for (entry of PUBLISH_PLURAL_MAPPING | gtxEntries; track entry.key) {
+      <tr class="type-header-row">
+        <th colspan="3">{{ ('common.' + entry.value + '_plural') | gtxI18n }}</th>
+      </tr>
+      @for (property of PROPERTIES; track property) {
+        <tr class="property-row">
+          <td class="label-column">{{ ('shared.' + property) | gtxI18n }}</td>
+          <td class="value-column">{{ totals[entry.key][property] }}</td>
+          <td class="progress-column"></td>
         </tr>
-
-        <ng-container *ngFor="let property of PROPERTIES">
-            <tr class="property-row">
-                <td class="label-column">{{ ('shared.' + property) | i18n }}</td>
-                <td class="value-column">{{ totals[entry.key][property] }}</td>
-                <td class="progress-column"></td>
-            </tr>
-
-            <ng-container *ngFor="let node of nodes">
-                <ng-container *ngIf="publishQueue.nodes?.[node.id] as nodeData">
-                    <tr
-                        *ngIf="nodeData?.[entry.key]?.[property] > 0"
-                        class="node-row"
-                        [class.publish-disabled]="node.disablePublish"
-                        [style.--gtx-progress.%]="((100 / totals[entry.key][property]) * nodeData[entry.key][property])"
-                        [attr.data-value]="nodeData[entry.key][property]"
-                    >
-                        <td class="label-column">{{ node.name }}</td>
-                        <td class="value-column">{{ nodeData[entry.key][property] }}</td>
-                        <td class="progress-column">{{ (((100 / totals[entry.key][property]) * nodeData[entry.key][property]) / 100) | gtxI18nNumber: {
-                            style: 'percent',
-                            minimumIntegerDigits: 1,
-                            maximumFractionDigits: 2
-                        } }}</td>
-                    </tr>
-                </ng-container>
-            </ng-container>
-        </ng-container>
-    </ng-container>
-</table>
+        @for (node of nodes; track node.id) {
+          @if (publishQueue.nodes?.[node.id]; as nodeData) {
+            @if (nodeData?.[entry.key]?.[property] > 0) {
+              <tr
+                class="node-row"
+                [class.publish-disabled]="node.disablePublish"
+                [style.--gtx-progress.%]="((100 / totals[entry.key][property]) * nodeData[entry.key][property])"
+                [attr.data-value]="nodeData[entry.key][property]"
+                >
+                <td class="label-column">{{ node.name }}</td>
+                <td class="value-column">{{ nodeData[entry.key][property] }}</td>
+                <td class="progress-column">{{ (((100 / totals[entry.key][property]) * nodeData[entry.key][property]) / 100) | gtxI18nNumber: {
+                  style: 'percent',
+                  minimumIntegerDigits: 1,
+                  maximumFractionDigits: 2
+                } }}</td>
+              </tr>
+            }
+          }
+        }
+      }
+    }
+  </table>
+}

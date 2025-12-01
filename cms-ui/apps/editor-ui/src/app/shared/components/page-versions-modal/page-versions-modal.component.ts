@@ -1,32 +1,37 @@
 import {
-    AfterContentInit,
     AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    ElementRef,
     Input,
     OnDestroy,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Page, PageRequestOptions, PageVersion } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { Api } from '../../../core/providers/api/api.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { FolderActionsService } from '../../../state';
 import { PublishableStateUtil } from '../../util/entity-states';
+
+function sortVariantsByLanguageName(a: Page, b: Page): number {
+    return a.languageName < b.languageName ? -1 : a.languageName > b.languageName ? 1 : 0;
+}
+
+function sortVersionsByDate(a: PageVersion, b: PageVersion): number {
+    return b.timestamp - a.timestamp;
+}
 
 @Component({
     selector: 'page-versions-modal',
     templateUrl: './page-versions-modal.tpl.html',
     styleUrls: ['./page-versions-modal.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
-export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterContentInit, OnDestroy {
+export class PageVersionsModal implements IModalDialog, AfterViewInit, OnDestroy {
 
     @Input() page: Page;
     @Input() nodeId: number;
@@ -34,40 +39,29 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
     loading = false;
     backgroundActivity = false;
     languageVariants: Page[];
-    private selectedLanguage: string;
     selectedPageVariant: Page;
-    private compareBaseVersion: PageVersion;
-    private subscription = new Subscription();
-    private timeout: ReturnType<typeof setTimeout>;
-    private current: PageVersion;
-    private published: PageVersion;
-    private planned: boolean;
     plannedVersion: string;
     plannedOnlineDate: number;
     plannedOfflineDate: number;
 
+    private selectedLanguage: string;
+    private compareBaseVersion: PageVersion;
+    private subscription = new Subscription();
+    private timeout: ReturnType<typeof setTimeout>;
+    public current: PageVersion;
+    public published: PageVersion;
+    public planned: boolean;
+
     constructor(
         private api: Api,
-        private router: Router,
         private navigationService: NavigationService,
         private folderActions: FolderActionsService,
-        private notification: I18nNotification,
-        private elementRef: ElementRef,
+        private notification: I18nNotificationService,
         private changeDetector: ChangeDetectorRef,
     ) { }
 
     ngAfterViewInit(): void {
         this.fetchFromServer();
-    }
-
-    ngAfterContentInit(): void {
-        // Hacky fix for a bug with Internet Explorer's reflow.
-        // Please accept my sincere apologies.
-        this.timeout = setTimeout(() => {
-            const element = this.elementRef.nativeElement as HTMLElement;
-            element.style.maxWidth = '100px';
-            (element.offsetWidth || 1) && (element.style.maxWidth = '');
-        }, 100);
     }
 
     ngOnDestroy(): void {
@@ -88,7 +82,7 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
 
         return new Promise((resolve, reject) => {
             this.subscription = this.api.folders.getItem(this.page.id, 'page', options)
-                .subscribe(res => {
+                .subscribe((res) => {
                     this.loading = false;
                     this.changeDetector.markForCheck();
 
@@ -102,22 +96,20 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
                         return;
                     }
 
-                    const languageVariants: { [index: number]: Page } = res.page.languageVariants as any;
-                    const variants = Object.keys(languageVariants)
-                        .map(key => languageVariants[Number(key)])
-                        .sort(this.sortVariantsByLanguageName)
-                        .map(variant => {
-                            if (variant.currentVersion) {
-                                variant.currentVersion = variant.versions
-                                    .filter(v => v.timestamp === variant.currentVersion.timestamp)[0];
-                            }
+                    const variants = (Object.values(res.page.languageVariants) as Page[])
+                        .sort(sortVariantsByLanguageName)
+                        .map((variant) => {
+                            // if (variant.currentVersion) {
+                            //     variant.currentVersion = variant.versions
+                            //         .find((v) => v.timestamp === variant.currentVersion.timestamp);
+                            // }
 
-                            if (variant.publishedVersion) {
-                                variant.publishedVersion = variant.versions
-                                    .filter(v => v.timestamp === variant.publishedVersion.timestamp)[0];
-                            }
+                            // if (variant.publishedVersion) {
+                            //     variant.publishedVersion = variant.versions
+                            //         .find((v) => v.timestamp === variant.publishedVersion.timestamp);
+                            // }
 
-                            variant.versions.sort(this.sortVersionsByDate);
+                            variant.versions.sort(sortVersionsByDate);
 
                             return variant;
                         });
@@ -125,12 +117,12 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
                     this.languageVariants = variants;
 
                     if (this.selectedLanguage) {
-                        this.selectVariant(variants.filter(variant => variant.language === this.selectedLanguage)[0]);
+                        this.selectVariant(variants.filter((variant) => variant.language === this.selectedLanguage)[0]);
                         resolve(this.selectedPageVariant.currentVersion);
                         return;
                     }
 
-                    const languageVariant = variants.filter(variant => variant.language === res.page.language)[0];
+                    const languageVariant = variants.filter((variant) => variant.language === res.page.language)[0];
                     if (languageVariant) {
                         this.selectVariant(languageVariant);
                         resolve(this.selectedPageVariant.currentVersion);
@@ -139,17 +131,17 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
 
                     // Node has no languages configured
                     const page = res.page;
-                    page.versions.sort(this.sortVersionsByDate);
-                    if (page.currentVersion) {
-                        page.currentVersion = page.versions.filter(v => v.timestamp === page.currentVersion.timestamp)[0];
-                    }
-                    if (page.publishedVersion) {
-                        page.publishedVersion = page.versions.filter(v => v.timestamp === page.publishedVersion.timestamp)[0];
-                    }
+                    page.versions.sort(sortVersionsByDate);
+                    // if (page.currentVersion) {
+                    //     page.currentVersion = page.versions.find((v) => v.timestamp === page.currentVersion.timestamp);
+                    // }
+                    // if (page.publishedVersion) {
+                    //     page.publishedVersion = page.versions.find((v) => v.timestamp === page.publishedVersion.timestamp);
+                    // }
                     this.selectVariant(res.page);
 
                     resolve(this.selectedPageVariant.currentVersion);
-                }, error => {
+                }, (error) => {
                     this.loading = false;
                     this.changeDetector.markForCheck();
 
@@ -190,7 +182,7 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
         this.backgroundActivity = true;
         this.folderActions.restorePageVersion(this.selectedPageVariant.id, version, false)
             .then(() => this.fetchFromServer())
-            .then(currentVersion => {
+            .then((currentVersion) => {
                 this.backgroundActivity = false;
                 if (currentVersion.number === versionBeforeRestore) {
                     this.notification.show({
@@ -207,10 +199,10 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
                 this.navigationService
                     .detailOrModal(this.nodeId, 'page', this.page.id, EditMode.PREVIEW)
                     .navigate()
-                    .then(navigated => {
+                    .then((navigated) => {
                         this.closeFn();
                     });
-            }, error => {
+            }, (error) => {
                 this.backgroundActivity = false;
                 this.notification.show({
                     type: 'alert',
@@ -242,14 +234,6 @@ export class PageVersionsModal implements IModalDialog, AfterViewInit, AfterCont
             .detailOrModal(nodeId, 'page', pageId, EditMode.COMPARE_VERSION_CONTENTS, { version, oldVersion })
             .navigate();
         this.closeFn();
-    }
-
-    private sortVariantsByLanguageName(a: Page, b: Page): number {
-        return a.languageName < b.languageName ? -1 : a.languageName > b.languageName ? 1 : 0;
-    }
-
-    private sortVersionsByDate(a: PageVersion, b: PageVersion): number {
-        return b.timestamp - a.timestamp;
     }
 
     closeFn(): void { }

@@ -1,55 +1,59 @@
 <gtx-progress-bar [active]="loading$ | async"></gtx-progress-bar>
 
 <div class="modal-title">
-    <h5>{{ 'modal.publish_queue_title' | i18n }}</h5>
+  <h5>{{ 'modal.publish_queue_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <ng-container *ngIf="(queue$ | async)?.length as requestsAmount">
-        <p *ngIf="requestsAmount === 1" class="modal-title-sub">{{ 'modal.publish_queue_title_sub_singular' | i18n }}:</p>
-        <p *ngIf="requestsAmount > 1" class="modal-title-sub">{{ 'modal.publish_queue_title_sub_plural' | i18n:{ amount: requestsAmount } }}:</p>
-    </ng-container>
+  @if ((queue$ | async)?.length; as requestsAmount) {
+    @if (requestsAmount === 1) {
+      <p class="modal-title-sub">{{ 'modal.publish_queue_title_sub_singular' | gtxI18n }}:</p>
+    }
+    @if (requestsAmount > 1) {
+      <p class="modal-title-sub">{{ 'modal.publish_queue_title_sub_plural' | gtxI18n:{ amount: requestsAmount } }}:</p>
+    }
+  }
 
-    <ng-container *ngIf="!(loading$ | async)">
-        <div *ngIf="(queue$ | async)?.length > 0; else emptyMessage" class="queue-list">
-            <publish-queue-list
-                [pages]="queue$ | async"
-                (pageClick)="pageClicked($event)"
-                (selectionChange)="selectedPages = $event"
-            ></publish-queue-list>
-        </div>
-
-        <ng-template #emptyMessage>
-            <div class="empty-message">
-                {{ 'modal.publish_queue_empty' | i18n }}
-            </div>
-        </ng-template>
-    </ng-container>
+  @if (!(loading$ | async)) {
+    @if ((queue$ | async)?.length > 0) {
+      <div class="queue-list">
+        <publish-queue-list
+          [pages]="queue$ | async"
+          (pageClick)="pageClicked($event)"
+          (selectionChange)="selectedPages = $event"
+        ></publish-queue-list>
+      </div>
+    } @else {
+      <div class="empty-message">
+        {{ 'modal.publish_queue_empty' | gtxI18n }}
+      </div>
+    }
+  }
 
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        flat
-        type="secondary"
-        data-action="cancel"
-        (click)="cancelFn()"
-    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+  <gtx-button
+    flat
+    type="secondary"
+    data-action="cancel"
+    (click)="cancelFn()"
+  >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 
-    <gtx-button
-        data-action="assign"
-        [disabled]="selectedPages.length === 0"
-        (click)="assign()"
+  <gtx-button
+    data-action="assign"
+    [disabled]="selectedPages.length === 0"
+    (click)="assign()"
     >
-        <icon left>assignment_ind</icon> {{ 'modal.assign_to_button' | i18n }}
-    </gtx-button>
+    <icon left>assignment_ind</icon> {{ 'modal.assign_to_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="success"
-        data-action="confirm"
-        [disabled]="!approveBtnIsVisible()"
-        (click)="approve()"
+  <gtx-button
+    type="success"
+    data-action="confirm"
+    [disabled]="!approveBtnIsVisible()"
+    (click)="approve()"
     >
-        <icon left>playlist_add_check</icon> {{ 'modal.publish_queue_btn_approve' | i18n }}
-    </gtx-button>
+    <icon left>playlist_add_check</icon> {{ 'modal.publish_queue_btn_approve' | gtxI18n }}
+  </gtx-button>
 </div>

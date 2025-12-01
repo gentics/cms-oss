@@ -1,4 +1,4 @@
-import {IndexByKey} from '@gentics/cms-models';
+import { IndexByKey } from '@gentics/cms-models';
 
 /**
  * Describes the breadcrumb for a route part.

@@ -1,9 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, ViewChild } from '@angular/core';
-import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
-import { FolderActionsService } from '@editor-ui/app/state';
 import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -19,8 +14,13 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, merge, of } from 'rxjs';
 import { catchError, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
+import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
+import { RepositoryBrowserClient } from '../../../../shared/providers';
+import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper/selected-item-helper';
+import { FolderActionsService } from '../../../../state';
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
 
 /**
@@ -105,7 +105,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
                          * Also, null is emitted in case a referenced folder got deleted and the tag property data was refetched.
                          * (Since the folderId in tagProperty gets removed)
                          */
-                        return this.i18n.translate('editor.folder_no_selection');
+                        return this.i18n.instant('editor.folder_no_selection');
                     }
                 }),
             ),
@@ -121,7 +121,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
                         /** additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
                          * This could trigger an emission before this.tagProperty is set in updateTagProperty
                          */
-                        return this.i18n.translate('editor.folder_not_found', { id: this.tagProperty.folderId });
+                        return this.i18n.instant('editor.folder_not_found', { id: this.tagProperty.folderId });
                     } else {
                         return '';
                     }

@@ -9,8 +9,5 @@
   "devDependencies": {
     "@gentics/cms-models": "^6.3.9",
     "@gentics/mesh-models": "^2.1.0 || ^3.0.0"
-  },
-  "publishConfig": {
-    "registry": "https://repo.gentics.com/repository/npm-products/"
   }
 }

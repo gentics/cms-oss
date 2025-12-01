@@ -1,35 +1,33 @@
 <div class="modal-title">
-    <h5>{{ 'modal.select_content_package_title' | i18n }}</h5>
+  <h5>{{ 'modal.select_content_package_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-content-package-list
-        [selectable]="true"
-        [multiple]="false"
-        [selection]="activePackage"
-        (selectionChange)="updateActivePackage($event)"
-    ></gtx-content-package-list>
+  <gtx-content-package-list
+    [selectable]="true"
+    [multiple]="false"
+    [selection]="activePackage"
+    (selectionChange)="updateActivePackage($event)"
+  ></gtx-content-package-list>
 </div>
 
 <div class="modal-footer">
-    <ng-container *ngIf="!activePackage && !hadPackage; else confirmButtons">
-        <gtx-button
-            type="secondary"
-            flat
-            (click)="closeFn()"
-        >{{ 'modal.close' | i18n }}</gtx-button>
-    </ng-container>
+  @if (!activePackage && !hadPackage) {
+    <gtx-button
+      type="secondary"
+      flat
+      (click)="closeFn()"
+    >{{ 'modal.close' | gtxI18n }}</gtx-button>
+  } @else {
+    <gtx-button
+      type="secondary"
+      flat
+      (click)="closeFn()"
+    >{{ 'modal.cancel' | gtxI18n }}</gtx-button>
+    <gtx-button
+      type="primary"
+      (click)="updatePackageInState()"
+    >{{ (activePackage ? 'modal.confirm_content_package_select' : 'modal.leave_content_staging_mode') | gtxI18n }}</gtx-button>
+  }
 
-    <ng-template #confirmButtons>
-        <gtx-button
-            type="secondary"
-            flat
-            (click)="closeFn()"
-        >{{ 'modal.cancel' | i18n }}</gtx-button>
-
-        <gtx-button
-            type="primary"
-            (click)="updatePackageInState()"
-        >{{ (activePackage ? 'modal.confirm_content_package_select' : 'modal.leave_content_staging_mode') | i18n }}</gtx-button>
-    </ng-template>
 </div>

@@ -1,55 +1,116 @@
 {{ 'JUST SOME OUTPUT FOR DEBUGGING PURPOSES' }}
 <gtx-contents-list-item [class.selected]="isSelected">
 
-    <div class="checkbox-wrapper" *ngIf="canBeSelected">
-        <gtx-checkbox
-            [checked]="isSelected"
-            (change)="toggleSelect.emit(!isSelected)"></gtx-checkbox>
+  @if (canBeSelected) {
+    <div class="checkbox-wrapper">
+      <gtx-checkbox
+        [checked]="isSelected"
+      (change)="toggleSelect.emit(!isSelected)"></gtx-checkbox>
     </div>
-    <div class="item-icon" *ngIf="!canBeSelected">
-        <icon>{{ item.type | gtxTypeIcon }}</icon>
+  }
+  @if (!canBeSelected) {
+    <div class="item-icon">
+      <icon>{{ item.type | gtxTypeIcon }}</icon>
     </div>
+  }
 
-    <div #itemPrimary class="item-primary" [class.selected]="isSelected">
-        <ng-template #itemName>
-            <span *ngIf="item.inherited"
-                class="inherited-icon"
-                title="Inherited from: {{ item.inheritedFrom }}">
-                <icon>input</icon>
-            </span>
-            <div *ngIf="item | itemIsLocalized"
-                class="localized-icon"
-                [title]="'editor.localized_tooltip' | i18n:{ master: item.masterNode }">
-                <icon>file_copy</icon>
-            </div>
+  <div #itemPrimary class="item-primary" [class.selected]="isSelected">
+    <ng-template #itemName>
+      @if (item.inherited) {
+        <span
+          class="inherited-icon"
+          title="Inherited from: {{ item.inheritedFrom }}">
+          <icon>input</icon>
+        </span>
+      }
+      @if (item | itemIsLocalized) {
+        <div
+          class="localized-icon"
+          [title]="'editor.localized_tooltip' | gtxI18n:{ master: item.masterNode }">
+          <icon>file_copy</icon>
+        </div>
+      }
 
-            <div class="item-name">
-                <a (click)="itemClick.emit(item)">
-                    <div *ngIf="displayNodeName" class="node-name">{{ item | nodeNameOfItem }}</div>
-                    {{ item.name }}
-                </a>
-                <item-status-label *ngIf="item.type === 'page'" [item]="item"></item-status-label>
-                <file-status-label [item]="item"></file-status-label>
-                <start-page-icon *ngIf="startPageId && item.type === 'page' && item.id === startPageId"></start-page-icon>
-            </div>
+      <div class="item-name">
+        <a (click)="itemClick.emit(item)">
+          @if (displayNodeName) {
+            <div class="node-name">{{ item | nodeNameOfItem }}</div>
+          }
+          {{ item.name }}
+        </a>
+        @if (item.type === 'page') {
+          <item-status-label [item]="item"></item-status-label>
+        }
+        <file-status-label [item]="item"></file-status-label>
+        @if (startPageId && item.type === 'page' && item.id === startPageId) {
+          <start-page-icon></start-page-icon>
+        }
+      </div>
 
-            <div class="item-breadcrumbs" *ngIf="searching">
-                <item-breadcrumbs [item]="item" [linkPaths]="false"></item-breadcrumbs>
-            </div>
+      @if (searching) {
+        <div class="item-breadcrumbs">
+          <item-breadcrumbs [item]="item" [linkPaths]="false"></item-breadcrumbs>
+        </div>
+      }
 
-            <div class="item-path" *ngIf="displayFields?.showPath && item.type !== 'folder'"
-                [title]="item | itemPath:(item | nodeNameOfItem)"
-                [innerHTML]="item | itemPath:(item | nodeNameOfItem) | truncatePath:60">
-            </div>
-        </ng-template>
+      @if (displayFields?.showPath && item.type !== 'folder') {
+        <div class="item-path"
+          [title]="item | itemPath:(item | nodeNameOfItem)"
+          [innerHTML]="item | itemPath:(item | nodeNameOfItem) | truncatePath:60">
+        </div>
+      }
+    </ng-template>
 
-        <image-thumbnail-tooltip *ngIf="item.type === 'image'; else itemName" [image]="item" [nodeId]="nodeId" [parent]="itemPrimary">
-            <ng-container *ngTemplateOutlet="itemName"></ng-container>
-        </image-thumbnail-tooltip>
-    </div>
-    <div class="display-fields">
-        <list-item-details [fields]="displayFields?.selection" [item]="item">
-        </list-item-details>
-    </div>
+    @if (item.type === 'image') {
+      <image-thumbnail-tooltip [image]="item" [nodeId]="nodeId" [parent]="itemPrimary">
+        <ng-container *ngTemplateOutlet="itemName"></ng-container>
+      </image-thumbnail-tooltip>
+    } @else {
+      @if (item.inherited) {
+        <span
+          class="inherited-icon"
+          title="Inherited from: {{ item.inheritedFrom }}">
+          <icon>input</icon>
+        </span>
+      }
+      @if (item | itemIsLocalized) {
+        <div
+          class="localized-icon"
+          [title]="'editor.localized_tooltip' | gtxI18n:{ master: item.masterNode }">
+          <icon>file_copy</icon>
+        </div>
+      }
+      <div class="item-name">
+        <a (click)="itemClick.emit(item)">
+          @if (displayNodeName) {
+            <div class="node-name">{{ item | nodeNameOfItem }}</div>
+          }
+          {{ item.name }}
+        </a>
+        @if (item.type === 'page') {
+          <item-status-label [item]="item"></item-status-label>
+        }
+        <file-status-label [item]="item"></file-status-label>
+        @if (startPageId && item.type === 'page' && item.id === startPageId) {
+          <start-page-icon></start-page-icon>
+        }
+      </div>
+      @if (searching) {
+        <div class="item-breadcrumbs">
+          <item-breadcrumbs [item]="item" [linkPaths]="false"></item-breadcrumbs>
+        </div>
+      }
+      @if (displayFields?.showPath && item.type !== 'folder') {
+        <div class="item-path"
+          [title]="item | itemPath:(item | nodeNameOfItem)"
+          [innerHTML]="item | itemPath:(item | nodeNameOfItem) | truncatePath:60">
+        </div>
+      }
+    }
+  </div>
+  <div class="display-fields">
+    <list-item-details [fields]="displayFields?.selection" [item]="item">
+    </list-item-details>
+  </div>
 
 </gtx-contents-list-item>

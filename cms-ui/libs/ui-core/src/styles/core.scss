@@ -1,11 +1,9 @@
 @import './base-import';
 
-$roboto-font-path: '../fonts' !default;
 @import 'materialize';
 @import 'icons';
+@import 'fonts';
 @import 'grid';
-@import 'roboto-fontface-woff/css/roboto/sass/roboto-fontface';
-
 @import 'modals';
 @import 'rome';
 

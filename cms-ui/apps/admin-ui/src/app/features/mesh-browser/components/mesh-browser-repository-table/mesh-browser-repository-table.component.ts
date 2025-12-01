@@ -1,7 +1,6 @@
 import { AdminUIEntityDetailRoutes, ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
 import {
     ContentRepositoryHandlerService,
-    I18nService,
     PermissionsService,
 } from '@admin-ui/core';
 import {
@@ -14,13 +13,14 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, ContentRepository, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 
 @Component({
     selector: 'gtx-mesh-browser-repository-table',
     templateUrl: './mesh-browser-repository-table.component.html',
     styleUrls: ['./mesh-browser-repository-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ContentRepositoryTableComponent
     extends BaseEntityTableComponent<ContentRepository, ContentRepositoryBO, MeshContentRepositoryTableLoaderOptions> {
@@ -31,17 +31,18 @@ export class ContentRepositoryTableComponent
     protected rawColumns: TableColumn<ContentRepositoryBO>[] = [
         {
             id: 'name',
-            label: 'contentRepository.name',
+            label: 'content_repository.name',
             fieldPath: 'name',
             sortable: true,
         },
         {
             id: 'url',
-            label: 'contentRepository.url',
+            label: 'content_repository.url',
             fieldPath: 'url',
             sortable: true,
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'contentRepository';
 
     constructor(

@@ -9,17 +9,6 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
-import { EditorState, ITEM_PROPERTIES_TAB, SaveBehaviour } from '@editor-ui/app/common/models';
-import { areItemsSaving } from '@editor-ui/app/common/utils/are-items-saving';
-import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { PageVersionsModal } from '@editor-ui/app/shared/components';
-import { BreadcrumbsService } from '@editor-ui/app/shared/providers';
-import { PublishableStateUtil } from '@editor-ui/app/shared/util/entity-states';
-import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '@editor-ui/app/state';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CmsFormType,
@@ -32,6 +21,7 @@ import {
     ItemNormalized,
     ItemPermissions,
     Language,
+    LocalizationType,
     Node,
     Normalized,
     Page,
@@ -40,6 +30,17 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ChangesOf, IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
+import { EditorState, ITEM_PROPERTIES_TAB, SaveBehaviour } from '../../../common/models';
+import { areItemsSaving } from '../../../common/utils/are-items-saving';
+import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { PageVersionsModal } from '../../../shared/components';
+import { BreadcrumbsService } from '../../../shared/providers';
+import { PublishableStateUtil } from '../../../shared/util/entity-states';
+import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '../../../state';
 import { AlohaIntegrationService } from '../../providers';
 
 /** Used to define which buttons are visible at a certain moment. */
@@ -48,6 +49,7 @@ interface AvailableButtons {
     compareSources?: boolean;
     editItem?: boolean;
     edit?: boolean;
+    editInheritance?: boolean;
     editProperties?: boolean;
     lockedEdit?: boolean;
     previewPage?: boolean;
@@ -142,42 +144,42 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.uploadInProgress$ = this.appState.select(state => state.editor).pipe(
-            map(editorState => editorState.uploadInProgress),
+        this.uploadInProgress$ = this.appState.select((state) => state.editor).pipe(
+            map((editorState) => editorState.uploadInProgress),
             publishReplay(1),
             refCount(),
         );
 
         this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.editor.focusMode),
-            this.appState.select(state => state.editor.editMode),
-            this.appState.select(state => state.editor.editorIsOpen),
-            this.appState.select(state => state.editor.editorIsFocused),
+            this.appState.select((state) => state.editor.focusMode),
+            this.appState.select((state) => state.editor.editMode),
+            this.appState.select((state) => state.editor.editorIsOpen),
+            this.appState.select((state) => state.editor.editorIsFocused),
         ]).subscribe(([active, editMode, open, focused]) => {
             this.focusMode = active && editMode === EditMode.EDIT && open && focused;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.ui.contentFrameBreadcrumbsExpanded).subscribe(expanded => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.contentFrameBreadcrumbsExpanded).subscribe((expanded) => {
             this.multilineExpanded = expanded;
             this.changeDetector.markForCheck();
         }));
 
         // TODO: this is wrong - the contentFrame may be open when another node is navigated to,
         // so the list of languages would be wrong. Need another way to get the list for the current editor node.
-        this.subscriptions.push(this.appState.select(state => state.folder.activeNodeLanguages.list).pipe(
-            map(languageIds => languageIds.map(id => this.entityResolver.getLanguage(id))),
-        ).subscribe(languages => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeNodeLanguages.list).pipe(
+            map((languageIds) => languageIds.map((id) => this.entityResolver.getLanguage(id))),
+        ).subscribe((languages) => {
             this.activeNodeLanguages = languages;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(areItemsSaving).subscribe(isSaving => {
+        this.subscriptions.push(this.appState.select(areItemsSaving).subscribe((isSaving) => {
             this.isSaving = isSaving;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
+        this.subscriptions.push(this.aloha.ready$.subscribe((ready) => {
             this.alohaReady = ready;
             this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
@@ -201,7 +203,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     logoClick(): void {
@@ -229,16 +231,16 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             return;
         }
         this.subscriptions.push(this.client.folder.breadcrumbs(folderId, { nodeId }).pipe(
-            map(response => response.folders.map((folder) => ({
+            map((response) => response.folders.map((folder) => ({
                 text: folder.name,
-                route: ['/editor', { outlets: { list: ['node', nodeId, 'folder', folder.id] }} ],
+                route: ['/editor', { outlets: { list: ['node', nodeId, 'folder', folder.id] } }],
             } as IBreadcrumbLink | IBreadcrumbRouterLink))),
             map((breadcrumbs) => !this.multilineExpanded
                 ? this.breadcrumbsService.addTooltip(breadcrumbs)
                 : breadcrumbs,
             ),
-        ).subscribe(breadcrumbs => {
-            this.breadcrumbs = breadcrumbs ;
+        ).subscribe((breadcrumbs) => {
+            this.breadcrumbs = breadcrumbs;
             this.changeDetector.markForCheck();
         }));
     }
@@ -251,8 +253,8 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
         const page = this.currentItem as Page;
         this.subscriptions.push(this.permissions.forItem(page.id, 'page', this.currentNode.id).pipe(
-            map(permissions => permissions.publish && PublishableStateUtil.stateInQueue(page)),
-        ).subscribe(inQueue => {
+            map((permissions) => permissions.publish && PublishableStateUtil.stateInQueue(page)),
+        ).subscribe((inQueue) => {
             this.inQueue = inQueue;
             this.changeDetector.markForCheck();
         }));
@@ -308,7 +310,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     showPageVersionsModal(): void {
         const options = { page: this.currentItem as Page, nodeId: this.currentNode.id };
         this.modalService.fromComponent(PageVersionsModal, null, options)
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 
     showTimeManagement(): void {
@@ -336,7 +338,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         switch (this.currentItem.type) {
             case 'page':
                 this.decisionModals.showInheritedDialog(this.currentItem, this.currentNode.id)
-                    .then(({item, nodeId}) => this.navigationService.detailOrModal(nodeId, 'page', item.id, EditMode.EDIT).navigate());
+                    .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, 'page', item.id, EditMode.EDIT).navigate());
                 break;
             case 'form':
                 this.editForm();
@@ -351,7 +353,13 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     previewPage(): void {
         this.navigationService
-            .detailOrModal(this.currentNode && this.currentNode.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
+            .detailOrModal(this.currentNode?.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
+            .navigate();
+    }
+
+    editInheritance(): void {
+        this.navigationService
+            .detailOrModal(this.currentNode?.id, this.currentItem.type, this.currentItem.id, EditMode.EDIT_INHERITANCE)
             .navigate();
     }
 
@@ -377,7 +385,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         switch (this.currentItem.type) {
             case 'page':
                 this.decisionModals.selectPagesToTakeOffline([this.currentItem as Page<Normalized>])
-                    .then(result => this.folderActions.takePagesOffline(result));
+                    .then((result) => this.folderActions.takePagesOffline(result));
                 break;
 
             case 'form':
@@ -406,8 +414,16 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         return {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
             compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
-            editItem: editMode === EditMode.EDIT_PROPERTIES && (isPage || isForm) && userCan.edit && !this.locked,
+            editItem: (editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE)
+              && (isPage || isForm)
+              && userCan.edit
+              && !this.locked,
             edit: (isPage || isForm) && previewing && userCan.edit && !this.locked,
+            editInheritance: isPage
+              && userCan.edit
+              && editMode !== EditMode.EDIT_INHERITANCE
+              && !isInherited
+              && (this.currentItem as Page).localizationType === LocalizationType.PARTIAL,
             editProperties: editMode !== EditMode.EDIT_PROPERTIES && userCan.view && !this.locked,
             lockedEdit: (isPage || isForm) && this.locked && userCan.edit && !this.showSave,
             previewPage: (isPage || isForm) && !previewing && userCan.view,

@@ -1,19 +1,17 @@
 import { ROUTE_PERMISSIONS_KEY, RouteData } from '@admin-ui/common/models/routing';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { first, take, tap } from 'rxjs/operators';
-import { I18nNotificationService } from '../../providers/i18n-notification/i18n-notification.service';
 import { PermissionsService, RequiredTypePermissions } from '../../providers/permissions';
 
 /**
  * A guard to prevent users from navigating to routes, for which they do not have permissions.
- *
  * @note Currently `PermissionsGuard` supports type permissions only, but if necessary, we can extend it to
  * support resolving instance permissions as well. This would require a resolver that is configured with
  * the permissions that need to be checked and that can extract the `instanceId` and `nodeId` from the route.
- *
  * @example
    ```
    // Route Config:
@@ -56,14 +54,14 @@ export class PermissionsGuard {
         const reqPermissions = this.getRequiredPermissions(routeSnapshot);
 
         return this.permissionsService.checkPermissions(reqPermissions).pipe(
-            tap(permissionsGranted => {
+            tap((permissionsGranted) => {
                 if (permissionsGranted) {
                     return;
                 }
                 // if user has not required permissions, cancel routing and display notification
-                this.i18nNotification.show({message: 'common.no_permissions_for_module', type: 'alert'});
+                this.i18nNotification.show({ message: 'common.no_permissions_for_module', type: 'alert' });
                 // if user has no permissions for this application's modules, redirect to unauthorized page
-                this.userCanAccessDashboard().pipe(first()).subscribe(userCanAccessDashboard => {
+                this.userCanAccessDashboard().pipe(first()).subscribe((userCanAccessDashboard) => {
                     if (!userCanAccessDashboard) {
                         this.router.navigateByUrl('unauthorized');
                     }

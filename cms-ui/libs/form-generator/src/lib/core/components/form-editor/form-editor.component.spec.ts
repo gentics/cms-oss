@@ -1,10 +1,11 @@
-import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 import { IconDirective } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
-import { FormEditorConfigurationService, FormEditorMappingService, FormEditorService } from '../../providers';
 import { FormEditorConfiguration } from '../../../common';
+import { FormEditorConfigurationService, FormEditorMappingService, FormEditorService } from '../../providers';
 import { FormEditorElementComponent, FormEditorElementListComponent } from '../form-editor-element/form-editor-element-and-list.component';
 import { FormEditorMenuComponent } from '../form-editor-menu/form-editor-menu.component';
 import { FormElementDropZoneComponent } from '../form-element-drop-zone/form-element-drop-zone.component';
@@ -32,7 +33,7 @@ describe('FormEditorComponent', () => {
          * replace with https://jasmine.github.io/api/3.6/jasmine.html#.createSpyObj after updating
          */
         const formEditorConfigurationServiceMock = {
-            get configuration$(): Observable<FormEditorConfiguration>  {
+            get configuration$(): Observable<FormEditorConfiguration> {
                 return undefined;
             },
         } as any; // SpyObj<T> seems not to be exported
@@ -75,13 +76,3 @@ describe('FormEditorComponent', () => {
         expect(component).toBeTruthy();
     });
 });
-
-@Pipe({
-    name: 'i18n',
-    standalone: false,
-})
-class MockI18nPipe implements PipeTransform {
-    transform(value: string): string {
-        return value;
-    }
-}

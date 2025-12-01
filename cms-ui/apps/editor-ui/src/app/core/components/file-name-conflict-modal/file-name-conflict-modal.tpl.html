@@ -1,45 +1,57 @@
 <div class="modal-title">
-    <h5>{{ 'modal.replace_files_title' | i18n }}</h5>
-    <p class="lead">
-        {{ 'modal.replace_files_body' | i18n }}:
-    </p>
-    <div class="list-header">
-        <gtx-button class="replace" type="warning" size="small" flat (click)="selectAll()">{{ 'modal.replace_all_label' | i18n }}</gtx-button>
-        <gtx-button class="create" size="small" flat (click)="deselectAll()">{{ 'modal.create_all_label' | i18n }}</gtx-button>
-    </div>
+  <h5>{{ 'modal.replace_files_title' | gtxI18n }}</h5>
+  <p class="lead">
+    {{ 'modal.replace_files_body' | gtxI18n }}:
+  </p>
+  <div class="list-header">
+    <gtx-button class="replace" type="warning" size="small" flat (click)="selectAll()">{{ 'modal.replace_all_label' | gtxI18n }}</gtx-button>
+    <gtx-button class="create" size="small" flat (click)="deselectAll()">{{ 'modal.create_all_label' | gtxI18n }}</gtx-button>
+  </div>
 </div>
 <div class="modal-content">
-    <div class="list">
-        <div *ngFor="let item of conflictingFiles">
-            <gtx-contents-list-item [ngClass]="item.type || ''">
-                <div class="item-icon">
-                    <icon [attr.translate]="'no'">{{ item.type | gtxTypeIcon }}</icon>
-                </div>
-                <div class="item-primary">
-                    <span class="item-name">{{ item.name }}</span>
-                </div>
-                <gtx-radio-button
-                    [value]="true"
-                    [label]="'modal.replace_label' | i18n"
-                    [(ngModel)]="selected[getKey(item)]"
-                ></gtx-radio-button>
-                <gtx-radio-button
-                    [value]="false"
-                    [label]="'modal.create_label' | i18n"
-                    [(ngModel)]="selected[getKey(item)]"
-                ></gtx-radio-button>
-            </gtx-contents-list-item>
-        </div>
-    </div>
+  <div class="list">
+    @for (item of conflictingFiles; track getKey(item)) {
+      <div>
+        <gtx-contents-list-item [ngClass]="item.type || ''">
+          <div class="item-icon">
+            <icon [attr.translate]="'no'">{{ item.type | gtxTypeIcon }}</icon>
+          </div>
+          <div class="item-primary">
+            <span class="item-name">{{ item.name }}</span>
+          </div>
+          <gtx-radio-button
+            [value]="true"
+            [label]="'modal.replace_label' | gtxI18n"
+            [(ngModel)]="selected[getKey(item)]"
+          ></gtx-radio-button>
+          <gtx-radio-button
+            [value]="false"
+            [label]="'modal.create_label' | gtxI18n"
+            [(ngModel)]="selected[getKey(item)]"
+          ></gtx-radio-button>
+        </gtx-contents-list-item>
+      </div>
+    }
+  </div>
 </div>
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button [type]="getConfirmButtonType()" (click)="confirm()" class="confirm-button">
-        <span *ngIf="0 < totalFileCount - selectedCount()">
-            {{ 'modal.create_files_button' | i18n:{ count: totalFileCount - selectedCount(), _type: 'file' } }}
-        </span>
-        <span *ngIf="0 < selectedCount()">
-            {{ 'modal.replace_files_button' | i18n:{ count: selectedCount(), _type: 'file' } }}
-        </span>
-    </gtx-button>
+  <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+  <gtx-button [type]="getConfirmButtonType()" (click)="confirm()" class="confirm-button">
+    @if (0 < totalFileCount - selectedCount()) {
+      <span>
+        {{ 'modal.create_files_button' | gtxI18n:{
+            count: totalFileCount - selectedCount(),
+            type: ('common.type_file' + (totalFileCount - selectedCount() !== 1 ? 's' : '')) |gtxI18n
+        } }}
+      </span>
+    }
+    @if (0 < selectedCount()) {
+      <span>
+        {{ 'modal.replace_files_button' | gtxI18n:{
+            count: selectedCount(),
+            type: ('common.type_file' + (selectedCount() !== 1 ? 's' : '')) |gtxI18n
+        } }}
+      </span>
+    }
+  </gtx-button>
 </div>

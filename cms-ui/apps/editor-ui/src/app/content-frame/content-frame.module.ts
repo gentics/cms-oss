@@ -39,6 +39,7 @@ import {
     FilePreviewComponent,
     FormReportsListComponent,
     ImagePropertiesModalComponent,
+    InheritanceEditorComponent,
     LinkCheckerControlsComponent,
     NodePropertiesComponent,
     PageEditorControlsComponent,
@@ -49,7 +50,7 @@ import {
     TableSizeInputComponent,
     TableSizeSelectComponent,
 } from './components';
-import { contentFrameRoutes } from './content-frame.routes';
+import { CONTENT_FRAME_ROUTES } from './content-frame.routes';
 import { ContentFrameGuard } from './guards';
 import {
     CustomerScriptService,
@@ -89,11 +90,12 @@ const COMPONENTS = [
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
+    ImagePropertiesModalComponent,
+    InheritanceEditorComponent,
     LinkCheckerControlsComponent,
     NodePropertiesComponent,
     PageEditorControlsComponent,
     PageEditorTabsComponent,
-    ImagePropertiesModalComponent,
 
     PropertiesEditorComponent,
     SimpleDeleteModalComponent,
@@ -112,7 +114,7 @@ const GUARDS = [
 ];
 
 const MODULE_INITIALIZER = provideAppInitializer(() => {
-    const customScriptService = inject(CustomerScriptService)
+    const customScriptService = inject(CustomerScriptService);
     return customScriptService.loadCustomerScript();
 });
 
@@ -123,7 +125,7 @@ const MODULE_INITIALIZER = provideAppInitializer(() => {
         EditorOverlayModule,
         ColorSliderModule,
         ColorAlphaModule,
-        RouterModule.forChild(contentFrameRoutes),
+        RouterModule.forChild(CONTENT_FRAME_ROUTES),
         GenticsUICoreModule,
     ],
     exports: [],

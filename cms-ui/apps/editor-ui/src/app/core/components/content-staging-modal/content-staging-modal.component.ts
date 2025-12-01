@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { UIMode } from '@editor-ui/app/common/models';
-import { ApplicationStateService, SetActiveContentPackageAction, SetUIModeAction } from '@editor-ui/app/state';
 import { BaseModal } from '@gentics/ui-core';
+import { UIMode } from '../../../common/models';
+import { ApplicationStateService, SetActiveContentPackageAction, SetUIModeAction } from '../../../state';
 
 @Component({
     selector: 'gtx-content-staging-modal',

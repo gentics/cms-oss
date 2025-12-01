@@ -1,174 +1,197 @@
 <div class="modal-title">
-    <h5>{{ 'modal.multi_delete_title' | i18n:{
-            count: localizedItems.length + inheritedItems.length + otherItems.length,
-            _type: itemType
-    } }}</h5>
+    @let count = localizedItems.length + inheritedItems.length + otherItems.length;
+  <h5>{{ 'modal.multi_delete_title' | gtxI18n:{
+    count: count,
+    type: ('common.type_' + itemType + (count !== 1 ? 's' : '')) |gtxI18n
+  } }}</h5>
 </div>
 
 <div class="modal-content">
-    <div class="list other" *ngIf="otherItems.length > 0">
-        <p class="lead" *ngIf="otherItems.length === 1">
-            {{ 'modal.multi_delete_others_header_singular' | i18n:{ _type: itemType } }}
+  @if (otherItems.length > 0) {
+    <div class="list other">
+      @if (otherItems.length === 1) {
+        <p class="lead">
+          {{ 'modal.multi_delete_others_header_singular' | gtxI18n:{ type: ('common.type_' + itemType) | gtxI18n } }}
         </p>
-
-        <p class="lead" *ngIf="otherItems.length > 1">
-            {{ 'modal.multi_delete_others_header_plural' | i18n:{
-                count: otherItems.length,
-                _type: itemType
-            } }}
+      }
+      @if (otherItems.length > 1) {
+        <p class="lead">
+          {{ 'modal.multi_delete_others_header_plural' | gtxI18n:{
+            count: otherItems.length,
+            type: ('common.type_' + itemType + (otherItems.length !== 1 ? 's' : '')) |gtxI18n
+          } }}
         </p>
-
-        <div class="label-select-common" *ngIf="itemType === 'page'">
-            <span>{{ 'modal.multi_delete_selected_languages' | i18n }}:</span>
-        </div>
-
-        <gtx-contents-list-item
-            *ngFor="let item of otherItems"
-            [ngClass]="item.type || ''"
-            [class.none-selected]="isNoneSelected(item.id)"
-        >
-            <div class="item-icon">
-                <icon>{{ item.type | gtxTypeIcon }}</icon>
-            </div>
-
-            <div class="item-primary">
-                <div class="item-name-container">
-                    <div class="item-name">{{ item.name | replaceEscapedCharacters }}</div>
-
-                    <gtx-dropdown-list *ngIf="0 < getAllLocalizations(item.id).length" width="contents">
-                        <gtx-dropdown-trigger>
-                            <gtx-button size="small" type="alert" flat class="localized-warning-trigger">
-                                <icon left>error</icon>
-                                <span>
-                                    {{ 'modal.multi_delete_localization_warning_label' | i18n: {
-                                        count: getAllLocalizations(item.id).length,
-                                        _type: item.type
-                                    } }}!
-                                </span>
-                            </gtx-button>
-                        </gtx-dropdown-trigger>
-
-                        <gtx-dropdown-content>
-                            <div class="localized-warning-body">
-                                <p>{{ 'modal.multi_delete_localization_warning_body' | i18n: { _type: item.type, count: 2 } }}</p>
-                                <ul>
-                                    <li *ngFor="let info of getAllLocalizations(item.id)">
-                                        <detail-chip>{{ item.type | i18n }} ID {{ info.itemId }}</detail-chip> in "{{ info.nodeName }}"
-                                    </li>
-                                </ul>
-                            </div>
-                        </gtx-dropdown-content>
-                    </gtx-dropdown-list>
-                </div>
-            </div>
-
-            <page-language-selector
-                *ngIf="itemType === 'page'"
-                [page]="item"
-                [variants]="pageLanguageVariants[item.id]"
-                [selected]="selectedPageLanguageVariants[item.id]"
-                (selectionChange)="onPageLanguageSelectionChange(item.id, $event, true)"
-            ></page-language-selector>
-
-            <gtx-form-language-selector
-                *ngIf="itemType === 'form'"
-                [item]="item"
-                [variants]="formLanguageVariants[item.id]"
-                [selection]="selectedFormLanguageVariants[item.id]"
-                (selectionChange)="onFormLanguageSelectionChange(item.id, $event)"
-            ></gtx-form-language-selector>
-        </gtx-contents-list-item>
-    </div>
-
-    <div class="list localized" *ngIf="localizedItems.length > 0">
-        <p class="lead" *ngIf="localizedItems.length === 1">
-            {{ 'modal.multi_delete_localized_header_singular' | i18n:{ _type: itemType } }}
-        </p>
-
-        <p class="lead" *ngIf="localizedItems.length > 1">
-            {{ 'modal.multi_delete_localized_header_plural' | i18n:{
-                count: localizedItems.length,
-                _type: itemType
-            } }}
-        </p>
-
+      }
+      @if (itemType === 'page') {
         <div class="label-select-common">
-            <span>{{ 'modal.multi_unlocalize_selected_languages' | i18n }}:</span>
+          <span>{{ 'modal.multi_delete_selected_languages' | gtxI18n }}:</span>
         </div>
-
+      }
+      @for (item of otherItems; track (item.type + item.id)) {
         <gtx-contents-list-item
-            *ngFor="let item of localizedItems"
-            [ngClass]="item.type || ''"
-            [class.none-selected]="selectedPageLanguageVariants[item.id]?.length === 0"
-        >
-            <div class="item-icon">
-                <icon>{{ item.type | gtxTypeIcon }}</icon>
+          [ngClass]="item.type || ''"
+          [class.none-selected]="isNoneSelected(item.id)"
+          >
+          <div class="item-icon">
+            <icon>{{ item.type | gtxTypeIcon }}</icon>
+          </div>
+          <div class="item-primary">
+            <div class="item-name-container">
+              <div class="item-name">{{ item.name | replaceEscapedCharacters }}</div>
+              @let locals = getAllLocalizations(item.id);
+              @if (0 < locals.length) {
+                <gtx-dropdown-list width="contents">
+                  <gtx-dropdown-trigger>
+                    <gtx-button size="small" type="alert" flat class="localized-warning-trigger">
+                      <icon left>error</icon>
+                      <span>
+                        {{ 'modal.multi_delete_localization_warning_label' | gtxI18n: {
+                            count: locals.length,
+                            type: ('common.type_' + item.type + (locals.length !== 1 ? 's' : '')) |gtxI18n
+                        } }}!
+                      </span>
+                    </gtx-button>
+                  </gtx-dropdown-trigger>
+                  <gtx-dropdown-content>
+                    <div class="localized-warning-body">
+                      <p>{{ 'modal.multi_delete_localization_warning_body' | gtxI18n: {
+                          count: 2,
+                          type: ('common.type_' + item.type + 's') |gtxI18n
+                      } }}</p>
+                      <ul>
+                        @for (info of locals; track (info.type + info.itemId)) {
+                          <li>
+                            <detail-chip>{{ item.type | gtxI18n }} ID {{ info.itemId }}</detail-chip> in "{{ info.nodeName }}"
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  </gtx-dropdown-content>
+                </gtx-dropdown-list>
+              }
             </div>
-
-            <div class="item-primary">
-                <div class="item-name-container">
-                    <span class="localized-icon"
-                          [title]="'editor.localized_tooltip' | i18n:{ master: item.masterNode }">
-                        <icon>file_copy</icon>
-                    </span>
-                    <span class="item-name">{{ item.name }}</span>
-                    <div class="inheritance-info">{{ 'modal.multi_delete_unlocalize_label' | i18n: { master: item.masterNode } }}</div>
-                </div>
-            </div>
-
+          </div>
+          @if (itemType === 'page') {
             <page-language-selector
-                *ngIf="itemType === 'page'"
-                [page]="item"
-                [variants]="pageLanguageVariants[item.id]"
-                [selected]="selectedPageLanguageVariants[item.id]"
-                (selectionChange)="onPageLanguageSelectionChange(item.id, $event)"
+              [page]="item"
+              [variants]="pageLanguageVariants[item.id]"
+              [selected]="selectedPageLanguageVariants[item.id]"
+              (selectionChange)="onPageLanguageSelectionChange(item.id, $event, true)"
             ></page-language-selector>
+          }
+          @if (itemType === 'form') {
+            <gtx-form-language-selector
+              [item]="item"
+              [variants]="formLanguageVariants[item.id]"
+              [selection]="selectedFormLanguageVariants[item.id]"
+              (selectionChange)="onFormLanguageSelectionChange(item.id, $event)"
+            ></gtx-form-language-selector>
+          }
         </gtx-contents-list-item>
+      }
     </div>
+  }
 
-    <div class="list inherited" *ngIf="inheritedItems.length > 0">
-        <p class="lead" *ngIf="inheritedItems.length === 1">
-            {{ 'modal.multi_delete_inherited_header_singular' | i18n:{ _type: itemType } }}
+  @if (localizedItems.length > 0) {
+    <div class="list localized">
+      @if (localizedItems.length === 1) {
+        <p class="lead">
+          {{ 'modal.multi_delete_localized_header_singular' | gtxI18n:{ type: ('common.type_' + itemType) | gtxI18n } }}
         </p>
-
-        <p class="lead" *ngIf="inheritedItems.length > 1">
-            {{ 'modal.multi_delete_inherited_header_plural' | i18n:{
-                count: inheritedItems.length,
-                _type: itemType
-            } }}
+      }
+      @if (localizedItems.length > 1) {
+        <p class="lead">
+          {{ 'modal.multi_delete_localized_header_plural' | gtxI18n:{
+            count: localizedItems.length,
+            type: ('common.type_' + itemType + 's') |gtxI18n
+          } }}
         </p>
-
-        <gtx-contents-list-item *ngFor="let item of inheritedItems" [ngClass]="item.type || ''">
-            <div class="item-icon">
-                <icon>{{ item.type | gtxTypeIcon }}</icon>
+      }
+      <div class="label-select-common">
+        <span>{{ 'modal.multi_unlocalize_selected_languages' | gtxI18n }}:</span>
+      </div>
+      @for (item of localizedItems; track (item.type + item.id)) {
+        <gtx-contents-list-item
+          [ngClass]="item.type || ''"
+          [class.none-selected]="selectedPageLanguageVariants[item.id]?.length === 0"
+          >
+          <div class="item-icon">
+            <icon>{{ item.type | gtxTypeIcon }}</icon>
+          </div>
+          <div class="item-primary">
+            <div class="item-name-container">
+              <span class="localized-icon"
+                [title]="'editor.localized_tooltip' | gtxI18n:{ master: item.masterNode }">
+                <icon>file_copy</icon>
+              </span>
+              <span class="item-name">{{ item.name }}</span>
+              <div class="inheritance-info">{{ 'modal.multi_delete_unlocalize_label' | gtxI18n: { master: item.masterNode } }}</div>
             </div>
-
-            <div class="item-primary">
-                <span
-                    class="inherited-icon"
-                    [title]="'editor.inherited_tooltip' | i18n:{ master: item.inheritedFrom }"
-                >
-                    <icon>input</icon>
-                </span>
-                <span class="item-name">{{ item.name }}</span>
-            </div>
+          </div>
+          @if (itemType === 'page') {
+            <page-language-selector
+              [page]="item"
+              [variants]="pageLanguageVariants[item.id]"
+              [selected]="selectedPageLanguageVariants[item.id]"
+              (selectionChange)="onPageLanguageSelectionChange(item.id, $event)"
+            ></page-language-selector>
+          }
         </gtx-contents-list-item>
+      }
     </div>
+  }
+
+  @if (inheritedItems.length > 0) {
+    <div class="list inherited">
+      @if (inheritedItems.length === 1) {
+        <p class="lead">
+          {{ 'modal.multi_delete_inherited_header_singular' | gtxI18n:{ type: ('common.type_' + itemType) | gtxI18n } }}
+        </p>
+      }
+      @if (inheritedItems.length > 1) {
+        <p class="lead">
+          {{ 'modal.multi_delete_inherited_header_plural' | gtxI18n:{
+            count: inheritedItems.length,
+            type: ('common.type_' + itemType + 's') |gtxI18n
+          } }}
+        </p>
+      }
+      @for (item of inheritedItems; track (item.type + item.id)) {
+        <gtx-contents-list-item [ngClass]="item.type || ''">
+          <div class="item-icon">
+            <icon>{{ item.type | gtxTypeIcon }}</icon>
+          </div>
+          <div class="item-primary">
+            <span
+              class="inherited-icon"
+              [title]="'editor.inherited_tooltip' | gtxI18n:{ master: item.inheritedFrom }"
+              >
+              <icon>input</icon>
+            </span>
+            <span class="item-name">{{ item.name }}</span>
+          </div>
+        </gtx-contents-list-item>
+      }
+    </div>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
-    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
+  >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 
-    <gtx-button
-        type="alert"
-        class="confirm-button"
-        [disabled]="deleteCount === 0"
-        (click)="confirm()"
+  <gtx-button
+    type="alert"
+    class="confirm-button"
+    [disabled]="deleteCount === 0"
+    (click)="confirm()"
     >
-        {{ 'modal.multi_delete_confirm_button' | i18n:{ count: deleteCount, _type: itemType } }}
-    </gtx-button>
+    {{ 'modal.multi_delete_confirm_button' | gtxI18n:{
+        count: deleteCount,
+        type: ('common.type_' + itemType + (deleteCount !== 1 ? 's' : '')) |gtxI18n
+    } }}
+  </gtx-button>
 </div>

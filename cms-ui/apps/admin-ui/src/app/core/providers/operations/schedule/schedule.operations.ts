@@ -1,6 +1,7 @@
 import { applyInstancePermissions, discard } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     EntityIdType,
     InstancePermissionMap,
@@ -21,7 +22,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { combineLatest, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()
@@ -39,18 +39,18 @@ export class ScheduleOperations extends ExtendedEntityOperationsBase<'schedule'>
 
     getAll(options?: ScheduleListOptions, parentId?: string | number): Observable<ScheduleBO<Raw>[]> {
         return this.api.scheduler.listSchedules(options).pipe(
-            map(res => applyInstancePermissions(res).items),
-            map(items => items.map(schedule => this.mapToBusinessObject(schedule))),
-            tap(schedules => this.entities.addEntities(this.entityIdentifier, schedules)),
+            map((res) => applyInstancePermissions(res).items),
+            map((items) => items.map((schedule) => this.mapToBusinessObject(schedule))),
+            tap((schedules) => this.entities.addEntities(this.entityIdentifier, schedules)),
             this.catchAndRethrowError(),
-        )
+        );
     }
 
     get(entityId: number, options?: any, parentId?: string | number): Observable<ScheduleBO<Raw>> {
         return combineLatest([
             this.api.scheduler.getSchedule(entityId),
             this.api.scheduler.getSchedulePermission(entityId, SingleInstancePermissionType.EDIT).pipe(
-                map(res => res.granted),
+                map((res) => res.granted),
             ),
         ]).pipe(
             map(([res, canEdit]) => this.mapToBusinessObject(res.item, {
@@ -58,19 +58,19 @@ export class ScheduleOperations extends ExtendedEntityOperationsBase<'schedule'>
                 [SingleInstancePermissionType.EDIT]: canEdit,
                 [SingleInstancePermissionType.DELETE]: canEdit,
             })),
-            tap(schedule => this.entities.addEntity(this.entityIdentifier, schedule)),
+            tap((schedule) => this.entities.addEntity(this.entityIdentifier, schedule)),
             this.catchAndRethrowError(),
         );
     }
 
     create(body: ScheduleCreateReqeust, notification: boolean = true): Observable<ScheduleBO<Raw>> {
         return this.api.scheduler.createSchedule(body).pipe(
-            map(res => this.mapToBusinessObject(res.item, {
+            map((res) => this.mapToBusinessObject(res.item, {
                 [SingleInstancePermissionType.VIEW]: true,
                 [SingleInstancePermissionType.EDIT]: true,
                 [SingleInstancePermissionType.DELETE]: true,
             })),
-            tap(schedule => {
+            tap((schedule) => {
                 this.entities.addEntity(this.entityIdentifier, schedule);
 
                 if (notification) {
@@ -82,17 +82,17 @@ export class ScheduleOperations extends ExtendedEntityOperationsBase<'schedule'>
                 }
             }),
             this.catchAndRethrowError(),
-        )
+        );
     }
 
     update(entityId: EntityIdType, body: ScheduleSaveReqeust, notification: boolean = true): Observable<ScheduleBO<Raw>> {
         return this.api.scheduler.updateSchedule(entityId, body).pipe(
-            map(res => this.mapToBusinessObject(res.item, {
+            map((res) => this.mapToBusinessObject(res.item, {
                 [SingleInstancePermissionType.VIEW]: true,
                 [SingleInstancePermissionType.EDIT]: true,
                 [SingleInstancePermissionType.DELETE]: true,
             })),
-            tap(schedule => {
+            tap((schedule) => {
                 this.entities.addEntity(this.entityIdentifier, schedule);
 
                 if (notification) {
@@ -144,14 +144,14 @@ export class ScheduleOperations extends ExtendedEntityOperationsBase<'schedule'>
 
     listExecutions(scheduleId: number, options?: ScheduleExecutionListOptions): Observable<ScheduleExecution<Raw>[]> {
         return this.api.scheduler.listExecutions(scheduleId, options).pipe(
-            map(res => res.items),
+            map((res) => res.items),
             this.catchAndRethrowError(),
         );
     }
 
     getExecution(scheduleId: number, executionId: number): Observable<ScheduleExecution<Raw>> {
         return this.api.scheduler.getExecution(scheduleId, executionId).pipe(
-            map(res => res.item),
+            map((res) => res.item),
             this.catchAndRethrowError(),
         );
     }

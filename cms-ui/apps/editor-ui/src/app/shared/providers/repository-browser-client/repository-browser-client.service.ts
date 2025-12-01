@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction } from '@editor-ui/app/state';
 import { RepositoryBrowserOptions, wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelectionType,
@@ -8,6 +7,7 @@ import {
     TagInContainer,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
+import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction } from '../../../state';
 import { RepositoryBrowser } from '../../components';
 
 @Injectable()

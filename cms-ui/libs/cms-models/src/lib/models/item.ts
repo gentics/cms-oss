@@ -82,47 +82,44 @@ export type ItemNormalized = Page<Normalized> | FileModel<Normalized> | Folder<N
  */
 export interface Item<T extends ModelType = DefaultModelType> extends NormalizableEntity<T> {
 
+    /* BASICS
+     * ---------------------------------------------------------------------- */
+
     /** ID of the item */
-    id: number;
+    readonly id: number;
 
     /** Global ID of the item */
-    globalId: string;
+    readonly globalId: string;
 
     /** Name of the item */
     name: string;
 
-    masterId?: number;
-
-    masterNodeId?: number;
-
-    inheritedFromId?: number;
+    /* COMMON META-DATA
+     * ---------------------------------------------------------------------- */
 
     /** Creator of the item */
-    creator: Normalizable<T, User<Raw>, number>;
+    readonly creator: Normalizable<T, User<Raw>, number>;
 
     /** Creation date of the item as a Unix timestamp */
-    cdate: number;
+    readonly cdate: number;
 
     /** Last editor of the item */
-    editor: Normalizable<T, User<Raw>, number>;
+    readonly editor: Normalizable<T, User<Raw>, number>;
 
     /** Last Edit Date of the item as a Unix timestamp  */
-    edate: number;
+    readonly edate: number;
 
     /** Item type */
-    type: ItemType;
+    readonly type: ItemType;
 
     /** Deletion information, if object was deleted */
-    deleted?: DeleteInfo;
-
-    /** Deletion information about the master (if the object is not a master itself) */
-    masterDeleted?: DeleteInfo;
+    readonly deleted?: DeleteInfo;
 
     /** Deletion information about the containing folder */
-    folderDeleted?: DeleteInfo;
+    readonly folderDeleted?: DeleteInfo;
 
     /** Usage information about the item */
-    usage?: Usage;
+    readonly usage?: Usage;
 }
 
 /**
@@ -130,31 +127,36 @@ export interface Item<T extends ModelType = DefaultModelType> extends Normalizab
  */
 export interface InheritableItem<T extends ModelType = DefaultModelType> extends Item<T> {
 
-    type: FolderItemType;
+    readonly type: FolderItemType;
 
     /** Whether this item is excluded from multichannelling */
-    excluded: boolean;
+    readonly excluded: boolean;
 
-    /** True if the item was inherited */
-    inherited: boolean;
-
-    /** Name of the node, this item is inherited from. */
-    inheritedFrom: string;
-
-    /** ID of the node this item is inherited from. */
-    inheritedFromId: number;
+    readonly masterId?: number;
 
     /** Name of the node, the master object belongs to */
-    masterNode: string;
+    readonly masterNode: string;
 
     /** ID of the node, the master object belongs to. */
-    masterNodeId: number;
+    readonly masterNodeId: number;
 
-    /** Whether this item is disinherited by default in new channels. */
-    disinheritDefault: boolean;
+    /** Deletion information about the master (if the object is not a master itself) */
+    readonly masterDeleted?: DeleteInfo;
+
+    /** True if the item was inherited */
+    readonly inherited: boolean;
+
+    /** Name of the node, this item is inherited from. */
+    readonly inheritedFrom: string;
+
+    /** ID of the node this item is inherited from. */
+    readonly inheritedFromId: number;
 
     /** True if the item is disinherited in some channels */
-    disinherited: boolean;
+    readonly disinherited: boolean;
+
+    /** Whether this item is disinherited by default in new channels. */
+    readonly disinheritDefault: boolean;
 
     /**
      * IDs of nodes/channels, in which the object will not be inherited.
@@ -163,9 +165,9 @@ export interface InheritableItem<T extends ModelType = DefaultModelType> extends
      * NOTE: This property does not exist by default, but is created
      * after calling the `<type>/disinherit/<id>` endpoint, at which
      * point it is merged into the item.
+     * @deprecated Business-logic, move to appropiate app instead
      */
-    disinherit?: number[];
-
+    readonly disinherit?: number[];
 
     /**
      * IDs of nodes/channels, where this object (actually its master) can be inherited
@@ -173,8 +175,9 @@ export interface InheritableItem<T extends ModelType = DefaultModelType> extends
      * NOTE: This property does not exist by default, but is created
      * after calling the `<type>/disinherit/<id>` endpoint, at which
      * point it is merged into the item.
+     * @deprecated Business-logic, move to appropiate app instead
      */
-    inheritable?: number[];
+    readonly inheritable?: number[];
 
 }
 
@@ -204,6 +207,6 @@ export type ItemWithContentTags<T extends ModelType = DefaultModelType> = Page<T
  * for the root folder, comparing the type alone is not sufficient.
  */
 export function isFolderOrNode(input: any): input is Folder {
-    return (typeof input === 'object' && input &&
-        (input.type === 'folder' || input.type === 'node' || input.type === 'channel'));
+    return (typeof input === 'object' && input
+      && (input.type === 'folder' || input.type === 'node' || input.type === 'channel'));
 }

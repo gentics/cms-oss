@@ -78,9 +78,7 @@
                 "production": {},
                 "development": {
                     "fileReplacements": [],
-                    "buildOptimizer": false,
                     "optimization": false,
-                    "vendorChunk": true,
                     "extractLicenses": false,
                     "sourceMap": true,
                     "namedChunks": true
@@ -105,10 +103,8 @@
                     "buildTarget": "ct-link-checker:build:development"
                 }
             },
-            "defaultConfiguration": "development"
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint"
+            "defaultConfiguration": "development",
+            "continuous": true
         },
         "test": {
             "executor": "nx:run-commands",

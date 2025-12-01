@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, HostBinding, Input, Output } from '@angular/core';
-import { ItemsInfo } from '@editor-ui/app/common/models';
 import { Image } from '@gentics/cms-models';
+import { ItemsInfo } from '../../../common/models';
 
 /**
  * Component that renders a single image in the repository browser.

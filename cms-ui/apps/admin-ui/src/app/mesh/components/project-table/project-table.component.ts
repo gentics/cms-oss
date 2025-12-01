@@ -1,5 +1,4 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { MeshMicroschemaBO, MeshProjectBO, MeshSchemaBO } from '@admin-ui/mesh/common';
 import { MicroschemaHandlerService, SchemaHandlerService } from '@admin-ui/mesh/providers';
 import { ProjectTableLoaderService } from '@admin-ui/mesh/providers/project-table-loader/project-table-loader.service';
@@ -8,13 +7,14 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { Permission, Project } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ManageTagFamiliesModal } from '../manage-tag-families-modal/manage-tag-families-modal.component';
 import { ProjectModal } from '../project-modal/project-modal.component';
 import { ProjectPropertiesMode } from '../project-properties/project-properties.component';
 import { SelectMicroschemaModal } from '../select-microschema-modal/select-microschema-modal.component';
 import { SelectSchemaModal } from '../select-schema-modal/select-schema-modal.component';
-import { ManageTagFamiliesModal } from '../manage-tag-families-modal/manage-tag-families-modal.component';
 
 const EDIT_ACTION = 'edit';
 const MANAGE_TAGS_ACTIONS = 'manageTags';
@@ -26,7 +26,7 @@ const MANAGE_MICROSCHEMA_ASSIGNMENT_ACTION = 'manageMicroschemaAssignment';
     templateUrl: './project-table.component.html',
     styleUrls: ['./project-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ProjectTableComponent extends BaseEntityTableComponent<Project, MeshProjectBO> {
 
@@ -38,6 +38,7 @@ export class ProjectTableComponent extends BaseEntityTableComponent<Project, Mes
             sortable: true,
         },
     ];
+
     protected entityIdentifier = 'project' as any;
 
     constructor(
@@ -148,7 +149,7 @@ export class ProjectTableComponent extends BaseEntityTableComponent<Project, Mes
 
     async manageSchemaAssignment(project: MeshProjectBO): Promise<void> {
         const assignedSchemas = ((await this.schemaHandler.listFromProject(project.name))?.data || []);
-        const assignedSchemaIds = assignedSchemas.map(schema => schema.uuid);
+        const assignedSchemaIds = assignedSchemas.map((schema) => schema.uuid);
 
         const dialog = await this.modalService.fromComponent(SelectSchemaModal, {}, {
             title: 'mesh.manage_schema_assignment',
@@ -157,10 +158,10 @@ export class ProjectTableComponent extends BaseEntityTableComponent<Project, Mes
         });
 
         const schemas: MeshSchemaBO[] = await dialog.open();
-        const newSchemaIds = schemas.map(schema => schema.uuid);
+        const newSchemaIds = schemas.map((schema) => schema.uuid);
 
-        const toAssign = schemas.filter(schema => !assignedSchemaIds.includes(schema.uuid));
-        const toRemove = assignedSchemas.filter(schema => !newSchemaIds.includes(schema.uuid));
+        const toAssign = schemas.filter((schema) => !assignedSchemaIds.includes(schema.uuid));
+        const toRemove = assignedSchemas.filter((schema) => !newSchemaIds.includes(schema.uuid));
 
         // Nothing to do
         if (toAssign.length === 0 && toRemove.length === 0) {
@@ -179,7 +180,7 @@ export class ProjectTableComponent extends BaseEntityTableComponent<Project, Mes
 
     async manageMicroschemaAssignment(project: MeshProjectBO): Promise<void> {
         const assignedMicroschemas = ((await this.microschemaHandler.listFromProject(project.name))?.data || []);
-        const assignedMicroschemaIds = assignedMicroschemas.map(schema => schema.uuid);
+        const assignedMicroschemaIds = assignedMicroschemas.map((schema) => schema.uuid);
 
         const dialog = await this.modalService.fromComponent(SelectMicroschemaModal, {}, {
             title: 'mesh.manage_microschema_assignment',
@@ -188,10 +189,10 @@ export class ProjectTableComponent extends BaseEntityTableComponent<Project, Mes
         });
 
         const microschemas: MeshMicroschemaBO[] = await dialog.open();
-        const newMicroschemaIds = microschemas.map(microschema => microschema.uuid);
+        const newMicroschemaIds = microschemas.map((microschema) => microschema.uuid);
 
-        const toAssign = microschemas.filter(microschema => !assignedMicroschemaIds.includes(microschema.uuid));
-        const toRemove = assignedMicroschemas.filter(microschema => !newMicroschemaIds.includes(microschema.uuid));
+        const toAssign = microschemas.filter((microschema) => !assignedMicroschemaIds.includes(microschema.uuid));
+        const toRemove = assignedMicroschemas.filter((microschema) => !newMicroschemaIds.includes(microschema.uuid));
 
         // Nothing to do
         if (toAssign.length === 0 && toRemove.length === 0) {

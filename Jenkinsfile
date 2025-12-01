@@ -48,7 +48,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: docker.gentics.com/cms-oss/build-container:latest
+      image: docker.gentics.com/cms-oss/build-container:6.4
       resources:
         requests:
           cpu: '0'

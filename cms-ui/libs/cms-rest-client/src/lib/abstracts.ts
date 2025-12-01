@@ -248,6 +248,7 @@ import {
     PageDeleteOptions,
     PageListOptions,
     PageListResponse,
+    PageLocalizeRequest,
     PageOfflineOptions,
     PageOfflineRequest,
     PagePreviewRequest,
@@ -420,7 +421,7 @@ export interface AbstractConstructAPI extends BasicAPI {
     update: (id: number | string, body: ConstructUpdateRequest) => ConstructUpdateResponse;
     delete: (id: number | string) => void;
 
-    listForEditor: (options?: ConstructListOptions) => ConstructListResponse,
+    listForEditor: (options?: ConstructListOptions) => ConstructListResponse;
 
     hash: (id: number | string) => ImplementationHashResponse;
     getLinkedNodes: (id: number | string) => ConstructLinkedNodesResponse;
@@ -725,7 +726,7 @@ export interface AbstractGroupAPI extends BasicAPI {
     setPermission: (
         id: number | string,
         perm: AccessControlledType,
-        body: GroupSetPermissionsRequest
+        body: GroupSetPermissionsRequest,
     ) => Response;
     getInstancePermission: (
         id: number | string,
@@ -736,7 +737,7 @@ export interface AbstractGroupAPI extends BasicAPI {
         id: number | string,
         perm: AccessControlledType,
         instanceId: number | string,
-        body: GroupSetPermissionsRequest
+        body: GroupSetPermissionsRequest,
     ) => Response;
 }
 
@@ -809,7 +810,7 @@ export interface AbstractLinkCheckerAPI extends BasicAPI {
     replace: (
         pageId: number | string,
         linkId: number,
-        body: LinkCheckerReplaceRequest
+        body: LinkCheckerReplaceRequest,
     ) => Response;
 }
 
@@ -895,6 +896,7 @@ export interface AbstractPageAPI extends BasicAPI {
 
     preview: (body: PagePreviewRequest) => PagePreviewResponse;
     render: (body: Page<Raw>, options?: PageRenderOptions) => PageRenderResponse;
+    renderById: (id: number | string, options?: PageRenderOptions) => PageRenderResponse;
     renderTag: (id: number | string, tagKeyword: string, body: Page<Raw>, options?: PageTagRenderOptions) => PageRenderResponse;
 
     suggestFileName: (body: SuggestPageFileNameRequest) => SuggestPageFileNameResponse;
@@ -907,15 +909,17 @@ export interface AbstractPageAPI extends BasicAPI {
     takeOffline: (id: number | string, body: PageOfflineRequest, options?: PageOfflineOptions) => Response;
 
     listPublishQueue: (options?: PublishQueueOptions) => PageListResponse;
-    approvePublishQueue: (body: IdSetRequest) => Response,
+    approvePublishQueue: (body: IdSetRequest) => Response;
 
     listTags: (id: number | string, options?: PageTagListOptions) => PageTagListResponse;
     createTag: (id: number | string, body: ContentTagCreateRequest) => TagCreateResponse;
     createMultipleTags: (id: number | string, body: MultiTagCreateRequest) => MultiTagCreateResponse;
     restoreTag: (id: number | string, tagKeyword: string, options: TagRestoreOptions) => PageTagListResponse;
+    localizeTag: (id: number | string, tagId: string) => Response;
+    unlocalizeTag: (id: number | string, tagId: string, body: UnlocalizeRequest) => Response;
 
-    workflowDecline: (id: number | string) => Response,
-    workflowRevoke: (id: number | string) => Response,
+    workflowDecline: (id: number | string) => Response;
+    workflowRevoke: (id: number | string) => Response;
 
     inheritanceStatus: (id: number | string, options?: InheritanceStatusOptions) => InheritanceResponse;
     multipleInheritanceStatus: (options: MultiInheritanceStatusOptions) => MultipleInheritanceResponse;
@@ -927,7 +931,7 @@ export interface AbstractPageAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: LocalizeRequest) => Response;
+    localize: (id: number | string, body: PageLocalizeRequest) => Response;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 
@@ -1074,11 +1078,11 @@ export interface AbstractValidationAPI extends BasicAPI {
 
 export interface AbstractTranslationAPI extends BasicAPI {
     translateText: (data: TranslationTextRequest) => TranslationResponse;
-    translatePage: (pageId: number, params: TranslationRequestOptions) => GenericItemResponse<PageResponse>
+    translatePage: (pageId: number, params: TranslationRequestOptions) => GenericItemResponse<PageResponse>;
 }
 
 export interface AbstractPublishProtocolAPI extends BasicAPI {
-    get: (type: PublishType, objId: number) =>  PublishLogEntry;
+    get: (type: PublishType, objId: number) => PublishLogEntry;
     list: (options?: PublishLogListOption) => ListResponse<PublishLogEntry>;
 }
 

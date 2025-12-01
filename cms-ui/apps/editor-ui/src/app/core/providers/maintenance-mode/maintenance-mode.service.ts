@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
+import { I18nNotificationService, TranslatedNotificationOptions } from '@gentics/cms-components';
+import { Subscription, combineLatest } from 'rxjs';
+import { catchError, distinctUntilChanged, filter, map, skip, switchMap } from 'rxjs/operators';
+import { deepEqual } from '../../../common/utils/deep-equal';
 import {
     ApplicationStateService,
     MaintenanceModeFetchErrorAction,
     MaintenanceModeFetchSuccessAction,
     StartMaintenanceModeFetchingAction,
-} from '@editor-ui/app/state';
-import { Subscription, combineLatest } from 'rxjs';
-import { catchError, distinctUntilChanged, filter, map, skip, switchMap } from 'rxjs/operators';
-import { deepEqual } from '../../../common/utils/deep-equal';
+} from '../../../state';
 import { Api } from '../api/api.service';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotification, TranslatedNotificationOptions } from '../i18n-notification/i18n-notification.service';
 
 @Injectable()
 export class MaintenanceModeService {
@@ -19,7 +19,7 @@ export class MaintenanceModeService {
         private api: Api,
         private appState: ApplicationStateService,
         private errorHandler: ErrorHandler,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) { }
 
     /**

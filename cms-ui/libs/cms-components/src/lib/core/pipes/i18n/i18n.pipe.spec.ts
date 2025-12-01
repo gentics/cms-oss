@@ -1,100 +1,109 @@
-import { EventEmitter } from '@angular/core';
-import { GtxI18nPipe } from './i18n.pipe';
+import { TestBed } from '@angular/core/testing';
+import { InterpolationParameters, LangChangeEvent, provideTranslateService, TranslateService } from '@ngx-translate/core';
+import { I18nService } from '../../providers/i18n/i18n.service';
+import { I18nPipe } from './i18n.pipe';
+import { NEVER, Observable } from 'rxjs';
 
-class MockTranslateService {
-    instant = jasmine.createSpy('instant').and.callFake((key: string, params: object) => {
+class MockTranslateService implements Partial<TranslateService> {
+    get onLangChange(): Observable<LangChangeEvent> {
+        return NEVER;
+    }
+
+    instant(key: string | string[], interpolateParams?: InterpolationParameters) {
         return `${key}_translated`;
-    });
-    onLangChange = new EventEmitter<any>();
-}
-
-class MockTranslatePipe {
-    transform = jasmine.createSpy('transform').and.returnValue('bar');
-    _dispose = jasmine.createSpy('_dispose');
+    }
 }
 
 describe('I18nPipe', () => {
 
-    let i18nPipe: GtxI18nPipe;
-    let mockTranslatePipe: MockTranslatePipe;
-    let mockTranslateService: MockTranslateService;
+    let i18nPipe: I18nPipe;
+    let spy: jasmine.Spy;
 
     beforeEach(() => {
-        mockTranslatePipe = new MockTranslatePipe();
-        mockTranslateService = new MockTranslateService();
-        i18nPipe = new GtxI18nPipe(mockTranslateService as any, {} as any);
-        i18nPipe.translatePipe = mockTranslatePipe as any;
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: TranslateService, useClass: MockTranslateService },
+                I18nService,
+            ],
+        });
+
+        const translateService = TestBed.inject(TranslateService);
+        const i18n = TestBed.inject(I18nService);
+
+        spy = spyOn(translateService, 'instant').and.callThrough();
+
+        i18nPipe = new I18nPipe(i18n, {} as any);
     });
 
     afterEach(() => {
-        GtxI18nPipe.memoized = {};
+        I18nPipe.memoized = {};
     });
 
     it('passes key and params to TranslatePipe', () => {
         for (let i = 0; i < 100; i++) {
-            let key = Math.random().toString(36);
-            let params = {
+            const key = Math.random().toString(36);
+            const params = {
                 foo: i,
             };
             i18nPipe.transform(key, params);
 
-            expect(mockTranslatePipe.transform).toHaveBeenCalledWith(key, params);
+            expect(spy).toHaveBeenCalledWith(key, params);
         }
     });
 
     it('applies shortcuts to common types', () => {
         const commonTypes = ['folder', 'page', 'file', 'image', 'tag', 'template', 'node', 'variant'];
-        for (let type of commonTypes) {
+        for (const type of commonTypes) {
             i18nPipe.transform(type, {});
-            expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_${type}`, {});
+            expect(spy).toHaveBeenCalledWith(`common.type_${type}`, {});
         }
     });
 
     it('applies shortcuts to common statuses', () => {
         const commonStatuses = ['published', 'edited', 'offline', 'queue', 'timeframe', 'publishat'];
-        for (let status of commonStatuses) {
+        for (const status of commonStatuses) {
             i18nPipe.transform(status, {});
-            expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.status_${status}`, {});
+            expect(spy).toHaveBeenCalledWith(`common.status_${status}`, {});
         }
     });
 
     it('correctly pluralizes key for common types with count param', () => {
         i18nPipe.transform('folder', { count: -1 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: -1 });
+        expect(spy).toHaveBeenCalledWith('common.type_folders', { count: -1 });
         i18nPipe.transform('folder', { count: 0 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: 0 });
+        expect(spy).toHaveBeenCalledWith('common.type_folders', { count: 0 });
         i18nPipe.transform('folder', { count: 1 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folder`, { count: 1 });
+        expect(spy).toHaveBeenCalledWith('common.type_folder', { count: 1 });
         i18nPipe.transform('folder', { count: 2 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: 2 });
+        expect(spy).toHaveBeenCalledWith('common.type_folders', { count: 2 });
         i18nPipe.transform('folder', { count: 100 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: 100 });
+        expect(spy).toHaveBeenCalledWith('common.type_folders', { count: 100 });
         i18nPipe.transform('folder', { count: 1e34 });
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith(`common.type_folders`, { count: 1e34 });
+        expect(spy).toHaveBeenCalledWith('common.type_folders', { count: 1e34 });
     });
 
     it('does not translate params with no leading underscore', () => {
         i18nPipe.transform('foo', { type: 'bar' });
-        expect(mockTranslateService.instant).not.toHaveBeenCalledWith('bar');
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('foo', { type: 'bar' });
+        expect(spy).not.toHaveBeenCalledWith('bar');
+        expect(spy).toHaveBeenCalledWith('foo', { type: 'bar' });
     });
 
     it('translates params with leading underscore', () => {
         i18nPipe.transform('foo', { _type: 'bar' });
-        expect(mockTranslateService.instant).toHaveBeenCalledWith('bar');
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('foo', { type: 'bar_translated' });
+        expect(spy).toHaveBeenCalledWith('bar');
+        expect(spy).toHaveBeenCalledWith('foo', { type: 'bar_translated' });
     });
 
     it('uses shortcut and translates common type param with leading underscore', () => {
         i18nPipe.transform('foo', { _type: 'folder' });
-        expect(mockTranslateService.instant).toHaveBeenCalledWith('common.type_folder');
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('foo', { type: 'common.type_folder_translated' });
+        expect(spy).toHaveBeenCalledWith('common.type_folder');
+        expect(spy).toHaveBeenCalledWith('foo', { type: 'common.type_folder_translated' });
     });
 
     it('uses shortcut and translates common type param with leading underscore and count', () => {
         i18nPipe.transform('foo', { _type: 'folder', count: 2 });
-        expect(mockTranslateService.instant).toHaveBeenCalledWith('common.type_folders');
-        expect(mockTranslatePipe.transform).toHaveBeenCalledWith('foo', { type: 'common.type_folders_translated', count: 2 });
+        expect(spy).toHaveBeenCalledWith('common.type_folders');
+        expect(spy).toHaveBeenCalledWith('foo', { type: 'common.type_folders_translated', count: 2 });
     });
 
 });

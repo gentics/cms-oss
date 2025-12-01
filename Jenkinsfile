@@ -57,6 +57,7 @@ spec:
           cpu: '0'
           memory: '0'
     - name: docker
+      image: docker:29.0.4-dind-rootless
       resources:
         limits:
           cpu: '0'

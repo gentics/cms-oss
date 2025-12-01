@@ -1485,6 +1485,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				// finally restore the plinks
 				code = restorePLinks(code, savedPLinks);
 			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY && prefs.isFeature(Feature.COPY_TAGS, node))) {
+				var needWrapper = tag.isLocalizable() && editMode != RenderType.EM_PUBLISH;
 				Matcher matcher = rootTagPattern.matcher(code);
 
 				if (matcher.matches()) {
@@ -1516,9 +1517,12 @@ public class AlohaRenderer implements TemplateRenderer {
 						// annotate the tag
 						startTag = startTag.replaceFirst(rootTagName, rootTagName + " " + renderTagAnnotations(page, tag));
 						code = startTag + rest;
-					} else if (tag.isLocalizable() && editMode != RenderType.EM_PUBLISH) {
-						code = "<div " + renderTagAnnotations(page, tag) + ">" + code + "</div>";
+						needWrapper = false;
 					}
+				}
+
+				if (needWrapper) {
+					code = "<div " + renderTagAnnotations(page, tag) + ">" + code + "</div>";
 				}
 			}
 

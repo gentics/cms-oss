@@ -267,7 +267,7 @@ public class MCPageResourceImpl implements MCPageResource {
 	@POST
 	@Path("/localize/{pageId}/tags/{tagId}")
 	@Override
-	public GenericResponse localizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId) throws Exception {
+	public GenericResponse localizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId) throws NodeException {
 		if (pageId == null) {
 			var msg = "Error while localizing tag: no page ID provided";
 

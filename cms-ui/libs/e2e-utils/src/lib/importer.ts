@@ -751,7 +751,7 @@ export class EntityImporter {
         if (parent === null) {
             parentGroup = this.cmsRootGroup;
         } else if (parent != null) {
-            parentGroup = this.getDependency(parent, true);
+            parentGroup = this.getDependency<typeof IMPORT_TYPE_GROUP>(parent, true);
         } else {
             parentGroup = this.testRootGroup;
         }
@@ -808,7 +808,7 @@ export class EntityImporter {
         } else if (!group) {
             groupEntity = this.testRootGroup;
         } else {
-            groupEntity = this.getDependency(group);
+            groupEntity = this.getDependency<typeof IMPORT_TYPE_GROUP>(group);
         }
 
         try {

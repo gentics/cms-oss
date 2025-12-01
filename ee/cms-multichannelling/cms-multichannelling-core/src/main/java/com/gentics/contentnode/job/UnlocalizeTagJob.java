@@ -14,6 +14,7 @@ import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import org.apache.commons.lang3.StringUtils;
 
@@ -70,14 +71,14 @@ public class UnlocalizeTagJob extends AbstractBackgroundJob {
 			var toRemove = new HashSet<String>();
 
 			toRemove.add(tagId);
-			toRemove.addAll(getEmbeddedTagNames(tags, tagId));
+			toRemove.addAll(MiscUtils.getEmbeddedTagNames(tags, tagId));
 
 			for (var otherRootTag: getRootTags(tags)) {
 				if (otherRootTag.equals(tagId)) {
 					continue;
 				}
 
-				toRemove.removeAll(getEmbeddedTagNames(tags, otherRootTag));
+				toRemove.removeAll(MiscUtils.getEmbeddedTagNames(tags, otherRootTag));
 			}
 
 			for (var tagName: toRemove) {
@@ -104,56 +105,6 @@ public class UnlocalizeTagJob extends AbstractBackgroundJob {
 		}
 
 		return rootTags;
-	}
-
-	/**
-	 * Get the tags embedded in the given tag.
-	 * @param tags The content tags of the page.
-	 * @param rootTagName The name of the root tag to fetch the embedded tags for.
-	 * @return The tags embedded in the given tag.
-	 */
-	private Collection<String> getEmbeddedTagNames(Map<String, ContentTag> tags, String rootTagName) throws NodeException {
-		if (!tags.containsKey(rootTagName)) {
-			return Collections.emptyList();
-		}
-
-		var tagNames = tags.keySet();
-		var tagsToCheck = new LinkedList<ContentTag>();
-		var embeddedTags = new HashSet<String>();
-
-		tagsToCheck.add(tags.get(rootTagName));
-
-		while (!tagsToCheck.isEmpty()) {
-			var localizedTag = tagsToCheck.pop();
-			var construct = localizedTag.getConstruct();
-			var values = localizedTag.getValues();
-
-			for (var part: construct.getParts()) {
-				var key = part.getKeyname();
-				var val = values.getByKeyname(key);
-
-				if (val == null) {
-					continue;
-				}
-
-				var text = val.getValueText();
-
-				if (StringUtils.isEmpty(text)) {
-					continue;
-				}
-
-				for (var tagName: tagNames) {
-					if (!embeddedTags.contains(tagName) && text.contains("<node " + tagName + ">")) {
-						var tag = tags.get(tagName);
-
-						embeddedTags.add(tagName);
-						tagsToCheck.add(tag);
-					}
-				}
-			}
-		}
-
-		return embeddedTags;
 	}
 
 	/**

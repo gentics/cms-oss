@@ -259,7 +259,7 @@ public class MCPageResourceImpl implements MCPageResource {
 										"page's node is not master node of the specified channel"));
 			}
 
-			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000,
+			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000L,
 					Operator.lock(LockType.channelSet, page.getChannelSetId()), new LocalizePageCallable(id, request.getChannelId(), false, partial));
 		}
 	}
@@ -373,7 +373,7 @@ public class MCPageResourceImpl implements MCPageResource {
 
 			return Operator.executeLocked(
 					new CNI18nString("localizejob").toString(),
-					AbstractContentNodeResource.getJobForegroundTime(null) * 1000,
+					AbstractContentNodeResource.getJobForegroundTime(null) * 1000L,
 					Operator.lock(LockType.channelSet, page.getChannelSetId()),
 					new LocalizeRootTagCallable(pageId, page.getChannel().getId(), tagId)
 			);

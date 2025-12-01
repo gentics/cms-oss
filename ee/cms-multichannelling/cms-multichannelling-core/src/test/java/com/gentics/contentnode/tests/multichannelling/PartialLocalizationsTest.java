@@ -297,6 +297,7 @@ public class PartialLocalizationsTest {
 		var reloadedLocalizedPage = loadPage(localizedPage.getId());
 
 		reloadedLocalizedPage.getTags().remove(TAGNAME);
+		reloadedLocalizedPage.getTags().remove(OTHER_TAGNAME);
 
 		var saveRequest = new PageSaveRequest();
 
@@ -311,7 +312,7 @@ public class PartialLocalizationsTest {
 
 		assertThat(reloadedLocalizedPage.getTags().keySet())
 			.as("Page tags")
-			.containsExactly(TAGNAME, OTHER_TAGNAME, embeddedTagNames.get(0));
+			.containsExactlyInAnyOrder(TAGNAME, OTHER_TAGNAME, embeddedTagNames.get(0));
 	}
 
 	@Test

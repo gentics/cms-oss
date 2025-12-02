@@ -129,9 +129,6 @@ function isObjectPropertyTag(tag: Tag): tag is ObjectTag {
 export const ID_OBJ_PROP_CATEGORY_OTHERS = '_others_';
 export const NAME_OBJ_PROP_CATEGORY_OTHERS = 'editor.object_properties_category_others_label';
 
-const ACTION_LOCALIZE_TAG = 'localize-tag';
-const ACTION_DELETE_TAG_LOCALIZATION = 'delete-tag-localization';
-
 export function groupObjectPropertiesByCategory(objectProperties: EditableObjectTag[]): ObjectPropertiesCategory[] {
     const categories: ObjectPropertiesCategory[] = [];
     const categoriesMap = new Map<string, ObjectPropertiesCategory>();
@@ -170,6 +167,8 @@ export function groupObjectPropertiesByCategory(objectProperties: EditableObject
 const ACTION_DELETE = 'delete';
 const ACTION_ACTIVATE = 'activate';
 const ACTION_DEACTIVATE = 'deactivate';
+const ACTION_LOCALIZE_TAG = 'localize-tag';
+const ACTION_DELETE_TAG_LOCALIZATION = 'delete-tag-localization';
 
 /**
  * Displays vertical tabs, which contain one tab for the item's properties (PropertiesEditor component)

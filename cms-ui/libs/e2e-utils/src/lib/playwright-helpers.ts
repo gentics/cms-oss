@@ -206,7 +206,7 @@ export async function getSourceLocator(source: Page | Locator, nodeName: string)
         || await (source as Locator).evaluate(
             (el, args) => el == null
               || typeof el !== 'object'
-              || el.nodeName.toLowerCase() !== args.nodeName,
+              || el.nodeName.toLowerCase() !== args.nodeName.toLowerCase(),
             { nodeName },
         )
     ) {

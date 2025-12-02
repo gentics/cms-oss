@@ -69,7 +69,7 @@ test.describe('Mesh Browser', () => {
         });
 
         test('should show login gate on click', async ({ page }) => {
-            const row = findTableRowById(page, testCr.id);
+            const row = await findTableRowById(page, testCr.id);
             await row.waitFor();
             await row.click();
             await expect(page.locator('.login-gate-wrapper')).toBeVisible();
@@ -111,7 +111,7 @@ test.describe('Mesh Browser', () => {
             await navigateToModule(page, 'mesh-browser');
 
             // Click into the Mesh CR
-            const row = findTableRowById(page, testCr.id);
+            const row = await findTableRowById(page, testCr.id);
             await row.waitFor();
             await row.click();
 
@@ -208,12 +208,12 @@ test.describe('Mesh Browser', () => {
             await navigateToModule(page, 'mesh-browser');
 
             // Click into the Mesh CR
-            const row = findTableRowById(page, testCr.id);
+            const row = await findTableRowById(page, testCr.id);
             await row.waitFor();
             await row.click();
 
             // Wait for folders to be loaded
-            const folderLoad = page.waitForResponse(request => {
+            const folderLoad = page.waitForResponse((request) => {
                 if (!matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/*/graphql')(request)) {
                     return false;
                 }

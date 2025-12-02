@@ -194,12 +194,12 @@ export const INTERNAL_TASKS = [
 ];
 
 export const KEYCLOAK_LOGIN: LoginInformation = {
-    username: 'node',
-    password: 'node',
+    username: 'integrationTest_admin',
+    password: 'keycloak_integrationTest#admin',
 };
 export const MESH_LOGIN: LoginInformation = {
     username: 'admin',
-    password: 'admin',
+    password: 'mesh_integrationTest#admin',
 };
 
 export const BOUNDARY_NODES = new Set([

@@ -124,7 +124,7 @@ test.describe('Constructs Module', () => {
         });
 
         test('should properly remove and assign the constructs to the node', async ({ page }) => {
-            const row = findTableRowById(page, testConstruct.id);
+            const row = await findTableRowById(page, testConstruct.id);
             await findTableAction(row, 'assignConstructToNodes').click();
 
             // Wait for modal and find the node table

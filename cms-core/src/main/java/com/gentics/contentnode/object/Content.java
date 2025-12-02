@@ -129,7 +129,9 @@ public abstract class Content extends AbstractContentObject implements TagContai
 	@Override
 	public void delete(boolean force) throws NodeException {
 		for (ContentTag tag : getContentTags().values()) {
-			tag.delete();
+			if (!tag.isInherited()) {
+				tag.delete();
+			}
 		}
 		performDelete();
 	}

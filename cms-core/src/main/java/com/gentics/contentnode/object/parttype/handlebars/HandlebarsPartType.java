@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
@@ -20,6 +21,7 @@ import com.gentics.contentnode.object.parttype.CMSResolver;
 import com.gentics.contentnode.object.parttype.TextPartType;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.render.RenderableResolvable;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 import com.gentics.contentnode.rest.util.MiscUtils;
@@ -35,7 +37,7 @@ import com.github.jknack.handlebars.io.StringTemplateSource;
 /**
  * PartType implementation for using {@link Handlebars} template engine
  */
-public class HandlebarsPartType extends TextPartType {
+public class HandlebarsPartType extends TextPartType implements Resolvable {
 	private static final long serialVersionUID = 6043235322865960951L;
 
 	public HandlebarsPartType(Value value) throws NodeException {
@@ -48,27 +50,7 @@ public class HandlebarsPartType extends TextPartType {
 		RenderType renderType = t.getRenderType();
 		renderType.createCMSResolver();
 		try {
-			Value value = getValueObject();
-
-			String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
-					.map(cont -> MiscUtils.execOrNull(ValueContainer::getConstruct, cont)).map(Construct::getKeyword)
-					.orElse("<unknown>");
-			String partKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getPart, v))
-					.map(Part::getKeyname).orElse("<unknown>");
-			int valueId = Optional.ofNullable(value).map(Value::getId).orElse(0);
-			String templateName = String.format("%s/%s/%d", constructKeyword, partKeyword, valueId);
-
-			CMSResolver cmsResolver = renderType.getCMSResolver();
-			Node node = ObjectTransformer.get(Node.class, cmsResolver.get("node")).getMaster();
-			Handlebars handlebars = renderType.getHandlebars(node);
-
-			StringTemplateSource source = new StringTemplateSource(templateName, getText());
-			Template handlebarsTemplate = handlebars.compile(source);
-			Context context = Context.newBuilder(null)
-					.resolver(MapValueResolver.INSTANCE, JavaBeanValueResolver.INSTANCE)
-					.combine("cms", new ResolvableMapWrapper(cmsResolver))
-					.build();
-			return handlebarsTemplate.apply(context);
+			return render(renderType, makeContext(renderType));
 		} catch (NodeException e) {
 			throw e;
 		} catch (Throwable e) {
@@ -81,6 +63,75 @@ public class HandlebarsPartType extends TextPartType {
 	@Override
 	public Type getPropertyType() {
 		return Property.Type.RICHTEXT;
+	}
+
+	@Override
+	public Object getProperty(String key) {
+		return get(key);
+	}
+
+	@Override
+	public Object get(String key) {
+		try {
+			RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
+
+			try {
+				renderType.createCMSResolver();
+
+				Context context = makeContext(renderType);
+				render(renderType, context);
+				Object value = context.data(key);
+				if (value == null) {
+					value = context.get(key);
+				}
+				if (value instanceof RenderableResolvable) {
+					value = ((RenderableResolvable) value).getWrappedObject();
+				}
+				return value;
+			} catch (IOException e) {
+				throw new NodeException(e);
+			} finally {
+				renderType.popCMSResolver();
+			}
+		} catch (NodeException e) {
+			logger.error(String.format("Error while getting %s", key), e);
+			return null;
+		}
+	}
+
+	@Override
+	public boolean canResolve() {
+		return true;
+	}
+
+	private Context makeContext(RenderType renderType) {
+		Context ctx = Context.newBuilder(null)
+				.resolver(MapValueResolver.INSTANCE, JavaBeanValueResolver.INSTANCE)
+				.combine("cms", new ResolvableMapWrapper(renderType.getCMSResolver()))
+				.build();
+		ctx.combine("renderType", renderType);
+		return ctx;
+	}
+
+	private String render(RenderType renderType, Context context) throws NodeException, IOException {
+		Value value = getValueObject();
+
+		String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
+				.map(cont -> MiscUtils.execOrNull(ValueContainer::getConstruct, cont)).map(Construct::getKeyword)
+				.orElse("<unknown>");
+		String partKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getPart, v))
+				.map(Part::getKeyname).orElse("<unknown>");
+		int valueId = Optional.ofNullable(value).map(Value::getId).orElse(0);
+		String templateName = String.format("%s/%s/%d", constructKeyword, partKeyword, valueId);
+
+		CMSResolver cmsResolver = renderType.getCMSResolver();
+		Node node = ObjectTransformer.get(Node.class, cmsResolver.get("node")).getMaster();
+		Handlebars handlebars = renderType.getHandlebars(node);
+
+		StringTemplateSource source = new StringTemplateSource(templateName, getText());
+		Template handlebarsTemplate = handlebars.compile(source);
+
+		return handlebarsTemplate.apply(context);
 	}
 
 	/**

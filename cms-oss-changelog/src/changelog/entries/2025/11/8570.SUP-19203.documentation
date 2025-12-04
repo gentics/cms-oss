@@ -1,0 +1,1 @@
+Server: A mandatory parameter @--add-opens=java.base/java.lang=ALL-UNNAMED@ has been added to the "installation documentation":https://www.gentics.com/Content.Node/cmp8/guides/admin_install.html#gsc.tab=0 , to actualize the instructions against the modern Java runtimes.

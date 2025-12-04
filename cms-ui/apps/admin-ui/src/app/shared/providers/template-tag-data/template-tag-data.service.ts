@@ -1,9 +1,11 @@
 import { detailLoading, discard } from '@admin-ui/common';
-import { EntityManagerService, I18nNotificationService, I18nService, TemplateTagOperations } from '@admin-ui/core';
+import { EntityManagerService, TemplateTagOperations } from '@admin-ui/core';
 import { AppStateService, IncrementDetailLoading, ResetDetailLoading, SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EntityIdType, NormalizableEntityType, TemplateSaveRequest, TemplateTag } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, Observable, OperatorFunction } from 'rxjs';
 import { filter, map, switchMap, tap } from 'rxjs/operators';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
@@ -11,10 +13,10 @@ import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-b
 @Injectable()
 export class TemplateTagDataService extends ExtendedEntityDataServiceBase<'templateTag', TemplateTagOperations> {
 
-    @SelectState(state => state.ui.focusEntityType)
+    @SelectState((state) => state.ui.focusEntityType)
     focusEntityType$: Observable<NormalizableEntityType>;
 
-    @SelectState(state => state.ui.focusEntityId)
+    @SelectState((state) => state.ui.focusEntityId)
     focusEntityId$: Observable<string>;
 
     constructor(

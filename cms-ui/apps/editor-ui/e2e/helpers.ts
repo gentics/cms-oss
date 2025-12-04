@@ -51,7 +51,7 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
 export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
     // Note: This is a simplified version. You'll need to implement file upload handling
     if (options?.dragAndDrop) {
-        const data = files.map(f => {
+        const data = files.map((f) => {
             const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
             return {
                 bufferData: `data:application/octet-stream;base64,${buffer}`,
@@ -64,32 +64,32 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
             // Put the binaries/Files into the transfer
             for (const file of Object.values(data)) {
                 const blobData = await fetch(file.bufferData).then((res) => res.blob());
-                transfer.items.add(new File([blobData], file.name, { type: file.type }))
+                transfer.items.add(new File([blobData], file.name, { type: file.type }));
             }
             return transfer;
         }, data);
         await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
-        await page.waitForRequest(request =>
-            request.url().includes('/rest/file/create') ||
-            request.url().includes('/rest/image/create'));
+        await page.waitForRequest((request) =>
+            request.url().includes('/rest/file/create')
+            || request.url().includes('/rest/image/create'));
     } else {
         const fileChooserPromise = page.waitForEvent('filechooser');
         const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
         await uploadButton.waitFor({ state: 'visible' });
         await uploadButton.click();
         const fileChooser = await fileChooserPromise;
-        await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
+        await fileChooser.setFiles(files.map((f) => `./fixtures/${f}`));
     }
 
     // Wait for upload to complete and return response
-    const response = await page.waitForResponse(response =>
-        response.url().includes('/rest/file/create') ||
-        response.url().includes('/rest/image/create'),
+    const response = await page.waitForResponse((response) =>
+        response.url().includes('/rest/file/create')
+        || response.url().includes('/rest/image/create'),
     );
     const responseData = await response.json();
 
     const output: Record<string, any> = {};
-    files.forEach(file => {
+    files.forEach((file) => {
         output[file] = responseData.file || responseData.image;
     });
     return output;
@@ -97,17 +97,18 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
 
 export async function openPropertiesTab(page: Page): Promise<void> {
     await page.waitForSelector('content-frame .content-frame-container');
-    const previewActivated = await page.locator('content-frame .content-frame-container .properties-tabs .tab-link[data-id="preview"].is-active').count();
+    const tabs = page.locator('content-frame .content-frame-container .properties-tabs');
+    const previewActivated = await tabs.locator('tab-link[data-id="preview"].is-active').count();
     if (previewActivated > 0) {
-        await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="properties"] a');
+        await tabs.locator('.tab-link[data-id="properties"] a').click();
     }
-    await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="item-properties"]');
+    await tabs.locator('.tab-link[data-id="item-properties"]').click();
 }
 
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {
     await openPropertiesTab(page);
     const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
-    const isExpanded = await group.evaluate(el => el.classList.contains('expanded'));
+    const isExpanded = await group.evaluate((el) => el.classList.contains('expanded'));
 
     if (!isExpanded) {
         await group.locator('.collapsible-header').click();
@@ -123,6 +124,10 @@ export async function closeObjectPropertyEditor(page: Page, force: boolean = tru
     if (unsavedChanges > 0 && force) {
         await page.click('confirm-navigation-modal gtx-button[type="alert"] button');
     }
+}
+
+export function getEditorToolbarContext(page: Page): Locator {
+    return page.locator('content-frame gtx-editor-toolbar [data-action="editor-context"]');
 }
 
 export async function editorAction(page: Page, action: string): Promise<void> {
@@ -149,7 +154,7 @@ export async function selectOption(element: Locator, value: number | string | (s
     }
 }
 
-export function findAlohaComponent(page: Page, options?: { slot?: string, action?: string, type?: string }, subject?: Locator): Locator {
+export function findAlohaComponent(page: Page, options?: { slot?: string; action?: string; type?: string }, subject?: Locator): Locator {
     const root = subject || page.locator('project-editor content-frame gtx-page-editor-controls');
     const slotSelector = options?.slot ? `[slot="${options.slot}"]` : '';
     const actionSelector = `[data-action="${options.action ? options.action : 'primary'}"]`;
@@ -173,13 +178,13 @@ export function selectRangeIn(element: Locator, start: number, end?: number): Pr
         }
 
         return applied;
-    }, { start, end })
+    }, { start, end });
 }
 
 export function selectTextIn(element: Locator, textToSelect: string): Promise<boolean> {
     return element.evaluate((el, context) => {
         window.getSelection().removeAllRanges();
-        const win = (window as any as HelperWindow);
+        const win = window as any as HelperWindow;
         const applied = win.selectText(el as HTMLElement, context.textToSelect);
 
         if (applied) {
@@ -213,7 +218,7 @@ export async function createExternalLink(
     page: Page,
     formHandler: (form: Locator) => Promise<void>,
 ): Promise<void> {
-    return createLink(page, async form => {
+    return createLink(page, async (form) => {
         // Fill out rest of the form
         await formHandler(form);
     });
@@ -224,7 +229,7 @@ export async function createInternalLink(
     repoHandler: (repoBrowser: Locator) => Promise<void>,
     formHandler: (form: Locator) => Promise<void>,
 ): Promise<void> {
-    return createLink(page, async form => {
+    return createLink(page, async (form) => {
         // Select internal page
         await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
         const repoBrowser = page.locator('repository-browser');
@@ -254,9 +259,9 @@ export async function getAlohaIFrame(page: Page): Promise<Frame> {
 }
 
 export async function openPageForEditing(page: Page, pageToEdit: CmsPage): Promise<{
-    row: Locator,
-    iframe: Frame,
-    editable: Locator,
+    row: Locator;
+    iframe: Frame;
+    editable: Locator;
 }> {
     // Setup page for editing
     const list = findList(page, ITEM_TYPE_PAGE);
@@ -272,7 +277,7 @@ export async function openPageForEditing(page: Page, pageToEdit: CmsPage): Promi
         row,
         iframe,
         editable,
-    }
+    };
 }
 
 export async function setupHelperWindowFunctions(page: Page): Promise<void> {
@@ -285,7 +290,6 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
          * windows selection.
          * If you wish to replace the selection, then call the `window.getSelection().removeAllRanges()`,
          * to clear the previous selection before calling this function.
-         *
          * @param element The element in which the selection should be applied
          * @param start The starting index/offset from where the selection should start
          * @param end The ending index/offset until where the selection should be set.
@@ -392,7 +396,6 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
          * Wrapper for `selectRange`, where the `start` and `end` position are based on the
          * `indexOf` from the `element`'s `textContent`.
          * If the text can't be found at all (i.E. `indexOf` === -1), then it returns `false`.
-         *
          * @param element The element in which the selection should be applied
          * @param text The text to search and select.
          * @returns If the text was successfully selected.
@@ -410,7 +413,6 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
 
         /**
          * Updates the selection handler in Aloha to properly select the range.
-         *
          * @param win Window object where the Aloha object is available.
          * @param range The new range that should be applied/updated.
          */
@@ -444,13 +446,13 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
 }
 
 export function overrideAlohaConfig(page: Page, configFilename: string): Promise<void> {
-    return page.route('/internal/minimal/files/js/aloha-config.js', route => {
+    return page.route('/internal/minimal/files/js/aloha-config.js', (route) => {
         return route.fulfill({
             headers: {
                 location: `/internal/minimal/files/js/${configFilename}`,
             },
             status: 301,
-        })
+        });
     });
 }
 

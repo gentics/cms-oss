@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { RENDERING_CONTEXT_DROPDOWN } from '@editor-ui/app/common/models';
 import { DynamicDropdownConfiguration } from '@gentics/aloha-models';
 import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import { BaseComponent } from '@gentics/ui-core';
 import { combineLatest } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
+import { RENDERING_CONTEXT_DROPDOWN } from '../../../common/models';
 import { applyControl, focusFirst } from '../../utils';
 
 type CloseFn<T> = (value: T) => void;

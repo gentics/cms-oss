@@ -1,8 +1,10 @@
-<label *ngIf="label">{{ label }}</label>
+@if (label) {
+  <label>{{ label }}</label>
+}
 
 <gtx-checkbox
-    [label]="'common.selected' | i18n"
-    [checked]="value?.booleanValue"
-    [disabled]="disabled"
-    (click)="toggleValue($event)"
+  [label]="'common.selected' | gtxI18n"
+  [checked]="value?.booleanValue"
+  [disabled]="disabled"
+  (click)="toggleValue($event)"
 ></gtx-checkbox>

@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'modal.sort_construct_categories_title' | i18n }}</h5>
+    <h5>{{ 'modal.sort_construct_categories_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
@@ -20,7 +20,7 @@
         [disabled]="disabled"
         (click)="updateSorting()"
     >
-        {{ 'modal.save_button' | i18n }}
+        {{ 'modal.save_button' | gtxI18n }}
     </gtx-button>
 
     <gtx-button
@@ -29,6 +29,6 @@
         data-action="cancel"
         (click)="closeFn(false)"
     >
-        {{ 'common.cancel_button' | i18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
 </div>

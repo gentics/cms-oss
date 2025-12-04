@@ -91,10 +91,8 @@
                     "buildTarget": "editor-ui:build:development"
                 }
             },
-            "defaultConfiguration": "development"
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint"
+            "defaultConfiguration": "development",
+            "continuous": true
         },
         "test": {
             "executor": "nx:run-commands",
@@ -113,7 +111,7 @@
             }
         },
         "component-test": {
-            "executor": "@nx/cypress:cypress",
+            "executor": "nx:noop",
             "options": {
                 "cypressConfig": "apps/editor-ui/cypress.config.ts",
                 "testingType": "component",

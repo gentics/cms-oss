@@ -19,6 +19,11 @@
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+                gap: 0.25rem;
 
                 span {
                     vertical-align: top;

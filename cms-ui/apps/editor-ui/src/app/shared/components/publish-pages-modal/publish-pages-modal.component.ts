@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
-import { LanguageVariantMap } from '@editor-ui/app/common/models';
 import { Language, Page } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
+import { LanguageVariantMap } from '../../../common/models';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
 

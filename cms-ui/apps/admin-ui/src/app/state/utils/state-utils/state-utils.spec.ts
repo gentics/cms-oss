@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Action, NgxsModule, StateContext, Store } from '@ngxs/store';
-import { ActionDef } from '@ngxs/store/src/actions/symbols';
+import { Action, ActionDef, NgxsModule, StateContext, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
-
 import { AuthStateModel, INITIAL_AUTH_STATE } from '../../auth/auth.state';
 import {
     ActionDeclaration,
@@ -12,7 +10,7 @@ import {
     defineInitialState,
     NO_ACTION_CLASS_ERROR_MSG,
     SelectState,
- } from './state-utils';
+} from './state-utils';
 
 interface TestStateModel {
     aString: string;
@@ -112,7 +110,7 @@ describe('StateUtils', () => {
                 imports: [ NgxsModule.forRoot([ TestAuthStateModule ]) ],
                 providers: [TestService],
             }).compileComponents();
-            store = TestBed.get(Store);
+            store = TestBed.inject(Store);
         });
 
         afterEach(() => {
@@ -142,7 +140,7 @@ describe('StateUtils', () => {
         });
 
         it('@SelectState works', () => {
-            const testService = TestBed.get(TestService) as TestService;
+            const testService = TestBed.inject(TestService) as TestService;
             expect(isObservable(testService.authState$)).toBeTruthy();
 
             let emissionCount = 0;

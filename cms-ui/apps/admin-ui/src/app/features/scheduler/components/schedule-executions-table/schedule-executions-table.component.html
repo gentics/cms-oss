@@ -1,39 +1,44 @@
-<gtx-search-bar
-    *ngIf="showSearch"
+@if (showSearch) {
+  <gtx-search-bar
     class="search-bar"
     [query]="query"
-    [placeholder]="'shared.search' | i18n"
+    [placeholder]="'shared.search' | gtxI18n"
     (search)="updateSearchQuery($event)"
     (clear)="updateSearchQuery('')"
-></gtx-search-bar>
+  ></gtx-search-bar>
+}
 
-<div *ngIf="!hideActions" class="entity-table-actions-bar"></div>
+@if (!hideActions) {
+  <div class="entity-table-actions-bar"></div>
+}
 
-<div *ngIf="selectable" class="entity-table-selection">
-    {{ 'scheduler.info_selected_schedules' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
-</div>
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'scheduler.info_selected_schedules' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
 <gtx-table
-    class="entity-table"
+  class="entity-table"
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [disabled]="disabled"
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [hideActions]="hideActions"
+  [disabled]="disabled"
 
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
 
-    [page]="page"
-    [perPage]="perPage"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
 
     [renderers]="{
         result: resultRenderer,
@@ -42,28 +47,28 @@
         duration: durationRenderer
     }"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
 ></gtx-table>
 
 <ng-template #resultRenderer let-value="value">
-    <span class="gtx-table-cell-text">
-        {{ 'scheduler.execution_result_' + (value == null ? 'running' : (value ? 'true' : 'false')) | i18n }}
-    </span>
+  <span class="gtx-table-cell-text">
+    {{ 'scheduler.execution_result_' + (value == null ? 'running' : (value ? 'true' : 'false')) | gtxI18n }}
+  </span>
 </ng-template>
 
 <ng-template #dateRenderer let-value="value">
-    <span class="gtx-table-cell-text">
-        {{ value | i18nDate:'dateTimeDetailed' }}
-    </span>
+  <span class="gtx-table-cell-text">
+    {{ value | gtxI18nDate:'dateTimeDetailed' }}
+  </span>
 </ng-template>
 
 <ng-template #durationRenderer let-value="value">
-    <span class="gtx-table-cell-text">
-        {{ value | gtxI18nDuration:true }}
-    </span>
+  <span class="gtx-table-cell-text">
+    {{ value | gtxI18nDuration:true }}
+  </span>
 </ng-template>

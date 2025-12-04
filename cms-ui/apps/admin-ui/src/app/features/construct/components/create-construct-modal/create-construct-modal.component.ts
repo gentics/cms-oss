@@ -1,7 +1,8 @@
-import { ConstructHandlerService, I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
+import { ConstructHandlerService, LanguageHandlerService } from '@admin-ui/core';
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
@@ -10,7 +11,7 @@ import { Observable, Subscription } from 'rxjs';
     selector: 'gtx-create-construct-modal',
     templateUrl: './create-construct-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateConstructModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 

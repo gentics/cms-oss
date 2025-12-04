@@ -1,12 +1,5 @@
 import { Injectable } from '@angular/core';
 import {
-    folderSchema,
-    imageSchema,
-    languageSchema,
-    nodeSchema,
-} from '@editor-ui/app/common/models';
-import { defaultUserSettings } from '@editor-ui/app/core/models';
-import {
     File,
     Folder,
     FolderItemOrTemplateType,
@@ -33,9 +26,14 @@ import {
     RecentItem,
     RecentItemMode,
     emptyItemInfo,
+    folderSchema,
+    imageSchema,
+    languageSchema,
+    nodeSchema,
     plural,
 } from '../../../common/models';
 import { deepEqual } from '../../../common/utils/deep-equal';
+import { defaultUserSettings } from '../../../core/models';
 import { ApplicationStateService } from '../../providers/application-state/application-state.service';
 import { ActionDefinition, AppStateBranch, concatUnique, getNormalizrSchema } from '../../state-utils';
 import { FocusListAction } from '../editor/editor.actions';

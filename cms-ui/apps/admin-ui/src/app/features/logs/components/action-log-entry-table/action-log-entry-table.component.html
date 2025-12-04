@@ -1,52 +1,55 @@
-<div *ngIf="!hideActions" class="entity-table-actions-bar">
+@if (!hideActions) {
+  <div class="entity-table-actions-bar">
     <gtx-button
-        class="table-action-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled || loading"
-        (click)="clear()"
-    >
-        <icon right>filter_alt</icon> {{ 'common.reset_filter' | i18n }}
+      class="table-action-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled || loading"
+      (click)="clear()"
+      >
+      <icon right>filter_alt</icon> {{ 'common.reset_filter' | gtxI18n }}
     </gtx-button>
-
     <gtx-button
-        class="table-action-button reload-button"
-        flat
-        size="small"
-        type="primary"
-        [disabled]="disabled || loading"
-        (click)="reload()"
-    >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+      class="table-action-button reload-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled || loading"
+      (click)="reload()"
+      >
+      <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
     </gtx-button>
-</div>
+  </div>
+}
 
-<div *ngIf="selectable" class="entity-table-selection">
-    {{ 'logs.info_selected_logs' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
-</div>
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'logs.info_selected_logs' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
 <gtx-table
-    class="entity-table"
+  class="entity-table"
 
-    [selectAllType]="TableSelectAllType.PAGE"
-    [selectable]="selectable"
-    [hideActions]="hideActions"
-    [disabled]="disabled"
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [hideActions]="hideActions"
+  [disabled]="disabled"
 
-    [columns]="columns"
-    [rows]="rows"
-    [actions]="actions"
-    [selected]="selected"
-    [active]="activeEntity"
-    [totalCount]="totalCount"
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
 
-    [page]="page"
-    [perPage]="perPage"
-    [sortBy]="sortBy"
-    [sortOrder]="sortOrder"
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
 
     [renderers]="{
         object: typeRenderer,
@@ -61,96 +64,102 @@
         timestamp: dateFilter,
     }"
 
-    (pageChange)="changePageTo($event)"
-    (sortByChange)="updateSortBy($event)"
-    (sortOrderChange)="updateSortOrder($event)"
-    (selectedChange)="updateSelection($event)"
-    (select)="forwardSelect($event)"
-    (deselect)="forwardDeselect($event)"
-    (rowClick)="handleRowClick($event)"
-    (actionClick)="handleAction($event)"
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowSelect)="forwardSelect($event)"
+  (rowDeselect)="forwardDeselect($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
 ></gtx-table>
 
 <ng-template #typeRenderer let-row="row">
-    <div class="name-wrapper">
-        <gtx-icon [name]="row.item?.type?.name || row.item?.action?.name" class="type-icon"></gtx-icon>
-        <a *ngIf="row.item?.type?.name !== 'template'"
-            class="gtx-table-cell-link name"
-            [routerLink]="row.item | gtxEntityDetailRouterLink"
-        >{{ row.item?.type?.label || row.item?.action?.label }}</a>
-        <span *ngIf="row.item?.type?.name === 'template'" class="name">{{ row.item?.type?.label || row.item?.action?.label }}</span>
-    </div>
+  <div class="name-wrapper">
+    <gtx-icon [name]="row.item?.type?.name || row.item?.action?.name" class="type-icon"></gtx-icon>
+    @if (row.item?.type?.name !== 'template') {
+      <a
+        class="gtx-table-cell-link name"
+        [routerLink]="row.item | gtxEntityDetailRouterLink"
+      >{{ row.item?.type?.label || row.item?.action?.label }}</a>
+    }
+    @if (row.item?.type?.name === 'template') {
+      <span class="name">{{ row.item?.type?.label || row.item?.action?.label }}</span>
+    }
+  </div>
 </ng-template>
 
 <ng-template #dateRenderer let-value="value">
-    <span class="gtx-table-cell-text">
-        {{ value | i18nDate:'dateTimeDetailed' }}
-    </span>
+  <span class="gtx-table-cell-text">
+    {{ value | gtxI18nDate:'dateTimeDetailed' }}
+  </span>
 </ng-template>
 
 <ng-template #objectFilter>
-    <gtx-table-filter-wrapper [hasValue]="filters?.object?.length > 0" (clear)="applyFilterValue('object', null)">
-        <gtx-select
-            class="object-filter"
-            [placeholder]="'common.object_filter_placeholder' | i18n"
-            [multiple]="true"
-            [value]="filters.object"
-            (valueChange)="applyFilterValue('object', $event)"
-        >
-            <gtx-option
-                *ngFor="let item of logTypes"
-                [value]="item.name"
-            >{{ item.label }}</gtx-option>
-        </gtx-select>
-    </gtx-table-filter-wrapper>
+  <gtx-table-filter-wrapper [hasValue]="filters?.object?.length > 0" (clear)="applyFilterValue('object', null)">
+    <gtx-select
+      class="object-filter"
+      [placeholder]="'common.object_filter_placeholder' | gtxI18n"
+      [multiple]="true"
+      [value]="filters.object"
+      (valueChange)="applyFilterValue('object', $event)"
+      >
+      @for (item of logTypes; track item.name) {
+        <gtx-option
+          [value]="item.name"
+        >{{ item.label }}</gtx-option>
+      }
+    </gtx-select>
+  </gtx-table-filter-wrapper>
 </ng-template>
 
 <ng-template #actionFilter>
-    <gtx-table-filter-wrapper [hasValue]="filters?.action?.length > 0" (clear)="applyFilterValue('action', null)">
-        <gtx-select
-            class="object-filter"
-            [placeholder]="'common.action_filter_placeholder' | i18n"
-            [multiple]="true"
-            [value]="filters.action"
-            (valueChange)="applyFilterValue('action', $event)"
-        >
-            <gtx-option
-                *ngFor="let item of logActions"
-                [value]="item.name"
-            >{{ item.label }}</gtx-option>
+  <gtx-table-filter-wrapper [hasValue]="filters?.action?.length > 0" (clear)="applyFilterValue('action', null)">
+    <gtx-select
+      class="object-filter"
+      [placeholder]="'common.action_filter_placeholder' | gtxI18n"
+      [multiple]="true"
+      [value]="filters.action"
+      (valueChange)="applyFilterValue('action', $event)"
+      >
+      @for (item of logActions; track item.name) {
+        <gtx-option
+          [value]="item.name"
+        >{{ item.label }}</gtx-option>
+      }
 
-        </gtx-select>
-    </gtx-table-filter-wrapper>
+    </gtx-select>
+  </gtx-table-filter-wrapper>
 </ng-template>
 
 <ng-template #textFilter let-column="column">
-    <gtx-table-filter-wrapper [hasValue]="!!filters?.[column.id]" (clear)="applyFilterValue(column.id, null)">
-        <gtx-input
-            [type]="'text'"
-            [placeholder]="'Filter '+ column.label"
-            [value]="filters[column.id]"
-            (keyup.enter)="applyFilterValue(column.id, $event.target.value)"
-        />
-    </gtx-table-filter-wrapper>
+  <gtx-table-filter-wrapper [hasValue]="!!filters?.[column.id]" (clear)="applyFilterValue(column.id, null)">
+    <gtx-input
+      [type]="'text'"
+      [placeholder]="'Filter '+ column.label"
+      [value]="filters[column.id]"
+      (keyup.enter)="applyFilterValue(column.id, $event.target.value)"
+      />
+  </gtx-table-filter-wrapper>
 </ng-template>
 
 <ng-template #dateFilter let-column="column">
-    <gtx-table-filter-wrapper [hasValue]="!!filters?.['start']" [hasClear]="false">
-        <gtx-date-time-picker
-            [displayTime]="true"
-            [clearable]="false"
-            [placeholder]="'common.date_filter_placeholder' | i18n"
-            [value]="filters['start']"
-            [max]="startMax"
-            (valueChange)="applyFilterValue('start', $event)"
-        />
-        <gtx-date-time-picker
-            [displayTime]="true"
-            [clearable]="false"
-            [placeholder]="'common.date_filter_placeholder' | i18n"
-            [value]="filters['end']"
-            [min]="endMin"
-            (valueChange)="applyFilterValue('end', $event)"
-        />
-    </gtx-table-filter-wrapper>
+  <gtx-table-filter-wrapper [hasValue]="!!filters?.['start']" [hasClear]="false">
+    <gtx-date-time-picker
+      [displayTime]="true"
+      [clearable]="false"
+      [placeholder]="'common.date_filter_placeholder' | gtxI18n"
+      [value]="filters['start']"
+      [max]="startMax"
+      (valueChange)="applyFilterValue('start', $event)"
+      />
+    <gtx-date-time-picker
+      [displayTime]="true"
+      [clearable]="false"
+      [placeholder]="'common.date_filter_placeholder' | gtxI18n"
+      [value]="filters['end']"
+      [min]="endMin"
+      (valueChange)="applyFilterValue('end', $event)"
+      />
+  </gtx-table-filter-wrapper>
 </ng-template>

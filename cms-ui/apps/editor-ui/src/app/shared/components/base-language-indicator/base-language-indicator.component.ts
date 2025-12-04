@@ -1,9 +1,8 @@
 import { Directive, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChange } from '@angular/core';
-import { ItemLanguageClickEvent, UIMode } from '@editor-ui/app/common/models';
-import { ItemListRowMode } from '@editor-ui/app/common/models';
 import { Form, Language, Normalized, Page, StagedItemsMap } from '@gentics/cms-models';
 import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
 import { first, map, mergeMap, takeUntil } from 'rxjs/operators';
+import { ItemLanguageClickEvent, ItemListRowMode, UIMode } from '../../../common/models';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 @Directive()

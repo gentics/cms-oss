@@ -1,6 +1,3 @@
-/* eslint-disable import/order */
-/* eslint-disable import/no-nodejs-modules */
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import {
     ConstructCategory,
     ContentRepository,
@@ -39,7 +36,6 @@ import {
     ConstructCategoryImportData,
     CORE_CONSTRUCTS,
     EntityMap,
-    ENV_E2E_CMS_URL,
     FileImportData,
     FixtureFile,
     FolderImportData,
@@ -73,6 +69,7 @@ import {
     TestSize,
     UserImportData,
 } from './common';
+import { ENV_E2E_CMS_URL } from './config';
 import {
     emptyNode,
     GROUP_ROOT,
@@ -80,14 +77,14 @@ import {
     PACKAGE_MAP,
     SCHEDULE_PUBLISHER,
 } from './entities';
-import { MeshPlaywrightDriver } from './mesh-playwright-driver';
 import { createMeshProxy } from './mesh-proxy';
-import { GCMSPlaywrightDriver } from './playwright-driver';
+import { PlaywrightGCMSDriver } from './playwright-cms-driver';
+import { PlaywrightMeshDriver } from './playwright-mesh-driver';
 import { getDefaultSystemLogin } from './utils';
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
-}
+};
 
 const GLOBAL_FEATURES = Object.values(Feature);
 const NODE_FEATURES = Object.values(NodeFeature);
@@ -127,7 +124,7 @@ export class EntityImporter {
     public tasks: Record<string, ScheduleTask> = {};
     /** The top most group that can be accessed from the admin account. */
     public cmsRootGroup: Group;
-    /** The root of all test groups, which is imported via the {@link GROUP_ROOT} import data.*/
+    /** The root of all test groups, which is imported via the {@link GROUP_ROOT} import data. */
     public testRootGroup: Group;
     /** If the `bootstrapSuite` has been successfully run through. */
     public bootstrapped = false;
@@ -248,7 +245,7 @@ export class EntityImporter {
             if (this.options?.logImports) {
                 console.log(`Waiting for the schedule "${schedule.name}" execution to finish`);
             }
-            await new Promise(resolve => setTimeout(resolve, 1_000));
+            await new Promise((resolve) => setTimeout(resolve, 1_000));
         }
     }
 
@@ -317,7 +314,7 @@ export class EntityImporter {
         // Get all the required node-ids from the package, if present
         if (size) {
             nodeIds = PACKAGE_MAP[size]
-                .filter(data => data[IMPORT_TYPE] === IMPORT_TYPE_NODE)
+                .filter((data) => data[IMPORT_TYPE] === IMPORT_TYPE_NODE)
                 .map((data: NodeImportData) => this.getDependency(data)?.id);
         }
 
@@ -334,15 +331,15 @@ export class EntityImporter {
                     }).send();
                 } catch (err) {
                     if (err instanceof GCMSRestClientRequestError
-                        && (
-                            err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already deactivated`
-                            || err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already activated`
-                            // In case we want to (make sure) to have a feature deactivated, but it isn't licensed, then we can ignore it
-                            || (
-                                err.data?.responseInfo?.responseCode === ResponseCode.NOT_LICENSED
-                                && !enabled
-                            )
-                        )
+                      && (
+                          err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already deactivated`
+                          || err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already activated`
+                          // In case we want to (make sure) to have a feature deactivated, but it isn't licensed, then we can ignore it
+                          || (
+                              err.data?.responseInfo?.responseCode === ResponseCode.NOT_LICENSED
+                              && !enabled
+                          )
+                      )
                     ) {
                         return;
                     }
@@ -367,7 +364,7 @@ export class EntityImporter {
         this.apiContext = apiContext;
 
         if (this.client) {
-            (this.client.driver as GCMSPlaywrightDriver).context = this.apiContext;
+            (this.client.driver as PlaywrightGCMSDriver).context = this.apiContext;
         }
     }
 
@@ -523,7 +520,7 @@ export class EntityImporter {
             ...reqData
         } = data;
 
-        const {masterId, ...req} = reqData.node;
+        const { masterId, ...req } = reqData.node;
 
         let actualMasterId = 0;
         if (masterId) {
@@ -555,7 +552,7 @@ export class EntityImporter {
             packages = PACKAGE_IMPORTS[pkgName];
         } else {
             // If no package is provided, it'll aggregate all of them and assign those
-            packages = Array.from(new Set(Object.values(PACKAGE_IMPORTS).flatMap(v => v)));
+            packages = Array.from(new Set(Object.values(PACKAGE_IMPORTS).flatMap((v) => v)));
         }
 
         if (created.type !== 'channel') {
@@ -754,7 +751,7 @@ export class EntityImporter {
         if (parent === null) {
             parentGroup = this.cmsRootGroup;
         } else if (parent != null) {
-            parentGroup = this.getDependency(parent, true);
+            parentGroup = this.getDependency<typeof IMPORT_TYPE_GROUP>(parent, true);
         } else {
             parentGroup = this.testRootGroup;
         }
@@ -771,7 +768,7 @@ export class EntityImporter {
                 console.log(`${data[IMPORT_TYPE]}:${data[IMPORT_ID]} already exists`);
             }
             const foundGroups = (await this.client.group.list({ q: reqData.name }).send()).items || [];
-            importedGroup = foundGroups.find(group => group.name === reqData.name);
+            importedGroup = foundGroups.find((group) => group.name === reqData.name);
         }
 
         if (importedGroup && permissions) {
@@ -811,7 +808,7 @@ export class EntityImporter {
         } else if (!group) {
             groupEntity = this.testRootGroup;
         } else {
-            groupEntity = this.getDependency(group);
+            groupEntity = this.getDependency<typeof IMPORT_TYPE_GROUP>(group);
         }
 
         try {
@@ -826,7 +823,7 @@ export class EntityImporter {
                 console.log(`${data[IMPORT_TYPE]}:${data[IMPORT_ID]} already exists`);
             }
             const foundUsers = (await this.client.user.list({ q: data.login }).send()).items || [];
-            user = foundUsers.find(user => user.login === data.login);
+            user = foundUsers.find((user) => user.login === data.login);
         }
 
         if (extraGroups) {
@@ -871,7 +868,7 @@ export class EntityImporter {
             }
 
             const foundSchedules = (await this.client.scheduler.list().send()).items || [];
-            const found = foundSchedules.find(schedule => schedule.name === data.name);
+            const found = foundSchedules.find((schedule) => schedule.name === data.name);
 
             return found;
         }
@@ -1046,7 +1043,7 @@ export class EntityImporter {
         const login = await this.client.contentRepository.proxyLogin(cr.id).send();
 
         const mesh: MeshRestClient = createMeshProxy(this.client, cr.id);
-        mesh.driver = new MeshPlaywrightDriver(this.apiContext);
+        mesh.driver = new PlaywrightMeshDriver(this.apiContext);
         mesh.apiKey = login.token;
 
         return mesh;
@@ -1205,7 +1202,7 @@ export async function createClient(options: ClientOptions): Promise<GCMSRestClie
         options.connection = {
             absolute: true,
             ssl: baseUrl.protocol === 'https:',
-            host:options.isPageContext ? baseUrl.hostname : 'localhost',
+            host: options.isPageContext ? baseUrl.hostname : 'localhost',
             port: parseInt(baseUrl.port, 10),
             basePath: join(baseUrl.pathname, '/rest'),
         };
@@ -1213,7 +1210,7 @@ export async function createClient(options: ClientOptions): Promise<GCMSRestClie
 
     // The baseUrl (aka. protocol/host/port) has to be already setup when started
     const client = new GCMSRestClient(
-        new GCMSPlaywrightDriver(options.context),
+        new PlaywrightGCMSDriver(options.context),
         options as GCMSRestClientConfig,
     );
 
@@ -1233,4 +1230,3 @@ export async function createClient(options: ClientOptions): Promise<GCMSRestClie
         return client;
     }
 }
-

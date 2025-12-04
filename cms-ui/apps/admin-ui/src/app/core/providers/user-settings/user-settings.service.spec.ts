@@ -1,15 +1,15 @@
-import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
-import { AppStateService, INITIAL_AUTH_STATE } from '@admin-ui/state';
-import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { of } from 'rxjs';
 import { first, takeUntil } from 'rxjs/operators';
 import { createDelayedObservable } from '../../../../testing';
+import { InterfaceOf, ObservableStopper } from '../../../common';
+import { AppStateService, INITIAL_AUTH_STATE } from '../../../state';
 import { SetUILanguage, SetUISettings } from '../../../state/ui/ui.actions';
+import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
 import { EditorUiLocalStorageService } from '../editor-ui-local-storage';
-import { I18nService } from '../i18n';
-import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
 import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ServerStorageService } from '../server-storage';
 import { UI_SETTINGS_DEBOUNCE_MS, UserSettingsService } from './user-settings.service';
@@ -48,19 +48,15 @@ describe('UserSettingsService', () => {
             ],
             providers: [
                 UserSettingsService,
-                TestAppState,
-                { provide: AppStateService, useExisting: TestAppState },
-                MockEditorLocalStorage,
-                { provide: EditorUiLocalStorageService, useExisting: MockEditorLocalStorage },
-                MockI18nServiceWithSpies,
-                { provide: I18nService, useExisting: MockI18nServiceWithSpies },
-                MockServerStorageService,
-                { provide: ServerStorageService, useExisting: MockServerStorageService },
+                { provide: AppStateService, useClass: TestAppState },
+                { provide: EditorUiLocalStorageService, useClass: MockEditorLocalStorage },
+                { provide: ServerStorageService, useClass: MockServerStorageService },
                 { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },
+                { provide: I18nService, useClass: MockI18nService },
             ],
         });
 
-        appState = TestBed.inject(TestAppState);
+        appState = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
         userSettings = TestBed.inject(UserSettingsService);
     });
@@ -72,12 +68,12 @@ describe('UserSettingsService', () => {
     describe('UI Language', () => {
 
         let editorLocalStorage: MockEditorLocalStorage;
-        let i18n: MockI18nServiceWithSpies;
+        let i18n: I18nService;
 
         beforeEach(() => {
-            editorLocalStorage = TestBed.inject(MockEditorLocalStorage);
-            i18n = TestBed.inject(MockI18nServiceWithSpies);
-            i18n.inferUserLanguage.and.returnValue(I18N_SERVICE_INFERRED_LANGUAGE);
+            editorLocalStorage = TestBed.inject(EditorUiLocalStorageService) as any;
+            i18n = TestBed.inject(I18nService);
+            spyOn(i18n, 'inferUserLanguage').and.returnValue(I18N_SERVICE_INFERRED_LANGUAGE);
         });
 
         it('reads the UI language from the local storage and sets it in the AppState', () => {
@@ -139,13 +135,13 @@ describe('UserSettingsService', () => {
         let dispatchedActions: SetUISettings[];
 
         beforeEach(() => {
-            serverStorage = TestBed.inject(MockServerStorageService);
+            serverStorage = TestBed.inject(ServerStorageService) as any;
             dispatchedActions = [];
 
             appState.trackActions().pipe(
                 ofActionDispatched(SetUISettings as ActionType),
                 takeUntil(stopper.stopper$),
-            ).subscribe(action => dispatchedActions.push(action));
+            ).subscribe((action) => dispatchedActions.push(action));
         });
 
         function simulateLogin(userId: number, runTick: boolean = true): void {
@@ -227,7 +223,7 @@ describe('UserSettingsService', () => {
             tick();
 
             expect(serverStorage.set).toHaveBeenCalledTimes(1);
-            expect(serverStorage.set).toHaveBeenCalledWith(`uiLanguage`, 'en');
+            expect(serverStorage.set).toHaveBeenCalledWith('uiLanguage', 'en');
         }));
 
         it('does not save settings, while they are being loaded from the server', fakeAsync(() => {

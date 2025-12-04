@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.events.DependencyObject;
@@ -46,6 +47,9 @@ public abstract class Content extends AbstractContentObject implements TagContai
 	 * @throws NodeException
 	 */
 	public abstract List<Page> getPages() throws NodeException;
+
+	public abstract boolean isPartiallyLocalized();
+	public abstract Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException;
 
 	/**
 	 * get a contenttag by name.
@@ -125,7 +129,9 @@ public abstract class Content extends AbstractContentObject implements TagContai
 	@Override
 	public void delete(boolean force) throws NodeException {
 		for (ContentTag tag : getContentTags().values()) {
-			tag.delete();
+			if (!tag.isInherited()) {
+				tag.delete();
+			}
 		}
 		performDelete();
 	}
@@ -195,4 +201,6 @@ public abstract class Content extends AbstractContentObject implements TagContai
 	 * @throws NodeException
 	 */
 	public abstract Node getNode() throws NodeException;
+
+	public abstract Content setModified(boolean modified) throws ReadOnlyException;
 }

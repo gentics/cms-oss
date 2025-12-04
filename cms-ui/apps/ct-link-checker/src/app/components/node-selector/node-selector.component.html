@@ -1,6 +1,6 @@
 <gtx-dropdown-list>
     <gtx-dropdown-trigger>
-        <gtx-button icon type="default" title="{{ 'common.select_node' | translate }}…">
+        <gtx-button icon type="default" title="{{ 'common.select_node' | gtxI18n }}…">
             <i class="material-icons arrow-icon">arrow_drop_down</i>
         </gtx-button>
     </gtx-dropdown-trigger>
@@ -8,7 +8,7 @@
         <ng-content></ng-content>
         <gtxct-list-filter selector="gtx-dropdown-item"
                         filterThreshhold="10"
-                        [label]="'editor.filter_nodes' | translate">
+                        [label]="'editor.filter_nodes' | gtxI18n">
             <gtxct-node-selector-tree [stats]="stats | async" [branches]="nodeBranches$ | async"
                                 (nodeSelected)="select($event)"></gtxct-node-selector-tree>
         </gtxct-list-filter>

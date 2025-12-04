@@ -1,5 +1,5 @@
 import { ImportErrorBO } from '@admin-ui/common';
-import { ContentPackageOperations, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { ContentPackageOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import {
@@ -12,11 +12,13 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ContentPackageBO,
     ContentPackageImportError,
 } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import {
     ContentPackageImportErrorTableLoaderService,
     ContentPackageTableLoaderService,
@@ -28,7 +30,7 @@ import {
     templateUrl: './content-package-import-error-table.component.html',
     styleUrls: ['./content-package-import-error-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ContentPackageImportErrorTableComponent
     extends BaseEntityTableComponent<ContentPackageImportError, ImportErrorBO, ContentStagingImportErrorTableLoaderOptions>
@@ -40,7 +42,7 @@ export class ContentPackageImportErrorTableComponent
     @Output()
     public reloadPackage = new EventEmitter<void>();
 
-    public checkResultAvailable: boolean
+    public checkResultAvailable: boolean;
 
     public lastCheckTimestamp: string;
 
@@ -91,11 +93,11 @@ export class ContentPackageImportErrorTableComponent
         super.ngOnInit();
 
         this.subscriptions.push(
-            this.loader.checkResultAvailable$.subscribe(isAvailable => {
+            this.loader.checkResultAvailable$.subscribe((isAvailable) => {
                 this.checkResultAvailable = isAvailable;
                 this.changeDetector.markForCheck();
             }),
-            this.loader.lastCheckTimestamp$.subscribe(timestamp => {
+            this.loader.lastCheckTimestamp$.subscribe((timestamp) => {
                 this.lastCheckTimestamp = timestamp;
                 this.changeDetector.markForCheck();
             }),
@@ -119,7 +121,7 @@ export class ContentPackageImportErrorTableComponent
             },
         });
 
-        this.subscriptions.push(this.operations.importFromFileSystem(this.contentPackage.name, {test: true, wait: 1}, false).subscribe(() => {
+        this.subscriptions.push(this.operations.importFromFileSystem(this.contentPackage.name, { test: true, wait: 1 }, false).subscribe(() => {
             this.reloadWithPackage();
             this.contentPackageLoader.reload();
             this.changeDetector.markForCheck();

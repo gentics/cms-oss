@@ -1,15 +1,15 @@
 import { AdminUIEntityDetailRoutes, BO_PERMISSIONS, NodeBO } from '@admin-ui/common';
 import {
-    I18nNotificationService,
-    I18nService,
     NodeOperations,
     NodeTableLoaderService,
     PermissionsService,
 } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { WizardService } from '../../providers/wizard/wizard.service';
@@ -20,7 +20,7 @@ import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/ba
     templateUrl: './node-table.component.html',
     styleUrls: ['./node-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
 
@@ -53,6 +53,7 @@ export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
             sortable: false,
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'node';
 
     constructor(
@@ -72,7 +73,7 @@ export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
             i18n,
             loader,
             modalService,
-        )
+        );
     }
 
     protected override createTableActionLoading(): Observable<TableAction<NodeBO>[]> {

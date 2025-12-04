@@ -1,5 +1,4 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, QueryList, ViewChildren } from '@angular/core';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import {
     CompleteTagEditor,
     ModalClosingReason,
@@ -18,6 +17,7 @@ import {
     findTagPart,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -136,18 +136,18 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
 
     onDeleteClick(): void {
         this.modalService.dialog({
-            title: this.i18n.translate('modal.confirmation_tag_delete_singular_title'),
-            body: this.i18n.translate('modal.delete_tag_confirm_singular', { name: this.originalTag.name }),
+            title: this.i18n.instant('modal.confirmation_tag_delete_singular_title'),
+            body: this.i18n.instant('modal.delete_tag_confirm_singular', { name: this.originalTag.name }),
             buttons: [
                 {
-                    label: this.i18n.translate('common.cancel_button'),
+                    label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     flat: true,
                     returnValue: false,
                     shouldReject: true,
                 },
                 {
-                    label: this.i18n.translate('common.delete_button'),
+                    label: this.i18n.instant('common.delete_button'),
                     type: 'alert',
                     returnValue: true,
                 },

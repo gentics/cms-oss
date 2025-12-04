@@ -1,4 +1,4 @@
-import { MOVE_DOWN_ACTION, MOVE_TO_TOP_ACTION, MOVE_UP_ACTION } from '@admin-ui/common/models/tables';
+import { MOVE_DOWN_ACTION, MOVE_TO_TOP_ACTION, MOVE_UP_ACTION } from '../src/app/common/models/tables';
 import {
     Construct,
     ConstructCategoryListResponse,
@@ -124,7 +124,7 @@ test.describe('Constructs Module', () => {
         });
 
         test('should properly remove and assign the constructs to the node', async ({ page }) => {
-            const row = findTableRowById(page, testConstruct.id)
+            const row = await findTableRowById(page, testConstruct.id);
             await findTableAction(row, 'assignConstructToNodes').click();
 
             // Wait for modal and find the node table
@@ -143,7 +143,7 @@ test.describe('Constructs Module', () => {
                 const linkRequestBody: NodeMultiLinkRequest = JSON.parse(request.postData());
 
                 // Verify the request
-                expect(linkRequestBody.ids).toEqual([parseInt(nodeId!, 10)]);
+                expect(linkRequestBody.ids).toEqual([parseInt(nodeId, 10)]);
 
                 return route.continue();
             });
@@ -186,7 +186,7 @@ test.describe('Constructs Module', () => {
         const DEFAULT_CATEGORIES_COUNT = 2;
 
         const CATEGORIES = [...Array(20).keys()]
-            .map(idx => createCategoryData(idx + 1));
+            .map((idx) => createCategoryData(idx + 1));
 
         test.beforeEach(async ({ page, request, context }) => {
             await context.clearCookies();
@@ -279,12 +279,12 @@ test.describe('Constructs Module', () => {
                 ...LOADED_CATEGORIES.slice(REORDER_DOWN_TO_INDEX + 1, REORDER_TOP_INDEX),
                 // TOP START position
                 ...LOADED_CATEGORIES.slice(REORDER_TOP_INDEX + 1),
-            ].map(cat => `${cat.id}`);
+            ].map((cat) => `${cat.id}`);
             expect(EXPECTED_ORDER).toHaveLength(DEFAULT_CATEGORIES_COUNT + CATEGORIES.length);
 
             const updateReq = page.waitForRequest(matchRequest('POST', '/rest/construct/category/sortorder'));
             await modal.locator('.modal-footer [data-action="confirm"] button').click();
-            const updateBody = ((await updateReq).postDataJSON() as ConstructCategorySortRequest);
+            const updateBody = (await updateReq).postDataJSON() as ConstructCategorySortRequest;
 
             expect(updateBody.ids).toEqual(EXPECTED_ORDER);
         });

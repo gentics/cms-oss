@@ -275,6 +275,11 @@ public class Page extends PublishableContentItem implements Serializable {
 	private Integer customEdate;
 
 	/**
+	 * Whether this page has been partially localized.
+	 */
+	private LocalizationType localizationType;
+
+	/**
 	 * Constructor used by JAXB
 	 */
 	public Page() {
@@ -1062,5 +1067,15 @@ public class Page extends PublishableContentItem implements Serializable {
 	 */
 	public void setCustomEdate(Integer customEdate) {
 		this.customEdate = customEdate;
+	}
+
+	public LocalizationType getLocalizationType() {
+		return localizationType;
+	}
+
+	public Page setLocalizationType(LocalizationType localizationType) {
+		this.localizationType = localizationType;
+
+		return this;
 	}
 }

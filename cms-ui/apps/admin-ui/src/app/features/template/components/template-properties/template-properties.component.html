@@ -1,66 +1,68 @@
-<gtx-properties-manager
-    *ngIf="mode === TemplatePropertiesMode.UPDATE; else propertiesForm"
+@if (mode === TemplatePropertiesMode.UPDATE) {
+  <gtx-properties-manager
     class="proeprties-manager"
     [editors]="{ general: propertiesForm }"
-    [tabs]="[{ id: GENERAL_TAB, label: ('common.general' | i18n), isGroup: false }]"
+    [tabs]="[{ id: GENERAL_TAB, label: ('common.general' | gtxI18n), isGroup: false }]"
     [nodeId]="node?.id"
     [itemType]="'template'"
     [item]="value"
     [(activeTab)]="activePropertiesTab"
     (change)="tagsChanged($event)"
-></gtx-properties-manager>
-
-<ng-template #propertiesForm>
-    <form *ngIf="form" class="flex-row row" [formGroup]="form">
-        <div class="input-container small-12 medium-6 columns">
-            <gtx-input
-                type="text"
-                [required]="true"
-                maxlength="255"
-                [label]="('template.name' | i18n) + ' *'"
-                [placeholder]="'template.name' | i18n"
-                (blur)="triggerTouch()"
-                formControlName="name"
-            ></gtx-input>
-        </div>
-
-        <div class="input-container small-12 medium-6 columns">
-            <gtx-select
-                [required]="true"
-                [label]="('template.markupLanguage' | i18n) + ' *'"
-                [placeholder]="'template.markupLanguage' | i18n"
-                (blur)="triggerTouch()"
-                formControlName="markupLanguage"
-            >
-                <gtx-option
-                    *ngFor="let markupLang of (markupLanguages | gtxValues)"
-                    [value]="(markupLang.id + '')"
-                >
-                    {{ markupLang.name }}
-                    <ng-container *ngIf="markupLang.extension">&nbsp;(.{{ markupLang.extension }})</ng-container>
-                </gtx-option>
-            </gtx-select>
-        </div>
-
-        <div class="input-container small-12 medium-12 columns">
-            <gtx-input
-                type="text"
-                [required]="false"
-                [label]="'template.description' | i18n"
-                [placeholder]="'template.description' | i18n"
-                (blur)="triggerTouch()"
-                formControlName="description"
-            ></gtx-input>
-        </div>
-
-        <div class="input-container small-12 medium-12 columns">
-            <gtx-textarea
-                [required]="false"
-                [label]="'template.source' | i18n"
-                [placeholder]="'template.source' | i18n"
-                (touch)="triggerTouch()"
-                formControlName="source"
-            ></gtx-textarea>
-        </div>
+  ></gtx-properties-manager>
+} @else {
+  @if (form) {
+    <form class="flex-row row" [formGroup]="form">
+      <div class="input-container small-12 medium-6 columns">
+        <gtx-input
+          type="text"
+          [required]="true"
+          maxlength="255"
+          [label]="('template.name' | gtxI18n) + ' *'"
+          [placeholder]="'template.name' | gtxI18n"
+          (blur)="triggerTouch()"
+          formControlName="name"
+        ></gtx-input>
+      </div>
+      <div class="input-container small-12 medium-6 columns">
+        <gtx-select
+          [required]="true"
+          [label]="('template.markupLanguage' | gtxI18n) + ' *'"
+          [placeholder]="'template.markupLanguage' | gtxI18n"
+          (blur)="triggerTouch()"
+          formControlName="markupLanguage"
+          >
+          @for (markupLang of (markupLanguages | gtxValues); track markupLang.id) {
+            <gtx-option
+              [value]="(markupLang.id + '')"
+              >
+              {{ markupLang.name }}
+              @if (markupLang.extension) {
+                &nbsp;(.{{ markupLang.extension }})
+              }
+            </gtx-option>
+          }
+        </gtx-select>
+      </div>
+      <div class="input-container small-12 medium-12 columns">
+        <gtx-input
+          type="text"
+          [required]="false"
+          [label]="'template.description' | gtxI18n"
+          [placeholder]="'template.description' | gtxI18n"
+          (blur)="triggerTouch()"
+          formControlName="description"
+        ></gtx-input>
+      </div>
+      <div class="input-container small-12 medium-12 columns">
+        <gtx-textarea
+          [required]="false"
+          [label]="'template.source' | gtxI18n"
+          [placeholder]="'template.source' | gtxI18n"
+          (touch)="triggerTouch()"
+          formControlName="source"
+        ></gtx-textarea>
+      </div>
     </form>
-</ng-template>
+  }
+}
+

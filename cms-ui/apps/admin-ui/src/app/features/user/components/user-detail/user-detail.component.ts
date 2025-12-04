@@ -1,16 +1,3 @@
-import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE, UserDetailTabs } from '@admin-ui/common';
-import {
-    BREADCRUMB_RESOLVER,
-    EditorTabTrackerService,
-    PermissionsService,
-    ResolveBreadcrumbFn,
-    UserOperations,
-    UserTableLoaderService,
-} from '@admin-ui/core';
-import { ChangePasswordModalComponent } from '@admin-ui/core/components/change-password-modal/change-password-modal.component';
-import { ErrorHandler } from '@admin-ui/core/providers/error-handler/error-handler.service';
-import { BaseDetailComponent, getPatternEmail, UserDataService } from '@admin-ui/shared';
-import { AppStateService, UIStateModel } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -18,7 +5,7 @@ import {
     OnInit,
     Type,
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
     AccessControlledType,
@@ -31,7 +18,20 @@ import {
 import { ModalService } from '@gentics/ui-core';
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE, UserDetailTabs } from '../../../../common';
 import { detailLoading } from '../../../../common/utils/rxjs-loading-operators/detail-loading.operator';
+import { ChangePasswordModalComponent } from '../../../../core/components';
+import {
+    BREADCRUMB_RESOLVER,
+    EditorTabTrackerService,
+    ErrorHandler,
+    PermissionsService,
+    ResolveBreadcrumbFn,
+    UserOperations,
+    UserTableLoaderService,
+} from '../../../../core/providers';
+import { BaseDetailComponent, UserDataService } from '../../../../shared';
+import { AppStateService, UIStateModel } from '../../../../state';
 
 // *************************************************************************************************
 /**
@@ -44,7 +44,7 @@ import { detailLoading } from '../../../../common/utils/rxjs-loading-operators/d
     templateUrl: './user-detail.component.html',
     styleUrls: ['user-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class UserDetailComponent extends BaseDetailComponent<'user', UserOperations> implements OnInit {
 
@@ -59,11 +59,6 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
     fgProperties: UntypedFormGroup;
 
     fgPropertiesSaveDisabled$: Observable<boolean>;
-
-    /** Email regex pattern */
-    get patternEmail(): string {
-        return getPatternEmail();
-    }
 
     get isLoading(): boolean {
         return this.currentEntity == null || !this.currentEntity.login || this.currentEntity.login === '';
@@ -106,7 +101,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
         const appState = injector.get<AppStateService>(AppStateService as Type<AppStateService>);
         const user = appState.now.entity.user[Number(route.params.id)];
         return of(user ? { title: user.login, doNotTranslate: true } : null);
-    }
+    };
 
     ngOnInit(): void {
         super.ngOnInit();
@@ -128,7 +123,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
             this.fgPropertiesUpdate(currentEntity);
             this.changeDetectorRef.markForCheck();
             const commonPermissions = Object.values(userGroups.perms).reduce((accumulator, currentList) => {
-                return accumulator.filter(permission => currentList.includes(permission));
+                return accumulator.filter((permission) => currentList.includes(permission));
             });
             if (this.currentEntity.id !== this.appState.now.auth.currentUserId && !commonPermissions.includes(GcmsPermission.EDIT)) {
                 this.fgProperties.disable();
@@ -138,7 +133,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
         });
 
         this.permissionGroupsRead$ = this.permissionsService.getPermissions(AccessControlledType.GROUP_ADMIN).pipe(
-            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
+            map((typePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);
@@ -152,7 +147,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
             ChangePasswordModalComponent,
             { closeOnOverlayClick: true },
             { userId: this.currentEntity.id },
-        ).then(modal => modal.open())
+        ).then((modal) => modal.open())
             .catch(this.errorHandler.catch);
     }
 
@@ -190,7 +185,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
         this.fgProperties = new UntypedFormGroup({
             firstName: new UntypedFormControl(''),
             lastName: new UntypedFormControl(''),
-            email: new UntypedFormControl(''),
+            email: new UntypedFormControl('', Validators.email),
             login: new UntypedFormControl(''),
             description: new UntypedFormControl(''),
         });

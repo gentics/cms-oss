@@ -108,7 +108,7 @@ test.describe('Content Repositories Module', () => {
     });
 
     test('should open the details on click', async ({ page }) => {
-        const row = findTableRowById(master, testCr.id);
+        const row = await findTableRowById(master, testCr.id);
         await row.waitFor({ state: 'visible' });
         await clickTableRow(row);
         await expect(row).toHaveClass(CLASS_ACTIVE);
@@ -118,7 +118,7 @@ test.describe('Content Repositories Module', () => {
     });
 
     test('should be possible to select the management tab', async ({ page }) => {
-        const row = findTableRowById(master, testCr.id);
+        const row = await findTableRowById(master, testCr.id);
         await row.waitFor({ state: 'visible' });
         await clickTableRow(row);
 
@@ -136,7 +136,7 @@ test.describe('Content Repositories Module', () => {
         let managementContent: Locator;
 
         test.beforeEach(async ({ page }) => {
-            const row = findTableRowById(master, testCr.id);
+            const row = await findTableRowById(master, testCr.id);
             await row.waitFor({ state: 'visible' });
 
             // Repair the CR to have everything properly setup
@@ -155,23 +155,23 @@ test.describe('Content Repositories Module', () => {
         });
 
         test('should be possible to login via manual credentials and to logout again', async ({ page }) => {
-            expect(await managementContent.isVisible()).toBe(false);
+            await expect(managementContent).toBeHidden();
 
             await loginWithForm(management.locator('.login-form'), AUTH.mesh);
             await managementContent.waitFor({ state: 'visible' });
 
             await logoutMeshManagement(page);
-            expect(await managementContent.isVisible()).toBe(false);
+            await expect(managementContent).toBeHidden();
         });
 
         test('should be possible to login via CR credentials and to logout again', async ({ page }) => {
-            expect(await managementContent.isVisible()).toBe(false);
+            await expect(managementContent).toBeHidden();
 
             await loginWithCR(page);
             await managementContent.waitFor({ state: 'visible' });
 
             await logoutMeshManagement(page);
-            expect(await managementContent.isVisible()).toBe(false);
+            await expect(managementContent).toBeHidden();
         });
 
         test.describe('Login Gate forces new password', () => {
@@ -244,7 +244,7 @@ test.describe('Content Repositories Module', () => {
                 await test.step('Login with CR data should require password-reset', async () => {
                     // Login with CR should not be possible
                     await loginWithCR(page, false);
-                    expect(managementContent).toBeVisible({ visible: false });
+                    await expect(managementContent).toBeHidden();
                 });
 
                 await test.step('Login with additional new password', async () => {

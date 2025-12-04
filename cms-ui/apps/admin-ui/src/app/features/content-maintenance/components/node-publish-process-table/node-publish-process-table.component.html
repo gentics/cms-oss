@@ -1,14 +1,15 @@
-<gtx-search-bar
-    *ngIf="showSearch"
+@if (showSearch) {
+  <gtx-search-bar
     class="search-bar"
     [query]="query"
-    [placeholder]="'shared.search' | i18n"
+    [placeholder]="'shared.search' | gtxI18n"
     (search)="updateSearchQuery($event)"
     (clear)="updateSearchQuery('')"
-></gtx-search-bar>
+  ></gtx-search-bar>
+}
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'shared.info_selected_nodes' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+    {{ 'shared.info_selected_nodes' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
 </div>
 
 <div class="content-wrapper">
@@ -41,57 +42,56 @@
         (sortByChange)="updateSortBy($event)"
         (sortOrderChange)="updateSortOrder($event)"
         (selectedChange)="updateSelection($event)"
-        (select)="forwardSelect($event)"
-        (deselect)="forwardDeselect($event)"
+        (rowSelect)="forwardSelect($event)"
+        (rowDeselect)="forwardDeselect($event)"
         (rowClick)="handleRowClick($event)"
         (actionClick)="handleAction($event)"
     ></gtx-table>
-</div>
+</div>8 (GPU-2116: Nx/Angular Update & Translation refactoring)
 
 <ng-template #nameRenderer let-value="value" let-row="row">
-    <ng-template #name>
-        <div class="node-name">{{ value }}</div>
-    </ng-template>
+  <ng-template #name>
+    <div class="node-name">{{ value }}</div>
+  </ng-template>
 
-    <gtx-accordion
-        *ngIf="publishQueue?.nodes?.[row.id] as nodePublishData; else name"
-        [trigger]="name"
-        [open]="expandedNodes | gtxIncludes:row.id"
-        (openChange)="updateExpandedNodes(row.id, $event)"
-    >
-        <div class="queue-content">
-            <ng-container *ngFor="let entry of PUBLISH_PLURAL_MAPPING | gtxEntries">
-                <div *ngIf="nodePublishData[entry.key] as data" class="type-queue-wrapper">
-                    <ng-container
-                        [ngTemplateOutlet]="typeStatus"
-                        [ngTemplateOutletContext]="{ data: data, type: entry.value }"
-                    ></ng-container>
-                </div>
-            </ng-container>
-        </div>
-    </gtx-accordion>
+  <gtx-accordion [trigger]="name" [open]="expandedNodes | gtxIncludes:row.id" (openChange)="updateExpandedNodes(row.id, $event)">
+    <div class="queue-content">
+      @for (entry of PUBLISH_PLURAL_MAPPING | gtxEntries; track entry.key) {
+        @if (publishQueue?.nodes?.[row.id]?.[entry.key]; as data) {
+          <div class="type-queue-wrapper">
+            <ng-container
+              [ngTemplateOutlet]="typeStatus"
+              [ngTemplateOutletContext]="{ data: data, type: entry.value }"
+            ></ng-container>
+          </div>
+        }
+      }
+    </div>
+  </gtx-accordion>
 </ng-template>
 
 <ng-template #typeStatus let-data="data" let-type="type">
-    <table *ngIf="data" class="node-queue-table">
-        <tr>
-            <th colspan="2">{{ ('common.' + type + '_plural') | i18n }}</th>
-        </tr>
-        <tr>
-            <td class="label-column">{{ 'shared.toPublish' | i18n }}</td>
-            <td class="value-column">{{ data.toPublish }}</td>
-        </tr>
-        <tr>
-            <td class="label-column">{{ 'shared.delayed' | i18n }}</td>
-            <td class="value-column">{{ data.delayed }}</td>
-        </tr>
-        <tr>
-            <td class="label-column">{{ 'shared.published' | i18n }}</td>
-            <td class="value-column">{{ data.published }}</td>
-        </tr>
-        <tr>
-            <td class="label-column">{{ 'shared.remaining' | i18n }}</td>
-            <td class="value-column">{{ data.remaining }}</td>
-        </tr>
+  @if (data) {
+    <table class="node-queue-table">
+      <tr>
+        <th colspan="2">{{ ('common.' + type + '_plural') | gtxI18n }}</th>
+      </tr>
+      <tr>
+        <td class="label-column">{{ 'shared.toPublish' | gtxI18n }}</td>
+        <td class="value-column">{{ data.toPublish }}</td>
+      </tr>
+      <tr>
+        <td class="label-column">{{ 'shared.delayed' | gtxI18n }}</td>
+        <td class="value-column">{{ data.delayed }}</td>
+      </tr>
+      <tr>
+        <td class="label-column">{{ 'shared.published' | gtxI18n }}</td>
+        <td class="value-column">{{ data.published }}</td>
+      </tr>
+      <tr>
+        <td class="label-column">{{ 'shared.remaining' | gtxI18n }}</td>
+        <td class="value-column">{{ data.remaining }}</td>
+      </tr>
     </table>
+  }
 </ng-template>

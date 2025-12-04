@@ -1,36 +1,36 @@
 <div class="form-editor-menu-filter-container">
-    <i class="material-icons">search</i>
-    <input
-        #inputSearch
-        type="text"
-        class="form-editor-menu-filter"
-        [placeholder]="'gtxFormGenerator.search' | i18n"
-        [(ngModel)]="searchTerm"
-        (ngModelChange)="onMenuFilterChange($event)"
+  <i class="material-icons">search</i>
+  <input
+    #inputSearch
+    type="text"
+    class="form-editor-menu-filter"
+    [placeholder]="'gtxFormGenerator.search' | gtxI18n"
+    [(ngModel)]="searchTerm"
+    (ngModelChange)="onMenuFilterChange($event)"
     >
 </div>
 
-<div
-    *ngIf="(menuElements$ | async) as elements; else errorNoMenuElements"
+@if ((menuElements$ | async); as elements) {
+  <div
     class="form-editor-elements-container"
->
-    <ng-container *ngFor="let element of elements; trackBy:identify">
-        <div
-            class="form-editor-menu-element"
-            [@slideAnim]
-            draggable="true"
-            (dragstart)="onElementDragStart($event, element)"
+    >
+    @for (element of elements; track identify($index, element)) {
+      <div
+        class="form-editor-menu-element"
+        [@slideAnim]
+        draggable="true"
+        (dragstart)="onElementDragStart($event, element)"
         >
-            <gtx-form-editor-element
-                formEditMode="preview"
-                [readonly]="true"
-                [element]="element"
-                [isPreview]="true"
-            ></gtx-form-editor-element>
-        </div>
-    </ng-container>
-</div>
+        <gtx-form-editor-element
+          formEditMode="preview"
+          [readonly]="true"
+          [element]="element"
+          [isPreview]="true"
+        ></gtx-form-editor-element>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_formelements_available' | gtxI18n }}</p>
+}
 
-<ng-template #errorNoMenuElements>
-    <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_formelements_available' | i18n }}</p>
-</ng-template>

@@ -2,17 +2,16 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Page, PageResponse, ResponseCode } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
 import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { Api } from '../../../core/providers/api/api.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { PageVersionsModal } from './page-versions-modal.component';
 
 describe('PageVersionsModal', () => {
@@ -30,18 +29,17 @@ describe('PageVersionsModal', () => {
                 { provide: Router, useClass: MockRouter },
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
-                { provide: I18nNotification, useClass: MockI18Notification },
+                { provide: I18nNotificationService, useClass: MockI18Notification },
             ],
             declarations: [
                 PageVersionsModal,
                 TestComponent,
-                mockPipes('i18nDate'),
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        api = TestBed.get(Api);
-        modalService = TestBed.get(ModalService);
+        api = TestBed.inject(Api) as any;
+        modalService = TestBed.inject(ModalService);
     });
 
     it('is opened with right parameters', componentTest(() => TestComponent, async (fixture, instance) => {
@@ -111,7 +109,7 @@ describe('PageVersionsModal', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(fixture.nativeElement.querySelectorAll('gtx-contents-list-item')[0]
+                expect((fixture.nativeElement as HTMLElement).querySelectorAll('gtx-contents-list-item')[0]
                     .querySelector('.item-indicators span').className).toContain('current');
             });
     }),

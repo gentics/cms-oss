@@ -1,17 +1,19 @@
 <div class="outer-container">
-    <img src="assets/images/gentics-logo-lettering.png">
-    <div class="authentication-methods-container">
-        <div class="login-container">
-            <form [formGroup]="loginForm" (ngSubmit)="login()">
-                <gtx-input [label]="'user.user_name' | i18n" formControlName="username" autofocus></gtx-input>
-                <gtx-input [label]="'user.password' | i18n" formControlName="password" type="password"></gtx-input>
-                <gtx-button size="large" submit [disabled]="!loginForm.valid" type="submit">{{ 'user.log_in' | i18n }}</gtx-button>
-            </form>
-        </div>
-        <single-sign-on/>
+  <img src="assets/images/gentics-logo-lettering.png">
+  <div class="authentication-methods-container">
+    <div class="login-container">
+      <form [formGroup]="loginForm" (ngSubmit)="login()">
+        <gtx-input [label]="'user.user_name' | gtxI18n" formControlName="username" autofocus></gtx-input>
+        <gtx-input [label]="'user.password' | gtxI18n" formControlName="password" type="password"></gtx-input>
+        <gtx-button size="large" submit [disabled]="!loginForm.valid" type="submit">{{ 'user.log_in' | gtxI18n }}</gtx-button>
+      </form>
     </div>
-    
-    <div *ngIf="keycloakError" class="keycloak-error">
-        {{ keycloakError | i18n }}
+    <single-sign-on/>
+  </div>
+
+  @if (keycloakError) {
+    <div class="keycloak-error">
+      {{ keycloakError | gtxI18n }}
     </div>
+  }
 </div>

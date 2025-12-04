@@ -8,6 +8,7 @@ import {
     clickTableRow,
     findTableRowById,
     loginWithForm,
+    matchRequest,
     navigateToApp,
     selectTab,
 } from '@gentics/e2e-utils';
@@ -54,7 +55,7 @@ test.describe('Scheduler Module', () => {
             // Locate table and the specific task row
             await selectTab(page, 'tasks');
             const taskId = `${IMPORTER.get(EXAMPLE_TASK_ONE)?.id}`;
-            const row = findTableRowById(page, taskId);
+            const row = await findTableRowById(page, taskId);
             await clickTableRow(row);
 
             // Ensure detail view is visible
@@ -69,10 +70,9 @@ test.describe('Scheduler Module', () => {
             await page.click('.gtx-save-button button');
 
             // Verify table reload and updated name
-            await page.waitForResponse(resp =>
-                resp.url().includes('/rest/scheduler/task') && resp.request().method() === 'GET',
-            );
-            await expect(findTableRowById(page, taskId)).toContainText(newName);
+            await page.waitForResponse(matchRequest('GET', '/rest/scheduler/task'));
+            const taskRow = await findTableRowById(page, taskId);
+            await expect(taskRow).toContainText(newName);
         });
     });
 });

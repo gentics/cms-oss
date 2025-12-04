@@ -1,4 +1,5 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, of } from 'rxjs';
@@ -7,8 +8,6 @@ import { ApplicationStateService, FolderActionsService, PublishQueueActionsServi
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { defaultUserSettings } from '../../models';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotification as NotificationService } from '../i18n-notification/i18n-notification.service';
-import { I18nService } from '../i18n/i18n.service';
 import { LocalStorage } from '../local-storage/local-storage.service';
 import { ServerStorage } from '../server-storage/server-storage.service';
 import { UserSettingsService } from './user-settings.service';
@@ -42,7 +41,7 @@ class MockUIActions {
     getActiveUiLanguage = jasmine.createSpy('getActiveUiLanguage');
 }
 
-class MockI18nService {
+class MockI18nService implements Partial<I18nService> {
     inferUserLanguage = jasmine.createSpy('inferUserLanguage').and.returnValue('inferred language');
     setLanguage = jasmine.createSpy('setLanguage');
 }
@@ -87,8 +86,8 @@ describe('UserSettingsService', () => {
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: PublishQueueActionsService, useClass: MockPublishQueueActions },
                 { provide: UIActionsService, useClass: MockUIActions },
+                { provide: I18nNotificationService, useClass: MockNotificationService },
                 { provide: I18nService, useClass: MockI18nService },
-                { provide: NotificationService, useClass: MockNotificationService },
                 { provide: LocalStorage, useClass: MockLocalStorage },
                 { provide: ServerStorage, useClass: MockServerStorage },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
@@ -167,9 +166,15 @@ describe('UserSettingsService', () => {
             });
             serverStorage.getAll.and.returnValue(NEVER);
             localStorage.getForUser.and.callFake((userId: number, key: string): any => {
-                if (key === 'activeLanguage') { return 'testLanguage'; }
-                if (key === 'folderSorting') { return { sortBy: 'cdate', sortOrder: 'desc' }; }
-                if (key === 'fileDisplayFields') { return ['id', 'cdate', 'filename']; }
+                if (key === 'activeLanguage') {
+                    return 'testLanguage';
+                }
+                if (key === 'folderSorting') {
+                    return { sortBy: 'cdate', sortOrder: 'desc' };
+                }
+                if (key === 'fileDisplayFields') {
+                    return ['id', 'cdate', 'filename'];
+                }
             });
 
             userSettings.loadUserSettingsWhenLoggedIn();
@@ -191,8 +196,8 @@ describe('UserSettingsService', () => {
 
             const testServerStorage = {
                 uiLanguage: 'de',
-                recentItems: [ getExamplePageData() ],
-                favourites: [ getExamplePageData() ],
+                recentItems: [getExamplePageData()],
+                favourites: [getExamplePageData()],
             };
             serverStorage.getAll.and.returnValue(of(testServerStorage).pipe(first()));
             localStorage.getForUser.and.callFake((userId: number, key: string): any => {
@@ -212,9 +217,9 @@ describe('UserSettingsService', () => {
             expect(folderActions.setActiveLanguage).toHaveBeenCalledWith(defaultUserSettings.activeLanguage);
             expect(folderActions.setRepositoryBrowserDisplayFields).toHaveBeenCalledWith('page', defaultUserSettings.pageDisplayFieldsRepositoryBrowser);
 
-            for (const actions of [ folderActions, uiActions, publishQueueActions ]) {
-                const expectedCalledActionsSpies = Object.keys(actions).filter(key => key !== 'navigateToDefaultNode');
-                expectedCalledActionsSpies.forEach(key => {
+            for (const actions of [folderActions, uiActions, publishQueueActions]) {
+                const expectedCalledActionsSpies = Object.keys(actions).filter((key) => key !== 'navigateToDefaultNode');
+                expectedCalledActionsSpies.forEach((key) => {
                     const spy: jasmine.Spy = actions[key];
                     expect(spy).toHaveBeenCalled();
                 });
@@ -233,8 +238,12 @@ describe('UserSettingsService', () => {
             });
             serverStorage.getAll.and.returnValue(NEVER);
             localStorage.getForUser.and.callFake((userId: number, key: string): any => {
-                if (userId === 1234 && key === 'uiLanguage') { return 'language of first user'; }
-                if (userId === 9876 && key === 'uiLanguage') { return 'language of second user'; }
+                if (userId === 1234 && key === 'uiLanguage') {
+                    return 'language of first user';
+                }
+                if (userId === 9876 && key === 'uiLanguage') {
+                    return 'language of second user';
+                }
             });
 
             userSettings.loadUserSettingsWhenLoggedIn();
@@ -274,7 +283,7 @@ describe('UserSettingsService', () => {
                     },
                     folder: {
                         nodes: {
-                            list: [ 1, 2, 3, 4 ],
+                            list: [1, 2, 3, 4],
                         },
                         files: {
                             displayFields: [],
@@ -334,7 +343,7 @@ describe('UserSettingsService', () => {
                     },
                     folder: {
                         nodes: {
-                            list: [ 1, 2, 3, 4 ],
+                            list: [1, 2, 3, 4],
                         },
                         files: {
                             displayFields: [],
@@ -397,7 +406,7 @@ describe('UserSettingsService', () => {
                     folder: {
                         activeNode: 2,
                         nodes: {
-                            list: [ 1, 2, 3, 4 ],
+                            list: [1, 2, 3, 4],
                         },
                         files: {
                             displayFields: [],
@@ -459,7 +468,7 @@ describe('UserSettingsService', () => {
                     },
                     folder: {
                         nodes: {
-                            list: [ 1, 2, 3, 4 ],
+                            list: [1, 2, 3, 4],
                         },
                         files: {
                             displayFields: [],

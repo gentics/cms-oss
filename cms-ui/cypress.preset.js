@@ -3,7 +3,6 @@
 /* eslint-disable import/no-nodejs-modules */
 const { resolve } = require('path');
 
-const CYPRESS_TYPE_E2E = 'e2e';
 const CYPRESS_TYPE_COMPONENT = 'component';
 
 /**
@@ -52,9 +51,6 @@ function createReporterOptions(cypressType, type, name, isCI) {
 }
 
 module.exports = {
-    createE2EReporterOptions(type, name, isCI) {
-        return createReporterOptions(CYPRESS_TYPE_E2E, type, name, isCI);
-    },
     createComponentReporterOptions(type, name, isCI) {
         const config = createReporterOptions(CYPRESS_TYPE_COMPONENT, type, name, isCI);
         config.port = PORT_MAPPING[name] || 8580;

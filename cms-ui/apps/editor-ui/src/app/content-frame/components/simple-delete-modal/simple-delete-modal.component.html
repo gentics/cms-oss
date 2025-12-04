@@ -1,26 +1,31 @@
 <div class="modal-title">
-    <h5>{{ 'modal.multi_delete_title' | i18n:{
-        count: items.length,
-        _type: itemType | i18n
-    } }}</h5>
+  <h5>{{ 'modal.multi_delete_title' | gtxI18n:{
+    count: items.length,
+    type: ('common.type_' + itemType + (items.length !== 1 ? 's' : '')) |gtxI18n
+  } }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-contents-list-item *ngFor="let item of items">
-        <div class="item-icon">
-            <icon>{{ iconString }}</icon>
+  @for (item of items; track item[idProperty]) {
+    <gtx-contents-list-item>
+      <div class="item-icon">
+        <icon>{{ iconString }}</icon>
+      </div>
+      <div class="item-primary">
+        <div class="item-name-container">
+          <div class="item-name">{{ item[idProperty] | replaceEscapedCharacters }}</div>
         </div>
-        <div class="item-primary">
-            <div class="item-name-container">
-                <div class="item-name">{{ item[idProperty] | replaceEscapedCharacters }}</div>
-            </div>
-        </div>
+      </div>
     </gtx-contents-list-item>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button type="alert" (click)="confirm()" class="confirm-button" [disabled]="deleteCount === 0">
-        {{ 'modal.multi_delete_confirm_button' | i18n:{ count: deleteCount, _type: itemType | i18n } }}
-    </gtx-button>
+  <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+  <gtx-button type="alert" (click)="confirm()" class="confirm-button" [disabled]="deleteCount === 0">
+    {{ 'modal.multi_delete_confirm_button' | gtxI18n:{
+        count: deleteCount,
+        type: ('common.type_' + itemType + (deleteCount !== 1 ? 's' : '')) |gtxI18n
+    } }}
+  </gtx-button>
 </div>

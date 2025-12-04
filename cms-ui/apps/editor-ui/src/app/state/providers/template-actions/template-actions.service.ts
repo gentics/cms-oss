@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { TemplateLinkRequestOptions } from '@gentics/cms-models';
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { Api } from '../../../core/providers/api';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 
 @Injectable()
 export class TemplateActionsService {
@@ -12,7 +12,7 @@ export class TemplateActionsService {
     constructor(
         private api: Api,
         private errorHandler: ErrorHandler,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) {}
 
     /**

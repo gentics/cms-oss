@@ -1,159 +1,160 @@
-<div *ngIf="item" class="properties-editor-wrapper">
-
+@if (item) {
+  <div class="properties-editor-wrapper">
     <!-- The tabs need to be pure, because we need to be able to cancel the navigation if a user doesn't want to discard the changes. -->
     <gtx-grouped-tabs
-        class="properties-tabs"
-        pure
-        wrap
-        statusIcons
-        [activeId]="activeTabId"
-    >
+      class="properties-tabs"
+      pure
+      wrap
+      statusIcons
+      [activeId]="activeTabId"
+      >
+      <gtx-tab-pane
+        hideStatusIcon
+        [id]="ITEM_PROPERTIES_TAB"
+        [label]="'editor.general_properties_label' | gtxI18n"
+        (select)="onTabChange(ITEM_PROPERTIES_TAB)"
+      ></gtx-tab-pane>
+      @if (item.type == 'form') {
         <gtx-tab-pane
-            hideStatusIcon
-            [id]="ITEM_PROPERTIES_TAB"
-            [label]="'editor.general_properties_label' | i18n"
-            (select)="onTabChange(ITEM_PROPERTIES_TAB)"
+          hideStatusIcon
+          [disabled]="!(item?.online)"
+          [id]="ITEM_REPORTS_TAB"
+          [label]="'editor.form_reports_label' | gtxI18n"
+          (select)="onTabChange(ITEM_REPORTS_TAB)"
         ></gtx-tab-pane>
-
+      }
+      @if (item.type === 'page') {
         <gtx-tab-pane
-            *ngIf="item.type == 'form'"
-            hideStatusIcon
-            [disabled]="!(item?.online)"
-            [id]="ITEM_REPORTS_TAB"
-            [label]="'editor.form_reports_label' | i18n"
-            (select)="onTabChange(ITEM_REPORTS_TAB)"
+          hideStatusIcon
+          [id]="ITEM_TAG_LIST_TAB"
+          [label]="'editor.tag_list_label' | gtxI18n"
+          (select)="onTabChange(ITEM_TAG_LIST_TAB)"
         ></gtx-tab-pane>
-
-        <gtx-tab-pane
-            *ngIf="item.type === 'page'"
-            hideStatusIcon
-            [id]="ITEM_TAG_LIST_TAB"
-            [label]="'editor.tag_list_label' | i18n"
-            (select)="onTabChange(ITEM_TAG_LIST_TAB)"
-        ></gtx-tab-pane>
-
-        <ng-container *ngIf="item.type !== 'node' && item.type !== 'channel'">
-            <gtx-tab-group
-                *ngFor="let category of objectPropertiesGrouped"
-                [label]="category.name | i18n"
-                [id]="category.id"
-                [expanded]="expandedObjectPropertyCategories | gtxIncludes:category.id"
-                (tabGroupToggle)="tabGroupToggled($event, category.id)"
+      }
+      @if (item.type !== 'node' && item.type !== 'channel') {
+        @for (category of objectPropertiesGrouped; track category.id) {
+          <gtx-tab-group
+            [label]="category.name | gtxI18n"
+            [id]="category.id"
+            [expanded]="expandedObjectPropertyCategories | gtxIncludes:category.id"
+            (tabGroupToggle)="tabGroupToggled($event, category.id)"
             >
-                <gtx-tab-pane
-                    *ngFor="let objProp of category.objProperties"
-                    [id]="objProp.name"
-                    [readonly]="objProp.readOnly"
-                    [inactive]="!objProp.active"
-                    (select)="onTabChange(objProp.name, objProp.readOnly)"
+            @for (objProp of category.objProperties; track objProp.name) {
+              <gtx-tab-pane
+                [id]="objProp.name"
+                [readonly]="objProp.readOnly"
+                [inactive]="!objProp.active"
+                (select)="onTabChange(objProp.name, objProp.readOnly)"
                 >
-                    <ng-template gtx-tab-label>
-                        <gtx-tooltip
-                            #propTooltip
-                            class="object-property-tooltip"
-                            [position]="'bottom'"
-                            [align]="'bottom'"
-                            [type]="'light'"
-                        >
-                            <div class="property-tab" gtx-tooltip-trigger>
-                                <icon class="property-tab-mobile" left (click)="toggleDescription(propTooltip)">info</icon>
-                                <span class="property-tab-label">{{ objProp | objTagName }}</span>
-                            </div>
-
-                            <div gtx-tooltip-content>
-                                <description-tooltip
-                                    [objectProperty]="objProp"
-                                ></description-tooltip>
-                            </div>
-                        </gtx-tooltip>
-                    </ng-template>
-                </gtx-tab-pane>
-            </gtx-tab-group>
-        </ng-container>
-    </gtx-grouped-tabs>
-
-    <div class="properties-content">
-        <!-- All of this content should be moved to a dedicated component -->
-        <div class="item-properties" *ngIf="activeTabId === ITEM_PROPERTIES_TAB && (itemProperties$ | async)?.item">
-            <h2 class="item-properties-heading">{{ 'editor.general_properties_label' | i18n }}</h2>
-
-            <gtx-properties-editor
-                *ngIf="(itemProperties$ | async) as itemProps"
-                [item]="item"
-                [nodeId]="currentNode?.id"
-                [value]="editingProperties"
-                [templates]="itemProps.templates"
-                [languages]="itemProps.languages"
-                [itemClean]="itemClean"
-                (valueChange)="handlePropChanges($event)"
-                (itemCleanChange)="forwardItemCleanChange($event)"
-            ></gtx-properties-editor>
-        </div>
-
-        <div class="form-reports" *ngIf="activeTabId === ITEM_REPORTS_TAB">
-            <h2 class="form-reports-heading">{{ 'editor.form_reports_label' | i18n }}</h2>
-            <form-reports-list [form]="item"></form-reports-list>
-        </div>
-
-        <div class="item-tag-list" *ngIf="activeTabId === ITEM_TAG_LIST_TAB">
-            <h2 class="item-tag-list-heading">{{ 'editor.tag_list_label' | i18n }}</h2>
-
-            <div class="tag-list-container">
-                <gtx-table
-                    [selectAllType]="TableSelectAllType.PAGE"
-                    [selectable]="true"
-
-                    [columns]="contentTagColumns"
-                    [rows]="contentTagRows"
-                    [actions]="contentTagActions"
-                    [(selected)]="contentTagSelection"
-
-                    [renderers]="{
-                        active: boolIconRenderer
-                    }"
-
-                    (rowClick)="handleContentTagClick($event)"
-                    (actionClick)="handleContentTagAction($event)"
-                ></gtx-table>
-            </div>
-
-            <ng-template #boolIconRenderer let-value="value">
-                <icon
-                    class="gtx-table-cell-boolean"
-                    [ngClass]="'gtx-table-cell-boolean-' + value"
-                >{{ value ? 'check' : 'close' }}</icon>
-            </ng-template>
-        </div>
-
-        <div
-            #objPropWrapper
-            *ngIf="activeTabObjectProperty$ | async as activeTabObjProp"
-            class="object-property"
-            [class.has-editing-permission]="canSave"
-        >
-            <div class="tag-editor">
-                <div
-                    class="tag-wrapper"
-                    [class.disabled]="isDisabled"
-                    [class.nonActive]="!editedObjectProperty?.active"
-                    [class.tagfillLightEnabled]="tagFillLightEnabled"
-                >
-                    <div *ngIf="!tagFillLightEnabled" class="activate-obj-prop">
-                        <gtx-checkbox
-                            [label]="'editor.obj_prop_active_label' | i18n"
-                            [checked]="editedObjectProperty?.active"
-                            [disabled]="!(itemPermissions.edit) || (editedObjectProperty?.readOnly)"
-                            (change)="toggleDisplayContent()"
-                        ></gtx-checkbox>
+                <ng-template gtx-tab-label>
+                  <gtx-tooltip
+                    #propTooltip
+                    class="object-property-tooltip"
+                    [position]="'bottom'"
+                    [align]="'bottom'"
+                    [type]="'light'"
+                    >
+                    <div class="property-tab" gtx-tooltip-trigger>
+                      <icon class="property-tab-mobile" left (click)="toggleDescription(propTooltip)">info</icon>
+                      <span class="property-tab-label">{{ objProp | objTagName }}</span>
                     </div>
-
-                    <tag-editor-host *ngIf="activeTabObjProp.tag.tagType; else tagTypeLoadError"></tag-editor-host>
-                </div>
-
-                <ng-template #tagTypeLoadError>
-                    <span>{{ 'editor.properties_error_loading_tagtype' | i18n }}</span>
+                    <div gtx-tooltip-content>
+                      <description-tooltip
+                        [objectProperty]="objProp"
+                      ></description-tooltip>
+                    </div>
+                  </gtx-tooltip>
                 </ng-template>
-            </div>
+              </gtx-tab-pane>
+            }
+          </gtx-tab-group>
+        }
+      }
+    </gtx-grouped-tabs>
+    <div class="properties-content">
+      <!-- All of this content should be moved to a dedicated component -->
+      @if (activeTabId === ITEM_PROPERTIES_TAB && (itemProperties$ | async)?.item) {
+        <div class="item-properties">
+          <h2 class="item-properties-heading">{{ 'editor.general_properties_label' | gtxI18n }}</h2>
+          @if ((itemProperties$ | async); as itemProps) {
+            <gtx-properties-editor
+              [item]="item"
+              [nodeId]="currentNode?.id"
+              [value]="editingProperties"
+              [templates]="itemProps.templates"
+              [languages]="itemProps.languages"
+              [itemClean]="itemClean"
+              (valueChange)="handlePropChanges($event)"
+              (itemCleanChange)="forwardItemCleanChange($event)"
+            ></gtx-properties-editor>
+          }
         </div>
+      }
+      @if (activeTabId === ITEM_REPORTS_TAB) {
+        <div class="form-reports">
+          <h2 class="form-reports-heading">{{ 'editor.form_reports_label' | gtxI18n }}</h2>
+          <form-reports-list [form]="item"></form-reports-list>
+        </div>
+      }
+      @if (activeTabId === ITEM_TAG_LIST_TAB) {
+        <div class="item-tag-list">
+          <h2 class="item-tag-list-heading">{{ 'editor.tag_list_label' | gtxI18n }}</h2>
+          <div class="tag-list-container">
+            <gtx-table
+                [selectAllType]="TableSelectAllType.PAGE"
+                [selectable]="true"
+                [columns]="contentTagColumns"
+                [rows]="contentTagRows"
+                [actions]="contentTagActions"
+                [(selected)]="contentTagSelection"
+                [renderers]="{
+                    active: boolIconRenderer,
+                    inherited: boolIconRenderer
+                }"
+                (rowClick)="handleContentTagClick($event)"
+                (actionClick)="handleContentTagAction($event)"
+            ></gtx-table>
+          </div>
+          <ng-template #boolIconRenderer let-value="value">
+            <icon
+              class="gtx-table-cell-boolean"
+              [ngClass]="'gtx-table-cell-boolean-' + value"
+            >{{ value == null ? '' : (value ? 'check' : 'close') }}</icon>
+          </ng-template>
+        </div>
+      }
+      @if (activeTabObjectProperty$ | async; as activeTabObjProp) {
+        <div
+          #objPropWrapper
+          class="object-property"
+          [class.has-editing-permission]="canSave"
+          >
+          <div class="tag-editor">
+            <div
+              class="tag-wrapper"
+              [class.disabled]="isDisabled"
+              [class.nonActive]="!editedObjectProperty?.active"
+              [class.tagfillLightEnabled]="tagFillLightEnabled"
+              >
+              @if (!tagFillLightEnabled) {
+                <div class="activate-obj-prop">
+                  <gtx-checkbox
+                    [label]="'editor.obj_prop_active_label' | gtxI18n"
+                    [checked]="editedObjectProperty?.active"
+                    [disabled]="!(itemPermissions.edit) || (editedObjectProperty?.readOnly)"
+                    (change)="toggleDisplayContent()"
+                  ></gtx-checkbox>
+                </div>
+              }
+              @if (activeTabObjProp.tag.tagType) {
+                <tag-editor-host></tag-editor-host>
+              } @else {
+                <span>{{ 'editor.properties_error_loading_tagtype' | gtxI18n }}</span>
+              }
+            </div>
+          </div>
+        </div>
+      }
     </div>
-</div>
+  </div>
+}

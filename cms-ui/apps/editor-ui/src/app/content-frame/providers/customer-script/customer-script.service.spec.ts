@@ -1,20 +1,20 @@
 import { HttpClient } from '@angular/common/http';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { ApiBase } from '@editor-ui/app/core/providers/api';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { MockAppState, TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { EditMode } from '@gentics/cms-integration-api-models';
-import { ItemInNode, Tag } from '@gentics/cms-models';
+import { ItemInNode } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
+import { ApiBase } from '../../../core/providers/api';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
+import { RepositoryBrowserClient } from '../../../shared/providers';
+import { ApplicationStateService, STATE_MODULES } from '../../../state';
+import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
+import { TagEditorService } from '../../../tag-editor';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { AlohaGlobal, CNParentWindow, CNWindow } from '../../models/content-frame';
@@ -82,9 +82,9 @@ describe('CustomerScriptService', () => {
         });
 
         mockWindow = new MockWindow() as any;
-        customerScriptService = TestBed.get(CustomerScriptService);
-        state = TestBed.get(ApplicationStateService);
-        apiBase = TestBed.get(ApiBase);
+        customerScriptService = TestBed.inject(CustomerScriptService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        apiBase = TestBed.inject(ApiBase) as any;
 
         state.mockState(mockAppState);
 
@@ -184,7 +184,7 @@ describe('CustomerScriptService', () => {
         it('runPreLoadScript() catches errors in the pre-load script', () => {
             const errorMsg = 'Error in pre-load script';
             PreLoadScript.prototype.run = () => { throw new Error(errorMsg); }
-            const errorHandler = TestBed.get(ErrorHandler);
+            const errorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch');
 
             const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
@@ -210,7 +210,7 @@ describe('CustomerScriptService', () => {
             PostLoadScript.prototype.run = () => { throw new Error(errorMsgPostLoadScript); }
             spyOn(customerScriptService, 'invokeCustomerScript').and.throwError(errorMsgCustomerScript);
 
-            const errorHandler = TestBed.get(ErrorHandler);
+            const errorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch');
 
             const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
@@ -300,15 +300,15 @@ describe('CustomerScriptService', () => {
             const mockTag = { tag: 'tag' };
             const mockTagType = { tagType: 'tagType' };
             const mockPage = { page: 'page' };
-            const expectedResult = Promise.resolve(<Tag> null);
+            const expectedResult = Promise.resolve(null);
 
-            const mockTagEditorService = TestBed.get(TagEditorService);
+            const mockTagEditorService = TestBed.inject(TagEditorService);
             spyOn(mockTagEditorService, 'openTagEditor').and.returnValue(expectedResult);
 
             const gcmsUi = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
             const actualResult = gcmsUi.openTagEditor(<any> mockTag, <any> mockTagType, <any> mockPage, { withDelete: false });
 
-            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag, mockTagType, mockPage, { withDelete: false });
+            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag as any, mockTagType as any, mockPage as any, { withDelete: false });
             expect(actualResult).toBe(expectedResult);
         });
 
@@ -317,19 +317,19 @@ describe('CustomerScriptService', () => {
             const selected: ItemInNode | ItemInNode[] = [];
             const expectedResult = Promise.resolve(selected);
 
-            const mockRepositoryBrowserClientService = TestBed.get(RepositoryBrowserClient);
+            const mockRepositoryBrowserClientService = TestBed.inject(RepositoryBrowserClient);
             spyOn(mockRepositoryBrowserClientService, 'openRepositoryBrowser').and.returnValue(expectedResult);
 
             const gcmsUi = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
             const actualResult = gcmsUi.openRepositoryBrowser(<any> mockOptions);
 
-            expect(mockRepositoryBrowserClientService.openRepositoryBrowser).toHaveBeenCalledWith(mockOptions);
+            expect(mockRepositoryBrowserClientService.openRepositoryBrowser).toHaveBeenCalledWith(mockOptions as any);
             expect(actualResult).toBe(expectedResult);
         });
 
         it('editImage() correctly delegates to EditorOverlayService', () => {
             const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const editorOverlayService = TestBed.get(EditorOverlayService) as MockEditorOverlayService;
+            const editorOverlayService: MockEditorOverlayService = TestBed.inject(EditorOverlayService) as any;
 
             const promise = result.editImage(1, 4711);
             expect(promise instanceof Promise).toBeTruthy();

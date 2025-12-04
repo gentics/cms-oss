@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
+import com.gentics.contentnode.object.ContentTag;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
@@ -2532,5 +2534,56 @@ public class MiscUtils {
 			}
 			response.addMessage(message);
 		}
+	}
+
+
+	/**
+	 * Get the tags embedded in the given tag.
+	 * @param tags The content tags of the page.
+	 * @param rootTagName The name of the root tag to fetch the embedded tags for.
+	 * @return The tags embedded in the given tag.
+	 */
+	public static Collection<String> getEmbeddedTagNames(Map<String, ContentTag> tags, String rootTagName) throws NodeException {
+		if (!tags.containsKey(rootTagName)) {
+			return Collections.emptyList();
+		}
+
+		var tagNames = tags.keySet();
+		var tagsToCheck = new LinkedList<ContentTag>();
+		var embeddedTags = new HashSet<String>();
+
+		tagsToCheck.add(tags.get(rootTagName));
+
+		while (!tagsToCheck.isEmpty()) {
+			var localizedTag = tagsToCheck.pop();
+			var construct = localizedTag.getConstruct();
+			var values = localizedTag.getValues();
+
+			for (var part: construct.getParts()) {
+				var key = part.getKeyname();
+				var val = values.getByKeyname(key);
+
+				if (val == null) {
+					continue;
+				}
+
+				var text = val.getValueText();
+
+				if (StringUtils.isEmpty(text)) {
+					continue;
+				}
+
+				for (var tagName: tagNames) {
+					if (!embeddedTags.contains(tagName) && text.contains("<node " + tagName + ">")) {
+						var tag = tags.get(tagName);
+
+						embeddedTags.add(tagName);
+						tagsToCheck.add(tag);
+					}
+				}
+			}
+		}
+
+		return embeddedTags;
 	}
 }

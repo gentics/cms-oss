@@ -1,15 +1,14 @@
-import { SendMessageModalComponent } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
-import { Router } from '@angular/router';
+import { I18nService, MessageLink } from '@gentics/cms-components';
 import { Message, Node, Normalized } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, tap, withLatestFrom } from 'rxjs/operators';
+import { SendMessageModalComponent } from '../../../shared/components';
 import { MessageStateModel } from '../../../state/messages/message.state';
-import { I18nService, MessageService } from '../../providers';
-import { MessageLink } from '../message-body/message-parsing';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
+import { MessageService } from '../../providers';
 import { MessageModalComponent } from '../message-modal/message-modal.component';
 
 @Component({
@@ -17,7 +16,7 @@ import { MessageModalComponent } from '../message-modal/message-modal.component'
     templateUrl: './message-inbox.tpl.html',
     styleUrls: ['./message-inbox.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MessageInboxComponent implements OnInit {
 
@@ -41,16 +40,16 @@ export class MessageInboxComponent implements OnInit {
     showReadMessages = false;
     private messageToKeepInUnread$ = new BehaviorSubject<number | undefined>(undefined);
 
-    constructor(private appState: AppStateService,
+    constructor(
+        private appState: AppStateService,
         // private navigationService: NavigationService,
         // private entityResolver: EntityResolver,
         // private folderActions: FolderActions,
         private messageService: MessageService,
         private changeDetector: ChangeDetectorRef,
-        private router: Router,
         private modalService: ModalService,
         private i18n: I18nService,
-    ) { }
+    ) {}
 
     @HostListener('document:mouseup', ['$event'])
     onGlobalClick(event: Event): void {
@@ -59,17 +58,16 @@ export class MessageInboxComponent implements OnInit {
         }
     }
 
-
     ngOnInit(): void {
         // MessageState Observable that keeps the currently opened message in the "unread" messages.
-        const messages$ = this.appState.select(state => state.messages).pipe(
+        const messages$ = this.appState.select((state) => state.messages).pipe(
             distinctUntilChanged((a: MessageStateModel, b: MessageStateModel) => a.read === b.read && a.unread === b.unread),
             debounceTime(5),
             withLatestFrom(this.messageToKeepInUnread$),
             map(([state, keep]) => {
                 const read = (!keep || state.read.indexOf(keep) < 0)
                     ? state.read
-                    : state.read.filter(id => id !== keep);
+                    : state.read.filter((id) => id !== keep);
                 const unread = (!keep || state.unread.indexOf(keep) >= 0)
                     ? state.unread
                     : state.unread.concat(keep);
@@ -83,39 +81,39 @@ export class MessageInboxComponent implements OnInit {
         );
 
         this.hasMessages$ = messages$.pipe(
-            map(state => state.all.length > 0),
+            map((state) => state.all.length > 0),
             startWith(false),
         );
         this.readMessages$ = messages$.pipe(
-            map(state => state.read),
-            tap(messages => {
-                this.allReadIds = messages.map(msg => msg.id);
-                this.selectedRead = this.selectedRead.filter(id =>
-                    !!messages.find(msg => msg.id === id),
+            map((state) => state.read),
+            tap((messages) => {
+                this.allReadIds = messages.map((msg) => msg.id);
+                this.selectedRead = this.selectedRead.filter((id) =>
+                    !!messages.find((msg) => msg.id === id),
                 ).slice();
             }),
         );
 
         this.readMessagesCount$ = this.readMessages$.pipe(
-            map(messages => messages.length),
+            map((messages) => messages.length),
             distinctUntilChanged(isEqual),
         );
         this.unreadMessages$ = messages$.pipe(
-            map(state => state.unread),
-            tap(messages => {
-                this.allUnreadIds = messages.map(msg => msg.id);
-                this.selectedUnread = this.selectedUnread.filter(id =>
-                    !!messages.find(msg => msg.id === id),
+            map((state) => state.unread),
+            tap((messages) => {
+                this.allUnreadIds = messages.map((msg) => msg.id);
+                this.selectedUnread = this.selectedUnread.filter((id) =>
+                    !!messages.find((msg) => msg.id === id),
                 ).slice();
             }),
         );
         this.unreadMessagesCount$ = this.unreadMessages$.pipe(
-            map(messages => messages.length),
+            map((messages) => messages.length),
             distinctUntilChanged(isEqual),
         );
 
         /* this.nodes$ = this.appState.select(state => state.folder.nodes.list)
-            .map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id)));*/
+            .map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id))); */
     }
 
     toggleReadMessages(): void {
@@ -128,7 +126,7 @@ export class MessageInboxComponent implements OnInit {
         }
 
         this.modalService.fromComponent(MessageModalComponent, {}, { message })
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             .then((link: MessageLink) => {
                 this.messageToKeepInUnread$.next(undefined);
                 this.changeDetector.markForCheck();
@@ -153,7 +151,7 @@ export class MessageInboxComponent implements OnInit {
             messages = [messages];
         }
 
-        this.archiveMessagesById(messages.map(message => message.id));
+        this.archiveMessagesById(messages.map((message) => message.id));
     }
 
     deleteMessagesById(messageIds: number[]): void {
@@ -165,7 +163,7 @@ export class MessageInboxComponent implements OnInit {
             messages = [messages];
         }
 
-        this.deleteMessagesById(messages.map(message => message.id));
+        this.deleteMessagesById(messages.map((message) => message.id));
     }
 
     deleteMessage(message: Message<Normalized>): void {
@@ -220,7 +218,7 @@ export class MessageInboxComponent implements OnInit {
         this.archiveMessagesById(this.selectedUnread);
     }
 
-    confirmBeforeDelete(callback: Function, type: 'read' | 'unread', count: number): void {
+    confirmBeforeDelete(callback: () => any, type: 'read' | 'unread', count: number): void {
         this.modalService.dialog({
             title: this.i18n.instant('modal.confirmation_message_delete_title'),
             body: this.i18n.instant('modal.delete_message_confirm_' + type, { count: count }),
@@ -229,8 +227,8 @@ export class MessageInboxComponent implements OnInit {
                 { label: this.i18n.instant('common.delete_button'), type: 'alert' as const, returnValue: true },
             ],
         })
-            .then(dialog => dialog.open())
-            .then(result => callback());
+            .then((dialog) => dialog.open())
+            .then(() => callback());
     }
 
     deleteAllUnread(): void {
@@ -245,7 +243,6 @@ export class MessageInboxComponent implements OnInit {
         }, 'read', this.selectedRead.length);
     }
 
-
     /* private openPage(link: MessageLink): void {
         let nodeId: number;
 
@@ -258,7 +255,7 @@ export class MessageInboxComponent implements OnInit {
             .then(succeeded => succeeded &&
                 this.navigationService.detailOrModal(nodeId, 'page', link.id, 'preview').navigate()
             );
-    }*/
+    } */
 
     /* private nodeIdByName(nodeName: string): number {
         const nodes = this.appState.now.entities.node;
@@ -273,7 +270,7 @@ export class MessageInboxComponent implements OnInit {
         }
 
         return undefined;
-    }*/
+    } */
 
     /* private fetchPage(pageId: number): Promise<Page> {
         let page = this.entityResolver.getPage(pageId);
@@ -282,7 +279,7 @@ export class MessageInboxComponent implements OnInit {
         } else {
             return this.folderActions.getPage(pageId);
         }
-    }*/
+    } */
 
     /* private fetchFolder(folderId: number): Promise<Folder> {
         let folder = this.entityResolver.getFolder(folderId);
@@ -291,7 +288,7 @@ export class MessageInboxComponent implements OnInit {
         } else {
             return this.folderActions.getFolder(folderId);
         }
-    }*/
+    } */
 
     /* private navigateToFolder(folderId: number, nodeId: number): Promise<boolean> {
         let newRoute = ['/editor', { outlets: { list: ['node', nodeId, 'folder', folderId] } }];
@@ -319,13 +316,13 @@ export class MessageInboxComponent implements OnInit {
                     .mapTo(true)
                     .toPromise();
             });
-    }*/
+    } */
 
     /** Maps message IDs to their entities and sorts them by unread first, newest first. */
     private sortMapMessages(ids: number[], keep: number | undefined): Message<Normalized>[] {
         const entities = this.appState.now.entity.message;
         return ids
-            .map(id => entities[id])
+            .map((id) => entities[id])
             .sort((a, b) => {
                 const aUnread = a.unread || a.id === keep;
                 const bUnread = b.unread || b.id === keep;
@@ -340,6 +337,6 @@ export class MessageInboxComponent implements OnInit {
 
     composeMessage(): void {
         this.modalService.fromComponent(SendMessageModalComponent)
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 }

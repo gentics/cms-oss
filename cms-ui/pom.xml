@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.gentics</groupId>
         <artifactId>cms-oss</artifactId>
-        <version>6.3.10-SNAPSHOT</version>
+        <version>6.4.0-SNAPSHOT</version>
     </parent>
 
     <groupId>com.gentics.cms-oss</groupId>
@@ -18,8 +18,6 @@
     <url>http://www.gentics.com</url>
 
     <properties>
-        <!-- Dynamic third party dependencies -->
-        <frontend-maven-plugin.version>1.10.0</frontend-maven-plugin.version>
         <!-- The directory where the nodejs installation resides in -->
         <nodejs.npm.bin>ASSIGN_ME</nodejs.npm.bin>
         <npm.workingDirectory></npm.workingDirectory>

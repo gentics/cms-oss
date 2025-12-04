@@ -1,3 +1,5 @@
-<span *ngIf="!validationResult?.success && validationResult?.errorMessage" class="validation-error">
-    {{ validationResult?.errorMessage | i18n }}
-</span>
+@if (!validationResult?.success && validationResult?.errorMessage) {
+  <span class="validation-error">
+    {{ validationResult?.errorMessage | gtxI18n }}
+  </span>
+}

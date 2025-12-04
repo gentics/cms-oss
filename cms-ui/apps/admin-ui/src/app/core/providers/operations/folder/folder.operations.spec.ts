@@ -1,17 +1,17 @@
-import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
 import { createDelayedError, createDelayedObservable } from '@admin-ui/testing';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { MockI18nNotificationService, MockI18nService } from '@gentics/cms-components/testing';
 import { Folder, Raw, RecursivePartial } from '@gentics/cms-models';
 import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { takeUntil } from 'rxjs/operators';
-import { FolderOperations } from '.';
+import { InterfaceOf, ObservableStopper } from '../../../../common';
 import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { ErrorHandler } from '../../error-handler';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
-import { I18nNotificationService } from '../../i18n-notification';
-import { MockI18nNotificationService } from '../../i18n-notification/i18n-notification.service.mock';
+import { FolderOperations } from './folder.operations';
 
 class MockApi implements RecursivePartial<InterfaceOf<GcmsApi>> {
     folders = {
@@ -34,14 +34,15 @@ describe('FolderOperations', () => {
                 { provide: EntityManagerService, useClass: MockEntityManagerService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: GcmsApi, useClass: MockApi },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: I18nNotificationService, useClass: MockI18nNotificationService },
             ],
         });
 
-        api = TestBed.get(GcmsApi);
-        entityManager = TestBed.get(EntityManagerService);
-        errorHandler = TestBed.get(ErrorHandler);
-        folderOps = TestBed.get(FolderOperations);
+        api = TestBed.inject(GcmsApi) as any;
+        entityManager = TestBed.inject(EntityManagerService) as any;
+        errorHandler = TestBed.inject(ErrorHandler) as any;
+        folderOps = TestBed.inject(FolderOperations);
         stopper = new ObservableStopper();
     });
 
@@ -60,7 +61,7 @@ describe('FolderOperations', () => {
             let result: Folder<Raw>;
             folderOps.get(1).pipe(
                 takeUntil(stopper.stopper$),
-            ).subscribe(folder => result = folder);
+            ).subscribe((folder) => result = folder);
 
             tick();
             expect(result).toBe(mockFolder);

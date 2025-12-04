@@ -1,16 +1,19 @@
 <div
-    class="table-size-grid"
-    [style.--gtx-grid-columns]="maxColumns"
-    [style.--gtx-grid-rows]="maxRows"
-    (mouseleave)="setActivePosition(-1, -1)"
->
-    <div class="grid-row" *ngFor="let row of (maxRows | gtxRange)">
+  class="table-size-grid"
+  [style.--gtx-grid-columns]="maxColumns"
+  [style.--gtx-grid-rows]="maxRows"
+  (mouseleave)="setActivePosition(-1, -1)"
+  >
+  @for (row of (maxRows | gtxRange); track row) {
+    <div class="grid-row">
+      @for (col of (maxColumns | gtxRange); track col) {
         <div
-            *ngFor="let col of (maxColumns | gtxRange)"
-            class="cell"
-            [class.active]="col <= activeColumn && row <= activeRow"
-            (mouseenter)="setActivePosition(col, row)"
-            (click)="triggerSelection(col, row)"
+          class="cell"
+          [class.active]="col <= activeColumn && row <= activeRow"
+          (mouseenter)="setActivePosition(col, row)"
+          (click)="triggerSelection(col, row)"
         ></div>
+      }
     </div>
+  }
 </div>

@@ -1050,6 +1050,18 @@ public class PublishablePage extends AbstractPage {
 		}
 
 		@Override
+		public boolean isPartiallyLocalized() {
+			return false;
+		}
+
+		@Override
+		public Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException {
+			failReadOnly();
+
+			return null;
+		}
+
+		@Override
 		public boolean isLocked() throws NodeException {
 			return false;
 		}
@@ -1072,6 +1084,13 @@ public class PublishablePage extends AbstractPage {
 		@Override
 		public Node getNode() throws NodeException {
 			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Content setModified(boolean modified) throws ReadOnlyException {
+			failReadOnly();
+
 			return null;
 		}
 	}

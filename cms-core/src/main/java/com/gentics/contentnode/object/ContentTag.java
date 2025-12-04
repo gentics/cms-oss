@@ -32,6 +32,11 @@ public abstract class ContentTag extends Tag {
 	 */
 	protected final static Pattern TABLE_CELL_TAG_NAME = Pattern.compile(".+\\.[A-Z]+[0-9]+");
 
+	/**
+	 * Whether this tag is interited in a partially localized page.
+	 */
+	private boolean inherited = false;
+
 	protected ContentTag(Integer id, NodeObjectInfo info) {
 		super(id, info);
 	}
@@ -83,6 +88,10 @@ public abstract class ContentTag extends Tag {
 	 * @see com.gentics.lib.parser.tag.ParserTag#isEditable()
 	 */
 	public boolean isEditable() throws NodeException {
+		if (isInherited()) {
+			return false;
+		}
+
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
 		int tagNestLevel = renderType.getStack().countInstances(Tag.class, this);
@@ -130,7 +139,7 @@ public abstract class ContentTag extends Tag {
 	 * @see com.gentics.lib.parser.tag.ParserTag#isInlineEditable()
 	 */
 	public boolean isInlineEditable() throws NodeException {
-		return getConstruct().isInlineEditable();
+		return !isInherited() && getConstruct().isInlineEditable();
 	}
 
 	@Override
@@ -151,5 +160,26 @@ public abstract class ContentTag extends Tag {
 	 */
 	public void clone(TemplateTag tag) throws NodeException {
 		assertEditable();
+	}
+
+	/**
+	 * Whether this tag is inherited in a partially localized page.
+	 * @return Whether this tag is inherited in a partially localized page.
+	 */
+	public boolean isInherited() {
+		return inherited;
+	}
+
+	/**
+	 * Set whether this tag is inherited in a partially localized page.
+	 * @param inherited Whether this tag is inherited in a partially localized page.
+	 */
+	public void setInherited(boolean inherited) {
+		this.inherited = inherited;
+	}
+
+	@Override
+	public boolean isLocalizable() {
+		return comesFromTemplate() && isInherited();
 	}
 }

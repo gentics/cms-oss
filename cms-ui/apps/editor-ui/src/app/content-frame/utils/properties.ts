@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { EditableProperties } from '@editor-ui/app/common/models';
 import {
     CmsFormData,
     EditableFileProps,
@@ -13,6 +12,7 @@ import {
     Node,
     Page,
 } from '@gentics/cms-models';
+import { EditableProperties } from '../../common/models';
 
 export function getItemProperties(item: InheritableItem | Node): EditableProperties {
     if (item == null) {

@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,6 +38,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.gentics.lib.genericexceptions.IllegalUsageException;
 import org.apache.commons.collections.CollectionUtils;
 
 import com.gentics.api.lib.datasource.VersioningDatasource.Version;
@@ -121,7 +123,6 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.StackResolver;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
-import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
@@ -133,6 +134,7 @@ import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 
 import io.reactivex.Observable;
+import org.apache.commons.lang3.Strings;
 
 /**
  * An objectfactory which can create {@link Page} and {@link Content} objects, based on the {@link AbstractFactory}.
@@ -183,7 +185,7 @@ public class PageFactory extends AbstractFactory {
 			+ "contentset_id = ?, channelset_id = ?, channel_id = ?, sync_page_id = ?, sync_timestamp = ?, modified = 1 "
 			+ "WHERE id = ?";
 
-	protected final static String INSERT_CONTENT_SQL = "INSERT INTO content (creator, cdate, editor, edate, locked, locked_by, uuid) VALUES " + "(?, ?, ?, ?, ?, ?, ?)";
+	protected final static String INSERT_CONTENT_SQL = "INSERT INTO content (creator, cdate, editor, edate, locked, locked_by, uuid, partially_localized) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
 
 	protected final static String UPDATE_CONTENT_SQL = "UPDATE content SET editor = ?, edate = ? WHERE id = ?";
 
@@ -3990,6 +3992,8 @@ public class PageFactory extends AbstractFactory {
 		 */
 		protected int lockedBy;
 
+		protected boolean partiallyLocalized;
+
 		protected final static String CONTENTTAGS = "contenttags";
 
 		/**
@@ -4000,13 +4004,14 @@ public class PageFactory extends AbstractFactory {
 			super(null, info);
 		}
 
-		public FactoryContent(Integer id, NodeObjectInfo info, int locked, int lockedBy, List<Integer> tagIds, int nodeId, int udate, GlobalId globalId) {
+		public FactoryContent(Integer id, NodeObjectInfo info, int locked, int lockedBy, List<Integer> tagIds, int nodeId, int udate, boolean partiallyLocalized, GlobalId globalId) {
 			super(id, info);
 			this.tagIds = tagIds != null ? new Vector<>(tagIds) : null;
 			pageIds = null;
 			this.locked = locked;
 			this.lockedBy = lockedBy;
 			this.udate = udate;
+			this.partiallyLocalized = partiallyLocalized;
 			this.globalId = globalId;
 			this.nodeId = nodeId;
 		}
@@ -4037,6 +4042,18 @@ public class PageFactory extends AbstractFactory {
 
 		public List<Page> getPages() throws NodeException {
 			return loadPages();
+		}
+
+		@Override
+		public boolean isPartiallyLocalized() {
+			return partiallyLocalized;
+		}
+
+		@Override
+		public Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException {
+			failReadOnly();
+
+			return this;
 		}
 
 		/**
@@ -4088,7 +4105,78 @@ public class PageFactory extends AbstractFactory {
 				contentTags.put(tag.getName(), tag);
 			}
 
+			if (isPartiallyLocalized()) {
+				var page = getPages().stream().findAny();
+
+				if (page.isPresent()) {
+					addInheritedContentTags(page.get().getMaster().getContent().getContentTags(), contentTags);
+				}
+			}
+
 			return contentTags;
+		}
+
+		private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
+			var inheritedTags = new HashMap<String, ContentTag>();
+			var possibleInheritedTagNames = new HashSet<>(masterContentTags.keySet());
+			var tagsToCheck = new LinkedList<String>();
+
+			for (var masterTagEntry : masterContentTags.entrySet()) {
+				var masterTagName = masterTagEntry.getKey();
+				var masterTag = masterTagEntry.getValue();
+
+				if (masterTag.comesFromTemplate()) {
+					if (!contentTags.containsKey(masterTagName)) {
+						tagsToCheck.push(masterTagName);
+					}
+				}
+
+				if (!contentTags.containsKey(masterTagName)) {
+					masterTag.setInherited(true);
+				}
+			}
+
+			tagsToCheck.forEach(possibleInheritedTagNames::remove);
+
+			while (!tagsToCheck.isEmpty()) {
+				var masterTagName = tagsToCheck.pop();
+				var masterTag = masterContentTags.get(masterTagName);
+
+				inheritedTags.put(masterTagName, masterTag);
+
+				var construct = masterTag.getConstruct();
+				var values = masterTag.getValues();
+
+				for (var part : construct.getParts()) {
+					var key = part.getKeyname();
+					var val = values.getByKeyname(key);
+
+					if (val == null) {
+						continue;
+					}
+
+					var text = val.getValueText();
+
+					if (text.isEmpty()) {
+						continue;
+					}
+
+					var newToCheck = new HashSet<String>();
+
+					for (var embeddedTag : possibleInheritedTagNames) {
+						if (!inheritedTags.containsKey(embeddedTag) && text.contains("<node " + embeddedTag + ">")) {
+							newToCheck.add(embeddedTag);
+						}
+					}
+
+					if (!newToCheck.isEmpty()) {
+						possibleInheritedTagNames.removeAll(newToCheck);
+						tagsToCheck.addAll(newToCheck);
+					}
+				}
+			}
+
+			contentTags.putAll(inheritedTags);
 		}
 
 		private synchronized void loadPageIds() throws NodeException {
@@ -4236,6 +4324,13 @@ public class PageFactory extends AbstractFactory {
 
 			return t.getObject(Node.class, nodeId);
 		}
+
+		@Override
+		public Content setModified(boolean modified) throws ReadOnlyException {
+			failReadOnly();
+
+			return this;
+		}
 	}
 
 	/**
@@ -4252,6 +4347,8 @@ public class PageFactory extends AbstractFactory {
 		 * editable copies of the contenttags in this content
 		 */
 		private Map<String, ContentTag> contentTags = null;
+
+		protected boolean newContent = false;
 
 		/**
 		 * Flag to mark whether the content has been modified
@@ -4281,8 +4378,9 @@ public class PageFactory extends AbstractFactory {
 		 */
 		protected EditableFactoryContent(FactoryContent content, NodeObjectInfo info, boolean asNewContent) throws NodeException {
 			super(asNewContent ? null : content.getId(), info, asNewContent ? -1 : content.locked, asNewContent ? -1 : content.lockedBy,
-					asNewContent ? null : content.tagIds, content.nodeId, asNewContent ? -1 : content.getUdate(), asNewContent ? null : content.getGlobalId());
+					asNewContent ? null : content.tagIds, content.nodeId, asNewContent ? -1 : content.getUdate(), content.partiallyLocalized, asNewContent ? null : content.getGlobalId());
 			if (asNewContent) {
+				newContent = true;
 				// copy the contenttags
 				Map<String, ContentTag> originalContentTags = content.getContentTags();
 
@@ -4296,6 +4394,30 @@ public class PageFactory extends AbstractFactory {
 			}
 		}
 
+		@Override
+		public Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException {
+			if (partiallyLocalized && !this.partiallyLocalized) {
+				if (!newContent) {
+					throw new IllegalUsageException("Partial localization only supported for new content", "feature.partial_localization.only_for_new");
+				}
+
+				if (!Feature.PARTIAL_MULTICHANNELLING.isActivated(getNode())) {
+					throw new IllegalUsageException(
+						"Feature PARTIAL_MULTICHANNELLING is not available for this node",
+						"feature.missing_license",
+						Feature.PARTIAL_MULTICHANNELLING.name());
+				}
+			}
+
+			this.partiallyLocalized = partiallyLocalized;
+
+			if (partiallyLocalized) {
+				contentTags.clear();
+			}
+
+			return this;
+		}
+
 		/* (non-Javadoc)
 		 * @see com.gentics.contentnode.factory.object.PageFactory.FactoryContent#getContentTags()
 		 */
@@ -4305,7 +4427,9 @@ public class PageFactory extends AbstractFactory {
 			}
 
 			for (ContentTag tag : contentTags.values()) {
-				tag.setContent(this);
+				if (tag.getObjectInfo().isEditable()) {
+					tag.setContent(this);
+				}
 			}
 			return contentTags;
 		}
@@ -4357,11 +4481,11 @@ public class PageFactory extends AbstractFactory {
 			// take the construct's baseword and add numbers
 			String keyWord = construct.getKeyword();
 			String tagName = null;
-			int counter = 0;
 
 			do {
-				counter++;
-				tagName = keyWord + counter;
+				String uuid = Strings.CS.remove(UUID.randomUUID().toString(), "-");
+
+				tagName = keyWord + '_' + uuid;
 			} while (contentTagNames.contains(tagName) || reservedNames.contains(tagName));
 
 			tag.setName(tagName);
@@ -4441,14 +4565,17 @@ public class PageFactory extends AbstractFactory {
 			if (tagIds != null) {
 				tagIdsToRemove.addAll(tagIds);
 			}
-			for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext();) {
+
+			for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext(); ) {
 				ContentTag tag = i.next();
 
-				tag.setContentId(getId());
-				isModified |= tag.save();
+				if (!partiallyLocalized || tag.getObjectInfo().isEditable()) {
+					tag.setContentId(getId());
+					isModified |= tag.save();
 
-				// do not remove the tag, which was saved
-				tagIdsToRemove.remove(tag.getId());
+					// do not remove the tag, which was saved
+					tagIdsToRemove.remove(tag.getId());
+				}
 			}
 
 			// remove tags which no longer exist
@@ -4466,6 +4593,8 @@ public class PageFactory extends AbstractFactory {
 			if (isModified) {
 				t.dirtObjectCache(Content.class, getId());
 			}
+
+			this.modified = false;
 
 			return isModified;
 		}
@@ -4513,6 +4642,13 @@ public class PageFactory extends AbstractFactory {
 				pages.add(page);
 			}
 			return pages;
+		}
+
+		@Override
+		public EditableFactoryContent setModified(boolean modified) throws ReadOnlyException {
+			this.modified = modified;
+
+			return this;
 		}
 	}
 
@@ -5243,7 +5379,7 @@ public class PageFactory extends AbstractFactory {
 		if (isNew) {
 			// insert a new record
 			List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENT_SQL, new Object[] {
-				t.getUserId(), t.getUnixTimestamp(), t.getUserId(), t.getUnixTimestamp(), t.getUnixTimestamp(), t.getUserId(), ObjectTransformer.getString(content.getGlobalId(), "")
+				t.getUserId(), t.getUnixTimestamp(), t.getUserId(), t.getUnixTimestamp(), t.getUnixTimestamp(), t.getUserId(), ObjectTransformer.getString(content.getGlobalId(), ""), content.isPartiallyLocalized()
 			});
 
 			if (keys.size() == 1) {
@@ -5311,8 +5447,9 @@ public class PageFactory extends AbstractFactory {
 		List<Integer> tagIds = idLists != null ? idLists[0] : null;
 		int locked = rs.getInt("locked");
 		int lockedBy = rs.getInt("locked_by");
+		boolean partiallyLocalized = rs.getBoolean("partially_localized");
 
-		return new FactoryContent(id, info, locked, lockedBy, tagIds, rs.getInt("node_id"), getUdate(rs), getGlobalId(rs, "content"));
+		return new FactoryContent(id, info, locked, lockedBy, tagIds, rs.getInt("node_id"), getUdate(rs), partiallyLocalized, getGlobalId(rs, "content"));
 	}
 
 	/* (non-Javadoc)

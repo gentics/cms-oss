@@ -1,8 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import {
     RepositoryBrowserOptions,
     TagEditorContext,
@@ -16,6 +12,7 @@ import {
     Folder,
     FolderItemType,
     Image,
+    InheritableItem,
     Item,
     ItemInNode,
     ListType,
@@ -33,9 +30,12 @@ import {
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';
-import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { Api } from '../../../../core/providers/api/api.service';
+import { RepositoryBrowserClient } from '../../../../shared/providers';
+import { ApplicationStateService } from '../../../../state';
 
 /** All item types that can be selected by the overview. */
 export type OverviewItem = (ItemInNode<Page<Raw> | Folder<Raw> | File<Raw> | Image<Raw>>) & {
@@ -43,10 +43,10 @@ export type OverviewItem = (ItemInNode<Page<Raw> | Folder<Raw> | File<Raw> | Ima
      * Hacky fix to add the node ID when reloading items.
      * @deprecated Do not use, unless you know what you are doing.
      */
-    _checkedNodeId: number
+    _checkedNodeId: number;
 };
 
-type PickedObject = { id:number, origId: number, item: Item<Raw> & { _checkedNodeId: number }, nodeId: number, origIndex: number };
+type PickedObject = { id: number; origId: number; item: Item<Raw> & { _checkedNodeId: number }; nodeId: number; origIndex: number };
 
 /** Used for easily getting the label of an object in the template. */
 export interface LabeledObject<T> {
@@ -93,7 +93,6 @@ ALLOWED_ORDER_BY_TYPES.set(ListType.FILE, [
 ]);
 ALLOWED_ORDER_BY_TYPES.set(ListType.IMAGE, ALLOWED_ORDER_BY_TYPES.get(ListType.FILE));
 
-
 /**
  * Used to edit OverviewTagParts.
  */
@@ -102,7 +101,7 @@ ALLOWED_ORDER_BY_TYPES.set(ListType.IMAGE, ALLOWED_ORDER_BY_TYPES.get(ListType.F
     templateUrl: './overview-tag-property-editor.component.html',
     styleUrls: ['./overview-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
@@ -154,7 +153,6 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
         private api: Api,
         private changeDetector: ChangeDetectorRef,
         private repositoryBrowserClient: RepositoryBrowserClient,
-        private modalService: ModalService,
         private i18n: I18nService,
         private state: ApplicationStateService,
     ) { }
@@ -206,12 +204,13 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
         this.repositoryBrowserClient.openRepositoryBrowser(options)
             .then((newItems: OverviewItem[]) => {
                 if (!this.isStickyChannelEnabled) {
-                    newItems.forEach(newItem => newItem.nodeId = undefined);
+                    newItems.forEach((newItem) => newItem.nodeId = undefined);
                 }
                 // Remove newItems, which already exist in the selectedItems.
-                newItems = newItems.filter(newItem =>
-                    !this.selectedItems.find(existingItem =>
-                        existingItem.id === newItem.id && existingItem.nodeId === newItem.nodeId || this.isAlreadyAddedItem(existingItem, newItem),
+                newItems = newItems.filter((newItem) =>
+                    !this.selectedItems.find((existingItem) =>
+                        (existingItem.id === newItem.id && existingItem.nodeId === newItem.nodeId)
+                        || this.isAlreadyAddedItem(existingItem, newItem),
                     ),
                 );
                 this.updatePath(newItems);
@@ -228,8 +227,8 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
      */
     private isAlreadyAddedItem(existingItem: OverviewItem, newItem: OverviewItem): boolean {
         if (!this.isStickyChannelEnabled) {
-            return (existingItem.masterNodeId === newItem.masterNodeId && existingItem.id === newItem.masterId) ||
-                (existingItem.masterNodeId === newItem.masterNodeId && newItem.id === existingItem.masterId);
+            return (existingItem.masterNodeId === newItem.masterNodeId && existingItem.id === newItem.masterId)
+              || (existingItem.masterNodeId === newItem.masterNodeId && newItem.id === existingItem.masterId);
         }
     }
 
@@ -242,12 +241,12 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
             const overview = this.tagProperty.overview;
 
             if (this.isStickyChannelEnabled) {
-                overview.selectedNodeItemIds = this.selectedItems.map(item => ({ objectId: item.id, nodeId: item.nodeId }));
+                overview.selectedNodeItemIds = this.selectedItems.map((item) => ({ objectId: item.id, nodeId: item.nodeId }));
                 if (overview.selectedItemIds) {
                     delete overview.selectedItemIds;
                 }
             } else {
-                overview.selectedItemIds = this.selectedItems.map(item => item.id);
+                overview.selectedItemIds = this.selectedItems.map((item) => item.id);
                 if (overview.selectedNodeItemIds) {
                     delete overview.selectedNodeItemIds;
                 }
@@ -270,7 +269,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
             const overview = this.tagProperty.overview;
 
             this.allowedOrderByTypes = this.getAllowedOrderByTypes(overview.listType);
-            if (!this.allowedOrderByTypes.find(orderByType => orderByType.value === overview.orderBy)) {
+            if (!this.allowedOrderByTypes.find((orderByType) => orderByType.value === overview.orderBy)) {
                 overview.orderBy = OrderBy.UNDEFINED;
             }
 
@@ -310,8 +309,8 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
      * Determines if the selected items list and the "Add items" button are visible.
      */
     areSelectedItemsVisible(overview: Overview): boolean {
-        return overview.listType && overview.listType !== ListType.UNDEFINED &&
-            (overview.selectType === SelectType.FOLDER || overview.selectType === SelectType.MANUAL);
+        return overview.listType && overview.listType !== ListType.UNDEFINED
+          && (overview.selectType === SelectType.FOLDER || overview.selectType === SelectType.MANUAL);
     }
 
     /**
@@ -321,7 +320,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
         if (newValue.type !== TagPropertyType.OVERVIEW) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by OverviewTagPropertyEditor.`);
         }
-        this.tagProperty = newValue ;
+        this.tagProperty = newValue;
         const overview = this.tagProperty.overview;
 
         if (overview.orderBy === 'UNDEFINED') {
@@ -357,7 +356,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
             groupedItems = this.groupItemsWithoutNodes(overview.selectedItemIds || []);
         }
         const loadRequest$ = this.loadItems(groupedItems, this.determineSelectedItemsType(overview.listType, overview.selectType));
-        const sub = loadRequest$.subscribe(loadedItems => {
+        const sub = loadRequest$.subscribe((loadedItems) => {
             this.updatePath(loadedItems);
             this.selectedItems = loadedItems;
             this.changeDetector.markForCheck();
@@ -366,13 +365,18 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
     }
 
     private updatePath(selectedItems: OverviewItem[]): void {
-        if (!this.isStickyChannelEnabled) {
-            selectedItems.forEach(item => {
-                if (this.state.now.entities.node[this.state.now.editor.nodeId].masterNodeId === item.masterNodeId) {
-                    item.path = item.path.replace(item.masterNode, this.nodeName);
-                }
-            })
+        if (this.isStickyChannelEnabled) {
+            return;
         }
+        const currentMasterId = this.state.now.entities.node[this.state.now.editor.nodeId].masterNodeId;
+
+        selectedItems.forEach((item) => {
+            if (currentMasterId === item.masterNodeId) {
+                // FIXME: This shouldn't be used at all - either fix it in the template,
+                // assign it as new property, or have it fixed in the backend.
+                (item as any).path = item.path.replace(item.masterNode, this.nodeName);
+            }
+        });
     }
 
     /**
@@ -380,7 +384,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
      */
     private assembleAllowedListTypes(settings: OverviewSetting): LabeledObject<ListType>[] {
         if (settings.listTypes.length > 0) {
-            return settings.listTypes.map(listType => {
+            return settings.listTypes.map((listType) => {
                 if (listType === ListType.UNDEFINED) {
                     throw new TagEditorError('Incorrect OverviewSetting: allowed listTypes includes ListType.UNDEFINED.');
                 }
@@ -408,7 +412,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
      */
     private assembleAllowedSelectTypes(settings: OverviewSetting): LabeledObject<SelectType>[] {
         if (settings.selectTypes.length > 0) {
-            return settings.selectTypes.map(selectType => {
+            return settings.selectTypes.map((selectType) => {
                 if (selectType === SelectType.UNDEFINED) {
                     throw new TagEditorError('Incorrect OverviewSetting: allowed selectTypes includes SelectType.UNDEFINED.');
                 }
@@ -451,11 +455,11 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
             if (nodeId === -1) {
                 nodeId = undefined;
             }
-            const request$ = this.api.folders.getExistingItems(itemsFromNode.itemIds, nodeId, itemType, {fillWithNulls: true}).pipe(
-                map(loadedItems => {
+            const request$ = this.api.folders.getExistingItems(itemsFromNode.itemIds, nodeId, itemType, { fillWithNulls: true }).pipe(
+                map((loadedItems) => {
                     return itemsFromNode.itemIds
                         .map((id, index) => {
-                            let loaded = loadedItems.find(item => item !== null && item.id === id);
+                            let loaded = loadedItems.find((item) => item !== null && item.id === id);
 
                             /*
                              * Edge Case which needs to be fixed in Backend.
@@ -483,7 +487,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                                 origIndex: itemsFromNode.origIndices[id],
                             };
                         })
-                        .filter(element => element != null);
+                        .filter((element) => element != null);
                 }),
             );
             requests$.push(request$);
@@ -499,19 +503,28 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                 const loadedItemsInOrder: OverviewItem[] = [];
 
                 Array.from(itemsToLoad).forEach(([nodeId, itemsForNode]: [number, ItemsForNode]) => {
-                    itemsForNode.itemIds.forEach(itemId => {
-                        const itemsForNodeItems = results.find(resultNodes => {
-                            return resultNodes.some(resultNode => resultNode.id === itemId || resultNode.origId === itemId);
+                    itemsForNode.itemIds.forEach((itemId) => {
+                        const itemsForNodeItems = results.find((resultNodes) => {
+                            return resultNodes.some((resultNode) => resultNode.id === itemId || resultNode.origId === itemId);
                         });
                         // if item is not existing, insert error object to be displayed instead
-                        const itemLoaded: OverviewItem = Array.isArray(itemsForNodeItems) && itemsForNodeItems.find(item => {
-                            return item.id === itemId || item.origId === itemId || (item.item != null && item.item.masterId === itemId);
-                        }).item as OverviewItem
-                        || {
-                            id: itemId,
-                            name: this.i18n.translate('editor.item_not_found', { id: itemId }),
-                            nodeId,
-                        } as OverviewItem;
+                        let itemLoaded: OverviewItem;
+
+                        if (Array.isArray(itemsForNodeItems)) {
+                            itemLoaded = itemsForNodeItems.find((item) => {
+                                return item.id === itemId
+                                  || item.origId === itemId
+                                  || (item.item != null && (item.item as any as InheritableItem).masterId === itemId);
+                            }).item as OverviewItem;
+                        }
+
+                        if (!itemLoaded) {
+                            itemLoaded = {
+                                id: itemId,
+                                name: this.i18n.instant('editor.item_not_found', { id: itemId }),
+                                nodeId,
+                            } as OverviewItem;
+                        }
 
                         if (nodeId === -1) {
                             /**
@@ -535,11 +548,11 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
     /**
      * Updates the item id list, as it may contain localized channel item id.
      */
-    private updateItems(results: { item: Item<Raw>, nodeId: number, origIndex: number }[][]): Map<number, ItemsForNode> {
+    private updateItems(results: { item: Item<Raw>; nodeId: number; origIndex: number }[][]): Map<number, ItemsForNode> {
         const items: NodeIdObjectId[] = [];
-        results.forEach(result => {
-            result.forEach(itemData => {
-                items.push({nodeId: itemData.nodeId, objectId: itemData.item.id})
+        results.forEach((result) => {
+            result.forEach((itemData) => {
+                items.push({ nodeId: itemData.nodeId, objectId: itemData.item.id });
             });
         });
         return this.groupItemsByNode(items);
@@ -577,7 +590,7 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
                 groupedItems.set(item.nodeId, itemsForNode);
             }
             // itemsForNode should be unique - only add if it not already exists
-            if (itemsForNode.itemIds.findIndex(itemId => itemId === item.objectId) === -1) {
+            if (itemsForNode.itemIds.findIndex((itemId) => itemId === item.objectId) === -1) {
                 itemsForNode.itemIds.push(item.objectId);
                 itemsForNode.origIndices[item.objectId] = index;
             }

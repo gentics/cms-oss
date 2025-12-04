@@ -1,46 +1,42 @@
-<ng-container *ngIf="currentStep">
-    <div class="modal-title">
-        <h5>{{ title }}</h5>
-    </div>
-
-    <div class="modal-content">
-        <gtx-tabs pure [activeId]="currentStepIndex | json">
-            <ng-container *ngFor="let step of steps; let i = index">
-                <gtx-tab [id]="i | json" [title]="step.title">
-                    <ng-content *ngTemplateOutlet="step.contentTemplate"></ng-content>
-                </gtx-tab>
-            </ng-container>
-        </gtx-tabs>
-    </div>
-
-    <div class="modal-footer">
-        <gtx-button
-            *ngIf="currentStepIndex > 0"
-            type="primary"
-            (click)="onPrevButtonClick()"
+@if (currentStep) {
+  <div class="modal-title">
+    <h5>{{ title }}</h5>
+  </div>
+  <div class="modal-content">
+    <gtx-tabs pure [activeId]="currentStepIndex | json">
+      @for (step of steps; track step; let i = $index) {
+        <gtx-tab [id]="i | json" [title]="step.title">
+          <ng-content *ngTemplateOutlet="step.contentTemplate"></ng-content>
+        </gtx-tab>
+      }
+    </gtx-tabs>
+  </div>
+  <div class="modal-footer">
+    @if (currentStepIndex > 0) {
+      <gtx-button
+        type="primary"
+        (click)="onPrevButtonClick()"
         >
-            {{ 'modal.previous_button' | i18n }}
-        </gtx-button>
-
-        <gtx-button
-            type="primary"
-            [disabled]="!currentStep.nextEnabled || nextClickHandlerExecuting"
-            (click)="onNextButtonClick()"
-        >
-            <ng-container *ngIf="currentStep !== steps.last; else finishButtonContent">
-                {{ 'modal.next_button' | i18n }}
-            </ng-container>
-            <ng-template #finishButtonContent>
-                {{ finishButtonTitle || ('modal.finish_button' | i18n) }}
-            </ng-template>
-        </gtx-button>
-
-        <gtx-button
-            type="secondary"
-            flat
-            (click)="onCancelButtonClick()"
-        >
-            {{ 'common.cancel_button' | i18n }}
-        </gtx-button>
-    </div>
-</ng-container>
+        {{ 'modal.previous_button' | gtxI18n }}
+      </gtx-button>
+    }
+    <gtx-button
+      type="primary"
+      [disabled]="!currentStep.nextEnabled || nextClickHandlerExecuting"
+      (click)="onNextButtonClick()"
+      >
+      @if (currentStep !== steps.last) {
+        {{ 'modal.next_button' | gtxI18n }}
+      } @else {
+        {{ finishButtonTitle || ('modal.finish_button' | gtxI18n) }}
+      }
+    </gtx-button>
+    <gtx-button
+      type="secondary"
+      flat
+      (click)="onCancelButtonClick()"
+      >
+      {{ 'common.cancel_button' | gtxI18n }}
+    </gtx-button>
+  </div>
+}

@@ -9,6 +9,10 @@
     flex-direction: column;
     flex-wrap: nowrap;
 
+    &.mode-editInheritance {
+        padding: 10px;
+    }
+
     .gentics-logo {
         margin-right: 1rem;
         flex: 0 0 auto;
@@ -87,6 +91,7 @@
 
                     .inner-wrapper {
                         line-height: inherit;
+                        align-items: center;
 
                         .other-content {
                             margin-right: 0.5rem;

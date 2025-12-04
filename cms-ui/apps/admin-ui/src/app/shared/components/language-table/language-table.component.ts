@@ -1,24 +1,23 @@
 import { createMoveActions, EditableEntity, LanguageBO } from '@admin-ui/common';
-import { I18nService, LanguageLoaderOptions, LanguageTableLoaderService, PermissionsService } from '@admin-ui/core';
+import { LanguageLoaderOptions, LanguageTableLoaderService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { AnyModelType, Language, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BaseSortableEntityTableComponent } from '../base-sortable-entity-table/base-sortable-entity-table.component';
 
-
 export const UNASSIGN_ACTION = 'unassign';
-
 
 @Component({
     selector: 'gtx-language-table',
     templateUrl: './language-table.component.html',
     styleUrls: ['./language-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class LanguageTableComponent
     extends BaseSortableEntityTableComponent<Language, LanguageBO, LanguageLoaderOptions>
@@ -44,6 +43,7 @@ export class LanguageTableComponent
             sortable: true,
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'language';
     protected focusEntityType = EditableEntity.LANGUAGE;
     protected languageLoader: LanguageTableLoaderService;

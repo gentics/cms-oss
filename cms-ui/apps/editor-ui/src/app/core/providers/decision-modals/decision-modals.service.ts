@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '@editor-ui/app/state';
 import {
     Feature,
     File,
@@ -14,6 +13,7 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { take } from 'rxjs/operators';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 import {
@@ -26,8 +26,8 @@ import { MultiMoveModal } from '../../../shared/components/multi-move-modal/mult
 import { MultiRestoreModalComponent } from '../../../shared/components/multi-restore-modal/multi-restore-modal.component';
 import { PublishPagesModalComponent } from '../../../shared/components/publish-pages-modal/publish-pages-modal.component';
 import { TakePagesOfflineModal } from '../../../shared/components/take-pages-offline-modal/take-pages-offline-modal.component';
+import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '../../../state';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
-import { I18nService } from '../i18n/i18n.service';
 import { LocalizationsService } from '../localizations/localizations.service';
 import { PermissionService } from '../permissions/permission.service';
 
@@ -59,7 +59,7 @@ export class DecisionModalsService {
      * Displays a confirmation dialog before taking an action on a possibly-inherited item to ask whether
      * the user wishes to edit the master version or create a new localization and then work on that.
      */
-    showInheritedDialog(item: InheritableItem | Node, nodeId: number): Promise<{ item: InheritableItem | Node, nodeId: number }> {
+    showInheritedDialog(item: InheritableItem | Node, nodeId: number): Promise<{ item: InheritableItem | Node; nodeId: number }> {
         // We cannot rely on the `item.inherited` property since its value varies depending on the node context under
         // which the data was last fetched. A reliable way is to compare the inheritedFromId with the current node - this
         // should remain constant.
@@ -82,12 +82,12 @@ export class DecisionModalsService {
             });
     }
 
-    private localizeItemAndRefreshList(item: InheritableItem, nodeId: number): Promise<{ item: InheritableItem<Raw>, nodeId: number }> {
+    private localizeItemAndRefreshList(item: InheritableItem, nodeId: number): Promise<{ item: InheritableItem<Raw>; nodeId: number }> {
         return this.folderActions.localizeItem(item.type, item.id, nodeId)
-            .then(localizedItem => {
+            .then((localizedItem) => {
                 // Refresh the list view to reflect the new local item.
-                const parentFolderId = (localizedItem as Page | File | Image).folderId ||
-                    (localizedItem as Folder).motherId;
+                const parentFolderId = (localizedItem as Page | File | Image).folderId
+                  || (localizedItem as Folder).motherId;
                 const currentFolderId = this.appState.now.folder.activeFolder;
                 if (parentFolderId === currentFolderId) {
                     this.folderActions.getItems(parentFolderId, item.type);
@@ -96,42 +96,42 @@ export class DecisionModalsService {
             });
     }
 
-    private askUserInWhichNodeToEdit(item: InheritableItem, nodeId: number): Promise<{ item: InheritableItem, nodeId: number }> {
+    private askUserInWhichNodeToEdit(item: InheritableItem, nodeId: number): Promise<{ item: InheritableItem; nodeId: number }> {
         const localNodeName = this.entityResolver.getNode(nodeId).name;
         return this.modalService
             .dialog({
-                title: this.i18n.translate('modal.edit_inherited_title', { _type: item.type, name: item.name }),
-                body: this.i18n.translate('modal.edit_inherited_body', {
+                title: this.i18n.instant('modal.edit_inherited_title', { _type: item.type, name: item.name }),
+                body: this.i18n.instant('modal.edit_inherited_body', {
                     _type: item.type,
-                    master: (item ).inheritedFrom,
+                    master: (item).inheritedFrom,
                     name: item.name,
                     local: localNodeName,
                 }),
                 buttons: [
                     {
-                        label: this.i18n.translate('common.cancel_button'),
+                        label: this.i18n.instant('common.cancel_button'),
                         type: 'secondary',
                         returnValue: '',
                         flat: true,
                     },
                     {
-                        label: this.i18n.translate('modal.edit_original_button'),
+                        label: this.i18n.instant('modal.edit_original_button'),
                         type: 'secondary',
                         returnValue: 'editOriginal',
                     },
                     {
-                        label: this.i18n.translate('modal.localize_and_edit_button'),
+                        label: this.i18n.instant('modal.localize_and_edit_button'),
                         type: 'default',
                         returnValue: 'localize',
                     },
                 ],
             }, { width: '800px' })
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             .then((result: string) => {
                 if (result === 'editOriginal') {
                     return { item, nodeId: item.inheritedFromId };
                 } else if (result === 'localize') {
-                    return this.localizeItemAndRefreshList(item, nodeId) as Promise<{ item: InheritableItem, nodeId: number }>;
+                    return this.localizeItemAndRefreshList(item, nodeId) as Promise<{ item: InheritableItem; nodeId: number }>;
                 }
             });
     }
@@ -150,31 +150,31 @@ export class DecisionModalsService {
         const masterNode = this.entityResolver.getNode(page.masterNodeId);
 
         return this.modalService.dialog({
-            title: this.i18n.translate('modal.translate_inherited_title'),
-            body: this.i18n.translate('modal.translate_inherited_body', {
+            title: this.i18n.instant('modal.translate_inherited_title'),
+            body: this.i18n.instant('modal.translate_inherited_body', {
                 master: page.masterNode,
                 local: localNode.name,
             }),
             buttons: [
                 {
-                    label: this.i18n.translate('common.cancel_button'),
+                    label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     shouldReject: true,
                     flat: true,
                 },
                 {
-                    label: this.i18n.translate('modal.translate_in_master_node_button'),
+                    label: this.i18n.instant('modal.translate_in_master_node_button'),
                     type: 'secondary',
                     returnValue: masterNode.id,
                 },
                 {
-                    label: this.i18n.translate('modal.translate_in_local_node_button'),
+                    label: this.i18n.instant('modal.translate_in_local_node_button'),
                     type: 'default',
                     returnValue: localNode.id,
                 },
             ],
         }, { width: '800px' })
-            .then<number>(modal => modal.open());
+            .then<number>((modal) => modal.open());
     }
 
     /**
@@ -198,7 +198,7 @@ export class DecisionModalsService {
             return [];
         }
 
-        const pageLanguages = new Set<string>(data.pages.map(page => page.language));
+        const pageLanguages = new Set<string>(data.pages.map((page) => page.language));
 
         // If we only want to publish pages in the current language,
         // and all final pages have the correct language, then we can
@@ -218,7 +218,7 @@ export class DecisionModalsService {
             variants: data.variants,
             selectVariants: publishLanguageVariants,
         })
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 
     /**
@@ -238,7 +238,7 @@ export class DecisionModalsService {
         const pagesToTakeOffline = data.pages;
 
         const anyPagesHaveMultipleLanguage = Object.values(data.variants)
-            .some(arr => arr.length > 1);
+            .some((arr) => arr.length > 1);
 
         if (!anyPagesHaveMultipleLanguage) {
             // In this case we are simply taking offline local items which do not have any other language
@@ -250,7 +250,7 @@ export class DecisionModalsService {
             pagesToTakeOffline,
             pageLanguageVariants: data.variants,
         })
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 
     /**
@@ -260,7 +260,7 @@ export class DecisionModalsService {
     selectItemsToDelete(items: InheritableItem[]): Promise<MultiDeleteResult> {
         // If there's no multichanneling enabled, we don't need any of this. Just simply delete the files
         if (!this.appState.now.features[Feature.MULTICHANNELLING]) {
-            const pages = items.filter(item => item.type === 'page') as Page[];
+            const pages = items.filter((item) => item.type === 'page') as Page[];
             const pageData = this.getPermittedPageLanguages(pages, [GcmsPermission.DELETE_ITEMS]);
 
             return this.modalService.fromComponent(MultiDeleteModal, null, {
@@ -270,7 +270,7 @@ export class DecisionModalsService {
                 itemLocalizations: {},
                 pageLanguageVariants: pageData.variants,
                 formLanguageVariants: this.createFormLanguageVariantsMap(items),
-            }).then(modal => modal.open());
+            }).then((modal) => modal.open());
         }
 
         const inheritedItems: InheritableItem[] = [];
@@ -287,16 +287,16 @@ export class DecisionModalsService {
             }
         }
 
-        const pages = [...otherItems, ...localizedItems].filter(item => item.type === 'page') as Page[];
+        const pages = [...otherItems, ...localizedItems].filter((item) => item.type === 'page') as Page[];
         const pageData = this.getPermittedPageLanguages(pages, [GcmsPermission.DELETE_ITEMS]);
         const formLanguageVariants: FormLanguageVariantMap = this.createFormLanguageVariantsMap([...otherItems]);
 
         // Remove all pages which aren't allowed or referenced
-        const filteredOtherItems = otherItems.filter(item => item.type !== 'page' || pageData.referencedIds.has(item.id));
+        const filteredOtherItems = otherItems.filter((item) => item.type !== 'page' || pageData.referencedIds.has(item.id));
 
-        return this.localizationService.getLocalizationMap(items.filter(item => item.type !== 'form'))
+        return this.localizationService.getLocalizationMap(items.filter((item) => item.type !== 'form'))
             .toPromise()
-            .then(itemLocalizations => {
+            .then((itemLocalizations) => {
                 return this.modalService.fromComponent(MultiDeleteModal, null, {
                     otherItems: filteredOtherItems,
                     localizedItems,
@@ -306,7 +306,7 @@ export class DecisionModalsService {
                     itemLocalizations: itemLocalizations,
                 });
             })
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 
     /**
@@ -331,33 +331,32 @@ export class DecisionModalsService {
                 pages,
             },
         )
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 
     /**
      * When moving multiple items, inform the user that inherited and localized items can not be moved.
      */
     moveMultipleItems(items: InheritableItem[], targetFolder: Folder, targetNode: Node): Promise<InheritableItem[]> {
-        const hasUnmovableItems = items.some(item => item.inherited || itemIsLocalized(item));
+        const hasUnmovableItems = items.some((item) => item.inherited || itemIsLocalized(item));
 
         if (!hasUnmovableItems) {
             return Promise.resolve(items);
         }
 
         return this.modalService.fromComponent(MultiMoveModal, null, { items, targetFolder, targetNode })
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 
     private getPermittedPageLanguages(
         pages: Page[],
         permissions: (GcmsPermission | GcmsRolePrivilege)[],
     ): {
-            languages: Set<string>,
-            pages: Page[],
-            variants: PageLanguageVariantMap,
-            referencedIds: Set<number>,
-        }
-    {
+        languages: Set<string>;
+        pages: Page[];
+        variants: PageLanguageVariantMap;
+        referencedIds: Set<number>;
+    } {
         const validPages = new Map<number, Page>();
         const variations: PageLanguageVariantMap = {};
         const languages = new Set<string>();
@@ -409,7 +408,7 @@ export class DecisionModalsService {
             }
 
             // Check the general permissions
-            const hasGeneralPerm = permissions.some(perm => folderPermissions?.permissions?.[perm]);
+            const hasGeneralPerm = permissions.some((perm) => folderPermissions?.permissions?.[perm]);
             if (!hasGeneralPerm) {
                 let hasValidLangPerm = false;
 
@@ -424,7 +423,7 @@ export class DecisionModalsService {
                     // Check if there's any special role permissions
                     const lang = langPage.language;
                     const rolePerms = folderPermissions?.rolePermissions?.pageLanguages?.[lang];
-                    const hasRolePerm = permissions.some(perm => rolePerms?.[perm]);
+                    const hasRolePerm = permissions.some((perm) => rolePerms?.[perm]);
                     if (!hasRolePerm) {
                         continue;
                     }
@@ -486,8 +485,8 @@ export class DecisionModalsService {
 
     private createFormLanguageVariantsMap(items: InheritableItem[]): FormLanguageVariantMap {
         const variantsPerFormLanguage: FormLanguageVariantMap = {};
-        const forms = items.filter(item => item.type === 'form') as Form[];
-        forms.forEach(form => {
+        const forms = items.filter((item) => item.type === 'form') as Form[];
+        forms.forEach((form) => {
             variantsPerFormLanguage[form.id] = form.languages;
         });
         return variantsPerFormLanguage;

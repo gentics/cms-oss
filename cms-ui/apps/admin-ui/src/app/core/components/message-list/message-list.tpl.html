@@ -1,19 +1,31 @@
-<div *ngFor="let msg of messages; trackBy: trackUnique"
-     class="message" [class.read]="!msg?.unread">
-        <gtx-icon-checkbox icon="mail"
+@for (msg of messages; track trackUnique(msg)) {
+    <div class="message" [class.read]="!msg?.unread">
+        <gtx-icon-checkbox
+            icon="mail"
             [selected]="isSelected(msg)"
-            (change)="toggleSelect(msg, $event)"></gtx-icon-checkbox>
-        <span class="name" (click)="messageClick.emit(msg)">{{ getFullName(msg?.sender) | async }}</span>:
+            (change)="toggleSelect(msg, $event)"
+        ></gtx-icon-checkbox>
+        <span
+            class="name"
+            (click)="messageClick.emit(msg)"
+        >{{ getFullName(msg?.sender) | async }}</span>:
+
         <gtx-message-body (click)="messageClick.emit(msg)" [body]="msg?.message" [nodes]="nodes" singleLine></gtx-message-body>
+
         <div class="message-actions">
-            <i class="material-icons" [attr.translate]="'no'"
-               [title]="'dashboard.archive_message_title' | i18n"
-               *ngIf="msg?.unread"
-               (click)="messageArchive.emit(msg)">move_to_inbox</i>
-            <i class="material-icons" [attr.translate]="'no'"
-               [title]="'dashboard.delete_message_title' | i18n"
-               [attr.data-msg-id]="msg.id"
-               (click)="messageDelete.emit(msg)"
-               [class.confirm]="msg === waitsForDeleteConfirmation">delete</i>
+            @if (msg?.unread) {
+                <i class="material-icons" [attr.translate]="'no'"
+                [title]="'dashboard.archive_message_title' | gtxI18n"
+                (click)="messageArchive.emit(msg)">move_to_inbox</i>
+            }
+            <i
+                class="material-icons"
+                [attr.translate]="'no'"
+                [title]="'dashboard.delete_message_title' | gtxI18n"
+                [attr.data-msg-id]="msg.id"
+                (click)="messageDelete.emit(msg)"
+                [class.confirm]="msg === waitsForDeleteConfirmation"
+            >delete</i>
         </div>
-</div>
+    </div>
+}

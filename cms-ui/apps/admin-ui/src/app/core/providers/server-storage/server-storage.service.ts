@@ -1,9 +1,9 @@
-import { ServiceBase } from '@admin-ui/shared/providers/service-base/service.base';
 import { Injectable } from '@angular/core';
 import { IndexByKey, UserDataResponse } from '@gentics/cms-models';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
+import { ServiceBase } from '../../../shared/providers/service-base/service.base';
 
 @Injectable()
 export class ServerStorageService extends ServiceBase {
@@ -26,12 +26,11 @@ export class ServerStorageService extends ServiceBase {
      */
     userData$ = new BehaviorSubject<IndexByKey<any>>({});
 
-
     constructor(
         private api: GcmsApi,
     ) {
         super();
-     }
+    }
 
     /**
      * Load all user data stored on the server.
@@ -43,12 +42,12 @@ export class ServerStorageService extends ServiceBase {
         }
 
         return this.api.userData.getAllKeys().pipe(
-            map(response => response.data),
+            map((response) => response.data),
             tap(() => this.markAsSupported()),
             catchError((err, response) => this.checkIfUnsupported(err)
                 ? of({})
                 : throwError(err)),
-            tap(data => this.userData$.next(data)),
+            tap((data) => this.userData$.next(data)),
         );
     }
 
@@ -62,12 +61,12 @@ export class ServerStorageService extends ServiceBase {
         }
 
         return this.api.userData.getKey(key).pipe(
-            map(response => response.data),
-            tap(data => this.markAsSupported()),
+            map((response) => response.data),
+            tap((data) => this.markAsSupported()),
             catchError((err, response) => this.checkIfUnsupported(err)
                 ? of(null)
                 : throwError(err)),
-            tap(data => this.userData$.next(Object.assign({}, this.userData$, { [key]: data }))),
+            tap((data) => this.userData$.next(Object.assign({}, this.userData$, { [key]: data }))),
         );
     }
 
@@ -105,8 +104,8 @@ export class ServerStorageService extends ServiceBase {
     private checkIfUnsupported(error: Error): boolean {
         if (error instanceof ApiError) {
             const response = error.response as UserDataResponse;
-            const unsupported = (response && response.responseInfo && response.responseInfo.responseCode === 'FAILURE' &&
-                response.messages && response.messages.length > 0 && response.messages[0].type === 'CRITICAL');
+            const unsupported = (response && response.responseInfo && response.responseInfo.responseCode === 'FAILURE'
+              && response.messages && response.messages.length > 0 && response.messages[0].type === 'CRITICAL');
 
             if (unsupported && this.supported$.value === 'unknown') {
                 this.supported$.next(false);

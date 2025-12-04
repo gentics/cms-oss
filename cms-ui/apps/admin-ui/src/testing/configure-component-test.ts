@@ -1,8 +1,8 @@
 import { getTestBed, TestModuleMetadata } from '@angular/core/testing';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nPipe, MockI18nService } from '@gentics/cms-components/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipe } from '@gentics/ui-core/testing';
-import { I18nService } from '../app/core/providers/i18n/i18n.service';
-import { MockI18nService } from '../app/core/providers/i18n/i18n.service.mock';
+import { mockPipes } from '@gentics/ui-core/testing';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -10,7 +10,7 @@ import { MockI18nService } from '../app/core/providers/i18n/i18n.service.mock';
 function mergeUnique(a: any[], b: any[]): any[] {
     const arr1 = a instanceof Array ? a : [];
     const arr2 = b instanceof Array ? b : [];
-    return arr1.concat(arr2.filter(item => arr1.indexOf(item) < 0));
+    return arr1.concat(arr2.filter((item) => arr1.indexOf(item) < 0));
 }
 
 /**
@@ -24,15 +24,20 @@ export function configureComponentTest(config: TestModuleMetadata): void {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
         imports: [GenticsUICoreModule.forRoot()],
-        declarations: [ mockPipe('i18n') ],
-        providers: [{ provide: I18nService, useClass: MockI18nService }]
+        declarations: [
+            MockI18nPipe,
+            ...mockPipes('gtxI18nDate'),
+        ],
+        providers: [
+            { provide: I18nService, useClass: MockI18nService },
+        ],
     };
 
     const mergedConfig: TestModuleMetadata = {
         imports: mergeUnique(defaultConfig.imports, config.imports),
         declarations: mergeUnique(defaultConfig.declarations, config.declarations),
         providers: mergeUnique(defaultConfig.providers, config.providers),
-        schemas: mergeUnique(defaultConfig.schemas, config.schemas)
+        schemas: mergeUnique(defaultConfig.schemas, config.schemas),
     };
     testBed.configureTestingModule(mergedConfig);
 }

@@ -1,38 +1,34 @@
 import { TestBed } from '@angular/core/testing';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs/operators';
-import { of } from 'rxjs';
-import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
-import { FALLBACK_LANGUAGE } from '../../../common/config/config';
 import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
-import { GCMS_COMMON_LANGUAGE, I18nService } from './i18n.service';
-import { LocalTranslateLoader } from './local-translate-loader';
+import { I18nService } from './i18n.service';
 
 describe('I18nService', () => {
 
     let i18n: I18nService;
     let ngxTranslate: TranslateService;
+    const FALLBACK_LANGUAGE = 'en';
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [
-                TranslateModule.forRoot(),
-            ],
             providers: [
+                provideTranslateService(),
                 I18nService,
-                LocalTranslateLoader,
-                { provide: GCMS_COMMON_LANGUAGE, useValue: of<GcmsUiLanguage>('en') },
             ],
         });
 
-        ngxTranslate = TestBed.get(TranslateService);
+        ngxTranslate = TestBed.inject(TranslateService);
+        ngxTranslate.addLangs(['en', 'de']);
+        ngxTranslate.setFallbackLang(FALLBACK_LANGUAGE);
+
         spyOn(ngxTranslate, 'instant').and.callFake((key: string) => {
-            return `${key}_translated_${ngxTranslate.currentLang}`;
+            return `${key}_translated_${ngxTranslate.getCurrentLang()}`;
         });
-        spyOn(ngxTranslate, 'setDefaultLang').and.callThrough();
+        spyOn(ngxTranslate, 'setFallbackLang').and.callThrough();
         ngxTranslate.use('en');
 
-        i18n = TestBed.get(I18nService);
+        i18n = TestBed.inject(I18nService);
     });
 
     describe('instant()', () => {
@@ -125,7 +121,7 @@ describe('I18nService', () => {
                 takeUntil(stopper.stopper$),
             );
             let translation: string;
-            translation$.subscribe(val => translation = val);
+            translation$.subscribe((val) => translation = val);
 
             expect(ngxTranslate.instant).toHaveBeenCalledTimes(1);
             expect(ngxTranslate.instant).toHaveBeenCalledWith('testKey', { type: 'param' });
@@ -137,7 +133,7 @@ describe('I18nService', () => {
                 takeUntil(stopper.stopper$),
             );
             let translation: string;
-            translation$.subscribe(val => translation = val);
+            translation$.subscribe((val) => translation = val);
 
             expect(ngxTranslate.instant).toHaveBeenCalledTimes(1);
             expect(ngxTranslate.instant).toHaveBeenCalledWith('testKey', { type: 'param' });
@@ -197,49 +193,55 @@ describe('I18nService', () => {
 
         it('returns "en" when the browser reports "en"', () => {
             mockNavigator.language = 'en';
+            mockNavigator.languages = ['en'];
             expect(i18n.inferUserLanguage()).toBe('en');
         });
 
         it('returns "en" when the browser reports "en-GB"', () => {
             mockNavigator.language = 'en-GB';
+            mockNavigator.languages = ['en'];
             expect(i18n.inferUserLanguage()).toBe('en');
         });
 
         it('returns "en" when the browser reports "en-US"', () => {
             mockNavigator.language = 'en-US';
+            mockNavigator.languages = ['en'];
             expect(i18n.inferUserLanguage()).toBe('en');
         });
 
         it('returns "de" when the browser reports "de"', () => {
             mockNavigator.language = 'de';
+            mockNavigator.languages = ['en', 'de'];
             expect(i18n.inferUserLanguage()).toBe('de');
         });
 
         it('returns "de" when the browser reports "de-DE"', () => {
             mockNavigator.language = 'de-DE';
+            mockNavigator.languages = ['en', 'de'];
             expect(i18n.inferUserLanguage()).toBe('de');
         });
 
         it('returns "de" when the browser reports "de-AT"', () => {
             mockNavigator.language = 'de-AT';
+            mockNavigator.languages = ['en', 'de'];
             expect(i18n.inferUserLanguage()).toBe('de');
         });
 
         it('returns "en" when the browser reports ["fr", "en"]', () => {
             mockNavigator.language = 'fr';
-            mockNavigator.languages = ['fr', 'en'];
+            mockNavigator.languages = ['en', 'fr'];
             expect(i18n.inferUserLanguage()).toBe('en');
         });
 
         it('returns "en" when the browser reports ["fr", "en-US"]', () => {
             mockNavigator.language = 'fr';
-            mockNavigator.languages = ['fr', 'en-US'];
+            mockNavigator.languages = ['en', 'fr'];
             expect(i18n.inferUserLanguage()).toBe('en');
         });
 
         it('returns "de" when the browser reports ["it", "de"]', () => {
             mockNavigator.language = 'it';
-            mockNavigator.languages = ['it', 'de'];
+            mockNavigator.languages = ['de', 'it'];
             expect(i18n.inferUserLanguage()).toBe('de');
         });
 

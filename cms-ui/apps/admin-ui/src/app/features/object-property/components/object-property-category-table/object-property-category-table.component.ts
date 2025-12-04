@@ -1,10 +1,11 @@
 import { EditableEntity, ObjectPropertyCategoryBO } from '@admin-ui/common';
-import { I18nService, PermissionsService } from '@admin-ui/core';
+import { PermissionsService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertyCategory } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ObjectPropertyCategoryTableLoaderService } from '../../providers';
@@ -14,18 +15,19 @@ import { ObjectPropertyCategoryTableLoaderService } from '../../providers';
     templateUrl: './object-property-category-table.component.html',
     styleUrls: ['./object-property-category-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ObjectPropertyCategortTableComponent extends BaseEntityTableComponent<ObjectPropertyCategory, ObjectPropertyCategoryBO> {
 
     protected rawColumns: TableColumn<ObjectPropertyCategoryBO>[] = [
         {
             id: 'name',
-            label: 'objectProperty.name',
+            label: 'object_property.name',
             fieldPath: 'name',
             sortable: true,
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'objectPropertyCategory';
     protected focusEntityType = EditableEntity.OBJECT_PROPERTY_CATEGORY;
 

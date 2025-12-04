@@ -23,7 +23,6 @@ import {
     ScheduleTask,
     ScheduleTaskCreateRequest,
     User,
-    Variant,
 } from '@gentics/cms-models';
 import { GCMSRestClientConfig } from '@gentics/cms-rest-client';
 import { APIRequestContext } from '@playwright/test';
@@ -84,6 +83,12 @@ export interface BufferedFixtureFile extends FixtureFile {
     buffer: Buffer;
 }
 
+export interface ContentFile {
+    contents: string | Buffer;
+    fileName: string;
+    mimeType: string;
+}
+
 export const LANGUAGE_EN = 'en';
 export const LANGUAGE_DE = 'de';
 
@@ -103,72 +108,20 @@ export const IMPORT_TYPE_SCHEDULE = 'schedule';
 
 export const IMPORT_TYPE_CONSTRUCT_CATEGORY = 'construct-category';
 
-export const ENV_CI = 'CI';
-export const ENV_E2E_CMS_VARIANT = 'E2E_CMS_VARIANT';
-export const ENV_E2E_LOCAL_PLAYWRIGHT = 'E2E_LOCAL_PLAYWRIGHT';
-export const ENV_E2E_LOCAL_APP = 'E2E_LOCAL_APP';
-export const ENV_SKIP_E2E_LOCAL_APP_LAUNCH = 'SKIP_E2E_LOCAL_APP_LAUNCH';
-export const ENV_E2E_FORCE_REPEATS = 'E2E_FORCE_REPEATS';
-
-export const ENV_E2E_KEYCLOAK_URL = 'E2E_KEYCLOAK_URL';
-export const ENV_E2E_CMS_URL = 'E2E_CMS_URL';
-export const ENV_E2E_APP_PATH = 'E2E_APP_PATH';
-export const ENV_E2E_APP_URL = 'E2E_APP_URL';
-
-export const ENV_E2E_CMS_IMPORTER_USERNAME = 'E2E_CMS_IMPORTER_USERNAME';
-export const ENV_E2E_CMS_IMPORTER_PASSWORD = 'E2E_CMS_IMPORTER_PASSWORD';
-
 export const DEFAULT_E2E_KEYCLOAK_URL = 'http://keycloak.localhost.gentics.com';
 
 export const ATTR_CONTEXT_ID = 'data-context-id';
 export const ATTR_MULTIPLE = 'data-multiple';
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/no-namespace
-    namespace NodeJS {
-        interface ProcessEnv {
-            /** Flag which determines if we're running in a CI context. */
-            [ENV_CI]: boolean | string | number;
-
-            /** The CMS Variant that is being tested. */
-            [ENV_E2E_CMS_VARIANT]: Variant;
-            /** If it should use the local playwright server instead of the container. */
-            [ENV_E2E_LOCAL_PLAYWRIGHT]?: boolean | string | number;
-            /** If it should use the local application instead of the application in the container. */
-            [ENV_E2E_LOCAL_APP]?: boolean | string | number;
-            /** If it should not automatically launch the local application. */
-            [ENV_SKIP_E2E_LOCAL_APP_LAUNCH]?: boolean | string | number;
-            /** If it should force repeats of intergration tests. */
-            [ENV_E2E_FORCE_REPEATS]?: boolean | string | number;
-
-            /** Override for the URL where keycloak is reachable. */
-            [ENV_E2E_KEYCLOAK_URL]?: string;
-            /** The URL where the CMS is reachable. */
-            [ENV_E2E_CMS_URL]?: string;
-            /** The path where the app is reachable, if it is hosted on the CMS. */
-            [ENV_E2E_APP_PATH]?: string;
-            /** Full URL for the current test application. */
-            [ENV_E2E_APP_URL]?: string;
-
-            /** Username override for setup rest calls */
-            [ENV_E2E_CMS_IMPORTER_USERNAME]?: string;
-            /** Password override for setup rest calls */
-            [ENV_E2E_CMS_IMPORTER_PASSWORD]?: string;
-        }
-    }
-}
-
-export const ENV_ALOHA_PLUGIN_CITE = 'ALOHA_PLUGIN_CITE';
-
 export type ItemType = typeof ITEM_TYPE_FOLDER | typeof ITEM_TYPE_PAGE | typeof ITEM_TYPE_FILE | typeof ITEM_TYPE_IMAGE | typeof ITEM_TYPE_FORM;
 export type ImportType = ItemType
-| typeof IMPORT_TYPE_NODE
-| typeof IMPORT_TYPE_USER
-| typeof IMPORT_TYPE_GROUP
-| typeof IMPORT_TYPE_TASK
-| typeof IMPORT_TYPE_SCHEDULE
-| typeof IMPORT_TYPE_CONSTRUCT_CATEGORY
-| typeof IMPORT_TYPE_PAGE_TRANSLATION;
+  | typeof IMPORT_TYPE_NODE
+  | typeof IMPORT_TYPE_USER
+  | typeof IMPORT_TYPE_GROUP
+  | typeof IMPORT_TYPE_TASK
+  | typeof IMPORT_TYPE_SCHEDULE
+  | typeof IMPORT_TYPE_CONSTRUCT_CATEGORY
+  | typeof IMPORT_TYPE_PAGE_TRANSLATION;
 
 /** Type to determine how to import/delete the entity */
 export const IMPORT_TYPE = Symbol('gtx-e2e-import-type');
@@ -241,12 +194,12 @@ export const INTERNAL_TASKS = [
 ];
 
 export const KEYCLOAK_LOGIN: LoginInformation = {
-    username: 'node',
-    password: 'node',
+    username: 'integrationTest_admin',
+    password: 'keycloak_integrationTest#admin',
 };
 export const MESH_LOGIN: LoginInformation = {
     username: 'admin',
-    password: 'admin',
+    password: 'mesh_integrationTest#admin',
 };
 
 export const BOUNDARY_NODES = new Set([
@@ -403,7 +356,7 @@ export interface NodeImportData extends Omit<NodeCreateRequest, 'node'>, ImportD
     templates?: string[];
     node: Omit<NodeCreateRequest['node'], 'masterId'> & {
         masterId?: string;
-    }
+    };
 }
 
 export interface FolderImportData extends Omit<FolderCreateRequest, 'nodeId' | 'motherId'>, ImportData {
@@ -419,7 +372,7 @@ export interface PageImportData
     extends Omit<PageCreateRequest, 'nodeId' | 'folderId' | 'templateId' | 'language'>,
     Partial<Pick<Page, 'tags' | 'language'>>, ImportData {
 
-    [IMPORT_TYPE]: typeof ITEM_TYPE_PAGE,
+    [IMPORT_TYPE]: typeof ITEM_TYPE_PAGE;
 
     /** The nodes `IMPORT_ID` value */
     nodeId: string;
@@ -440,7 +393,7 @@ export interface PageTranslationImportData
 }
 
 export interface FileImportData extends EditableFileProps, ImportData {
-    [IMPORT_TYPE]: typeof ITEM_TYPE_FILE,
+    [IMPORT_TYPE]: typeof ITEM_TYPE_FILE;
 
     /** The nodes `IMPORT_ID` value */
     nodeId: string;
@@ -449,7 +402,7 @@ export interface FileImportData extends EditableFileProps, ImportData {
 }
 
 export interface ImageImportData extends EditableFileProps, ImportData {
-    [IMPORT_TYPE]: typeof ITEM_TYPE_IMAGE,
+    [IMPORT_TYPE]: typeof ITEM_TYPE_IMAGE;
 
     /** The nodes `IMPORT_ID` value */
     nodeId: string;
@@ -470,7 +423,7 @@ export interface FormImportData extends EditableFormProps, ImportData {
 }
 
 export interface GroupImportData extends GroupCreateRequest, ImportData {
-    [IMPORT_TYPE]: typeof IMPORT_TYPE_GROUP,
+    [IMPORT_TYPE]: typeof IMPORT_TYPE_GROUP;
 
     /**
      * The parent reference under which the group should be created.
@@ -483,7 +436,7 @@ export interface GroupImportData extends GroupCreateRequest, ImportData {
 }
 
 export interface UserImportData extends Omit<GroupUserCreateRequest, 'groups'>, ImportData {
-    [IMPORT_TYPE]: typeof IMPORT_TYPE_USER,
+    [IMPORT_TYPE]: typeof IMPORT_TYPE_USER;
 
     /** The group reference, in which the user should be created in. */
     group: ImportReference<GroupImportData>;

@@ -3,8 +3,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipe } from '@gentics/ui-core/testing/mock-pipe';
 import { mount } from 'cypress/angular';
+import { MockI18nPipe } from '../../../../testing/mocks';
 import { ATTR_CONTENT_TYPE, ATTR_LINK_TYPE, ATTR_TARGET, ATTR_URL, RichContentLinkType, RichContentType } from '../../../common/models';
 import { normalizeWhitespaces } from '../../../common/utils/rich-content';
 import { ValuesPipe } from '../../pipes';
@@ -46,18 +46,18 @@ describe('RichContentEditorComponent', () => {
             },
             schemas: [NO_ERRORS_SCHEMA],
             imports: [GenticsUICoreModule.forRoot()],
-        }).then(async mounted => {
+        }).then(async (mounted) => {
             mounted.fixture.detectChanges();
             await mounted.fixture.whenRenderingDone();
 
             cy.get('.content-wrapper .text-container')
-                .then($container => {
+                .then(($container) => {
                     expect(normalizeWhitespaces($container.text())).to.equal('Hello World! Click me for more info!');
                     return $container;
                 })
                 .find(`[${ATTR_CONTENT_TYPE}="${RichContentType.LINK}"]`)
                 .should('exist')
-                .then($link => {
+                .then(($link) => {
                     expect($link.attr(ATTR_LINK_TYPE)).to.equal(RichContentLinkType.URL);
                     expect($link.attr(ATTR_URL)).to.equal('https://www.gentics.com');
                     expect($link.attr(ATTR_TARGET)).to.equal('_blank');
@@ -76,7 +76,7 @@ describe('RichContentEditorComponent', () => {
             autoSpyOutputs: true,
             schemas: [NO_ERRORS_SCHEMA],
             imports: [GenticsUICoreModule.forRoot()],
-        }).then(async mounted => {
+        }).then(async (mounted) => {
             mounted.fixture.detectChanges();
             await mounted.fixture.whenRenderingDone();
 
@@ -89,7 +89,7 @@ describe('RichContentEditorComponent', () => {
                 .should('have.been.calledOnceWith', VALUE);
 
             cy.get('.content-wrapper .text-container')
-                .then($container => {
+                .then(($container) => {
                     expect(normalizeWhitespaces($container.text())).to.equal('Hello World!');
                     return $container;
                 });
@@ -110,7 +110,7 @@ describe('RichContentEditorComponent', () => {
                 RichContentModal,
                 RichContentLinkPropertiesComponent,
                 ValuesPipe,
-                mockPipe('i18n'),
+                MockI18nPipe,
             ],
             providers: [
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -122,7 +122,7 @@ describe('RichContentEditorComponent', () => {
                 FormsModule,
                 ReactiveFormsModule,
             ],
-        }).then(async mounted => {
+        }).then(async (mounted) => {
             mounted.fixture.detectChanges();
             await mounted.fixture.whenRenderingDone();
 
@@ -146,7 +146,7 @@ describe('RichContentEditorComponent', () => {
                 .find('[property-name="linkType"] .select-input')
                 .click({ force: true });
             cy.get('gtx-dropdown-content-wrapper .select-options .select-option')
-                .then($options => Cypress.$($options.get(2)))
+                .then(($options) => Cypress.$($options.get(2)))
                 .click({ force: true });
 
             cy.get('@modal')
@@ -162,20 +162,20 @@ describe('RichContentEditorComponent', () => {
             // Validate changes
 
             cy.get('@container')
-                .then($container => {
+                .then(($container) => {
                     expect(normalizeWhitespaces($container.text())).to.equal('Hello World Example');
                     return $container;
                 })
                 .find(`[${ATTR_CONTENT_TYPE}="${RichContentType.LINK}"]`)
                 .should('exist')
-                .then($link => {
+                .then(($link) => {
                     expect($link.attr(ATTR_LINK_TYPE)).to.equal(RichContentLinkType.URL);
                     expect($link.attr(ATTR_URL)).to.equal('https://www.example.com');
                     expect($link.attr(ATTR_TARGET)).to.equal('_top');
                     expect($link.text()).to.equal('Example');
                 });
             cy.get('@valueChangeSpy')
-                .should('have.been.calledWith', FINAL_VALUE)
+                .should('have.been.calledWith', FINAL_VALUE);
         });
     });
 
@@ -194,7 +194,7 @@ describe('RichContentEditorComponent', () => {
                 RichContentModal,
                 RichContentLinkPropertiesComponent,
                 ValuesPipe,
-                mockPipe('i18n'),
+                MockI18nPipe,
             ],
             providers: [
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -206,14 +206,14 @@ describe('RichContentEditorComponent', () => {
                 FormsModule,
                 ReactiveFormsModule,
             ],
-        }).then(async mounted => {
+        }).then(async (mounted) => {
             mounted.fixture.detectChanges();
             await mounted.fixture.whenRenderingDone();
 
             // Select the first link
             cy.get('.content-wrapper .text-container')
                 .as('container')
-                .then($container => {
+                .then(($container) => {
                     expect(normalizeWhitespaces($container.text())).to.equal('Hello World Example');
                     $container[0].focus();
 
@@ -253,20 +253,20 @@ describe('RichContentEditorComponent', () => {
             // Validate changes
 
             cy.get('@container')
-                .then($container => {
+                .then(($container) => {
                     expect(normalizeWhitespaces($container.text())).to.equal('Hello World Example');
                     return $container;
                 })
                 .find(`[${ATTR_CONTENT_TYPE}="${RichContentType.LINK}"]`)
                 .should('exist')
-                .then($link => {
+                .then(($link) => {
                     expect($link.attr(ATTR_LINK_TYPE)).to.equal(RichContentLinkType.URL);
                     expect($link.attr(ATTR_URL)).to.equal('https://www.gentics.com');
                     expect($link.attr(ATTR_TARGET)).to.equal('_top');
                     expect($link.text()).to.equal('Example');
                 });
             cy.get('@valueChangeSpy')
-                .should('have.been.calledWith', FINAL_VALUE)
+                .should('have.been.calledWith', FINAL_VALUE);
         });
     });
 
@@ -284,7 +284,7 @@ describe('RichContentEditorComponent', () => {
                 RichContentModal,
                 RichContentLinkPropertiesComponent,
                 ValuesPipe,
-                mockPipe('i18n'),
+                MockI18nPipe,
             ],
             providers: [
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -296,13 +296,13 @@ describe('RichContentEditorComponent', () => {
                 FormsModule,
                 ReactiveFormsModule,
             ],
-        }).then(async mounted => {
+        }).then(async (mounted) => {
             mounted.fixture.detectChanges();
             await mounted.fixture.whenRenderingDone();
 
             cy.get('.content-wrapper .text-container')
                 .as('container')
-                .then($container => {
+                .then(($container) => {
                     expect(normalizeWhitespaces($container.text())).to.equal('Hello World Example');
                     $container[0].focus();
 
@@ -327,7 +327,7 @@ describe('RichContentEditorComponent', () => {
             // Validate changes
 
             cy.get('@container')
-                .then($container => {
+                .then(($container) => {
                     expect(normalizeWhitespaces($container.text())).to.equal('Hello World Example');
                     return $container;
                 })

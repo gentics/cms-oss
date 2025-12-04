@@ -1,7 +1,7 @@
-import { I18nNotificationService } from '@admin-ui/core';
 import { TemplateTagDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { TemplateTag } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { TemplateTagPropertiesMode } from '../template-tag-properties/template-tag-properties.component';
@@ -11,7 +11,7 @@ import { TemplateTagPropertiesMode } from '../template-tag-properties/template-t
     templateUrl: './create-template-tag-modal.component.html',
     styleUrls: ['./create-template-tag-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateTemplateTagModalComponent extends BaseModal<TemplateTag> implements OnInit {
 
@@ -67,7 +67,7 @@ export class CreateTemplateTagModalComponent extends BaseModal<TemplateTag> impl
                 type: 'success',
             });
             this.closeFn(tag);
-        }, err => {
+        }, (err) => {
             this.notification.show({
                 message: 'templateTag.tag_save_error',
                 translationParams: {

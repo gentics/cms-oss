@@ -1,14 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ResponseCode } from '@gentics/cms-models';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { Actions, ActionType, ofActionDispatched } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { AppStateService, LogoutSuccess } from '../../../state';
 import { assembleTestAppStateImports, TEST_APP_STATE, TestAppState } from '../../../state/utils/test-app-state';
-import { I18nNotificationService } from '../i18n-notification/i18n-notification.service';
 import { ErrorHandler } from './error-handler.service';
 
 class MockNotificationService {
@@ -47,7 +47,7 @@ class MockRouter {
 
 class MockModalService {
     dialog = jasmine.createSpy('dialog')
-        .and.returnValue(new Promise(neverResolve => {}));
+        .and.returnValue(new Promise((neverResolve) => {}));
 }
 
 class MockTranslateService {
@@ -85,12 +85,12 @@ describe('ErrorHandler', () => {
                 TEST_APP_STATE,
                 { provide: Router, useValue: router },
                 { provide: ModalService, useValue: modalService },
-                { provide: TranslateService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockTranslateService },
                 { provide: I18nNotificationService, useValue: notification },
             ],
         }).compileComponents();
 
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
         const snapshot = appState.snapshot();
         dispatchedActions$ = TestBed.inject(Actions);
         errorHandler = TestBed.inject(ErrorHandler);

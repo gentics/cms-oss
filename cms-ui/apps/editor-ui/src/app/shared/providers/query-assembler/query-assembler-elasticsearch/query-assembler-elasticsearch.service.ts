@@ -1,17 +1,5 @@
 import { Injectable } from '@angular/core';
 import {
-    GtxChipSearchProperties,
-    GtxChipSearchPropertyBoolean,
-    GtxChipSearchPropertyDate,
-    GtxChipSearchPropertyKeys,
-    GtxChipSearchPropertyNumber,
-    GtxChipSearchPropertyObjectId,
-    GtxChipSearchPropertyString,
-    GtxChipSearchSearchFilterMap,
-} from '@editor-ui/app/common/models';
-import { ChipPropertyOptionValueElasticsearch } from '@editor-ui/app/shared/providers/chip-search-bar-config/chip-search-bar-config.models';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import {
     ElasticSearchQuery,
     FolderItemType,
     GtxCmsQueryOptions,
@@ -28,6 +16,18 @@ import {
     filter,
     map,
 } from 'rxjs/operators';
+import {
+    GtxChipSearchProperties,
+    GtxChipSearchPropertyBoolean,
+    GtxChipSearchPropertyDate,
+    GtxChipSearchPropertyKeys,
+    GtxChipSearchPropertyNumber,
+    GtxChipSearchPropertyObjectId,
+    GtxChipSearchPropertyString,
+    GtxChipSearchSearchFilterMap,
+} from '../../../../common/models';
+import { ChipPropertyOptionValueElasticsearch } from '../../../../shared/providers/chip-search-bar-config/chip-search-bar-config.models';
+import { ApplicationStateService } from '../../../../state';
 import {
     ELASTICSEARCH_INDEXED_PROPERTIES_FILE,
     ELASTICSEARCH_INDEXED_PROPERTIES_FOLDER,

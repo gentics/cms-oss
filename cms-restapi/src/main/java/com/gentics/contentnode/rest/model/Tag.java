@@ -70,6 +70,16 @@ public class Tag implements Serializable {
 	private Type type;
 
 	/**
+	 * Whether this tag is a root tag (i.e., it comes from the template).
+	 */
+	private Boolean rootTag;
+
+	/**
+	 * Whether this tag is inherited in a partially localized page.
+	 */
+	private Boolean inherited;
+
+	/**
 	 * Constructor used by JAXB
 	 */
 	public Tag() {}
@@ -179,6 +189,38 @@ public class Tag implements Serializable {
 	 */
 	public void setType(Type type) {
 		this.type = type;
+	}
+
+	/**
+	 * Whether this tag is a root tag (i.e., it comes from the template).
+	 * @return Whether this tag is a root tag.
+	 */
+	public Boolean getRootTag() {
+		return rootTag;
+	}
+
+	/**
+	 * Set whether this tag is a root tag.
+	 * @param rootTag Whether this tag is a root tag.
+	 */
+	public void setRootTag(Boolean rootTag) {
+		this.rootTag = rootTag;
+	}
+
+	/**
+	 * Whether this tag is inherited in a partially localized page.
+	 * @return Whether this tag is inherited in a partially localized page.
+	 */
+	public Boolean getInherited() {
+		return inherited;
+	}
+
+	/**
+	 * Set whether this tag is inherited in a partially localized page.
+	 * @param inherited Whether this tag is inherited in a partially localized page.
+	 */
+	public void setInherited(Boolean inherited) {
+		this.inherited = inherited;
 	}
 
 	@Override

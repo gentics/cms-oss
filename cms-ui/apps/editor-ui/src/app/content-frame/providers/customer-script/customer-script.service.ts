@@ -1,20 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
-import { CUSTOMER_CONFIG_PATH } from '@editor-ui/app/common/config/config';
-import { AppState } from '@editor-ui/app/common/models/app-state';
-import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '@editor-ui/app/common/utils/base-urls';
-import { deepEqual } from '@editor-ui/app/common/utils/deep-equal';
-import { stripLeadingSlash } from '@editor-ui/app/common/utils/strip';
-import { ApiBase } from '@editor-ui/app/core/providers/api';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TagEditorService } from '@editor-ui/app/tag-editor';
-import {
-    UploadWithPropertiesModalComponent,
-} from '@editor-ui/app/tag-editor/components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
+import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '@gentics/cms-components';
 import {
     ExposedPartialState,
     GcmsUiBridge,
@@ -35,6 +21,20 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { Subscription, of } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
+import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
+import { AppState } from '../../../common/models/app-state';
+import { deepEqual } from '../../../common/utils/deep-equal';
+import { stripLeadingSlash } from '../../../common/utils/strip';
+import { ApiBase } from '../../../core/providers/api';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
+import { RepositoryBrowserClient } from '../../../shared/providers';
+import { ApplicationStateService } from '../../../state';
+import { TagEditorService } from '../../../tag-editor';
+import {
+    UploadWithPropertiesModalComponent,
+} from '../../../tag-editor/components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';

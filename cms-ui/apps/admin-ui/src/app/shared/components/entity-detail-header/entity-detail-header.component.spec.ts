@@ -1,7 +1,5 @@
 import { InterfaceOf, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF, UserActionPermissions } from '@admin-ui/common';
 import { PermissionsService } from '@admin-ui/core/providers';
-import { I18nService } from '@admin-ui/core/providers/i18n';
-import { MockI18nService } from '@admin-ui/core/providers/i18n/i18n.service.mock';
 import { AppStateService } from '@admin-ui/state';
 import { TestAppState } from '@admin-ui/state/utils/test-app-state';
 import { MockStore } from '@admin-ui/state/utils/test-app-state/test-store.mock';
@@ -9,8 +7,8 @@ import { componentTest, configureComponentTest } from '@admin-ui/testing';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { Store } from '@ngxs/store';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { Store } from '@ngxs/store';
 import { BehaviorSubject } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { ActionAllowedDirective } from '../../directives/action-allowed/action-allowed.directive';
@@ -34,8 +32,8 @@ class MockPermissionsService implements Partial<InterfaceOf<PermissionsService>>
 
         const parts = actionId.split('.');
         if (parts.length !== 2) {
-            throw new Error(`Malformed user action ID provided to gtxActionAllowed directive: '${actionId}'.` +
-                'Make sure that you use the format \'<module>.actionId');
+            throw new Error(`Malformed user action ID provided to gtxActionAllowed directive: '${actionId}'.`
+              + 'Make sure that you use the format \'<module>.actionId');
         }
 
         const module = USER_ACTION_PERMISSIONS_DEF[parts[0]];
@@ -94,14 +92,13 @@ describe('EntityDetailHeaderComponent', () => {
             ],
             providers: [
                 { provide: Store, useClass: MockStore },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: USER_ACTION_PERMISSIONS, useValue: USER_ACTION_PERMISSIONS_DEF },
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: AppStateService, useClass: TestAppState },
             ],
         });
 
-        permissionService = TestBed.get(PermissionsService);
+        permissionService = TestBed.inject(PermissionsService) as any;
     });
 
     it('should create', componentTest(() => TestComponent, (fixture, instance) => {
@@ -156,6 +153,6 @@ describe('EntityDetailHeaderComponent', () => {
 
             expect(saveButton.disabled).toBe(true);
         },
-    ));
+        ));
 
 });

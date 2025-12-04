@@ -1,7 +1,7 @@
 <gtx-progress-bar [active]="loading"></gtx-progress-bar>
 
 <div class="modal-title">
-    <h5>{{ 'modal.create_new_form_title' | i18n }}</h5>
+    <h5>{{ 'modal.create_new_form_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
@@ -24,7 +24,7 @@
         (click)="cancelFn()"
         [disabled]="loading"
     >
-        {{ 'common.cancel_button' | i18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
 
     <gtx-button
@@ -33,6 +33,6 @@
         (click)="saveChanges()"
         [disabled]="loading || !control?.valid"
     >
-        {{ 'common.okay_button' | i18n }}
+        {{ 'common.okay_button' | gtxI18n }}
     </gtx-button>
 </div>

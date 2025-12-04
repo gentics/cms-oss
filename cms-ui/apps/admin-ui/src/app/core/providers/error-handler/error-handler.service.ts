@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { AdminUIModuleRoutes } from '../../../common';
 import { ServiceBase } from '../../../shared/providers/service-base/service.base';
-import { AppState, AppStateService, LogoutSuccess } from '../../../state';
-import { I18nNotificationService } from '../i18n-notification/i18n-notification.service';
-import { AdminUIModuleRoutes } from '@admin-ui/common';
-import { wasClosedByUser } from '@gentics/cms-integration-api-models';
+import { AppStateService, LogoutSuccess } from '../../../state';
 
-/* TODO: Modernize the serialization and deserialization. Usage of atob/btoa is depreacted and may cause errors with utf-8 content */
+/* TODO: Move this to cms-components to re-use across all apps. */
 
 /**
  * A central error handler that shows a notification for occuring errors,
@@ -54,7 +53,7 @@ export class ErrorHandler extends ServiceBase {
         private appState: AppStateService,
         private router: Router,
         private modalService: ModalService,
-        private translate: TranslateService,
+        private translate: I18nService,
         private notification: I18nNotificationService,
     ) {
         super();
@@ -81,8 +80,8 @@ export class ErrorHandler extends ServiceBase {
         }
 
         // Only show one notification with the same message within 3 seconds.
-        let showNotification = (!options || options.notification !== false) &&
-            (!this.lastError || this.lastError.message !== error.message || (Date.now() - this.lastErrorTime) > 3000);
+        let showNotification = (!options || options.notification !== false)
+          && (!this.lastError || this.lastError.message !== error.message || (Date.now() - this.lastErrorTime) > 3000);
 
         // Some error messages should always be displayed to the user.
         if (error instanceof ApiError) {
@@ -160,7 +159,7 @@ export class ErrorHandler extends ServiceBase {
         this.errorList.next(this.errorList.value.concat(error));
 
         return returnValue;
-    }
+    };
 
     /**
      * Handles the error by showing a notification and then rethrowing it.
@@ -178,51 +177,6 @@ export class ErrorHandler extends ServiceBase {
         return errorMsg;
     }
 
-    /**
-     * Serializes the current application state and all occurred errors
-     * to a base64-encoded string which can be used to reproduce the error.
-     */
-    serialize(): string {
-        const state = this.appState.snapshot();
-
-        // Do not serialize entities and messages
-        const stateToSerialize: Partial<AppState> = {
-            auth: state.auth,
-            maintenanceMode: state.maintenanceMode,
-            ui: state.ui,
-        };
-
-        const json = JSON.stringify({
-            state: stateToSerialize,
-            errors: this.errorList.value,
-            url: this.router.url,
-        });
-
-        // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-        const escapedUnicode = encodeURIComponent(json).replace(/%([0-9A-F]{2})/g,
-            (all: string, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)));
-
-        const base64 = btoa(escapedUnicode);
-
-        return base64;
-    }
-
-    /**
-     * De-serialize a base64 encoded bug report into the application state
-     * and the occurred errors.
-     * To get the complete application state, the entities need to be requested from the server.
-     */
-    deserialize(serializedBase64String: string): { state: any, errors: Error[], url: string } {
-        const escapedUnicode = atob(serializedBase64String);
-
-        // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const json = decodeURIComponent(Array.prototype.map.call(escapedUnicode,
-            (char: string) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2)).join(''));
-
-        return JSON.parse(json);
-    }
-
     private userWasLoggedOut(): void {
         this.appState.dispatch(new LogoutSuccess());
         this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
@@ -234,8 +188,8 @@ export class ErrorHandler extends ServiceBase {
                 : 'modal.logged_out_by_backend_inactivity'),
             buttons: [{
                 type: 'default',
-                label: this.translate.instant('common.ok_button'),
+                label: this.translate.instant('common.okay_button'),
             }],
-        }).then(modal => modal.open());
+        }).then((modal) => modal.open());
     }
 }

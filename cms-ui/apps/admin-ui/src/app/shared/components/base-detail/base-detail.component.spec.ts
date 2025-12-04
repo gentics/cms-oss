@@ -64,7 +64,7 @@ describe('TestDetailComponent', () => {
                 { provide: OperationsBase, useClass: MockOperations },
             ],
         });
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
     });
 
 

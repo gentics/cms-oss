@@ -100,7 +100,7 @@ test.describe('Page Editing', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
         });
     });
 
@@ -121,12 +121,12 @@ test.describe('Page Editing', () => {
         }
 
         test.describe('Basic Editing', () => {
-            test.beforeEach(async ({page}) => {
+            test.beforeEach(async ({ page }) => {
                 editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
             });
 
-            test.only('should be able to add new text to the content-editable', async ({page}) => {
+            test('should be able to add new text to the content-editable', async ({ page }) => {
                 const TEXT_CONTENT = 'Foo bar hello world';
 
                 // Type content into editor
@@ -147,19 +147,20 @@ test.describe('Page Editing', () => {
                 const data = await response.request().postDataJSON();
 
                 // Verify content was saved correctly
+                // eslint-disable-next-line playwright/no-conditional-in-test
                 const contentText = data?.page?.tags?.content?.properties?.text?.stringValue || '';
                 const trimmedContent = contentText.replace(/<\/?p>/g, '').trim();
                 expect(trimmedContent).toBe(TEXT_CONTENT);
             });
 
-            test('should cancel editing when the edit view is closed', async ({page}) => {
+            test('should cancel editing when the edit view is closed', async ({ page }) => {
                 const cancelRequest = page.waitForResponse(matchRequest('POST', `/rest/page/cancel/${editingPage.id}`));
 
                 await editorAction(page, 'close');
 
-                await cancelRequest;
+                const res = await cancelRequest;
+                expect(res.ok()).toBe(true);
             });
-
 
             test.describe('Mobile view', () => {
                 test.use({ viewport: { width: 450, height: 812 } });
@@ -169,8 +170,8 @@ test.describe('Page Editing', () => {
                         type: 'ticket',
                         description: 'SUP-19055',
                     }],
-                }, async ({page}) => {
-                    await page.route(url => matchesUrl(url, `/rest/page/save/${editingPage.id}`), async (route, request) => {
+                }, async ({ page }) => {
+                    await page.route((url) => matchesUrl(url, `/rest/page/save/${editingPage.id}`), (route) => {
                         setTimeout(() => {
                             route.continue();
                         }, 5_000);
@@ -188,18 +189,19 @@ test.describe('Page Editing', () => {
 
                     await editorAction(page, 'close');
 
-                    await page.locator('content-frame').waitFor({state: 'detached'});
-                    await expect(page.locator('folder-contents')).toBeInViewport({ratio: 1.0});
+                    await page.locator('content-frame').waitFor({ state: 'detached' });
+                    await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 1.0 });
                 });
             });
 
+            // FIXME: Bugged
             test('should display list correctly after closing', {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-19055',
                 }],
-            }, async ({page}) => {
-                await page.route(url => matchesUrl(url, `/rest/page/save/${editingPage.id}`), async (route, request) => {
+            }, async ({ page }) => {
+                await page.route((url) => matchesUrl(url, `/rest/page/save/${editingPage.id}`), (route) => {
                     setTimeout(() => {
                         route.continue();
                     }, 5_000);
@@ -217,13 +219,13 @@ test.describe('Page Editing', () => {
 
                 await editorAction(page, 'close');
 
-                await page.locator('content-frame').waitFor({state: 'detached'});
+                await page.locator('content-frame').waitFor({ state: 'detached' });
                 await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.98 });
             });
         });
 
         test.describe('Formatting', () => {
-            test.beforeEach(async ({page}) => {
+            test.beforeEach(async ({ page }) => {
                 editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
             });
@@ -256,8 +258,8 @@ test.describe('Page Editing', () => {
                         await formatButton.click();
 
                         // Verify format is applied
-                        const formattedText = await mainEditable.locator(format.tag).textContent();
-                        expect(formattedText).toBe(TEXT);
+                        const formattedText = mainEditable.locator(format.tag);
+                        await expect(formattedText).toHaveText(TEXT);
                         await mainEditable.click();
 
                         // Remove format
@@ -285,7 +287,9 @@ test.describe('Page Editing', () => {
                     { tag: 'b', combo: 'ControlOrMeta+b' },
                     { tag: 'i', combo: 'ControlOrMeta+i' },
                     { tag: 'u', combo: 'ControlOrMeta+u' },
+                    // FIXME: Bugged
                     { tag: 'pre', combo: 'ControlOrMeta+p' },
+                    // FIXME: Bugged
                     { tag: 'del', combo: 'ControlOrMeta+d' },
                     { tag: 'sub', combo: 'Alt+Shift+s' },
                     { tag: 'sup', combo: 'Control+Shift+s' },
@@ -303,12 +307,13 @@ test.describe('Page Editing', () => {
                         await mainEditable.press(bind.combo);
 
                         // Verify format is applied
-                        const formattedText = await mainEditable.locator(bind.tag).textContent();
-                        expect(formattedText).toBe(TEXT);
+                        const formattedText = mainEditable.locator(bind.tag);
+                        await expect(formattedText).toHaveText(TEXT);
                     });
                 }
             });
 
+            // FIXME: Bugged
             test('should switch typography with keybindings', {
                 annotation: [{
                     type: 'ticket',
@@ -328,8 +333,8 @@ test.describe('Page Editing', () => {
                         await mainEditable.press(`ControlOrMeta+Alt+${i}`);
 
                         // Verify typography is applied
-                        const formattedText = await mainEditable.locator(`h${i}`).textContent();
-                        expect(formattedText).toBe(TEXT);
+                        const formattedText = mainEditable.locator(`h${i}`);
+                        await expect(formattedText).toHaveText(TEXT);
                     });
                 }
 
@@ -337,8 +342,8 @@ test.describe('Page Editing', () => {
                     await mainEditable.press('ControlOrMeta+Alt+0');
 
                     // Verify typography is applied
-                    const formattedText = await mainEditable.locator('p').textContent();
-                    expect(formattedText).toBe(TEXT);
+                    const formattedText = mainEditable.locator('p');
+                    await expect(formattedText).toHaveText(TEXT);
                 });
             });
 
@@ -426,7 +431,7 @@ test.describe('Page Editing', () => {
 
                     expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
 
-                    await createExternalLink(page, async form => {
+                    await createExternalLink(page, async (form) => {
                         await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
                     });
                 });
@@ -461,7 +466,7 @@ test.describe('Page Editing', () => {
                     type: 'ticket',
                     description: 'SUP-18800',
                 }],
-            }, async ({page}) => {
+            }, async ({ page }) => {
                 let inlineEditable = iframe.locator('main p[contenteditable="true"]');
 
                 // Enter some sample text in multiple lines
@@ -478,13 +483,13 @@ test.describe('Page Editing', () => {
 
                 // Certain formatting should not be available
                 await selectEditorTab(page, 'formatting');
-                await expect(findAlohaComponent(page, {slot: 'typography'})).not.toBeVisible();
-                await expect(findAlohaComponent(page, {slot: 'listOrdered'})).not.toBeVisible();
-                await expect(findAlohaComponent(page, {slot: 'listUnordered'})).not.toBeVisible();
-                await expect(findAlohaComponent(page, {slot: 'listDefinition'})).not.toBeVisible();
+                await expect(findAlohaComponent(page, { slot: 'typography' })).toBeHidden();
+                await expect(findAlohaComponent(page, { slot: 'listOrdered' })).toBeHidden();
+                await expect(findAlohaComponent(page, { slot: 'listUnordered' })).toBeHidden();
+                await expect(findAlohaComponent(page, { slot: 'listDefinition' })).toBeHidden();
 
                 // Format selected text as bold
-                await findAlohaComponent(page, {slot: 'bold'}).click();
+                await findAlohaComponent(page, { slot: 'bold' }).click();
 
                 // Save the page and re-open the page in edit-mode
                 const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
@@ -493,19 +498,19 @@ test.describe('Page Editing', () => {
                 await editorAction(page, 'close');
 
                 // Wait until content-frame is actually closed before trying to go to edit-mode
-                await page.locator('content-frame').waitFor({state: 'detached'});
+                await page.locator('content-frame').waitFor({ state: 'detached' });
 
                 await itemAction(itemRow, 'edit');
                 iframe = await getAlohaIFrame(page);
                 inlineEditable = iframe.locator('main p[contenteditable="true"]');
-                await inlineEditable.waitFor({timeout: 60_000});
+                await inlineEditable.waitFor({ timeout: 60_000 });
 
                 expect(await inlineEditable.innerHTML()).toEqual([`<b>${LINES[0]}</b>`, ...LINES.slice(1)].join('<br>'));
             });
         });
 
         test.describe('Links', () => {
-            test.beforeEach(async ({page}) => {
+            test.beforeEach(async ({ page }) => {
                 editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
             });
@@ -514,7 +519,7 @@ test.describe('Page Editing', () => {
                 const TEXT_CONTENT = 'Hello ';
                 const LINK_TEXT = 'World';
                 const LINK_ITEM = IMPORTER.get(PAGE_ONE);
-                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL)!;
+                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL);
                 const LINK_TITLE = 'My Link Title';
                 const LINK_TARGET = '_blank';
                 const LINK_ANCHOR = 'test-anchor';
@@ -527,9 +532,9 @@ test.describe('Page Editing', () => {
 
                 // Select text to make into link
                 expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
-                await createInternalLink(page, async repoBrowser => {
+                await createInternalLink(page, async (repoBrowser) => {
                     await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
-                }, async form => {
+                }, async (form) => {
                     await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
                     await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
                     await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
@@ -576,14 +581,14 @@ test.describe('Page Editing', () => {
 
                     const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
                     // Remove template tags
-                    TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
+                    TEMPLATE_TAGS.forEach((tagName) => tags.delete(tagName));
 
                     // Make sure we actually save only one link tag
                     expect(tags.size).toEqual(1);
 
                     // Wait till properly closed
                     await editorAction(page, 'close');
-                    await page.locator('content-frame').waitFor({state: 'detached'});
+                    await page.locator('content-frame').waitFor({ state: 'detached' });
 
                     // Now open the page again
                     await openEditingPageInEditmode(page);
@@ -599,12 +604,12 @@ test.describe('Page Editing', () => {
                     await mainEditable.press('ControlOrMeta+v');
 
                     // Wait for the content to be loaded and processed
-                    await mainEditable.locator('img').waitFor({state: 'detached'});
+                    await mainEditable.locator('img').waitFor({ state: 'detached' });
                     await page.waitForTimeout(1_000);
 
-                    const linkIds = await mainEditable.evaluate(el => {
+                    const linkIds = await mainEditable.evaluate((el) => {
                         return Array.from(el.querySelectorAll('a'))
-                            .map(link => link.getAttribute('data-gcn-tagid'));
+                            .map((link) => link.getAttribute('data-gcn-tagid'));
                     });
 
                     expect(linkIds).toHaveLength(2);
@@ -617,7 +622,7 @@ test.describe('Page Editing', () => {
 
                     const tags = new Set<string>(Object.keys(pageUpdate.page.tags || {}));
                     // Remove template tags
-                    TEMPLATE_TAGS.forEach(tagName => tags.delete(tagName));
+                    TEMPLATE_TAGS.forEach((tagName) => tags.delete(tagName));
 
                     // Make sure we actually save 2 different tags
                     expect(tags.size).toEqual(2);
@@ -629,15 +634,15 @@ test.describe('Page Editing', () => {
                     type: 'ticket',
                     description: 'SUP-18537',
                 }],
-            }, async ({page}) => {
+            }, async ({ page }) => {
                 const LINK_ITEM = IMPORTER.get(PAGE_ONE);
                 await createLinkCopyPasteTest(page, async () => {
-                    await createInternalLink(page, async repoBrowser => {
+                    await createInternalLink(page, async (repoBrowser) => {
                         await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
                     }, async () => {
                         // nop
                     });
-                })
+                });
             });
 
             test('should be possible to copy an external link', {
@@ -645,9 +650,9 @@ test.describe('Page Editing', () => {
                     type: 'ticket',
                     description: 'SUP-18537',
                 }],
-            }, async ({page}) => {
+            }, async ({ page }) => {
                 await createLinkCopyPasteTest(page, async () => {
-                    await createExternalLink(page, async form => {
+                    await createExternalLink(page, async (form) => {
                         await form.locator('[data-slot="url"] .target-input input').fill('https://example.com');
                         await form.locator('[data-slot="title"] input').fill('A very interesting site');
                     });
@@ -658,8 +663,8 @@ test.describe('Page Editing', () => {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-19262',
-                }]
-            }, async ({page, context}) => {
+                }],
+            }, async ({ page, context }) => {
                 await mainEditable.click();
                 await mainEditable.clear();
 
@@ -669,6 +674,7 @@ test.describe('Page Editing', () => {
                 await expect(mainEditable).toHaveText('Hello from Playwright!');
             });
 
+            // FIXME: Bugged
             test('should be possible to insert a link with a keybind', {
                 annotation: [{
                     type: 'ticket',
@@ -687,7 +693,7 @@ test.describe('Page Editing', () => {
                 await mainEditable.press('Control+k');
 
                 // Modal should be open now
-                expect(page.locator('gtx-dynamic-form-modal')).toBeVisible();
+                await expect(page.locator('gtx-dynamic-form-modal')).toBeVisible();
             });
         });
 
@@ -712,7 +718,7 @@ test.describe('Page Editing', () => {
                 const topLeftCell = table.locator('.aloha-table-leftuppercorner');
                 await topLeftCell.click();
 
-                const styleToggle = findAlohaComponent(page, {slot: SLOT_CELL_STYLE});
+                const styleToggle = findAlohaComponent(page, { slot: SLOT_CELL_STYLE });
                 await expect(styleToggle).toBeDisabled();
             });
 
@@ -728,7 +734,7 @@ test.describe('Page Editing', () => {
                 const topLeftCell = table.locator('.aloha-table-leftuppercorner');
                 await topLeftCell.click();
 
-                const styleToggle = findAlohaComponent(page, {slot: SLOT_CELL_STYLE});
+                const styleToggle = findAlohaComponent(page, { slot: SLOT_CELL_STYLE });
                 await styleToggle.click();
 
                 const styleOptionsContainer = findDynamicDropdown(page, SLOT_CELL_STYLE);
@@ -751,7 +757,7 @@ test.describe('Page Editing', () => {
                 const firstColumn = table.locator('.aloha-table-selectcolumn td:nth-child(2)');
                 await firstColumn.click();
 
-                const styleToggle = findAlohaComponent(page, {slot: SLOT_CELL_STYLE});
+                const styleToggle = findAlohaComponent(page, { slot: SLOT_CELL_STYLE });
                 await styleToggle.click();
 
                 const styleOptionsContainer = findDynamicDropdown(page, SLOT_CELL_STYLE);
@@ -779,7 +785,7 @@ test.describe('Page Editing', () => {
                 const firstRow = table.locator('tr:nth-child(2) .aloha-table-selectrow');
                 await firstRow.click();
 
-                const styleToggle = findAlohaComponent(page, {slot: SLOT_CELL_STYLE});
+                const styleToggle = findAlohaComponent(page, { slot: SLOT_CELL_STYLE });
                 await styleToggle.click();
 
                 const styleOptionsContainer = findDynamicDropdown(page, SLOT_CELL_STYLE);
@@ -805,7 +811,7 @@ test.describe('Page Editing', () => {
                 await mainEditable.clear();
 
                 await selectEditorTab(page, 'insert');
-                await findAlohaComponent(page, {slot: SLOT_CREATE_TABLE}).click();
+                await findAlohaComponent(page, { slot: SLOT_CREATE_TABLE }).click();
                 const dropdown = findDynamicDropdown(page, SLOT_CREATE_TABLE);
 
                 await dropdown.locator(`gtx-table-size-select .grid-row:nth-child(${ROW_COUNT}) .cell:nth-child(${COLUMN_COUNT})`).click();
@@ -813,11 +819,13 @@ test.describe('Page Editing', () => {
         });
 
         test.describe('Constructs', () => {
-            test.beforeEach(async ({page}) => {
+            test.beforeEach(async ({ page }) => {
                 editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
             });
 
+
+            // FIXME: Bugged
             test('should be able to move a construct between two existing ones', async ({ page }) => {
                 const TEST_IMAGE = IMPORTER.get(IMAGE_ONE);
 
@@ -861,11 +869,11 @@ test.describe('Page Editing', () => {
                 await test.step('Move image', async () => {
                     const blocks = mainEditable.locator('.GENTICS_block');
 
-                    const idsBefore = await Promise.all((await blocks.all()).map(loc => loc.getAttribute('id')));
+                    const idsBefore = await Promise.all((await blocks.all()).map((loc) => loc.getAttribute('id')));
 
                     const originImage = blocks.last();
                     const blockId = await originImage.getAttribute('id');
-                    const rect = await originImage.evaluate(el => el.getBoundingClientRect());
+                    const rect = await originImage.evaluate((el) => el.getBoundingClientRect());
 
                     await originImage.locator('.aloha-block-handle .gcn-construct-drag-handle').dragTo(mainEditable, {
                         targetPosition: {
@@ -874,7 +882,7 @@ test.describe('Page Editing', () => {
                         },
                     });
 
-                    const idsAfter = await Promise.all((await blocks.all()).map(loc => loc.getAttribute('id')));
+                    const idsAfter = await Promise.all((await blocks.all()).map((loc) => loc.getAttribute('id')));
 
                     // IDs should have changed
                     expect(idsBefore).not.toStrictEqual(idsAfter);
@@ -892,20 +900,20 @@ test.describe('Page Editing', () => {
     }, async ({ page }) => {
         // Admin request which shouldn't be used/called
         let adminEndpointCalled = false;
-        page.on('request', request => {
+        page.on('request', (request) => {
             if (request.method() === 'POST' && matchesPath(request.url(), '/rest/construct')) {
                 adminEndpointCalled = true;
             }
         });
 
         // Regular endpoint which should be used
-        const constructLoadRequest = page.waitForRequest(request =>
+        const constructLoadRequest = page.waitForRequest((request) =>
             request.method() === 'GET'
-                && matchesPath(request.url(), '/rest/construct')
-                && hasMatchingParams(request.url(), {
-                    nodeId: IMPORTER.get(NODE_MINIMAL).id.toString(),
-                    pageId: IMPORTER.get(PAGE_ONE).id.toString(),
-                }),
+            && matchesPath(request.url(), '/rest/construct')
+            && hasMatchingParams(request.url(), {
+                nodeId: IMPORTER.get(NODE_MINIMAL).id.toString(),
+                pageId: IMPORTER.get(PAGE_ONE).id.toString(),
+            }),
         );
 
         // Setup page for editing
@@ -936,7 +944,7 @@ test.describe('Page Editing', () => {
         // Verify constructs are loaded
         const controls = page.locator('content-frame gtx-page-editor-controls');
         const noConstructs = controls.locator('gtx-construct-controls .no-constructs');
-        await expect(noConstructs).not.toBeVisible();
+        await expect(noConstructs).toBeHidden();
 
         const constructCategories = controls.locator('gtx-construct-controls .groups-container .construct-category');
         await expect(constructCategories).toHaveCount(2);

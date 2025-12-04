@@ -1,10 +1,11 @@
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Response } from '@gentics/cms-models';
 import { MeshRestClientRequestError } from '@gentics/mesh-rest-client';
 
 export abstract class BaseMeshEntitiyHandlerService {
 
-    public nameMap: Record<string, string> = {}
+    public nameMap: Record<string, string> = {};
 
     constructor(
         protected errorHandler: ErrorHandler,
@@ -17,7 +18,7 @@ export abstract class BaseMeshEntitiyHandlerService {
             this.notification.show({
                 type: 'alert',
                 delay: 10_000,
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
                 message: error.data?.message || (error.data as any as Response)?.responseInfo?.responseMessage || 'mesh.unknown_error',
             });
             console.error('Response data', error.data);

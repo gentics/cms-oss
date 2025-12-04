@@ -1,10 +1,5 @@
-import { batchedMap } from '@admin-ui/common';
-import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
-import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
-import { AppStateService, SelectState } from '@admin-ui/state';
-import { AddEntities, DeleteAllEntitiesInBranch, DeleteEntities } from '@admin-ui/state/entity/entity.actions';
-import { EntityStateModel } from '@admin-ui/state/entity/entity.state';
 import { Injectable } from '@angular/core';
+import { InitializableServiceBase } from '@gentics/cms-components';
 import {
     AnyModelType,
     ArrayNormalizationResult,
@@ -31,6 +26,8 @@ import {
     tap,
 } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { batchedMap, deepFreeze } from '../../../common/utils';
+import { AddEntities, AppStateService, DeleteAllEntitiesInBranch, DeleteEntities, EntityStateModel, SelectState } from '../../../state';
 
 interface CachedDenormalizedValue<
     T extends keyof EntityStateModel,
@@ -52,7 +49,7 @@ interface CachedDenormalizedValue<
 @Injectable()
 export class EntityManagerService extends InitializableServiceBase {
 
-    @SelectState(state => state.entity)
+    @SelectState((state) => state.entity)
     protected entityState: Observable<EntityStateModel>;
 
     protected normalizer = new GcmsNormalizer();
@@ -85,16 +82,16 @@ export class EntityManagerService extends InitializableServiceBase {
      */
     getEntity<
         T extends keyof EntityStateModel,
-        R extends NormalizableEntityTypesMapBO<Normalized>[T]
+        R extends NormalizableEntityTypesMapBO<Normalized>[T],
     >(type: T, id: EntityIdType): Observable<R> {
         if (!this.appState.now.entity[type]) {
             throw new Error(`The EntityState branch "${type}" does not exist.`);
         }
 
         return this.entityState.pipe(
-            map(allEntities => allEntities[type]),
+            map((allEntities) => allEntities[type]),
             distinctUntilChanged(isEqual),
-            map(destBranch => destBranch[id] as R),
+            map((destBranch) => destBranch[id] as R),
             distinctUntilChanged(isEqual),
         );
     }
@@ -109,7 +106,7 @@ export class EntityManagerService extends InitializableServiceBase {
     denormalizeEntity<
         T extends keyof EntityStateModel,
         E extends NormalizableEntityTypesMapBO<AnyModelType>[T],
-        R extends NormalizableEntityTypesMapBO<Raw>[T]
+        R extends NormalizableEntityTypesMapBO<Raw>[T],
     >(
         type: T,
         entity: E | null | undefined,
@@ -134,12 +131,11 @@ export class EntityManagerService extends InitializableServiceBase {
      * If `pageA` changes, the second object in the languageVariants of `pageB` should
      * also change, but currently it does not.
      * We will see if this causes problems, e.g., with groups and subgroups.
-     *
      * @param type The type of entity.
      */
     watchDenormalizedEntitiesList<
         T extends keyof EntityStateModel,
-        R = NormalizableEntityTypesMapBO<Raw>[T]
+        R = NormalizableEntityTypesMapBO<Raw>[T],
     >(
         type: T,
     ): Observable<R[]> {
@@ -159,16 +155,15 @@ export class EntityManagerService extends InitializableServiceBase {
      *
      * All normalized entities should be treated as immutable, since they are
      * shared among all subscribers of a certain type.
-     *
      * @param type The type of entity.
      */
     watchNormalizedEntitiesList<
         T extends keyof EntityStateModel,
-        R = NormalizableEntityTypesMapBO<Normalized>[T]
+        R = NormalizableEntityTypesMapBO<Normalized>[T],
     >(
         type: T,
     ): Observable<R[]> {
-        return this.appState.select(state => state.entity[type] as any).pipe(
+        return this.appState.select((state) => state.entity[type] as any).pipe(
             map((entities: IndexById<R>) => _values(entities)),
         );
     }
@@ -226,7 +221,6 @@ export class EntityManagerService extends InitializableServiceBase {
      * because here we are dealing with much larger quantities of entities at a time.
      * Thus using setTimeout() repeatedly would result in a too long waiting time for the user,
      * so we go for the much more efficient web worker.
-     *
      * @param type The type of entities in the `rawEntities` array.
      * @param rawEntities The array of raw entities.
      */
@@ -260,17 +254,17 @@ export class EntityManagerService extends InitializableServiceBase {
             take(1),
             takeUntil(this.stopper.stopper$),
         ).subscribe(
-            normalizationResult => {
+            (normalizationResult) => {
                 this.appState.dispatch(new AddEntities(normalizationResult.entities));
                 resolveFn();
             },
-            error => rejectFn(error),
+            (error) => rejectFn(error),
         );
     }
 
     protected normalizeAsync<
         T extends keyof EntityStateModel,
-        E extends NormalizableEntityTypesMapBO<Raw>[T]
+        E extends NormalizableEntityTypesMapBO<Raw>[T],
     >(
         type: T,
         rawEntities: E[],
@@ -304,8 +298,8 @@ export class EntityManagerService extends InitializableServiceBase {
             });
         }, this.CLEANUP_DEBOUNCE, { trailing: true });
 
-        const denormalizer$ = this.appState.select(state => state.entity[type]).pipe(
-            switchMap(entityBranch => {
+        const denormalizer$ = this.appState.select((state) => state.entity[type]).pipe(
+            switchMap((entityBranch) => {
                 ++iteration;
                 return this.denormalizeBranchUsingCache(type, entityBranch, iteration, denormalizedCache);
             }),
@@ -350,7 +344,7 @@ export class EntityManagerService extends InitializableServiceBase {
         const ids$ = observableOf(ids);
 
         return ids$.pipe(
-            batchedMap(id => {
+            batchedMap((id) => {
                 const normalized: NormalizableEntityTypesMapBO<Normalized>[T] = entityBranch[id] as any;
                 let cachedEntry = cache.get(id);
 

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditablePageProps, Language, NodeFeature, Page, Raw, ResponseCode, Template } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -14,15 +14,15 @@ export enum TranslatePageModalActions {
 }
 
 export interface TranslateResult {
-    newPage: Page,
-    action: TranslatePageModalActions,
+    newPage: Page;
+    action: TranslatePageModalActions;
 }
 
 @Component({
     selector: 'translate-page-modal',
     templateUrl: './translate-page-modal.tpl.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TranslatePageModal extends BaseModal<TranslateResult> implements OnInit, OnDestroy {
 
@@ -57,7 +57,7 @@ export class TranslatePageModal extends BaseModal<TranslateResult> implements On
     constructor(
         private changeDetector: ChangeDetectorRef,
         private translationService: TranslationActionsService,
-        private notificationService: I18nNotification,
+        private notificationService: I18nNotificationService,
         private folderActions: FolderActionsService,
         private entityResolver: EntityResolver,
         private appState: ApplicationStateService,
@@ -68,29 +68,29 @@ export class TranslatePageModal extends BaseModal<TranslateResult> implements On
     ngOnInit(): void {
         this.control = new FormControl(this.defaultProps);
 
-        this.subscriptions.push(this.appState.select(state => state.folder.templates.list).subscribe(templateIds => {
-            this.templates = templateIds.map(id => this.entityResolver.getTemplate(id));
+        this.subscriptions.push(this.appState.select((state) => state.folder.templates.list).subscribe((templateIds) => {
+            this.templates = templateIds.map((id) => this.entityResolver.getTemplate(id));
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.folder.activeNodeLanguages.list).subscribe(languageIds => {
-            this.languages = languageIds.map(id => this.entityResolver.getLanguage(id));
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeNodeLanguages.list).subscribe((languageIds) => {
+            this.languages = languageIds.map((id) => this.entityResolver.getLanguage(id));
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.folder.folders.creating).subscribe(loading => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.folders.creating).subscribe((loading) => {
             this.loading = loading;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features.nodeFeatures).subscribe(nodeFeatures => {
+        this.subscriptions.push(this.appState.select((state) => state.features.nodeFeatures).subscribe((nodeFeatures) => {
             this.autoTranslationEnabled = ((nodeFeatures || {})[this.nodeId] || []).includes(NodeFeature.AUTOMATIC_TRANSLATION);
             this.changeDetector.markForCheck();
         }));
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     handleConfirm(action: TranslatePageModalActions): void {
@@ -100,23 +100,23 @@ export class TranslatePageModal extends BaseModal<TranslateResult> implements On
 
     createAutomaticallyTranslatedPage(): void {
         this.createTranslationWithFunction((pageId, options) =>
-            this.translationService.translatePage(pageId, options).then(result => {
+            this.translationService.translatePage(pageId, options).then((result) => {
                 if (result?.page) {
-                    return result.page
+                    return result.page;
                 }
-                if(result?.responseInfo.responseCode === ResponseCode.OK) {
-                    this.notificationService.show({message: result.messages[0]?.message});
+                if (result?.responseInfo.responseCode === ResponseCode.OK) {
+                    this.notificationService.show({ message: result.messages[0]?.message });
                     this.cancelFn();
                     return;
                 }
             }),
         ).then((newPage: Page<Raw>) => {
             if (newPage) {
-                this.closeFn({ newPage, action: TranslatePageModalActions.EDIT_PAGE })
+                this.closeFn({ newPage, action: TranslatePageModalActions.EDIT_PAGE });
             }
-        }).catch(error=> {
-            console.log(error)
-        })
+        }).catch((error) => {
+            console.log(error);
+        });
     }
 
     /**
@@ -128,7 +128,7 @@ export class TranslatePageModal extends BaseModal<TranslateResult> implements On
 
     private createTranslationWithFunction(translationFunction: TranslateRequestFunction): Promise<Page<Raw> | void> {
         return this.folderActions.executePageTranslationFunction(this.nodeId, this.pageId, this.defaultProps.language, translationFunction)
-            .then(page => {
+            .then((page) => {
                 if (page) {
                     this.folderActions.updatePageProperties(page.id, this.control.value, { showNotification: true, fetchForUpdate: false });
                     this.folderActions.refreshList(page.type);

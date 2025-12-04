@@ -23,12 +23,12 @@ import {
     EntityUpdateResponseModel,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class ObjectPropertyCategoryHandlerService
@@ -65,7 +65,7 @@ export class ObjectPropertyCategoryHandlerService
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EntityCreateResponseModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>> {
         return this.api.objectPropertycategories.createObjectPropertyCategory(data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.objectPropertyCategory);
                 this.nameMap[res.objectPropertyCategory.id] = name;
 
@@ -86,7 +86,7 @@ export class ObjectPropertyCategoryHandlerService
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
         return this.create(data, params).pipe(
-            map(res => this.mapToBusinessObject(res.objectPropertyCategory)),
+            map((res) => this.mapToBusinessObject(res.objectPropertyCategory)),
         );
     }
 
@@ -95,7 +95,7 @@ export class ObjectPropertyCategoryHandlerService
         params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EntityLoadResponseModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>> {
         return this.api.objectPropertycategories.getObjectPropertyCategory(id).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.objectPropertyCategory);
                 this.nameMap[res.objectPropertyCategory.id] = name;
             }),
@@ -108,7 +108,7 @@ export class ObjectPropertyCategoryHandlerService
         params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
         return this.get(id, params).pipe(
-            map(res => this.mapToBusinessObject(res.objectPropertyCategory)),
+            map((res) => this.mapToBusinessObject(res.objectPropertyCategory)),
         );
     }
 
@@ -118,7 +118,7 @@ export class ObjectPropertyCategoryHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>> {
         return this.api.objectPropertycategories.updateObjectPropertyCategory(id, data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.objectPropertyCategory);
                 this.nameMap[res.objectPropertyCategory.id] = name;
 
@@ -140,7 +140,7 @@ export class ObjectPropertyCategoryHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
         return this.update(id, data, params).pipe(
-            map(res => this.mapToBusinessObject(res.objectPropertyCategory)),
+            map((res) => this.mapToBusinessObject(res.objectPropertyCategory)),
         );
     }
 
@@ -171,8 +171,8 @@ export class ObjectPropertyCategoryHandlerService
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EntityListResponseModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>> {
         return this.api.objectPropertycategories.getObjectPropertyCategories(params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
+            tap((res) => {
+                res.items.forEach((objCat) => {
                     const name = this.displayName(objCat);
                     this.nameMap[objCat.id] = name;
                 });
@@ -185,7 +185,7 @@ export class ObjectPropertyCategoryHandlerService
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY]>> {
         return this.list(body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),

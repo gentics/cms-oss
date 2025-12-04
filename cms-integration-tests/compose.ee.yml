@@ -52,8 +52,8 @@ services:
       TZ: "Europe/Vienna"
 
       # Auth Settings
-      KEYCLOAK_ADMIN: node
-      KEYCLOAK_ADMIN_PASSWORD: node
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
 
       # Database connection
       KC_DB: mariadb

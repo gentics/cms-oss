@@ -21,6 +21,7 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.gentics.contentnode.rest.model.LocalizationType;
 import org.apache.logging.log4j.Level;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -311,7 +312,7 @@ public class ModelBuilder {
 		if (channel != null) {
 			restFile.setChannelId(channel.getId());
 		} else {
-			restFile.setChannelId(new Integer(0));
+			restFile.setChannelId(0);
 			channel = getMaster(nodeFile.getFolder().getNode());
 		}
 		restFile.setInherited(nodeFile.isInherited());
@@ -944,6 +945,8 @@ public class ModelBuilder {
 		switch (ttype) {
 		case Tag.TYPE_CONTENTTAG:
 			restTag.setType(com.gentics.contentnode.rest.model.Tag.Type.CONTENTTAG);
+			restTag.setRootTag(((ContentTag) nodeTag).comesFromTemplate());
+			restTag.setInherited(((ContentTag) nodeTag).isInherited());
 			break;
 
 		case Tag.TYPE_TEMPLATETAG:
@@ -986,7 +989,25 @@ public class ModelBuilder {
 					nodePage.getObjectTags().remove(objectTagNameWithoutObject);
 				} else {
 					// this is a content tag
-					nodePage.getContent().getTags().remove(toDelete);
+					var content = nodePage.getContent();
+					var tags = content.getContentTags();
+					var tagToDelete = content.getTags().get(toDelete);
+					var allTagsToDelete = new ArrayList<String>();
+
+					allTagsToDelete.add(toDelete);
+
+					if (Feature.PARTIAL_MULTICHANNELLING.isActivated(nodePage.getNode())
+							&& tagToDelete instanceof ContentTag removedContentTag
+							&& removedContentTag.comesFromTemplate()
+							&& !removedContentTag.isInherited()) {
+						var embeddedTagNames = MiscUtils.getEmbeddedTagNames(tags, removedContentTag.getName());
+
+						allTagsToDelete.addAll(embeddedTagNames);
+					}
+
+					for (var tagName: allTagsToDelete) {
+						tags.remove(tagName);
+					}
 				}
 			}
 		}
@@ -1192,6 +1213,10 @@ public class ModelBuilder {
 		restPage.setLiveUrl(renderLiveUrlForObject(Page.class, nodePage, nodePage.getNode()));
 
 		restPage.setPublishPath(renderPublishPath(nodePage));
+
+		if (!nodePage.isMaster() && !nodePage.isInherited()) {
+			restPage.setLocalizationType(nodePage.getContent().isPartiallyLocalized() ? LocalizationType.PARTIAL : LocalizationType.FULL);
+		}
 
 		// eventually fill references
 		if (fillRefs != null) {

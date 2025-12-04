@@ -1,21 +1,25 @@
 <div class="modal-title">
-    <h4>{{ 'modal.display_field_selector_title' | translate  }}</h4>
+  <h4>{{ 'modal.display_field_selector_title' | gtxI18n  }}</h4>
 </div>
 <div class="modal-content">
-    <gtx-sortable-list (dragEnd)="sortList($event)">
-        <gtx-sortable-item *ngFor="let field of availableFields">
-            <gtx-contents-list-item>
-                <div class="item-primary">
-                    <gtx-checkbox [(ngModel)]="selected[field.name]"
-                                    [name]="field.name"
-                                    [label]="field.label | translate "></gtx-checkbox>
-                </div>
-                <gtx-drag-handle></gtx-drag-handle>
-            </gtx-contents-list-item>
-        </gtx-sortable-item>
-    </gtx-sortable-list>
+  <gtx-sortable-list (dragEnd)="sortList($event)">
+    @for (field of availableFields; track field.name) {
+      <gtx-sortable-item>
+        <gtx-contents-list-item>
+          <div class="item-primary">
+            <gtx-checkbox
+                [name]="field.name"
+                [label]="field.label | gtxI18n"
+                [(ngModel)]="selected[field.name]"
+            ></gtx-checkbox>
+          </div>
+          <gtx-drag-handle></gtx-drag-handle>
+        </gtx-contents-list-item>
+      </gtx-sortable-item>
+    }
+  </gtx-sortable-list>
 </div>
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | translate  }}</gtx-button>
-    <gtx-button class="okay" (click)="updateAndClose()">{{ 'common.okay_button' | translate  }}</gtx-button>
+  <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n  }}</gtx-button>
+  <gtx-button class="okay" (click)="updateAndClose()">{{ 'common.okay_button' | gtxI18n  }}</gtx-button>
 </div>

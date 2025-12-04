@@ -1,42 +1,50 @@
 <div class="modal-title">
-    <h5>{{ 'modal.take_pages_offline_title' | i18n }}</h5>
+  <h5>{{ 'modal.take_pages_offline_title' | gtxI18n }}</h5>
 </div>
 <div class="modal-content">
-    <div *ngIf="pagesToTakeOffline.length > 0">
-        <table>
-            <thead>
-                <tr>
-                    <th colspan="2">
-                        <span class="lead" *ngIf="pagesToTakeOffline.length === 1">
-                            {{ 'modal.take_pages_offline_header_singular' | i18n }}
-                        </span>
-                        <span class="lead" *ngIf="pagesToTakeOffline.length !== 1">
-                            {{ 'modal.take_pages_offline_header_plural' | i18n:{ count: pagesToTakeOffline.length } }}
-                        </span>
-                    </th>
-                    <th class="selected-languages-header">{{ 'modal.take_offline_selected_languages' | i18n }}:</th>
-                </tr>
-            </thead>
-            <tbody>
-                <gtx-contents-list-item *ngFor="let item of pagesToTakeOffline" [ngClass]="item.type || ''" [class.none-selected]="selectedLanguageVariants[item.id]?.length === 0">
-                    <td class="item-icon">
-                        <icon>{{ item.type | gtxTypeIcon }}</icon>
-                    </td>
-                    <td class="item-primary">
-                        <div class="item-name">{{ item.name }}</div>
-                    </td>
-                    <td>
-                        <page-language-selector [page]="item" [variants]="pageLanguageVariants[item.id]" [selected]="selectedLanguageVariants[item.id]"
-                            (selectionChange)="onLanguageSelectionChange(item.id, $event, true)">
-                        </page-language-selector>
-                    </td>
-                </gtx-contents-list-item>
-            </tbody>
-        </table>
+  @if (pagesToTakeOffline.length > 0) {
+    <div>
+      <table>
+        <thead>
+          <tr>
+            <th colspan="2">
+              @if (pagesToTakeOffline.length === 1) {
+                <span class="lead">
+                  {{ 'modal.take_pages_offline_header_singular' | gtxI18n }}
+                </span>
+              }
+              @if (pagesToTakeOffline.length !== 1) {
+                <span class="lead">
+                  {{ 'modal.take_pages_offline_header_plural' | gtxI18n:{ count: pagesToTakeOffline.length } }}
+                </span>
+              }
+            </th>
+            <th class="selected-languages-header">{{ 'modal.take_offline_selected_languages' | gtxI18n }}:</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of pagesToTakeOffline; track (item.type + item.id)) {
+            <gtx-contents-list-item [ngClass]="item.type || ''" [class.none-selected]="selectedLanguageVariants[item.id]?.length === 0">
+              <td class="item-icon">
+                <icon>{{ item.type | gtxTypeIcon }}</icon>
+              </td>
+              <td class="item-primary">
+                <div class="item-name">{{ item.name }}</div>
+              </td>
+              <td>
+                <page-language-selector [page]="item" [variants]="pageLanguageVariants[item.id]" [selected]="selectedLanguageVariants[item.id]"
+                  (selectionChange)="onLanguageSelectionChange(item.id, $event, true)">
+                </page-language-selector>
+              </td>
+            </gtx-contents-list-item>
+          }
+        </tbody>
+      </table>
     </div>
+  }
 
 </div>
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button type="warning" (click)="confirm()">{{ 'modal.take_offline_button' | i18n }}</gtx-button>
+  <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+  <gtx-button type="warning" (click)="confirm()">{{ 'modal.take_offline_button' | gtxI18n }}</gtx-button>
 </div>

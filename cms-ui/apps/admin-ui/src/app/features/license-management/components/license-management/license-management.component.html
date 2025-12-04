@@ -1,37 +1,38 @@
 <gtx-progress-bar [active]="loading" />
 
 <div class="management-wrapper">
-    <div class="action-button-row">
-        <gtx-button
-            class="action-button upload-button"
-            flat
-            size="small"
-            type="warning"
-            data-action="upload"
-            [disabled]="loading"
-            (click)="openUploadModal()"
-        >
-            <icon left>upload</icon> {{ 'license.upload_license' | i18n }}
-        </gtx-button>
+  <div class="action-button-row">
+    <gtx-button
+      class="action-button upload-button"
+      flat
+      size="small"
+      type="warning"
+      data-action="upload"
+      [disabled]="loading"
+      (click)="openUploadModal()"
+      >
+      <icon left>upload</icon> {{ 'license.upload_license' | gtxI18n }}
+    </gtx-button>
 
-        <gtx-button
-            class="action-button reload-button"
-            flat
-            size="small"
-            type="primary"
-            data-action="reload"
-            [disabled]="loading"
-            (click)="loadLicenseInfo()"
-        >
-            <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
-        </gtx-button>
-    </div>
+    <gtx-button
+      class="action-button reload-button"
+      flat
+      size="small"
+      type="primary"
+      data-action="reload"
+      [disabled]="loading"
+      (click)="loadLicenseInfo()"
+      >
+      <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+    </gtx-button>
+  </div>
 
-    <div class="management-content">
-        <gtx-license-info
-            *ngIf="!loading"
-            [status]="status"
-            [license]="license"
+  <div class="management-content">
+    @if (!loading) {
+      <gtx-license-info
+        [status]="status"
+        [license]="license"
         />
-    </div>
+    }
+  </div>
 </div>

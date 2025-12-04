@@ -1,24 +1,17 @@
-import { API_BASE_URL, throwIfAlreadyLoaded, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '@admin-ui/common';
-import {
-    BreadcrumbsService,
-    ErrorHandler,
-    I18nNotificationService,
-    I18nService,
-    LocalTranslateLoader,
-} from '@admin-ui/core';
-import { MeshModule } from '@admin-ui/mesh';
-import { SharedModule } from '@admin-ui/shared/shared.module';
-import { AppStateService, StateModule } from '@admin-ui/state';
-import { NgModule, Optional, SkipSelf, inject, provideAppInitializer } from '@angular/core';
+import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
-import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { API_BASE_URL, CmsComponentsModule } from '@gentics/cms-components';
+import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
+import { throwIfAlreadyLoaded, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../common';
+import { MeshModule } from '../mesh';
+import { SharedModule } from '../shared/shared.module';
+import { AppStateService, StateModule } from '../state';
 import {
     ActivityManagerComponent,
     ChangePasswordModalComponent,
@@ -35,7 +28,10 @@ import { AuthGuard, DiscardChangesGuard, PermissionsGuard } from './guards';
 import {
     ActivityManagerService,
     AdminHandlerService,
+    AdminOperations,
+    AuthOperations,
     BreadcrumbResolver,
+    BreadcrumbsService,
     ConstructCategoryHandlerService,
     ConstructHandlerService,
     ConstructTableLoaderService,
@@ -54,7 +50,10 @@ import {
     DevToolPackageTableLoaderService,
     EditorCloserService,
     EditorTabTrackerService,
+    EditorUiLocalStorageService,
     ElasticSearchIndexOperations,
+    EntityManagerService,
+    ErrorHandler,
     FeatureOperations,
     FileOperations,
     FolderOperations,
@@ -66,9 +65,12 @@ import {
     ImageOperations,
     LanguageHandlerService,
     LanguageTableLoaderService,
+    LogoutCleanupService,
+    MaintenanceModeService,
     MarkupLanguageOperations,
     MessageService,
     NodeHandlerService,
+    NodeOperations,
     NodeTableLoaderService,
     ObjectPropertyCategoryHandlerService,
     ObjectPropertyHandlerService,
@@ -78,8 +80,8 @@ import {
     PermissionsTrableLoaderService,
     RoleOperations,
     RouteEntityResolverService,
-    ScheduleHandlerService,
     ScheduleExecutionOperations,
+    ScheduleHandlerService,
     ScheduleOperations,
     ScheduleTaskOperations,
     ServerStorageService,
@@ -89,37 +91,12 @@ import {
     TemplateTagOperations,
     TemplateTagStatusOperations,
     UserOperations,
+    UserSettingsService,
     UsersnapService,
     UserTableLoaderService,
 } from './providers';
-import { EditorUiLocalStorageService } from './providers/editor-ui-local-storage/editor-ui-local-storage.service';
-import { EntityManagerService } from './providers/entity-manager/entity-manager.service';
-import { LogoutCleanupService } from './providers/logout-cleanup/logout-cleanup.service';
-import { MaintenanceModeService } from './providers/maintenance-mode/maintenance-mode.service';
-import { AdminOperations } from './providers/operations/admin/admin.operations';
-import { AuthOperations } from './providers/operations/auth/auth.operations';
-import { NodeOperations } from './providers/operations/node';
-import { UserSettingsService } from './providers/user-settings/user-settings.service';
 
-export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select(state => state.auth.sid);
-
-export function initializeApp(appState: AppStateService, client: GCMSRestClientService, keycloak: KeycloakService): () => Promise<void> {
-    return () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        client.init({
-            connection: {
-                absolute: false,
-                basePath: '/rest',
-            },
-        });
-        appState.select(state => state.auth.sid).subscribe(sid => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            client.setSessionId(sid);
-        });
-
-        return keycloak.checkKeycloakAuth();
-    };
-}
+export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select((state) => state.auth.sid);
 
 const COMPONENTS: any[] = [
     ActivityManagerComponent,
@@ -188,8 +165,6 @@ const PROVIDERS: any[] = [
     FolderTrableLoaderService,
     GroupTableLoaderService,
     GroupTrableLoaderService,
-    I18nNotificationService,
-    I18nService,
     LanguageHandlerService,
     LanguageTableLoaderService,
     LogoutCleanupService,
@@ -224,10 +199,7 @@ const PROVIDERS: any[] = [
         useFactory: createSidObservable,
         deps: [AppStateService],
     },
-    provideAppInitializer(() => {
-        const initializerFn = (initializeApp)(inject(AppStateService), inject(GCMSRestClientService), inject(KeycloakService));
-        return initializerFn();
-      }),
+
 ];
 
 @NgModule({
@@ -240,9 +212,9 @@ const PROVIDERS: any[] = [
         GCMSRestClientModule,
         MeshRestClientModule,
         GenticsUICoreModule,
-        CmsComponentsModule,
+        CmsComponentsModule.forRoot(),
         TranslateModule.forRoot({
-            loader: { provide: TranslateLoader, useClass: LocalTranslateLoader },
+            fallbackLang: 'en',
         }),
         SharedModule,
         StateModule,

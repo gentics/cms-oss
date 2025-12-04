@@ -1,32 +1,28 @@
-# compiled output
-/build
+# build/temp directories
 /dist
 /out-tsc
-/apps/**/src/**/*.css
+/coverage
+/.angular
+/.nx
+/.playwright
+
+# JUnit test reports
+/.reports
+
+# compiled output
 /apps/ui-core-docs/compile-docs.js
 /apps/ui-core-docs/docs.output.json
+migrations.json
 
 # profiling files
 chrome-profiler-events.json
 speed-measure-plugin.json
 
-# temp/cache files
-/tmp
-.angular
-.nx
-
-# output directories
-coverage
-.playwright
-test-results
-
-# Customer specific configurations
-customer-config/
-
-# JUnit test reports
-.reports
-
 # ng serve proxy configuration
 proxy.conf.json
 proxy.conf.*.json
 report.*.json
+
+# ai agent configs
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

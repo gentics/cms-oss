@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ title | i18n }}</h5>
+    <h5>{{ title | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
@@ -16,7 +16,7 @@
         data-action="confirm"
         (click)="confirmSelection()"
     >
-        {{ 'shared.confirm_selection' | i18n }}
+        {{ 'shared.confirm_selection' | gtxI18n }}
     </gtx-button>
 
     <gtx-button
@@ -25,6 +25,6 @@
         data-action="cancel"
         (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
 </div>

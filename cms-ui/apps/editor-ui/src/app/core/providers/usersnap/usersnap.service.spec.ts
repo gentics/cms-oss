@@ -46,9 +46,9 @@ describe('UsersnapService', () => {
             ],
         });
 
-        appState = TestBed.get(ApplicationStateService);
-        uiActions = TestBed.get(UIActionsService);
-        usersnapService = TestBed.get(UsersnapService);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        uiActions = TestBed.inject(UIActionsService) as any;
+        usersnapService = TestBed.inject(UsersnapService) as any;
     });
 
     afterEach(() => {

@@ -2,12 +2,12 @@ import { Component } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { TagPart } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { TagPropertyLabelPipe } from '../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 import { ValidationErrorInfoComponent } from '../shared/validation-error-info/validation-error-info.component';
@@ -39,7 +39,7 @@ describe('TagPropertyEditorHostComponent', () => {
     it('queries the TagPropertyEditorResolverService for the TagPropertyEditor component\'s factory and instantiates the component',
         componentTest(() => TestComponent, (fixture, instance) => {
             const tagPart = getExampleEditableTag().tagType.parts[0];
-            const resolverService: TagPropertyEditorResolverService = TestBed.get(TagPropertyEditorResolverService);
+            const resolverService: TagPropertyEditorResolverService = TestBed.inject(TagPropertyEditorResolverService);
             spyOn(resolverService, 'resolveTagPropertyEditorFactory').and.callThrough();
             expect(tagPart).toBeTruthy();
             expect(instance.tagPart).toBeFalsy();
@@ -61,7 +61,7 @@ describe('TagPropertyEditorHostComponent', () => {
     it('properly distroys the TagPropertyEditor component',
         componentTest(() => TestComponent, (fixture, instance) => {
             const tagPart = getExampleEditableTag().tagType.parts[0];
-            const resolverService: TagPropertyEditorResolverService = TestBed.get(TagPropertyEditorResolverService);
+            const resolverService: TagPropertyEditorResolverService = TestBed.inject(TagPropertyEditorResolverService);
             expect(tagPart).toBeTruthy();
             expect(instance.tagPart).toBeFalsy();
 

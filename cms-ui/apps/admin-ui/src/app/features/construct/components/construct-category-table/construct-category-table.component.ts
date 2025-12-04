@@ -1,13 +1,14 @@
-import { BO_NEW_SORT_ORDER, BO_ORIGINAL_SORT_ORDER, ConstructCategoryBO, EditableEntity, createMoveActions } from '@admin-ui/common';
-import { I18nService, PermissionsService } from '@admin-ui/core';
-import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { AnyModelType, ConstructCategory, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { BO_NEW_SORT_ORDER, BO_ORIGINAL_SORT_ORDER, ConstructCategoryBO, EditableEntity, createMoveActions } from '../../../../common';
+import { PermissionsService } from '../../../../core';
+import { BaseSortableEntityTableComponent, DELETE_ACTION } from '../../../../shared';
+import { AppStateService } from '../../../../state';
 import { ConstructCategoryTableLoaderService } from '../../providers';
 import { ConstructCategorySortModal } from '../construct-category-sort-modal/construct-category-sort-modal.component';
 
@@ -16,9 +17,12 @@ import { ConstructCategorySortModal } from '../construct-category-sort-modal/con
     templateUrl: './construct-category-table.component.html',
     styleUrls: ['./construct-category-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ConstructCategoryTableComponent extends BaseSortableEntityTableComponent<ConstructCategory, ConstructCategoryBO> {
+
+    public readonly BO_NEW_SORT_ORDER = BO_NEW_SORT_ORDER;
+    public readonly BO_ORIGINAL_SORT_ORDER = BO_ORIGINAL_SORT_ORDER;
 
     protected rawColumns: TableColumn<ConstructCategoryBO>[] = [
         {
@@ -30,7 +34,7 @@ export class ConstructCategoryTableComponent extends BaseSortableEntityTableComp
         {
             id: 'sortorder',
             label: 'construct.categorySortorder',
-            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+
             mapper: (category: ConstructCategoryBO) => this.sorting
                 ? category[BO_NEW_SORT_ORDER] + 1
                 : (category.sortOrder ?? (category[BO_ORIGINAL_SORT_ORDER] + 1)),
@@ -38,6 +42,7 @@ export class ConstructCategoryTableComponent extends BaseSortableEntityTableComp
             align: 'right',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'constructCategory';
     protected focusEntityType = EditableEntity.CONSTRUCT_CATEGORY;
 

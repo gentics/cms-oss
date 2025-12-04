@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import { downloadFromBlob } from '@gentics/cms-components';
 import { coerceToBoolean } from '@gentics/ui-core';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { ApplicationStateService } from '../../../state';
 
 const PARAM_BACKGROUND_DOWNLOAD = 'gcms-background-download';
 const PARAM_DOWNLOAD_METHOD = 'gcms-download-method';

@@ -8,7 +8,7 @@ import { EntityResolver } from '../../../core/providers/entity-resolver/entity-r
     templateUrl: './item-breadcrumbs.component.html',
     styleUrls: ['./item-breadcrumbs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ItemBreadcrumbsComponent implements OnChanges {
 
@@ -54,13 +54,13 @@ export class ItemBreadcrumbsComponent implements OnChanges {
 
         if (parentFolder && parentFolder.breadcrumbs) {
             // If the item is a folder it should not be included in the breadcrumbs itself.
-            let breadcrumbsCount = this.item.type === 'folder' ? parentFolder.breadcrumbs.length - 1 : parentFolder.breadcrumbs.length;
+            const breadcrumbsCount = this.item.type === 'folder' ? parentFolder.breadcrumbs.length - 1 : parentFolder.breadcrumbs.length;
 
             for (let i = 0; i < breadcrumbsCount; ++i) {
                 const folder = parentFolder.breadcrumbs[i];
                 breadcrumbs.push({
                     text: folder.name,
-                    route: ['/editor', { outlets: { list: ['node', parentFolder.nodeId, 'folder', folder.id]}} ]
+                    route: ['/editor', { outlets: { list: ['node', parentFolder.nodeId, 'folder', folder.id] } }],
                 });
             }
         }

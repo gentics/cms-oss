@@ -8,6 +8,7 @@ import {
     SetUsersnapSettings,
 } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ContentMaintenanceAction,
     ContentMaintenanceActionRequest,
@@ -28,7 +29,6 @@ import {
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, of } from 'rxjs';
 import { catchError, finalize, map, tap } from 'rxjs/operators';
-import { I18nNotificationService } from '../../i18n-notification';
 import { OperationsBase } from '../operations.base';
 
 @Injectable()
@@ -45,7 +45,7 @@ export class AdminOperations extends OperationsBase {
 
     getUsersnapSettings(): Observable<UsersnapSettings> {
         return this.api.admin.getUsersnapSettings().pipe(
-            map(response => {
+            map((response) => {
                 this.appState.dispatch(new SetUsersnapSettings(response.settings));
                 return response.settings;
             }),
@@ -55,7 +55,7 @@ export class AdminOperations extends OperationsBase {
 
     getCmsVersion(silent: boolean = false): Observable<Version> {
         return this.api.adminInfo.getVersion().pipe(
-            map(response => {
+            map((response) => {
                 const version: Version = {
                     cmpVersion: response.cmpVersion,
                     version: response.version,
@@ -71,9 +71,9 @@ export class AdminOperations extends OperationsBase {
 
     getCmsUpdates(silent: boolean = false): Observable<string[]> {
         return this.api.adminInfo.getUpdates().pipe(
-            map(response => {
+            map((response) => {
                 this.appState.dispatch(new SetCmsUpdates(response.available));
-                return response.available.map(update => update.version);
+                return response.available.map((update) => update.version);
             }),
             silent ? catchError(() => of(null)) : this.catchAndRethrowError(),
         );
@@ -88,14 +88,14 @@ export class AdminOperations extends OperationsBase {
     setMaintenanceMode(options: MaintenanceModeRequestOptions): Observable<MaintenanceModeResponse> {
         this.appState.dispatch(new IncrementMasterLoading('shared.set_maintenance_mode'));
         return this.api.adminInfo.setMaintenanceMode(options).pipe(
-            tap(response => {
+            tap((response) => {
                 this.appState.dispatch(new FetchMaintenanceStatusSuccess(response));
                 this.notification.show({
                     type: 'success',
                     message: 'shared.set_maintenance_mode_success',
                 });
             }),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.set_maintenance_mode_failed',
@@ -114,7 +114,7 @@ export class AdminOperations extends OperationsBase {
 
     getJobs(options?: JobListRequestOptions): Observable<Jobs> {
         return this.api.adminInfo.getJobs(options).pipe(
-            map(response => {
+            map((response) => {
                 return response;
             }),
             this.catchAndRethrowError(),
@@ -123,7 +123,7 @@ export class AdminOperations extends OperationsBase {
 
     getDirtQueue(options?: DirtQueueListOptions): Observable<DirtQueueEntry[]> {
         return this.api.adminInfo.getDirtQueue(options).pipe(
-            map(response => response.items),
+            map((response) => response.items),
             this.catchAndRethrowError(),
         );
     }
@@ -141,7 +141,7 @@ export class AdminOperations extends OperationsBase {
         nodes: number[];
         contentRepositories: number[];
         clearPublishCache: boolean;
-        attributes: string[],
+        attributes: string[];
         start?: number;
         end?: number;
     }): Observable<Response> {
@@ -155,13 +155,13 @@ export class AdminOperations extends OperationsBase {
             ...(Number.isInteger(opts.start) && { start: opts.start }),
             ...(Number.isInteger(opts.end) && { end: opts.end }),
         };
-        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.republish_objects'));
+        this.appState.dispatch(new IncrementMasterLoading('content_maintenance.republish_objects'));
         return this.api.adminInfo.modifyPublishQueue(payload).pipe(
             tap(() => this.notification.show({
                 type: 'success',
                 message: 'shared.republish_objects_success',
             })),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.republish_objects_failed',
@@ -187,13 +187,13 @@ export class AdminOperations extends OperationsBase {
             ...(Number.isInteger(opts.start) && { start: opts.start }),
             ...(Number.isInteger(opts.end) && { end: opts.end }),
         };
-        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.delay_objects'));
+        this.appState.dispatch(new IncrementMasterLoading('content_maintenance.delay_objects'));
         return this.api.adminInfo.modifyPublishQueue(payload).pipe(
             tap(() => this.notification.show({
                 type: 'success',
                 message: 'shared.delay_objects_success',
             })),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.delay_objects_failed',
@@ -219,13 +219,13 @@ export class AdminOperations extends OperationsBase {
             ...(Number.isInteger(opts.start) && { start: opts.start }),
             ...(Number.isInteger(opts.end) && { end: opts.end }),
         };
-        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.republish_delayed_objects'));
+        this.appState.dispatch(new IncrementMasterLoading('content_maintenance.republish_delayed_objects'));
         return this.api.adminInfo.modifyPublishQueue(payload).pipe(
             tap(() => this.notification.show({
                 type: 'success',
                 message: 'shared.republish_delayed_objects_success',
             })),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.republish_delayed_objects_failed',
@@ -251,13 +251,13 @@ export class AdminOperations extends OperationsBase {
             ...(Number.isInteger(opts.start) && { start: opts.start }),
             ...(Number.isInteger(opts.end) && { end: opts.end }),
         };
-        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.mark_objects_as_published'));
+        this.appState.dispatch(new IncrementMasterLoading('content_maintenance.mark_objects_as_published'));
         return this.api.adminInfo.modifyPublishQueue(payload).pipe(
             tap(() => this.notification.show({
                 type: 'success',
                 message: 'shared.mark_objects_as_published_success',
             })),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.mark_objects_as_published_failed',
@@ -269,9 +269,9 @@ export class AdminOperations extends OperationsBase {
     }
 
     stopPublishing(): Observable<PublishInfo> {
-        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.stop_publishing'));
+        this.appState.dispatch(new IncrementMasterLoading('content_maintenance.stop_publishing'));
         return this.api.adminInfo.stopPublishing().pipe(
-            tap(publishInfo => {
+            tap((publishInfo) => {
                 if (publishInfo.running) {
                     this.notification.show({
                         type: 'warning',
@@ -284,7 +284,7 @@ export class AdminOperations extends OperationsBase {
                     });
                 }
             }),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.stop_publishing_failed',
@@ -296,13 +296,13 @@ export class AdminOperations extends OperationsBase {
     }
 
     reloadConfiguration(): Observable<Response> {
-        this.appState.dispatch(new IncrementMasterLoading('contentmaintenance.reload_configuration'));
+        this.appState.dispatch(new IncrementMasterLoading('content_maintenance.reload_configuration'));
         return this.api.adminInfo.reloadConfiguration().pipe(
             tap(() => this.notification.show({
                 type: 'success',
                 message: 'shared.reload_configuration_success',
             })),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.reload_configuration_failed',
@@ -320,7 +320,7 @@ export class AdminOperations extends OperationsBase {
                 type: 'success',
                 message: 'shared.repeat_failed_dirt_queue_of_node_success',
             })),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.repeat_failed_dirt_queue_of_node_failed',
@@ -338,7 +338,7 @@ export class AdminOperations extends OperationsBase {
                 type: 'success',
                 message: 'shared.delete_failed_dirt_queue_of_node_success',
             })),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.delete_failed_dirt_queue_of_node_failed',

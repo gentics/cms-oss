@@ -3,16 +3,13 @@
   "version": "6.3.9",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@angular/common": ">=19.0.0",
-    "@angular/core": ">=19.0.0",
+    "@angular/common": ">=20.3.0",
+    "@angular/core": ">=20.3.0",
     "@gentics/cms-models": "^6.2.3"
   },
   "devDependencies": {
-    "@angular/common": ">=19.0.0",
-    "@angular/core": ">=19.0.0",
-    "@gentics/cms-models": "^6.3.9"
-  },
-  "publishConfig": {
-    "registry": "https://repo.gentics.com/repository/npm-products/"
+    "@angular/common": ">=20.3.0",
+    "@angular/core": ">=20.3.0",
+    "@gentics/cms-models": "^6.3.7"
   }
 }

@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'mesh.manage_role_instance_permissions' | i18n:{ entityName: role.name } }}</h5>
+    <h5>{{ 'mesh.manage_role_instance_permissions' | gtxI18n:{ entityName: role.name } }}</h5>
 </div>
 
 <div class="modal-content">
@@ -13,6 +13,6 @@
         data-action="cancel"
         (click)="closeFn()"
     >
-        {{ 'common.close_button' | i18n }}
+        {{ 'common.close_button' | gtxI18n }}
     </gtx-button>
 </div>

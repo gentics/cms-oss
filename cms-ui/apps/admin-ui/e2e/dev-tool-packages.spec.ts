@@ -69,7 +69,7 @@ test.describe('Dev-Tool Packages Module', () => {
         });
 
         await test.step('Assign object property to test package', async () => {
-            const packageRow = findTableRowById(masterTable, TEST_PACKAGE_NAME);
+            const packageRow = await findTableRowById(masterTable, TEST_PACKAGE_NAME);
             await clickTableRow(packageRow);
 
             const packageEditor = page.locator('gtx-dev-tool-package-editor');
@@ -80,11 +80,11 @@ test.describe('Dev-Tool Packages Module', () => {
             await packagePropertiesTable.locator('.entity-table-actions-bar [data-action="assign"] button').click();
 
             const assignModal = page.locator('gtx-assign-entity-to-package-modal');
-            const objectPropertyRow = findTableRowById(assignModal, objectProperty.id);
+            const objectPropertyRow = await findTableRowById(assignModal, objectProperty.id);
             await selectTableRow(objectPropertyRow);
             await assignModal.locator('.modal-footer [data-action="confirm"] button').click();
 
-            const assignedObjectPropertyRow = findTableRowById(packagePropertiesTable, objectProperty.id);
+            const assignedObjectPropertyRow = await findTableRowById(packagePropertiesTable, objectProperty.id);
             await expect(assignedObjectPropertyRow).toBeVisible();
         });
     });

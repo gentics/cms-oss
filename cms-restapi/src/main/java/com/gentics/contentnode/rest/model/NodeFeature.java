@@ -60,4 +60,9 @@ public enum NodeFeature {
 	 * This feature enables automatic text/page translation.
 	 */
 	automatic_translation,
+
+	/**
+	 * This feature enables partial localization of pages.
+	 */
+	partial_multichannelling
 }

@@ -2,9 +2,7 @@ import { Component, ComponentRef, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { I18nService } from '@gentics/cms-components';
 import {
     MultiValidationResult,
     TagChangedFn,
@@ -28,6 +26,8 @@ import { componentTest, configureComponentTest } from '../../../../testing';
 import { spyOnDynamicallyCreatedComponent } from '../../../../testing/dynamic-components';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
 import { TagPropertyLabelPipe } from '../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
@@ -101,7 +101,7 @@ describe('GenticsTagEditorComponent', () => {
                         ++currTagPropertyEditorIndex;
                     }
                     if (componentType === GenticsTagEditorComponent) {
-                        const tagEditor = (<GenticsTagEditorComponent> componentInstance.instance);
+                        const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
                         const origEditTag = tagEditor.editTag.bind(tagEditor);
                         spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
                             validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
@@ -138,7 +138,7 @@ describe('GenticsTagEditorComponent', () => {
 
             // Verify that the TagPropertyEditor initialization methods have been called and
             // that the parameters to them are always clones of the original objects.
-            const expectedTagParts = [ tag.tagType.parts[0], tag.tagType.parts[1], tag.tagType.parts[2], tag.tagType.parts[5] ];
+            const expectedTagParts = [tag.tagType.parts[0], tag.tagType.parts[1], tag.tagType.parts[2], tag.tagType.parts[5]];
             for (let i = 0; i < expectedTagParts.length; ++i) {
                 const expectedTagPart = expectedTagParts[i];
                 const expectedTagProperty = tag.properties[expectedTagPart.name];
@@ -209,7 +209,7 @@ describe('GenticsTagEditorComponent', () => {
 
             // Click the OK button and make sure that the promise resolves with the expected edits.
             let promiseResolved = false;
-            result.then(editorResult => {
+            result.then((editorResult) => {
                 expect(promiseResolved).toBe(false);
                 expect(editorResult.doDelete).toEqual(false);
                 expect(editorResult.tag).toEqual(tag);
@@ -312,8 +312,8 @@ describe('GenticsTagEditorComponent', () => {
         }),
     );
 
-    it('correctly validates and communicates changes by one TagPropertyEditor to all TagPropertyEditors ' +
-        'and editTag() resolves the promise correctly on OK click',
+    it('correctly validates and communicates changes by one TagPropertyEditor to all TagPropertyEditors '
+      + 'and editTag() resolves the promise correctly on OK click',
     componentTest(() => TestComponent, (fixture, instance) => {
         fixture.detectChanges();
 
@@ -331,7 +331,7 @@ describe('GenticsTagEditorComponent', () => {
                     );
                 }
                 if (componentType === GenticsTagEditorComponent) {
-                    const tagEditor = (<GenticsTagEditorComponent> componentInstance.instance);
+                    const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
                     const origEditTag = tagEditor.editTag.bind(tagEditor);
                     spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
                         validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
@@ -381,7 +381,7 @@ describe('GenticsTagEditorComponent', () => {
         expect(validatorSpy.calls.argsFor(0)[0]).toEqual(change[tagPart1Key]);
         expect(actualValidationResults).toEqual(expectedValidationResults);
         assertWriteChangedValuesSpiesCalled(
-            [ writeChangedValuesSpies[0], writeChangedValuesSpies[2], writeChangedValuesSpies[3] ],
+            [writeChangedValuesSpies[0], writeChangedValuesSpies[2], writeChangedValuesSpies[3]],
             change,
         );
         expect(writeChangedValuesSpies[1].calls.count()).toBe(0);
@@ -412,14 +412,14 @@ describe('GenticsTagEditorComponent', () => {
         expect(validatorSpy.calls.argsFor(1)[0]).toEqual(change[tagPart2Key]);
         expect(actualValidationResults).toEqual(expectedValidationResults);
         assertWriteChangedValuesSpiesCalled(
-            [ writeChangedValuesSpies[0], writeChangedValuesSpies[1], writeChangedValuesSpies[3] ],
+            [writeChangedValuesSpies[0], writeChangedValuesSpies[1], writeChangedValuesSpies[3]],
             change,
         );
         expect(writeChangedValuesSpies[2].calls.count()).toBe(0);
 
         // Click the OK button and make sure that the promise resolves with the expected edits.
         let promiseResolved = false;
-        result.then(editorResult => {
+        result.then((editorResult) => {
             expect(promiseResolved).toBe(false);
             expect(editorResult.doDelete).toEqual(false);
             expect(editorResult.tag).toEqual(expectedFinalTag);
@@ -454,7 +454,7 @@ describe('GenticsTagEditorComponent', () => {
                         );
                     }
                     if (componentType === GenticsTagEditorComponent) {
-                        const tagEditor = (<GenticsTagEditorComponent> componentInstance.instance);
+                        const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
                         const origEditTag = tagEditor.editTag.bind(tagEditor);
                         spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
                             validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
@@ -512,8 +512,8 @@ describe('GenticsTagEditorComponent', () => {
             expect(validatorSpy.calls.count()).toBe(1);
             expect(validatorSpy.calls.argsFor(0)[0]).toEqual(change[tagPart1Key]);
             expect(actualValidationResults).toEqual(expectedValidationResults);
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            writeChangedValuesSpies.forEach(spy => expect(spy.calls.count()).toBe(0));
+
+            writeChangedValuesSpies.forEach((spy) => expect(spy.calls.count()).toBe(0));
             validatorSpy.calls.reset();
 
             // Make sure that the OK button has been disabled.
@@ -555,7 +555,7 @@ describe('GenticsTagEditorComponent', () => {
             expect(validatorSpy.calls.argsFor(1)[0]).toEqual(change[tagPart2Key]);
             expect(actualValidationResults).toEqual(expectedValidationResults);
             assertWriteChangedValuesSpiesCalled(
-                [ writeChangedValuesSpies[0], writeChangedValuesSpies[1], writeChangedValuesSpies[3] ],
+                [writeChangedValuesSpies[0], writeChangedValuesSpies[1], writeChangedValuesSpies[3]],
                 expectedPropagatedChange,
             );
             expect(writeChangedValuesSpies[2].calls.count()).toBe(0);
@@ -593,7 +593,7 @@ describe('GenticsTagEditorComponent', () => {
             expect(validatorSpy.calls.argsFor(1)[0]).toEqual(change[tagPart1Key]);
             expect(actualValidationResults).toEqual(expectedValidationResults);
             assertWriteChangedValuesSpiesCalled(
-                [ writeChangedValuesSpies[0], writeChangedValuesSpies[2], writeChangedValuesSpies[3] ],
+                [writeChangedValuesSpies[0], writeChangedValuesSpies[2], writeChangedValuesSpies[3]],
                 expectedPropagatedChange,
             );
             expect(writeChangedValuesSpies[1].calls.count()).toBe(0);
@@ -604,7 +604,7 @@ describe('GenticsTagEditorComponent', () => {
 
             // Click the OK button and make sure that the promise resolves with the expected edits.
             let promiseResolved = false;
-            result.then(editorResult => {
+            result.then((editorResult) => {
                 expect(promiseResolved).toBe(false);
                 expect(editorResult.doDelete).toEqual(false);
                 expect(editorResult.tag).toEqual(expectedFinalTag);
@@ -662,7 +662,7 @@ describe('GenticsTagEditorComponent', () => {
             // have been notified, but that source editor has not received a writeChangedValues() call.
             expect(change).toEqual(changeClone);
             assertWriteChangedValuesSpiesCalled(
-                [ writeChangedValuesSpies[0], writeChangedValuesSpies[2] ],
+                [writeChangedValuesSpies[0], writeChangedValuesSpies[2]],
                 change,
             );
             expect(writeChangedValuesSpies[1].calls.count()).toBe(0);
@@ -689,7 +689,7 @@ describe('GenticsTagEditorComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
 
-            const errorHandler: ErrorHandler = TestBed.get(ErrorHandler);
+            const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch').and.callThrough();
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
@@ -753,7 +753,7 @@ describe('GenticsTagEditorComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
 
-            const errorHandler: ErrorHandler = TestBed.get(ErrorHandler);
+            const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch').and.callThrough();
 
             const tag = getMockedTag();
@@ -798,7 +798,7 @@ describe('GenticsTagEditorComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
 
-            const errorHandler: ErrorHandler = TestBed.get(ErrorHandler);
+            const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch').and.callThrough();
             const expectedError = new Error('error during init');
 
@@ -846,7 +846,7 @@ describe('GenticsTagEditorComponent', () => {
                     );
                 }
                 if (componentType === GenticsTagEditorComponent) {
-                    const tagEditor = (<GenticsTagEditorComponent> componentInstance.instance);
+                    const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
                     const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
                     spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
                         spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
@@ -914,7 +914,7 @@ describe('GenticsTagEditorComponent', () => {
                     );
                 }
                 if (componentType === GenticsTagEditorComponent) {
-                    const tagEditor = (<GenticsTagEditorComponent> componentInstance.instance);
+                    const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
                     const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
                     spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
                         validatorSpy = spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
@@ -990,7 +990,7 @@ describe('GenticsTagEditorComponent', () => {
                     );
                 }
                 if (componentType === GenticsTagEditorComponent) {
-                    const tagEditor = (<GenticsTagEditorComponent> componentInstance.instance);
+                    const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
                     const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
                     spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
                         spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
@@ -1040,7 +1040,7 @@ describe('GenticsTagEditorComponent', () => {
 });
 
 function assertWriteChangedValuesSpiesCalled(spies: jasmine.Spy[], expectedChange: Partial<TagPropertyMap>): void {
-    spies.forEach(writeChangedValuesSpy => {
+    spies.forEach((writeChangedValuesSpy) => {
         expect(writeChangedValuesSpy.calls.count()).toBe(1);
         expect(writeChangedValuesSpy.calls.argsFor(0)[0]).toEqual(expectedChange);
         expect(writeChangedValuesSpy.calls.argsFor(0)[0]).not.toBe(expectedChange);
@@ -1048,7 +1048,7 @@ function assertWriteChangedValuesSpiesCalled(spies: jasmine.Spy[], expectedChang
 }
 
 function resetSpies(spies: jasmine.Spy[]): void {
-    spies.forEach(spy => spy.calls.reset());
+    spies.forEach((spy) => spy.calls.reset());
 }
 
 function getMockedTag(): EditableTag {
@@ -1138,7 +1138,7 @@ class MockErrorHandlerService {
 }
 
 class MockI18nService implements Partial<I18nService> {
-    translate(key: string | string[], params?: any): string {
+    instant(key: string | string[], params?: any): string {
         return key as string;
     }
 }

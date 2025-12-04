@@ -1,34 +1,36 @@
 <div class="modal-title">
-    <h5>{{ 'modal.upload_to_content_package_title' | i18n:{ packageName: contentPackage.name } }}</h5>
+  <h5>{{ 'modal.upload_to_content_package_title' | gtxI18n:{ packageName: contentPackage.name } }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-progress-bar [active]="loading"></gtx-progress-bar>
+  <gtx-progress-bar [active]="loading"></gtx-progress-bar>
 
-    <gtx-file-picker
-        class="upload-button"
-        gtxFileDropArea
-        size="large"
-        accept="application/zip,application/x-zip-compressed"
-        [multiple]="false"
-        [gtxPreventFileDrop]="false"
-        [disabled]="loading"
-        (fileSelect)="fileSelected($event)"
+  <gtx-file-picker
+    class="upload-button"
+    gtxFileDropArea
+    size="large"
+    accept="application/zip,application/x-zip-compressed"
+    [multiple]="false"
+    [gtxPreventFileDrop]="false"
+    [disabled]="loading"
+    (fileSelect)="fileSelected($event)"
     >
-        <icon left>inventory</icon>{{ 'content_staging.upload_area' | i18n }}
-    </gtx-file-picker>
+    <icon left>inventory</icon>{{ 'content_staging.upload_area' | gtxI18n }}
+  </gtx-file-picker>
 
-    <div *ngIf="file" class="selected-file">
-        {{ 'content_staging.selected_upload_file' | i18n }}:
-        <div class="selected-file-name">{{ file.name }}</div>
+  @if (file) {
+    <div class="selected-file">
+      {{ 'content_staging.selected_upload_file' | gtxI18n }}:
+      <div class="selected-file-name">{{ file.name }}</div>
     </div>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()" [disabled]="loading">
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
-    <gtx-button type="primary" (click)="performUpload()" [disabled]="loading || !file">
-        {{ 'common.upload_button' | i18n }}
-    </gtx-button>
+  <gtx-button type="secondary" flat (click)="cancelFn()" [disabled]="loading">
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
+  <gtx-button type="primary" (click)="performUpload()" [disabled]="loading || !file">
+    {{ 'common.upload_button' | gtxI18n }}
+  </gtx-button>
 </div>

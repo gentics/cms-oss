@@ -1484,7 +1484,8 @@ public class AlohaRenderer implements TemplateRenderer {
 
 				// finally restore the plinks
 				code = restorePLinks(code, savedPLinks);
-			} else if (editMode == RenderType.EM_ALOHA_READONLY && prefs.isFeature(Feature.COPY_TAGS, node)) {
+			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY && prefs.isFeature(Feature.COPY_TAGS, node))) {
+				var needWrapper = tag.isLocalizable() && editMode != RenderType.EM_PUBLISH;
 				Matcher matcher = rootTagPattern.matcher(code);
 
 				if (matcher.matches()) {
@@ -1516,7 +1517,12 @@ public class AlohaRenderer implements TemplateRenderer {
 						// annotate the tag
 						startTag = startTag.replaceFirst(rootTagName, rootTagName + " " + renderTagAnnotations(page, tag));
 						code = startTag + rest;
+						needWrapper = false;
 					}
+				}
+
+				if (needWrapper) {
+					code = "<div " + renderTagAnnotations(page, tag) + ">" + code + "</div>";
 				}
 			}
 
@@ -1863,6 +1869,10 @@ public class AlohaRenderer implements TemplateRenderer {
 			Construct construct = tag.getConstruct();
 			if (construct != null) {
 				annotations.append(" data-gcn-i18n-constructname=\"").append(StringUtils.escapeXML(construct.getName().toString())).append("\"");
+			}
+
+			if (tag.isLocalizable() && page != null && !page.isMaster()) {
+				annotations.append(" data-gcn-localizable=\"").append(page.getChannel().getId()).append("\"");
 			}
 		}
 		return annotations.toString();

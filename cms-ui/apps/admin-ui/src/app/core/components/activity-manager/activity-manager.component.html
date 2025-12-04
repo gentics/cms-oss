@@ -1,46 +1,43 @@
-<div
-    *ngFor="let activity of (activities$ | async)"
+@for (activity of (activities$ | async); track activity.id) {
+  <div
     class="gtx-activity-manager-activity"
     [class.expanded]="activity.expanded"
     [class.in-progress]="activity.inProgress"
     [class.succeeded]="activity.succeeded"
     [class.failed]="activity.failed"
->
-    <div
-        [hidden]="!activity.inProgress"
-        class="gtx-activity-manager-anim"
-        [class.visible]="activity.inProgress"
     >
-        <div class="gtx-activity-manager-anim-loader"></div>
+    <div
+      [hidden]="!activity.inProgress"
+      class="gtx-activity-manager-anim"
+      [class.visible]="activity.inProgress"
+      >
+      <div class="gtx-activity-manager-anim-loader"></div>
     </div>
-
     <icon [hidden]="!activity.succeeded">check</icon>
     <icon [hidden]="!activity.failed">warning</icon>
-
     <div class="gtx-activity-manager-activity-label" [title]="activity.label">
-        {{ activity.label }}
+      {{ activity.label }}
     </div>
-
     <div class="gtx-activity-manager-activity-actions">
-        <gtx-button
-            class="gtx-activity-manager-activity-action-expand"
-            [class.expanded]="activity.expanded"
-            flat
-            type="primary"
-            size="small"
-            (click)="activitySetExpanded(activity.id, !activity.expanded)"
+      <gtx-button
+        class="gtx-activity-manager-activity-action-expand"
+        [class.expanded]="activity.expanded"
+        flat
+        type="primary"
+        size="small"
+        (click)="activitySetExpanded(activity.id, !activity.expanded)"
         >
-            <icon left>keyboard_arrow_left</icon>
-        </gtx-button>
-        <gtx-button
-            class="gtx-activity-manager-activity-action-remove"
-            flat
-            type="primary"
-            size="small"
-            (click)="activityRemove(activity.id)"
+        <icon left>keyboard_arrow_left</icon>
+      </gtx-button>
+      <gtx-button
+        class="gtx-activity-manager-activity-action-remove"
+        flat
+        type="primary"
+        size="small"
+        (click)="activityRemove(activity.id)"
         >
-            <icon left>close</icon>
-        </gtx-button>
+        <icon left>close</icon>
+      </gtx-button>
     </div>
-
-</div>
+  </div>
+}

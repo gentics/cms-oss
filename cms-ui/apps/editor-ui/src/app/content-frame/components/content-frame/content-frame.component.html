@@ -1,86 +1,114 @@
 <div class="content-frame-container">
 
-    <gtx-editor-toolbar
-        *ngIf="currentItem && currentNode"
-        [nodeInherited]="isInherited$ | async"
-        [currentNode]="currentNode"
-        [currentItem]="currentItem"
-        [editorState]="editorState$ | async"
-        [showSave]="saveButtonVisible"
-        [saveDisabled]="saveButtonIsDisabled"
-        [copyDisabled]="saveAsCopyButtonIsDisabled"
-        [locked]="isLocked"
-        [itemPermissions]="itemPermissions"
-        [itemLanguage]="itemLanguage"
-        (close)="closeEditor()"
-        (save)="handleItemSave($event)"
-        (timeManagement)="showTimeManagement($event)"
-    ></gtx-editor-toolbar>
+    @if (currentItem && currentNode) {
+        <gtx-editor-toolbar
+            [nodeInherited]="isInherited$ | async"
+            [currentNode]="currentNode"
+            [currentItem]="currentItem"
+            [editorState]="editorState$ | async"
+            [showSave]="saveButtonVisible"
+            [saveDisabled]="saveButtonIsDisabled"
+            [copyDisabled]="saveAsCopyButtonIsDisabled"
+            [locked]="isLocked"
+            [itemPermissions]="itemPermissions"
+            [itemLanguage]="itemLanguage"
+            (close)="closeEditor()"
+            (save)="handleItemSave($event)"
+            (timeManagement)="showTimeManagement($event)"
+        ></gtx-editor-toolbar>
+    }
 
-    <gtx-tabs
-        *ngIf="editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')"
-        pure
-        class="properties-tabs"
-        [activeId]="propertiesTab$ | async"
-    >
-        <gtx-tab
-            id="preview"
-            [title]="'editor.preview_label' | i18n"
-            (select)="changePropertiesTab('preview')"
-        ></gtx-tab>
+    @if (editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')) {
+        <gtx-tabs
+            pure
+            class="properties-tabs"
+            [activeId]="propertiesTab$ | async"
+        >
+            <gtx-tab
+                id="preview"
+                [title]="'editor.preview_label' | gtxI18n"
+                (select)="changePropertiesTab('preview')"
+            ></gtx-tab>
+            <gtx-tab
+                id="properties"
+                [title]="'editor.properties_label' | gtxI18n"
+                (select)="changePropertiesTab('properties')"
+            ></gtx-tab>
+        </gtx-tabs>
+    }
 
-        <gtx-tab
-            id="properties"
-            [title]="'editor.properties_label' | i18n"
-            (select)="changePropertiesTab('properties')"
-        ></gtx-tab>
-    </gtx-tabs>
+    @if (editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')) {
+        <div
+            class="preview-form"
+            [class.hidden]="(propertiesTab$ | async) !== 'preview'"
+        >
+            <file-preview
+                [file]="currentItem"
+                (imageLoading)="isImageLoading = $event"
+            ></file-preview>
+        </div>
+    }
 
-    <div
-        *ngIf="editMode === EditMode.EDIT_PROPERTIES && (currentItem?.type === 'file' || currentItem?.type === 'image')"
-        class="preview-form"
-        [class.hidden]="(propertiesTab$ | async) !== 'preview'"
-    >
-        <file-preview
-            [file]="currentItem"
-            (imageLoading)="isImageLoading = $event"
-        ></file-preview>
-    </div>
+    @if (editMode === EditMode.EDIT_PROPERTIES) {
+        <div
+            class="properties-form"
+            [class.hidden]="(propertiesTab$ | async) !== 'properties'"
+        >
+            <combined-properties-editor
+                [item]="currentItem"
+                [isDisabled]="!saveButtonVisible"
+                [(itemClean)]="currentItemClean"
+            ></combined-properties-editor>
+        </div>
+    }
 
-    <div
-        *ngIf="editMode === EditMode.EDIT_PROPERTIES"
-        class="properties-form"
-        [class.hidden]="(propertiesTab$ | async) !== 'properties'"
-    >
-        <combined-properties-editor
-            [item]="currentItem"
-            [isDisabled]="!saveButtonVisible"
-            [(itemClean)]="currentItemClean"
-        ></combined-properties-editor>
-    </div>
+    @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form') {
+        <div class="form-editor">
+            <gtx-form-editor
+                class="form-editor"
+                [form]="currentItem"
+                [activeUiLanguageCode]="activeUiLanguageCode$ | async"
+                [activeContentLanguageCode]="itemLanguage?.code"
+                [readonly]="editMode !== EditMode.EDIT"
+                (formModified)="formChange($event)"
+                (validityChange)="setItemValidity($event)"
+            ></gtx-form-editor>
+        </div>
+    }
 
-    <div *ngIf="(editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form'" class="form-editor">
-        <gtx-form-editor
-            class="form-editor"
-            [form]="currentItem"
-            [activeUiLanguageCode]="activeUiLanguageCode$ | async"
-            [activeContentLanguageCode]="itemLanguage?.code"
-            [readonly]="editMode !== EditMode.EDIT"
-            (formModified)="formChange($event)"
-            (validityChange)="setItemValidity($event)"
-        ></gtx-form-editor>
-    </div>
+    @if (editMode === EditMode.EDIT_INHERITANCE) {
+        @if (currentItem.type !== 'page' || !currentItem.localizationType === LocalizationType.PARTIAL) {
+            <div class="edit-inheritance-error">{{ 'editor.invalid_state_edit_inheritance' | gtxI18n }}</div>
+        } @else {
+            <gtx-inheritance-editor
+                [pageId]="currentItem.id"
+                [nodeId]="currentNode.id"
+                [modifiedTags]="modifiedTags"
+                (modifiedTagsChange)="updateTagInheritance($event)"
+            />
+        }
+    }
 
-    <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || currentItem?.type === 'form'">
+    <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE || currentItem?.type === 'form'">
         <gtx-progress-bar
             class="frame-requesting"
-            [active]="!windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
+            [active]="!windowLoaded
+                || (
+                    (editMode === EditMode.EDIT)
+                    && pageComparisonLanguage == null
+                    && !alohaWindowLoaded
+                )"
         ></gtx-progress-bar>
 
         <gtx-loading-spinner
-            [visible]="!windowLoaded || (editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
-            [message]="(editMode === EditMode.EDIT ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| i18n"
-            [longerMessage]="'editor.loading_takes_more_time' | i18n"
+            [visible]="!windowLoaded
+                || (
+                    (editMode === EditMode.EDIT)
+                    && pageComparisonLanguage == null
+                    && !alohaWindowLoaded
+                )"
+            [message]="((editMode === EditMode.EDIT) ? 'editor.edit_mode_loading' : 'editor.preview_mode_loading' )| gtxI18n"
+            [longerMessage]="'editor.loading_takes_more_time' | gtxI18n"
         ></gtx-loading-spinner>
 
         <div class="frame-language-container" [class.hidden]="!comparePageId">
@@ -96,12 +124,19 @@
             <iframe
                 #iframe
                 class="frame master-frame"
+                [class.hidden]="editMode === EditMode.EDIT_INHERITANCE"
                 [attr.data-item-type]="currentItem?.type"
                 [attr.data-edit-mode]="editMode"
-                [attr.loaded]="windowLoaded && !(editMode === EditMode.EDIT && pageComparisonLanguage == null && !alohaWindowLoaded)"
+                [attr.loaded]="windowLoaded
+                    && !(
+                        (editMode === EditMode.EDIT)
+                        && pageComparisonLanguage == null
+                        && !alohaWindowLoaded
+                    )"
                 name="master-frame"
                 aria-hidden="false"
             ></iframe>
+
             <div class="frame-language-indicator" [class.hidden]="!comparePageId">{{ itemLanguage?.name }}</div>
         </div>
     </div>

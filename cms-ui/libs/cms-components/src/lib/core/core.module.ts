@@ -1,56 +1,59 @@
 import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
+import { NgModule, PipeTransform, Provider, Type } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { TranslateModule } from '@ngx-translate/core';
 import {
+    AppVersionLabelComponent,
     BasePropertiesComponent,
     BrowseBoxComponent,
     FormBrowseBoxComponent,
-    GtxAppVersionLabelComponent,
-    GtxLinkToManualComponent,
-    GtxUserMenuComponent,
-    GtxUserMenuToggleComponent,
     I18nCheckboxComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
     I18nSelectComponent,
     KeyI18nValueListInputComponent,
+    LinkToManualComponent,
     PasswordConfirmInputComponent,
     RichContentEditorComponent,
     RichContentLinkPropertiesComponent,
     RichContentModal,
     StringListComponent,
+    UserMenuComponent,
+    UserMenuToggleComponent,
     VersionModalComponent,
 } from './components';
 import {
     ClickOutsideDirective,
 } from './directives';
 import {
-    DurationPipe,
     EntriesPipe,
     FilterPipe,
-    GtxI18nDatePipe,
-    GtxI18nPipe,
-    GtxI18nRelativeDatePipe,
-    GtxI18nRelativeDateService,
+    I18nPipe,
+    I18nDatePipe,
+    I18nDurationPipe,
+    I18nNumberPipe,
+    I18nRelativeDatePipe,
     SafePipe,
     StripRichContentPipe,
     ValuesPipe,
 } from './pipes';
 import {
+    I18nDatePickerFormatService,
+    I18nNotificationService,
+    I18nRelativeDateService,
     I18nService,
     KeycloakService,
-    LocalTranslateLoader,
     WindowRef,
 } from './providers';
 
 const COMPONENTS: any[] = [
     BasePropertiesComponent,
-    GtxAppVersionLabelComponent,
-    GtxLinkToManualComponent,
+    AppVersionLabelComponent,
+    LinkToManualComponent,
     StringListComponent,
-    GtxUserMenuComponent,
-    GtxUserMenuToggleComponent,
+    UserMenuComponent,
+    UserMenuToggleComponent,
     I18nCheckboxComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
@@ -65,17 +68,18 @@ const COMPONENTS: any[] = [
     RichContentLinkPropertiesComponent,
 ];
 
-const DIRECTIVES = [
+const DIRECTIVES: Type<any>[] = [
     ClickOutsideDirective,
 ];
 
-const PIPES: any[] = [
-    DurationPipe,
+const PIPES: Type<PipeTransform>[] = [
     EntriesPipe,
     FilterPipe,
-    GtxI18nDatePipe,
-    GtxI18nPipe,
-    GtxI18nRelativeDatePipe,
+    I18nPipe,
+    I18nDatePipe,
+    I18nDurationPipe,
+    I18nNumberPipe,
+    I18nRelativeDatePipe,
     StripRichContentPipe,
     SafePipe,
     ValuesPipe,
@@ -87,16 +91,15 @@ const DECLARATIONS: any[] = [
     ...PIPES,
 ];
 
-const PROVIDERS: any[] = [
+const PROVIDERS: Provider[] = [
+    I18nRelativeDateService,
+    I18nNotificationService,
+    I18nDatePickerFormatService,
     I18nService,
-    LocalTranslateLoader,
-    {
-        provide: GtxI18nRelativeDateService,
-        deps: [ I18nService ],
-    },
     WindowRef,
     KeycloakService,
     ...PIPES,
+
 ];
 
 @NgModule({
@@ -105,9 +108,11 @@ const PROVIDERS: any[] = [
         CommonModule,
         ReactiveFormsModule,
         GenticsUICoreModule,
+        TranslateModule,
     ],
     exports: [
         ...DECLARATIONS,
+        TranslateModule,
     ],
     providers: PROVIDERS,
 })

@@ -1,6 +1,7 @@
-import { I18nNotificationService, ScheduleOperations } from '@admin-ui/core';
+import { ScheduleOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ScheduleBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -11,7 +12,7 @@ import { SchedulePropertiesMode } from '../schedule-properties/schedule-properti
     templateUrl: './create-schedule-modal.component.html',
     styleUrls: ['./create-schedule-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateScheduleModalComponent extends BaseModal<ScheduleBO | false> implements OnInit, OnDestroy {
 
@@ -61,12 +62,12 @@ export class CreateScheduleModalComponent extends BaseModal<ScheduleBO | false> 
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.subscription = this.entityOperations.create(this.form.value).subscribe(created => {
+        this.subscription = this.entityOperations.create(this.form.value).subscribe((created) => {
             this.form.enable({ emitEvent: false });
             this.loading = false;
             this.changeDetector.markForCheck();
             this.closeFn(created);
-        }, error => {
+        }, (error) => {
             this.notifications.show({
                 message: 'scheduler.create_schedule_error',
                 translationParams: {

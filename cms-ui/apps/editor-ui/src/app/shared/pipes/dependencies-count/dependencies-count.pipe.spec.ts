@@ -1,3 +1,4 @@
+import { I18nService } from '@gentics/cms-components';
 import { DependenciesCountPipe } from './dependencies-count.pipe';
 
 describe('DependenciesCountPipe', () => {
@@ -16,8 +17,8 @@ describe('DependenciesCountPipe', () => {
 
     it('shows items count with translated singular/plural texts', () => {
         const actual = pipe.transform(pageDependency);
-        expect(mockI18nService.translate).toHaveBeenCalledWith('common.type_pages');
-        expect(mockI18nService.translate).toHaveBeenCalledWith('common.type_file');
+        expect(mockI18nService.instant).toHaveBeenCalledWith('common.type_pages');
+        expect(mockI18nService.instant).toHaveBeenCalledWith('common.type_file');
         expect(actual).toBe('3 common.type_pages_translated, 1 common.type_file_translated');
     });
 
@@ -25,15 +26,14 @@ describe('DependenciesCountPipe', () => {
 
 function createPageDependency(): any {
     const pageDependency: any = {
-        'file' : [ { 186: 3 } ],
-        'page' : [ { 125: 4 }, { 124: 3 }, { 126: 4 } ]
+        file: [{ 186: 3 }],
+        page: [{ 125: 4 }, { 124: 3 }, { 126: 4 }],
     };
     return pageDependency;
 }
 
-class MockI18nService {
-    translate = jasmine.createSpy('instant').and.callFake((key: string) => {
+class MockI18nService implements Partial<I18nService> {
+    instant = jasmine.createSpy('instant').and.callFake((key: string) => {
         return `${key}_translated`;
     });
 }
-

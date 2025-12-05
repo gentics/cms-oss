@@ -363,23 +363,27 @@ spec:
 		}
 
         stage("Build Helm Chart") {
-            if (env.BUILD_SKIPPED != "true" && Boolean.valueOf(params.runHelmBuild)) {
-                sh ".jenkins/build-helm-chart.sh ${helmVersion}"
+            when {
+                expression {
+                    return env.BUILD_SKIPPED != "true" && params.runHelmBuild
+                }
+            }
+            steps {
+                script {
+                    sh ".jenkins/build-helm-chart.sh ${helmVersion}"
 
-                if (Boolean.valueOf(params.runDeploy) || Boolean.valueOf(params.runDeployTesting)) {
-                    if (Boolean.valueOf(params.runDeployTesting)) {
-                        helmRepository = helmRepositoryTest;
-                    }
+                    if (Boolean.valueOf(params.runDeploy) || Boolean.valueOf(params.runDeployTesting)) {
+                        if (Boolean.valueOf(params.runDeployTesting)) {
+                            helmRepository = helmRepositoryTest;
+                        }
 
-                    withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
-                        def helmPackageFilename = "cms-${helmVersion}.tgz"
-                        echo "Deploying CMS Helm Chart"
-                        sh "curl -u ${repoUsername}:${repoPassword} ${helmRepository} --upload-file target/${helmPackageFilename}"
+                        withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
+                            def helmPackageFilename = "cms-${helmVersion}.tgz"
+                            echo "Deploying CMS Helm Chart"
+                            sh "curl -u ${repoUsername}:${repoPassword} ${helmRepository} --upload-file target/${helmPackageFilename}"
+                        }
                     }
                 }
-
-            } else {
-                echo "Helm build skipped.."
             }
         }
 

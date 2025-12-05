@@ -1,0 +1,76 @@
+{{- if .Values.spellchecker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cms.fullname" . }}-spellchecker
+  labels:
+    {{- include "cms.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gentics-cms-spellchecker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gentics-cms-spellchecker
+    spec:
+      serviceAccountName: {{ include "cms.serviceAccountName" . }}
+      securityContext:
+        {{- if .Values.spellchecker.podSecurityContext }}
+        {{- toYaml .Values.spellchecker.podSecurityContext | nindent 8 }}
+        {{- else }}
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- end }}
+      containers:
+      - name: spellchecker
+        image: "{{ .Values.spellchecker.repository }}:{{ .Values.spellchecker.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.spellchecker.securityContext }}
+        securityContext:
+        {{- toYaml .Values.spellchecker.securityContext | nindent 12 }}
+        {{- else if .Values.securityContext }}
+        securityContext:
+        {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        {{- if .Values.lifecycle }}
+        lifecycle:
+        {{- toYaml .Values.lifecycle | nindent 12 }}
+        {{- end }}
+        ports:
+          - name: http
+            containerPort: 8010
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /v2/languages
+            port: http
+          initialDelaySeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /v2/languages
+            port: http
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          {{- toYaml .Values.spellchecker.resources | nindent 10 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.image.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.image.pullSecret }}
+    {{- end }}
+{{- end }}

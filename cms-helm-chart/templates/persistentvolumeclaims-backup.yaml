@@ -1,0 +1,33 @@
+{{- if and .Values.cms.backup.persistence.enabled (not .Values.cms.backup.persistence.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "cms.fullname" . }}-backup
+
+  {{- with .Values.cms.backup.persistence.annotations }}
+  annotations:
+    {{ toYaml . }}
+  {{- end }}
+
+  labels:
+    app: "{{ template "cms.name" . }}"
+    chart: {{ template "cms.chart" . }}
+    release: {{ .Release.Name | quote }}
+    heritage: {{ .Release.Service | quote }}
+
+spec:
+  accessModes:
+  {{- range .Values.cms.backup.persistence.accessModes }}
+    - {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.cms.backup.persistence.size | quote }}
+{{- if .Values.cms.backup.persistence.storageClass }}
+{{- if (eq "-" .Values.cms.backup.persistence.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: {{ .Values.cms.backup.persistence.storageClass | quote }}
+{{- end }}
+{{- end }}
+{{- end }}

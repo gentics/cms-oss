@@ -372,8 +372,8 @@ spec:
                 script {
                     sh ".jenkins/build-helm-chart.sh ${helmVersion}"
 
-                    if (Boolean.valueOf(params.runDeploy) || Boolean.valueOf(params.runDeployTesting)) {
-                        if (Boolean.valueOf(params.runDeployTesting)) {
+                    if (Boolean.valueOf(params.deploy) || Boolean.valueOf(params.deployTesting)) {
+                        if (Boolean.valueOf(params.deployTesting)) {
                             helmRepository = helmRepositoryTest;
                         }
 
@@ -416,22 +416,6 @@ spec:
                     }
                 }
             }
-		}
-
-		stage("Deploy QA images to Kubernetes") {
-			when {
-				expression {
-					return env.BUILD_SKIPPED != "true" && qaDeploy
-				}
-			}
-
-			steps {
-				build job: 'contentnode-qa-deploy',
-					parameters: [
-						string(name: 'branchName', value: branchName)
-					],
-					wait: false
-			}
 		}
 
 		stage("Git push") {

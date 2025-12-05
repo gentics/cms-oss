@@ -93,7 +93,7 @@ spec:
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
         booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker image")
-        booleanParam(name: 'runHelmBuild',              defaultValue: true,  description: "Whether to run the helm build steps.")
+        booleanParam(name: 'runHelmBuild',              defaultValue: false, description: "Whether to run the helm build steps.")
         string(name:       'forceVersion',              defaultValue: "",    description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",    description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
         string(name:       'cmsOssVersion',             defaultValue: "",    description: "Override CMS OSS version")

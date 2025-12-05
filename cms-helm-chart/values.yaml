@@ -57,7 +57,7 @@ cms:
 
   resources:
     requests:
-      memory: 1.1Gi
+      memory: 1Gi
     limits:
       memory: 2Gi
   

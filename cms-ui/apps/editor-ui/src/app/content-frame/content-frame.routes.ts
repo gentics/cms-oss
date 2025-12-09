@@ -7,4 +7,8 @@ export const CONTENT_FRAME_ROUTES = [
         component: ContentFrameComponent,
         canDeactivate: [ContentFrameGuard],
     },
+    /*
+     * TODO: Create routes per type and mode, and create dedicated components for these.
+     * Having it all stuffed into one component is extremely messy.
+     */
 ];

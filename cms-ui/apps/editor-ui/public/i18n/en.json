@@ -961,7 +961,9 @@
         "choose_localization_type_title": "Choose localization type",
         "choose_localization_type_body": "Please choose the type of localization.<br><ul><li><b>Full localization</b>: The entire page, including all of it's content is being localized, based on the current state of the master node, and is fully editable. After localization, no more content will be inherited.</li><li><b>Partial localization</b>: Only the root-tags of a page can be individually localized; All other content is being inherited from the master node.</li></ul>",
         "save_tag_inheritance_title": "Save changes to inheritance?",
-        "save_tag_inheritance_body": "Changes to existing inheritance settings may lead to the loss of already localized content.<br>Do you wish to continue?"
+        "save_tag_inheritance_localize": "The following tags will be localized: {{tags}}",
+        "save_tag_inheritance_inherit": "The followiing localizations, and the content of these tags, will be deleted: {{tags}}",
+        "save_tag_inheritance_body": "{{info}}.<br>Do you wish to continue?"
     },
     "lang": {
         "ar": "Arabic",

@@ -877,7 +877,7 @@ span.diff-html-added {
             : (item.lockedBy as User)?.id !== currentUserId;
     }
 
-    public handleItemSave(behaviour: SaveBehaviour): Promise<void> | undefined {
+    public handleItemSave(behaviour: SaveBehaviour): Promise<any> | undefined {
         switch (behaviour) {
             case SaveBehaviour.REGULAR:
                 return this.saveChanges();
@@ -895,70 +895,103 @@ span.diff-html-added {
 
     /**
      * Use the GCN JavaScript API to save the current page, or the CombinedPropertiesEditor for simple properties and object properties.
+     * @param fromNavigation If the save was prompted from the navigation handler (i.E. tries to close before saving).
+     * Used to prevent to ask the user twice if tey want to save.
      */
-    saveChanges(): Promise<void> {
+    saveChanges(fromNavigation: boolean = false): Promise<boolean> {
         switch (this.editMode) {
             case EditMode.EDIT_PROPERTIES:
                 return this.savePropertiesChanges();
             case EditMode.EDIT:
-                return this.saveEditModeChanges();
+                return this.saveEditModeChanges()
+                    .then(() => true);
             case EditMode.EDIT_INHERITANCE:
-                return this.saveTagInheritanceChanges();
+                return this.saveTagInheritanceChanges(fromNavigation);
             default:
-                return Promise.resolve();
+                return Promise.resolve(false);
         }
     }
 
-    saveTagInheritanceChanges(): Promise<void> {
-        return this.modalService.dialog({
-            title: this.i18n.instant('modal.save_tag_inheritance_title'),
-            body: this.i18n.instant('modal.save_tag_inheritance_body'),
-            buttons: [
-                {
-                    id: 'cancel',
-                    type: 'secondary',
-                    label: this.i18n.instant('common.cancel_button'),
-                    returnValue: false,
-                },
-                {
-                    id: 'confirm',
-                    type: 'default',
-                    label: this.i18n.instant('common.save_button'),
-                    returnValue: true,
-                },
-            ],
-        })
-            .then((dialog) => dialog.open())
-            .then((accept) => {
-                if (!accept) {
-                    return Promise.resolve();
-                }
+    saveTagInheritanceChanges(fromNavigation: boolean = false): Promise<boolean> {
+        const toLocalize: string[] = [];
+        const toInherit: string[] = [];
 
-                forkJoin(Object.entries(this.modifiedTags).map(([name, inherited]) => {
-                    if (inherited) {
-                        return this.client.page.localizeTag(this.currentItem.id, name);
-                    } else {
-                        return this.client.page.unlocalizeTag(this.currentItem.id, name, { channelId: this.currentNode.id });
-                    }
-                })).pipe(
-                    discard(() => {
-                        this.notification.show({
-                            id: `tag-inheritance-save-success:${this.currentItem.id}`,
-                            type: 'success',
-                            message: 'tag_inheritance.save_success',
-                        });
-                        this.modifiedTags = null;
-                        this.markContentAsModifiedInState(false);
-                    }),
-                    catchError((err) => {
-                        this.errorHandler.catch(err);
-                        return throwError(() => err);
-                    }),
-                ).toPromise();
-            });
+        Object.entries(this.modifiedTags).forEach(([tagName, inherited]) => {
+            if (inherited) {
+                toLocalize.push(tagName);
+            } else {
+                toInherit.push(tagName);
+            }
+        });
+
+        let choice: Promise<boolean>;
+
+        if (fromNavigation) {
+            choice = Promise.resolve(true);
+        } else {
+            const localizeInfo = toLocalize.length === 0
+                ? ''
+                : this.i18n.instant('modal.save_tag_inheritance_localize', {
+                    tags: '<b>' + toLocalize.join('</b>, <b>') + '</b>',
+                });
+            const inheritInfo = toInherit.length === 0
+                ? ''
+                : this.i18n.instant('modal.save_tag_inheritance_inherit', {
+                    tags: '<b>' + toInherit.join('</b>, <b>') + '</b>',
+                });
+
+            choice = this.modalService.dialog({
+                title: this.i18n.instant('modal.save_tag_inheritance_title'),
+                body: this.i18n.instant('modal.save_tag_inheritance_body', {
+                    info: (localizeInfo === '' ? '' : (localizeInfo + '<br>')) + inheritInfo,
+                }),
+                buttons: [
+                    {
+                        id: 'cancel',
+                        type: 'secondary',
+                        label: this.i18n.instant('common.cancel_button'),
+                        returnValue: false,
+                    },
+                    {
+                        id: 'confirm',
+                        type: 'default',
+                        label: this.i18n.instant('common.save_button'),
+                        returnValue: true,
+                    },
+                ],
+            })
+                .then((dialog) => dialog.open());
+        }
+
+        return choice.then((accept) => {
+            if (!accept) {
+                return Promise.resolve(false);
+            }
+
+            return forkJoin([
+                ...toLocalize.map((tagName) => this.client.page.localizeTag(this.currentItem.id, tagName)),
+                ...toInherit.map((tagName) => this.client.page.unlocalizeTag(this.currentItem.id, tagName, { channelId: this.currentNode.id })),
+            ]).pipe(
+                map(() => {
+                    this.notification.show({
+                        id: `tag-inheritance-save-success:${this.currentItem.id}`,
+                        type: 'success',
+                        message: 'tag_inheritance.save_success',
+                    });
+                    this.modifiedTags = null;
+                    this.markContentAsModifiedInState(false);
+
+                    return true;
+                }),
+                catchError((err) => {
+                    this.errorHandler.catch(err);
+                    return throwError(() => err);
+                }),
+            ).toPromise();
+        });
     }
 
-    savePropertiesChanges(): Promise<void> {
+    savePropertiesChanges(): Promise<boolean> {
         // Do nothing if there's no changes
         if (!this.appState.now.editor.modifiedObjectPropertiesValid) {
             // No idea why this message is supposed to be displayed
@@ -967,7 +1000,7 @@ span.diff-html-added {
                 message: 'message.invalid_image_property',
             });
 
-            return;
+            return Promise.resolve(false);
         }
 
         // for pages and forms, we suppress the general save notification
@@ -994,7 +1027,10 @@ span.diff-html-added {
                                 },
                             },
                         });
+
+                        return true;
                     });
+
             case 'form':
                 return this.combinedPropertiesEditor.saveChanges({}, {
                     fetchForConstruct: true,
@@ -1016,12 +1052,15 @@ span.diff-html-added {
                                 },
                             },
                         });
+
+                        return true;
                     });
             default:
                 return this.combinedPropertiesEditor.saveChanges()
                     .then(() => {
                         this.currentItemClean = true;
                         this.changeDetector.markForCheck();
+                        return true;
                     });
         }
     }

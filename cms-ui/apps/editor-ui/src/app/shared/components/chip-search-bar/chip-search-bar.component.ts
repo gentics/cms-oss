@@ -59,6 +59,7 @@ import {
     FocusListAction,
     FolderActionsService,
 } from '../../../state';
+import { ChangesOf } from '@gentics/ui-core';
 
 const patternShortCutSyntaxId = /^(?:jump):(\d+)$/;
 
@@ -79,7 +80,7 @@ const patternShortCutSyntaxId = /^(?:jump):(\d+)$/;
     templateUrl: './chip-search-bar.component.html',
     styleUrls: ['./chip-search-bar.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 
@@ -93,6 +94,8 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     /** If TRUE visually indicates application processing user input and disabling further user input. */
     private loadingSub = new BehaviorSubject<boolean>(false);
     public loading$ = this.loadingSub.asObservable();
+
+    public searchableProperties: (GtxChipSearchChipPropertyOption & { id: string })[] = [];
 
     /** Recent Items settings */
     showRecentButton$: Observable<boolean>;
@@ -176,7 +179,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
 
         // assign data streams
 
-        this.filterTerm$ = this.state.select(state => state.folder.filterTerm);
+        this.filterTerm$ = this.state.select((state) => state.folder.filterTerm);
 
         this.filterTerm$.pipe(
             takeUntil(this.stopper.stopper$),
@@ -185,14 +188,14 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
             this.changeDetector.markForCheck();
         });
 
-        const activeSearch$ = this.state.select(state => state.folder.searchFilters);
+        const activeSearch$ = this.state.select((state) => state.folder.searchFilters);
 
         const recentFeatureEnabled$ = this.state
-            .select(state => state.features.recent_items).pipe(
+            .select((state) => state.features.recent_items).pipe(
                 tap(() => this.changeDetector.markForCheck()),
             );
 
-        const recentItems$ = this.state.select(state => state.folder.recentItems);
+        const recentItems$ = this.state.select((state) => state.folder.recentItems);
 
         // Recent Items button
         this.showRecentButton$ = combineLatest([
@@ -216,9 +219,15 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         this.initFormGroup();
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.loading) {
             this.loadingSub.next(this.loading);
+        }
+        if (changes.chipSearchBarConfig) {
+            this.searchableProperties = this.chipSearchBarConfig.searchableProperties.map((prop) => ({
+                ...prop,
+                id: prop.value,
+            }));
         }
     }
 
@@ -227,7 +236,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
             debounceTime(1000),
             tap(() => this.searchInputHasChanged$.next(false)),
             takeUntil(this.stopper.stopper$),
-        ).subscribe(loading => {
+        ).subscribe((loading) => {
             if (loading) {
                 this.formGroupMain?.disable({ emitEvent: false });
             } else {
@@ -242,7 +251,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
             this.loading$.pipe(
                 debounceTime(1000),
             ),
-            this.state.select(appState => appState.editor.editorIsOpen),
+            this.state.select((appState) => appState.editor.editorIsOpen),
         ]).pipe(
             takeUntil(this.stopper.stopper$),
             distinctUntilChanged(isEqual),
@@ -253,14 +262,14 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         });
 
         // sync filter state to component
-        this.state.select(state => state.folder.searchFilters).pipe(
+        this.state.select((state) => state.folder.searchFilters).pipe(
             filter(() => this.writeFromStateToComponentInProgess),
             tap(() => this.writeFromStateToComponentInProgess = true),
             takeUntil(this.stopper.stopper$),
         ).subscribe((searchFilters: GtxChipSearchSearchFilterMap) => {
             this.clearSearchbarChips();
             Object.entries(searchFilters)?.forEach(([filterKey, filterData]) => {
-                filterData?.forEach(filter => {
+                filterData?.forEach((filter) => {
                     this.addOrUpdateChip(filterKey, filter.operator, filter.value);
                 });
             });
@@ -320,7 +329,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     }
 
     onDropDownFilterPropertiesItemClicked(property: GtxChipSearchPropertyKeys): void {
-        const isValidProperty = this.chipSearchBarConfig.searchableProperties.some(p => p.value === property);
+        const isValidProperty = this.searchableProperties.some((p) => p.value === property);
         if (!isValidProperty) {
             return;
         }
@@ -337,7 +346,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
 
     searchIsActive(): boolean {
         const chips = this.getChips();
-        const atLeastOneChipIsValid = chips && chips.controls.some(c => this.getChipValue(c));
+        const atLeastOneChipIsValid = chips && chips.controls.some((c) => this.getChipValue(c));
         return chips.length > 0 && atLeastOneChipIsValid;
     }
 
@@ -361,12 +370,13 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     }
 
     chipValuesAreAlltouched(): boolean {
-        return !this.getChips().controls.some(c => c.untouched);
+        return !this.getChips().controls.some((c) => c.untouched);
     }
 
     chipsAllHaveOperators(): boolean {
         return !this.getChips().controls.some((c: UntypedFormControl) => !this.getChipOperator(c));
     }
+
     chipsAllHaveValues(): boolean {
         return !this.getChips().controls.some((c: UntypedFormControl) => {
             const chipValue = this.getChipValue(c);
@@ -376,7 +386,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     }
 
     chipsAllHaveNoValue(): boolean {
-        return !this.getChips().controls.some(c => {
+        return !this.getChips().controls.some((c) => {
             const chipValue = this.getChipValue(c);
             // allow unchecked checkbox value
             return chipValue !== null || chipValue !== undefined || chipValue !== '';
@@ -387,6 +397,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     getSearchbarValue(): string {
         return this.getSearchBarValueControl().value;
     }
+
     setSearchbarValue(v: string, preventEmit?: boolean): void {
         if (this.formGroupMain) {
             this.getSearchBarValueControl().setValue(v, (preventEmit && { onlySelf: true, emitEvent: false }));
@@ -401,10 +412,12 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     getChipPropertyControl(control: AbstractControl): AbstractControl | null {
         return this.getFormControl(control, 'chipProperty');
     }
+
     getChipPropertyIdentifier(control: AbstractControl): GtxChipSearchPropertyKeys | null {
         const c = this.getChipPropertyControl(control);
         return this.getFormControlValue(c);
     }
+
     setChipProperty(control: AbstractControl, newValue: GtxChipSearchPropertyKeys): void {
         const c = this.getChipPropertyControl(control);
         this.setFormControlValue(c, newValue);
@@ -413,10 +426,12 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     getChipOperatorControl(control: AbstractControl): AbstractControl | null {
         return this.getFormControl(control, 'chipOperator');
     }
+
     getChipOperator<K extends GtxChipSearchPropertyKeys>(control: AbstractControl): GtxChipOperator<K> | null {
         const c = this.getChipOperatorControl(control);
         return this.getFormControlValue(c);
     }
+
     setChipOperator<K extends GtxChipSearchPropertyKeys>(control: AbstractControl, newValue: GtxChipOperator<K>): void {
         const c = this.getChipOperatorControl(control);
         this.setFormControlValue(c, newValue);
@@ -425,6 +440,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     getChipValueControl(control: AbstractControl): AbstractControl | null {
         return this.getFormControl(control, 'chipValue');
     }
+
     getChipValueControlAtIndex(index: number): AbstractControl {
         const chip = this.getChips().at(index);
         if (!(chip instanceof AbstractControl)) {
@@ -436,10 +452,12 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         }
         return control;
     }
+
     getChipValue<K extends GtxChipSearchPropertyKeys>(control: AbstractControl): GtxChipValue<K> | null {
         const c = this.getChipValueControl(control);
         return this.getFormControlValue(c);
     }
+
     setChipValue<K extends GtxChipSearchPropertyKeys>(control: AbstractControl, newValue: GtxChipValue<K>): void {
         const c = this.getChipValueControl(control);
         this.setFormControlValue(c, newValue);
@@ -448,7 +466,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     /** Get entity property option config data object by property name. */
     getPropertyOptionsByIdentifier(chipControl: UntypedFormControl): GtxChipSearchChipPropertyOption | null {
         const chipProperty: GtxChipSearchPropertyKeys = this.getChipPropertyIdentifier(chipControl);
-        const prop = this.chipSearchBarConfig.searchableProperties.find(p => p.value === chipProperty);
+        const prop = this.searchableProperties.find((p) => p.value === chipProperty);
         return prop ? prop : null;
     }
 
@@ -563,7 +581,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         value?: GtxChipValue<K>,
     ): UntypedFormGroup {
         // if chip is of value type boolean, its value input is hideen and will always be true
-        const propertyConfig = this.chipSearchBarConfig.searchableProperties.find(p => p.value === property);
+        const propertyConfig = this.searchableProperties.find((p) => p.value === property);
         const isBoolean = propertyConfig && propertyConfig.type === 'boolean';
         return this.formBuilder.group({
             chipProperty: [property, Validators.required],
@@ -585,12 +603,12 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
             // notify state that filters start changing
             this.folderActions.setSearchFiltersChanging(true);
             // if chips exist and at least one chip is valid
-            const chipPropertyIdentifiers = this.chipSearchBarConfig.searchableProperties.map(item => item.value);
+            const chipPropertyIdentifiers = this.searchableProperties.map((item) => item.value);
             const chips: AbstractControl[] = this.getChips().controls || [];
             // iterate through all searchable fields and check if chips are set for them
-            chipPropertyIdentifiers.forEach(chipPropertyIdentifier => {
+            chipPropertyIdentifiers.forEach((chipPropertyIdentifier) => {
                 // try to get chip of field
-                const chipExisting = chips.find(chip => this.getChipPropertyIdentifier(chip) === chipPropertyIdentifier);
+                const chipExisting = chips.find((chip) => this.getChipPropertyIdentifier(chip) === chipPropertyIdentifier);
 
                 // if chip is set for field, set field to filter values of chip
                 if (chipExisting) {
@@ -668,12 +686,11 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         this.setSearchbarValue('', !this.writeFromStateToComponentInProgess);
     }
 
-
     // Suggestion bar - recent and suggestion items
 
     showSuggestionBar(): void {
-        this.showRecent = Array.isArray(this.state.now.folder.recentItems) &&
-            this.state.now.folder.recentItems.length > 0;
+        this.showRecent = Array.isArray(this.state.now.folder.recentItems)
+          && this.state.now.folder.recentItems.length > 0;
         this.showSuggestion = true;
     }
 
@@ -768,9 +785,9 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     private setDefaultFilters(): void {
         const filters = this.chipSearchBarConfig.defaultFilters;
         if (!Array.isArray(filters) || filters.length === 0) {
-            return
+            return;
         }
-        filters.forEach(filterData => {
+        filters.forEach((filterData) => {
             this.addChipIfNotExisting(filterData.chipProperty, filterData.chipOperator, filterData.chipValue);
         });
     }

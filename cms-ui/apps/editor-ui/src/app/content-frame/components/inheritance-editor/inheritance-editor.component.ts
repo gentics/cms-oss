@@ -252,7 +252,7 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
 
         const diff: Record<string, boolean> = {};
         this.changedTags.forEach((tagName) => {
-            diff[tagName] = this.loadedPage.tags[key].inherited;
+            diff[tagName] = this.loadedPage.tags[tagName].inherited;
         });
 
         this.modifiedTags.set(diff);

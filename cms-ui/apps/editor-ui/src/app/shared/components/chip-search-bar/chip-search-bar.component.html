@@ -22,7 +22,7 @@
                                 <span class="gtx-chip-property">
                                     <gtx-input-select
                                         formControlName="chipProperty"
-                                        [options]="chipSearchBarConfig.searchableProperties"
+                                        [options]="searchableProperties"
                                         [noInput]="true"
                                         [style.width]="getChipValue(chip)?.length < 4 ? '4ch' : getChipValue(chip).length + 1 + 'ch'"
                                     ></gtx-input-select>
@@ -144,7 +144,7 @@
         <div class="gtx-chipsearchbar-button-container">
             @if (!showRecent) {
                 <div class="gtx-chipsearchbar-button gtx-chipsearchbar-menu-filter-properties">
-                    @if (chipSearchBarConfig.searchableProperties; as searchableProperties) {
+                    @if (searchableProperties) {
                         <gtx-input-select
                             [options]="searchableProperties"
                             [iconOnly]="true"

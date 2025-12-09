@@ -59,6 +59,7 @@ export class ItemBreadcrumbsComponent implements OnChanges {
             for (let i = 0; i < breadcrumbsCount; ++i) {
                 const folder = parentFolder.breadcrumbs[i];
                 breadcrumbs.push({
+                    id: `${parentFolder.globalId || parentFolder.id}_${folder.id}`,
                     text: folder.name,
                     route: ['/editor', { outlets: { list: ['node', parentFolder.nodeId, 'folder', folder.id] } }],
                 });

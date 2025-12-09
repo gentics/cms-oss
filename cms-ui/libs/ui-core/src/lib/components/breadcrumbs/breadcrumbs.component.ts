@@ -30,7 +30,7 @@ export interface IBreadcrumbLink extends IBreadcrumbItem {
     route?: any;
 }
 
-export interface IBreadcrumbRouterLink extends IBreadcrumbItem{
+export interface IBreadcrumbRouterLink extends IBreadcrumbItem {
     route: any[];
 }
 
@@ -49,7 +49,7 @@ const ELLIPSIS_WIDTH = 13;
     templateUrl: './breadcrumbs.component.html',
     styleUrls: ['./breadcrumbs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit {
 
@@ -282,7 +282,7 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
                 ev.stopImmediatePropagation();
             }
         }
-    }
+    };
 
     /**
      * Workaround/Hack for the native angular "RouterLink" having no way to disable navigation on click.
@@ -291,7 +291,7 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const thisComponent = this;
 
-        for (const link of this.routerLinkChildren.filter(link => !link.hasOwnProperty('onClick'))) {
+        for (const link of this.routerLinkChildren.filter((link) => !link.hasOwnProperty('onClick'))) {
             const originalOnClick = link.onClick;
             link.onClick = function interceptedOnClick(...args: any[]): boolean {
                 if (thisComponent.disabled) {

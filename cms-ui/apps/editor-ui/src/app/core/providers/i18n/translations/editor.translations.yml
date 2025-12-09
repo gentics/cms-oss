@@ -964,6 +964,12 @@ format_style_bold:
 format_style_italic:
     en: Italic
     de: Kursiv
+format_style_strong:
+    en: Strong
+    de: Stark
+format_style_emphasized:
+    en: Emphasized
+    de: Betoned
 format_style_underline:
     en: Underlined
     de: Unterstrichen

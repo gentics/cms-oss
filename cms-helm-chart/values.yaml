@@ -20,9 +20,6 @@ database:
 # Add custom certificates to the jvm truststore
 # customCert:
 #   secretName: "my-certs"
-#   certs:
-#     - key: cert.crt
-#       alias: custom-cert
 
 cms:
   replicaCount: 1

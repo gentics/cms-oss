@@ -363,7 +363,7 @@ spec:
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
                     sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
 
-                    scanImage image: imageNameWithTag, exitCode: 1
+                    scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ${env.WORKSPACE}/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
                     if (tagName != null) {
                         String dockerImageVersionTag = imageName + ":" + tagName
                         sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag

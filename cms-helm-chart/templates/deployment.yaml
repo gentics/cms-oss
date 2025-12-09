@@ -179,11 +179,6 @@ spec:
             subPath: {{ .subPath }}
           {{- end }}
           {{- end }}
-          {{- if .Values.cms.keycloak.enabled }}
-          - mountPath: /cms/ui-conf/keycloak.json
-            name: config-cms
-            subPath: keycloak.json
-          {{- end }}
           {{- if .Values.cmsConfigMapFiles }}
           {{- range $key, $value := .Values.cmsConfigMapFiles }}
           {{- if $value.mountPath }}

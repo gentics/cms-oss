@@ -100,13 +100,6 @@ cms:
         - ReadWriteOnce
       size: 5Gi
 
-  keycloak:
-    enabled: false
-    keycloakJson: |-
-      {
-          
-      }
-
   backup:
     enabled: false
     

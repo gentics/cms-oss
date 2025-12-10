@@ -182,9 +182,9 @@ public class TagCopyTest {
 			getPartType(CheckboxPartType.class, outerTag, "bool").getValueObject().setValueText("1");
 		}));
 
-		ContentTag outerTag = Trx.execute(p -> p.getContent().getContentTags().values().stream().filter(isOuterTag).findFirst()
+		ContentTag outerTag = Trx.execute(p -> p.getContentTags().values().stream().filter(isOuterTag).findFirst()
 				.orElseThrow(() -> new NodeException("Did not find original outer tag")), page);
-		ContentTag innerTag = Trx.execute(p -> p.getContent().getContentTags().values().stream().filter(isInnerTag).findFirst()
+		ContentTag innerTag = Trx.execute(p -> p.getContentTags().values().stream().filter(isInnerTag).findFirst()
 				.orElseThrow(() -> new NodeException("Did not find original inner tag")), page);
 
 		TagCreateResponse response = null;
@@ -199,9 +199,9 @@ public class TagCopyTest {
 
 		page = Trx.execute(p -> TransactionManager.getCurrentTransaction().getObject(p), page);
 
-		ContentTag newOuterTag = Trx.execute(p -> p.getContent().getContentTags().values().stream().filter(isOuterTag).filter(t -> !t.equals(outerTag))
+		ContentTag newOuterTag = Trx.execute(p -> p.getContentTags().values().stream().filter(isOuterTag).filter(t -> !t.equals(outerTag))
 				.findFirst().orElseThrow(() -> new NodeException("Did not find new outer tag")), page);
-		ContentTag newInnerTag = Trx.execute(p -> p.getContent().getContentTags().values().stream().filter(isInnerTag).filter(t -> !t.equals(innerTag))
+		ContentTag newInnerTag = Trx.execute(p -> p.getContentTags().values().stream().filter(isInnerTag).filter(t -> !t.equals(innerTag))
 				.findFirst().orElseThrow(() -> new NodeException("Did not find new inner tag")), page);
 
 		ContentNodeRESTUtils.assertResponseOK(response);
@@ -236,7 +236,7 @@ public class TagCopyTest {
 		consume(p -> {
 			assertThat(p).as("Copy").isNotEqualTo(source);
 
-			ContentTag overviewTag = p.getContent().getContentTag(tagname.get());
+			ContentTag overviewTag = p.getContentTag(tagname.get());
 			assertThat(overviewTag).as("Copied overview tag").isNotNull().hasConstruct(overviewConstruct.getGlobalId());
 			Overview overview = getPartType(OverviewPartType.class, overviewTag, "ds").getOverview();
 

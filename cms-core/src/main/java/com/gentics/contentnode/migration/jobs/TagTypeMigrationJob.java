@@ -655,7 +655,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 		} catch (Exception e) {
 			// Mark the tags in the page as skipped
 			page = t.getObject(Page.class, pageId);
-			Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+			Map<String, ContentTag> contentTags = page.getContentTags();
 
 			markSkippedTags(contentTags.values());
 			logger.error("Unable to obtain lock on page {" + pageId + "} during tag type migration.", e);
@@ -668,7 +668,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 
 		// Apply the mappings
 		logger.debug("Applying mappings to page {" + pageId + "}");
-		Result result = applyMappings(page.getContent().getContentTags().values());
+		Result result = applyMappings(page.getContentTags().values());
 		if (result == Result.skipobject) {
 			logger.info(String.format("Skipping page {%d}.", pageId));
 			page.unlock();
@@ -1162,7 +1162,7 @@ public class TagTypeMigrationJob extends AbstractMigrationJob {
 				Page page = t.getObject(Page.class, pageId);
 
 				// Iterate over all tags of the current page
-				for (Tag tag : page.getContent().getContentTags().values()) {
+				for (Tag tag : page.getContentTags().values()) {
 					logger.debug("Validating tag {" + tag + "} of page {" + page + "}");
 					// Iterate over all values of the current tag
 					for (Value value : tag.getValues()) {

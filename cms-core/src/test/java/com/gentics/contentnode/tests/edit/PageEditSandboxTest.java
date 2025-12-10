@@ -10,6 +10,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -24,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.Assertions;
+import org.dbunit.Assertion;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -338,13 +341,17 @@ public class PageEditSandboxTest {
 		Transaction t = testContext.startTransactionWithPermissions(true);
 		String newValueText = "This is the new content";
 		int constructId = 1;
-		String expectedTagName = "htmllong1";
 
 		// get the page for editing
 		Page page = (Page) t.getObject(Page.class, PAGE_ID, true);
 
 		// add a new tag
 		ContentTag newTag = page.getContent().addContentTag(constructId);
+		String newTagName = newTag.getName();
+
+		Assertions.assertThat(newTagName)
+			.as("New tag name")
+			.startsWith("htmllong");
 
 		// set a value for the tag
 		Value value = newTag.getValues().iterator().next();
@@ -360,16 +367,16 @@ public class PageEditSandboxTest {
 
 		// get the page again and check for the new tag
 		page = (Page) t.getObject(Page.class, PAGE_ID);
-		Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+		Map<String, ContentTag> contentTags = page.getContentTags();
 
 		// check the tags
 		assertEquals("Check the number of contenttags in the page", 3, contentTags.size());
 
 		// get the tag
-		ContentTag loadedTag = contentTags.get(expectedTagName);
+		ContentTag loadedTag = contentTags.get(newTagName);
 
 		assertNotNull("Check whether the name was found", loadedTag);
-		assertEquals("Check the name of the tag (again)", expectedTagName, loadedTag.getName());
+		assertEquals("Check the name of the tag (again)", newTagName, loadedTag.getName());
 		assertEquals("Check the construct", constructId, loadedTag.getConstruct().getId().intValue());
 		assertEquals("Check the content of the tag", newValueText, loadedTag.getValues().iterator().next().getValueText());
 
@@ -383,7 +390,7 @@ public class PageEditSandboxTest {
 		// check tag content in the database
 		res = testContext.getDBSQLUtils().executeQuery(
 				"SELECT contenttag.construct_id, value.* FROM page LEFT JOIN contenttag ON page.content_id = contenttag.content_id LEFT JOIN value on contenttag.id = value.contenttag_id WHERE page.id = "
-						+ PAGE_ID + " AND contenttag.name = '" + expectedTagName + "'");
+						+ PAGE_ID + " AND contenttag.name = '" + newTagName + "'");
 
 		if (res.next()) {
 			assertEquals("Check the construct", constructId, res.getInt("construct_id"));
@@ -407,7 +414,7 @@ public class PageEditSandboxTest {
 		Page page = (Page) t.getObject(Page.class, PAGE_ID, true);
 
 		// get the map of all tags
-		Map<String, ContentTag> tagMap = page.getContent().getContentTags();
+		Map<String, ContentTag> tagMap = page.getContentTags();
 
 		assertEquals("Check number of contenttags before removing one", 2, tagMap.size());
 
@@ -423,7 +430,7 @@ public class PageEditSandboxTest {
 
 		page = (Page) t.getObject(Page.class, PAGE_ID);
 
-		assertEquals("Check number of contenttags after removing one", 1, page.getContent().getContentTags().size());
+		assertEquals("Check number of contenttags after removing one", 1, page.getContentTags().size());
 
 		// check number of contenttags in the database
 		ResultSet res = testContext.getDBSQLUtils().executeQuery(
@@ -600,8 +607,8 @@ public class PageEditSandboxTest {
 		// set the template id (which should generate the content with the contenttags and values)
 		newPage.setTemplateId(TEMPLATE_ID);
 
-		assertEquals("Check the number of contenttags after setting the template", 1, newPage.getContent().getContentTags().size());
-		assertEquals("Check the name of the existing contenttag", tagName, newPage.getContent().getContentTags().keySet().iterator().next());
+		assertEquals("Check the number of contenttags after setting the template", 1, newPage.getContentTags().size());
+		assertEquals("Check the name of the existing contenttag", tagName, newPage.getContentTags().keySet().iterator().next());
 
 		// set the folder id
 		newPage.setFolderId(FOLDER_ID);
@@ -624,7 +631,7 @@ public class PageEditSandboxTest {
 
 		assertNotNull("Check that the page now really exists", page);
 
-		assertEquals("Check the content of the new page", newValueText, page.getContent().getContentTag(tagName).getValues().iterator().next().getValueText());
+		assertEquals("Check the content of the new page", newValueText, page.getContentTag(tagName).getValues().iterator().next().getValueText());
 
 		// check existance of page, content, contenttag and value in the database
 		ResultSet res = testContext.getDBSQLUtils().executeQuery(
@@ -704,8 +711,8 @@ public class PageEditSandboxTest {
 		assertTrue("Check whether content is editable", page.getContent().getObjectInfo().isEditable());
 		assertNotSame("Check whether the readonly copy of the content is another object", readOnlyPage.getContent(), page.getContent());
 
-		Map<String, ContentTag> tagMap = page.getContent().getContentTags();
-		Map<String, ContentTag> readOnlyTagMap = readOnlyPage.getContent().getContentTags();
+		Map<String, ContentTag> tagMap = page.getContentTags();
+		Map<String, ContentTag> readOnlyTagMap = readOnlyPage.getContentTags();
 
 		for (Iterator<ContentTag> iterator = tagMap.values().iterator(); iterator.hasNext();) {
 			ContentTag tag = iterator.next();
@@ -1162,7 +1169,7 @@ public class PageEditSandboxTest {
 		assertEquals("Original value doesn't match", "original value", testValue.getValueText());
 
 		// Delete value from "text" part and replace by new one
-		ctag = page.getContent().getContentTag("testtag");
+		ctag = page.getContentTag("testtag");
 		ValueList ctagvals = ctag.getValues();
 		Value oldval = ctagvals.getByKeyname("text");
 		oldval.delete();

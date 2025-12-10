@@ -564,6 +564,14 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 	ContentTag getContentTag(String name) throws NodeException;
 
 	/**
+	 * Get the contenttag with given id.
+	 * @param id The contenttag ID.
+	 * @return The contenttag with the given ID.
+	 * @throws NodeException
+	 */
+	ContentTag getContentTag(Integer id) throws NodeException;
+
+	/**
 	 * get all page variants of this page.
 	 * @return a list of all pages using the same content.
 	 * @throws NodeException TODO
@@ -571,6 +579,18 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 	public default List<Page> getPageVariants() throws NodeException {
 		return getContent().getPages();
 	}
+
+	/**
+	 * Get content tags of this page.
+	 *
+	 * <p>
+	 *     When the contents of this page are partially localized, the result will contain the localized tags as
+	 *     well as the inherited tags from the next higher page.
+	 * </p>
+	 *
+	 * @return A map of all this page's tag names to the respective tags.
+	 */
+	Map<String, ContentTag> getContentTags() throws NodeException;
 
 	@Override
 	Map<String, Tag> getTags() throws NodeException;

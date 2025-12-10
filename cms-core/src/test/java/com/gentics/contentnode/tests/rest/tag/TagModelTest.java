@@ -339,7 +339,7 @@ public class TagModelTest {
 		targetPage = supply(() -> update(createPage(node.getFolder(), template, "Target Page"), p -> {
 			p.getContent().addContentTag(testConstructId);
 		}));
-		targetTag = supply(() -> targetPage.getContent().getContentTags().values().iterator().next());
+		targetTag = supply(() -> targetPage.getContentTags().values().iterator().next());
 		ByteArrayOutputStream data = new ByteArrayOutputStream();
 		FileUtil.inputStreamToOutputStream(GenericTestUtils.getPictureResource("blume.jpg"), data);
 		targetImage = (ImageFile) supply(() -> createImage(node.getFolder(), "blume.jpg", data.toByteArray()));

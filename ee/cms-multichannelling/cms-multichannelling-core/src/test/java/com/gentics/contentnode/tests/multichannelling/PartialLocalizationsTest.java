@@ -32,6 +32,8 @@ import com.gentics.contentnode.rest.model.Tag.Type;
 import com.gentics.contentnode.rest.model.request.MultiPageLoadRequest;
 import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
+import com.gentics.contentnode.rest.model.request.PushToMasterRequest;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.MCPageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
@@ -51,6 +53,7 @@ import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.junit.Assert.assertTrue;
 
@@ -68,6 +71,7 @@ public class PartialLocalizationsTest {
 
 	private static Node node;
 	private static Node channel;
+	private static Node subChannel;
 	private static Folder folder;
 	private static Template template;
 	private static int constructId;
@@ -77,6 +81,7 @@ public class PartialLocalizationsTest {
 		testContext.getContext().getTransaction().commit();
 		node = supply(() -> ContentNodeTestDataUtils.createNode());
 		channel = supply(() -> ContentNodeTestDataUtils.createChannel(node, "Channel", "channel", "/"));
+		subChannel = supply(() -> ContentNodeTestDataUtils.createChannel(channel, "SubChannel", "subchannel", "/"));
 		folder = supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder"));
 		constructId = supply(() -> ContentNodeTestDataUtils.createConstruct(node, ShortTextPartType.class, "construct", PARTNAME));
 		template = supply(() -> ContentNodeTestDataUtils.createTemplate(
@@ -456,7 +461,7 @@ public class PartialLocalizationsTest {
 
 		// modify the page (but do not publish)
 		masterPage = Builder.update(masterPage, update -> {
-			ContentNodeTestDataUtils.getPartType(ShortTextPartType.class, update.getContentTag(TAGNAME), PARTNAME).setText("modification");
+			getPartType(ShortTextPartType.class, update.getContentTag(TAGNAME), PARTNAME).setText("modification");
 		}).at(2000).doNotPublish().build();
 
 		// localize partially
@@ -464,6 +469,59 @@ public class PartialLocalizationsTest {
 
 		// we assert that the page does not contain any non-inherited content tags
 		assertThat(localizedRestPage.getTags().values().stream().filter(t -> t.getType() == Type.CONTENTTAG).filter(t -> Objects.equals(t.getInherited(), false))).isEmpty();
+	}
+
+	@Test
+	public void testPushFullyLocalizedPageOverPartial() throws NodeException {
+		node = update(node, n -> n.activateFeature(Feature.PARTIAL_MULTICHANNELLING));
+
+		var masterPage = create(Page.class, create -> {
+			create.setFolder(node, folder);
+			create.setTemplateId(template.getId());
+			create.setName("Master Page");
+
+			getPartType(ShortTextPartType.class, create.getContentTag(TAGNAME), PARTNAME).setText("Master content in %s".formatted(TAGNAME));
+			getPartType(ShortTextPartType.class, create.getContentTag(OTHER_TAGNAME), PARTNAME).setText("Master content in %s".formatted(OTHER_TAGNAME));
+		}).build();
+
+		var channelRestPage = localizePage(masterPage, channel, LocalizationType.PARTIAL, LocalizationType.PARTIAL);
+		execute(m -> new MCPageResourceImpl().localizeTag(m.getId(), TAGNAME), channelRestPage);
+		var channelPage = execute(id -> TransactionManager.getCurrentTransaction().getObject(Page.class, id, false, false, true),
+				channelRestPage.getId());
+
+		channelPage = Builder.update(channelPage, update -> {
+			getPartType(ShortTextPartType.class, update.getContentTag(TAGNAME), PARTNAME).setText("Channel content in %s".formatted(TAGNAME));
+		}).build();
+
+		var subChannelRestPage = localizePage(masterPage, subChannel, LocalizationType.FULL, LocalizationType.FULL);
+		var subChannelPage = execute(id -> TransactionManager.getCurrentTransaction().getObject(Page.class, id, false, false, true),
+				subChannelRestPage.getId());
+		subChannelPage = Builder.update(subChannelPage, update -> {
+			getPartType(ShortTextPartType.class, update.getContentTag(TAGNAME), PARTNAME).setText("Subchannel content in %s".formatted(TAGNAME));
+			getPartType(ShortTextPartType.class, update.getContentTag(OTHER_TAGNAME), PARTNAME).setText("Subchannel content in %s".formatted(OTHER_TAGNAME));
+		}).build();
+
+		var response = execute(id -> {
+			PushToMasterRequest req = new PushToMasterRequest();
+			req.setChannelId(subChannel.getId());
+			req.setMasterId(channel.getId());
+			req.setForegroundTime(0);
+			req.setTypes(Arrays.asList(PushToMasterRequest.Type.page));
+
+			return new MCPageResourceImpl().pushToMaster(id, req);
+		}, subChannelPage.getId());
+
+		assertResponse(response, ResponseCode.OK);
+
+		channelPage = execute(Page::reload, channelPage);
+		assertThat(channelPage).as("Channel Page").isNotNull();
+		String content = execute(p -> getPartType(ShortTextPartType.class, p.getContentTag(TAGNAME), PARTNAME).getText(), channelPage);
+		assertThat(content).as("Tag %s in Channel".formatted(TAGNAME)).isEqualTo("Subchannel content in %s".formatted(TAGNAME));
+		content = execute(p -> getPartType(ShortTextPartType.class, p.getContentTag(OTHER_TAGNAME), PARTNAME).getText(), channelPage);
+		assertThat(content).as("Tag %s in Channel".formatted(OTHER_TAGNAME)).isEqualTo("Master content in %s".formatted(OTHER_TAGNAME));
+
+		subChannelPage = execute(Page::reload, subChannelPage);
+		assertThat(subChannelPage).as("SubChannel Page").isNull();
 	}
 
 	/**
@@ -511,11 +569,25 @@ public class PartialLocalizationsTest {
 	 * @return The REST model of the localized page.
 	 */
 	private static com.gentics.contentnode.rest.model.Page localizePage(Page page, LocalizationType localizationType, LocalizationType expectedLocalizationResult) throws NodeException {
+		return localizePage(page, channel, localizationType, expectedLocalizationResult);
+	}
+
+	/**
+	 * Localize the given page with the given localization type.
+	 *
+	 * @see #loadPage(int) 
+	 * @param page The page to localize.
+	 * @param c channel where to localize
+	 * @param localizationType The desired localization type.
+	 * @param expectedLocalizationResult The actually expected localization type of the result.
+	 * @return The REST model of the localized page.
+	 */
+	private static com.gentics.contentnode.rest.model.Page localizePage(Page page, Node c, LocalizationType localizationType, LocalizationType expectedLocalizationResult) throws NodeException {
 		var localizeRequest = new PageLocalizeRequest();
 
 		localizeRequest
 			.setLocalizationType(localizationType)
-			.setChannelId(channel.getId());
+			.setChannelId(c.getId());
 		localizeRequest.setForegroundTime(0);
 
 		var localizeResponse = execute(m -> new MCPageResourceImpl().localize(m.getId(), localizeRequest), page);
@@ -523,7 +595,7 @@ public class PartialLocalizationsTest {
 
 		assertResponse(localizeResponse, ResponseCode.OK, expectedMessage);
 
-		var loadedPage = loadPage(page.getId());
+		var loadedPage = loadPage(page.getId(), c);
 
 		Assertions.assertThat(loadedPage.getLocalizationType())
 			.as("Localization type")

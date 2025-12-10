@@ -135,7 +135,7 @@ public class PartialLocalizationsRenderTest {
 		operate(() -> {
 			switch (localizationTarget) {
 				case ROOT_EMPTY: {
-					var templateTag = localizedPage.getContent().getContentTag(OTHER_TAGNAME);
+					var templateTag = localizedPage.getContentTag(OTHER_TAGNAME);
 					var templateTagTextPart = templateTag.getValues().getByKeyname(PARTNAME);
 
 					templateTagTextPart.setValueText("LOCALIZED_ROOT_TWO");
@@ -143,7 +143,7 @@ public class PartialLocalizationsRenderTest {
 				} break;
 
 				case ROOT_WITH_EMBEDDED: {
-					var templateTag = localizedPage.getContent().getContentTag(TAGNAME);
+					var templateTag = localizedPage.getContentTag(TAGNAME);
 					var templateTagTextPart = templateTag.getValues().getByKeyname(PARTNAME);
 					var oldValue = templateTagTextPart.getValueText();
 
@@ -155,7 +155,7 @@ public class PartialLocalizationsRenderTest {
 						.filter(t -> !t.equals(TAGNAME) && !t.equals(OTHER_TAGNAME))
 						.toList()
 						.get(0);
-					var contentTag = localizedPage.getContent().getContentTag(localizedEmbeddedTagName);
+					var contentTag = localizedPage.getContentTag(localizedEmbeddedTagName);
 					var contentTagTextPart = contentTag.getValues().getByKeyname(PARTNAME);
 
 					contentTagTextPart.setValueText("LOCALIZED_EMBEDDED");
@@ -301,12 +301,12 @@ public class PartialLocalizationsRenderTest {
 			embeddedTagNames.add(embeddedTag.getName());
 			embeddedTagTextPart.setValueText("MASTER_EMBEDDED");
 
-			var templateTagOne = p.getContent().getContentTag(TAGNAME);
+			var templateTagOne = p.getContentTag(TAGNAME);
 			var templateTagOneTextPart = templateTagOne.getValues().getByKeyname(PARTNAME);
 
 			templateTagOneTextPart.setValueText("MASTER_ROOT_ONE: <node " + embeddedTag.getName() + ">");
 
-			var templateTagTwo = p.getContent().getContentTag(OTHER_TAGNAME);
+			var templateTagTwo = p.getContentTag(OTHER_TAGNAME);
 			var templateTagTwoTextPart = templateTagTwo.getValues().getByKeyname(PARTNAME);
 
 			templateTagTwoTextPart.setValueText("MASTER_ROOT_TWO");

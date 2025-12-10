@@ -144,7 +144,7 @@ public class VelocityRenderForeignObjectTest {
 			p.setName("Master Page");
 			getPartType(LongHTMLPartType.class, p.getContentTag(TEMPLATE_TAG_NAME), "template").setText(outerTagVtl);
 
-			p.getContent().getContentTags().put(CONTENT_TAG_NAME, Builder.create(ContentTag.class, c -> {
+			p.getContentTags().put(CONTENT_TAG_NAME, Builder.create(ContentTag.class, c -> {
 				c.setName(CONTENT_TAG_NAME);
 				c.setConstructId(velocityConstruct.getId());
 				c.setEnabled(true);

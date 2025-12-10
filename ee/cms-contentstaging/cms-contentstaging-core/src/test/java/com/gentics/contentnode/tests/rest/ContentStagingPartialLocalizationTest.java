@@ -150,7 +150,7 @@ public class ContentStagingPartialLocalizationTest extends AbstractContentStagin
 
 		return update(page, p -> {
 			var contentTag = p.getContent().addContentTag(constructId);
-			var templateTag = p.getContent().getContentTag(TAGNAME);
+			var templateTag = p.getContentTag(TAGNAME);
 			var textPart = templateTag.getValues().getByKeyname(PARTNAME);
 
 			textPart.setValueText("<node " + contentTag.getName() + ">");

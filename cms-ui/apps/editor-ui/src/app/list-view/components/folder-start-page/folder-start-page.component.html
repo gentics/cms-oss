@@ -4,11 +4,11 @@
       <gtx-dropdown-trigger>
         @if (getStartPageType === 'deleted') {
           <start-page-icon disabled></start-page-icon>
-          <span class="start-page-deleted">{{ 'common.deleted_page_label' | gtxI18n }}</span>
+          <span class="start-page-name start-page-deleted">{{ 'common.deleted_page_label' | gtxI18n }}</span>
         }
         @if ((getStartPageType === 'internal' && getStartPageId()) || getStartPageType === 'external') {
           <start-page-icon></start-page-icon>
-          <span>{{ getStartPageType === 'internal' ? startPage.name : startPage }}</span>
+          <span class="start-page-name">{{ getStartPageType === 'internal' ? startPage.name : startPage }}</span>
         }
       </gtx-dropdown-trigger>
       <gtx-dropdown-content>

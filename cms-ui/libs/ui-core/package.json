@@ -18,7 +18,6 @@
     "moment-timezone": "^0.5.43",
     "ngx-autosize": "^2.0.4",
     "ngx-pagination": "^6.0.3",
-    "roboto-fontface-woff": "^0.8.0",
     "sortablejs": "^1.15.2",
     "tslib": "^2.5.0"
   },
@@ -38,7 +37,6 @@
     "moment-timezone": "^0.5.43",
     "ngx-autosize": "^2.0.4",
     "ngx-pagination": "^6.0.3",
-    "roboto-fontface-woff": "^0.8.0",
     "sortablejs": "^1.15.2"
   }
 }

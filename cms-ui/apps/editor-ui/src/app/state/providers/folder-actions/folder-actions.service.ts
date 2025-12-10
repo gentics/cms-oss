@@ -2252,7 +2252,7 @@ export class FolderActionsService {
 
             this.notification.show({
                 type: 'success',
-                message: 'tag_inheritance.localize_success',
+                message: 'tag_inheritance.page_localize_success',
             });
 
             await this.appState.dispatch(new ListSavingSuccessAction('page')).toPromise();

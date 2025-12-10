@@ -27,7 +27,7 @@ enum StartPageType {
     templateUrl: './folder-start-page.component.html',
     styleUrls: ['./folder-start-page.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -70,11 +70,11 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
     ngOnInit(): void {
         this.subscriptions.add(combineLatest([
-            this.appState.select(state => state.entities.page),
-            this.appState.select(state => state.entities.folder),
-            this.appState.select(state => state.folder.pages.list),
-            this.appState.select(state => state.folder.activeLanguage),
-            this.appState.select(state => state.folder.activeFolder),
+            this.appState.select((state) => state.entities.page),
+            this.appState.select((state) => state.entities.folder),
+            this.appState.select((state) => state.folder.pages.list),
+            this.appState.select((state) => state.folder.activeLanguage),
+            this.appState.select((state) => state.folder.activeFolder),
         ]).pipe(
             distinctUntilChanged(isEqual),
             debounceTime(50),
@@ -107,7 +107,6 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
     /**
      * Open a URL in new tab
-     *
      * @param url Url to navigate
      */
     openInNewTab(url: string): void {
@@ -116,7 +115,6 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
     /**
      * Open a page in preview mode
-     *
      * @param page The page to preview
      */
     previewPage(page: Page): void {
@@ -125,7 +123,6 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
     /**
      * Open a page in edit mode
-     *
      * @param page The page to edit
      */
     editPage(page: Page): void {
@@ -134,7 +131,6 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
     /**
      * Open the start page object property of the folder
-     *
      * @param folder The folder to setup
      */
     reassignStartPage(folder: Folder): void {
@@ -173,7 +169,7 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
         }
 
         this.folderActions.getItem(this.folder.id, 'folder', { nodeId: this.folder.nodeId })
-            .then(folder => {
+            .then((folder) => {
                 this.folder = folder;
                 if (this.hasStartPageInfo) {
                     this.getStartPage();
@@ -199,9 +195,9 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
         const page = this.entityResolver.getEntity('page', pageId);
 
         if (page && !page.deleted?.by) {
-            if (!page.languageVariants ||
-                !page.languageVariants[languageId] ||
-                (page.languageVariants[languageId] && page.languageVariants[languageId] === page.id)
+            if (!page.languageVariants
+              || !page.languageVariants[languageId]
+              || (page.languageVariants[languageId] && page.languageVariants[languageId] === page.id)
             ) {
                 this.startPage$.next(page);
             } else {
@@ -212,17 +208,17 @@ export class FolderStartPageComponent implements OnInit, OnChanges, OnDestroy {
 
         this.folderActions
             .getItem(pageId, 'page', { nodeId: this.folder.nodeId, langvars: true }, true)
-            .then(page => {
-                if (!page.languageVariants ||
-                    !page.languageVariants[languageId] ||
-                    (page.languageVariants[languageId] && page.languageVariants[languageId].id === page.id)
+            .then((page) => {
+                if (!page.languageVariants
+                  || !page.languageVariants[languageId]
+                  || (page.languageVariants[languageId] && page.languageVariants[languageId].id === page.id)
                 ) {
                     this.startPage$.next(page);
                 } else {
                     this.startPage$.next(page.languageVariants[languageId]);
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 this.startPage$.next(StartPageType.DELETED);
             });
     }

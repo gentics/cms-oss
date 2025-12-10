@@ -513,8 +513,15 @@
         "indicator_localized": "Lokalisiert",
         "save_success": "Lokalisierungen gespeichert",
         "localize_success": "Seite erfolgreich lokalisiert",
+        "tag_multi_localize_success": "Tags erfolgreich lokalisiert",
+        "tag_localize_success": "Tag {{name}} erfolgreich lokalisiert",
+        "tag_multi_unlocalize_success": "Lokalisierungen der Tags erfolgreich gelöscht",
+        "tag_unlocalize_success": "Lokalisierung von Tag {{name}} erfolgreich gelöscht",
         "type_full": "Volle Lokalisierung",
-        "type_partial": "Partielle Lokalisierung"
+        "type_partial": "Partielle Lokalisierung",
+        "table_column_localized": "Lokalisiert",
+        "action_localize": "Lokalisieren",
+        "action_delete_localization": "Lokalisierung löschen"
     },
     "search": {
         "all": "Alles",
@@ -583,7 +590,7 @@
         "link_target_current_tab": "Vorhandenen Tab",
         "link_target_new_tab": "Neuen Tab"
     },
-    "tag-editor": {
+    "tag_editor": {
         "browse": "Durchsuchen",
         "browse_for_tag": "Tag auswählen",
         "clear_selection": "Auwahl aufheben",
@@ -951,9 +958,11 @@
         "select_content_package_title": "Contentpaket auswählen",
         "image_properties_title": "Eigenschaften von \"{{fileName}}\"",
         "choose_localization_type_title": "Lokalisierungart auswählen",
-        "choose_localization_type_body": "Bitte wählen Sie die art der Lokalsierung aus.<br><ul><li><b>Volle Lokalisierung</b>: Die gesamte Seite mit dem gesamten Inhalt wird lokalisiert und steht zur bearbeitung zur verfügung.</li><li><b>Partielle Lokalisierung</b>: Haupt-Tags der Seite können individuell lokalisiert werden, alle anderen Inhalte werden vererbt.</li></ul>",
+        "choose_localization_type_body": "Bitte wählen Sie die art der Lokalsierung aus.<br><ul><li><b>Volle Lokalisierung</b>: Die gesamte Seite inklusive aller Inhalte wird auf Basis des aktuellen Stands aus dem Master Node lokalisiert und steht vollständig zur Bearbeitung zur Verfügung. Es werden keine Inhalte mehr vererbt.</li><li><b>Partielle Lokalisierung</b>: Lediglich die Root-Tags der Seite können individuell lokalisiert werden; alle übrigen Inhalte werden aus dem Master Node übernommen (vererbt).</li></ul>",
         "save_tag_inheritance_title": "Lokaliserungseinstellungen speichern?",
-        "save_tag_inheritance_body": "Änderungen an den Lokalisierungseinstellungen können bereits lokalisierte Daten löschen.<br>Möchten Sie fortfahren?"
+        "save_tag_inheritance_localize": "Folgende tags werden lokalisiert: {{tags}}",
+        "save_tag_inheritance_inherit": "Folgende tag lokalisierungen, sowie deren Inhalt, werden gelöscht: {{tags}}",
+        "save_tag_inheritance_body": "{{info}}<br>Möchten Sie fortfahren?"
     },
     "lang": {
         "ar": "Arabisch",

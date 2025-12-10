@@ -1,14 +1,34 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { Feature, Node, NodePageLanguageCode, NodeUrlMode, Variant } from '@gentics/cms-models';
+import {
+    AccessControlledType,
+    Page as CMSPage,
+    Feature,
+    GcmsPermission,
+    LocalizationType,
+    Node,
+    NodeFeature,
+    NodePageLanguageCode,
+    NodeUrlMode,
+    PageLocalizeRequest,
+    PageResponse,
+    Variant,
+} from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    clickModalAction,
     EntityImporter,
+    findTableAction,
+    findTableRowById,
+    GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
+    IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
+    IMPORT_TYPE_USER,
     isVariant,
     ITEM_TYPE_PAGE,
     loginWithForm,
+    matchRequest,
     navigateToApp,
     NODE_FULL,
     NodeImportData,
@@ -20,50 +40,77 @@ import {
     PAGE_NINE,
     pickSelectValue,
     TestSize,
+    UserImportData,
 } from '@gentics/e2e-utils';
+import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { findItem, findList, getAlohaIFrame, itemAction, selectNode, setupHelperWindowFunctions } from './helpers';
+import { findItem, findList, getAlohaIFrame, getEditorToolbarContext, itemAction, selectNode, setupHelperWindowFunctions } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Multichannelling', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
     const IMPORTER = new EntityImporter();
-    const CHANNEL_IMPORT_DATA: NodeImportData = {
 
+    const CHANNEL_IMPORT_DATA: NodeImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_NODE,
         [IMPORT_ID]: 'channelNode',
 
         node: {
-            name : 'Channel',
+            name: 'Channel',
             masterId: NODE_FULL[IMPORT_ID],
-            publishDir : '',
-            binaryPublishDir : '',
-            pubDirSegment : true,
-            publishImageVariants : false,
-            host : 'channel.localhost',
-            publishFs : false,
-            publishFsPages : false,
-            publishFsFiles : false,
-            publishContentMap : true,
-            publishContentMapPages : true,
-            publishContentMapFiles : true,
-            publishContentMapFolders : true,
+            publishDir: '',
+            binaryPublishDir: '',
+            pubDirSegment: true,
+            publishImageVariants: false,
+            host: 'channel.localhost',
+            publishFs: false,
+            publishFsPages: false,
+            publishFsFiles: false,
+            publishContentMap: true,
+            publishContentMapPages: true,
+            publishContentMapFiles: true,
+            publishContentMapFolders: true,
             urlRenderWayPages: NodeUrlMode.AUTOMATIC,
             urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
-            omitPageExtension : false,
-            pageLanguageCode : NodePageLanguageCode.FILENAME,
-            meshPreviewUrlProperty : '',
+            omitPageExtension: false,
+            pageLanguageCode: NodePageLanguageCode.FILENAME,
+            meshPreviewUrlProperty: '',
         },
         description: 'channel of "full"',
 
-        languages : [],
+        languages: [],
         templates: [],
     };
+
+    const NAMESPACE = 'multichannelling';
+
+    const TEST_GROUP_BASE: GroupImportData = {
+        [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
+        [IMPORT_ID]: `group_${NAMESPACE}_base`,
+
+        name: `${NAMESPACE}_base`,
+        description: 'Multichannelling: Base',
+    };
+
+    const TEST_USER: UserImportData = {
+        [IMPORT_TYPE]: IMPORT_TYPE_USER,
+        [IMPORT_ID]: `user_${NAMESPACE}_base`,
+
+        email: 'test@example.com',
+        firstName: 'Multichannelling',
+        lastName: 'User',
+        login: `${NAMESPACE}_user`,
+        password: 'multichannellingtest123',
+
+        group: TEST_GROUP_BASE,
+    };
+
+    let masterNode: Node;
     let channelNode: Node;
 
-    test.beforeAll(async ({request}) => {
+    test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
 
         await IMPORTER.clearClient();
@@ -71,7 +118,7 @@ test.describe('Multichannelling', () => {
         await IMPORTER.bootstrapSuite(TestSize.FULL);
     });
 
-    test.beforeEach(async ({page, request, context}) => {
+    test.beforeEach(async ({ request, context }) => {
         await context.clearCookies();
         IMPORTER.setApiContext(request);
 
@@ -84,18 +131,37 @@ test.describe('Multichannelling', () => {
         await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
         await IMPORTER.importData([CHANNEL_IMPORT_DATA]);
 
+        masterNode = IMPORTER.get(NODE_FULL);
         channelNode = IMPORTER.get(CHANNEL_IMPORT_DATA);
 
-        await setupHelperWindowFunctions(page);
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(NODE_FULL).id);
+        const TEST_GROUP = cloneWithSymbols(TEST_GROUP_BASE);
+        TEST_GROUP.permissions = [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${masterNode.folderId}`,
+                perms: [
+                    { type: GcmsPermission.CREATE_ITEMS, value: true },
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.PUBLISH_PAGES, value: true },
+                    { type: GcmsPermission.DELETE_ITEMS, value: true },
+                ],
+            },
+        ];
+
+        await IMPORTER.importData([TEST_GROUP, TEST_USER]);
     });
 
     test.describe('Edit Mode', () => {
         let editor: Locator;
 
-        test.beforeEach(async ({page}) => {
+        test.beforeEach(async ({ page }) => {
+            await setupHelperWindowFunctions(page);
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+            await selectNode(page, IMPORTER.get(NODE_FULL).id);
+
             // Setup page for editing
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, IMPORTER.get(PAGE_FIVE).id);
@@ -104,7 +170,7 @@ test.describe('Multichannelling', () => {
             // Wait for editor to be ready
             const iframe = await getAlohaIFrame(page);
             editor = iframe.locator('main .GENTICS_tagname_content[contenteditable="true"]');
-            await editor.waitFor({timeout: 60_000});
+            await editor.waitFor({ timeout: 60_000 });
         });
 
         test('should handle node IDs for overview items using sticky channels', {
@@ -153,7 +219,7 @@ test.describe('Multichannelling', () => {
             });
 
             // Repo Browser
-            await test.step('Repository Browser', async() => {
+            await test.step('Repository Browser', async () => {
                 const repoBrowser = page.locator('repository-browser');
 
                 // Select the master page
@@ -183,7 +249,7 @@ test.describe('Multichannelling', () => {
             });
 
             // Select another channel item
-            await test.step('Repository Browser round two', async() => {
+            await test.step('Repository Browser round two', async () => {
                 await overview.locator('gtx-button[data-action="browse-items"] button').click();
                 const repoBrowser = page.locator('repository-browser');
 
@@ -217,7 +283,9 @@ test.describe('Multichannelling', () => {
     });
 
     test.describe('Publishing', () => {
-        test.beforeEach(async ({page}) => {
+        test.beforeEach(async ({ page }) => {
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
             await selectNode(page, channelNode.id);
         });
 
@@ -233,6 +301,111 @@ test.describe('Multichannelling', () => {
 
             await expect(context.locator('[data-action="publish"]')).toBeHidden();
             await expect(context.locator('[data-action="publish-variants"]')).toBeHidden();
+        });
+    });
+
+    test.describe('Partial Localizing', () => {
+        let testPage: CMSPage;
+
+        test.beforeEach(async ({ page }) => {
+            // Enable the feature
+            await IMPORTER.client.node.activateFeature(IMPORTER.get(NODE_FULL).id, NodeFeature.PARTIAL_MULTICHANNELLING).send();
+            await IMPORTER.client.node.activateFeature(channelNode.id, NodeFeature.PARTIAL_MULTICHANNELLING).send();
+
+            testPage = IMPORTER.get(PAGE_FOUR);
+
+            await navigateToApp(page);
+            await loginWithForm(page, TEST_USER);
+            await selectNode(page, channelNode.id);
+        });
+
+        test('should be possible to localize a page partially', {
+            annotation: [{
+                type: 'issue',
+                description: 'GPU-2072',
+            }],
+        }, async ({ page }) => {
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, testPage.id);
+            await itemAction(item, 'localize');
+
+            const localizeReq = page.waitForRequest(matchRequest('POST', `/rest/page/localize/${testPage.id}`));
+            const loadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${testPage.id}`));
+            const modal = page.locator('gtx-modal-dialog');
+            await clickModalAction(modal, 'partial');
+
+            await test.step('Validate localize request', async () => {
+                const req = await localizeReq;
+                const reqData: PageLocalizeRequest = req.postDataJSON();
+                expect(reqData.channelId).toEqual(channelNode.id);
+                expect(reqData.localizationType).toEqual(LocalizationType.PARTIAL);
+            });
+
+            await test.step('Validate page load', async () => {
+                const req = await loadReq;
+                const res: PageResponse = await req.json();
+                expect(res.page.localizationType).toEqual(LocalizationType.PARTIAL);
+            });
+        });
+
+        test('should be able to manage tag-inheritance via tag-list', {
+            annotation: [{
+                type: 'ticket',
+                description: 'GPU-2072',
+            }],
+        }, async ({ page }) => {
+            let testTag = testPage.tags.title;
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, testPage.id);
+            await itemAction(item, 'localize');
+
+            const modal = page.locator('gtx-modal-dialog');
+            const pageLoadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${testPage.id}`));
+            await clickModalAction(modal, 'partial');
+            const pageLoadRes = await pageLoadReq;
+            testPage = (await pageLoadRes.json() as PageResponse).page;
+
+            const editorCtx = getEditorToolbarContext(page);
+            const ctx = await openContext(editorCtx);
+            await ctx.locator('[data-action="edit-properties"]').click();
+
+            const contentFrame = page.locator('content-frame');
+            const editor = contentFrame.locator('combined-properties-editor');
+            await editor.locator('.properties-tabs .tab-link[data-id="item-tag-list"]').click();
+
+            const table = editor.locator('gtx-table');
+
+            await test.step('Localize Tag', async () => {
+                const titleRow = await findTableRowById(table, testTag.id);
+                await expect(titleRow).toBeVisible();
+
+                const localizeReq = page.waitForResponse(matchRequest('POST', `/rest/page/localize/${testPage.id}/tags/${testTag.name}`));
+                const loadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${testPage.id}`));
+
+                await findTableAction(titleRow, 'localize-tag').click();
+
+                await localizeReq;
+                const loadRes = await loadReq;
+                const resData: PageResponse = await loadRes.json();
+                testTag = resData.page.tags[testTag.name];
+                expect(testTag.inherited).toBe(false);
+            });
+
+            await test.step('Unlocalize Tag', async () => {
+                const titleRow = await findTableRowById(table, testTag.id);
+                await expect(titleRow).toBeVisible();
+
+                const unlocalizeReq = page.waitForResponse(matchRequest('POST', `/rest/page/unlocalize/${testPage.id}/tags/${testTag.name}`));
+                const loadReq = page.waitForResponse(matchRequest('GET', '/rest/page/load/*'));
+
+                await findTableAction(titleRow, 'delete-tag-localization').click();
+
+                await unlocalizeReq;
+                const loadRes = await loadReq;
+                const resData: PageResponse = await loadRes.json();
+                expect(resData.page.tags[testTag.name].inherited).toBe(true);
+            });
         });
     });
 });

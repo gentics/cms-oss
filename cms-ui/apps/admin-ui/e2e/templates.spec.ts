@@ -46,7 +46,7 @@ test.describe('Templates Module', () => {
         await IMPORTER.syncPackages(TestSize.MINIMAL);
         await IMPORTER.setupTest(TestSize.MINIMAL);
 
-        testTemplate = IMPORTER.get(BASIC_TEMPLATE_ID as any) as any;
+        testTemplate = IMPORTER.get(BASIC_TEMPLATE_ID as any);
         testNode = IMPORTER.get(NODE_MINIMAL);
 
         // Navigate to the app and log in
@@ -59,15 +59,15 @@ test.describe('Templates Module', () => {
         // select our "empty node", as unassign from the test node, and it
         // wouldn't show up anymore and just cause issues.
         const nodeTable = page.locator('gtx-node-table');
-        await clickTableRow(findTableRowById(nodeTable, IMPORTER.dummyNode));
+        await clickTableRow(await findTableRowById(nodeTable, IMPORTER.dummyNode));
     });
 
     test('should open node assignment modal for single template', async ({ page }) => {
-        const tplRow = findTableRowById(page, testTemplate.id);
+        const tplRow = await findTableRowById(page, testTemplate.id);
 
         const modal = page.locator(LINK_TO_NODE_MODAL);
         const nodeTable = modal.locator('gtx-node-table');
-        const nodeRow = findTableRowById(nodeTable, testNode.id);
+        const nodeRow = await findTableRowById(nodeTable, testNode.id);
 
         await test.step('Unassign from node', async () => {
             const nodeLoad = page.waitForResponse(matchRequest('GET', '/rest/node'));
@@ -106,7 +106,7 @@ test.describe('Templates Module', () => {
         let folderRow: Locator;
 
         await test.step('Open Folder assign modal', async () => {
-            const tplRow = findTableRowById(page, testTemplate.id);
+            const tplRow = await findTableRowById(page, testTemplate.id);
             const folderLoad = page.waitForResponse(matchRequest('GET', `/rest/template/${testTemplate.id}/folders`));
 
             await findTableAction(tplRow, LINK_TO_FOLDER_ACTION).click();

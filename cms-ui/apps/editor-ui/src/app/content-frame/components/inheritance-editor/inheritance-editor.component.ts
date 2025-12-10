@@ -30,7 +30,7 @@ const STYLES = `
   font-style: normal;
   font-weight: 100 900;
   font-stretch: 100%;
-  src: url('./Roboto-VariableFont.ttf') format('truetype');
+  src: url('./assets/fonts/Roboto-VariableFont.ttf') format('truetype');
 }
 
 .${CLASS_EDITABLE} {
@@ -53,6 +53,8 @@ const STYLES = `
     top: 0;
     line-height: 1.1;
     font-family: 'Roboto';
+    font-weight: normal;
+    font-style: normal;
     transition: 200ms;
   }
 
@@ -250,7 +252,7 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
 
         const diff: Record<string, boolean> = {};
         this.changedTags.forEach((tagName) => {
-            diff[tagName] = this.loadedPage.tags[key].inherited;
+            diff[tagName] = this.loadedPage.tags[tagName].inherited;
         });
 
         this.modifiedTags.set(diff);

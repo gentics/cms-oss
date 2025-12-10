@@ -75,10 +75,10 @@ ENV LANG=en_US.UTF-8 \
 	LC_ALL=en_US.UTF-8
 
 # Python 2 - Do we still need this?
-# RUN apt install --assume-yes python2.7
-# RUN sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python2.7 20 \
-#  && sudo chmod +x /usr/local/bin/python
-# ENV PYTHON /usr/local/bin/python
+RUN apt install --assume-yes python2.7
+RUN sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python2.7 20 \
+ && sudo chmod +x /usr/local/bin/python
+ENV PYTHON /usr/local/bin/python
 
 # Install docker-compose v2 and compatibility for v1
 # RUN mkdir -p /usr/local/lib/docker/cli-plugins/ \

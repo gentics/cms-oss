@@ -512,9 +512,16 @@
         "indicator_inherited": "Inherited",
         "indicator_localized": "Localized",
         "save_success": "Localization saved",
-        "localize_success": "Page successfull localized",
+        "page_localize_success": "Page successfull localized",
+        "tag_multi_localize_success": "Tags successfully localized",
+        "tag_localize_success": "Tag {{name}} successfully localized",
+        "tag_multi_unlocalize_success": "Localizations of the Tags successfully deleted",
+        "tag_unlocalize_success": "Localization of Tag {{name}} successfully deleted",
         "type_full": "Full localization",
-        "type_partial": "Partial localization"
+        "type_partial": "Partial localization",
+        "table_column_localized": "Localized",
+        "action_localize": "Localize",
+        "action_delete_localization": "Delete localization"
     },
     "search": {
         "all": "All",
@@ -583,7 +590,7 @@
         "link_target_current_tab": "Current Tab",
         "link_target_new_tab": "New Tab"
     },
-    "tag-editor": {
+    "tag_editor": {
         "browse": "Browse",
         "browse_for_tag": "Browse for Tag",
         "clear_selection": "Clear Selection",
@@ -647,7 +654,6 @@
         "keycloak_not_available": "Something went wrong while accessing Keycloak. Using login without Single Sign-On instead.",
         "i18n_properties_label": "Multilingual"
     },
-
     "template": {
         "link_mode_append": "Append",
         "link_mode_apply": "Apply"
@@ -953,9 +959,11 @@
         "select_content_package_title": "Select Content Package",
         "image_properties_title": "Properties of \"{{fileName}}\"",
         "choose_localization_type_title": "Choose localization type",
-        "choose_localization_type_body": "Please choose the type of localization.<br><ul><li><b>Full localization</b>: The entire page with all it's contents is localized and can be edited.</li><li><b>Partial localization</b>: Root-Tags can be localized individually, all other content is being inherited.</li></ul>",
+        "choose_localization_type_body": "Please choose the type of localization.<br><ul><li><b>Full localization</b>: The entire page, including all of it's content is being localized, based on the current state of the master node, and is fully editable. After localization, no more content will be inherited.</li><li><b>Partial localization</b>: Only the root-tags of a page can be individually localized; All other content is being inherited from the master node.</li></ul>",
         "save_tag_inheritance_title": "Save changes to inheritance?",
-        "save_tag_inheritance_body": "Changes to existing inheritance settings may lead to the loss of already localized content.<br>Do you wish to continue?"
+        "save_tag_inheritance_localize": "The following tags will be localized: {{tags}}",
+        "save_tag_inheritance_inherit": "The followiing localizations, and the content of these tags, will be deleted: {{tags}}",
+        "save_tag_inheritance_body": "{{info}}.<br>Do you wish to continue?"
     },
     "lang": {
         "ar": "Arabic",

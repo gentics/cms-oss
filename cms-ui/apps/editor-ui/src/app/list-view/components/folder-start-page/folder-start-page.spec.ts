@@ -162,8 +162,8 @@ describe('FolderStartPage', () => {
             expect(instance.folderStartPage.startPage$.value).toBe(PAGE);
 
             fixture.detectChanges();
-            const folderStartPage: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
-            expect(folderStartPage.innerText).toBe(`home${PAGE.name}`);
+            const folderStartPage: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger .start-page-name');
+            expect(folderStartPage.innerText).toBe(PAGE.name);
         }),
     );
 
@@ -202,8 +202,8 @@ describe('FolderStartPage', () => {
             expect(instance.folderStartPage.startPage$.value).toBe(expectedText);
 
             fixture.detectChanges();
-            const folderStartPage: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
-            expect(folderStartPage.innerText).toBe(`home${expectedText}`);
+            const folderStartPage: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger .start-page-name');
+            expect(folderStartPage.innerText).toBe(expectedText);
         }),
     );
 

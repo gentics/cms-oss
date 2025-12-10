@@ -129,9 +129,6 @@ function isObjectPropertyTag(tag: Tag): tag is ObjectTag {
 export const ID_OBJ_PROP_CATEGORY_OTHERS = '_others_';
 export const NAME_OBJ_PROP_CATEGORY_OTHERS = 'editor.object_properties_category_others_label';
 
-const ACTION_LOCALIZE_TAG = 'localize-tag';
-const ACTION_DELETE_TAG_LOCALIZATION = 'delete-tag-localization';
-
 export function groupObjectPropertiesByCategory(objectProperties: EditableObjectTag[]): ObjectPropertiesCategory[] {
     const categories: ObjectPropertiesCategory[] = [];
     const categoriesMap = new Map<string, ObjectPropertiesCategory>();
@@ -170,6 +167,8 @@ export function groupObjectPropertiesByCategory(objectProperties: EditableObject
 const ACTION_DELETE = 'delete';
 const ACTION_ACTIVATE = 'activate';
 const ACTION_DEACTIVATE = 'deactivate';
+const ACTION_LOCALIZE_TAG = 'localize-tag';
+const ACTION_DELETE_TAG_LOCALIZATION = 'delete-tag-localization';
 
 /**
  * Displays vertical tabs, which contain one tab for the item's properties (PropertiesEditor component)
@@ -304,9 +303,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (this.item?.type === 'page' && this.item.localizationType === LocalizationType.PARTIAL) {
             this.contentTagColumns.push({
                 id: 'inherited',
-                fieldPath: 'inherited',
-                mapper: (page: Page) => page.inherited,
-                label: this.i18n.instant('editor.tag_inherited_label'),
+                mapper: (tag: Tag) => !tag.rootTag ? null : !tag.inherited,
+                label: this.i18n.instant('tag_inheritance.table_column_localized'),
                 align: 'center',
                 clickable: true,
             });
@@ -342,6 +340,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             this.contentTagRows = tags.map((tag) => {
                 return {
                     id: `${tag.id}`,
+                    hash: `${tag.active}_${tag.inherited}`,
                     item: tag,
                 };
             });
@@ -561,18 +560,18 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (this.item?.type === 'page' && this.item.localizationType === LocalizationType.PARTIAL) {
             this.contentTagActions.unshift({
                 id: ACTION_LOCALIZE_TAG,
-                enabled: (tag) => this.itemPermissions.edit && (tag == null || !tag.inherited),
+                enabled: (tag) => tag == null || (tag.rootTag && tag.inherited),
                 icon: 'insert_drive_file',
                 type: 'primary',
-                label: this.i18n.instant('editor.localize_tag_label'),
+                label: this.i18n.instant('tag_inheritance.action_localize'),
                 single: true,
                 multiple: true,
             }, {
                 id: ACTION_DELETE_TAG_LOCALIZATION,
-                enabled: (tag) => this.itemPermissions.edit && (tag == null || tag.inherited),
+                enabled: (tag) => tag == null || (tag.rootTag && !tag.inherited),
                 icon: 'restore_page',
                 type: 'alert',
-                label: this.i18n.instant('editor.delete_localized_tag_label'),
+                label: this.i18n.instant('tag_inheritance.action_delete_localization'),
                 single: true,
                 multiple: true,
             });
@@ -648,7 +647,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         forkJoin(tagNames.map((name) => this.client.page.localizeTag(page.id, name)))
             .pipe(
                 switchMap(() => this.client.page.get(page.id, {
-                    nodeId: this.nodeId,
+                    nodeId: this.nodeId || this.currentNode?.id,
                     update: this.itemPermissions.edit,
                     construct: true,
                 })),
@@ -661,13 +660,23 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                     this.contentTagSelection = [];
                     this.changeDetector.markForCheck();
 
-                    this.notification.show({
-                        message: 'editor.page_tags_localize_success',
-                        type: 'success',
-                        translationParams: {
-                            tagNames,
-                        },
-                    });
+                    if (tagNames.length === 1) {
+                        this.notification.show({
+                            message: 'tag_inheritance.tag_localize_success',
+                            type: 'success',
+                            translationParams: {
+                                name: tagNames[0],
+                            },
+                        });
+                    } else {
+                        this.notification.show({
+                            message: 'tag_inheritance.tag_multi_localize_success',
+                            type: 'success',
+                            translationParams: {
+                                tagNames,
+                            },
+                        });
+                    }
                 },
                 error: (err) => {
                     this.errorHandler.catch(err, { notification: true });
@@ -677,11 +686,11 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
     unlocalizeTags(page: Page, tagNames: string[]): void {
         forkJoin(tagNames.map((name) => this.client.page.unlocalizeTag(page.id, name, {
-            channelId: this.nodeId,
+            channelId: this.nodeId || this.currentNode?.id,
         })))
             .pipe(
                 switchMap(() => this.client.page.get(page.id, {
-                    nodeId: this.nodeId,
+                    nodeId: this.nodeId || this.currentNode?.id,
                     update: this.itemPermissions.edit,
                     construct: true,
                 })),
@@ -694,13 +703,23 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                     this.contentTagSelection = [];
                     this.changeDetector.markForCheck();
 
-                    this.notification.show({
-                        message: 'editor.page_tags_unlocalize_success',
-                        type: 'success',
-                        translationParams: {
-                            tagNames,
-                        },
-                    });
+                    if (tagNames.length === 1) {
+                        this.notification.show({
+                            message: 'tag_inheritance.tag_unlocalize_success',
+                            type: 'success',
+                            translationParams: {
+                                name: tagNames[0],
+                            },
+                        });
+                    } else {
+                        this.notification.show({
+                            message: 'tag_inheritance.tag_multi_unlocalize_success',
+                            type: 'success',
+                            translationParams: {
+                                tagNames,
+                            },
+                        });
+                    }
                 },
                 error: (err) => {
                     this.errorHandler.catch(err, { notification: true });

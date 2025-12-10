@@ -451,6 +451,6 @@ export function matchesUrl(url: URL | string, path: string | RegExp, params?: Re
 export function getDefaultSystemLogin(): LoginInformation {
     return {
         username: process.env[ENV_E2E_CMS_IMPORTER_USERNAME] || 'node',
-        password: process.env[ENV_E2E_CMS_IMPORTER_PASSWORD] || 'node',
+        password: process.env[ENV_E2E_CMS_IMPORTER_PASSWORD] || 'cms_integrationTest#node',
     };
 }

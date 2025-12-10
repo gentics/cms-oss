@@ -101,25 +101,25 @@
           <h2 class="item-tag-list-heading">{{ 'editor.tag_list_label' | gtxI18n }}</h2>
           <div class="tag-list-container">
             <gtx-table
-              [selectAllType]="TableSelectAllType.PAGE"
-              [selectable]="true"
-              [columns]="contentTagColumns"
-              [rows]="contentTagRows"
-              [actions]="contentTagActions"
-              [(selected)]="contentTagSelection"
-                    [renderers]="{
-                        active: boolIconRenderer,
-                        inherited: boolIconRenderer
-                    }"
-              (rowClick)="handleContentTagClick($event)"
-              (actionClick)="handleContentTagAction($event)"
+                [selectAllType]="TableSelectAllType.PAGE"
+                [selectable]="true"
+                [columns]="contentTagColumns"
+                [rows]="contentTagRows"
+                [actions]="contentTagActions"
+                [(selected)]="contentTagSelection"
+                [renderers]="{
+                    active: boolIconRenderer,
+                    inherited: boolIconRenderer
+                }"
+                (rowClick)="handleContentTagClick($event)"
+                (actionClick)="handleContentTagAction($event)"
             ></gtx-table>
           </div>
           <ng-template #boolIconRenderer let-value="value">
             <icon
               class="gtx-table-cell-boolean"
               [ngClass]="'gtx-table-cell-boolean-' + value"
-            >{{ value ? 'check' : 'close' }}</icon>
+            >{{ value == null ? '' : (value ? 'check' : 'close') }}</icon>
           </ng-template>
         </div>
       }

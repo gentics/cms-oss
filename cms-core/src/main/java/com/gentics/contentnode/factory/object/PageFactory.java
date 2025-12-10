@@ -3912,6 +3912,11 @@ public class PageFactory extends AbstractFactory {
 		 * @see com.gentics.contentnode.object.AbstractContentObject#copyFrom(com.gentics.lib.base.object.NodeObject)
 		 */
 		public <T extends NodeObject> void copyFrom(T original) throws ReadOnlyException, NodeException {
+			copyFrom(original, true);
+		}
+
+		@Override
+		public <T extends NodeObject> void copyFrom(T original, boolean copyContent) throws ReadOnlyException, NodeException {
 			super.copyFrom(original);
 			Page oPage = (Page) original;
 
@@ -3948,8 +3953,10 @@ public class PageFactory extends AbstractFactory {
 				}
 			}
 
-			// copy the content
-			getContent().copyFrom(oPage.getContent());
+			if (copyContent) {
+				// copy the content
+				getContent().copyFrom(oPage.getContent());
+			}
 		}
 
 		@Override

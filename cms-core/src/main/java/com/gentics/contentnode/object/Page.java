@@ -213,6 +213,17 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 	void deleteAllLanguages() throws InsufficientPrivilegesException, NodeException;
 
 	/**
+	 * Variant of {@link Page#copyFrom(NodeObject)} that optionally copies the content
+	 * @param original original page
+	 * @param copyContent true to also copy the content
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	default <T extends NodeObject> void copyFrom(T original, boolean copyContent) throws ReadOnlyException, NodeException {
+		throw new ReadOnlyException();
+	}
+
+	/**
 	 * Create a copy of the page in the specified target folder. This method
 	 * will not commit or rollback the transaction in any case. Please invoke
 	 * those calls afterwards. This method will automatically copy language

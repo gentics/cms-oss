@@ -93,7 +93,7 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 					long oldTimestamp = t.getTimestamp();
 					try {
 						t.setTimestamp(oldTimestamp + 1000L);
-						localCopy.copyFrom(page);
+						localCopy.copyFrom(page, !partial);
 						localCopy.save();
 						t.commit(false);
 					} finally {

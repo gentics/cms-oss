@@ -5,7 +5,6 @@
  */
 package com.gentics.contentnode.publish;
 
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,6 +39,7 @@ import com.gentics.api.lib.datasource.WritableMultichannellingDatasource;
 import com.gentics.api.lib.datasource.WriteableDatasource;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.ParserException;
 import com.gentics.api.lib.expressionparser.EvaluableExpression;
 import com.gentics.api.lib.expressionparser.Expression;
 import com.gentics.api.lib.expressionparser.ExpressionEvaluator;
@@ -93,6 +93,7 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.PropertyStackResolver;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.contentnode.runtime.ConfigurationValue;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.base.MapResolver;
 import com.gentics.lib.content.FilesystemAttributeStatistics;
 import com.gentics.lib.content.FilesystemAttributeValue;
@@ -1414,6 +1415,19 @@ public class CnMapPublisher {
 		return entry.getObjectType() == Page.TYPE_PAGE && "content".equals(entry.getMapname()) && ObjectTransformer.isEmpty(entry.getTagname());
 	}
 
+	public static Object parseExpression(RenderType renderType, String input) throws ParserException, ExpressionParserException {
+		Object value = null;
+		boolean useExpressionParser = renderType.getPreferences().getFeature("tagmap_useexpressionparser");
+
+		if (useExpressionParser) {
+			Expression tagnameExpression = ExpressionParser.getInstance().parse(input);
+
+			value = ((EvaluableExpression) tagnameExpression).evaluate(
+					new ExpressionQueryRequest(new PropertyStackResolver(renderType.getStack()), null), ExpressionEvaluator.OBJECTTYPE_ANY);
+		}
+		return value;
+	}
+
 	public static Object resolveTagmapEntry(RenderType renderType, RenderResult renderResult,
 			TagmapEntryRenderer entry) throws NodeException {
 		// special behaviour for page content
@@ -1430,10 +1444,7 @@ public class CnMapPublisher {
 		if (useExpressionParser) {
 			// Evaluate our expression ..
 			try {
-				Expression tagnameExpression = ExpressionParser.getInstance().parse(entry.getTagname());
-
-				evaluatedValue = ((EvaluableExpression) tagnameExpression).evaluate(
-						new ExpressionQueryRequest(new PropertyStackResolver(renderType.getStack()), null), ExpressionEvaluator.OBJECTTYPE_ANY);
+				evaluatedValue = parseExpression(renderType, entry.getTagname());
 			} catch (ExpressionParserException e) {
 				renderResult.error(CnMapPublisher.class, "Error while evaluating expression for tagmap {" + entry.getTagname() + "}", e);
 			} catch (Throwable e) {
@@ -1451,7 +1462,6 @@ public class CnMapPublisher {
 			}
 			if (debugExpressionParser) {
 				// If debug is enabled, output values and compare them.
-                
 				String debug = "mapname: {" + entry.getMapname() + "} tagname: {" + entry.getTagname() + "} Evaluated: {" + String.valueOf(evaluatedValue) + "} ("
 						+ (evaluatedValue == null ? "null" : evaluatedValue.getClass().getName()) + ") Resolved: {" + String.valueOf(resolvedValue) + "} ("
 						+ (resolvedValue == null ? "null" : resolvedValue.getClass().getName()) + ")";

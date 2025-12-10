@@ -59,6 +59,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.MultiSelectPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
@@ -108,7 +109,9 @@ public class MeshPublishRolesTest {
 	public final static List<String> ROLES = Arrays.asList("role_a", "role_b", "role_c");
 
 	private final static String VTL_OBJECT_TAG_KEYWORD = "vtlroles";
+	private final static String HBS_OBJECT_TAG_KEYWORD = "hbsroles";
 	private final static String VTL_PART_KEYWORD = "vtl";
+	private final static String HBS_PART_KEYWORD = "hbs";
 	private final static String VTL_ROLES_FIELD = "roles";
 
 	@ClassRule
@@ -129,6 +132,7 @@ public class MeshPublishRolesTest {
 
 	private static ObjectTagDefinition rolesProperty;
 	private static ObjectTagDefinition velocityRolesProperty;
+	private static ObjectTagDefinition handlebarsRolesProperty;
 
 	@Rule
 	public MeshTestRule meshTestRule = new MeshTestRule(mesh);
@@ -172,10 +176,12 @@ public class MeshPublishRolesTest {
 			}, false));
 		}));
 
-		int velocityRolesConstructId = Trx.supply(t -> ContentNodeTestDataUtils.createVelocityConstruct(node, "roleConstruct", VTL_PART_KEYWORD));
+		int velocityRolesConstructId = Trx.supply(t -> ContentNodeTestDataUtils.createVelocityConstruct(node, "roleVtlConstruct", VTL_PART_KEYWORD));
+		int handlebarsRolesConstructId = Trx.supply(t -> ContentNodeTestDataUtils.createHandlebarsConstruct(node, "roleHbsConstruct", HBS_PART_KEYWORD));
 
 		rolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, rolesConstruct.getId(), "Roles", "roles");
 		velocityRolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, velocityRolesConstructId, "VTLRoles", VTL_OBJECT_TAG_KEYWORD);
+		handlebarsRolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, handlebarsRolesConstructId, "HBSRoles", HBS_OBJECT_TAG_KEYWORD);
 	}
 
 	@Before
@@ -799,13 +805,33 @@ public class MeshPublishRolesTest {
 		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_a", "role_c");
 	}
 
+	/**
+	 * Test that permissions on project are set
+	 * @throws Exception
+	 */
+	@Test
+	public void testProjectPermissionsWithoutDsHandlebars() throws Exception {
+		setHandlebarsPermissionProperty();
+		setHandlebarsRoles(node.getFolder(), "anonymous", "role_b");
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "anonymous", "role_b");
+		List<BranchResponse> branches = mesh.client().findBranches(MESH_PROJECT_NAME).blockingGet().getData();
+		Optional<BranchResponse> optionalDefaultBranch = branches.stream().filter(isDefaultBranch()).findFirst();
+		assertThat(optionalDefaultBranch).isPresent();
+		assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "anonymous", "role_b");
+	}
 
 	/**
 	 * Test that permissions on project are set
 	 * @throws Exception
 	 */
 	@Test
-	public void testProjectPermissionsWithoutDs() throws Exception {
+	public void testProjectPermissionsWithoutDsVelocity() throws Exception {
 		setVelocityPermissionProperty();
 		setVelocityRoles(node.getFolder(), "anonymous", "role_b");
 
@@ -829,6 +855,25 @@ public class MeshPublishRolesTest {
 	public void testProjectRootNodePermissionsWithoutDs() throws Exception {
 		setVelocityPermissionProperty();
 		setVelocityRoles(node.getFolder(), "anonymous", "role_b");
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		String rootNodeUuid = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet().getRootNode().getUuid();
+		assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "anonymous", "role_b");
+	}
+
+
+	/**
+	 * Test permissions on root node
+	 * @throws Exception
+	 */
+	@Test
+	public void testProjectRootNodePermissionsWithoutDsHandlebars() throws Exception {
+		setHandlebarsPermissionProperty();
+		setHandlebarsRoles(node.getFolder(), "anonymous", "role_b");
 
 		try (Trx trx = new Trx()) {
 			context.publish(false);
@@ -894,6 +939,20 @@ public class MeshPublishRolesTest {
 		});
 	}
 
+
+	/**
+	 * The the {@link ContentRepository#setPermissionProperty(String) permission property} of the Mesh Contentrepository
+	 * to the {@code roles} field in the Velocity context of the object tag.
+	 */
+	protected void setHandlebarsPermissionProperty() throws NodeException {
+		Trx.operate(t -> {
+			ContentRepository cr = t.getObject(ContentRepository.class, crId, true);
+
+			cr.setPermissionProperty(String.format("object.%s.parts.%s.%s", HBS_OBJECT_TAG_KEYWORD, HBS_PART_KEYWORD, VTL_ROLES_FIELD));
+			cr.save();
+		});
+	}
+
 	/**
 	 * Set the given roles via the velocity object tag.
 	 *
@@ -914,6 +973,23 @@ public class MeshPublishRolesTest {
 			getPartType(LongHTMLPartType.class, tag, ContentNodeTestDataUtils.TEMPLATE_PARTNAME)
 				.getValueObject()
 				.setValueText(valueText.toString());
+		});
+	}
+
+	/**
+	 * Set the given roles via the velocity object tag.
+	 *
+	 * @param container The container to set the roles for.
+	 * @param roles The roles to set.
+	 */
+	protected void setHandlebarsRoles(ObjectTagContainer container, String... roles) throws NodeException {
+		ObjectTag objTag = container.getObjectTag(HBS_OBJECT_TAG_KEYWORD);
+		update(objTag, tag -> {
+			tag.setEnabled(true);
+
+			getPartType(HandlebarsPartType.class, tag, HBS_PART_KEYWORD)
+				.getValueObject()
+				.setValueText(Arrays.stream(roles).map(role -> String.format("'%s'", role)).collect(Collectors.joining(",", "{{#gtx_store_expr '" + VTL_ROLES_FIELD + "'}}[", "]{{/gtx_store_expr}}")));
 		});
 	}
 

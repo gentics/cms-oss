@@ -17,7 +17,9 @@ import org.apache.commons.lang3.StringUtils;
 import com.gentics.api.lib.datasource.Datasource;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.ParserException;
 import com.gentics.api.lib.exception.UnknownPropertyException;
+import com.gentics.api.lib.expressionparser.ExpressionParserException;
 import com.gentics.api.lib.resolving.PropertyResolver;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.resolving.ResolvableComparator;
@@ -35,6 +37,7 @@ import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.PartType;
+import com.gentics.contentnode.publish.CnMapPublisher;
 import com.gentics.contentnode.render.FormRendering;
 import com.gentics.contentnode.render.GisRendering;
 import com.gentics.contentnode.render.GisRendering.CropInfo;
@@ -233,6 +236,51 @@ public class HelperSource {
 		return null;
 	}
 
+	/**
+	 * Evaluate and return an expression from the parameter. This function does nothing, if `tagmap_useexpressionparser` feature is not enabled.
+	 * 
+	 * @param input
+	 * @param options
+	 * @return
+	 * @throws ParserException
+	 * @throws ExpressionParserException
+	 */
+	public static Object gtx_expr(String input, Options options) throws ParserException, ExpressionParserException {
+		RenderType renderType = (RenderType) options.context.get("renderType");
+		return CnMapPublisher.parseExpression(renderType, input);
+	}
+
+	/**
+	 * Evaluate an expression from the enclosing block, and store its value in the context under the `name` key. This function does nothing, if `tagmap_useexpressionparser` feature is not enabled.
+	 * 
+	 * @param name
+	 * @param options
+	 * @return
+	 * @throws ParserException
+	 * @throws ExpressionParserException
+	 * @throws IOException
+	 */
+	public static CharSequence gtx_store_expr(String name, Options options) throws ParserException, ExpressionParserException, IOException {
+		Object value = options.fn();
+		if (value != null) {
+			value = gtx_expr(value.toString(), options);
+		}
+		gtx_store(name, value, options);
+		return StringUtils.EMPTY;
+	}
+
+	/**
+	 * Store an arbitrary key/value pair in the Handlebars context.
+	 * 
+	 * @param name the key
+	 * @param object the value
+	 * @param options Handlebars context holder
+	 * @return
+	 */
+	public static CharSequence gtx_store(String name, Object object, Options options) {
+		options.context.data(name, object);
+		return StringUtils.EMPTY;
+	}
 	/**
 	 * Get the rendered resolved key from the resolvable or null if the resolvable is null.
 	 * If the resolved value is a {@link Renderable}, it will be rendered.

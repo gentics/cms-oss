@@ -94,6 +94,10 @@ public abstract class ContentTag extends Tag {
 
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
+		if (renderType == null) {
+			return true;
+		}
+
 		int tagNestLevel = renderType.getStack().countInstances(Tag.class, this);
 
 		// if the tag is the only tag on the stack, it is always considered editable

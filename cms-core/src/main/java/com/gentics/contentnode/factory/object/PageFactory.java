@@ -4623,8 +4623,11 @@ public class PageFactory extends AbstractFactory {
 				ContentTag originalTag = entry.getValue();
 
 				if (thisCTags.containsKey(tagName)) {
-					// found the tag in this content, copy the original tag over it
-					thisCTags.get(tagName).copyFrom(originalTag);
+					ContentTag toOverwrite = thisCTags.get(tagName);
+					if (toOverwrite.isEditable()) {
+						// found the tag in this content, copy the original tag over it
+						toOverwrite.copyFrom(originalTag);
+					}
 				} else {
 					// did not find the tag, so copy the original
 					thisCTags.put(tagName, (ContentTag) originalTag.copy());

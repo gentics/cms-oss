@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 
+import com.gentics.contentnode.rest.util.MiscUtils;
 import org.apache.commons.collections4.SetUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -962,62 +963,27 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 	}
 
 	private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
+
 		var inheritedTags = new HashMap<String, ContentTag>();
-		var possibleInheritedTagNames = new HashSet<>(masterContentTags.keySet());
-		var tagsToCheck = new LinkedList<String>();
 
 		for (var masterTagEntry : masterContentTags.entrySet()) {
 			var masterTagName = masterTagEntry.getKey();
 			var masterTag = masterTagEntry.getValue();
 
-			if (masterTag.comesFromTemplate()) {
-				if (!contentTags.containsKey(masterTagName)) {
-					tagsToCheck.push(masterTagName);
-				}
-			}
-
 			if (!contentTags.containsKey(masterTagName)) {
 				masterTag.setInherited(true);
-			}
-		}
 
-		tagsToCheck.forEach(possibleInheritedTagNames::remove);
+				if (masterTag.comesFromTemplate()) {
+					inheritedTags.put(masterTagName, masterTag);
 
-		while (!tagsToCheck.isEmpty()) {
-			var masterTagName = tagsToCheck.pop();
-			var masterTag = masterContentTags.get(masterTagName);
+					for (var embeddedTagName: MiscUtils.getEmbeddedTagNames(masterContentTags, masterTagName)) {
+						var embeddedTag = masterContentTags.get(embeddedTagName);
 
-			inheritedTags.put(masterTagName, masterTag);
-
-			var construct = masterTag.getConstruct();
-			var values = masterTag.getValues();
-
-			for (var part : construct.getParts()) {
-				var key = part.getKeyname();
-				var val = values.getByKeyname(key);
-
-				if (val == null) {
-					continue;
-				}
-
-				var text = val.getValueText();
-
-				if (text.isEmpty()) {
-					continue;
-				}
-
-				var newToCheck = new HashSet<String>();
-
-				for (var embeddedTag : possibleInheritedTagNames) {
-					if (!inheritedTags.containsKey(embeddedTag) && text.contains("<node " + embeddedTag + ">")) {
-						newToCheck.add(embeddedTag);
+						embeddedTag.setInherited(true);
+						inheritedTags.put(embeddedTagName, embeddedTag);
 					}
 				}
 
-				if (!newToCheck.isEmpty()) {
-					possibleInheritedTagNames.removeAll(newToCheck);
-					tagsToCheck.addAll(newToCheck);
-				}
 			}
 		}
 

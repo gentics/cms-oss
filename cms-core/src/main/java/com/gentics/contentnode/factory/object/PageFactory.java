@@ -38,7 +38,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.genericexceptions.IllegalUsageException;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -4114,33 +4113,6 @@ public class PageFactory extends AbstractFactory {
 			}
 
 			return contentTags;
-		}
-
-		private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
-			var inheritedTags = new HashMap<String, ContentTag>();
-
-			for (var masterTagEntry : masterContentTags.entrySet()) {
-				var masterTagName = masterTagEntry.getKey();
-				var masterTag = masterTagEntry.getValue();
-
-				if (!contentTags.containsKey(masterTagName)) {
-					masterTag.setInherited(true);
-
-					if (masterTag.comesFromTemplate()) {
-						inheritedTags.put(masterTagName, masterTag);
-
-						for (var embeddedTagName: MiscUtils.getEmbeddedTagNames(masterContentTags, masterTagName)) {
-							var embeddedTag = masterContentTags.get(embeddedTagName);
-
-							embeddedTag.setInherited(true);
-							inheritedTags.put(embeddedTagName, embeddedTag);
-						}
-					}
-
-				}
-			}
-
-			contentTags.putAll(inheritedTags);
 		}
 
 		private synchronized void loadPageIds() throws NodeException {

@@ -195,7 +195,6 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.currentItem || changes.currentNode) {
             this.checkIfInQueue();
-            this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
         }
         if (changes.editorState || changes.currentItem || changes.currentNode || changes.itemPermissions || changes.locked) {
             this.buttons = this.determineVisibleButtons();
@@ -379,6 +378,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     saveChanges(behaviour: SaveBehaviour): void {
         this.save.emit(behaviour);
+        this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
     }
 
     takeItemOffline(): void {

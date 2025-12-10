@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -27,12 +28,14 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.rest.model.LocalizationType;
+import com.gentics.contentnode.rest.model.Tag.Type;
 import com.gentics.contentnode.rest.model.request.MultiPageLoadRequest;
 import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.MCPageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -46,6 +49,7 @@ import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.junit.Assert.assertTrue;
@@ -421,6 +425,47 @@ public class PartialLocalizationsTest {
 				.containsExactly(localizedPage.getId());
 	}
 
+	@Test
+	public void testLocalizePublishedPage() throws NodeException {
+		node = update(node, n -> n.activateFeature(Feature.PARTIAL_MULTICHANNELLING));
+
+		// create a page and publish it
+		var masterPage = create(Page.class, create -> {
+			create.setFolder(node, folder);
+			create.setTemplateId(template.getId());
+			create.setName("Master page");
+		}).at(1000).publish().build();
+
+		// localize partially
+		var localizedRestPage = localizePage(masterPage, LocalizationType.PARTIAL, LocalizationType.PARTIAL);
+
+		// we assert that the page does not contain any non-inherited content tags
+		assertThat(localizedRestPage.getTags().values().stream().filter(t -> t.getType() == Type.CONTENTTAG).filter(t -> Objects.equals(t.getInherited(), false))).isEmpty();
+	}
+
+	@Test
+	public void testLocalizePublishedAndModifiedPage() throws NodeException {
+		node = update(node, n -> n.activateFeature(Feature.PARTIAL_MULTICHANNELLING));
+
+		// create a page and publish it
+		var masterPage = create(Page.class, create -> {
+			create.setFolder(node, folder);
+			create.setTemplateId(template.getId());
+			create.setName("Master page");
+		}).at(1000).publish().build();
+
+		// modify the page (but do not publish)
+		masterPage = Builder.update(masterPage, update -> {
+			ContentNodeTestDataUtils.getPartType(ShortTextPartType.class, update.getContentTag(TAGNAME), PARTNAME).setText("modification");
+		}).at(2000).doNotPublish().build();
+
+		// localize partially
+		var localizedRestPage = localizePage(masterPage, LocalizationType.PARTIAL, LocalizationType.PARTIAL);
+
+		// we assert that the page does not contain any non-inherited content tags
+		assertThat(localizedRestPage.getTags().values().stream().filter(t -> t.getType() == Type.CONTENTTAG).filter(t -> Objects.equals(t.getInherited(), false))).isEmpty();
+	}
+
 	/**
 	 * Create a page with {@link #TAGNAME} as content tag and an embedded tag.
 	 * @param name The name of the page.
@@ -471,6 +516,7 @@ public class PartialLocalizationsTest {
 		localizeRequest
 			.setLocalizationType(localizationType)
 			.setChannelId(channel.getId());
+		localizeRequest.setForegroundTime(0);
 
 		var localizeResponse = execute(m -> new MCPageResourceImpl().localize(m.getId(), localizeRequest), page);
 		var expectedMessage = String.format("Die Seite wurde erfolgreich %slokalisiert.", expectedLocalizationResult == LocalizationType.FULL ? "" : "partiell ");

@@ -48,7 +48,17 @@ public abstract class Content extends AbstractContentObject implements TagContai
 	 */
 	public abstract List<Page> getPages() throws NodeException;
 
+	/**
+	 * check, if the content is partially localized.
+	 * @return true, if the content is partially localized.
+	 */
 	public abstract boolean isPartiallyLocalized();
+
+	/**
+	 * set the partially localized flag.
+	 * @param partiallyLocalized new value for partially localized flag
+	 * @return Fluent API
+	 */
 	public abstract Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException;
 
 	/**

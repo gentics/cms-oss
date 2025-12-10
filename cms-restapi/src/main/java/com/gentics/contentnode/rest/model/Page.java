@@ -1069,10 +1069,19 @@ public class Page extends PublishableContentItem implements Serializable {
 		this.customEdate = customEdate;
 	}
 
+	/**
+	 * The localization type of the page.
+	 * @return The localization type of the page.
+	 */
 	public LocalizationType getLocalizationType() {
 		return localizationType;
 	}
 
+	/**
+	 * Set the localization type of the page.
+	 * @param localizationType The localization type for the page.
+	 * @return Fluent API
+	 */
 	public Page setLocalizationType(LocalizationType localizationType) {
 		this.localizationType = localizationType;
 

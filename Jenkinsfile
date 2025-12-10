@@ -172,13 +172,13 @@ spec:
 
                     if (params.cmsOssVersion?.trim() && !params.runReleaseBuild) {
                         echo "Setting CMS OSS version to " + params.cmsOssVersion.trim()
-                        mvnArguments += " -Dcms\\-oss.version=" + params.cmsOssVersion.trim()
+                        MavenHelper.setProperty("cms-oss.version", params.cmsOssVersion.trim())
                         mvnProjects = " -am -pl '!cms-changelog,!cms-doc'"
                     }
 
                     if (params.meshPluginsVersion?.trim() && !params.runReleaseBuild) {
                         echo "Setting Mesh Plugins version to " + params.meshPluginsVersion.trim()
-                        mvnArguments += " -Dmesh.forms.plugin.version=" + params.meshPluginsVersion.trim()
+                        MavenHelper.setProperty("mesh.forms.plugin.version", params.meshPluginsVersion.trim())
                     }
 
                     if (version) {

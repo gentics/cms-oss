@@ -420,7 +420,7 @@ public class PageVersionsSandboxTest extends AbstractPageVersioningTest {
 
 		// now remove the inner tag
 		page = t.getObject(Page.class, page.getId(), true);
-		page.getContent().getContentTags().remove(innerTag.getName());
+		page.getContentTags().remove(innerTag.getName());
 		page.save();
 		t.commit(false);
 

@@ -2322,7 +2322,7 @@ public class PageFactory extends AbstractFactory {
 
 		@Override
 		public boolean needsContenttagMigration(Template template, List<String> tagnames, boolean force) throws NodeException {
-			for (ContentTag contentTag : getContent().getContentTags().values()) {
+			for (ContentTag contentTag : getContentTags().values()) {
 				if (tagnames != null && !tagnames.contains(contentTag.getName())) {
 					continue;
 				}
@@ -2338,7 +2338,7 @@ public class PageFactory extends AbstractFactory {
 				if (tagnames != null && !tagnames.contains(templateTag.getName())) {
 					continue;
 				}
-				if (getContent().getContentTag(templateTag.getName()) == null) {
+				if (getContentTag(templateTag.getName()) == null) {
 					return true;
 				}
 			}
@@ -3197,7 +3197,7 @@ public class PageFactory extends AbstractFactory {
 			Map<String, ContentTag> contentTags = Collections.emptyMap();
 
 			if (!isEmptyId(contentId)) {
-				contentTags = getContent().getContentTags();
+				contentTags = getContentTags();
 			}
 			boolean modifiedContentTags = false;
 
@@ -3243,7 +3243,7 @@ public class PageFactory extends AbstractFactory {
 				return false;
 			}
 			// check contenttags
-			for (ContentTag contentTag : getContent().getContentTags().values()) {
+			for (ContentTag contentTag : getContentTags().values()) {
 				for (Value value : contentTag.getValues()) {
 					if (isEmptyId(value.getId())) {
 						return true;
@@ -3314,7 +3314,7 @@ public class PageFactory extends AbstractFactory {
 		public void migrateContenttags(Template template, List<String> tagnames, boolean force) throws NodeException {
 			super.migrateContenttags(template, tagnames, force);
 
-			for (Iterator<ContentTag> i = getContent().getContentTags().values().iterator(); i.hasNext();) {
+			for (Iterator<ContentTag> i = getContentTags().values().iterator(); i.hasNext();) {
 				ContentTag contentTag = i.next();
 				if (tagnames != null && !tagnames.contains(contentTag.getName())) {
 					continue;
@@ -4112,78 +4112,7 @@ public class PageFactory extends AbstractFactory {
 				contentTags.put(tag.getName(), tag);
 			}
 
-			if (isPartiallyLocalized()) {
-				var page = getPages().stream().findAny();
-
-				if (page.isPresent()) {
-					addInheritedContentTags(page.get().getMaster().getContent().getContentTags(), contentTags);
-				}
-			}
-
 			return contentTags;
-		}
-
-		private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
-			var inheritedTags = new HashMap<String, ContentTag>();
-			var possibleInheritedTagNames = new HashSet<>(masterContentTags.keySet());
-			var tagsToCheck = new LinkedList<String>();
-
-			for (var masterTagEntry : masterContentTags.entrySet()) {
-				var masterTagName = masterTagEntry.getKey();
-				var masterTag = masterTagEntry.getValue();
-
-				if (masterTag.comesFromTemplate()) {
-					if (!contentTags.containsKey(masterTagName)) {
-						tagsToCheck.push(masterTagName);
-					}
-				}
-
-				if (!contentTags.containsKey(masterTagName)) {
-					masterTag.setInherited(true);
-				}
-			}
-
-			tagsToCheck.forEach(possibleInheritedTagNames::remove);
-
-			while (!tagsToCheck.isEmpty()) {
-				var masterTagName = tagsToCheck.pop();
-				var masterTag = masterContentTags.get(masterTagName);
-
-				inheritedTags.put(masterTagName, masterTag);
-
-				var construct = masterTag.getConstruct();
-				var values = masterTag.getValues();
-
-				for (var part : construct.getParts()) {
-					var key = part.getKeyname();
-					var val = values.getByKeyname(key);
-
-					if (val == null) {
-						continue;
-					}
-
-					var text = val.getValueText();
-
-					if (text.isEmpty()) {
-						continue;
-					}
-
-					var newToCheck = new HashSet<String>();
-
-					for (var embeddedTag : possibleInheritedTagNames) {
-						if (!inheritedTags.containsKey(embeddedTag) && text.contains("<node " + embeddedTag + ">")) {
-							newToCheck.add(embeddedTag);
-						}
-					}
-
-					if (!newToCheck.isEmpty()) {
-						possibleInheritedTagNames.removeAll(newToCheck);
-						tagsToCheck.addAll(newToCheck);
-					}
-				}
-			}
-
-			contentTags.putAll(inheritedTags);
 		}
 
 		private synchronized void loadPageIds() throws NodeException {

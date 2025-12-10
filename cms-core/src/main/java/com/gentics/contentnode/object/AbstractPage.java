@@ -9,8 +9,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 
@@ -897,7 +899,12 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 
 	@Override
 	public ContentTag getContentTag(String name) throws NodeException {
-		return getContent().getContentTag(name);
+		return getContentTags().get(name);
+	}
+
+	@Override
+	public ContentTag getContentTag(Integer id) throws NodeException {
+		return getContentTags().values().stream().filter(tag -> Objects.equals(tag.getId(), id)).findFirst().orElse(null);
 	}
 
 	/**
@@ -921,12 +928,25 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		}
 	}
 
+	public Map<String, ContentTag> getContentTags() throws NodeException {
+		var content = getContent();
+		var contentTags = content.getContentTags();
+
+		if (content.isPartiallyLocalized()) {
+			var masterTags = MultichannellingFactory.getNextHigherObject(this).getContentTags();
+
+			addInheritedContentTags(masterTags, contentTags);
+		}
+
+		return contentTags;
+	}
+
 	public Map<String, Tag> getTags() throws NodeException {
 		Map<String, Tag> mergedTags = new HashMap<String, Tag>(getTemplate().getPrivateTemplateTags());
 
 		// before overwriting a templatetag with a contenttag of same name, we
 		// check whether the templatetag is editable in page
-		Map<String, ContentTag> contentTags = getContent().getContentTags();
+		Map<String, ContentTag> contentTags = getContentTags();
 
 		for (Map.Entry<String, ContentTag> entry : contentTags.entrySet()) {
 			// get the contenttag's name
@@ -939,6 +959,69 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		}
 
 		return mergedTags;
+	}
+
+	private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
+		var inheritedTags = new HashMap<String, ContentTag>();
+		var possibleInheritedTagNames = new HashSet<>(masterContentTags.keySet());
+		var tagsToCheck = new LinkedList<String>();
+
+		for (var masterTagEntry : masterContentTags.entrySet()) {
+			var masterTagName = masterTagEntry.getKey();
+			var masterTag = masterTagEntry.getValue();
+
+			if (masterTag.comesFromTemplate()) {
+				if (!contentTags.containsKey(masterTagName)) {
+					tagsToCheck.push(masterTagName);
+				}
+			}
+
+			if (!contentTags.containsKey(masterTagName)) {
+				masterTag.setInherited(true);
+			}
+		}
+
+		tagsToCheck.forEach(possibleInheritedTagNames::remove);
+
+		while (!tagsToCheck.isEmpty()) {
+			var masterTagName = tagsToCheck.pop();
+			var masterTag = masterContentTags.get(masterTagName);
+
+			inheritedTags.put(masterTagName, masterTag);
+
+			var construct = masterTag.getConstruct();
+			var values = masterTag.getValues();
+
+			for (var part : construct.getParts()) {
+				var key = part.getKeyname();
+				var val = values.getByKeyname(key);
+
+				if (val == null) {
+					continue;
+				}
+
+				var text = val.getValueText();
+
+				if (text.isEmpty()) {
+					continue;
+				}
+
+				var newToCheck = new HashSet<String>();
+
+				for (var embeddedTag : possibleInheritedTagNames) {
+					if (!inheritedTags.containsKey(embeddedTag) && text.contains("<node " + embeddedTag + ">")) {
+						newToCheck.add(embeddedTag);
+					}
+				}
+
+				if (!newToCheck.isEmpty()) {
+					possibleInheritedTagNames.removeAll(newToCheck);
+					tagsToCheck.addAll(newToCheck);
+				}
+			}
+		}
+
+		contentTags.putAll(inheritedTags);
 	}
 
 	private Resolvable getTagResolver() {

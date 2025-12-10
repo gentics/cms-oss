@@ -178,7 +178,7 @@ public class CrRenderTagmapTest {
 				getPartType(LongHTMLPartType.class, cTag, ContentNodeTestDataUtils.TEMPLATE_PARTNAME).getValueObject()
 						.setValueText(
 								"#set($pages =  $cms.folder.pages)##\n#set($pages = $cms.imps.sorter.sort($pages, \"page.name\"))##\n#foreach($page in $pages)##\n$page.name ($page.online)\n#end##");
-				upd.getContent().getContentTags().put("overview", cTag);
+				upd.getContentTags().put("overview", cTag);
 			});
 		}, res -> {
 			assertThat(res.get(TAGNAME)).as("Property").isEqualTo("Offline Page (false)\nOnline Page (true)\nTestpage page.tags.overview (true)\n");

@@ -359,7 +359,6 @@ public class PartialLocalizationsTest {
 		var page = createPage("Master page 12");
 		var localizedRestPage = localizePage(page, LocalizationType.PARTIAL, LocalizationType.PARTIAL);
 		var localizedPage = supply(t -> t.getObject(Page.class, localizedRestPage.getId()));
-		var localizeTagResponse = execute(m -> new MCPageResourceImpl().localizeTag(m.getId(), TAGNAME), localizedRestPage);
 
 		operate(t -> {
 			t.getObject(page, true).publish();
@@ -382,6 +381,44 @@ public class PartialLocalizationsTest {
 		assertThat(supply(() -> PublishQueue.getDirtedObjectIds(Page.class, false, node)))
 			.as("Dirted page IDs")
 			.containsExactly(page.getId(), localizedPage.getId());
+	}
+
+	@Test
+	public void testDependencyLocalizedTag() throws Exception {
+		node = update(node, n -> n.activateFeature(Feature.PARTIAL_MULTICHANNELLING));
+
+		var dirtedPageIds = supply(() -> PublishQueue.getDirtedObjectIds(Page.class, false, channel));
+
+		assertTrue("Publish queue must contain no dirted objects", dirtedPageIds.isEmpty());
+
+		var page = createPage("Master page 13");
+		var localizedRestPage = localizePage(page, LocalizationType.PARTIAL, LocalizationType.PARTIAL);
+		var localizedPage = supply(t -> t.getObject(Page.class, localizedRestPage.getId()));
+		var localizeTagResponse = execute(m -> new MCPageResourceImpl().localizeTag(m.getId(), TAGNAME), localizedRestPage);
+
+		assertResponse(localizeTagResponse, ResponseCode.OK, "Der Tag wurde erfolgreich lokalisiert.");
+
+		operate(t -> {
+			t.getObject(page, true).publish();
+			t.getObject(localizedPage, true).publish();
+		});
+
+		try (Trx trx = new Trx()) {
+			testContext.publish(false);
+		}
+
+		operate(() -> PublishQueue.undirtObjects(null, Page.TYPE_PAGE, null, -1, -1));
+
+		update(localizedPage, p -> {
+			p.getContentTag(TAGNAME).getValues().getByKeyname(PARTNAME).setValueText("new text");
+			p.save();
+		});
+
+		operate(() -> testContext.waitForDirtqueueWorker());
+
+		assertThat(supply(() -> PublishQueue.getDirtedObjectIds(Page.class, false, node)))
+				.as("Dirted page IDs")
+				.containsExactly(localizedPage.getId());
 	}
 
 	/**

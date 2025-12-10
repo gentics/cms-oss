@@ -120,6 +120,7 @@ public class AbstractContentStagingTest {
 	@BeforeClass
 	public static void setupOnce() throws Exception {
 		{
+			System.out.println("Ho!");
 			Transaction t = TransactionManager.getCurrentTransaction();
 			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 			prefs.setFeature(Feature.CONTENT_STAGING.toString().toLowerCase(), true);

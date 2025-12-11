@@ -1,43 +1,5 @@
 package com.gentics.contentnode.tests.multichannelling;
 
-<<<<<<< Updated upstream
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.object.parttype.ShortTextPartType;
-import com.gentics.contentnode.publish.PublishQueue;
-import com.gentics.contentnode.rest.model.LocalizationType;
-import com.gentics.contentnode.rest.model.Tag.Type;
-import com.gentics.contentnode.rest.model.request.MultiPageLoadRequest;
-import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
-import com.gentics.contentnode.rest.model.request.PageSaveRequest;
-import com.gentics.contentnode.rest.model.request.PushToMasterRequest;
-import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.impl.MCPageResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
-import com.gentics.contentnode.tests.utils.Builder;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
-import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.contentnode.testutils.GCNFeature;
-import org.assertj.core.api.Assertions;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
-=======
->>>>>>> Stashed changes
 import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
@@ -170,15 +132,9 @@ public class PartialLocalizationsTest {
 	public void testFeatureEnabled() throws NodeException {
 		node = update(node, n -> n.activateFeature(Feature.PARTIAL_MULTICHANNELLING));
 
-<<<<<<< Updated upstream
-		var page = createPage("Page 3");
-		var masterTagNames = supply(() -> page.getContentTags().keySet());
-		var localizedPage = localizePage(page, LocalizationType.PARTIAL, LocalizationType.PARTIAL);
-=======
 		var page = createPage("Page 3", -1);
 		var masterTagNames = supply(() -> page.getContent().getContentTags().keySet());
 		var localizedPage = localizePage(page, LocalizationType.PARTIAL, LocalizationType.PARTIAL, -1);
->>>>>>> Stashed changes
 
 		assertThat(localizedPage.getTags())
 			.as("Number of tags")
@@ -600,17 +556,10 @@ public class PartialLocalizationsTest {
 			create.setTemplateId(template.getId());
 			create.setName(name);
 
-<<<<<<< Updated upstream
-		return update(page, p -> {
-			var contentTag = p.getContent().addContentTag(constructId);
-			var templateTag = p.getContentTag(TAGNAME);
-			var textPart = templateTag.getValues().getByKeyname(PARTNAME);
-=======
 			var contentTag = create.getContent().addContentTag(constructId);
 
 			getPartType(ShortTextPartType.class, create.getContent().getContentTag(TAGNAME), PARTNAME)
 					.setText("<node %s>".formatted(contentTag.getName()));
->>>>>>> Stashed changes
 
 			embeddedTagNames.add(contentTag.getName());
 		}).at(timestamp).build();

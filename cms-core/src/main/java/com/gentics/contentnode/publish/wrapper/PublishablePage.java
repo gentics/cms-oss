@@ -522,6 +522,12 @@ public class PublishablePage extends AbstractPage {
 	}
 
 	@Override
+	public Page copy(boolean includeInheritedTags) throws NodeException {
+		failReadOnly();
+		return null;
+	}
+
+	@Override
 	public OpResult move(Folder target, int targetChannelId, boolean allLanguages) throws NodeException {
 		failReadOnly();
 		return null;

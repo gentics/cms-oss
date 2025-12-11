@@ -76,7 +76,7 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 				// create a copy of the published version
 				Page localCopy = null;
 				try (PublishCacheTrx pcTrx = new PublishCacheTrx(false)) {
-					localCopy = (Page) page.getPublishedObject().copy();
+					localCopy = page.getPublishedObject().copy(true);
 				}
 
 				// set the channel information (master pages and their local copies are grouped together with their common channelset id)
@@ -105,7 +105,7 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 				localCopy.unlock();
 			} else {
 				// create a copy of the page
-				Page localCopy = (Page) page.copy();
+				Page localCopy = page.copy(true);
 
 				// set the channel information (master pages and their local copies are grouped together with their common channelset id)
 				localCopy.setChannelInfo(channelId, channelSetId);

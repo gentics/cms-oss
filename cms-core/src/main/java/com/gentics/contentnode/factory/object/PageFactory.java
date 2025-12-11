@@ -1600,7 +1600,12 @@ public class PageFactory extends AbstractFactory {
 		 * @see com.gentics.lib.base.object.NodeObject#copy()
 		 */
 		public Page copy() throws NodeException {
-			return new EditableFactoryPage(this, getFactory().getFactoryHandle(Page.class).createObjectInfo(Page.class, true), true);
+			return copy(false);
+		}
+
+		@Override
+		public Page copy(boolean includeInheritedTags) throws NodeException {
+			return new EditableFactoryPage(this, getFactory().getFactoryHandle(Page.class).createObjectInfo(Page.class, true), true, includeInheritedTags);
 		}
 
 		/**
@@ -2933,11 +2938,12 @@ public class PageFactory extends AbstractFactory {
 		 * @param asNewPage true when the editable copy shall represent a new
 		 *        page, false if it shall be the editable version of the same
 		 *        page
+		 * @param includeInheritedTags true to include inherited tags
 		 * @throws NodeException when an internal error occurred
 		 * @throws ReadOnlyException when the page could not be fetched for
 		 *         update
 		 */
-		protected EditableFactoryPage(FactoryPage page, NodeObjectInfo info, boolean asNewPage) throws ReadOnlyException, NodeException {
+		protected EditableFactoryPage(FactoryPage page, NodeObjectInfo info, boolean asNewPage, boolean includeInheritedTags) throws ReadOnlyException, NodeException {
 			// set some values differently, depending on whether this is a new page
 			super(asNewPage ? null : page.getId(), info, page.name, page.niceUrl, page.description, page.filename, page.templateId, page.getFolderId(),
 					asNewPage ? null : page.contentId, page.priority, page.contentSetId, page.languageId, asNewPage ? null : page.objectTagIds,
@@ -2949,6 +2955,18 @@ public class PageFactory extends AbstractFactory {
 
 			if (asNewPage) {
 				editableContent = (EditableFactoryContent) page.getContent().copy();
+
+				// include inherited tags
+				if (includeInheritedTags && page.getContent().isPartiallyLocalized()) {
+					var masterTags = MultichannellingFactory.getNextHigherObject(page).getContentTags();
+					var masterTagCopies = new HashMap<String, ContentTag>();
+
+					for (Entry<String, ContentTag> entry : masterTags.entrySet()) {
+						masterTagCopies.put(entry.getKey(), (ContentTag)entry.getValue().copy());
+					}
+
+					addInheritedContentTags(masterTagCopies, editableContent.getContentTags());
+				}
 
 				// copy the objecttags
 				Map<String, ObjectTag> originalObjectTags = page.getObjectTags();
@@ -5402,7 +5420,7 @@ public class PageFactory extends AbstractFactory {
 		}
 		if (object instanceof FactoryPage) {
 			try {
-				EditableFactoryPage editableCopy = new EditableFactoryPage((FactoryPage) object, info, false);
+				EditableFactoryPage editableCopy = new EditableFactoryPage((FactoryPage) object, info, false, false);
 
 				// synchronize the contenttags with the template
 				if (editableCopy.synchronizeContentTagsWithTemplate() || editableCopy.containsNewValues()) {

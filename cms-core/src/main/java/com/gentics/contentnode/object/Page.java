@@ -1189,4 +1189,12 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 			return Optional.of(languages);
 		}
 	}
+
+	/**
+	 * Variant of {@link Page#copy()} that optionally copies inherited tags
+	 * @param includeInheritedTags true to copy also inherited tags
+	 * @return copy
+	 * @throws NodeException
+	 */
+	Page copy(boolean includeInheritedTags) throws NodeException;
 }

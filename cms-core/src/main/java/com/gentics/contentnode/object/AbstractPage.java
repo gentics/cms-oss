@@ -962,7 +962,7 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		return mergedTags;
 	}
 
-	private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
+	protected void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
 
 		var inheritedTags = new HashMap<String, ContentTag>();
 

@@ -124,7 +124,7 @@ public class TagTypeMigrationTest {
 		int toTagTypeCount = getContentTagCount(page, TO_TAGTYPE_ID);
 
 		// Apply the mapping to all content tags in the page
-		Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+		Map<String, ContentTag> contentTags = page.getContentTags();
 
 		for (Tag tag : contentTags.values()) {
 			MigrationHelper.migrateTag(t, logger, tag, mapping);
@@ -178,7 +178,7 @@ public class TagTypeMigrationTest {
 		int toTagTypeCount = getContentTagCount(page, TO_TAGTYPE_ID);
 
 		// Apply the mapping to all content tags in the page
-		Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+		Map<String, ContentTag> contentTags = page.getContentTags();
 
 		for (Tag tag : contentTags.values()) {
 			MigrationHelper.migrateTag(t, logger, tag, mapping);
@@ -250,7 +250,7 @@ public class TagTypeMigrationTest {
 		Integer tagId = -1;
 
 		// Apply the mapping to all content tags in the page
-		Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+		Map<String, ContentTag> contentTags = page.getContentTags();
 
 		for (Tag tag : contentTags.values()) {
 			Integer constructIdOfCurrentTag = ObjectTransformer.getInteger(tag.getConstruct().getId(), null);
@@ -268,7 +268,7 @@ public class TagTypeMigrationTest {
 		t = testContext.startTransactionWithPermissions(false);
 		page = (Page) t.getObject(Page.class, PAGE_ID);
 
-		contentTags = page.getContent().getContentTags();
+		contentTags = page.getContentTags();
 		for (Tag tag : contentTags.values()) {
 			Integer idOfCurrentTag = ObjectTransformer.getInteger(tag.getId(), null);
 
@@ -324,7 +324,7 @@ public class TagTypeMigrationTest {
 		Integer tagId = -1;
 
 		// Apply the mapping to all content tags in the page
-		Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+		Map<String, ContentTag> contentTags = page.getContentTags();
 
 		for (Tag tag : contentTags.values()) {
 			Integer constructIdOfCurrentTag = ObjectTransformer.getInteger(tag.getConstruct().getId(), null);
@@ -342,7 +342,7 @@ public class TagTypeMigrationTest {
 		t = testContext.startTransactionWithPermissions(false);
 		page = (Page) t.getObject(Page.class, PAGE_ID);
 
-		contentTags = page.getContent().getContentTags();
+		contentTags = page.getContentTags();
 		for (Tag tag : contentTags.values()) {
 			Integer idOfCurrentTag = ObjectTransformer.getInteger(tag.getId(), null);
 
@@ -1167,7 +1167,7 @@ public class TagTypeMigrationTest {
 
 		int count = 0;
 
-		Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+		Map<String, ContentTag> contentTags = page.getContentTags();
 
 		for (Tag tag : contentTags.values()) {
 			if (ObjectTransformer.getInt(tag.getConstruct().getId(), 0) == constructId) {

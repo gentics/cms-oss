@@ -103,7 +103,7 @@ public class ConstructEditSandboxTest {
 		tagName = newTag.getName();
 
 		// load the page and its content (make sure all is in the cache)
-		t.getObject(Page.class, PAGE_ID).getContent().getContentTags();
+		t.getObject(Page.class, PAGE_ID).getContentTags();
 
 		// load the tag and its values (make sure all is in the cache)
 		t.getObject(ContentTag.class, tagId).getValues();

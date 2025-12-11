@@ -169,7 +169,7 @@ public class TemplateMigrationJob extends AbstractMigrationJob {
 				} catch (Exception e) {
 					// Mark the tags in the page as skipped
 					page = t.getObject(Page.class, pageId);
-					Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+					Map<String, ContentTag> contentTags = page.getContentTags();
 
 					markSkippedTags(contentTags.values());
 					logger.error("Unable to obtain lock on page {" + pageId + "} during tag type migration.", e);

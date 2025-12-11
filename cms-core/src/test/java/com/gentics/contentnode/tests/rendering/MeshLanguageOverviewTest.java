@@ -192,7 +192,7 @@ public class MeshLanguageOverviewTest {
 		}));
 
 		page = Trx.supply(() -> update(createPage(node.getFolder(), template, "Testpage"), p -> {
-			p.getContent().getContentTags().put("overview", create(ContentTag.class, tag -> {
+			p.getContentTags().put("overview", create(ContentTag.class, tag -> {
 				tag.setConstructId(overviewConstructId);
 				tag.setEnabled(true);
 				tag.setName("overview");

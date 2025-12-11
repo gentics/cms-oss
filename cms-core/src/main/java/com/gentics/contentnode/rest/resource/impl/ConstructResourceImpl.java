@@ -501,7 +501,7 @@ public class ConstructResourceImpl implements ConstructResource {
 
 		List<Tag> tags = new ArrayList<Tag>();
 
-		tags.addAll(page.getContent().getContentTags().values());
+		tags.addAll(page.getContentTags().values());
 		tags.addAll(page.getObjectTags().values());
 
 		com.gentics.contentnode.object.Construct construct;

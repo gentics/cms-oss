@@ -38,7 +38,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.genericexceptions.IllegalUsageException;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -2323,7 +2322,7 @@ public class PageFactory extends AbstractFactory {
 
 		@Override
 		public boolean needsContenttagMigration(Template template, List<String> tagnames, boolean force) throws NodeException {
-			for (ContentTag contentTag : getContent().getContentTags().values()) {
+			for (ContentTag contentTag : getContentTags().values()) {
 				if (tagnames != null && !tagnames.contains(contentTag.getName())) {
 					continue;
 				}
@@ -2339,7 +2338,7 @@ public class PageFactory extends AbstractFactory {
 				if (tagnames != null && !tagnames.contains(templateTag.getName())) {
 					continue;
 				}
-				if (getContent().getContentTag(templateTag.getName()) == null) {
+				if (getContentTag(templateTag.getName()) == null) {
 					return true;
 				}
 			}
@@ -3198,7 +3197,7 @@ public class PageFactory extends AbstractFactory {
 			Map<String, ContentTag> contentTags = Collections.emptyMap();
 
 			if (!isEmptyId(contentId)) {
-				contentTags = getContent().getContentTags();
+				contentTags = getContentTags();
 			}
 			boolean modifiedContentTags = false;
 
@@ -3244,7 +3243,7 @@ public class PageFactory extends AbstractFactory {
 				return false;
 			}
 			// check contenttags
-			for (ContentTag contentTag : getContent().getContentTags().values()) {
+			for (ContentTag contentTag : getContentTags().values()) {
 				for (Value value : contentTag.getValues()) {
 					if (isEmptyId(value.getId())) {
 						return true;
@@ -3315,7 +3314,7 @@ public class PageFactory extends AbstractFactory {
 		public void migrateContenttags(Template template, List<String> tagnames, boolean force) throws NodeException {
 			super.migrateContenttags(template, tagnames, force);
 
-			for (Iterator<ContentTag> i = getContent().getContentTags().values().iterator(); i.hasNext();) {
+			for (Iterator<ContentTag> i = getContentTags().values().iterator(); i.hasNext();) {
 				ContentTag contentTag = i.next();
 				if (tagnames != null && !tagnames.contains(contentTag.getName())) {
 					continue;
@@ -4113,42 +4112,7 @@ public class PageFactory extends AbstractFactory {
 				contentTags.put(tag.getName(), tag);
 			}
 
-			if (isPartiallyLocalized()) {
-				var page = getPages().stream().findAny();
-
-				if (page.isPresent()) {
-					addInheritedContentTags(page.get().getMaster().getContent().getContentTags(), contentTags);
-				}
-			}
-
 			return contentTags;
-		}
-
-		private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
-			var inheritedTags = new HashMap<String, ContentTag>();
-
-			for (var masterTagEntry : masterContentTags.entrySet()) {
-				var masterTagName = masterTagEntry.getKey();
-				var masterTag = masterTagEntry.getValue();
-
-				if (!contentTags.containsKey(masterTagName)) {
-					masterTag.setInherited(true);
-
-					if (masterTag.comesFromTemplate()) {
-						inheritedTags.put(masterTagName, masterTag);
-
-						for (var embeddedTagName: MiscUtils.getEmbeddedTagNames(masterContentTags, masterTagName)) {
-							var embeddedTag = masterContentTags.get(embeddedTagName);
-
-							embeddedTag.setInherited(true);
-							inheritedTags.put(embeddedTagName, embeddedTag);
-						}
-					}
-
-				}
-			}
-
-			contentTags.putAll(inheritedTags);
 		}
 
 		private synchronized void loadPageIds() throws NodeException {

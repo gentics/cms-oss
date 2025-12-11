@@ -3466,7 +3466,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				Transaction t = TransactionManager.getCurrentTransaction();
 				for (Page page : t.getObjects(Page.class, pageId)) {
-					for (ContentTag tag : page.getContent().getContentTags().values()) {
+					for (ContentTag tag : page.getContentTags().values()) {
 						for (Value value : tag.getValues()) {
 							PartType partType = value.getPartType();
 							if (partType instanceof PageURLPartType) {
@@ -3538,7 +3538,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				Transaction t = TransactionManager.getCurrentTransaction();
 				for (Page page : t.getObjects(Page.class, pageId)) {
-					for (ContentTag tag : page.getContent().getContentTags().values()) {
+					for (ContentTag tag : page.getContentTags().values()) {
 						for (Value value : tag.getValues()) {
 							PartType partType = value.getPartType();
 							if (partType instanceof FileURLPartType) {
@@ -3610,7 +3610,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				Transaction t = TransactionManager.getCurrentTransaction();
 				for (Page page : t.getObjects(Page.class, pageId)) {
-					for (ContentTag tag : page.getContent().getContentTags().values()) {
+					for (ContentTag tag : page.getContentTags().values()) {
 						for (Value value : tag.getValues()) {
 							PartType partType = value.getPartType();
 							if (partType instanceof ImageURLPartType) {
@@ -3967,7 +3967,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		// Make sure that all rest tags have a valid construct ID set (important for validation)
 		Map<String, com.gentics.contentnode.rest.model.Tag> restTags = restPage.getTags();
-		Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+		Map<String, ContentTag> contentTags = page.getContentTags();
 		Map<String, ObjectTag> objectTags = page.getObjectTags();
 
 		if (restTags != null) {

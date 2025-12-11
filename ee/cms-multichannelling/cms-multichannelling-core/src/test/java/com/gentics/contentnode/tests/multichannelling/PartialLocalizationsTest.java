@@ -476,6 +476,40 @@ public class PartialLocalizationsTest {
 	}
 
 	@Test
+	public void testLocalizePartiallyLocalizedPage() throws NodeException {
+		node = update(node, n -> n.activateFeature(Feature.PARTIAL_MULTICHANNELLING));
+
+		var masterPage = create(Page.class, create -> {
+			create.setFolder(node, folder);
+			create.setTemplateId(template.getId());
+			create.setName("Master Page");
+
+			getPartType(ShortTextPartType.class, create.getContentTag(TAGNAME), PARTNAME).setText("Master content in %s".formatted(TAGNAME));
+			getPartType(ShortTextPartType.class, create.getContentTag(OTHER_TAGNAME), PARTNAME).setText("Master content in %s".formatted(OTHER_TAGNAME));
+		}).build();
+
+		var channelRestPage = localizePage(masterPage, channel, LocalizationType.PARTIAL, LocalizationType.PARTIAL, -1);
+		execute(m -> new MCPageResourceImpl().localizeTag(m.getId(), TAGNAME), channelRestPage);
+		var channelPage = execute(id -> TransactionManager.getCurrentTransaction().getObject(Page.class, id, false, false, true),
+				channelRestPage.getId());
+
+		channelPage = Builder.update(channelPage, update -> {
+			getPartType(ShortTextPartType.class, update.getContentTag(TAGNAME), PARTNAME).setText("Channel content in %s".formatted(TAGNAME));
+		}).build();
+
+		var subChannelRestPage = localizePage(channelPage, subChannel, LocalizationType.FULL, LocalizationType.FULL, -1);
+		assertThat(subChannelRestPage.getTags().get(TAGNAME)).as("%s in Subchannel Page".formatted(TAGNAME))
+				.isNotNull();
+		assertThat(subChannelRestPage.getTags().get(TAGNAME).getProperties().get(PARTNAME))
+				.as("%s in Subchannel Page".formatted(TAGNAME))
+				.hasFieldOrPropertyWithValue("stringValue", "Channel content in %s".formatted(TAGNAME));
+		assertThat(subChannelRestPage.getTags().get(OTHER_TAGNAME)).as("%s in Subchannel Page".formatted(OTHER_TAGNAME)).isNotNull();
+		assertThat(subChannelRestPage.getTags().get(OTHER_TAGNAME).getProperties().get(PARTNAME))
+				.as("%s in Subchannel Page".formatted(OTHER_TAGNAME))
+				.hasFieldOrPropertyWithValue("stringValue", "Master content in %s".formatted(OTHER_TAGNAME));
+	}
+
+	@Test
 	public void testPushFullyLocalizedPageOverPartial() throws NodeException {
 		node = update(node, n -> n.activateFeature(Feature.PARTIAL_MULTICHANNELLING));
 

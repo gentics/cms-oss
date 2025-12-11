@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cms.fullname" . }}-config
+  labels:
+    app.kubernetes.io/name: {{ include "cms.name" . }}
+    helm.sh/chart: {{ include "cms.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+
+  backup.sh: |-
+{{- $file := .Files.Get "scripts/backup.sh" | indent 6 }}
+{{- if .Values.cms.backup.backupScript }}
+{{ tpl .Values.cms.backup.backupScript . | indent 6 }}
+{{- else }}
+{{ tpl $file . }}
+{{- end }}
+
+  {{- if .Values.cms.supportLogin }}
+  support-login-public-key.jwk: |-
+    {"keys":[{"kty":"RSA","e":"AQAB","use":"sig","kid":"a992699e-89ff-48f1-9163-c8f9a23e9e60","n":"7cUUPeF0OtrEZc_lfzjx6S-5jdo2xXtf7MwTaIcx8bggOH8Di35ROqSkA2-hxgfAOuLQkX1DpMDA3eMQKfVbF2Q10qZ5QeMmSnER8tD7Qfh-w8gveJr_qb_nvw6xoQuDcTZtgbtSk4XH2GPHJ57IcKySkfHGRZqdXIzMm0mimFdBO_LpbZz5pFMwIRKAPQpL1CKuZQ1JgSxhtK7RSyu-gOtQutv2AjfmRhym3c56zRHb28IaBppuIwVmzQIfoSjRl2-8ymN1i_u0AsK7hnksk28gmQyP0mg7XZXCyZq95mXNB7Pdu8R_EwWQ8p3xZK1nvcT-yRFq8lgW4t5iquhllw"}]}
+  {{- end }}
+
+  {{- range $key, $value := .Values.cmsConfigMapFiles }}
+  {{ $key }}: |
+    {{- tpl $value.content $ | nindent 4 }}
+  {{- end }}

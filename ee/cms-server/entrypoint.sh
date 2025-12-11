@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. /__cacert_entrypoint.sh
+
 function join() {
     local IFS=$1
     shift

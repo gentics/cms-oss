@@ -1,0 +1,204 @@
+# Default values for cms.
+global:
+  nameOverride: ""
+  fullnameOverride: ""
+
+image:
+  repository: "docker.gentics.com/gentics/cms"
+  tag: 6.1.0
+  pullPolicy: IfNotPresent
+  pullSecret: docker-gentics-com
+
+database:
+  name: "cms"
+  username: "node"
+  # password: "node"
+  # passwordSecret: "cms.database.secret"
+  host: "mariadb"
+  port: "3306"
+
+# Add custom certificates to the jvm truststore
+# customCert:
+#   secretName: "my-certs"
+
+cms:
+  replicaCount: 1
+
+# Custom annotations for the deployment
+  #annotations:
+  #  custom: "whatever"
+
+  license:
+    key: null
+    #optionally - specify the secret name where the license key is already stored (key need to be "licensekey")
+    #secret: 
+
+  nodeUserPassword: ""
+
+  #configure gentics support login (Public/Private Key Auth)
+  supportLogin: false
+
+  # Configuration paths to be loaded
+  configurationPaths:
+    - extraconfig
+
+  # Static content paths to be served
+  #staticServePaths:
+  #  - /cms/public/customer-config
+  
+  addJavaOpts: ""
+
+  #extraEnv:
+  #  - name: EXAMPLE_ENV
+  #    value: "EXAMPLE_VALUE"
+
+  resources:
+    requests:
+      memory: 1Gi
+    limits:
+      memory: 2Gi
+  
+  ## Configure the service
+  service:
+    ## Specify a service type
+    type: ClusterIP
+    port: 80
+    useHttp2: false
+
+  ingress:
+    enabled: false
+    host: example.local
+    annotations:
+      # kubernetes.io/tls-acme: "true"
+    #ingressClassName: nginx
+
+    secretName: your-domain-tls
+    tls: false
+
+  persistence:
+    enabled: true
+    #if false, also implementation (packages, config, ...) is persisted
+    onlyData: false
+    # Use existingClaim if you want to use a pre-exising claim. No new data volume will be requested
+    # existingClaim: ""
+    annotations: {}
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+
+  ## Persist cache to a persistent volume
+  cache:
+    persistence:
+      enabled: false
+      # Use existingClaim if you want to use a pre-exising claim. No new data volume will be requested
+      # existingClaim: ""
+      annotations: {}
+      accessModes:
+        - ReadWriteOnce
+      size: 5Gi
+
+  backup:
+    enabled: false
+    
+    # Daily at 22 pm
+    schedule: "0 22 * * *"
+    # Define the time limit for the backup in seconds
+    timeLimitSeconds: 3600
+
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 3
+
+    #image:
+    #  repository: "docker.gentics.com/gentics/cms"
+    #  tag: "6.1.0"
+    #  pullPolicy: IfNotPresent
+    #  pullSecret: docker-gentics-com
+
+    resources:
+      requests:
+        memory: 500Mi
+        cpu: 100m
+      limits:
+        memory: 1Gi
+        cpu: 250m
+
+    ## Persist backup data to a persistent volume
+    persistence:
+      enabled: true
+      # Use existingClaim if you want to use a pre-exising claim. No new backup volume will be requested
+      # existingClaim: ""
+      annotations: {}
+      accessModes:
+        - ReadWriteOnce
+      size: 5Gi
+
+    #allow to override default backup.sh script
+    #backupScript: |-
+
+
+spellchecker:
+  enabled: false
+  repository: gentics/languagetool
+  tag: latest
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+# CMS ConfigMap files
+# Override defaults or add more
+# mountPath must be specified if it should be mounted into the CMS pod
+cmsConfigMapFiles:
+  # EXAMPLE: Mount custom cache config
+  # cache.ccf:
+  #   mountPath: /cms/conf/cache.ccf
+  #   content: |
+  #     jcs.default=
+  #     ...
+
+  # EXAMPLE: Mount custom log config
+  # nodelog.yml:
+  #   mountPath: /cms/conf/nodelog.yml
+  #   content: |
+  #     Configuration:
+  #     ...
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Define additional volumes which can be
+# added to the Gentics CMS pod
+# creates volume and volumeMount
+#cmsExtraVolumes:
+#  - name: "extra"
+#    mount:
+#      mountPath: /Node/tmp/extra.conf
+#      subPath: extra.conf
+#    volume:
+#      persistentVolumeClaim:
+#        claimName: "extra"
+#  - name: "extra2"
+#    mount:
+#      mountPath: /Node/tmp/extra2.conf
+#    volume:
+#      persistentVolumeClaim:
+#        claimName: extra2
+
+
+# Define extraVolumeMounts using existing volumes
+# Can be used for persisting custom data in e.g. the existing cms data volume
+#cmsExtraVolumeMounts:
+#  - mountPath: "/Node/var/httpd/htdocs/custom"
+#    subPath: "custom"
+#    name: "data"

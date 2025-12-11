@@ -1,0 +1,278 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cms.fullname" . }}
+  labels:
+    {{- include "cms.labels" . | nindent 4 }}
+  {{- with .Values.cms.annotations}}
+  annotations:
+    {{- toYaml . | nindent 4}}
+  {{- end }}
+spec:
+  replicas: {{ .Values.cms.replicaCount }}
+  {{- if eq (.Values.cms.replicaCount | int) 1 }}
+  strategy:
+    type: Recreate
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "cms.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cms.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "cms.serviceAccountName" . }}
+      securityContext:
+        {{- if .Values.cms.podSecurityContext }}
+        {{- toYaml .Values.cms.podSecurityContext | nindent 8 }}
+        {{- else }}
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- end }}
+      containers:
+      - name: cms
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.cms.securityContext }}
+        securityContext:
+        {{- toYaml .Values.cms.securityContext | nindent 12 }}
+        {{- else if .Values.securityContext }}
+        securityContext:
+        {{- toYaml .Values.securityContext | nindent 12 }}
+        {{- end }}
+        {{- if .Values.lifecycle }}
+        lifecycle:
+        {{- toYaml .Values.lifecycle | nindent 12 }}
+        {{- end }}
+        env:
+          {{- if $.Values.cms.license.secret }}
+          - name: LICENSEKEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ $.Values.cms.license.secret }}
+                key: licensekey
+          {{- else if $.Values.cms.license.key }}
+          - name: LICENSEKEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "cms.fullname" . }}
+                key: licensekey
+          ## only for backwards compatibility cmp < 8.2 - remove when Helmchart moved to cms repo
+          {{- else if $.Values.cms.licenseKey }}
+          - name: LICENSEKEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "cms.fullname" . }}
+                key: licensekey
+          {{- end }}
+          - name: NODE_DB_HOST
+            value: "{{ .Values.database.host }}"
+          - name: NODE_DB_PORT
+            value: "{{ .Values.database.port }}"
+          - name: NODE_DB_USER
+            value: "{{ .Values.database.username }}"
+          {{- if $.Values.database.passwordSecret }}
+          - name: NODE_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ $.Values.database.passwordSecret }}
+                key: password
+          {{- else if $.Values.database.password }}
+          - name: NODE_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "cms.fullname" . }}
+                key: database-password
+          {{- else }}
+          - name: NODE_DB_PASSWORD
+            value: "{{ required "Either database.password or database.passwordSecret are required!" "" }}"
+          {{- end }}
+          - name: NODE_DB_NAME
+            value: "{{ .Values.database.name }}"
+          - name: ADD_JAVA_OPTS
+            value: "{{ .Values.cms.addJavaOpts }}"
+          - name: PUBLISH_PATH
+            value: data/publish
+          - name: GIS_PATH
+            value: data/publish/gis
+          {{- if .Values.cms.configurationPaths }}
+          - name: CONF_FILES
+            value: {{ join "," .Values.cms.configurationPaths | quote }}
+          {{- end }}
+          {{- if .Values.cms.staticServePaths }}
+          - name: STATIC_SERVE_LIST
+            value: {{ join "," .Values.cms.staticServePaths | quote }}
+          {{- end }}
+          {{- if $.Values.cms.nodeUserPasswordSecret }}
+          - name: NODE_USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ $.Values.cms.nodeUserPasswordSecret }}
+                key: password
+          {{- else if $.Values.cms.nodeUserPassword }}
+          - name: NODE_USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "cms.fullname" . }}
+                key: node-user-password
+          {{- end }}
+          {{- if .Values.cms.extraEnv }}
+          {{- toYaml .Values.cms.extraEnv | nindent 10 }}
+          {{- end }}
+          {{- if and .Values.customCert .Values.customCert.secretName }}
+          - name: USE_SYSTEM_CA_CERTS
+            value: "1"
+          {{- end }}
+        volumeMounts:
+          {{- range .Values.cmsExtraVolumes }}
+          - name: {{ .name }}
+            {{- toYaml .mount | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cms.backup.enabled }}
+          - mountPath: /backup
+            name: backup
+            subPath: db
+            readOnly: true
+          {{- end }}
+          - mountPath: /cms/data
+            name: data
+            subPath: cms/data
+          - mountPath: /cms/keys
+            name: data
+            subPath: cms/keys
+          {{- if .Values.cms.supportLogin }}
+          - mountPath: /cms/keys/support-login-public-key.jwk
+            name: config-cms
+            subPath: support-login-public-key.jwk
+          {{- end }}
+          {{- if not .Values.cms.persistence.onlyData }}
+          - mountPath: /cms/conf
+            name: data
+            subPath: cms/conf
+          - mountPath: /cms/ui-conf
+            name: data
+            subPath: cms/ui-conf
+          - mountPath: /cms/packages
+            name: data
+            subPath: cms/packages
+          - mountPath: /cms/content-packages
+            name: data
+            subPath: cms/content-packages
+          - mountPath: /cms/logs
+            name: data
+            subPath: cms/logs
+          - mountPath: /cms/publish
+            name: data
+            subPath: cms/publish
+          - mountPath: /cms/scheduler-commands
+            name: data
+            subPath: cms/scheduler-commands
+          {{- end }}
+          {{- if .Values.cms.cache.persistence.enabled }}
+          - mountPath: /cms/cache
+            name: cache
+          {{- end }}
+          {{- if .Values.cmsExtraVolumeMounts }}
+          {{- range .Values.cmsExtraVolumeMounts }}
+          - mountPath: {{ .mountPath }}
+            name: {{ .name }}
+            subPath: {{ .subPath }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.cmsConfigMapFiles }}
+          {{- range $key, $value := .Values.cmsConfigMapFiles }}
+          {{- if $value.mountPath }}
+          - mountPath: {{ $value.mountPath }}
+            name: config-cms
+            subPath: "{{ $key }}"
+            readOnly: true
+          {{- end }}  
+          {{- end }}
+          {{- end }}
+          {{- if and .Values.customCert .Values.customCert.secretName }}
+          - name: cert-secret
+            mountPath: "/certificates"
+            readOnly: true
+          {{- end }}
+        ports:
+          - name: http
+            containerPort: 8080
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /rest/info/maintenance
+            port: http
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          {{- toYaml .Values.cms.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.image.pullSecret }}
+      imagePullSecrets:
+      - name: {{ .Values.image.pullSecret }}
+    {{- end }}
+      {{- if .Values.hostAliases }}
+      hostAliases:
+      {{- toYaml .Values.hostAliases | nindent 8 }}
+      {{- end }}
+      volumes:
+      {{- range .Values.cmsExtraVolumes }}
+      - name: {{ .name }}
+        {{- toYaml .volume | nindent 8 }}
+      {{- end }}
+      - name: config-cms
+        configMap:
+          name: {{ include "cms.fullname" . }}-config
+      - name: data
+      {{- if .Values.cms.persistence.enabled }}
+        persistentVolumeClaim:
+        {{- if .Values.cms.persistence.existingClaim }}
+          claimName: {{ .Values.cms.persistence.existingClaim }}
+        {{- else }}
+          claimName: {{ include "cms.fullname" . }}-data
+        {{- end }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+      - name: cache
+      {{- if .Values.cms.cache.persistence.enabled }}
+        persistentVolumeClaim:
+        {{- if .Values.cms.cache.persistence.existingClaim }}
+          claimName: {{ .Values.cms.cache.persistence.existingClaim }}
+        {{- else }}
+          claimName: {{ include "cms.fullname" . }}-cache
+        {{- end }}
+      {{- else }}
+        emptyDir: {}
+      {{- end }}
+      {{- if .Values.cms.backup.enabled }}
+      - name: backup
+        persistentVolumeClaim:
+          {{- if .Values.cms.backup.persistence.existingClaim }}
+          claimName: {{ .Values.cms.backup.persistence.existingClaim }}
+          {{- else }}
+          claimName: {{ include "cms.fullname" . }}-backup
+          {{- end }}
+      {{- end }}
+      {{- if and .Values.customCert .Values.customCert.secretName }}
+      - name: cert-secret
+        secret:
+          secretName: {{ .Values.customCert.secretName }}
+      {{- end }}

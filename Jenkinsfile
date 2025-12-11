@@ -9,9 +9,12 @@ final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
 final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
 final def testDbManagerPort    = "8080"
+final def helmRepositoryProd   = 'https://repo.gentics.com/repository/helm/';
+final def helmRepositoryTest   = 'https://repo.gentics.com/repository/helm-snapshots/';
 
 def branchName                 = null
 def version                    = null
+def helmVersion                = null
 def releaseVersion             = ""
 def tagName                    = null
 def dockerImageTag             = null
@@ -21,6 +24,7 @@ def qaDeployBranchList         = ["dev"] as String[]
 
 def imageHost                  = "push.docker.gentics.com"
 def imageRepo                  = "docker-snapshots"
+def helmRepository             = helmRepositoryProd;
 
 pipeline {
     agent {
@@ -90,6 +94,7 @@ spec:
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
         booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker image")
+        booleanParam(name: 'runHelmBuild',              defaultValue: false, description: "Whether to run the helm build steps.")
         string(name:       'forceVersion',              defaultValue: "",    description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",    description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
         string(name:       'cmsOssVersion',             defaultValue: "",    description: "Override CMS OSS version")
@@ -160,6 +165,7 @@ spec:
                     if (!version && params.runReleaseBuild) {
                         version = MavenHelper.getVersion()
                     }
+                    helmVersion = version
 
                     // Merge the hotfix branch if building a release branch
                     if (params.mergeHotfixBranch && branchName.startsWith("release-")) {
@@ -185,6 +191,7 @@ spec:
                     if (version) {
                         if (params.runReleaseBuild) {
                             version = MavenHelper.transformSnapshotToReleaseVersion(version)
+                            helmVersion = version
                         }
 
                         MavenHelper.setVersion(version, mvnArguments)
@@ -356,6 +363,31 @@ spec:
             }
 		}
 
+        stage("Build Helm Chart") {
+            when {
+                expression {
+                    return env.BUILD_SKIPPED != "true" && params.runHelmBuild
+                }
+            }
+            steps {
+                script {
+                    sh ".jenkins/build-helm-chart.sh ${helmVersion}"
+
+                    if (Boolean.valueOf(params.deploy) || Boolean.valueOf(params.deployTesting)) {
+                        if (Boolean.valueOf(params.deployTesting)) {
+                            helmRepository = helmRepositoryTest;
+                        }
+
+                        withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
+                            def helmPackageFilename = "cms-${helmVersion}.tgz"
+                            echo "Deploying CMS Helm Chart"
+                            sh "curl -u ${repoUsername}:${repoPassword} ${helmRepository} --upload-file target/${helmPackageFilename}"
+                        }
+                    }
+                }
+            }
+        }
+
         stage("UI Integration Tests") {
 			when {
 				expression {
@@ -385,22 +417,6 @@ spec:
                     }
                 }
             }
-		}
-
-		stage("Deploy QA images to Kubernetes") {
-			when {
-				expression {
-					return env.BUILD_SKIPPED != "true" && qaDeploy
-				}
-			}
-
-			steps {
-				build job: 'contentnode-qa-deploy',
-					parameters: [
-						string(name: 'branchName', value: branchName)
-					],
-					wait: false
-			}
 		}
 
 		stage("Git push") {

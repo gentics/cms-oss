@@ -1,0 +1,9 @@
+apiVersion: v1
+name: cms
+description: Gentics CMS
+
+version: 6.4.0
+appVersion: 6.4.0
+
+home: https://www.gentics.com/Content.Node/cmp8/guides/
+icon: https://www.gentics.com/genticscms/assets/images/gentics/gentics_logo.png

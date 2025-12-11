@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.RenderTypeTrx;
+import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
@@ -40,10 +41,6 @@ import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,11 +55,34 @@ public class PartialLocalizationsRenderTest {
 		EMBEDDED
 	}
 
+	public enum ExpectedRenderMode {
+		PLAIN,
+		ALOHA_READONLY,
+		ALOHA_EDITABLE
+	}
+
 	public final static List<String> RENDER_MODES = Arrays.asList("publish", "preview", "aloha_readonly", "aloha");
+
+	private final static String TEMPLATE_ALOHA_READONLY = "<div "
+		+ "data-gcn-pageid=\"%d\" "
+		+ "data-gcn-tagid=\"%d\" "
+		+ "data-gcn-tagname=\"%s\" "
+		+ "data-gcn-i18n-constructname=\"construct\" "
+		+ "data-gcn-localizable=\"%d\""
+		+ ">%s</div>";
+
+	private final static String TEMPLATE_ALOHA_EDITABLE = "<div "
+		+ "data-gcn-pageid=\"%d\" "
+		+ "data-gcn-tagid=\"%d\" "
+		+ "data-gcn-tagname=\"%s\" "
+		+ "data-gcn-i18n-constructname=\"construct\" "
+		+ "class=\"aloha-block\" "
+		+ "id=\"GENTICS_BLOCK_%d\""
+		+ ">%s</div>";
 
 	@Parameters(name = "{index}: localize target: {0}, render mode: {1}")
 	public static Collection<Object[]> data() {
-		Collection<Object[]> data = new ArrayList<Object[]>();
+		Collection<Object[]> data = new ArrayList<>();
 
 		for (var feature: LocalizationTarget.values()) {
 			for (var renderMode: RENDER_MODES) {
@@ -113,9 +133,9 @@ public class PartialLocalizationsRenderTest {
 
 	@Test
 	public void testRender() throws NodeException {
-		var page = createPage("Testpage");
+		var page = createPage();
 
-		var localizedRestPage = localizePage(page, LocalizationType.PARTIAL, LocalizationType.PARTIAL);
+		var localizedRestPage = localizePage(page);
 
 		switch (localizationTarget) {
 			case ROOT_EMPTY:
@@ -204,95 +224,111 @@ public class PartialLocalizationsRenderTest {
 	 * @return The expected result for rendering the specified tag.
 	 */
 	private String getExpectedRenderedTag(Page page, LocalizationTarget renderedTag, String contents) throws NodeException {
+		var localizationState = localizationTarget == renderedTag ? "LOCALIZED" : "MASTER";
+		var expectedRenderMode = getExpectedRenderMode(renderedTag);
+
+		String tagContents = null;
+		ContentTag tag = null;
+
 		switch (renderedTag) {
 			case ROOT_EMPTY: {
-				if (localizationTarget == LocalizationTarget.ROOT_EMPTY) {
-					if (editMode.equals("aloha")) {
-						var tag = page.getContentTag(OTHER_TAGNAME);
+				tag = page.getContentTag(OTHER_TAGNAME);
+				tagContents = String.format("%s_ROOT_TWO", localizationState);
 
-						return String.format(
-								"<div data-gcn-pageid=\"%d\" data-gcn-tagid=\"%d\" data-gcn-tagname=\"othertesttag\" data-gcn-i18n-constructname=\"construct\" class=\"aloha-block\" id=\"GENTICS_BLOCK_%d\">LOCALIZED_ROOT_TWO</div>",
-								page.getId(),
-								tag.getId(),
-								tag.getId());
-					}
-
-					return "LOCALIZED_ROOT_TWO";
-				}
-
-				return "MASTER_ROOT_TWO";
+				break;
 			}
 
-			case ROOT_WITH_EMBEDDED:
-				if (localizationTarget == LocalizationTarget.ROOT_WITH_EMBEDDED || localizationTarget == LocalizationTarget.EMBEDDED) {
-					var rootState = localizationTarget == LocalizationTarget.ROOT_WITH_EMBEDDED ? "LOCALIZED" : "MASTER";
+			case ROOT_WITH_EMBEDDED: {
+				tag = page.getContentTag(TAGNAME);
+				tagContents = String.format("%s_ROOT_ONE: %s", localizationState, contents);
 
-					if (editMode.equals("aloha")) {
-						var tag = page.getContentTag(TAGNAME);
+				break;
+			}
+			case EMBEDDED: {
+				var tagName = page.getTags().keySet().stream()
+					.filter(t -> !t.equals(TAGNAME) && !t.equals(OTHER_TAGNAME))
+					.findFirst()
+					.orElse("UNKNOWN_TAG");
 
-						return String.format(
-								"<div data-gcn-pageid=\"%d\" data-gcn-tagid=\"%d\" data-gcn-tagname=\"testtag\" data-gcn-i18n-constructname=\"construct\" class=\"aloha-block\" id=\"GENTICS_BLOCK_%d\">%s_ROOT_ONE: %s</div>",
-								page.getId(),
-								tag.getId(),
-								tag.getId(),
-								rootState,
-								contents);
-					}
+				tag = page.getContentTag(tagName);
+				tagContents = String.format("%s_EMBEDDED", localizationState);
+			}
+		};
 
-					return String.format("%s_ROOT_ONE: %s", rootState, contents);
+		assertThat(tagContents).isNotNull();
+		assertThat(tag).isNotNull();
+
+		return switch (expectedRenderMode) {
+			case PLAIN -> tagContents;
+			case ALOHA_READONLY -> String.format(TEMPLATE_ALOHA_READONLY,
+				page.getId(),
+				tag.getId(),
+				tag.getName(),
+				page.getChannel().getId(),
+				tagContents);
+			case ALOHA_EDITABLE -> String.format(TEMPLATE_ALOHA_EDITABLE,
+				page.getId(),
+				tag.getId(),
+				tag.getName(),
+				tag.getId(),
+				tagContents);
+		};
+	}
+
+	/**
+	 * Get the expected render mode for the given rendered tag.
+	 *
+	 * @param renderedTag The currently rendered tag.
+	 * @return The expected render mode for the given rendered tag.
+	 */
+	private ExpectedRenderMode getExpectedRenderMode(LocalizationTarget renderedTag) {
+		var expectedRenderMode = ExpectedRenderMode.PLAIN;
+		var rootWithEmbeddedIsLocalized = localizationTarget == LocalizationTarget.ROOT_WITH_EMBEDDED || localizationTarget == LocalizationTarget.EMBEDDED;
+
+		if (editMode.equals("aloha_readonly") && renderedTag != LocalizationTarget.EMBEDDED) {
+			if (renderedTag == LocalizationTarget.ROOT_EMPTY) {
+				if (localizationTarget != LocalizationTarget.ROOT_EMPTY) {
+					expectedRenderMode = ExpectedRenderMode.ALOHA_READONLY;
 				}
-
-				return String.format("MASTER_ROOT_ONE: %s", contents);
-
-			case EMBEDDED:
-				contents = localizationTarget == LocalizationTarget.EMBEDDED ? "LOCALIZED_EMBEDDED" : "MASTER_EMBEDDED";
-
-				if ((localizationTarget == LocalizationTarget.ROOT_WITH_EMBEDDED || localizationTarget == LocalizationTarget.EMBEDDED) && editMode.equals("aloha")) {
-					var tagName = page.getTags().keySet().stream()
-							.filter(t -> !t.equals(TAGNAME) && !t.equals(OTHER_TAGNAME))
-							.findFirst()
-							.orElse("UNKNOWN_TAG");
-					var tag = page.getContentTag(tagName);
-
-					return String.format(
-							"<div data-gcn-pageid=\"%d\" data-gcn-tagid=\"%d\" data-gcn-tagname=\"%s\" data-gcn-i18n-constructname=\"construct\" class=\"aloha-block\" id=\"GENTICS_BLOCK_%d\">%s</div>",
-							page.getId(),
-							tag.getId(),
-							tag.getName(),
-							tag.getId(),
-							contents);
-
+			} else if (!rootWithEmbeddedIsLocalized) {
+				expectedRenderMode = ExpectedRenderMode.ALOHA_READONLY;
+			}
+		} else if (editMode.equals("aloha")) {
+			if (renderedTag == LocalizationTarget.EMBEDDED) {
+				if (rootWithEmbeddedIsLocalized) {
+					expectedRenderMode = ExpectedRenderMode.ALOHA_EDITABLE;
 				}
-
-				return contents;
-
-			default:
-				return "UNEXPECTED_TAG";
+			} else if (renderedTag == LocalizationTarget.ROOT_WITH_EMBEDDED && rootWithEmbeddedIsLocalized) {
+				expectedRenderMode = ExpectedRenderMode.ALOHA_EDITABLE;
+			} else {
+				expectedRenderMode = renderedTag == localizationTarget ? ExpectedRenderMode.ALOHA_EDITABLE : ExpectedRenderMode.ALOHA_READONLY;
+			}
 		}
+
+		return expectedRenderMode;
 	}
 
 	/**
 	 * Create a page with {@link #TAGNAME} as content tag and an embedded tag.
-	 * @param name The name of the page.
+	 *
 	 * @return The created page.
 	 */
-	private static Page createPage(String name) throws NodeException {
-		return createPage(name, new ArrayList<>());
+	private static Page createPage() throws NodeException {
+		return createPage(new ArrayList<>());
 	}
 
 	/**
 	 * Create a page with {@link #TAGNAME} as content tag and an embedded tag.
 	 *
 	 * <p>
-	 *     The name of the embedded tag is added to the list of embedded tag names.
+	 * The name of the embedded tag is added to the list of embedded tag names.
 	 * </p>
 	 *
-	 * @param name The name of the page.
 	 * @param embeddedTagNames The list of embedded tag names.
 	 * @return The created page.
 	 */
-	private static Page createPage(String name, List<String> embeddedTagNames) throws NodeException {
-		var page = supply(() -> ContentNodeTestDataUtils.createPage(folder, template, name, node));
+	private static Page createPage(List<String> embeddedTagNames) throws NodeException {
+		var page = supply(() -> ContentNodeTestDataUtils.createPage(folder, template, "Testpage", node));
 
 		return update(page, p -> {
 			var embeddedTag = p.getContent().addContentTag(constructId);
@@ -317,21 +353,19 @@ public class PartialLocalizationsRenderTest {
 	/**
 	 * Localize the given page with the given localization type.
 	 *
-	 * @see #loadPage(int)
 	 * @param page The page to localize.
-	 * @param localizationType The desired localization type.
-	 * @param expectedLocalizationResult The actually expected localization type of the result.
 	 * @return The REST model of the localized page.
+	 * @see #loadPage(int)
 	 */
-	private static com.gentics.contentnode.rest.model.Page localizePage(Page page, LocalizationType localizationType, LocalizationType expectedLocalizationResult) throws NodeException {
+	private static com.gentics.contentnode.rest.model.Page localizePage(Page page) throws NodeException {
 		var localizeRequest = new PageLocalizeRequest();
 
 		localizeRequest
-				.setLocalizationType(localizationType)
+				.setLocalizationType(LocalizationType.PARTIAL)
 				.setChannelId(channel.getId());
 
 		var localizeResponse = execute(m -> new MCPageResourceImpl().localize(m.getId(), localizeRequest), page);
-		var expectedMessage = String.format("Die Seite wurde erfolgreich %slokalisiert.", expectedLocalizationResult == LocalizationType.FULL ? "" : "partiell ");
+		var expectedMessage = "Die Seite wurde erfolgreich partiell lokalisiert.";
 
 		assertResponse(localizeResponse, ResponseCode.OK, expectedMessage);
 
@@ -339,7 +373,7 @@ public class PartialLocalizationsRenderTest {
 
 		Assertions.assertThat(loadedPage.getLocalizationType())
 				.as("Localization type")
-				.isEqualTo(expectedLocalizationResult);
+				.isEqualTo(LocalizationType.PARTIAL);
 
 		return loadedPage;
 	}

@@ -1485,7 +1485,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				// finally restore the plinks
 				code = restorePLinks(code, savedPLinks);
 			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY && prefs.isFeature(Feature.COPY_TAGS, node))) {
-				var needWrapper = tag.isLocalizable() && editMode != RenderType.EM_PUBLISH;
+				var needWrapper = tag.isLocalizable() && editMode != RenderType.EM_PUBLISH && editMode != RenderType.EM_PREVIEW;
 				Matcher matcher = rootTagPattern.matcher(code);
 
 				if (matcher.matches()) {
@@ -1528,7 +1528,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 			if (tag.getName().equals(renderType.getParameter(MARK_TAG))) {
 				code = String.format("<gtxtag %s>%s</gtxtag %s>", tag.getName(), code, tag.getName());
-		}
+			}
 		}
 
 		if (logger.isDebugEnabled()) {

@@ -38,7 +38,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.genericexceptions.IllegalUsageException;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -1601,7 +1600,12 @@ public class PageFactory extends AbstractFactory {
 		 * @see com.gentics.lib.base.object.NodeObject#copy()
 		 */
 		public Page copy() throws NodeException {
-			return new EditableFactoryPage(this, getFactory().getFactoryHandle(Page.class).createObjectInfo(Page.class, true), true);
+			return copy(false);
+		}
+
+		@Override
+		public Page copy(boolean includeInheritedTags) throws NodeException {
+			return new EditableFactoryPage(this, getFactory().getFactoryHandle(Page.class).createObjectInfo(Page.class, true), true, includeInheritedTags);
 		}
 
 		/**
@@ -2323,7 +2327,7 @@ public class PageFactory extends AbstractFactory {
 
 		@Override
 		public boolean needsContenttagMigration(Template template, List<String> tagnames, boolean force) throws NodeException {
-			for (ContentTag contentTag : getContent().getContentTags().values()) {
+			for (ContentTag contentTag : getContentTags().values()) {
 				if (tagnames != null && !tagnames.contains(contentTag.getName())) {
 					continue;
 				}
@@ -2339,7 +2343,7 @@ public class PageFactory extends AbstractFactory {
 				if (tagnames != null && !tagnames.contains(templateTag.getName())) {
 					continue;
 				}
-				if (getContent().getContentTag(templateTag.getName()) == null) {
+				if (getContentTag(templateTag.getName()) == null) {
 					return true;
 				}
 			}
@@ -2934,11 +2938,12 @@ public class PageFactory extends AbstractFactory {
 		 * @param asNewPage true when the editable copy shall represent a new
 		 *        page, false if it shall be the editable version of the same
 		 *        page
+		 * @param includeInheritedTags true to include inherited tags
 		 * @throws NodeException when an internal error occurred
 		 * @throws ReadOnlyException when the page could not be fetched for
 		 *         update
 		 */
-		protected EditableFactoryPage(FactoryPage page, NodeObjectInfo info, boolean asNewPage) throws ReadOnlyException, NodeException {
+		protected EditableFactoryPage(FactoryPage page, NodeObjectInfo info, boolean asNewPage, boolean includeInheritedTags) throws ReadOnlyException, NodeException {
 			// set some values differently, depending on whether this is a new page
 			super(asNewPage ? null : page.getId(), info, page.name, page.niceUrl, page.description, page.filename, page.templateId, page.getFolderId(),
 					asNewPage ? null : page.contentId, page.priority, page.contentSetId, page.languageId, asNewPage ? null : page.objectTagIds,
@@ -2950,6 +2955,18 @@ public class PageFactory extends AbstractFactory {
 
 			if (asNewPage) {
 				editableContent = (EditableFactoryContent) page.getContent().copy();
+
+				// include inherited tags
+				if (includeInheritedTags && page.getContent().isPartiallyLocalized()) {
+					var masterTags = MultichannellingFactory.getNextHigherObject(page).getContentTags();
+					var masterTagCopies = new HashMap<String, ContentTag>();
+
+					for (Entry<String, ContentTag> entry : masterTags.entrySet()) {
+						masterTagCopies.put(entry.getKey(), (ContentTag)entry.getValue().copy());
+					}
+
+					addInheritedContentTags(masterTagCopies, editableContent.getContentTags());
+				}
 
 				// copy the objecttags
 				Map<String, ObjectTag> originalObjectTags = page.getObjectTags();
@@ -3198,7 +3215,7 @@ public class PageFactory extends AbstractFactory {
 			Map<String, ContentTag> contentTags = Collections.emptyMap();
 
 			if (!isEmptyId(contentId)) {
-				contentTags = getContent().getContentTags();
+				contentTags = getContentTags();
 			}
 			boolean modifiedContentTags = false;
 
@@ -3244,7 +3261,7 @@ public class PageFactory extends AbstractFactory {
 				return false;
 			}
 			// check contenttags
-			for (ContentTag contentTag : getContent().getContentTags().values()) {
+			for (ContentTag contentTag : getContentTags().values()) {
 				for (Value value : contentTag.getValues()) {
 					if (isEmptyId(value.getId())) {
 						return true;
@@ -3315,7 +3332,7 @@ public class PageFactory extends AbstractFactory {
 		public void migrateContenttags(Template template, List<String> tagnames, boolean force) throws NodeException {
 			super.migrateContenttags(template, tagnames, force);
 
-			for (Iterator<ContentTag> i = getContent().getContentTags().values().iterator(); i.hasNext();) {
+			for (Iterator<ContentTag> i = getContentTags().values().iterator(); i.hasNext();) {
 				ContentTag contentTag = i.next();
 				if (tagnames != null && !tagnames.contains(contentTag.getName())) {
 					continue;
@@ -4113,42 +4130,7 @@ public class PageFactory extends AbstractFactory {
 				contentTags.put(tag.getName(), tag);
 			}
 
-			if (isPartiallyLocalized()) {
-				var page = getPages().stream().findAny();
-
-				if (page.isPresent()) {
-					addInheritedContentTags(page.get().getMaster().getContent().getContentTags(), contentTags);
-				}
-			}
-
 			return contentTags;
-		}
-
-		private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
-			var inheritedTags = new HashMap<String, ContentTag>();
-
-			for (var masterTagEntry : masterContentTags.entrySet()) {
-				var masterTagName = masterTagEntry.getKey();
-				var masterTag = masterTagEntry.getValue();
-
-				if (!contentTags.containsKey(masterTagName)) {
-					masterTag.setInherited(true);
-
-					if (masterTag.comesFromTemplate()) {
-						inheritedTags.put(masterTagName, masterTag);
-
-						for (var embeddedTagName: MiscUtils.getEmbeddedTagNames(masterContentTags, masterTagName)) {
-							var embeddedTag = masterContentTags.get(embeddedTagName);
-
-							embeddedTag.setInherited(true);
-							inheritedTags.put(embeddedTagName, embeddedTag);
-						}
-					}
-
-				}
-			}
-
-			contentTags.putAll(inheritedTags);
 		}
 
 		private synchronized void loadPageIds() throws NodeException {
@@ -5438,7 +5420,7 @@ public class PageFactory extends AbstractFactory {
 		}
 		if (object instanceof FactoryPage) {
 			try {
-				EditableFactoryPage editableCopy = new EditableFactoryPage((FactoryPage) object, info, false);
+				EditableFactoryPage editableCopy = new EditableFactoryPage((FactoryPage) object, info, false, false);
 
 				// synchronize the contenttags with the template
 				if (editableCopy.synchronizeContentTagsWithTemplate() || editableCopy.containsNewValues()) {

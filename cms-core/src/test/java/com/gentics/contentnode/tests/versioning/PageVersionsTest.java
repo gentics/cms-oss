@@ -88,7 +88,7 @@ public class PageVersionsTest {
 			p.setTemplateId(template.getId());
 			p.setName("Test page");
 
-			Map<String, ContentTag> tags = p.getContent().getContentTags();
+			Map<String, ContentTag> tags = p.getContentTags();
 			tags.put("tag1", create(ContentTag.class, c -> {
 				c.setConstructId(construct.getId());
 				c.setName("tag1");
@@ -115,15 +115,15 @@ public class PageVersionsTest {
 
 		// update page by removing one of the tags
 		page = update(page, p -> {
-			p.getContent().getContentTags().remove("tag2");
+			p.getContentTags().remove("tag2");
 		}).at(2).build();
 
 		// load the page version @1
 		Page pageVersion1 = execute(p -> TransactionManager.getCurrentTransaction().getObject(Page.class, p.getId(), 1), page);
-		consume(p -> assertThat(p.getContent().getContentTags()).as("Content Tags of version 1").containsOnlyKeys("tag1", "tag2"), pageVersion1);
+		consume(p -> assertThat(p.getContentTags()).as("Content Tags of version 1").containsOnlyKeys("tag1", "tag2"), pageVersion1);
 
 		// load the page version @2
 		Page pageVersion2 = execute(p -> TransactionManager.getCurrentTransaction().getObject(Page.class, p.getId(), 2), page);
-		consume(p -> assertThat(p.getContent().getContentTags()).as("Content Tags of version 2").containsOnlyKeys("tag1"), pageVersion2);
+		consume(p -> assertThat(p.getContentTags()).as("Content Tags of version 2").containsOnlyKeys("tag1"), pageVersion2);
 	}
 }

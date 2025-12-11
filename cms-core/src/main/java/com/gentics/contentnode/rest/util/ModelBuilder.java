@@ -1326,7 +1326,7 @@ public class ModelBuilder {
 
 				case CONTENT_TAGS:
 					// add contenttags
-					Map<String, ContentTag> contenttagMap = nodePage.getContent().getContentTags();
+					Map<String, ContentTag> contenttagMap = nodePage.getContentTags();
 					Map<String, com.gentics.contentnode.rest.model.Tag> restContentTags = new HashMap<String, com.gentics.contentnode.rest.model.Tag>(
 							contenttagMap.size());
 
@@ -1537,7 +1537,7 @@ public class ModelBuilder {
 
 		if (restTags != null) {
 			// get the contenttags and objecttags
-			Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+			Map<String, ContentTag> contentTags = page.getContentTags();
 			Map<String, ObjectTag> objectTags = page.getObjectTags();
 
 			List<String> defKeynames = TagFactory.loadKeynames(Page.TYPE_PAGE,

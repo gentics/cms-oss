@@ -1419,8 +1419,7 @@
 			// Remove inherited tags from the payload. 
 			var tags = jQuery.extend({}, jsonData.tags) || {};
 			Object.keys(tags || {}).forEach(function(key) {
-				const tag = tags[key];
-				if (tag.inherited) {
+				if (tags[key].inherited) {
 					delete tags[key];
 				}
 			});

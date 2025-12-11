@@ -52,6 +52,19 @@ public abstract class Content extends AbstractContentObject implements TagContai
 	public abstract Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException;
 
 	/**
+	 * check, if the content is partially localized.
+	 * @return true, if the content is partially localized.
+	 */
+	public abstract boolean isPartiallyLocalized();
+
+	/**
+	 * set the partially localized flag.
+	 * @param partiallyLocalized new value for partially localized flag
+	 * @return Fluent API
+	 */
+	public abstract Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException;
+
+	/**
 	 * get a contenttag by name.
 	 * @param name the name of the tag.
 	 * @return the contenttag, or null if not found.

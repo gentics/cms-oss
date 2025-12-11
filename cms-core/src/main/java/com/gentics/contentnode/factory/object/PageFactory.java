@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.genericexceptions.IllegalUsageException;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -3912,6 +3913,11 @@ public class PageFactory extends AbstractFactory {
 		 * @see com.gentics.contentnode.object.AbstractContentObject#copyFrom(com.gentics.lib.base.object.NodeObject)
 		 */
 		public <T extends NodeObject> void copyFrom(T original) throws ReadOnlyException, NodeException {
+			copyFrom(original, true);
+		}
+
+		@Override
+		public <T extends NodeObject> void copyFrom(T original, boolean copyContent) throws ReadOnlyException, NodeException {
 			super.copyFrom(original);
 			Page oPage = (Page) original;
 
@@ -3948,8 +3954,10 @@ public class PageFactory extends AbstractFactory {
 				}
 			}
 
+			if (copyContent) {
 			// copy the content
 			getContent().copyFrom(oPage.getContent());
+		}
 		}
 
 		@Override
@@ -4118,61 +4126,25 @@ public class PageFactory extends AbstractFactory {
 
 		private void addInheritedContentTags(Map<String, ContentTag> masterContentTags, Map<String, ContentTag> contentTags) throws NodeException {
 			var inheritedTags = new HashMap<String, ContentTag>();
-			var possibleInheritedTagNames = new HashSet<>(masterContentTags.keySet());
-			var tagsToCheck = new LinkedList<String>();
 
 			for (var masterTagEntry : masterContentTags.entrySet()) {
 				var masterTagName = masterTagEntry.getKey();
 				var masterTag = masterTagEntry.getValue();
 
-				if (masterTag.comesFromTemplate()) {
-					if (!contentTags.containsKey(masterTagName)) {
-						tagsToCheck.push(masterTagName);
-					}
-				}
-
 				if (!contentTags.containsKey(masterTagName)) {
 					masterTag.setInherited(true);
-				}
-			}
 
-			tagsToCheck.forEach(possibleInheritedTagNames::remove);
+					if (masterTag.comesFromTemplate()) {
+						inheritedTags.put(masterTagName, masterTag);
 
-			while (!tagsToCheck.isEmpty()) {
-				var masterTagName = tagsToCheck.pop();
-				var masterTag = masterContentTags.get(masterTagName);
+						for (var embeddedTagName: MiscUtils.getEmbeddedTagNames(masterContentTags, masterTagName)) {
+							var embeddedTag = masterContentTags.get(embeddedTagName);
 
-				inheritedTags.put(masterTagName, masterTag);
-
-				var construct = masterTag.getConstruct();
-				var values = masterTag.getValues();
-
-				for (var part : construct.getParts()) {
-					var key = part.getKeyname();
-					var val = values.getByKeyname(key);
-
-					if (val == null) {
-						continue;
-					}
-
-					var text = val.getValueText();
-
-					if (text.isEmpty()) {
-						continue;
-					}
-
-					var newToCheck = new HashSet<String>();
-
-					for (var embeddedTag : possibleInheritedTagNames) {
-						if (!inheritedTags.containsKey(embeddedTag) && text.contains("<node " + embeddedTag + ">")) {
-							newToCheck.add(embeddedTag);
+							embeddedTag.setInherited(true);
+							inheritedTags.put(embeddedTagName, embeddedTag);
 						}
 					}
 
-					if (!newToCheck.isEmpty()) {
-						possibleInheritedTagNames.removeAll(newToCheck);
-						tagsToCheck.addAll(newToCheck);
-					}
 				}
 			}
 
@@ -4616,8 +4588,11 @@ public class PageFactory extends AbstractFactory {
 				ContentTag originalTag = entry.getValue();
 
 				if (thisCTags.containsKey(tagName)) {
+					ContentTag toOverwrite = thisCTags.get(tagName);
+					if (toOverwrite.isEditable()) {
 					// found the tag in this content, copy the original tag over it
-					thisCTags.get(tagName).copyFrom(originalTag);
+						toOverwrite.copyFrom(originalTag);
+					}
 				} else {
 					// did not find the tag, so copy the original
 					thisCTags.put(tagName, (ContentTag) originalTag.copy());

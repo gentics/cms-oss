@@ -1,8 +1,5 @@
 package com.gentics.contentnode.rest.resource.impl;
 
-import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
-import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,20 +8,11 @@ import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.MultichannellingFactory;
@@ -32,8 +20,10 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.job.LocalizePageCallable;
+import com.gentics.contentnode.job.LocalizeRootTagCallable;
 import com.gentics.contentnode.job.PushToMasterJob;
 import com.gentics.contentnode.job.UnlocalizeJob;
+import com.gentics.contentnode.job.UnlocalizeTagJob;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
@@ -41,10 +31,11 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.model.LocalizationType;
 import com.gentics.contentnode.rest.model.request.DisinheritRequest;
-import com.gentics.contentnode.rest.model.request.LocalizeRequest;
 import com.gentics.contentnode.rest.model.request.MultiPushToMasterRequest;
 import com.gentics.contentnode.rest.model.request.MultiUnlocalizeRequest;
+import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
 import com.gentics.contentnode.rest.model.request.PushToMasterRequest;
 import com.gentics.contentnode.rest.model.request.UnlocalizeRequest;
 import com.gentics.contentnode.rest.model.response.DisinheritResponse;
@@ -65,8 +56,20 @@ import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.Operator.LockType;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
-
 import io.reactivex.Observable;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import org.apache.commons.lang3.StringUtils;
+
+import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
+import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
 
 @Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ MediaType.APPLICATION_JSON })
@@ -174,7 +177,7 @@ public class MCPageResourceImpl implements MCPageResource {
 	@POST
 	@Path("/localize/{id}")
 	@Override
-	public GenericResponse localize(@PathParam("id") Integer id, LocalizeRequest request) throws NodeException {
+	public GenericResponse localize(@PathParam("id") Integer id, PageLocalizeRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			if (request == null) {
 				logger.error("Error while localizing page: no data provided");
@@ -209,6 +212,13 @@ public class MCPageResourceImpl implements MCPageResource {
 								"Error while localizing page {" + id
 								+ "} in channel {" + request.getChannelId() + "}: " +
 										"the specified page does not exist"));
+			}
+
+			var partial = request.getLocalizationType() == LocalizationType.PARTIAL;
+
+			if (partial && !Feature.PARTIAL_MULTICHANNELLING.isActivated(page.getNode())) {
+				logger.error("Ignoring flag for partial localization of page {" + id + "} in channel {" + request.getChannelId() + "}: Feature PARTIAL_MULTICHANNELLING not available");
+				partial = false;
 			}
 
 			Node channel = t.getObject(Node.class, request.getChannelId());
@@ -249,8 +259,158 @@ public class MCPageResourceImpl implements MCPageResource {
 										"page's node is not master node of the specified channel"));
 			}
 
-			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000,
-					Operator.lock(LockType.channelSet, page.getChannelSetId()), new LocalizePageCallable(id, request.getChannelId(), false));
+			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000L,
+					Operator.lock(LockType.channelSet, page.getChannelSetId()), new LocalizePageCallable(id, request.getChannelId(), false, partial));
+		}
+	}
+
+	@POST
+	@Path("/localize/{pageId}/tags/{tagId}")
+	@Override
+	public GenericResponse localizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId) throws NodeException {
+		if (pageId == null) {
+			var msg = "Error while localizing tag: no page ID provided";
+
+			logger.error(msg);
+
+			var m = new CNI18nString("rest.general.error");
+
+			return new GenericResponse(
+					new Message(Message.Type.CRITICAL, m.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, msg));
+
+		}
+
+		if (StringUtils.isBlank(tagId)) {
+			var msg = "Error while localizing tag: no tag ID provided";
+
+			logger.error(msg);
+
+			var m = new CNI18nString("rest.general.error");
+
+			return new GenericResponse(
+					new Message(Message.Type.CRITICAL, m.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, msg));
+		}
+
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			Page page = t.getObject(Page.class, pageId);
+
+			if (page == null) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: the specified page does not exist", tagId, pageId);
+
+				logger.error(msg);
+
+				I18nString m = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
+				if (!ObjectPermission.edit.checkObject(page)) {
+					String msg = new CNI18nString("page.nopermission").toString();
+					return new GenericResponse(
+							new Message(Type.CRITICAL, msg),
+							new ResponseInfo(ResponseCode.PERMISSION, "Not enough permissions to edit this page in the channel"));
+				}
+			}
+
+			if (!Feature.PARTIAL_MULTICHANNELLING.isActivated(page.getNode())) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: page is not partially localized", tagId, pageId);
+
+				logger.error(msg);
+
+				I18nString m = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			if (!page.getContent().isPartiallyLocalized()) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: page is not partially localized", tagId, pageId);
+
+				logger.error(msg);
+
+				I18nString m = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			var tag = page.getContentTag(tagId);
+
+			if (tag == null) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: the specified tag does not exist", tagId, pageId);
+				logger.error(msg);
+				I18nString m = new CNI18nString("rest.general.error");
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			if (!tag.comesFromTemplate()) {
+				var msg = String.format("Error while localizing tag {%s} for page {%d}: tag is not a root tag", tagId, pageId);
+
+				logger.error(msg);
+
+				I18nString m = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(
+						new Message(Message.Type.CRITICAL, m.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, msg));
+			}
+
+			if (!page.getMaster().getTag(tagId).equals(tag)) {
+				return new GenericResponse(
+						new Message(Type.SUCCESS, "Tag already localized"),
+						new ResponseInfo(ResponseCode.OK, "Tag already localized"));
+			}
+
+			return Operator.executeLocked(
+					new CNI18nString("localizejob").toString(),
+					AbstractContentNodeResource.getJobForegroundTime(null) * 1000L,
+					Operator.lock(LockType.channelSet, page.getChannelSetId()),
+					new LocalizeRootTagCallable(pageId, page.getChannel().getId(), tagId)
+			);
+		}
+	}
+
+	@POST
+	@Path("/unlocalize/{pageId}/tags/{tagId}")
+	@Override
+	public GenericResponse unlocalizeTag(@PathParam("pageId") Integer pageId, @PathParam("tagId") String tagId, UnlocalizeRequest request) throws Exception {
+		if (request == null) {
+			var msg = "Error while unlocalizing root tag: no UnlocalizeRequest provided";
+
+			logger.error(msg);
+
+			return new GenericResponse(
+				new Message(Message.Type.CRITICAL, new CNI18nString("rest.general.error").toString()),
+				new ResponseInfo(ResponseCode.FAILURE, msg));
+		}
+
+		var channelId = request.getChannelId();
+
+		try (var trx = ContentNodeHelper.trx()) {
+			if (!checkChannelSyncPerm(channelId) && !checkDeletePermSome(channelId, Page.class, Collections.singletonList(pageId))) {
+				var message = new CNI18nString("page.nopermission");
+
+				return new GenericResponse(
+					new Message(Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.PERMISSION, message.toString()));
+			}
+
+			var job = new UnlocalizeTagJob()
+				.setPageId(pageId)
+				.setTagId(tagId)
+				.setChannelId(channelId);
+
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		}
 	}
 

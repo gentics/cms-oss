@@ -581,12 +581,16 @@ public class StagingModelBuilder {
 		restPage.setContentId(nodePage.getContent().getGlobalId().toString());
 
 		// add contenttags
-		Map<String, ContentTag> contenttagMap = nodePage.getContent().getContentTags();
+		Map<String, ContentTag> contenttagMap = nodePage.getContentTags();
 		Map<String, StagedTag> restContentTags = new HashMap<>(contenttagMap.size());
 
 		for (Iterator<String> i = contenttagMap.keySet().iterator(); i.hasNext();) {
 			String tagName = i.next();
-			restContentTags.put(tagName, getTag(contenttagMap.get(tagName), new StagedTag()));
+			ContentTag tag = contenttagMap.get(tagName);
+
+			if (!nodePage.getContent().isPartiallyLocalized() || !tag.isInherited()) {
+				restContentTags.put(tagName, getTag(tag, new StagedTag()));
+			}
 		}
 		restPage.setTags(restContentTags);
 
@@ -771,7 +775,7 @@ public class StagingModelBuilder {
 
 		if (restTags != null) {
 			// get the contenttags
-			Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+			Map<String, ContentTag> contentTags = page.getContentTags();
 
 			for (Iterator<StagedTag> i = restTags.values().iterator(); i.hasNext();) {
 				StagedTag restTag = i.next();
@@ -1406,6 +1410,12 @@ public class StagingModelBuilder {
 				stagedObject.setDisinheritedChannelIds(channels.stream().map(c -> c.getGlobalId().toString()).collect(Collectors.toSet()));
 			}
 		}
+
+		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PARTIAL_MULTICHANNELLING)) {
+			if (Page.TYPE_PAGE_INTEGER.equals(object.getTType())) {
+				((StagedPage) stagedObject).setPartiallyLocalized(((Page) object).getContent().isPartiallyLocalized());
+			}
+		}
 	}
 
 	/**
@@ -1434,6 +1444,12 @@ public class StagingModelBuilder {
 				}
 			} else if (object.isNew()) {
 				object.setChannelInfo(channel.getId(), 0);
+			}
+		}
+
+		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PARTIAL_MULTICHANNELLING) && channel != null) {
+			if (clazz.equals(Page.class)) {
+				((Page) object).getContent().setPartiallyLocalized(((StagedPage) stagedObject).isPartiallyLocalized());
 			}
 		}
 	}

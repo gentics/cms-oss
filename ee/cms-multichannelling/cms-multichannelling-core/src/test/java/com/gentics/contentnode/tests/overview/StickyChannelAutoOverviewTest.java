@@ -200,7 +200,7 @@ public class StickyChannelAutoOverviewTest {
 
 		Trx.consume(p -> {
 			try (RenderTypeTrx rtTrx = new RenderTypeTrx(RenderType.EM_LIVEPREVIEW)) {
-				ContentTag tag = p.getContent().getContentTags().values().iterator().next();
+				ContentTag tag = p.getContentTags().values().iterator().next();
 
 				OverviewPartType overviewPartType = ContentNodeTestDataUtils.getPartType(OverviewPartType.class, tag, "ds");
 				Overview overview = overviewPartType.getOverview();
@@ -282,7 +282,7 @@ public class StickyChannelAutoOverviewTest {
 
 		Trx.consume(p -> {
 			try (RenderTypeTrx rtTrx = new RenderTypeTrx(RenderType.EM_LIVEPREVIEW)) {
-				ContentTag tag = p.getContent().getContentTags().values().iterator().next();
+				ContentTag tag = p.getContentTags().values().iterator().next();
 
 				OverviewPartType overviewPartType = ContentNodeTestDataUtils.getPartType(OverviewPartType.class, tag, "ds");
 				Overview overview = overviewPartType.getOverview();

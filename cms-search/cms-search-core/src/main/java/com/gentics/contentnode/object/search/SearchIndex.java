@@ -825,7 +825,7 @@ public class SearchIndex {
 				if ("content".equals(entry.getTagname()) && object instanceof Page) {
 					Page page = (Page) object;
 
-					List<String> content = Flowable.fromIterable(page.getContent().getContentTags().values()).flatMap(tag -> Flowable.fromIterable(tag.getValues())).filter(value -> {
+					List<String> content = Flowable.fromIterable(page.getContentTags().values()).flatMap(tag -> Flowable.fromIterable(tag.getValues())).filter(value -> {
 						PartType partType = value.getPartType();
 						return (partType instanceof TextPartType);
 					}).map(Value::getValueText).filter(value -> org.apache.commons.lang3.StringUtils.isNotBlank(value)).toList().blockingGet();

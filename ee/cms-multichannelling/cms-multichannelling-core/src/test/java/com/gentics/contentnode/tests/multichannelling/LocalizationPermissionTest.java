@@ -1,23 +1,10 @@
 package com.gentics.contentnode.tests.multichannelling;
 
-import static com.gentics.contentnode.factory.Trx.consume;
-import static com.gentics.contentnode.factory.Trx.supply;
-
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-
-import org.glassfish.jersey.media.multipart.MultiPart;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
@@ -40,8 +27,8 @@ import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
 import com.gentics.contentnode.rest.model.request.ImageSaveRequest;
-import com.gentics.contentnode.rest.model.request.LocalizeRequest;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
+import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.request.UnlocalizeRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -61,6 +48,18 @@ import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.i18n.CNI18nString;
+import org.glassfish.jersey.media.multipart.MultiPart;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.supply;
 
 /**
  * Test cases for localization with restricted permissions
@@ -228,7 +227,7 @@ public class LocalizationPermissionTest {
 		LocalizableNodeObject<?> master = Trx.supply(() -> type.create(folder, template));
 
 		try (Trx trx = new Trx(user)) {
-			LocalizeRequest request = new LocalizeRequest();
+			PageLocalizeRequest request = new PageLocalizeRequest();
 			request.setChannelId(testChannel.getId());
 			GenericResponse response = null;
 

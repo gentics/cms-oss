@@ -9,7 +9,10 @@ import com.gentics.license.feature.LicenseKeyFeatureDefinition;
 public class MultichannellingFeatureService implements FeatureService {
 	@Override
 	public boolean isProvided(Feature feature) {
-		return (feature == Feature.MULTICHANNELLING && LicenseService.isLicenseSufficient(LicenseKeyFeatureDefinition.MC))
-				|| (feature == Feature.MCCR  && LicenseService.isLicenseSufficient(LicenseKeyFeatureDefinition.MCCR));
+		return switch (feature) {
+			case MULTICHANNELLING, PARTIAL_MULTICHANNELLING -> LicenseService.isLicenseSufficient(LicenseKeyFeatureDefinition.MC);
+			case MCCR -> LicenseService.isLicenseSufficient(LicenseKeyFeatureDefinition.MCCR);
+			default -> false;
+		};
 	}
 }

@@ -411,7 +411,7 @@ public final class LinkChecker {
 				Set<Pair<Integer, Integer>> tagSet = linkMap.get(page.getId());
 				if (!ObjectTransformer.isEmpty(tagSet)) {
 					for (Pair<Integer, Integer> pair : tagSet) {
-						ContentTag tag = page.getContent().getContentTag(pair.getLeft());
+						ContentTag tag = page.getContentTag(pair.getLeft());
 						if (tag != null) {
 							Value value = tag.getValues().getById(pair.getRight());
 							if (value != null) {

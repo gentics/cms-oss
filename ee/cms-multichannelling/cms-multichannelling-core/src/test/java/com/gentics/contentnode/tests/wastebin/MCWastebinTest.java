@@ -1,28 +1,8 @@
 package com.gentics.contentnode.tests.wastebin;
 
-import static com.gentics.contentnode.factory.Trx.consume;
-import static com.gentics.contentnode.factory.Trx.execute;
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
@@ -44,6 +24,7 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.model.request.FolderMoveRequest;
 import com.gentics.contentnode.rest.model.request.LocalizeRequest;
 import com.gentics.contentnode.rest.model.request.ObjectMoveRequest;
+import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
@@ -64,6 +45,24 @@ import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.i18n.CNI18nString;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.execute;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Multichannelling Wastebin Tests
@@ -191,7 +190,7 @@ public class MCWastebinTest {
 
 		// localize the page in the channel
 		Trx.operate(() -> {
-		LocalizeRequest request = new LocalizeRequest();
+		PageLocalizeRequest request = new PageLocalizeRequest();
 		request.setChannelId(channel.getId());
 		request.setForegroundTime(50000);
 		ContentNodeRESTUtils.assertResponseOK(new MCPageResourceImpl().localize(masterPage.getId(), request));

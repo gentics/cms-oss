@@ -20,6 +20,8 @@ public class ElasticsearchContext extends GenericContainer<ElasticsearchContext>
 
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
+    public static final String VERSION_ES9 = "9.1.7";
+
     public static final String VERSION_ES8 = "8.14.1";
 
     public static final String VERSION_ES7 = "7.4.0";
@@ -29,7 +31,7 @@ public class ElasticsearchContext extends GenericContainer<ElasticsearchContext>
     private final int majorVersion;
 
     public ElasticsearchContext() {
-        this(VERSION_ES8);
+        this(VERSION_ES9);
     }
 
     public ElasticsearchContext(String version) {

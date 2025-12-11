@@ -41,7 +41,7 @@ import static org.junit.Assert.fail;
 public abstract class AbstractIndexerTest {
 
 	@ClassRule
-	public static ElasticsearchContext elasticsearch = new ElasticsearchContext(ElasticsearchContext.VERSION_ES8);
+	public static ElasticsearchContext elasticsearch = new ElasticsearchContext(ElasticsearchContext.VERSION_ES9);
 	public static ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
 	/**

@@ -26,7 +26,7 @@
     <gtx-dropdown-content>
       @for (singleBranch of availableBranches; track singleBranch) {
         <gtx-dropdown-item (click)="branchChangeHandler(singleBranch)">
-          {{ singleBranch }}
+          {{ singleBranch.name }}
         </gtx-dropdown-item>
       }
     </gtx-dropdown-content>

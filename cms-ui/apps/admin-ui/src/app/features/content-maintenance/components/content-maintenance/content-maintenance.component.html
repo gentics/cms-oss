@@ -43,7 +43,7 @@
         <gtx-tabs pure [activeId]="activeTabId">
             <gtx-tab
                 [id]="ContentMaintenanceTabs.GENERAL"
-                [title]="'contentmaintenance.title_general' | gtxI18n"
+                [title]="'content_maintenance.title_general' | gtxI18n"
                 (select)="changeTab($event)"
             >
                 @if (nodesError == null) {
@@ -62,7 +62,7 @@
 
             <gtx-tab
                 [id]="ContentMaintenanceTabs.FAILED_TASKS"
-                [title]="'contentmaintenance.title_failedTasks' | gtxI18n"
+                [title]="'content_maintenance.title_failedTasks' | gtxI18n"
                 (select)="changeTab($event)"
             >
                 <gtx-dirt-queue-item-table
@@ -94,7 +94,7 @@
                     [disabled]="!modifyPermissions || working"
                     (click)="reloadConfiguration()"
                 >
-                    <icon left>settings_applications</icon> {{ 'contentmaintenance.reload_configuration' | gtxI18n }}
+                    <icon left>settings_applications</icon> {{ 'content_maintenance.reload_configuration' | gtxI18n }}
                 </gtx-button>
 
                 <gtx-button
@@ -105,7 +105,7 @@
                     [disabled]="!modifyPermissions || working"
                     (click)="stopPublishing()"
                 >
-                    <icon left>highlight_off</icon> {{ 'contentmaintenance.stop_publishing' | gtxI18n }}
+                    <icon left>highlight_off</icon> {{ 'content_maintenance.stop_publishing' | gtxI18n }}
                 </gtx-button>
             </div>
 

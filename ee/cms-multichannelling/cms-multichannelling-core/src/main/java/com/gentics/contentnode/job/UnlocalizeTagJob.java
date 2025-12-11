@@ -62,7 +62,7 @@ public class UnlocalizeTagJob extends AbstractBackgroundJob {
 				throw new InsufficientPrivilegesException("Cannot unlocalize tag {" + tagId + "} on page {" + pageId + "} in channel {" + channelId + "}");
 			}
 
-			var tags = page.getContent().getContentTags();
+			var tags = page.getContentTags();
 
 			if (!tags.containsKey(tagId)) {
 				throw new EntityNotFoundException("Tag {" + tagId + "} not found on page {" + pageId + "} in channel {" + channelId + "}");

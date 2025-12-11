@@ -581,7 +581,7 @@ public class StagingModelBuilder {
 		restPage.setContentId(nodePage.getContent().getGlobalId().toString());
 
 		// add contenttags
-		Map<String, ContentTag> contenttagMap = nodePage.getContent().getContentTags();
+		Map<String, ContentTag> contenttagMap = nodePage.getContentTags();
 		Map<String, StagedTag> restContentTags = new HashMap<>(contenttagMap.size());
 
 		for (Iterator<String> i = contenttagMap.keySet().iterator(); i.hasNext();) {
@@ -775,7 +775,7 @@ public class StagingModelBuilder {
 
 		if (restTags != null) {
 			// get the contenttags
-			Map<String, ContentTag> contentTags = page.getContent().getContentTags();
+			Map<String, ContentTag> contentTags = page.getContentTags();
 
 			for (Iterator<StagedTag> i = restTags.values().iterator(); i.hasNext();) {
 				StagedTag restTag = i.next();

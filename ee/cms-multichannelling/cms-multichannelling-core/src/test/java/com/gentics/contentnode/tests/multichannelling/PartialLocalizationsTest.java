@@ -3,29 +3,19 @@ package com.gentics.contentnode.tests.multichannelling;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.events.Dependency;
-import com.gentics.contentnode.events.DependencyManager;
-import com.gentics.contentnode.events.DependencyObject;
-import com.gentics.contentnode.events.Events;
-import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.parttype.ShortTextPartType;
-import com.gentics.contentnode.perm.PermHandler;
-import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.rest.model.LocalizationType;
 import com.gentics.contentnode.rest.model.Tag.Type;
@@ -33,13 +23,11 @@ import com.gentics.contentnode.rest.model.request.MultiPageLoadRequest;
 import com.gentics.contentnode.rest.model.request.PageLocalizeRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.request.PushToMasterRequest;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.MCPageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
-import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import org.assertj.core.api.Assertions;
@@ -133,7 +121,7 @@ public class PartialLocalizationsTest {
 		node = update(node, n -> n.activateFeature(Feature.PARTIAL_MULTICHANNELLING));
 
 		var page = createPage("Page 3");
-		var masterTagNames = supply(() -> page.getContent().getContentTags().keySet());
+		var masterTagNames = supply(() -> page.getContentTags().keySet());
 		var localizedPage = localizePage(page, LocalizationType.PARTIAL, LocalizationType.PARTIAL);
 
 		assertThat(localizedPage.getTags())
@@ -549,7 +537,7 @@ public class PartialLocalizationsTest {
 
 		return update(page, p -> {
 			var contentTag = p.getContent().addContentTag(constructId);
-			var templateTag = p.getContent().getContentTag(TAGNAME);
+			var templateTag = p.getContentTag(TAGNAME);
 			var textPart = templateTag.getValues().getByKeyname(PARTNAME);
 
 			textPart.setValueText("<node " + contentTag.getName() + ">");

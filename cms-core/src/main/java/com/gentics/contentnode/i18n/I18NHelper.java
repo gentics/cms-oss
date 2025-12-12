@@ -1,5 +1,11 @@
 package com.gentics.contentnode.i18n;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.TreeMap;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -9,17 +15,13 @@ import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.object.UserLanguageFactory;
 import com.gentics.contentnode.object.Construct;
-import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Datasource;
-import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.I18nNamedNodeObject;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.NamedNodeObject;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTagDefinition;
-import com.gentics.contentnode.object.SystemUser;
-import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.Folder;
@@ -28,12 +30,8 @@ import com.gentics.contentnode.rest.model.Template;
 import com.gentics.contentnode.rest.model.request.page.TargetFolder;
 import com.gentics.lib.i18n.CNI18nString;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-
 public final class I18NHelper {
+
 	/**
 	 * Returns the name of the given object
 	 * @param object object
@@ -41,22 +39,38 @@ public final class I18NHelper {
 	 * @throws NodeException
 	 */
 	public static String getName(NodeObject object) throws NodeException {
+		return getName(object, true).orElseThrow(() -> new NodeException("Could not determine name for " + object));
+	}
+	/**
+	 * Returns the name of the given object, optionally throwing a {@link NodeException}.
+	 * @param object object
+	 * @param throwIfFailed if not set, the possible exception is logged but not rethrown.
+	 * @return name
+	 * @throws NodeException
+	 */
+	public static Optional<String> getName(NodeObject object, boolean throwIfFailed) throws NodeException {
 		if (object == null) {
-			throw new NodeException("Can't determine name for object. Given object was null.");
+			if (throwIfFailed) {
+				throw new NodeException("Could not determine name for object. Given object was null.");
+			} else {
+				return Optional.empty();
+			}
 		}
+		String result = null;
 		if (object instanceof NamedNodeObject) {
-			return ((NamedNodeObject) object).getName();
+			result = ((NamedNodeObject) object).getName();
 		} else if (object instanceof I18nNamedNodeObject) {
-			return ((I18nNamedNodeObject) object).getName().toString();
+			result = ((I18nNamedNodeObject) object).getName().toString();
 		} else if (object instanceof ObjectTagDefinition) {
-			return ((ObjectTagDefinition) object).getName();
+			result = ((ObjectTagDefinition) object).getName();
 		} else if (object instanceof Construct) {
-			return ((Construct) object).getName().toString();
+			result = ((Construct) object).getName().toString();
 		} else if (object instanceof Datasource) {
-			return ((Datasource) object).getName();
+			result = ((Datasource) object).getName();
 		} else {
-			return object.toString();
+			result = object.toString();
 		}
+		return Optional.of(result);
 	}
 
 	/**

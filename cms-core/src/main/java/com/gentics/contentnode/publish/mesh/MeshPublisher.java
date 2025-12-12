@@ -4108,7 +4108,7 @@ public class MeshPublisher implements AutoCloseable {
 							logger.debug(String.format("Postponing update of %d.%d due to recoverable error '%s'", task.objType, task.objId, t.getMessage()));
 						}
 						CNI18nString i18n = new CNI18nString("object.publish.conflict");
-						i18n.addParameter(Trx.supply(() -> I18NHelper.getName(task.getNodeObject())));
+						i18n.addParameter(Trx.supply(() -> I18NHelper.getName(task.getNodeObject(), false).orElse("Unknown")));
 						postponedTasks.add(Pair.of(task, i18n));
 					}
 				}

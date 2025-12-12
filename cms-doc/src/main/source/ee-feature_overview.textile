@@ -57,3 +57,7 @@ See "Multichannelling":mc_admin.html
 h3. Multichannelling Content.Repositories
 
 See "Multichannelling Content.Repositories":mc_contentrepository.html for more information.
+
+h3. Partial Multichannelling
+
+See "Partial Multichannelling":feature_partial_multichannelling.html for details.

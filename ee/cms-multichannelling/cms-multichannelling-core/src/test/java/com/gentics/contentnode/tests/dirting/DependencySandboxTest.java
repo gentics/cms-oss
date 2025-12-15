@@ -369,6 +369,7 @@ public class DependencySandboxTest  {
 
 		int fileUrlconstructId = ContentNodeTestDataUtils.createConstruct(master, FileURLPartType.class, FILEURL_TAGNAME, FILEURL_TAGNAME);
 		ContentTag tag = page.getContent().addContentTag(fileUrlconstructId);
+		tag.setName(FILEURL_TAGNAME + "1");
 		tag.setEnabled(true);
 
 		FileURLPartType fileUrlPartType = ContentNodeTestDataUtils.getPartType(FileURLPartType.class, tag, FILEURL_TAGNAME);

@@ -176,16 +176,16 @@ public class AbstractContentStagingTest {
 			p.setTemplateId(template.getId());
 			p.setName("Page 1");
 
-			p.getContent().addContentTag(noNodeConstructId);
-			p.getContent().addContentTag(node2ConstructId);
+			p.getContent().addContentTag(noNodeConstructId).setName("nonode1");
+			p.getContent().addContentTag(node2ConstructId).setName("node21");
 		}));
 
 		page2 = supply(() -> create(Page.class, p -> {
 			p.setFolderId(node2.getFolder().getId());
 			p.setTemplateId(template.getId());
 			p.setName("Page 2");
-			p.getContent().addContentTag(node1ConstructId);
-			p.getContent().addContentTag(bothNodeConstructId);
+			p.getContent().addContentTag(node1ConstructId).setName("node11");
+			p.getContent().addContentTag(bothNodeConstructId).setName("both1");
 		}));
 		page2 = execute(p -> update(p, upd -> {
 			Overview overview = getPartType(OverviewPartType.class, upd.getTag("both1"), "ds").getOverview();
@@ -213,8 +213,8 @@ public class AbstractContentStagingTest {
 			p.setTemplateId(template.getId());
 			p.setName("Page 1 of Folder 1");
 
-			p.getContent().addContentTag(noNodeConstructId);
-			p.getContent().addContentTag(node2ConstructId);
+			p.getContent().addContentTag(noNodeConstructId).setName("nonode1");
+			p.getContent().addContentTag(node2ConstructId).setName("node21");
 		}));
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -237,15 +237,15 @@ public class AbstractContentStagingTest {
 			p.setFolderId(node2.getFolder().getId());
 			p.setTemplateId(template.getId());
 			p.setName("Page 31");
-			p.getContent().addContentTag(node1ConstructId);
-			p.getContent().addContentTag(bothNodeConstructId);
+			p.getContent().addContentTag(node1ConstructId).setName("node11");
+			p.getContent().addContentTag(bothNodeConstructId).setName("both1");
 		}));
 		page32 = supply(() -> create(Page.class, p -> {
 			p.setFolderId(node2.getFolder().getId());
 			p.setTemplateId(template.getId());
 			p.setName("Page 32");
-			p.getContent().addContentTag(node1ConstructId);
-			p.getContent().addContentTag(bothNodeConstructId);
+			p.getContent().addContentTag(node1ConstructId).setName("node11");
+			p.getContent().addContentTag(bothNodeConstructId).setName("both1");
 		}));
 		page31 = execute(p -> update(p, upd -> {
 			Overview overview = getPartType(OverviewPartType.class, upd.getTag("both1"), "ds").getOverview();

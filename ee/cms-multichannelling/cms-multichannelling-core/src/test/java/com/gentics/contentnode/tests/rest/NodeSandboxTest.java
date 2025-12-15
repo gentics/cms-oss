@@ -269,6 +269,7 @@ public class NodeSandboxTest {
 		page.setTemplateId(template.getId());
 		ContentTag tag = page.getContent().addContentTag(ObjectTransformer.getInt(construct.getId(), 0));
 
+		tag.setName("link1");
 		tag.setEnabled(true);
 		PartType partType = tag.getValues().getByKeyname("url").getPartType();
 
@@ -362,6 +363,7 @@ public class NodeSandboxTest {
 		page.setTemplateId(template.getId());
 		ContentTag tag = page.getContent().addContentTag(ObjectTransformer.getInt(construct.getId(), 0));
 
+		tag.setName("link1");
 		tag.setEnabled(true);
 		PartType partType = tag.getValues().getByKeyname("url").getPartType();
 

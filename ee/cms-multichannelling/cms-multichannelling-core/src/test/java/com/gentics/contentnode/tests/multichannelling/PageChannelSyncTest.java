@@ -100,7 +100,7 @@ public class PageChannelSyncTest {
 		// create contenttag
 		Trx.operate(() -> {
 			update(masterPage, p -> {
-				p.getContent().addContentTag(construct.getId());
+				p.getContent().addContentTag(construct.getId()).setName("construct1");
 			});
 		});
 

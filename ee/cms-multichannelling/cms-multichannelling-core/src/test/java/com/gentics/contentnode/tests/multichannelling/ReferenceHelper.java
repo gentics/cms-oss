@@ -63,10 +63,11 @@ final class ReferenceHelper {
 	 * 
 	 * @param channelId ID of the channel node.
 	 * @param pageId ID of the page.
+	 * @param tag tag
 	 * @return The localized copy of the page.
 	 * @throws Exception if anything goes wrong.
 	 */
-	public static Page localizeAndPublishPageWithChangedContentTag(int channelId, int pageId) throws Exception {
+	public static Page localizeAndPublishPageWithChangedContentTag(int channelId, int pageId, com.gentics.contentnode.rest.model.Tag tag) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		
 		com.gentics.contentnode.object.Page page = t.getObject(com.gentics.contentnode.object.Page.class, pageId);
@@ -79,7 +80,7 @@ final class ReferenceHelper {
         
 		com.gentics.contentnode.rest.model.Page restLocalizedPage = ReferenceHelper.loadPage(ObjectTransformer.getInt(localCopyPage.getId(), -1));
 
-		restLocalizedPage.getTags().get("textshort1").getProperties().get("text").setStringValue(C.reference_test_data.page_tag_channel_value);
+		restLocalizedPage.getTags().get(tag.getName()).getProperties().get("text").setStringValue(C.reference_test_data.page_tag_channel_value);
         
 		savePage(restLocalizedPage);
         

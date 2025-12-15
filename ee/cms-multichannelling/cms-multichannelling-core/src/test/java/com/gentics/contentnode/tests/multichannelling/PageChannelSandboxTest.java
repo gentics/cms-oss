@@ -1015,6 +1015,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		linkPage.setFolderId(channelRootFolder.getId());
 
 		ContentTag tag = linkPage.getContent().addContentTag(ObjectTransformer.getInt(construct.getId(), 0));
+		tag.setName("link1");
 		tag.setEnabled(true);
 		PartType partType = tag.getValues().getByKeyname("url").getPartType();
 		if (partType instanceof PageURLPartType) {

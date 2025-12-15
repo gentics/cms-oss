@@ -101,6 +101,7 @@ public class ChannelSyncSandboxTest extends AbstractMultichannellingSandboxTest 
 
 		// Create a content tag for the test page
 		ContentTag contentTag = testPage.getContent().addContentTag(3);
+		contentTag.setName("textshort1");
 		contentTag.setEnabled(true);
 		contentTag.getValues().iterator().next().setValueText("masterContentTag");
 

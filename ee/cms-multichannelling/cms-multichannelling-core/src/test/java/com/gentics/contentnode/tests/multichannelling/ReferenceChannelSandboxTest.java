@@ -511,7 +511,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		// create a new page over the REST API
 		Page referencedPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
 
-		ReferenceHelper.createTag(referencedPage.getId());
+		Tag tag2 = ReferenceHelper.createTag(referencedPage.getId());
         
 		ReferenceHelper.savePage(referencedPage);
 		ReferenceHelper.publishPage(referencedPage);
@@ -522,7 +522,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		Tag contentTag = testPage.getTags().get("contenttag");
 		Property tag = contentTag.getProperties().get("tag");
 
-		tag.setContentTagId(referencedPage.getTags().get("textshort1").getId());
+		tag.setContentTagId(referencedPage.getTags().get(tag2.getName()).getId());
 		tag.setPageId(referencedPage.getId());
 		contentTag.setActive(true);
         
@@ -530,7 +530,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		ReferenceHelper.savePage(testPage);
 		ReferenceHelper.publishPage(testPage);
         
-		ReferenceHelper.localizeAndPublishPageWithChangedContentTag(channelId, ObjectTransformer.getInt(referencedPage.getId(), -1));
+		ReferenceHelper.localizeAndPublishPageWithChangedContentTag(channelId, ObjectTransformer.getInt(referencedPage.getId(), -1), tag2);
         
 		String expectedMaster = "Master Template\n" + C.reference_test_data.page_tag_master_value;
 		String expectedChannel = "Master Template\n" + C.reference_test_data.page_tag_channel_value;

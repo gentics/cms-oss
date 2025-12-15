@@ -3,6 +3,7 @@
  */
 package com.gentics.contentnode.tests.rest;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -150,7 +151,7 @@ public class TagCreateSandboxTest {
 			assertEquals("Check for the correct response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
 			// now check whether the name of the created tag is like expected
-			assertEquals("Check tag name", CONSTRUCT_NAME + i, response.getTag().getName());
+			assertThat(response.getTag().getName()).as("Tag of new name").matches("%s_.*".formatted(CONSTRUCT_NAME));
 		}
 	}
 

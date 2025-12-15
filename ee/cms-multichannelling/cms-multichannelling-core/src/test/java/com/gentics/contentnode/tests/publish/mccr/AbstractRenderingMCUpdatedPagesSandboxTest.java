@@ -127,6 +127,8 @@ public abstract class AbstractRenderingMCUpdatedPagesSandboxTest {
 	 */
 	protected Node subChannel;
 
+	protected String tagName;
+
 	/**
 	 * Part type ID for the rendering counter part type
 	 */
@@ -1127,7 +1129,7 @@ public abstract class AbstractRenderingMCUpdatedPagesSandboxTest {
 			t.setChannelId(node.getId());
 			
 			Page referencePage = t.getObject(Page.class, referencePageId, true);
-			ContentTag referenceTag = referencePage.getContentTag("htmllong1");
+			ContentTag referenceTag = referencePage.getContentTag(tagName);
 
 			referenceTag.setEnabled(true);
 			referenceTag.getValues().iterator().next().setValueText("Updated content");
@@ -1554,6 +1556,7 @@ public abstract class AbstractRenderingMCUpdatedPagesSandboxTest {
 		referencePage.setFolderId(getMaster().getFolder().getId());
 		
 		ContentTag htmllongContentTag = referencePage.getContent().addContentTag(HTMLLONG_CONSTRUCT_ID);
+		tagName = htmllongContentTag.getName();
 
 		htmllongContentTag.setEnabled(true);
 		htmllongContentTag.getValues().iterator().next().setValueText("Master content");
@@ -1571,7 +1574,7 @@ public abstract class AbstractRenderingMCUpdatedPagesSandboxTest {
 			localizedReferencePage.setChannelInfo(getChannel().getId(), referencePage.getChannelSetId());
 			localizedReferencePage.setName("TestPage-ReferencePage-channel");
 			
-			contentTag = localizedReferencePage.getContentTag("htmllong1");
+			contentTag = localizedReferencePage.getContentTag(htmllongContentTag.getName());
 			contentTag.getValues().iterator().next().setValueText("Channel content");
 			
 			localizedReferencePage.save();
@@ -1584,7 +1587,7 @@ public abstract class AbstractRenderingMCUpdatedPagesSandboxTest {
 			localizedReferencePage.setChannelInfo(getSubChannel().getId(), referencePage.getChannelSetId());
 			localizedReferencePage.setName("TestPage-ReferencePage-subchannel");
 			
-			contentTag = localizedReferencePage.getContentTag("htmllong1");
+			contentTag = localizedReferencePage.getContentTag(htmllongContentTag.getName());
 			contentTag.getValues().iterator().next().setValueText("SubChannel content");
 			
 			localizedReferencePage.save();
@@ -1597,7 +1600,7 @@ public abstract class AbstractRenderingMCUpdatedPagesSandboxTest {
 			localizedReferencePage.setChannelInfo(getChannel().getId(), referencePage.getChannelSetId());
 			localizedReferencePage.setName("TestPage-ReferencePage-channel");
 			
-			contentTag = localizedReferencePage.getContentTag("htmllong1");
+			contentTag = localizedReferencePage.getContentTag(htmllongContentTag.getName());
 			contentTag.getValues().iterator().next().setValueText("Channel content");
 			
 			localizedReferencePage.save();
@@ -1608,7 +1611,7 @@ public abstract class AbstractRenderingMCUpdatedPagesSandboxTest {
 			localizedReferencePage.setChannelInfo(getSubChannel().getId(), referencePage.getChannelSetId());
 			localizedReferencePage.setName("TestPage-ReferencePage-subchannel");
 			
-			contentTag = localizedReferencePage.getContentTag("htmllong1");
+			contentTag = localizedReferencePage.getContentTag(htmllongContentTag.getName());
 			contentTag.getValues().iterator().next().setValueText("SubChannel content");
 			
 			localizedReferencePage.save();
@@ -1627,7 +1630,7 @@ public abstract class AbstractRenderingMCUpdatedPagesSandboxTest {
 		Value pageTagvalue = pageTagContentTag.getValues().iterator().next();
 		PageTagPartType partType = (PageTagPartType) pageTagvalue.getPartType();
 
-		partType.setPageTag(referencePage, referencePage.getContentTag("htmllong1"));
+		partType.setPageTag(referencePage, referencePage.getContentTag(htmllongContentTag.getName()));
 		
 		htmllongTagValue.append(", <node pagetag>");
 	}

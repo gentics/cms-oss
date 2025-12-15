@@ -204,7 +204,7 @@ public class GlobalTagTypeMigrationTest {
 		// create pages
 		masterPage = ContentNodeTestDataUtils.createPage(master.getFolder(), masterTemplate, "Master Page");
 		masterPage = t.getObject(Page.class, masterPage.getId(), true);
-		masterPage.getContent().addContentTag(sourceConstruct.getId());
+		masterPage.getContent().addContentTag(sourceConstruct.getId()).setName("migratefrom1");
 		masterPage.save();
 		t.commit(false);
 		masterPage = t.getObject(Page.class, masterPage.getId());
@@ -213,7 +213,7 @@ public class GlobalTagTypeMigrationTest {
 
 		otherPage = ContentNodeTestDataUtils.createPage(other.getFolder(), otherTemplate, "Other Page");
 		otherPage = t.getObject(Page.class, otherPage.getId(), true);
-		otherPage.getContent().addContentTag(sourceConstruct.getId());
+		otherPage.getContent().addContentTag(sourceConstruct.getId()).setName("migratefrom1");
 		otherPage.save();
 		t.commit(false);
 		otherPage = t.getObject(Page.class, otherPage.getId());

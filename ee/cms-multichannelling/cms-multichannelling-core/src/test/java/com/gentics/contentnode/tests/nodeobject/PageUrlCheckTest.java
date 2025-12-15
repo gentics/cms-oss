@@ -128,6 +128,7 @@ public class PageUrlCheckTest {
 				if (sourcePages[i] instanceof Page) {
 					Page editable = trx.getTransaction().getObject(Page.class, sourcePages[i].getId(), true);
 					ContentTag linkTag = editable.getContent().addContentTag(linkConstructId);
+					linkTag.setName("link1");
 					tagName = linkTag.getName();
 					ContentNodeTestDataUtils.getPartType(PageURLPartType.class, linkTag, "url").setTargetPage(targetMaster);
 					editable.save();

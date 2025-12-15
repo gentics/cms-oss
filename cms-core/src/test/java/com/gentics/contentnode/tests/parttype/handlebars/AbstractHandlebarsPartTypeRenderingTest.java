@@ -576,12 +576,14 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 
 			// add an overview tag
 			ContentTag overviewTag = p.getContent().addContentTag(overviewConstruct.getId());
+			overviewTag.setName("overview_construct1");
 			ContentNodeTestDataUtils.fillOverview(overviewTag, "overview", "<node name><br>", Folder.class,
 					Overview.SELECTIONTYPE_SINGLE, 0, Overview.ORDER_NAME, Overview.ORDERWAY_ASC, false,
 					Arrays.asList(rootFolder, homeFolder, testFolder, subFolder));
 
 			// add a datasource tag
 			ContentTag datasourceTag = p.getContent().addContentTag(datasourceConstruct.getId());
+			datasourceTag.setName("datasource_construct1");
 			List<DatasourceEntry> items = getPartType(DatasourcePartType.class, datasourceTag, "datasource").getItems();
 			items.add(create(DatasourceEntry.class, ds -> {
 				ds.setDsid(1);
@@ -601,14 +603,17 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 
 			// add single select tag
 			ContentTag singleSelectTag = p.getContent().addContentTag(singleSelectConstruct.getId());
+			singleSelectTag.setName("single_select_construct1");
 			getPartType(SingleSelectPartType.class, singleSelectTag, "single").setSelected(datasource.getEntries().get(1));
 
 			// add multi select tag
 			ContentTag multiSelectTag = p.getContent().addContentTag(multiSelectConstruct.getId());
+			multiSelectTag.setName("multi_select_construct1");
 			getPartType(MultiSelectPartType.class, multiSelectTag, "multi").setSelected(datasource.getEntries().get(0), datasource.getEntries().get(2));
 
 			// add urls tag
 			ContentTag urlsTag = p.getContent().addContentTag(urlsConstruct.getId());
+			urlsTag.setName("urls_construct1");
 			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(testPage);
 			getPartType(PageURLPartType.class, urlsTag, "page").setNode(node);
 			getPartType(PageURLPartType.class, urlsTag, "extpage").setExternalTarget("https://www.gentics.com/");
@@ -621,11 +626,13 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 
 			// add a checkbox tag
 			ContentTag checkboxTag = p.getContent().addContentTag(checkboxConstruct.getId());
+			checkboxTag.setName("checkbox_construct1");
 			getPartType(CheckboxPartType.class, checkboxTag, "check1").setChecked(true);
 			getPartType(CheckboxPartType.class, checkboxTag, "check2").setChecked(false);
 
 			// add a node tag
 			ContentTag nodeTag = p.getContent().addContentTag(nodeConstruct.getId());
+			nodeTag.setName("node_construct1");
 			getPartType(NodePartType.class, nodeTag, "node").setNode(node);
 		}).at(editTimestamp).as(editor).unlock().build();
 

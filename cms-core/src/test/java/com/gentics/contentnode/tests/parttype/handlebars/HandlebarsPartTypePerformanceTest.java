@@ -169,6 +169,7 @@ public class HandlebarsPartTypePerformanceTest {
 				StringBuilder testtagContent = new StringBuilder();
 				for (int i = 0; i < numTags; i++) {
 					ContentTag tag = content.addContentTag(handlebarsConstruct.getId());
+					tag.setName("construct_with_handlebars%d".formatted(i + 1));
 					getPartType(HandlebarsPartType.class, tag, "hb").setText("{{ cms.tag.name }}");
 					testtagContent.append(String.format("{{gtx_render cms.page.tags.%s }}|", tag.getName()));
 				}

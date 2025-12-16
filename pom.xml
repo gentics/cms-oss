@@ -44,12 +44,12 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>ci-devtest-SNAPSHOT</alohaeditor.version>
+		<alohaeditor.version>2.1.13</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
 		<alohaeditor.date>18.11.2025</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
-		<mesh.version>3.2.0-SNAPSHOT</mesh.version>
+		<mesh.version>3.2.0</mesh.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>3.1.10</jersey.version>

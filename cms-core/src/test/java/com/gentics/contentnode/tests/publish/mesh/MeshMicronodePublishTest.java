@@ -312,7 +312,7 @@ public class MeshMicronodePublishTest {
 		targetFolder = Trx.supply(() -> createFolder(node.getFolder(), "Folder"));
 
 		targetPage = Trx.supply(() -> update(update(createPage(node.getFolder(), template, "Target"), upd -> {
-			upd.getContent().addContentTag(constructId);
+			upd.getContent().addContentTag(constructId).setName("text1");
 		}), Page::publish));
 		byte[] imageData = IOUtils.toByteArray(GenericTestUtils.getPictureResource("blume.jpg"));
 		targetImage = (ImageFile) Trx.supply(() -> createImage(node.getFolder(), "image.jpg", imageData));

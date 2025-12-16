@@ -24,6 +24,7 @@
             },
             "preVersionCommand": "npm run nx -- run-many -t build",
             "currentVersionResolver": "registry",
+            "fallbackCurrentVersionResolver": "disk",
             "versionPrefix": "^",
             "manifestRootsToUpdate": [
                 "{workspaceRoot}/{projectRoot}",

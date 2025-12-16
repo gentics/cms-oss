@@ -167,7 +167,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
-                                    <arg line="run nx -- release version ${project.version} --projects=tag:lib --verbose" />
+                                    <arg line="run nx -- release version ${project.version} --verbose" />
                                 </exec>
                             </target>
                         </configuration>

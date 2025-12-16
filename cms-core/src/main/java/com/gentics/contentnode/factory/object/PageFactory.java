@@ -4320,6 +4320,7 @@ public class PageFactory extends AbstractFactory {
 		 */
 		protected EditableFactoryContent(NodeObjectInfo info) {
 			super(info);
+			newContent = true;
 			modified = true;
 		}
 

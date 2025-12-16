@@ -16,14 +16,14 @@
                 "{workspaceRoot}/dist/{projectRoot}"
             ],
             "options": {
-                "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.json",
+                "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.prod.json",
                 "project": "libs/cms-rest-client-angular/ng-package.json"
             },
             "configurations": {
-                "production": {
-                    "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.prod.json"
+                "production": {},
+                "development": {
+                    "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.json"
                 },
-                "development": {},
                 "ci": {}
             },
             "defaultConfiguration": "production"

@@ -9,14 +9,14 @@
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
             "options": {
-                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json",
+                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.prod.json",
                 "project": "libs/cms-rest-clients-angular/ng-package.json"
             },
             "configurations": {
-                "production": {
-                    "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.prod.json"
+                "production": {},
+                "development": {
+                    "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json"
                 },
-                "development": {},
                 "ci": {}
             },
             "defaultConfiguration": "production"

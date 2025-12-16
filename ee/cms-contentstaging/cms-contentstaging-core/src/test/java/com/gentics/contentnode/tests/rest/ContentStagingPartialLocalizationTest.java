@@ -112,13 +112,13 @@ public class ContentStagingPartialLocalizationTest extends AbstractContentStagin
 			.as("Re-imported page")
 			.isNotNull();
 
-		var localizedTag = page.getContentTag(TAGNAME);
+		var localizedTag = execute(p -> p.getContentTag(TAGNAME), page);
 
 		assertThat(localizedTag.isInherited())
 			.as("Localized tag inherited")
 			.isFalse();
 
-		var inheritedTag = page.getContentTag(OTHER_TAGNAME);
+		var inheritedTag = execute(p -> p.getContentTag(OTHER_TAGNAME), page);
 
 		assertThat(inheritedTag.isInherited())
 			.as("Inherited tag inherited")

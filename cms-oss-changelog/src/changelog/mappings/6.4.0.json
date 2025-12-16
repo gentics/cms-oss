@@ -1,0 +1,13 @@
+{
+  "version": "6.4.0",
+  "date": "16.12.2025",
+  "changeLogEntryFileNames": [
+    "8592.GPU-2116.enhancement",
+    "8591.enhancement",
+    "8594.SUP-19405.documentation"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "18.11.2025",
+    "alohaeditor-version": "2.1.13"
+  }
+}

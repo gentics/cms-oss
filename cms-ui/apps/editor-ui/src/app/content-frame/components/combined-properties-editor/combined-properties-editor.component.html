@@ -55,7 +55,7 @@
                     [type]="'light'"
                     >
                     <div class="property-tab" gtx-tooltip-trigger>
-                      <icon class="property-tab-mobile" left (click)="toggleDescription(propTooltip)">info</icon>
+                      <icon class="property-tab-mobile" (click)="toggleDescription(propTooltip)">info</icon>
                       <span class="property-tab-label">{{ objProp | objTagName }}</span>
                     </div>
                     <div gtx-tooltip-content>

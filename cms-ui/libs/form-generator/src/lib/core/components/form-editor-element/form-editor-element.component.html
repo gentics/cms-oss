@@ -14,14 +14,14 @@
   @if (propertiesContainError) {
     <icon
       class="form-element-flag has-property-error"
-      [attr.title]="'gtxFormGenerator.element_status_property_error' | gtxI18n"
+      [attr.title]="'form_generator.element_status_property_error' | gtxI18n"
       [@fadeAnim]
     >error_outline</icon>
   } @else {
     @if (isUntranslated) {
       <icon
         class="form-element-flag is-untranslated"
-        [attr.title]="'gtxFormGenerator.element_status_missing_translation' | gtxI18n"
+        [attr.title]="'form_generator.element_status_missing_translation' | gtxI18n"
         [@fadeAnim]
       >translate</icon>
     }
@@ -48,7 +48,7 @@
         <icon
           class="form-element-btn-properties-editor-toggle"
           [class.active]="propertiesEditorIsOpen"
-          [attr.title]="'gtxFormGenerator.element_button_properties_menu_toggle' | gtxI18n"
+          [attr.title]="'form_generator.element_button_properties_menu_toggle' | gtxI18n"
           [@fadeAnim]
           >
           keyboard_arrow_down

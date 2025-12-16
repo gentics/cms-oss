@@ -81,7 +81,7 @@
 
                         @if (currentItem && currentItem?.type === 'form') {
                             <div class="form-type">
-                                {{ 'editor.item_type_label' | gtxI18n }}: {{ 'gtxFormGenerator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | gtxI18n }}
+                                {{ 'editor.item_type_label' | gtxI18n }}: {{ 'form_generator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | gtxI18n }}
                             </div>
                         }
                     </div>

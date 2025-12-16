@@ -1,5 +1,5 @@
 {
-    "form": {
+    "form_generator": {
         "search": "Suche",
         "element_status_missing_translation": "Fehlende Übersetzungen",
         "element_status_property_error": "Fehler in Elementeigenschaft",

@@ -13,7 +13,7 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
     templateUrl: './create-form-modal.component.html',
     styleUrls: ['./create-form-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateFormModalComponent
     extends BaseModal<Form>
@@ -53,40 +53,32 @@ export class CreateFormModalComponent
         this.folderId = folderState.activeFolder;
         this.nodeId = folderState.activeNode;
 
-        this.subscriptions.push(this.appState.select(state => state.folder.forms.creating).subscribe(loading => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.forms.creating).subscribe((loading) => {
             this.loading = loading;
             setEnabled(this.control, !loading);
             this.changeDetector.markForCheck();
-        }))
+        }));
 
         this.subscriptions.push(combineLatest([
-            this.appState.select(state => state.entities.language),
-            this.appState.select(state => state.folder.activeNodeLanguages.list),
+            this.appState.select((state) => state.entities.language),
+            this.appState.select((state) => state.folder.activeNodeLanguages.list),
         ]).pipe(
             map(([indexedLanguages, activeNodeLanguagesIds]: [IndexById<Language>, number[]]) => {
-                return activeNodeLanguagesIds.map(id => indexedLanguages[id]);
+                return activeNodeLanguagesIds.map((id) => indexedLanguages[id]);
             }),
-        ).subscribe(languages => {
+        ).subscribe((languages) => {
             this.languages = languages;
-            this.activeLanguage = languages.find(lang => lang.id ===  folderState.activeLanguage);
+            this.activeLanguage = languages.find((lang) => lang.id === folderState.activeLanguage);
             this.changeDetector.markForCheck();
         }));
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     saveChanges(): void {
         if (!this.control.valid) {
-            return;
-        }
-
-        if (this.languages?.length === 0) {
-            this.notification.show({
-                type: 'alert',
-                message: 'message.form_missing_language',
-            });
             return;
         }
 
@@ -97,19 +89,23 @@ export class CreateFormModalComponent
             languages: this.control.value.languages || [],
         };
 
-        if (
-            this.languages?.length > 0
-            && this.activeLanguage != null
-            && !form.languages.includes(this.activeLanguage.code)
-        ) {
+        // Default to the active language if none was selected for some reason
+        if (form.languages.length === 0 && this.activeLanguage != null) {
             form.languages.push(this.activeLanguage.code);
         }
 
-        this.folderActions.createNewForm(form).then(form => {
+        if (form.languages.length === 0) {
+            this.notification.show({
+                type: 'alert',
+                message: 'message.form_missing_language',
+            });
+            return;
+        }
+
+        this.folderActions.createNewForm(form).then((form) => {
             if (form) {
                 this.closeFn(form);
             }
         });
-
     }
 }

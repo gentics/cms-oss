@@ -4,7 +4,7 @@
     #inputSearch
     type="text"
     class="form-editor-menu-filter"
-    [placeholder]="'gtxFormGenerator.search' | gtxI18n"
+    [placeholder]="'form_generator.search' | gtxI18n"
     [(ngModel)]="searchTerm"
     (ngModelChange)="onMenuFilterChange($event)"
     >
@@ -31,6 +31,6 @@
     }
   </div>
 } @else {
-  <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_formelements_available' | gtxI18n }}</p>
+  <p class="form-editor-error">{{ 'form_generator.error_no_formelements_available' | gtxI18n }}</p>
 }
 

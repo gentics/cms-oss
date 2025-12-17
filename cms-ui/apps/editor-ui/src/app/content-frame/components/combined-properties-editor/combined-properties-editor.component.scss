@@ -32,7 +32,7 @@
 
 .object-property-tooltip {
     width: 100%;
-    display: block;
+    display: contents;
 
     &::ng-deep .tooltip-wrapper {
         width: 100%;
@@ -40,14 +40,8 @@
 
     .property-tab {
         display: flex;
-
-        .property-tab-icon {
-            margin: auto 0;
-        }
-
-        .property-tab-label {
-            margin: auto 0;
-        }
+        align-items: center;
+        gap: 0.5rem;
     }
 }
 
@@ -108,6 +102,21 @@ hr {
     &::ng-deep {
         .grouped-tabs {
             flex: 1 1 !important;
+
+            > .collapsible {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+
+                &::after {
+                    display: block;
+                    content: '';
+                    border-right: 1px solid $gtx-color-light-gray;
+                    flex: 1 1 auto;
+                    width: 1px;
+                    align-self: end;
+                }
+            }
 
             .collapsible {
                 border-right: none;
@@ -204,6 +213,20 @@ hr {
     }
 }
 
+.tag-list-container {
+    transition: 200ms;
+}
+
+@at-root {
+    ::ng-deep {
+        gtx-split-view-container.focusMode {
+            .tag-list-container {
+                padding-right: 1.5rem;
+            }
+        }
+    }
+}
+
 .object-property {
     flex-grow: 1;
     pointer-events: none;
@@ -226,8 +249,7 @@ hr {
 
 .property-tab-mobile {
     display: none;
-    height: 16px;
-    margin-top: 2px;
+    height: 24px;
 
     @media screen and (max-width: $small-screen) {
         display: block;

@@ -2,7 +2,7 @@
 /// <reference lib="dom"/>
 import { readFileSync } from 'node:fs';
 import { Page as CmsPage } from '@gentics/cms-models';
-import { clickButton, clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, selectDateInPicker } from '@gentics/e2e-utils';
+import { clickButton, clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, reroute, selectDateInPicker } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
@@ -444,14 +444,7 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
 }
 
 export function overrideAlohaConfig(page: Page, configFilename: string): Promise<void> {
-    return page.route('/internal/minimal/files/js/aloha-config.js', route => {
-        return route.fulfill({
-            headers: {
-                location: `/internal/minimal/files/js/${configFilename}`,
-            },
-            status: 301,
-        })
-    });
+    return page.route('/internal/minimal/files/js/aloha-config.js', reroute('GET', `/internal/minimal/files/js/${configFilename}`));
 }
 
 export async function addSearchChip(searchBar: Locator, filter: string): Promise<Locator> {

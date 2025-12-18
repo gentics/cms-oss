@@ -12,7 +12,6 @@ import {
     UserImportData,
 } from './common';
 import { hasMatchingParams, matchesPath } from './utils';
-import { ClickOptions } from './playwright-types';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
 const TOAST_CLOSE_BUTTON = '.gtx-toast-btn_close:not([hidden])';
@@ -65,6 +64,18 @@ export function mockResponse<T>(
     };
 }
 
+export function reroute(method: string, path: string): (route: Route) => Promise<void> {
+    return async route => {
+        const res = await route.fetch({
+            method: method,
+            url: path,
+        });
+        return route.fulfill({
+            response: res,
+        });
+    };
+}
+
 export function matchRequest(method: string, path: string | RegExp, options?: RequestMatchOptions): (response: Response | Request) => boolean {
     return (input: Request | Response) => {
         let request: Request;
@@ -83,6 +94,35 @@ export function matchRequest(method: string, path: string | RegExp, options?: Re
             && matchesPath(request.url(), path)
             && (!options?.params || hasMatchingParams(request.url(), options.params));
     };
+}
+
+/**
+ * Simple wrapper function for `page.waitForResponse` and {@link matchRequest}, but with an error-handler
+ * to tell which request actually failed, because otherwise you have to guess.
+ *
+ * @param page The playwright page object
+ * @param method The method of the request
+ * @param path The path of the request
+ * @param options Options for request matching and timeout settings
+ * @returns The Response object from the matched request.
+ */
+export function waitForResponseFrom(
+    page: Page,
+    method: string,
+    path: string | RegExp,
+    options?: RequestMatchOptions & { timeout?: number },
+): Promise<Response> {
+    const timeout = options?.timeout ?? 5_000;
+
+    return page.waitForResponse(matchRequest(method, path, options), { timeout })
+        .catch(err => {
+            // The actual class isn't publicly available, which is why we have to do this hacky workaround.
+            if (err instanceof Error && (err.constructor.name === 'TargetClosedError' || err.constructor.name === 'TimeoutError')) {
+                err.message = `Reached timeout for request "${method} ${path}"`;
+            }
+
+            throw err;
+        });
 }
 
 export function waitForKeycloakAuthPage(page: Page): Promise<void> {

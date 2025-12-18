@@ -1,6 +1,7 @@
 import { Feature, Variant } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    dismissNotifications,
     EntityImporter,
     FolderImportData,
     IMPORT_ID,
@@ -140,6 +141,7 @@ test.describe('Search', () => {
                 },
             }));
 
+            await dismissNotifications(page);
             await searchButton.click();
 
             await searchReq;
@@ -177,6 +179,7 @@ test.describe('Search', () => {
                 },
             }));
 
+            await dismissNotifications(page);
             await searchButton.click();
 
             await searchReq;
@@ -196,6 +199,7 @@ test.describe('Search', () => {
 
             const searchReq = page.waitForRequest(matchRequest('GET', '/rest/folder/getPages/*'));
 
+            await dismissNotifications(page);
             await searchButton.click();
 
             const req = await searchReq;
@@ -215,6 +219,7 @@ test.describe('Search', () => {
 
             await searchInput.fill(SEARCH_TERM);
             const searchReq = page.waitForResponse(matchRequest('GET', '/rest/folder/getPages/*'));
+            await dismissNotifications(page);
             await searchButton.click();
             await searchReq;
 
@@ -252,6 +257,7 @@ test.describe('Search', () => {
 
             const searchReq = page.waitForRequest(matchRequest('POST', '/rest/elastic/page/_search'));
 
+            await dismissNotifications(page);
             await searchButton.click();
 
             const req = await searchReq;
@@ -322,6 +328,7 @@ test.describe('Search', () => {
 
             const searchReq = page.waitForRequest(matchRequest('POST', '/rest/elastic/page/_search'));
 
+            await dismissNotifications(page);
             await searchButton.click();
 
             const req = await searchReq;
@@ -351,6 +358,7 @@ test.describe('Search', () => {
 
             const searchReq = page.waitForRequest(matchRequest('POST', '/rest/elastic/page/_search'));
 
+            await dismissNotifications(page);
             await searchButton.click();
 
             const req = await searchReq;

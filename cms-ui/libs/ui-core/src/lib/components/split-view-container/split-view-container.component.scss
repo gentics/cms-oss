@@ -226,4 +226,8 @@
             display: none;
         }
     }
+
+    .hasNoRightPanel > .right-panel {
+        display: none;
+    }
 }

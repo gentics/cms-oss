@@ -218,8 +218,8 @@ test.describe('Mesh Browser', () => {
                     return false;
                 }
                 const gqlReq: GraphQLRequest = request.request().postDataJSON();
-                return gqlReq.variables?.schemaName === `${MESH_SCHEMA_FOLDER}`;
-            });
+                return gqlReq.variables?.schemaName === MESH_SCHEMA_FOLDER;
+            }, { timeout: 5_000 });
 
             // Fill in Mesh credentials and submit
             await loginWithForm(page.locator('.login-form'), AUTH.mesh);

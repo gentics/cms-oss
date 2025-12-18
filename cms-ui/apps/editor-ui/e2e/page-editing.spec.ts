@@ -7,7 +7,6 @@ import {
     CONSTRUCT_TEST_IMAGE,
     EntityImporter,
     FIXTURE_IMAGE_ONE,
-    hasMatchingParams,
     IMAGE_ONE,
     IMPORT_ID,
     ITEM_TYPE_IMAGE,
@@ -21,21 +20,16 @@ import {
     PAGE_ONE,
     pickSelectValue,
     TestSize,
+    waitForResponseFrom
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
     ACTION_FORMAT_ABBR,
-    ACTION_FORMAT_BOLD,
     ACTION_FORMAT_CITE,
-    ACTION_FORMAT_CODE,
-    ACTION_FORMAT_ITALIC,
     ACTION_FORMAT_QUOTE,
-    ACTION_FORMAT_STRIKETHROUGH,
-    ACTION_FORMAT_SUBSCRIPT,
-    ACTION_FORMAT_SUPERSCRIPT,
-    ACTION_FORMAT_UNDERLINE,
     ACTION_REMOVE_FORMAT,
-    AUTH,
+    ACTION_SIMPLE_FORMAT_MAPPING,
+    AUTH
 } from './common';
 import {
     createExternalLink,
@@ -57,6 +51,8 @@ import {
     selectTextIn,
     setupHelperWindowFunctions,
 } from './helpers';
+
+const CLASS_ACTIVE = 'active';
 
 test.describe.configure({ mode: 'serial' });
 test.describe('Page Editing', () => {
@@ -126,7 +122,7 @@ test.describe('Page Editing', () => {
                 await openEditingPageInEditmode(page);
             });
 
-            test.only('should be able to add new text to the content-editable', async ({page}) => {
+            test('should be able to add new text to the content-editable', async ({page}) => {
                 const TEXT_CONTENT = 'Foo bar hello world';
 
                 // Type content into editor
@@ -218,30 +214,25 @@ test.describe('Page Editing', () => {
                 await editorAction(page, 'close');
 
                 await page.locator('content-frame').waitFor({state: 'detached'});
-                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.98 });
+                // Ratio is "rather low", as the content may overflow/cause scrolling, and that
+                // also counts towards viewport visibilty.
+                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.8 });
             });
         });
 
         test.describe('Formatting', () => {
-            test.beforeEach(async ({page}) => {
+            test.beforeEach(() => {
                 editingPage = IMPORTER.get(PAGE_ONE);
-                await openEditingPageInEditmode(page);
             });
 
             test.describe('add and remove basic formats', () => {
                 const TEXT = 'Hello World';
-                const FORMAT_ACTIONS = [
-                    { action: ACTION_FORMAT_BOLD, tag: 'b' },
-                    { action: ACTION_FORMAT_ITALIC, tag: 'i' },
-                    { action: ACTION_FORMAT_UNDERLINE, tag: 'u' },
-                    { action: ACTION_FORMAT_STRIKETHROUGH, tag: 's' },
-                    { action: ACTION_FORMAT_SUBSCRIPT, tag: 'sub' },
-                    { action: ACTION_FORMAT_SUPERSCRIPT, tag: 'sup' },
-                    { action: ACTION_FORMAT_CODE, tag: 'code' },
-                ];
+                const FORMAT_ACTIONS = Object.entries(ACTION_SIMPLE_FORMAT_MAPPING);
 
                 for (const format of FORMAT_ACTIONS) {
-                    test(`should add and remove ${format.action} formatting`, async ({ page }) => {
+                    test(`should add and remove ${format[0]} formatting`, async ({ page }) => {
+                        await openEditingPageInEditmode(page);
+
                         // Type and select text
                         await mainEditable.click();
                         await mainEditable.clear();
@@ -249,30 +240,84 @@ test.describe('Page Editing', () => {
 
                         await mainEditable.press('ControlOrMeta+a');
 
-                        await page.locator('gtx-page-editor-tabs button[data-id="formatting"]').click();
+                        await selectEditorTab(page, 'formatting');
 
                         // Apply format
-                        let formatButton = findAlohaComponent(page, { slot: format.action, type: 'toggle-button' });
+                        let formatButton = findAlohaComponent(page, { slot: format[0], type: 'toggle-button' });
                         await formatButton.click();
 
                         // Verify format is applied
-                        const formattedText = await mainEditable.locator(format.tag).textContent();
+                        const formattedText = await mainEditable.locator(format[1]).textContent();
                         expect(formattedText).toBe(TEXT);
                         await mainEditable.click();
 
                         // Remove format
                         await mainEditable.press('ControlOrMeta+a');
                         // Activate the toolbar
-                        await page.locator('gtx-page-editor-tabs button[data-id="formatting"]').click();
+                        await selectEditorTab(page, 'formatting');
 
                         formatButton = findAlohaComponent(page, { slot: ACTION_REMOVE_FORMAT, type: 'button' });
                         await formatButton.click();
 
                         // Verify format is removed
-                        const hasFormat = await mainEditable.locator(format.tag).count();
+                        const hasFormat = await mainEditable.locator(format[1]).count();
                         expect(hasFormat).toBe(0);
                     });
                 }
+            });
+
+            test('should be possible to configure the interchangeable node-names', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19357',
+                }],
+            }, async ({ page }) => {
+                const WORDS = ['Sample', 'text', 'to', 'test', 'out', 'different', 'formattings'];
+                await overrideAlohaConfig(page, 'aloha-config-interchangable-names.js');
+                await openEditingPageInEditmode(page);
+
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(WORDS.join(' '));
+
+                const boldButton = findAlohaComponent(page, { slot: 'bold' });
+                const strongButton = findAlohaComponent(page, { slot: 'strong' });
+                const italicButton = findAlohaComponent(page, { slot: 'italic' });
+                const emphasizeButton = findAlohaComponent(page, { slot: 'emphasize' });
+
+                await selectEditorTab(page, 'formatting');
+
+                await test.step('format as bold', async () => {
+                    await selectTextIn(mainEditable, WORDS[1]);
+                    await boldButton.click();
+                    await expect(mainEditable.locator('b')).toBeAttached();
+                    await expect(boldButton).toContainClass(CLASS_ACTIVE);
+                    await expect(strongButton).toContainClass(CLASS_ACTIVE);
+                });
+
+                await test.step('format as italic', async () => {
+                    await selectTextIn(mainEditable, WORDS[2]);
+                    await italicButton.click();
+                    await expect(mainEditable.locator('i')).toBeAttached();
+                    await expect(italicButton).toContainClass(CLASS_ACTIVE);
+                    await expect(emphasizeButton).toContainClass(CLASS_ACTIVE);
+                });
+
+                await test.step('format as strong', async () => {
+                    await selectTextIn(mainEditable, WORDS[3]);
+                    await strongButton.click();
+                    await expect(mainEditable.locator('strong')).toBeAttached();
+                    await expect(strongButton).toContainClass(CLASS_ACTIVE);
+                    await expect(boldButton).toContainClass(CLASS_ACTIVE);
+                });
+
+                await test.step('format as em', async () => {
+                    await selectTextIn(mainEditable, WORDS[4]);
+                    await emphasizeButton.click();
+                    await expect(mainEditable.locator('em')).toBeAttached();
+                    await expect(emphasizeButton).toContainClass(CLASS_ACTIVE);
+                    await expect(italicButton).toContainClass(CLASS_ACTIVE);
+                });
             });
 
             test.describe('toggle formats with keybinds', {
@@ -295,6 +340,8 @@ test.describe('Page Editing', () => {
 
                 for (const bind of KEYBINDS) {
                     test(`should toggle format "${bind.tag}" with a keybind correctly`, async ({ page }) => {
+                        await openEditingPageInEditmode(page);
+
                         await mainEditable.click();
                         await mainEditable.clear();
                         await mainEditable.fill(TEXT);
@@ -317,6 +364,7 @@ test.describe('Page Editing', () => {
             }, async ({ page }) => {
                 const TEXT = 'Test-Text';
 
+                await openEditingPageInEditmode(page);
                 await mainEditable.click();
                 await mainEditable.clear();
                 await mainEditable.fill(TEXT);
@@ -345,13 +393,14 @@ test.describe('Page Editing', () => {
             test('should add and remove quote formatting', async ({ page }) => {
                 const TEXT = 'Hello World';
 
+                await openEditingPageInEditmode(page);
                 await mainEditable.click();
                 await mainEditable.clear();
                 await mainEditable.fill(TEXT);
 
                 await mainEditable.press('ControlOrMeta+a');
 
-                await page.locator('gtx-page-editor-tabs button[data-id="formatting"]').click();
+                await selectEditorTab(page, 'formatting');
                 let formatButton = findAlohaComponent(page, { slot: ACTION_FORMAT_QUOTE, type: 'toggle-button' });
                 await formatButton.click();
 
@@ -360,7 +409,7 @@ test.describe('Page Editing', () => {
 
                 await mainEditable.press('ControlOrMeta+a');
 
-                await page.locator('gtx-page-editor-tabs button[data-id="formatting"]').click();
+                await selectEditorTab(page, 'formatting');
                 formatButton = findAlohaComponent(page, { slot: ACTION_REMOVE_FORMAT, type: 'button' });
                 await formatButton.click();
 
@@ -372,13 +421,14 @@ test.describe('Page Editing', () => {
                 const TEXT = 'HTML';
                 const TITLE = 'HyperText Markup Language';
 
+                await openEditingPageInEditmode(page);
                 await mainEditable.click();
                 await mainEditable.clear();
                 await mainEditable.fill(TEXT);
 
                 await mainEditable.press('ControlOrMeta+a');
 
-                await page.locator('gtx-page-editor-tabs button[data-id="formatting"]').click();
+                await selectEditorTab(page, 'formatting');
                 const formatButton = findAlohaComponent(page, { slot: ACTION_FORMAT_ABBR, type: 'toggle-button' });
                 await formatButton.click();
 
@@ -397,13 +447,14 @@ test.describe('Page Editing', () => {
                 const TEXT = 'The quote';
                 const SOURCE = 'Famous Author';
 
+                await openEditingPageInEditmode(page);
                 await mainEditable.click();
                 await mainEditable.clear();
                 await mainEditable.fill(TEXT);
 
                 await mainEditable.press('ControlOrMeta+a');
 
-                await page.locator('gtx-page-editor-tabs button[data-id="formatting"]').click();
+                await selectEditorTab(page, 'formatting');
                 const formatButton = findAlohaComponent(page, { slot: ACTION_FORMAT_CITE, type: 'toggle-button' });
                 await formatButton.click();
 
@@ -418,6 +469,7 @@ test.describe('Page Editing', () => {
                 const LINK_TEXT = 'World';
                 const LINK_ANCHOR = 'test-anchor';
 
+                await openEditingPageInEditmode(page);
                 await test.step('Create link', async () => {
                     // Type content and select text for link
                     await mainEditable.click();
@@ -462,6 +514,8 @@ test.describe('Page Editing', () => {
                     description: 'SUP-18800',
                 }],
             }, async ({page}) => {
+                await openEditingPageInEditmode(page);
+
                 let inlineEditable = iframe.locator('main p[contenteditable="true"]');
 
                 // Enter some sample text in multiple lines
@@ -818,7 +872,9 @@ test.describe('Page Editing', () => {
                 await openEditingPageInEditmode(page);
             });
 
-            test('should be able to move a construct between two existing ones', async ({ page }) => {
+            // FIXME: The drag-n-drop simply doesn't do anything in the test; Therefore functionality can't be properly tested.
+            // Tried already all kinds of workarounds, but sadly nothing works so far.
+            test.skip('should be able to move a construct between two existing ones', async ({ page }) => {
                 const TEST_IMAGE = IMPORTER.get(IMAGE_ONE);
 
                 // Clear the content
@@ -833,8 +889,11 @@ test.describe('Page Editing', () => {
                 let imageCounter = 1;
                 async function createImageTag(): Promise<void> {
                     await test.step(`Create Image ${imageCounter++}`, async () => {
+                        const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
                         const dropdown = await openContext(category);
                         await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                        await createReq;
+
                         const block = mainEditable.locator('.GENTICS_block').last();
                         await block.locator('.gcn-construct-button-edit').click();
 
@@ -848,7 +907,7 @@ test.describe('Page Editing', () => {
                         await targetImage.locator('gtx-checkbox label').click();
                         await clickModalAction(repoBrowser, 'confirm');
 
-                        const renderReq = page.waitForResponse(matchRequest('POST', '/rest/page/renderTag/*'));
+                        const renderReq = waitForResponseFrom(page, 'POST', '/rest/page/renderTag/*');
                         await modal.locator('[data-action="confirm"] button').click();
                         await renderReq;
                     });
@@ -864,13 +923,15 @@ test.describe('Page Editing', () => {
                     const idsBefore = await Promise.all((await blocks.all()).map(loc => loc.getAttribute('id')));
 
                     const originImage = blocks.last();
-                    const blockId = await originImage.getAttribute('id');
-                    const rect = await originImage.evaluate(el => el.getBoundingClientRect());
+                    const targetImage = blocks.first();
 
-                    await originImage.locator('.aloha-block-handle .gcn-construct-drag-handle').dragTo(mainEditable, {
+                    const blockId = await originImage.getAttribute('id');
+                    const targetRect = await targetImage.evaluate(el => el.getBoundingClientRect());
+
+                    await originImage.locator('.aloha-block-handle .gcn-construct-drag-handle').dragTo(targetImage, {
                         targetPosition: {
-                            x: rect.height - 10,
-                            y: 50,
+                            x: 10,
+                            y: targetRect.bottom,
                         },
                     });
 
@@ -899,14 +960,12 @@ test.describe('Page Editing', () => {
         });
 
         // Regular endpoint which should be used
-        const constructLoadRequest = page.waitForRequest(request =>
-            request.method() === 'GET'
-                && matchesPath(request.url(), '/rest/construct')
-                && hasMatchingParams(request.url(), {
-                    nodeId: IMPORTER.get(NODE_MINIMAL).id.toString(),
-                    pageId: IMPORTER.get(PAGE_ONE).id.toString(),
-                }),
-        );
+        const constructLoadRequest = waitForResponseFrom(page, 'GET', '/rest/construct', {
+            params: {
+                nodeId: IMPORTER.get(NODE_MINIMAL).id.toString(),
+                pageId: IMPORTER.get(PAGE_ONE).id.toString(),
+            }
+        },);
 
         // Setup page for editing
         const list = findList(page, ITEM_TYPE_PAGE);
@@ -927,8 +986,7 @@ test.describe('Page Editing', () => {
         expect(adminEndpointCalled).toBe(false);
 
         // Switch to constructs tab
-        const tabs = page.locator('content-frame gtx-page-editor-tabs');
-        await tabs.locator(`[data-id="${TAB_ID_CONSTRUCTS}"]`).click();
+        await selectEditorTab(page, TAB_ID_CONSTRUCTS);
 
         // Click in editor to activate constructs
         await editor.click();

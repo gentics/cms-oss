@@ -21,7 +21,13 @@
         'b', 'i', 'u', 's', 'sub', 'sup', 'code', 'q', 'abbr', 'cite',
         'removeFormat',
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p',
-        'pre', 'del', 'ins', 'strong', 'em'
+        'pre', 'del', 'strong', 'em'
     ];
+    Aloha.settings.plugins.format.interchangableNames = {
+        b: ['strong'],
+        strong: ['b'],
+        i: ['em'],
+        em: ['i'],
+    };
 
 })();

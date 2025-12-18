@@ -41,6 +41,10 @@ export const ACTION_FORMAT_CODE = 'code';
 export const ACTION_FORMAT_QUOTE = 'quote';
 export const ACTION_FORMAT_CITE = 'cite';
 export const ACTION_FORMAT_ABBR = 'formatAbbr';
+export const ACTION_FORMAT_DELETED = 'deleted';
+export const ACTION_FORMAT_INSERTED = 'inserted';
+export const ACTION_FORMAT_STRONG = 'strong';
+export const ACTION_FORMAT_EMPHASIZE = 'emphasize';
 
 export const ACTION_REMOVE_FORMAT = 'removeFormat';
 
@@ -55,6 +59,11 @@ export const FORMAT_QUOTE = 'q';
 export const FORMAT_CITE = 'cite';
 export const FORMAT_BLOCK_QUOTE = 'blockquote';
 export const FORMAT_ABBR = 'abbr';
+export const FORMAT_DELETED = 'del';
+export const FORMAT_INSERTED = 'ins';
+export const FORMAT_STRONG = 'strong';
+export const FORMAT_EMPHASIZE = 'em';
+
 export const AUTH_MESH = 'mesh';
 
 export const ACTION_SIMPLE_FORMAT_MAPPING: Record<string, string> = {
@@ -67,6 +76,10 @@ export const ACTION_SIMPLE_FORMAT_MAPPING: Record<string, string> = {
     [ACTION_FORMAT_CODE]: FORMAT_CODE,
     [ACTION_FORMAT_CITE]: FORMAT_CITE,
     [ACTION_FORMAT_QUOTE]: FORMAT_QUOTE,
+    [ACTION_FORMAT_DELETED]: FORMAT_DELETED,
+    [ACTION_FORMAT_INSERTED]: FORMAT_INSERTED,
+    [ACTION_FORMAT_STRONG]: FORMAT_STRONG,
+    [ACTION_FORMAT_EMPHASIZE]: FORMAT_EMPHASIZE,
 };
 export const ACTION_SIMPLE_FORMAT_KEYS = Object.keys(ACTION_SIMPLE_FORMAT_MAPPING);
 

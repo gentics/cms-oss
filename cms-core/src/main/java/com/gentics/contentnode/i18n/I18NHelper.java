@@ -39,8 +39,9 @@ public final class I18NHelper {
 	 * @throws NodeException
 	 */
 	public static String getName(NodeObject object) throws NodeException {
-		return getName(object, true).orElseThrow(() -> new NodeException("Could not determine name for " + object));
+		return getName(object, true).orElse(null);
 	}
+
 	/**
 	 * Returns the name of the given object, optionally throwing a {@link NodeException}.
 	 * @param object object
@@ -70,7 +71,7 @@ public final class I18NHelper {
 		} else {
 			result = object.toString();
 		}
-		return Optional.of(result);
+		return Optional.ofNullable(result);
 	}
 
 	/**

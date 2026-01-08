@@ -340,6 +340,12 @@ public class OverviewStagingTest extends AbstractContentStagingTest<Page> {
 			overviewPartType.fromProperty(prop);
 		}).build();
 
+		// import content package
+		importContentPackage(packageName);
+
+		// reload page
+		overviewPage = supply(t -> t.getObject(Page.class, overviewPageGlobalId));
+		assertOverview();
 	}
 
 	@SuppressWarnings("incomplete-switch")

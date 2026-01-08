@@ -75,6 +75,7 @@ import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.NodeIdObjectId;
 import com.gentics.contentnode.rest.model.Overview.ListType;
 import com.gentics.contentnode.rest.model.Overview.OrderDirection;
+import com.gentics.contentnode.rest.model.Overview.SelectType;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -266,10 +267,13 @@ public class StagingModelBuilder {
 		// set the entries
 		if (stagedOverview.getSelectedNodeItemIds() != null && stagedOverview.getSelectedNodeItemIds().size() > 0) {
 			// set the type of selected objects
+			SelectType selectType = restOverview.getSelectType();
 			ListType listType = restOverview.getListType();
 
 			Class<? extends NodeObject> entryClass = null;
-			if (listType != null) {
+			if (selectType == SelectType.FOLDER) {
+				entryClass = Folder.class;
+			} else if (listType != null) {
 				switch (listType) {
 				case FILE:
 					entryClass = File.class;

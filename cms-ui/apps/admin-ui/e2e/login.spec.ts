@@ -43,6 +43,7 @@ test.describe('Login', () => {
             await page.locator('gtx-dashboard').waitFor();
         });
 
+        // FIXME: broken in FF
         test('should skip login if already logged in', async ({ page }) => {
             await navigateToApp(page);
 

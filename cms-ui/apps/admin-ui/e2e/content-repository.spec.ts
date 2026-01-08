@@ -340,7 +340,7 @@ test.describe('Content Repositories Module', () => {
 
             test.beforeEach(async ({ page }) => {
                 await IMPORTER.importData([SCHEDULE_PUBLISHER]);
-                await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
+                await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER, 3);
                 await loginWithCR(page);
             });
 

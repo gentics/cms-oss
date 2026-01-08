@@ -1,11 +1,11 @@
 import {
     EntityImporter,
-    ITEM_TYPE_FOLDER,
-    TestSize,
     FOLDER_A,
+    ITEM_TYPE_FOLDER,
     loginWithForm,
-    NODE_MINIMAL,
     navigateToApp,
+    NODE_MINIMAL,
+    TestSize,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -81,8 +81,8 @@ test.describe('Folder Management', () => {
         await itemAction(item, 'properties');
 
         const form = page.locator('content-frame combined-properties-editor .properties-content gtx-folder-properties');
-
         await form.locator('[formcontrolname="name"] input').fill(CHANGE_FOLDER_NAME);
+        await page.waitForTimeout(500); // Have to wait for internals to propagate
 
         await editorAction(page, 'save');
 

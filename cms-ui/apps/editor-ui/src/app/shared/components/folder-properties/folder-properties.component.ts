@@ -19,7 +19,8 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, forkJoin, of, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ApplicationStateService } from '../../../state';
 
 export enum FolderPropertiesMode {
@@ -49,7 +50,7 @@ const CONTROLS_I18N: (keyof EditableFolderProps)[] = ['nameI18n', 'descriptionI1
         generateFormProvider(FolderPropertiesComponent),
         generateValidatorProvider(FolderPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class FolderPropertiesComponent
     extends BasePropertiesComponent<EditableFolderProps>
@@ -95,11 +96,14 @@ export class FolderPropertiesComponent
 
     private pubDirPattern: RegExp;
     private parentFolderId$ = new BehaviorSubject<number>(null);
+    /** Behaviour to call whenever a new permission check needs to occur */
+    private permissionCheck = new BehaviorSubject<void>(undefined);
 
     private autocompleteSubscription: Subscription;
 
     constructor(
         changeDetector: ChangeDetectorRef,
+        private permissions: PermissionService,
         private appState: ApplicationStateService,
         private client: GCMSRestClientService,
     ) {
@@ -218,9 +222,29 @@ export class FolderPropertiesComponent
         return form;
     }
 
-    protected configureForm(value: EditableFolderProps, loud?: boolean): void {
+    protected configureForm(_value: EditableFolderProps, loud?: boolean): void {
         const options = { onlySelf: loud, emitEvent: loud };
-        setControlsEnabled(this.form, CONTROLS_I18N, this.mode === FolderPropertiesMode.EDIT, options);
+
+        this.subscriptions.push(this.permissionCheck.pipe(
+            // Set the control disabled until we know the permissions
+            tap(() => {
+                setControlsEnabled(this.form, CONTROLS_I18N, false, options);
+                this.changeDetector.markForCheck();
+            }),
+            // Just in case it's getting spammed
+            debounceTime(50),
+            switchMap(() => {
+                return this.permissions.forFolder(this.itemId, this.nodeId).pipe(
+                    map(permission => {
+                        return permission.folder.edit;
+                    }),
+                );
+            }),
+        ).subscribe(enabled => {
+            this.disabled = this.mode !== FolderPropertiesMode.EDIT || !enabled;
+            setControlsEnabled(this.form, CONTROLS_I18N, !this.disabled, options);
+            this.changeDetector.markForCheck();
+        }));
     }
 
     protected assembleValue(value: EditableFolderProps): EditableFolderProps {

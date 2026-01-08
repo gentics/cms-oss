@@ -8,7 +8,7 @@
         </div>
       } @else {
         <div class="label-property-no-value-container">
-          {{ 'gtxFormGenerator.preview_property_empty' | gtxI18n:{ name: (element | property:'label' | i18nfg$:'ui' | async) } }}
+          {{ 'form_generator.preview_property_empty' | gtxI18n:{ name: (element | property:'label' | i18nfg$:'ui' | async) } }}
         </div>
       }
     }
@@ -19,7 +19,7 @@
     }
   } @else {
     <div class="no-preview">
-      {{ 'gtxFormGenerator.no_preview_property_configured' | gtxI18n }}
+      {{ 'form_generator.no_preview_property_configured' | gtxI18n }}
     </div>
   }
 </div>

@@ -18,6 +18,7 @@ import {
     PagingSortOrder,
     ResponseCode,
     Schedule,
+    ScheduleStatus,
     ScheduleTask,
     Template,
     User,
@@ -238,7 +239,7 @@ export class EntityImporter {
 
         for (let i = 0; i < 100; i++) {
             schedule = (await this.client.scheduler.get(id).send()).item;
-            if (!schedule.lastExecution?.running) {
+            if (schedule.status === ScheduleStatus.IDLE) {
                 break;
             }
 

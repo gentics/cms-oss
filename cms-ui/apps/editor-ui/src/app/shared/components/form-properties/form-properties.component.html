@@ -15,7 +15,7 @@
           <gtx-option
             [value]="formType"
             >
-            {{ 'gtxFormGenerator.form_type_' + (formType | lowercase) | gtxI18n }}
+            {{ 'form_generator.form_type_' + (formType | lowercase) | gtxI18n }}
           </gtx-option>
         }
       </gtx-select>
@@ -229,7 +229,7 @@
 </form>
 } @else {
   @if (formConfigLoaded) {
-    <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_or_invalid_formdata' | gtxI18n }}</p>
+    <p class="form-editor-error">{{ 'form_generator.error_no_or_invalid_formdata' | gtxI18n }}</p>
   }
 }
 

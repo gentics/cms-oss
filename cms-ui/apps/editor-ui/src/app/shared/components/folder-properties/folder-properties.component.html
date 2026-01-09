@@ -6,7 +6,6 @@
             [label]="('editor.item_name_label' | i18n) + '*'"
             formControlName="name"
             [autofocus]="mode === FolderPropertiesMode.CREATE"
-            [disabled]="disabled"
         ></gtx-input>
 
         <div class="gtx-input-validation-msgs">
@@ -24,7 +23,6 @@
             class="gtx-input-with-validation"
             [label]="('editor.item_directory_label' | i18n) + '*'"
             formControlName="publishDir"
-            [disabled]="disabled"
         ></gtx-input>
 
         <div class="gtx-input-validation-msgs">
@@ -40,7 +38,6 @@
     <gtx-input
         [label]="'editor.item_description_label' | i18n"
         formControlName="description"
-        [disabled]="disabled"
     ></gtx-input>
 
     <div *ngIf="languages?.length > 1 && mode !== FolderPropertiesMode.CREATE">
@@ -58,7 +55,6 @@
                 formControlName="nameI18n"
                 [language]="activeTabI18nLanguage?.code"
                 [availableLanguages]="languages"
-                [disabled]="disabled"
             ></gtx-i18n-input>
 
             <gtx-i18n-input
@@ -66,7 +62,6 @@
                 formControlName="publishDirI18n"
                 [language]="activeTabI18nLanguage?.code"
                 [availableLanguages]="languages"
-                [disabled]="disabled"
             ></gtx-i18n-input>
 
             <gtx-i18n-input
@@ -74,7 +69,6 @@
                 formControlName="descriptionI18n"
                 [language]="activeTabI18nLanguage?.code"
                 [availableLanguages]="languages"
-                [disabled]="disabled"
             ></gtx-i18n-input>
 
         </gtx-i18n-panel-group>

@@ -40,6 +40,7 @@ const CHARS_ALLOWED_PUB_DIR_SEGMENT = [ '_', '.', '-', '~' ];
 const CHARS_REQUIRE_ESCAPE = new Set([ '\\', '/', '{', '}', '[', ']', '(', ')', '.', '^', '$', '*', '+', '-', '?', '!', '=' ]);
 
 const CONTROLS_I18N: (keyof EditableFolderProps)[] = ['nameI18n', 'descriptionI18n', 'publishDirI18n'];
+const CONTROLS: (keyof EditableFolderProps)[] = ['name', 'description', 'publishDir'];
 
 @Component({
     selector: 'gtx-folder-properties',
@@ -228,6 +229,7 @@ export class FolderPropertiesComponent
         this.subscriptions.push(this.permissionCheck.pipe(
             // Set the control disabled until we know the permissions
             tap(() => {
+                setControlsEnabled(this.form, CONTROLS, false, options);
                 setControlsEnabled(this.form, CONTROLS_I18N, false, options);
                 this.changeDetector.markForCheck();
             }),
@@ -242,6 +244,7 @@ export class FolderPropertiesComponent
             }),
         ).subscribe(enabled => {
             this.disabled = this.mode !== FolderPropertiesMode.EDIT || !enabled;
+            setControlsEnabled(this.form, CONTROLS, !this.disabled, options);
             setControlsEnabled(this.form, CONTROLS_I18N, !this.disabled, options);
             this.changeDetector.markForCheck();
         }));

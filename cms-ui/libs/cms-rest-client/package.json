@@ -7,7 +7,7 @@
     "@gentics/mesh-models": "^2.1.0 || ^3.0.0"
   },
   "devDependencies": {
-    "@gentics/cms-models": "^6.3.10",
+    "@gentics/cms-models": "^6.4.0",
     "@gentics/mesh-models": "^2.1.0 || ^3.0.0"
   }
 }

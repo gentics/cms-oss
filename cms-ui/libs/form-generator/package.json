@@ -17,8 +17,8 @@
     "@angular/common": ">=20.3.0",
     "@angular/core": ">=20.3.0",
     "@angular/forms": ">=20.3.0",
-    "@gentics/cms-components": "^6.3.7",
-    "@gentics/cms-models": "^6.3.7",
+    "@gentics/cms-components": "^6.4.0",
+    "@gentics/cms-models": "^6.4.0",
     "lodash-es": "^4.17.15",
     "uuid": "^9.0.0"
   }

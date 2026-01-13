@@ -1208,7 +1208,7 @@ export async function createClient(options: ClientOptions): Promise<GCMSRestClie
             ssl: baseUrl.protocol === 'https:',
             host:options.isPageContext ? baseUrl.hostname : 'localhost',
             port: parseInt(baseUrl.port, 10),
-            basePath: join(baseUrl.pathname, '/rest'),
+            basePath: join(baseUrl.pathname, '/rest').replaceAll('\\', '/'),
         };
     }
 

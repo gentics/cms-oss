@@ -1,6 +1,6 @@
 {
   "name": "@gentics/image-editor",
-  "version": "6.4.0",
+  "version": "6.4.1",
   "license": "Apache-2.0",
   "peerDependencies": {
     "@angular/common": ">=20.3.0",

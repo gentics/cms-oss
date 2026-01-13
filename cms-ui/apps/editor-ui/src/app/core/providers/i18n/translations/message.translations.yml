@@ -190,6 +190,15 @@ page_saved:
 page_saved_error:
     en: Could not save page
     de: Speichern fehlgeschlagen
+page_loaded_error:
+    en: Could not load page
+    de: Laden der Seite fehlgeschlagen
+file_loaded_error:
+    en: Could not load file
+    de: Laden der Datei fehlgeschlagen
+image_loaded_error:
+    en: Could not load image
+    de: Laden des Bildes fehlgeschlagen
 form_saved:
     en: Form saved
     de: Formular gespeichert

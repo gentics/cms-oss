@@ -1,6 +1,6 @@
 {
   "name": "@gentics/cms-rest-client",
-  "version": "6.4.2",
+  "version": "6.4.1",
   "license": "Apache-2.0",
   "peerDependencies": {
     "@gentics/cms-models": "^6.2.3",

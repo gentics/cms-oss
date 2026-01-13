@@ -942,6 +942,36 @@ test.describe('Page Editing', () => {
                     await expect(blocks.last()).not.toHaveAttribute('id', blockId);
                 });
             });
+
+            test('should render new tag after inserting into editable', async ({page}) => {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                const renderUrl = '/rest/page/renderTag/*';
+                let postedEditableContent = "";
+                page.on('request', request => {
+                    if (request.method() === 'POST' && matchesPath(request.url(), renderUrl)) {
+                        const body = JSON.parse(request.postData());
+                        postedEditableContent = body.tags['content'].properties.text.stringValue;
+                    }
+                });
+                const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
+                const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
+                const dropdown = await openContext(category);
+                await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                const createResponse = await createReq;
+                const createResponseBody = await createResponse.json();
+                const tagName = createResponseBody.tag.name;
+                await renderReq;
+
+                expect(postedEditableContent).toContain(`<node ${tagName}>`);
+            });
         });
     });
 

@@ -1312,7 +1312,7 @@ define([
 
 				// The placeholder where we want to add the tag into.
 				$placeholder = $('<' + (construct.liveEditorTagName || 'div') + '>', {
-					class: 'gcn-tag-insert-placeholder aloha-ephemera material-symbols-outlined',
+					class: 'gcn-tag-insert-placeholder material-symbols-outlined',
 					contentEditable: false
 				});
 
@@ -1346,9 +1346,10 @@ define([
 					});
 
 					if (editableOfRange != null) {
+						var currentEditable = editableOfRange.getId();
 						// have the current editable updated, so that the page's data contains the placeholder for the new tag
 						gcnPlugin.page._updateEditableBlocks(function (editable) {
-							return editable.element == editableOfRange;
+							return editable.element == currentEditable;
 						});
 					}
 

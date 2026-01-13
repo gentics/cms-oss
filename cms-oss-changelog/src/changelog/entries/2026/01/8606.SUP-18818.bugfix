@@ -1,0 +1,3 @@
+Editor User Interface: When a new tag was inserted into an editable, it was initially not rendered
+in the portal, but by the CMS itself, which could result in displaying of portal code.
+This has been fixed now.

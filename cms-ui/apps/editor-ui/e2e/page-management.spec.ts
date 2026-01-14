@@ -1,4 +1,9 @@
-import { AccessControlledType, GcmsPermission, Page as CmsPage } from '@gentics/cms-models';
+import {
+    AccessControlledType,
+    GcmsPermission,
+    Page as CMSPage,
+    Response as CMSResponse,
+} from '@gentics/cms-models';
 import {
     clickNotificationAction,
     EntityImporter,
@@ -18,6 +23,7 @@ import {
     PAGE_ONE,
     TestSize,
     UserImportData,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, Page, Response, test } from '@playwright/test';
@@ -67,7 +73,7 @@ test.describe('Page Management', () => {
     const COLOR_ID = 2;
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    let TEST_PAGE: CmsPage;
+    let TEST_PAGE: CMSPage;
 
     test.beforeAll(async ({ request }) => {
         await test.step('Client Setup', async () => {
@@ -291,5 +297,66 @@ test.describe('Page Management', () => {
         const content = findContextContent(page, 'item-editor');
 
         await expect(content).toBeAttached();
+    });
+
+    test('should display error notification and log correctly on invalid requests', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19452',
+        }],
+    }, async ({ page }) => {
+        const NICE_URL = '/test';
+
+        // Create another page which has the nice-url set
+        const DUMMY_PAGE = cloneWithSymbols(PAGE_ONE);
+        DUMMY_PAGE[IMPORT_ID] = 'page-management_dummypage';
+        DUMMY_PAGE.pageName = 'Dummy Page';
+        DUMMY_PAGE.niceUrl = NICE_URL;
+        await IMPORTER.importData([DUMMY_PAGE]);
+
+        // Basic setup
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        // Edit the nice-url to use the one already in use
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        await itemAction(item, 'properties');
+        const form = page.locator('content-frame combined-properties-editor .properties-content gtx-page-properties');
+        await form.locator('[formcontrolname="niceUrl"] input').fill(NICE_URL);
+
+        let errorMessages: string[] = [];
+        page.on('console', (msg) => {
+            if (msg.type() === 'error') {
+                errorMessages.push(msg.text());
+            }
+        });
+
+        const saveReq = waitForResponseFrom(page, 'POST', '/rest/page/save/*', {
+            skipStatus: true, // Since we expect it to fail
+        });
+        await editorAction(page, 'save');
+        const saveRes = await saveReq;
+        const resBody = await saveRes.json() as CMSResponse;
+        const resMessage = resBody.messages[0].message;
+
+        // Delay for multiple toasts to appear
+        await page.waitForTimeout(500);
+
+        const toasts = page.locator('gtx-toast');
+        await expect(toasts).toHaveCount(1);
+        await expect(toasts.locator('.message'))
+            .toContainText(resMessage.replace('<br/>', '\n'));
+        expect(errorMessages).toHaveLength(1);
     });
 });

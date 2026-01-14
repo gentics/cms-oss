@@ -16,11 +16,13 @@ import {
     QueryAssemblerElasticSearchService,
     QueryAssemblerGCMSSearchService,
 } from '@editor-ui/app/shared/providers/query-assembler';
+import { responseMessageToNotification } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
     AnyModelType,
     BaseListResponse,
+    File as CMSFile,
     ChannelSyncRequest,
     CommonSortFields,
     CropResizeParameters,
@@ -33,7 +35,6 @@ import {
     ElasticSearchQuery,
     ElasticSearchQueryResponse,
     ElasticSearchTypeSearchOptions,
-    File as CMSFile,
     FileCopyRequest,
     FileCreateRequest,
     FileListResponse,
@@ -192,7 +193,6 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
-import { responseMessageToNotification } from '@gentics/cms-components';
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -1958,6 +1958,7 @@ export class FolderActionsService {
             .catch(error => {
                 this.appState.dispatch(new ListSavingErrorAction(type as any, error.message));
                 this.errorHandler.catch(error, { notification: true });
+                throw error;
             });
     }
 

@@ -202,10 +202,10 @@ export function selectEditorTab(page: Page, id: string): Promise<void> {
     return page.locator(`gtx-page-editor-tabs button[data-id="${id}"]`).click();
 }
 
-async function createLink(page: Page, handler: (form: Locator) => Promise<void>): Promise<void> {
+export async function upsertLink(page: Page, handler: (form: Locator) => Promise<void>, action: string = 'primary'): Promise<void> {
     await selectEditorTab(page, 'formatting');
 
-    const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
+    const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button', action: action });
     await linkButton.click();
 
     // Fill link form
@@ -221,7 +221,7 @@ export async function createExternalLink(
     page: Page,
     formHandler: (form: Locator) => Promise<void>,
 ): Promise<void> {
-    return createLink(page, async form => {
+    return upsertLink(page, async form => {
         // Fill out rest of the form
         await formHandler(form);
     });
@@ -232,7 +232,7 @@ export async function createInternalLink(
     repoHandler: (repoBrowser: Locator) => Promise<void>,
     formHandler: (form: Locator) => Promise<void>,
 ): Promise<void> {
-    return createLink(page, async form => {
+    return upsertLink(page, async form => {
         // Select internal page
         await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
         const repoBrowser = page.locator('repository-browser');

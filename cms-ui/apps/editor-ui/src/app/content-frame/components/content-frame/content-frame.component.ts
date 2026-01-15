@@ -895,7 +895,8 @@ span.diff-html-added {
                                         },
                                     },
                                 });
-                            });
+                            })
+                            .catch(() => {});
                     case 'form':
                         return this.combinedPropertiesEditor.saveChanges({}, {
                             fetchForConstruct: true,
@@ -917,13 +918,15 @@ span.diff-html-added {
                                         },
                                     },
                                 });
-                            });
+                            })
+                            .catch(() => {});
                     default:
                         return this.combinedPropertiesEditor.saveChanges()
                             .then(() => {
                                 this.currentItemClean = true;
                                 this.changeDetector.markForCheck();
-                            });
+                            })
+                            .catch(() => {});
                 }
             }
 

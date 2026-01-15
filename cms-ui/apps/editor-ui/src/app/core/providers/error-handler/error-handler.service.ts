@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { LogoutSuccessAction } from '@editor-ui/app/state/modules/auth/auth.actions';
 import { UpdateSearchFilterAction } from '@editor-ui/app/state/modules/folder/folder.actions';
-import { ModalCloseError, ModalClosingReason, wasClosedByUser } from '@gentics/cms-integration-api-models';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
@@ -46,8 +46,10 @@ export class ErrorHandler {
     /** Emits a list of all caught errors when an error is caught. */
     caughtErrors$: Observable<Error[]>;
 
+    // TODO: Use a WeakSet instead?
     private lastError: Error;
     private lastErrorTime: number;
+    // TODO: Remove, as it's unused. Same for `caughtErrors$`
     private errorList = new BehaviorSubject<Error[]>([]);
 
     constructor(
@@ -57,7 +59,6 @@ export class ErrorHandler {
         private translate: TranslateService,
         private notification: I18nNotification,
     ) {
-
         this.caughtErrors$ = this.errorList.asObservable();
     }
 
@@ -209,54 +210,6 @@ export class ErrorHandler {
                 break;
             }
         }
-    }
-
-    /**
-     * Serializes the current application state and all occurred errors
-     * to a base64-encoded string which can be used to reproduce the error.
-     */
-    serialize(): string {
-        const state = this.appState.now;
-
-        // Do not serialize entities and messages
-        const stateToSerialize = {
-            auth: state.auth,
-            editor: state.editor,
-            favourites: state.favourites,
-            folder: state.folder,
-            publishQueue: state.publishQueue,
-            ui: state.ui,
-            user: state.user,
-        };
-
-        const json = JSON.stringify({
-            state: stateToSerialize,
-            errors: this.errorList.value,
-            url: this.router.url,
-        });
-
-        // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-        const escapedUnicode = encodeURIComponent(json).replace(/%([0-9A-F]{2})/g,
-            (all: string, hex: string) => String.fromCharCode(Number.parseInt(hex, 16)));
-
-        const base64 = btoa(escapedUnicode);
-
-        return base64;
-    }
-
-    /**
-     * De-serialize a base64 encoded bug report into the application state
-     * and the occurred errors.
-     * To get the complete application state, the entities need to be requested from the server.
-     */
-    deserialize(serializedBase64String: string): { state: any, errors: Error[], url: string } {
-        const escapedUnicode = atob(serializedBase64String);
-
-        // https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-        const json = decodeURIComponent(Array.prototype.map.call(escapedUnicode,
-            (char: string) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2)).join(''));
-
-        return JSON.parse(json);
     }
 
     private userWasLoggedOut(): void {

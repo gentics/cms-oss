@@ -121,9 +121,7 @@ test.describe('Content-Maintenance Module', () => {
 
         await test.step('Open Admin-UI', async () => {
             await navigateToApp(page);
-            const permReq = page.waitForResponse(matchRequest('GET', '/rest/info/maintenance'));
             await loginWithForm(page, TEST_USER);
-            await permReq;
             nodeLoadReq = page.waitForResponse(matchRequest('GET', '/rest/node'));
             module = await navigateToModule(page, 'content-maintenance');
         });

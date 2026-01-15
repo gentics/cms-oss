@@ -2,8 +2,6 @@ import { ContentRepository } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     CONTENT_REPOSITORY_MESH,
-    MESH_SCHEMA_CONTENT,
-    MESH_SCHEMA_FOLDER,
     EntityImporter,
     findTableRowById,
     FOLDER_A,
@@ -14,6 +12,8 @@ import {
     LANGUAGE_EN,
     loginWithForm,
     matchRequest,
+    MESH_SCHEMA_CONTENT,
+    MESH_SCHEMA_FOLDER,
     navigateToApp,
     NODE_MINIMAL,
     openContext,
@@ -22,7 +22,6 @@ import {
     PageImportData,
     SCHEDULE_PUBLISHER,
     TestSize,
-    waitForPublishDone,
 } from '@gentics/e2e-utils';
 import { GraphQLRequest } from '@gentics/mesh-models';
 import { expect, test } from '@playwright/test';
@@ -101,8 +100,8 @@ test.describe('Mesh Browser', () => {
             // Publish the pages
             await IMPORTER.client.page.publish(IMPORTER.get(PAGE_ONE).id, { alllang: true }).send();
             await IMPORTER.client.page.publish(IMPORTER.get(PAGE_GERMAN).id, { alllang: true }).send();
-            await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
-            await waitForPublishDone(page, IMPORTER.client);
+            await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER, 3);
+            // await waitForPublishDone(page, IMPORTER.client);
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);

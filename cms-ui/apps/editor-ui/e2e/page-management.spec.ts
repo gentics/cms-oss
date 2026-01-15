@@ -176,6 +176,8 @@ test.describe('Page Management', () => {
             await itemAction(item, 'properties');
             const form = page.locator('content-frame combined-properties-editor .properties-content gtx-page-properties');
             await form.locator('[formcontrolname="name"] input').fill(CHANGE_PAGE_NAME);
+            await page.waitForTimeout(500); // Have to wait for internals to propagate
+
             await editorAction(page, 'save');
         });
 

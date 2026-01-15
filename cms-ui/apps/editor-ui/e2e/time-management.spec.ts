@@ -105,6 +105,7 @@ test.describe('Time Management', () => {
         await selectNode(page, NODE.id);
     });
 
+    // TODO: Flaky on CI
     test('should be able to remove the planned publish date', {
         annotation: [{
             type: 'ticket',

@@ -109,7 +109,7 @@ test.describe('Multichannelling', () => {
 
         test('should handle node IDs for overview items using sticky channels', {
             annotation: [{
-                type: 'issue',
+                type: 'ticket',
                 description: 'SUP-18873',
             }],
         }, async ({ page }) => {
@@ -223,7 +223,7 @@ test.describe('Multichannelling', () => {
 
         test('should not show publish actions for inherited objects', {
             annotation: [{
-                type: 'issue',
+                type: 'ticket',
                 description: 'SUP-19051',
             }],
         }, async ({ page }) => {

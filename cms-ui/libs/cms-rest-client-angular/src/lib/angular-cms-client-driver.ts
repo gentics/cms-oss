@@ -94,6 +94,10 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
 
     protected errorHandler<T>(request: GCMSRestClientRequestData): OperatorFunction<T, T> {
         return catchError(err => {
+            if (err instanceof GCMSRestClientRequestError || err instanceof GCMSRestClientAbortError) {
+                return throwError(() => err);
+            }
+
             if (!(err instanceof HttpErrorResponse)) {
                 return throwError(() => new Error(`Unexpected error while performing request "${request.method} ${request.url}"`, { cause: err }));
             }

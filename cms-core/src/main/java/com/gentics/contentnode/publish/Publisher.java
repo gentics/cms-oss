@@ -602,13 +602,16 @@ public class Publisher implements Runnable {
 						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_UPDATEPAGES);
 					}
 
-					boolean autoOffline = prefs.isFeature(Feature.CONTENTFILE_AUTO_OFFLINE);
+					// The file usage map is needed when the CONTENTFILE_AUTO_OFFLINE feature is enabled and
+					// active for at least one node.
+					boolean needFileUsageMap = prefs.isFeature(Feature.CONTENTFILE_AUTO_OFFLINE)
+						&& nodes.stream().anyMatch(n -> prefs.isFeature(Feature.CONTENTFILE_AUTO_OFFLINE, n));
 
 					try {
 						publisherInfo.setPhase(PublisherPhase.FILEDEPENDENCIES);
 						RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_FILEDEPENDENCIES);
 
-						if (autoOffline) {
+						if (needFileUsageMap) {
 							// prepare the file usage map
 							prepareFileUsageMap();
 						}
@@ -624,7 +627,7 @@ public class Publisher implements Runnable {
 						checkOnlineFiles(checkOnlineFilesPhase, meshPublishController);
 						checkOnlineFilesPhase.done();
 					} finally {
-						if (autoOffline) {
+						if (needFileUsageMap) {
 							removeFileUsageMap();
 						}
 						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_FILEDEPENDENCIES);

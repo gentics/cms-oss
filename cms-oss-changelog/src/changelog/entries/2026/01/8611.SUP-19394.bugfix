@@ -1,0 +1,1 @@
+The check for the need to gather file usage data has been improved, so that this action is not performed when no nodes have the @contentfile_auto_offline@ active.

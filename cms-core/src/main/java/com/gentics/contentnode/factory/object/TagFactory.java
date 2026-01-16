@@ -30,6 +30,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.events.Events;
@@ -82,7 +83,11 @@ import io.reactivex.functions.Consumer;
 	@DBTable(clazz = ObjectTag.class, name = "objtag") })
 public class TagFactory extends AbstractFactory {
 
-	protected final static String INSERT_CONTENTTAG_SQL = "INSERT INTO contenttag (content_id, construct_id, enabled, name, template, uuid) " + "VALUES (?, ?, ?, ?, ?, ?)";
+	protected final static String INSERT_CONTENTTAG_WO_PARAMS_SQL = "INSERT INTO contenttag (content_id, construct_id, enabled, name, template, uuid) VALUES ";
+
+	protected final static String INSERT_CONTENTTAG_PARAMS_SQL = "(?, ?, ?, ?, ?, ?)";
+
+	protected final static String INSERT_CONTENTTAG_SQL = "%s%s".formatted(INSERT_CONTENTTAG_WO_PARAMS_SQL, INSERT_CONTENTTAG_PARAMS_SQL);
 
 	protected final static String UPDATE_CONTENTTAG_SQL = "UPDATE contenttag SET content_id = ?, construct_id = ?, enabled = ?, name = ? " + "WHERE id = ?";
 
@@ -223,33 +228,37 @@ public class TagFactory extends AbstractFactory {
 		 */
 		private synchronized void loadValueIds() throws NodeException {
 			if (valueIds == null) {
-				ObjectFactory valueFactory = getFactory().getObjectFactory(Value.class);
-
-				HandleSelectResultSet<List<Integer>> valueIdList = rs -> {
-					List<Integer> idList = new ArrayList<>();
-					while (rs.next()) {
-						if (!valueFactory.isInDeletedList(Value.class, rs.getInt("id"))) {
-							idList.add(rs.getInt("id"));
-						}
-					}
-					return idList;
-				};
-
-				int contentTagId = ObjectTransformer.getInt(getId(), -1);
-
-				if (getObjectInfo().isCurrentVersion()) {
-					valueIds = DBUtils.select("SELECT id FROM value WHERE contenttag_id = ?",
-							ps -> ps.setInt(1, contentTagId), valueIdList);
+				if (isNew()) {
+					valueIds = new ArrayList<>();
 				} else {
-					int versionTimestamp = getObjectInfo().getVersionTimestamp();
+					ObjectFactory valueFactory = getFactory().getObjectFactory(Value.class);
 
-					valueIds = DBUtils.select(
-							"SELECT id FROM value_nodeversion WHERE contenttag_id = ? AND (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? GROUP BY id",
-							ps -> {
-								ps.setInt(1, contentTagId);
-								ps.setInt(2, versionTimestamp);
-								ps.setInt(3, versionTimestamp);
-							}, valueIdList);
+					HandleSelectResultSet<List<Integer>> valueIdList = rs -> {
+						List<Integer> idList = new ArrayList<>();
+						while (rs.next()) {
+							if (!valueFactory.isInDeletedList(Value.class, rs.getInt("id"))) {
+								idList.add(rs.getInt("id"));
+							}
+						}
+						return idList;
+					};
+
+					int contentTagId = ObjectTransformer.getInt(getId(), -1);
+
+					if (getObjectInfo().isCurrentVersion()) {
+						valueIds = DBUtils.select("SELECT id FROM value WHERE contenttag_id = ?",
+								ps -> ps.setInt(1, contentTagId), valueIdList);
+					} else {
+						int versionTimestamp = getObjectInfo().getVersionTimestamp();
+
+						valueIds = DBUtils.select(
+								"SELECT id FROM value_nodeversion WHERE contenttag_id = ? AND (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? GROUP BY id",
+								ps -> {
+									ps.setInt(1, contentTagId);
+									ps.setInt(2, versionTimestamp);
+									ps.setInt(3, versionTimestamp);
+								}, valueIdList);
+					}
 				}
 			}
 		}
@@ -413,10 +422,13 @@ public class TagFactory extends AbstractFactory {
 			}
 		}
 
-		/* (non-Javadoc)
-		 * @see com.gentics.contentnode.object.AbstractContentObject#save()
-		 */
+		@Override
 		public boolean save() throws InsufficientPrivilegesException, NodeException {
+			return saveBatch(null);
+		}
+
+		@Override
+		public boolean saveBatch(BatchUpdater batchUpdater) throws InsufficientPrivilegesException, NodeException {
 			assertEditable();
 
 			boolean isNew = isEmptyId(getId());
@@ -426,7 +438,7 @@ public class TagFactory extends AbstractFactory {
 				// object is modified, so update it
 				try {
 					isModified = true;
-					saveContentTagObject(this);
+					saveContentTagObject(this, batchUpdater);
 					modified = false;
 				} catch (SQLException e) {
 					throw new NodeException("Error while saving {" + this + "}", e);
@@ -444,7 +456,7 @@ public class TagFactory extends AbstractFactory {
 			}
 			for (Value value : values) {
 				value.setContainer(this);
-				isModified |= value.save();
+				isModified |= value.saveBatch(batchUpdater);
 				valueIdsToRemove.remove(value.getId());
 			}
 
@@ -461,7 +473,7 @@ public class TagFactory extends AbstractFactory {
 			}
 
 			if (isNew) {
-				updateMissingReferences();
+				updateMissingReferences(batchUpdater);
 			}
 
 			return isModified;
@@ -1771,7 +1783,7 @@ public class TagFactory extends AbstractFactory {
 	 * @throws NodeException
 	 * @throws SQLException
 	 */
-	private static void saveContentTagObject(EditableFactoryContentTag tag) throws NodeException, SQLException {
+	private static void saveContentTagObject(EditableFactoryContentTag tag, BatchUpdater batchUpdater) throws NodeException, SQLException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		boolean isNew = Tag.isEmptyId(tag.getId());
@@ -1790,16 +1802,32 @@ public class TagFactory extends AbstractFactory {
 				}
 			}
 
-			// insert a new record
-			List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENTTAG_SQL, new Object[] {
-				tag.contentId, tag.getConstruct().getId(), tag.getEnabledValue(), tagName, tag.template, ObjectTransformer.getString(tag.getGlobalId(), "")});
-
-			if (keys.size() == 1) {
+			Object[] params = new Object[] {
+					tag.contentId, tag.getConstruct().getId(), tag.getEnabledValue(), tagName, tag.template, ObjectTransformer.getString(tag.getGlobalId(), "")};
+			com.gentics.contentnode.etc.Consumer<Integer> generatedKeyHandler = key -> {
 				// set the new page id
-				tag.setId(keys.get(0));
-				synchronizeGlobalId(tag);
+				tag.setId(key);
+				if (batchUpdater != null) {
+					batchUpdater.addObjectToSynchronize(tag);
+					for (Value value : tag.getValues()) {
+						value.setContainer(tag);
+					}
+				} else {
+					synchronizeGlobalId(tag);
+				}
+			};
+
+			if (batchUpdater != null) {
+				batchUpdater.add(INSERT_CONTENTTAG_WO_PARAMS_SQL, INSERT_CONTENTTAG_PARAMS_SQL, Transaction.INSERT_STATEMENT, params, generatedKeyHandler);
 			} else {
-				throw new NodeException("Error while inserting new contenttag, could not get the insertion id");
+				// insert a new record
+				List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENTTAG_SQL, params);
+
+				if (keys.size() == 1) {
+					generatedKeyHandler.accept(keys.get(0));
+				} else {
+					throw new NodeException("Error while inserting new contenttag, could not get the insertion id");
+				}
 			}
 		} else {
 			DBUtils.executeUpdate(UPDATE_CONTENTTAG_SQL, new Object[] {

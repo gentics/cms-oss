@@ -22,6 +22,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.Supplier;
+import com.gentics.contentnode.etc.Timing;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.SessionToken;
@@ -182,11 +183,11 @@ public abstract class AbstractContentNodeResource {
 	 * @throws WebApplicationException if an error occurs during the commit
 	 */
 	public void commitTransaction() {
-		try {
+		try (Timing commit = Timing.log("Commit")) {
 			if (createdTransaction && transaction.isOpen()) {
 				transaction.commit();
 			}
-		} catch (TransactionException e) {
+		} catch (NodeException e) {
 			failWithGeneralError(e);
 		}
 	}

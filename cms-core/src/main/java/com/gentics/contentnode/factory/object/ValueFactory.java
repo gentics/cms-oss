@@ -18,6 +18,7 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
@@ -454,17 +455,20 @@ public class ValueFactory extends AbstractFactory {
 			}
 		}
 
-		/* (non-Javadoc)
-		 * @see com.gentics.contentnode.object.AbstractContentObject#save()
-		 */
+		@Override
 		public boolean save() throws InsufficientPrivilegesException, NodeException {
+			return saveBatch(null);
+		}
+
+		@Override
+		public boolean saveBatch(BatchUpdater batchUpdater) throws InsufficientPrivilegesException, NodeException {
 			assertEditable();
 
 			boolean isModified = false;
 			PartType type = getPartType();
 
 			// do PartType specific saving before saving the value
-			type.preSave();
+			type.preSave(batchUpdater);
 
 			if (modified) {
 				// make sure, valueText is not null
@@ -481,12 +485,12 @@ public class ValueFactory extends AbstractFactory {
 
 				// object is modified, so update it
 				isModified = true;
-				saveFactoryObject(this);
+				saveFactoryObject(this, batchUpdater);
 				modified = false;
 			}
 
 			// do PartType specific saving after saving the value
-			isModified |= type.postSave();
+			isModified |= type.postSave(batchUpdater);
 
 			return isModified;
 		}

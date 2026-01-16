@@ -612,6 +612,14 @@ public interface Transaction extends LanguageProvider, PreparedStatementHandler,
 	void dirtObjectCache(Class<? extends NodeObject> clazz, Integer id, boolean atCommit) throws NodeException;
 
 	/**
+	 * Clear the cache for objects of the given class having the given internal ids
+	 * @param clazz object class
+	 * @param ids set of object IDs
+	 * @throws NodeException
+	 */
+	void clearCache(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException;
+
+	/**
 	 * Get the start timestamp of this transaction
 	 * @return start timestamp
 	 */

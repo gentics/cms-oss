@@ -1,17 +1,16 @@
-package com.gentics.contentnode.etc;
+package com.gentics.lib.etc;
 
 import java.util.Stack;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
-
-import com.gentics.api.lib.exception.NodeException;
 
 /**
  * {@link AutoCloseable} implementation that measures the duration between creation and {@link Timing#close()}.
  * If the duration is bigger than the threshold (which defaults to 0), the consumer is called with the duration
  */
 public class Timing implements AutoCloseable {
-	private static ThreadLocal<Stack<AutoCloseable>> loggingStack = com.gentics.lib.etc.Timing.loggingStack;
+	public static ThreadLocal<Stack<AutoCloseable>> loggingStack = ThreadLocal.withInitial(() -> new Stack<>());
 
 	/**
 	 * Threshold in ms
@@ -51,30 +50,6 @@ public class Timing implements AutoCloseable {
 		}
 	}
 
-	public static <R> R logged(String description, Supplier<R> action) throws NodeException {
-		try (Timing tim = Timing.log(description)) {
-			return action.supply();
-		}
-	}
-
-	public static <R> R subLogged(String description, Supplier<R> action) throws NodeException {
-		try (Timing tim = Timing.subLog(description)) {
-			return action.supply();
-		}
-	}
-
-	public static void logged(String description, Operator action) throws NodeException {
-		try (Timing tim = Timing.log(description)) {
-			action.operate();
-		}
-	}
-
-	public static void subLogged(String description, Operator action) throws NodeException {
-		try (Timing tim = Timing.subLog(description)) {
-			action.operate();
-		}
-	}
-
 	/**
 	 * Get an instance with threshold and consumer
 	 * @param threshold threshold in ms
@@ -97,7 +72,7 @@ public class Timing implements AutoCloseable {
 	}
 
 	@Override
-	public void close() throws NodeException {
+	public void close() {
 		long endTime = System.currentTimeMillis();
 		long duration = endTime - startTime;
 		if (consumer != null && duration > threshold) {

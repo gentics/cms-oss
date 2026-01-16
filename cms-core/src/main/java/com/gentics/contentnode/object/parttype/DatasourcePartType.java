@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Datasource;
@@ -354,14 +355,12 @@ public class DatasourcePartType extends AbstractPartType {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.object.parttype.AbstractPartType#preSave()
-	 */
-	public boolean preSave() throws NodeException {
+	@Override
+	public boolean preSave(BatchUpdater batchUpdater) throws NodeException {
 		Datasource datasource = getDatasource();
 		boolean modified = false;
 		if (datasource != null) {
-			modified |= datasource.save();
+			modified |= datasource.saveBatch(batchUpdater);
 
 			getValueObject().setValueRef(ObjectTransformer.getInt(datasource.getId(), 0));
 		}

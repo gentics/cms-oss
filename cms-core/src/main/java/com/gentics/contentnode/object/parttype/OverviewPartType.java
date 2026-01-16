@@ -18,6 +18,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -444,10 +445,8 @@ public class OverviewPartType extends AbstractPartType {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.object.parttype.AbstractPartType#postSave()
-	 */
-	public boolean postSave() throws NodeException {
+	@Override
+	public boolean postSave(BatchUpdater batchUpdater) throws NodeException {
 		ValueContainer valueContainer = getValueObject().getContainer();
 		Overview overview = getOverview();
 		boolean modified = false;
@@ -457,7 +456,7 @@ public class OverviewPartType extends AbstractPartType {
 
 			//save the overview if it is not undefined
 			if (!overview.isUndefined()) {
-				modified |= overview.save();
+				modified |= overview.saveBatch(batchUpdater);
 			}
 		}
 

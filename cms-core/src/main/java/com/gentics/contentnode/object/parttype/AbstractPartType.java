@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.resolving.ResolvableGetter;
@@ -192,18 +193,14 @@ public abstract class AbstractPartType implements PartType, Resolvable, Serializ
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.object.parttype.PartType#preSave()
-	 */
-	public boolean preSave() throws NodeException {
+	@Override
+	public boolean preSave(BatchUpdater batchUpdater) throws NodeException {
 		// default implementation does nothing
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.object.parttype.PartType#postSave()
-	 */
-	public boolean postSave() throws NodeException {
+	@Override
+	public boolean postSave(BatchUpdater batchUpdater) throws NodeException {
 		// default implementation does nothing
 		return false;
 	}

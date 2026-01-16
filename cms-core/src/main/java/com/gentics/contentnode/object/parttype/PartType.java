@@ -14,6 +14,7 @@ import java.util.Set;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.TemplateRenderer;
 import com.gentics.lib.resolving.ResolvableMapWrappable;
@@ -139,22 +140,24 @@ public interface PartType extends Resolvable, TemplateRenderer, TransformablePar
 	 * value is saved. Implementations of this method possibly modify the value
 	 * object, and they cannot rely on the value being already stored (and
 	 * having an ID)
+	 * @param batchUpdater optional batch updater
 	 * 
 	 * @return true if something was changed, false if not
 	 * @throws NodeException
 	 */
-	boolean preSave() throws NodeException;
+	boolean preSave(BatchUpdater batchUpdater) throws NodeException;
 
 	/**
 	 * Do PartType specific saving for a value, that has to be done after the
 	 * value is saved. Implementations of this method should not modify the
 	 * value object (because changes would not be persisted), but they can rely
 	 * on the value being already stored (and having an ID)
+	 * @param batchUpdater optional batch updater
 	 * 
 	 * @return true if something was changed, false if not
 	 * @throws NodeException
 	 */
-	boolean postSave() throws NodeException;
+	boolean postSave(BatchUpdater batchUpdater) throws NodeException;
 
 	/**
 	 * Do PartType specific deletion

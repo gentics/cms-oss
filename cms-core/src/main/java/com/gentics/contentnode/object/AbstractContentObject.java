@@ -24,6 +24,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
@@ -947,29 +948,37 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable, R
 	}
 
 	protected void updateMissingReferences() throws NodeException {
-		List<Integer> valueIds = new ArrayList<>();
-		List<Integer> referenceIds = new ArrayList<>();
+		updateMissingReferences(null);
+	}
 
-		DBUtils.select(
-			"SELECT id, source_id, reference_name FROM missingreference WHERE source_tablename = ? AND target_uuid = ?",
-			stmt -> {
-				stmt.setString(1, "value");
-				stmt.setString(2, getUuid());
-			},
-			rs -> {
-				while (rs.next()) {
-					referenceIds.add(rs.getInt("id"));
-					valueIds.add(rs.getInt("source_id"));
-				}
+	protected void updateMissingReferences(BatchUpdater batchUpdater) throws NodeException {
+		if (batchUpdater != null) {
+			batchUpdater.updateMissingReferences(this);
+		} else {
+			List<Integer> valueIds = new ArrayList<>();
+			List<Integer> referenceIds = new ArrayList<>();
 
-				return null;
-			});
+			DBUtils.select(
+					"SELECT id, source_id, reference_name FROM missingreference WHERE source_tablename = ? AND target_uuid = ?",
+					stmt -> {
+						stmt.setString(1, "value");
+						stmt.setString(2, getUuid());
+					},
+					rs -> {
+						while (rs.next()) {
+							referenceIds.add(rs.getInt("id"));
+							valueIds.add(rs.getInt("source_id"));
+						}
+						
+						return null;
+					});
 
 
-		for (int valueId : valueIds) {
-			DBUtils.executeUpdate("UPDATE `value` SET value_ref = ? WHERE id = ?", new Object[] { getId(), valueId });
+			for (int valueId : valueIds) {
+				DBUtils.executeUpdate("UPDATE `value` SET value_ref = ? WHERE id = ?", new Object[] { getId(), valueId });
+			}
+
+			DBUtils.executeMassStatement("DELETE FROM `missingreference` WHERE id IN", null, referenceIds, 1, null, Transaction.DELETE_STATEMENT);
 		}
-
-		DBUtils.executeMassStatement("DELETE FROM `missingreference` WHERE id IN", null, referenceIds, 1, null, Transaction.DELETE_STATEMENT);
 	}
 }

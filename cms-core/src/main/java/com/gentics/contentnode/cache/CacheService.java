@@ -1,5 +1,7 @@
 package com.gentics.contentnode.cache;
 
+import java.util.Set;
+
 import com.gentics.contentnode.object.NodeObject;
 
 /**
@@ -23,6 +25,13 @@ public interface CacheService {
 	 * @param id object ID
 	 */
 	void clear(Class<? extends NodeObject> clazz, Integer id);
+
+	/**
+	 * Called when the cache of an object is cleared
+	 * @param clazz object class
+	 * @param id object ID
+	 */
+	void clear(Class<? extends NodeObject> clazz, Set<Integer> ids);
 
 	/**
 	 * Called when the cache of an object is dirted

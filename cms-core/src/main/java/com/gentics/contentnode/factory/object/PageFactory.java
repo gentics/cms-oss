@@ -44,12 +44,14 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
+import com.gentics.contentnode.etc.Timing;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
@@ -121,7 +123,6 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.StackResolver;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
-import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
@@ -1157,7 +1158,9 @@ public class PageFactory extends AbstractFactory {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
 			// dirt the content cache
-			t.dirtObjectCache(Content.class, contentId, false);
+			try (Timing tim = Timing.subLog("Dirt Content Cache")) {
+				t.dirtObjectCache(Content.class, contentId, false);
+			}
 		}
 
 		/* (non-Javadoc)
@@ -2978,18 +2981,16 @@ public class PageFactory extends AbstractFactory {
 				// check whether the content is currently locked
 				boolean wasLocked = super.getContent().isLocked();
 
-				try {
-					// get the (editable) content, this will also lock the content, or
-					// fail if the content is already locked by someone else
-					Content content = getContent();
-					if (!wasLocked) {
-						// in case there were some changes on the page or the content, we create a new version
-						// the editor of the version will be the last editor of the page (not the current user)
-						// the timestamp will be the timestamp of the last change on the page or the content (not objecttags, since they are not versioned)
-						int versionTimestamp = Math.max(page.getUdate(), content.getEffectiveUdate());
-						createPageVersion(page, false, page.getEditor().getId(), versionTimestamp);
-					}
-				} finally {}
+				// get the (editable) content, this will also lock the content, or
+				// fail if the content is already locked by someone else
+				Content content = getContent();
+				if (!wasLocked) {
+					// in case there were some changes on the page or the content, we create a new version
+					// the editor of the version will be the last editor of the page (not the current user)
+					// the timestamp will be the timestamp of the last change on the page or the content (not objecttags, since they are not versioned)
+					int versionTimestamp = Math.max(page.getUdate(), content.getEffectiveUdate());
+					createPageVersion(page, false, page.getEditor().getId(), versionTimestamp);
+				}
 			}
 		}
 
@@ -3536,14 +3537,14 @@ public class PageFactory extends AbstractFactory {
 			boolean isNew = this.id == null;
 
 			// save the content (and the whales ;-) )
-			boolean contentModified = getContent().save();
+			boolean contentModified = Timing.subLogged("Save content", () -> getContent().save());
 			isModified |= contentModified;
 			setContentId(getContent().getId());
 
 			// now check whether the object has been modified
 			if (modified || isNew) {
 				// object is modified, so update it
-				savePageObject(this, updateEditor);
+				Timing.subLogged("Save page object", () -> savePageObject(this, updateEditor));
 				modified = false;
 				pageModified = true;
 			} else if (isModified) {
@@ -3553,37 +3554,41 @@ public class PageFactory extends AbstractFactory {
 					eDate = new ContentNodeDate(t.getUnixTimestamp());
 				}
 
-				DBUtils.update("UPDATE page SET editor = ?, edate = ?, modified = ? WHERE id = ?", editorId, eDate.getIntTimestamp(), 1, getId());
+				Timing.subLogged("Update editor", () -> DBUtils.update("UPDATE page SET editor = ?, edate = ?, modified = ? WHERE id = ?", editorId, eDate.getIntTimestamp(), 1, getId()));
 				pageModified = true;
 			}
 
 			// save all the objecttags and check which tags no longer exist (and need to be removed)
-			Map<String, ObjectTag> tags = getObjectTags();
+			Map<String, ObjectTag> tags = Timing.subLogged("Get object tags", () -> getObjectTags());
 			List<Integer> tagIdsToRemove = new Vector<Integer>();
 
 			if (objectTagIds != null) {
 				tagIdsToRemove.addAll(objectTagIds);
 			}
-			for (Iterator<ObjectTag> i = tags.values().iterator(); i.hasNext();) {
-				ObjectTag tag = i.next();
+			try (Timing tim = Timing.subLog("Save object tags")) {
+				for (Iterator<ObjectTag> i = tags.values().iterator(); i.hasNext();) {
+					ObjectTag tag = i.next();
 
-				tag.setNodeObject(this);
-				isModified |= tag.save();
+					tag.setNodeObject(this);
+					isModified |= tag.save();
 
-				// do not remove the tag, which was saved
-				tagIdsToRemove.remove(tag.getId());
+					// do not remove the tag, which was saved
+					tagIdsToRemove.remove(tag.getId());
+				}
 			}
 
 			// eventually remove tags which no longer exist
-			if (!tagIdsToRemove.isEmpty()) {
-				List<ObjectTag> tagsToRemove = t.getObjects(ObjectTag.class, tagIdsToRemove);
+			try (Timing tim = Timing.subLog("Delete tags")) {
+				if (!tagIdsToRemove.isEmpty()) {
+					List<ObjectTag> tagsToRemove = t.getObjects(ObjectTag.class, tagIdsToRemove);
 
-				for (Iterator<ObjectTag> i = tagsToRemove.iterator(); i.hasNext();) {
-					ObjectTag tagToRemove = i.next();
+					for (Iterator<ObjectTag> i = tagsToRemove.iterator(); i.hasNext();) {
+						ObjectTag tagToRemove = i.next();
 
-					tagToRemove.delete();
+						tagToRemove.delete();
+					}
+					isModified = true;
 				}
-				isModified = true;
 			}
 
 			if (isModified) {
@@ -3616,12 +3621,12 @@ public class PageFactory extends AbstractFactory {
 
 			// generate a version, if requested
 			if (createVersion) {
-				createPageVersion(this, false, null);
+				Timing.subLogged("Create page version", () -> createPageVersion(this, false, null));
 				recalculateModifiedFlag();
 			}
 
 			// dirt the page cache
-			t.dirtObjectCache(Page.class, getId());
+			Timing.subLogged("Dirt cache", () -> t.dirtObjectCache(Page.class, getId()));
 
 			// if we added a new language variant, we also need to dirt the other language variants so that their list of language variants gets updated
 			if (isNew) {
@@ -4122,12 +4127,16 @@ public class PageFactory extends AbstractFactory {
 		public void dirtCache() throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
-			final List<Integer> contentTagIds = new Vector<Integer>();
-			final List<Integer> valueIds = new Vector<Integer>();
+			final Set<Integer> contentTagIds = new HashSet<>();
+			final Set<Integer> valueIds = new HashSet<>();
+			final Set<Integer> datasourceIds = new HashSet<>();
 			final int contentId = ObjectTransformer.getInt(getId(), 0);
 
+			// get the parts of type 32
+			final Set<Integer> datasourcePartsIds = DBUtils.select("SELECT id FROM part WHERE type_id = 32", DBUtils.IDS);
+
 			// we will now select all contenttag and value id's for the page in a single sql statement.
-			DBUtils.executeStatement("SELECT c.id tag_id, v.id value_id FROM contenttag c LEFT JOIN value v ON c.id = v.contenttag_id WHERE c.content_id = ?",
+			DBUtils.executeStatement("SELECT c.id tag_id, v.id value_id, v.value_ref, v.part_id FROM contenttag c LEFT JOIN value v ON c.id = v.contenttag_id WHERE c.content_id = ?",
 					new SQLExecutor() {
 				@Override
 				public void prepareStatement(PreparedStatement stmt) throws SQLException {
@@ -4139,22 +4148,34 @@ public class PageFactory extends AbstractFactory {
 					while (rs.next()) {
 						int contentTagId = rs.getInt("tag_id");
 						int valueId = rs.getInt("value_id");
+						int partId = rs.getInt("part_id");
+						int valueRef = rs.getInt("value_ref");
 
-						if (!contentTagIds.contains(contentTagId)) {
-							contentTagIds.add(contentTagId);
-						}
+						contentTagIds.add(contentTagId);
 						valueIds.add(valueId);
+
+						if (datasourcePartsIds.contains(partId)) {
+							datasourceIds.add(valueRef);
+						}
 					}
 				}
 			});
 
-			// get the tags now, this will make sure that it is not necessary to load the tags in single sql statements
-			t.getObjects(ContentTag.class, contentTagIds);
-			t.getObjects(Value.class, valueIds);
+			// select overviews contained in the content tags
+			final Set<Integer> overviewIds = new HashSet<>();
+			DBUtils.executeMassStatement("SELECT id FROM ds WHERE contenttag_id IN ", contentTagIds, 1, new SQLExecutor() {
+				@Override
+				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+					while (rs.next()) {
+						overviewIds.add(rs.getInt("id"));
+					}
+				}
+			});
 
-			for (Integer tagId :  contentTagIds) {
-				t.dirtObjectCache(ContentTag.class, tagId, false);
-			}
+			t.clearCache(ContentTag.class, contentTagIds);
+			t.clearCache(Value.class, valueIds);
+			t.clearCache(Overview.class, overviewIds);
+			t.clearCache(Datasource.class, datasourceIds);
 		}
 
 		/* (non-Javadoc)
@@ -4430,25 +4451,31 @@ public class PageFactory extends AbstractFactory {
 
 			// save the content, if necessary
 			if (isModified) {
-				saveContentObject(this);
+				Timing.subLogged("Save Content Object", () -> saveContentObject(this));
 				this.modified = false;
 			}
 
 			// save all the contenttags and check which tags no longer exist (and need to be removed)
-			Map<String, ContentTag> tags = getContentTags();
+			Map<String, ContentTag> tags = Timing.subLogged("Get content Tags", () -> getContentTags());
 			List<Integer> tagIdsToRemove = new Vector<>();
 
 			if (tagIds != null) {
 				tagIdsToRemove.addAll(tagIds);
 			}
-			for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext();) {
-				ContentTag tag = i.next();
+			try (Timing tim = Timing.subLog("Save tags")) {
+				BatchUpdater batchUpdater = new BatchUpdater();
 
-				tag.setContentId(getId());
-				isModified |= tag.save();
+				for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext();) {
+					ContentTag tag = i.next();
 
-				// do not remove the tag, which was saved
-				tagIdsToRemove.remove(tag.getId());
+					tag.setContentId(getId());
+					isModified |= tag.saveBatch(batchUpdater);
+
+					// do not remove the tag, which was saved
+					tagIdsToRemove.remove(tag.getId());
+				}
+
+				batchUpdater.execute();
 			}
 
 			// remove tags which no longer exist
@@ -4464,7 +4491,7 @@ public class PageFactory extends AbstractFactory {
 			}
 
 			if (isModified) {
-				t.dirtObjectCache(Content.class, getId());
+				Timing.subLogged("Dirt content cache", () -> t.dirtObjectCache(Content.class, getId()));
 			}
 
 			return isModified;
@@ -5402,7 +5429,7 @@ public class PageFactory extends AbstractFactory {
 						pst.executeUpdate();
 
 						// dirt the cache
-						currentTransaction.dirtObjectCache(Content.class, object.getId());
+						currentTransaction.clearCache(Content.class, Collections.singleton(object.getId()));
 
 						// set the content to be locked
 						setLocked = true;
@@ -5440,7 +5467,7 @@ public class PageFactory extends AbstractFactory {
 					}
 				}
 			} else {
-				currentTransaction.dirtObjectCache(Content.class, object.getId());
+				currentTransaction.clearCache(Content.class, Collections.singleton(object.getId()));
 			}
 
 			return (T) new EditableFactoryContent((FactoryContent) object, info, false);

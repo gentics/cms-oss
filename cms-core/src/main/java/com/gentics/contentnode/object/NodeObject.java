@@ -17,13 +17,14 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.factory.NodeFactory;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.db.ParamsExecutor;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
@@ -456,6 +457,17 @@ public interface NodeObject extends Serializable {
 	 * @throws NodeException
 	 */
 	boolean save() throws InsufficientPrivilegesException, NodeException;
+
+	/**
+	 * Save the object using the (optionally given) batch updater
+	 * @param batchUpdater optional batch updater
+	 * @return true when the object was modified, false if not
+	 * @throws InsufficientPrivilegesException
+	 * @throws NodeException
+	 */
+	default boolean saveBatch(BatchUpdater batchUpdater) throws InsufficientPrivilegesException, NodeException {
+		return save();
+	}
 
 	/**
 	 * Unlock the object

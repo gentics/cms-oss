@@ -15,6 +15,9 @@ import java.util.Vector;
 
 import com.gentics.api.lib.datasource.VersioningDatasource.Version;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
+import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.DB;
@@ -35,7 +38,7 @@ public class TableVersion {
 	/**
 	 * Batch size for fetching versioned and current data
 	 */
-	public final static int FETCH_BATCH_SIZE = 500;
+	public final static int FETCH_BATCH_SIZE = 2000;
 
 	/**
 	 * Static store of column names per table
@@ -63,10 +66,16 @@ public class TableVersion {
 	private String columnsList;
 
 	/**
-	 * SQL Statement to insert a new record into the _nodeversion table with existing values
+	 * First part of the SQL Statement to insert a new record into the _nodeversion table with existing values
 	 * if the table does not have nodeversion_autoupdate
 	 */
-	private String insertSQLStatement;
+	private String insertSQLStatementNoParams;
+
+	/**
+	 * Second part of the SQL Statement to insert a new record into the _nodeversion table with existing values
+	 * if the table does not have nodeversion_autoupdate
+	 */
+	private String insertSQLStatementParams;
 
 	/**
 	 * Flag to mark whether the table is supposed to have an auto_increment column (named auto_id)
@@ -217,9 +226,9 @@ public class TableVersion {
 			columnsList += i.next();
 		}
 
-		insertSQLStatement = "INSERT INTO `" + table + "_nodeversion` (" + columnsList
-				+ ", nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) VALUES ("
-				+ StringUtils.repeat("?", tableColumns.size() + 4, ",") + ")";
+		insertSQLStatementNoParams = "INSERT INTO `%s_nodeversion` (%s, nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) VALUES "
+				.formatted(table, columnsList);
+		insertSQLStatementParams = "(%s)".formatted(StringUtils.repeat("?", tableColumns.size() + 4, ","));
 	}
 
 	/**
@@ -617,6 +626,7 @@ public class TableVersion {
 				}
 			}
 
+			BatchUpdater batchUpdater = new BatchUpdater();
 			// iterate over the diff
 			for (Diff rowDiff : diff) {
 				switch (rowDiff.diffType) {
@@ -633,8 +643,10 @@ public class TableVersion {
 					insertParams[index++] = 1;
 					insertParams[index++] = 0;
 
-					update("nodeversionlatest = ?", new Object[] {0}, "id = ?", new Object[] {rowDiff.id});
-					DB.update(getHandle(), insertSQLStatement, insertParams);
+					if (rowDiff.diffType == Diff.DIFFTYPE_MOD) {
+						update("nodeversionlatest = ?", new Object[] {0}, "id = ?", new Object[] {rowDiff.id});
+					}
+					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, insertParams, null);
 					break;
 				}
 				case Diff.DIFFTYPE_DEL: {
@@ -650,11 +662,12 @@ public class TableVersion {
 					deleteParams[index++] = time;
 
 					update("nodeversionlatest = ?, nodeversionremoved = ?", new Object[] { 0, time }, "id = ?", new Object[] { rowDiff.id });
-					DB.update(getHandle(), insertSQLStatement, deleteParams);
+					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, deleteParams, null);
 					break;
 				}
 				}
 			}
+			batchUpdater.execute();
 
 			return true;
 		} catch (SQLException ex) {
@@ -728,6 +741,14 @@ public class TableVersion {
 	 */
 	public void restoreVersion(Object[] idParams, int time) throws NodeException {
 		try {
+			// get the diff between the version to be restored and the current version
+			List<Diff> diff = getDiff(idParams, time, -1);
+
+			// no diff, nothing to do
+			if (diff.isEmpty()) {
+				return;
+			}
+
 			// get ids of rows to restore
 			String sql = "SELECT gentics_main.id, max(gentics_main.nodeversiontimestamp) nodeversionrtime" + " FROM " + getFromPart()
 					+ " WHERE (nodeversionremoved >" + time + " OR nodeversionremoved = 0) AND nodeversiontimestamp <=" + time + " AND " + getWherePart()

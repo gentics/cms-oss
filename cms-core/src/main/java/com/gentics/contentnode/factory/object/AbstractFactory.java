@@ -39,9 +39,12 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
@@ -60,6 +63,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
 import com.gentics.contentnode.factory.TransactionStatistics;
 import com.gentics.contentnode.factory.TransactionStatistics.Item;
+import com.gentics.contentnode.factory.object.AbstractFactory.FactoryDataInformation;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -280,15 +284,16 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		}
 
 		String insertSQL = null;
+		String insertSQLWithoutParams = null;
+		String insertSQLParams = null;
 		if (insertFields.isEmpty()) {
-			insertSQL = String.format("INSERT INTO `%s`", tableName);
+			insertSQLWithoutParams = "INSERT INTO `%s`".formatted(tableName);
+			insertSQLParams = "";
 		} else {
-			insertSQL = String.format(
-				"INSERT INTO `%s` (%s) VALUES (%s)",
-				tableName,
-				insertFields.stream().map(field -> String.format("`%s`", field)).collect(Collectors.joining(", ")),
-				insertFields.stream().map(s -> "?").collect(Collectors.joining(", ")));
+			insertSQLWithoutParams = "INSERT INTO `%s` (%s) VALUES ".formatted(tableName, insertFields.stream().map(field -> String.format("`%s`", field)).collect(Collectors.joining(", ")));
+			insertSQLParams = "(%s)".formatted(insertFields.stream().map(s -> "?").collect(Collectors.joining(", ")));
 		}
+		insertSQL = "%s%s".formatted(insertSQLWithoutParams, insertSQLParams);
 		String updateSQL = null;
 
 		if (!updateFields.isEmpty()) {
@@ -301,6 +306,7 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		try {
 			FactoryDataInformation info = new FactoryDataInformation().setSelectSQL(createSelectStatement(tableName))
 					.setBatchLoadSQL(createBatchLoadStatement(tableName)).setInsertSQL(insertSQL)
+					.setInsertSQLWithoutParams(insertSQLWithoutParams).setInsertSQLParams(insertSQLParams)
 					.setInsertFields(insertFields).setUpdateSQL(updateSQL).setUpdateFields(updateFields)
 					.setFactoryDataFields(dataFields).setRestModelField(restModelField)
 					.setSetIdMethod(clazz.getMethod("setId", Integer.class)).setUuid(uuid);
@@ -319,11 +325,20 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 
 	/**
 	 * Save the given factory object into the DB
-	 * @param clazz factory class
 	 * @param object object
 	 * @throws NodeException
 	 */
 	protected final static void saveFactoryObject(NodeObject object) throws NodeException {
+		saveFactoryObject(object, null);
+	}
+
+	/**
+	 * Save the given factory object into the DB
+	 * @param object object
+	 * @param batchUpdater optional batch updater
+	 * @throws NodeException
+	 */
+	protected final static void saveFactoryObject(NodeObject object, BatchUpdater batchUpdater) throws NodeException {
 		FactoryDataInformation info = FACTORY_DATA_INFO.get(ObjectTransformer.getInt(object.getTType(), -1));
 
 		if (info == null) {
@@ -335,18 +350,33 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		if (isNew) {
 			assertNewGlobalId(object);
 
-			// insert a new record
-			List<Integer> keys = DBUtils.executeInsert(info.insertSQL, info.getInsertData(object));
+			Supplier<Object[]> paramSupplier = () -> info.getInsertData(object);
 
-			if (keys.size() == 1) {
+			Consumer<Integer> generatedKeysHandler = key -> {
 				// set the new entry id
-				info.setId(object, keys.get(0));
+				info.setId(object, key);
 				if (info.uuid) {
-					synchronizeGlobalId(object);
+					if (batchUpdater != null) {
+						batchUpdater.addObjectToSynchronize(object);
+					} else {
+						synchronizeGlobalId(object);
+					}
 				}
+			};
+
+			if (batchUpdater != null) {
+				batchUpdater.add(info.insertSQLWithoutParams, info.insertSQLParams, Transaction.INSERT_STATEMENT, paramSupplier, generatedKeysHandler);
 			} else {
-				throw new NodeException("Error while inserting new object, could not get the insertion id");
+				// insert a new record
+				List<Integer> keys = DBUtils.executeInsert(info.insertSQL, paramSupplier.supply());
+
+				if (keys.size() == 1) {
+					generatedKeysHandler.accept(keys.get(0));
+				} else {
+					throw new NodeException("Error while inserting new object, could not get the insertion id");
+				}
 			}
+
 		} else {
 			if (!ObjectTransformer.isEmpty(info.updateSQL)) {
 				DBUtils.executeUpdate(info.updateSQL, info.getUpdateData(object));
@@ -2099,6 +2129,16 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		protected String insertSQL;
 
 		/**
+		 * First part of the SQL Statement to insert a new record (up to and including "VALUES ")
+		 */
+		protected String insertSQLWithoutParams;
+
+		/**
+		 * Second part of the SQL Statement to insert a new record (after "VALUES ")
+		 */
+		protected String insertSQLParams;
+
+		/**
 		 * List of fields to insert
 		 */
 		protected List<String> insertFields;
@@ -2180,6 +2220,26 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		 */
 		public FactoryDataInformation setInsertSQL(String insertSQL) {
 			this.insertSQL = insertSQL;
+			return this;
+		}
+
+		/**
+		 * Set the first part of the insert SQL Statement
+		 * @param insertSQLWithoutParams SQL
+		 * @return fluent API
+		 */
+		public FactoryDataInformation setInsertSQLWithoutParams(String insertSQLWithoutParams) {
+			this.insertSQLWithoutParams = insertSQLWithoutParams;
+			return this;
+		}
+
+		/**
+		 * Set the second part of the insert SQL Statement
+		 * @param insertSQLParams SQL
+		 * @return fluent API
+		 */
+		public FactoryDataInformation setInsertSQLParams(String insertSQLParams) {
+			this.insertSQLParams = insertSQLParams;
 			return this;
 		}
 

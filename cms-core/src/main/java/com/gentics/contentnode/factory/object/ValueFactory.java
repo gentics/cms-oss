@@ -19,6 +19,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils.BatchUpdater;
+import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
@@ -457,11 +458,11 @@ public class ValueFactory extends AbstractFactory {
 
 		@Override
 		public boolean save() throws InsufficientPrivilegesException, NodeException {
-			return saveBatch(null);
+			return saveBatch(null, null, null);
 		}
 
 		@Override
-		public boolean saveBatch(BatchUpdater batchUpdater) throws InsufficientPrivilegesException, NodeException {
+		public boolean saveBatch(BatchUpdater batchUpdater, Operator before, Operator after) throws InsufficientPrivilegesException, NodeException {
 			assertEditable();
 
 			boolean isModified = false;
@@ -485,7 +486,7 @@ public class ValueFactory extends AbstractFactory {
 
 				// object is modified, so update it
 				isModified = true;
-				saveFactoryObject(this, batchUpdater);
+				saveFactoryObject(this, batchUpdater, before, after);
 				modified = false;
 			}
 

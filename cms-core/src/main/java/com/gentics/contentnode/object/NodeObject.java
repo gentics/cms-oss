@@ -21,6 +21,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.BatchUpdater;
+import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.factory.NodeFactory;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -461,11 +462,13 @@ public interface NodeObject extends Serializable {
 	/**
 	 * Save the object using the (optionally given) batch updater
 	 * @param batchUpdater optional batch updater
+	 * @param before optional before handler
+	 * @param after optional after handler
 	 * @return true when the object was modified, false if not
 	 * @throws InsufficientPrivilegesException
 	 * @throws NodeException
 	 */
-	default boolean saveBatch(BatchUpdater batchUpdater) throws InsufficientPrivilegesException, NodeException {
+	default boolean saveBatch(BatchUpdater batchUpdater, Operator before, Operator after) throws InsufficientPrivilegesException, NodeException {
 		return save();
 	}
 

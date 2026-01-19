@@ -360,7 +360,7 @@ public class DatasourcePartType extends AbstractPartType {
 		Datasource datasource = getDatasource();
 		boolean modified = false;
 		if (datasource != null) {
-			modified |= datasource.saveBatch(batchUpdater);
+			modified |= datasource.saveBatch(batchUpdater, null, null);
 
 			getValueObject().setValueRef(ObjectTransformer.getInt(datasource.getId(), 0));
 		}

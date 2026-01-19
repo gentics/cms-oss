@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,6 +31,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -1126,6 +1129,16 @@ public final class DBUtils {
 		private Set<NodeObject> updateMissingReferences = new HashSet<>();
 
 		/**
+		 * Map of handlers to be executed before a batch of sql statements
+		 */
+		private Map<Triple<String, String, Integer>, List<Operator>> beforeHandlers = new HashMap<>();
+
+		/**
+		 * Map of handlers to be executed after a batch of sql statements
+		 */
+		private Map<Triple<String, String, Integer>, List<Operator>> afterHandlers = new HashMap<>();
+
+		/**
 		 * Add the given SQL statement to be executed in batches. For updates, the complete statement can be given as parameter sql. For inserts,
 		 * the statement should be split into the parts <code>INSERT INTO [tablename] ([columns]) VALUES </code>
 		 * (given as parameter sql) and <code>(?, ?, ...)</code> (given as parameter paramSql).
@@ -1134,23 +1147,33 @@ public final class DBUtils {
 		 * @param type statement type
 		 * @param paramSupplier supplier for the parameters
 		 * @param generatedKeysHandler optional handler for generated keys (for insert statements)
+		 * @param before optional handler to perform right before the queries are executed
+		 * @param after optional handler to perform right after the queries are executed
 		 */
 		public void add(String sql, String paramSql, int type, Supplier<Object[]> paramSupplier,
-				Consumer<Integer> generatedKeysHandler) {
+				Consumer<Integer> generatedKeysHandler, Operator before, Operator after) {
 			Triple<String, String, Integer> batchKey = Triple.of(sql, paramSql, type);
 			computeIfAbsent(batchKey, key -> new ArrayList<>()).add(Pair.of(paramSupplier, generatedKeysHandler));
+			if (before != null) {
+				beforeHandlers.computeIfAbsent(batchKey, key -> new ArrayList<>()).add(before);
+			}
+			if (after != null) {
+				afterHandlers.computeIfAbsent(batchKey, key -> new ArrayList<>()).add(after);
+			}
 		}
 
 		/**
-		 * Variant of {@link #add(String, String, int, Supplier, Consumer)} with static parameter values
+		 * Variant of {@link #add(String, String, int, Supplier, Consumer, Operator, Operator)} with static parameter values
 		 * @param sql either complete sql statement or INSERT part
 		 * @param paramSql null or parameter list
 		 * @param type statement type
 		 * @param params parameters
 		 * @param generatedKeysHandler optional handler for generated keys (for insert statements)
+		 * @param before optional handler to perform right before the queries are executed
+		 * @param after optional handler to perform right after the queries are executed
 		 */
-		public void add(String sql, String paramSql, int type, Object[] params, Consumer<Integer> generatedKeysHandler) {
-			add(sql, paramSql, type, () -> params, generatedKeysHandler);
+		public void add(String sql, String paramSql, int type, Object[] params, Consumer<Integer> generatedKeysHandler, Operator before, Operator after) {
+			add(sql, paramSql, type, () -> params, generatedKeysHandler, before, after);
 		}
 
 		/**
@@ -1187,19 +1210,35 @@ public final class DBUtils {
 				String paramSql = entry.getKey().getMiddle();
 				int type = entry.getKey().getRight();
 
+				// execute before handlers
+				for (Operator handler : beforeHandlers.getOrDefault(entry.getKey(), Collections.emptyList())) {
+					handler.operate();
+				}
+
+				// supply the parameters
 				List<Object[]> params = new ArrayList<>();
 				for (Pair<Supplier<Object[]>, Consumer<Integer>> pair : entry.getValue()) {
 					params.add(pair.getLeft().supply());
 				}
 
+				// execute the statements
 				if (type == Transaction.INSERT_STATEMENT) {
 					final List<Integer> generatedKeys = new ArrayList<>();
 
-					Observable.fromIterable(params).buffer(100).forEach(batch -> {
+					AtomicReference<Throwable> error = new AtomicReference<>();
+					Observable.fromIterable(params).buffer(100).subscribe(batch -> {
 						Object[] combinedParams = batch.stream().flatMap(array -> Arrays.asList(array).stream()).collect(Collectors.toList()).toArray();
 						String fullSql = "%s%s".formatted(sql, StringUtils.repeat(paramSql, batch.size(), ", "));
 						generatedKeys.addAll(DBUtils.executeInsert(fullSql, combinedParams));
-					});
+					}, error::set);
+					if (error.get() != null) {
+						Throwable t = error.get();
+						if (t instanceof NodeException) {
+							throw (NodeException) t;
+						} else {
+							throw new NodeException(t);
+						}
+					}
 
 					List<Consumer<Integer>> generatedKeyHandlers = entry.getValue().stream().map(Pair::getRight)
 							.collect(Collectors.toList());
@@ -1215,9 +1254,16 @@ public final class DBUtils {
 				} else {
 					DBUtils.executeBatchStatement(sql, type, params, null);
 				}
+
+				// execute the after handlers
+				for (Operator handler : afterHandlers.getOrDefault(entry.getKey(), Collections.emptyList())) {
+					handler.operate();
+				}
 			}
 			// clear collected statements
 			clear();
+			beforeHandlers.clear();
+			afterHandlers.clear();
 
 			// synchronize the uuids of objects
 			for (Map.Entry<String, Set<NodeObject>> entry : objectsToSynchronize.entrySet()) {

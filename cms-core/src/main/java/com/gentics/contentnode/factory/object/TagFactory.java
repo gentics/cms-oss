@@ -33,6 +33,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.factory.DBTable;
@@ -424,11 +425,11 @@ public class TagFactory extends AbstractFactory {
 
 		@Override
 		public boolean save() throws InsufficientPrivilegesException, NodeException {
-			return saveBatch(null);
+			return saveBatch(null, null, null);
 		}
 
 		@Override
-		public boolean saveBatch(BatchUpdater batchUpdater) throws InsufficientPrivilegesException, NodeException {
+		public boolean saveBatch(BatchUpdater batchUpdater, Operator before, Operator after) throws InsufficientPrivilegesException, NodeException {
 			assertEditable();
 
 			boolean isNew = isEmptyId(getId());
@@ -455,8 +456,7 @@ public class TagFactory extends AbstractFactory {
 				valueIdsToRemove.addAll(valueIds);
 			}
 			for (Value value : values) {
-				value.setContainer(this);
-				isModified |= value.saveBatch(batchUpdater);
+				isModified |= value.saveBatch(batchUpdater, () -> value.setContainer(this), null);
 				valueIdsToRemove.remove(value.getId());
 			}
 
@@ -1818,7 +1818,7 @@ public class TagFactory extends AbstractFactory {
 			};
 
 			if (batchUpdater != null) {
-				batchUpdater.add(INSERT_CONTENTTAG_WO_PARAMS_SQL, INSERT_CONTENTTAG_PARAMS_SQL, Transaction.INSERT_STATEMENT, params, generatedKeyHandler);
+				batchUpdater.add(INSERT_CONTENTTAG_WO_PARAMS_SQL, INSERT_CONTENTTAG_PARAMS_SQL, Transaction.INSERT_STATEMENT, params, generatedKeyHandler, null, null);
 			} else {
 				// insert a new record
 				List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENTTAG_SQL, params);

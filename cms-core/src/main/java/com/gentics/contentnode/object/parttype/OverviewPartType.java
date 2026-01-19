@@ -452,11 +452,9 @@ public class OverviewPartType extends AbstractPartType {
 		boolean modified = false;
 
 		if (overview != null && valueContainer instanceof Tag) {
-			overview.setContainer((Tag) valueContainer);
-
 			//save the overview if it is not undefined
 			if (!overview.isUndefined()) {
-				modified |= overview.saveBatch(batchUpdater);
+				modified |= overview.saveBatch(batchUpdater, () -> overview.setContainer((Tag) valueContainer), null);
 			}
 		}
 

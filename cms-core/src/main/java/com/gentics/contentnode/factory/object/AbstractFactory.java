@@ -44,6 +44,7 @@ import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
+import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
@@ -63,7 +64,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
 import com.gentics.contentnode.factory.TransactionStatistics;
 import com.gentics.contentnode.factory.TransactionStatistics.Item;
-import com.gentics.contentnode.factory.object.AbstractFactory.FactoryDataInformation;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -329,16 +329,18 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 	 * @throws NodeException
 	 */
 	protected final static void saveFactoryObject(NodeObject object) throws NodeException {
-		saveFactoryObject(object, null);
+		saveFactoryObject(object, null, null, null);
 	}
 
 	/**
 	 * Save the given factory object into the DB
 	 * @param object object
 	 * @param batchUpdater optional batch updater
+	 * @param before optional before handler
+	 * @param after optional after handler
 	 * @throws NodeException
 	 */
-	protected final static void saveFactoryObject(NodeObject object, BatchUpdater batchUpdater) throws NodeException {
+	protected final static void saveFactoryObject(NodeObject object, BatchUpdater batchUpdater, Operator before, Operator after) throws NodeException {
 		FactoryDataInformation info = FACTORY_DATA_INFO.get(ObjectTransformer.getInt(object.getTType(), -1));
 
 		if (info == null) {
@@ -365,8 +367,12 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 			};
 
 			if (batchUpdater != null) {
-				batchUpdater.add(info.insertSQLWithoutParams, info.insertSQLParams, Transaction.INSERT_STATEMENT, paramSupplier, generatedKeysHandler);
+				batchUpdater.add(info.insertSQLWithoutParams, info.insertSQLParams, Transaction.INSERT_STATEMENT,
+						paramSupplier, generatedKeysHandler, before, after);
 			} else {
+				if (before != null) {
+					before.operate();
+				}
 				// insert a new record
 				List<Integer> keys = DBUtils.executeInsert(info.insertSQL, paramSupplier.supply());
 
@@ -375,11 +381,21 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 				} else {
 					throw new NodeException("Error while inserting new object, could not get the insertion id");
 				}
+
+				if (after != null) {
+					after.operate();
+				}
 			}
 
 		} else {
 			if (!ObjectTransformer.isEmpty(info.updateSQL)) {
+				if (before != null) {
+					before.operate();
+				}
 				DBUtils.executeUpdate(info.updateSQL, info.getUpdateData(object));
+				if (after != null) {
+					after.operate();
+				}
 			}
 		}
 	}

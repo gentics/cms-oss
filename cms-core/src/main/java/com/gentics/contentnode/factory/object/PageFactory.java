@@ -4469,7 +4469,7 @@ public class PageFactory extends AbstractFactory {
 					ContentTag tag = i.next();
 
 					tag.setContentId(getId());
-					isModified |= tag.saveBatch(batchUpdater);
+					isModified |= tag.saveBatch(batchUpdater, null, null);
 
 					// do not remove the tag, which was saved
 					tagIdsToRemove.remove(tag.getId());

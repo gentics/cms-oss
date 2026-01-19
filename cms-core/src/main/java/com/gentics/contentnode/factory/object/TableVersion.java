@@ -646,7 +646,7 @@ public class TableVersion {
 					if (rowDiff.diffType == Diff.DIFFTYPE_MOD) {
 						update("nodeversionlatest = ?", new Object[] {0}, "id = ?", new Object[] {rowDiff.id});
 					}
-					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, insertParams, null);
+					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, insertParams, null, null, null);
 					break;
 				}
 				case Diff.DIFFTYPE_DEL: {
@@ -662,7 +662,7 @@ public class TableVersion {
 					deleteParams[index++] = time;
 
 					update("nodeversionlatest = ?, nodeversionremoved = ?", new Object[] { 0, time }, "id = ?", new Object[] { rowDiff.id });
-					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, deleteParams, null);
+					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, deleteParams, null, null, null);
 					break;
 				}
 				}

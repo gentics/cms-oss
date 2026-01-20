@@ -435,13 +435,11 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
 }
 
 export async function expectItemOffline(item: Locator): Promise<void> {
-    // TODO: it would be better not to test on the icon
-    await expect(item.locator('icon.main-icon')).toHaveText('cloud_off');
+    await expect(item.locator('item-status-label .status-label')).not.toContainClass('published');
 }
 
 export async function expectItemPublished(item: Locator): Promise<void> {
-    // TODO: it would be better not to test on the icon
-    await expect(item.locator('icon.main-icon')).toHaveText('cloud_upload');
+    await expect(item.locator('item-status-label .status-label')).toContainClass('published');
 }
 
 export async function openToolOrAction(page: Page, id: string): Promise<void> {

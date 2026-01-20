@@ -15,7 +15,6 @@ import java.util.Vector;
 
 import com.gentics.api.lib.datasource.VersioningDatasource.Version;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -86,6 +85,50 @@ public class TableVersion {
 	 * Processor for handling "restore version" operations
 	 */
 	private TableVersionRestoreProcessor restoreProcessor;
+
+	/**
+	 * Restore the version with given timestamp in all the given {@link TableVersion} instances, if at least one has a diff
+	 * @param versions instances
+	 * @param id id
+	 * @param timestamp timestamp to restore
+	 * @throws NodeException
+	 */
+	public static void restoreIfDiff(List<TableVersion> versions, Long id, int timestamp) throws NodeException {
+		restoreIfDiff(versions, new Object[] { id }, timestamp);
+	}
+
+	/**
+	 * Restore the version with given timestamp in all the given {@link TableVersion} instances, if at least one has a diff
+	 * @param versions instances
+	 * @param idParams id parameters
+	 * @param timestamp timestamp to restore
+	 * @throws NodeException
+	 */
+	public static void restoreIfDiff(List<TableVersion> versions, Object[] idParams, int timestamp) throws NodeException {
+		if (hasDiff(versions, idParams, timestamp, -1)) {
+			for (TableVersion v : versions) {
+				v.restoreVersion(idParams, timestamp);
+			}
+		}
+	}
+
+	/**
+	 * Check if at least one of the {@link TableVersion} instances has a diff between the given timestamps
+	 * @param versions instances
+	 * @param idParams id parameters
+	 * @param timestamp1 first timestamp
+	 * @param timestamp2 second timestamp
+	 * @return true if a diff was found
+	 * @throws NodeException
+	 */
+	public static boolean hasDiff(List<TableVersion> versions, Object[] idParams, int timestamp1, int timestamp2) throws NodeException {
+		for (TableVersion v : versions) {
+			if (!v.getDiff(idParams, timestamp1, timestamp2).isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Create an instance of the TableVersion
@@ -741,14 +784,6 @@ public class TableVersion {
 	 */
 	public void restoreVersion(Object[] idParams, int time) throws NodeException {
 		try {
-			// get the diff between the version to be restored and the current version
-			List<Diff> diff = getDiff(idParams, time, -1);
-
-			// no diff, nothing to do
-			if (diff.isEmpty()) {
-				return;
-			}
-
 			// get ids of rows to restore
 			String sql = "SELECT gentics_main.id, max(gentics_main.nodeversiontimestamp) nodeversionrtime" + " FROM " + getFromPart()
 					+ " WHERE (nodeversionremoved >" + time + " OR nodeversionremoved = 0) AND nodeversiontimestamp <=" + time + " AND " + getWherePart()

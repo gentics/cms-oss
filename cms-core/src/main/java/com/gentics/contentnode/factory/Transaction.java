@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -610,6 +611,18 @@ public interface Transaction extends LanguageProvider, PreparedStatementHandler,
 	 * @throws NodeException
 	 */
 	void dirtObjectCache(Class<? extends NodeObject> clazz, Integer id, boolean atCommit) throws NodeException;
+
+	/**
+	 * Clear the cache for a single object of given class and id
+	 * @param clazz object class
+	 * @param id object id
+	 * @throws NodeException
+	 */
+	default void clearCache(Class<? extends NodeObject> clazz, Integer id) throws NodeException {
+		if (id != null) {
+			clearCache(clazz, Collections.singleton(id));
+		}
+	}
 
 	/**
 	 * Clear the cache for objects of the given class having the given internal ids

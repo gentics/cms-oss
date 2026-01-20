@@ -396,6 +396,7 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 				if (after != null) {
 					after.operate();
 				}
+				TransactionManager.getCurrentTransaction().clearCache(object.getObjectInfo().getObjectClass(), object.getId());
 			}
 		}
 	}

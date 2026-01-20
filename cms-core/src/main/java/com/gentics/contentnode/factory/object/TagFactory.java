@@ -1835,7 +1835,7 @@ public class TagFactory extends AbstractFactory {
 			});
 
 			// and dirt the cache for the updated object
-			t.dirtObjectCache(ContentTag.class, tag.getId());
+			t.clearCache(ContentTag.class, tag.getId());
 		}
 	}
 

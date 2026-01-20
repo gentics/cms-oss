@@ -3695,9 +3695,7 @@ public class PageFactory extends AbstractFactory {
 			List<TableVersion> contentIdBasedTableVersions = getContentIdBasedTableVersions(true);
 
 			Object[] idParam = new Object[] {tag.getId()};
-			for (TableVersion version : contentIdBasedTableVersions) {
-				version.restoreVersion(idParam, versionTimestamp);
-			}
+			TableVersion.restoreIfDiff(contentIdBasedTableVersions, idParam, versionTimestamp);
 
 			// dirt the tag cache
 			TransactionManager.getCurrentTransaction().dirtObjectCache(ContentTag.class, tag.getId());
@@ -4036,6 +4034,8 @@ public class PageFactory extends AbstractFactory {
 			if (contentTags == null) {
 				contentTags = loadContentTags();
 				t.putIntoLevel2Cache(this, CONTENTTAGS, contentTags);
+			} else if (tagIds == null) {
+				tagIds = contentTags.values().stream().map(ContentTag::getId).collect(Collectors.toList());
 			}
 			return contentTags;
 		}
@@ -4130,6 +4130,7 @@ public class PageFactory extends AbstractFactory {
 			final Set<Integer> contentTagIds = new HashSet<>();
 			final Set<Integer> valueIds = new HashSet<>();
 			final Set<Integer> datasourceIds = new HashSet<>();
+			final Set<Integer> datasourceEntryIds = new HashSet<>();
 			final int contentId = ObjectTransformer.getInt(getId(), 0);
 
 			// get the parts of type 32
@@ -4161,6 +4162,18 @@ public class PageFactory extends AbstractFactory {
 				}
 			});
 
+			// select the datasource entry ids
+			if (!datasourceIds.isEmpty()) {
+				DBUtils.executeMassStatement("SELECT id FROM datasource_value WHERE datasource_id IN ", datasourceIds, 1, new SQLExecutor( ) {
+					@Override
+					public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+						while (rs.next()) {
+							datasourceEntryIds.add(rs.getInt("id"));
+						}
+					}
+				});
+			}
+
 			// select overviews contained in the content tags
 			final Set<Integer> overviewIds = new HashSet<>();
 			DBUtils.executeMassStatement("SELECT id FROM ds WHERE contenttag_id IN ", contentTagIds, 1, new SQLExecutor() {
@@ -4176,6 +4189,7 @@ public class PageFactory extends AbstractFactory {
 			t.clearCache(Value.class, valueIds);
 			t.clearCache(Overview.class, overviewIds);
 			t.clearCache(Datasource.class, datasourceIds);
+			t.clearCache(DatasourceEntry.class, datasourceEntryIds);
 		}
 
 		/* (non-Javadoc)
@@ -5429,7 +5443,7 @@ public class PageFactory extends AbstractFactory {
 						pst.executeUpdate();
 
 						// dirt the cache
-						currentTransaction.clearCache(Content.class, Collections.singleton(object.getId()));
+						currentTransaction.clearCache(Content.class, object.getId());
 
 						// set the content to be locked
 						setLocked = true;
@@ -5467,7 +5481,7 @@ public class PageFactory extends AbstractFactory {
 					}
 				}
 			} else {
-				currentTransaction.clearCache(Content.class, Collections.singleton(object.getId()));
+				currentTransaction.clearCache(Content.class, object.getId());
 			}
 
 			return (T) new EditableFactoryContent((FactoryContent) object, info, false);
@@ -5821,7 +5835,7 @@ public class PageFactory extends AbstractFactory {
 
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			TableVersion niceUrlVersion = getAlternateUrlTableVersion();
-			niceUrlVersion.restoreVersion(pageId, versionTimestamp);
+			TableVersion.restoreIfDiff(Arrays.asList(niceUrlVersion), pageId, versionTimestamp);
 		}
 
 		// get the table version instances
@@ -5831,9 +5845,7 @@ public class PageFactory extends AbstractFactory {
 		contentIdBasedTableVersions.forEach(tv -> tv.setRestoreProcessor(restoreProcessor));
 
 		// restore the versions
-		for (TableVersion version : contentIdBasedTableVersions) {
-			version.restoreVersion(contentId, versionTimestamp);
-		}
+		TableVersion.restoreIfDiff(contentIdBasedTableVersions, contentId, versionTimestamp);
 
 		// create a new page version
 		if (createPageVersion(page, false, t.getUserId())) {

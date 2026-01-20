@@ -3,9 +3,11 @@ import {
     GcmsPermission,
     Page as CMSPage,
     Response as CMSResponse,
+    ResponseCode,
 } from '@gentics/cms-models';
 import {
     clickNotificationAction,
+    CONTENT_REPOSITORY_MESH,
     EntityImporter,
     findContextContent,
     findNotification,
@@ -17,6 +19,7 @@ import {
     ImportPermissions,
     ITEM_TYPE_PAGE,
     loginWithForm,
+    matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
@@ -97,6 +100,7 @@ test.describe('Page Management', () => {
 
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
+            await IMPORTER.syncPackages(TestSize.MINIMAL);
             await IMPORTER.setupTest(TestSize.MINIMAL);
             TEST_PAGE = IMPORTER.get(PAGE_ONE);
         });
@@ -361,18 +365,27 @@ test.describe('Page Management', () => {
         expect(errorMessages).toHaveLength(1);
     });
 
-    test('should handle errors when taking a page offline correctly', {
-        annotation: [{
-            type: 'ticket',
-            description: 'SUP-19444',
-        }],
-    }, async ({ page }) => {
-        // First we need to publish the page
-        await IMPORTER.client.page.publish(TEST_PAGE.id, {
-            alllang: true,
-        }).send();
-        await IMPORTER.importData([SCHEDULE_PUBLISHER]);
-        await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
+    async function setupInstantPublishing(): Promise<void> {
+        await test.step('Setup Instant Publishing', async () => {
+            // Activate instant publishing
+            const CR = IMPORTER.get(CONTENT_REPOSITORY_MESH);
+            await IMPORTER.client.contentRepository.update(CR.id, {
+                instantPublishing: true,
+            }).send();
+            // Make sure that mesh is properly setup
+            await IMPORTER.client.contentRepository.repairStructure(CR.id).send();
+        });
+    }
+
+    async function testPageTakeOffline(page: Page, successful: boolean): Promise<void> {
+        await test.step('Page Setup', async () => {
+            // First we need to publish the page
+            await IMPORTER.client.page.publish(TEST_PAGE.id, {
+                alllang: true,
+            }).send();
+            await IMPORTER.importData([SCHEDULE_PUBLISHER]);
+            await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
+        });
 
         await setupWithPermissions(page, [
             {
@@ -389,21 +402,99 @@ test.describe('Page Management', () => {
 
         const list = findList(page, ITEM_TYPE_PAGE);
         const item = findItem(list, TEST_PAGE.id);
+        let toastMessage: string;
 
-        // Delete the page, to force an error once we try to take the page offline
-        await IMPORTER.client.page.delete(TEST_PAGE.id).send();
+        // Validate initial state
+        await expectItemPublished(item);
 
-        const offlineReq = waitForResponseFrom(page, 'POST', `/rest/page/takeOffline/${TEST_PAGE.id}`, {
-            skipStatus: true,
+        await test.step('Take page offline', async () => {
+            if (!successful) {
+                // Mock an error
+                await page.route(url => matchesUrl(url, `/rest/page/takeOffline/${TEST_PAGE.id}`), (route) => {
+                    return route.fulfill({
+                        status: 200, // Old endpoint which still returns 200 on failure
+                        json: {
+                            messages: [{
+                                type: 'CRITICAL',
+                                message: 'An error occurred while accessing the backend system.',
+                                timestamp: new Date().getTime(),
+                            }],
+                            responseInfo: {
+                                responseCode: ResponseCode.FAILURE,
+                                responseMessage: `Error while taking offline page ${TEST_PAGE.id}: Mocked error`,
+                            },
+                        } as CMSResponse,
+                    });
+                });
+            }
+
+            const offlineReq = waitForResponseFrom(page, 'POST', `/rest/page/takeOffline/${TEST_PAGE.id}`);
+            await itemAction(item, 'take-offline');
+            const offlineRes = await offlineReq;
+            const offlineBody = await offlineRes.json() as CMSResponse;
+            toastMessage = successful
+                ? offlineBody.messages[0].message
+                : offlineBody.responseInfo.responseMessage;
         });
-        await itemAction(item, 'take-offline');
-        const offlineRes = await offlineReq;
-        const offlineBody = await offlineRes.json() as CMSResponse;
 
-        const toasts = page.locator('gtx-toast');
+        await test.step('Validate UI state', async () => {
+            const toasts = page.locator('gtx-toast');
+            await page.waitForTimeout(500); // Allow for notifications to spawn
 
-        await page.waitForTimeout(500); // Allow for notifications to spawn
-        await expect(toasts).toHaveCount(1);
-        await expect(toasts.locator('.message')).toContainText(offlineBody.messages[0].message);
+            // Get all notifications now, and check length.
+            // Using the build in helper is wrong in this case, as when 2 are displayed,
+            // it'd wait until one fades away and resolves to true.
+            expect(await toasts.all()).toHaveLength(1);
+
+            await expect(toasts.locator('.message')).toContainText(toastMessage);
+
+            if (successful) {
+                await expect(toasts.locator('.gtx-toast')).toContainClass('success');
+                // Item should be updated correctly in the list as well
+            await expectItemOffline(item);
+            } else {
+                await expect(toasts.locator('.gtx-toast')).toContainClass('alert');
+                // Since an error occurred, page should still be published
+                await expectItemPublished(item);
+            }
+        });
+    }
+
+    test('should be able to take a page offline', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19444',
+        }],
+    }, async ({ page }) => {
+        await testPageTakeOffline(page, true);
+    });
+
+    test('should be able to take a page offline with instant publishing', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19444',
+        }],
+    }, async ({ page }) => {
+        await setupInstantPublishing();
+        await testPageTakeOffline(page, true);
+    });
+
+    test('should handle errors when taking a page offline', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19444',
+        }],
+    }, async ({ page }) => {
+        await testPageTakeOffline(page, false);
+    });
+
+    test('should handle errors when taking a page offline with instant publishing', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19444',
+        }],
+    }, async ({ page }) => {
+        await setupInstantPublishing();
+        await testPageTakeOffline(page, false);
     });
 });

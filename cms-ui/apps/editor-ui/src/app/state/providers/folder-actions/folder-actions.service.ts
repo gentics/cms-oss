@@ -3098,7 +3098,7 @@ export class FolderActionsService {
                 catchError((error: GCMSRestClientRequestError) => {
                     const errorMsg = error && error.message || `Error on taking page offline with id ${id}.`;
                     this.appState.dispatch(new ListSavingErrorAction('page', errorMsg));
-                    this.errorHandler.catch(error, { notification: true });
+                    this.errorHandler.catch(error, { notification: false });
                     return of({
                         id,
                         response: error.data,

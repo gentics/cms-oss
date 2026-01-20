@@ -96,6 +96,18 @@ export function matchRequest(method: string, path: string | RegExp, options?: Re
     };
 }
 
+export function onRequest(
+    page: Page,
+    matcher: (req: Request) => boolean,
+    handler: (req: Request) => any,
+): void {
+    page.on('request', req => {
+        if (matcher(req)) {
+            handler(req);
+        }
+    });
+}
+
 /**
  * Simple wrapper function for `page.waitForResponse` and {@link matchRequest}, but with an error-handler
  * to tell which request actually failed, because otherwise you have to guess.
@@ -118,7 +130,12 @@ export function waitForResponseFrom(
         .catch(err => {
             // The actual class isn't publicly available, which is why we have to do this hacky workaround.
             if (err instanceof Error && (err.constructor.name === 'TargetClosedError' || err.constructor.name === 'TimeoutError')) {
-                err.message = `Reached timeout for request "${method} ${path}"`;
+                const timeoutStr = timeout >= 1000 ? (timeout / 1000) + 's' : (timeout + 'ms');
+                if (path instanceof RegExp) {
+                    err.message = `Reached timeout (${timeoutStr}) for request "${method}" matching "${path.source}"`;
+                } else {
+                    err.message = `Reached timeout (${timeoutStr}) for request "${method} ${path}"`;
+                }
             }
 
             throw err;

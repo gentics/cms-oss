@@ -34,7 +34,6 @@ import com.gentics.api.lib.i18n.Language;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
-import com.gentics.contentnode.etc.Timing;
 import com.gentics.contentnode.factory.TransactionStatistics.Item;
 import com.gentics.contentnode.i18n.CNDictionary;
 import com.gentics.contentnode.jmx.MBeanRegistry;
@@ -849,56 +848,42 @@ public final class TransactionManager {
 				// flush all factories
 				Transaction current = TransactionManager.getCurrentTransactionOrNull();
 
-				try (Timing commit = Timing.subLog("Flush")) {
+				try {
 					TransactionManager.setCurrentTransaction(this);
 					factoryHandle.flushAll();
 				} finally {
 					TransactionManager.setCurrentTransaction(current);
 				}
 
-				try (Timing commit = Timing.subLog("Clear Cache")) {
-					// clear the level2 cache
-					clearLevel2Cache();
-				}
+				// clear the level2 cache
+				clearLevel2Cache();
 
 				runTransactionals = true;
-				try (Timing commit = Timing.subLog("On DB Commit")) {
-					// call the transactionals onDBCommit()
-					for (Transactional t : transactionals) {
-						t.onDBCommit(this);
-					}
+				// call the transactionals onDBCommit()
+				for (Transactional t : transactionals) {
+					t.onDBCommit(this);
 				}
 
-				try (Timing commit = Timing.subLog("Connection Commit")) {
-					// commit the db connection
-					connection.commit();
-				}
+				// commit the db connection
+				connection.commit();
 
 				boolean commitAgain = false;
 
-				try (Timing commit = Timing.subLog("On Trx Commit")) {
-					// call the transactionals onTransactionCommit()
-					for (Transactional t : transactionals) {
-						commitAgain |= t.onTransactionCommit(this);
-					}
+				// call the transactionals onTransactionCommit()
+				for (Transactional t : transactionals) {
+					commitAgain |= t.onTransactionCommit(this);
 				}
 
 				if (commitAgain) {
-					try (Timing commit = Timing.subLog("Connection Commit")) {
-						connection.commit();
-					}
+					connection.commit();
 				}
 				runTransactionals = false;
 
-				try (Timing commit = Timing.subLog("Remove Delete Lists")) {
-					removeDeleteLists();
-				}
+				removeDeleteLists();
 				transactionals = new Vector<Transactional>();
 
 				if (stopTransaction) {
-					try (Timing commit = Timing.subLog("Stop")) {
-						stopTransaction();
-					}
+					stopTransaction();
 				}
 			} catch (Exception e) {
 				try {

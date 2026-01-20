@@ -1,9 +1,5 @@
 package com.gentics.contentnode.etc;
 
-import java.util.Stack;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.gentics.api.lib.exception.NodeException;
 
 /**
@@ -11,8 +7,6 @@ import com.gentics.api.lib.exception.NodeException;
  * If the duration is bigger than the threshold (which defaults to 0), the consumer is called with the duration
  */
 public class Timing implements AutoCloseable {
-	private static ThreadLocal<Stack<AutoCloseable>> loggingStack = com.gentics.lib.etc.Timing.loggingStack;
-
 	/**
 	 * Threshold in ms
 	 */
@@ -34,45 +28,7 @@ public class Timing implements AutoCloseable {
 	 * @return instance
 	 */
 	public static Timing get(Consumer<Long> consumer) {
-		return get(-1, consumer);
-	}
-
-	public static Timing log(String description) {
-		Timing t = get(-1, duration -> System.out.println("%s: %d ms".formatted(description, duration)));
-		loggingStack.get().push(t);
-		return t;
-	}
-
-	public static Timing subLog(String description) {
-		if (loggingStack.get().isEmpty()) {
-			return get(Long.MAX_VALUE, duration -> {});
-		} else {
-			return log("%s%s".formatted(StringUtils.repeat('\t', loggingStack.get().size()), description));
-		}
-	}
-
-	public static <R> R logged(String description, Supplier<R> action) throws NodeException {
-		try (Timing tim = Timing.log(description)) {
-			return action.supply();
-		}
-	}
-
-	public static <R> R subLogged(String description, Supplier<R> action) throws NodeException {
-		try (Timing tim = Timing.subLog(description)) {
-			return action.supply();
-		}
-	}
-
-	public static void logged(String description, Operator action) throws NodeException {
-		try (Timing tim = Timing.log(description)) {
-			action.operate();
-		}
-	}
-
-	public static void subLogged(String description, Operator action) throws NodeException {
-		try (Timing tim = Timing.subLog(description)) {
-			action.operate();
-		}
+		return get(0, consumer);
 	}
 
 	/**
@@ -103,6 +59,5 @@ public class Timing implements AutoCloseable {
 		if (consumer != null && duration > threshold) {
 			consumer.accept(duration);
 		}
-		loggingStack.get().remove(this);
 	}
 }

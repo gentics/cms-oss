@@ -27,7 +27,6 @@ import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.ContentMap;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.etc.Timing;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Wastebin;
@@ -143,7 +142,7 @@ public class AlohaPageServlet extends ContentNodeUserServlet {
 			Folder folder = null;
 			Wastebin wastebin = Wastebin.EXCLUDE;
 
-			try (Timing tim = Timing.log("Render Page")) {
+			try {
 				boolean multiChannelling = t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING);
 				// get the nodeid of the scope (may be empty)
 				Integer nodeId = ObjectTransformer.getInteger(request.getParameter("nodeid"), null);

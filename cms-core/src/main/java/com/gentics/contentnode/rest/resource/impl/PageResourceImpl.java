@@ -5,6 +5,13 @@
  */
 package com.gentics.contentnode.rest.resource.impl;
 
+import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
+import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
+import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLanguage;
+import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
+import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
+import static com.gentics.contentnode.rest.util.MiscUtils.throwIfLockedByAnotherUser;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,6 +35,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
 import com.gentics.api.lib.exception.NodeException;
@@ -43,7 +53,6 @@ import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.Supplier;
-import com.gentics.contentnode.etc.Timing;
 import com.gentics.contentnode.factory.AutoCommit;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.ContentNodeFactory;
@@ -196,6 +205,7 @@ import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.util.FileUtil;
+
 import de.jkeylockmanager.manager.ReturnValueLockCallback;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DefaultValue;
@@ -209,15 +219,6 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
-import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.tuple.Pair;
-
-import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
-import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
-import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLanguage;
-import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
-import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
-import static com.gentics.contentnode.rest.util.MiscUtils.throwIfLockedByAnotherUser;
 
 /**
  * Resource used for loading, saving and manipulating GCN pages.
@@ -1083,17 +1084,15 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Transaction t = getTransaction();
 		Page page = null;
 
-		try (AutoCommit cmt = new AutoCommit(); /* Timing tim1 = Timing.log("Save Page") */) {
+		try (AutoCommit cmt = new AutoCommit()) {
 			// first get the page and lock it (for checking the permission to
 			// save)
-			try (Timing tim2 = Timing.subLog("Get Locked Page")) {
-				if (request.isClearOfflineAt() || request.isClearPublishAt()) {
-					// clearing offlineAt or publishAt currently requires the publish permission (since that cannot be queued)
-					page = getLockedPage(id, PermHandler.ObjectPermission.edit,
-							PermHandler.ObjectPermission.publish);
-				} else {
-					page = getLockedPage(id, PermHandler.ObjectPermission.edit);
-				}
+			if (request.isClearOfflineAt() || request.isClearPublishAt()) {
+				// clearing offlineAt or publishAt currently requires the publish permission (since that cannot be queued)
+				page = getLockedPage(id, PermHandler.ObjectPermission.edit,
+						PermHandler.ObjectPermission.publish);
+			} else {
+				page = getLockedPage(id, PermHandler.ObjectPermission.edit);
 			}
 
 			// Transform the rest PageSaveRequest into a rest page
@@ -1105,9 +1104,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			List<String> tagsToDelete = request.getDelete();
 
 			// Validate the given rest page properties and tags
-			try (Timing tim3 = Timing.subLog("Validate")) {
-				sanitizeAndValidateRestPage(restPage, page);
-			}
+			sanitizeAndValidateRestPage(restPage, page);
 
 			// fix an incorrect extension
 			if (!StringUtils.isEmpty(restPage.getFileName()) && !StringUtils.isEmpty(
@@ -1129,10 +1126,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 							&& !ObjectTransformer.isEmpty(restPage.getFileName())
 							&& !StringUtils.isEqual(restPage.getFileName(), page.getFilename());
 
-			try (Timing tim2 = Timing.subLog("Transform")) {
-				// transform the page from the request into a page object
-				page = ModelBuilder.getPage(request.getPage(), false);
-			}
+			// transform the page from the request into a page object
+			page = ModelBuilder.getPage(request.getPage(), false);
 
 			boolean deriveFilename = ObjectTransformer.getBoolean(request.getDeriveFileName(), false)
 					&& StringUtils.isEmpty(request.getPage().getFileName());
@@ -1212,10 +1207,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			// delete the tags, which are requested to be deleted
 			ModelBuilder.deleteTags(tagsToDelete, page);
 
-			try (Timing tim3 = Timing.subLog("Save")) {
-				// save the page
-				page.save(request.isCreateVersion());
-			}
+			// save the page
+			page.save(request.isCreateVersion());
 
 			if (request.isClearPublishAt()) {
 				page.clearTimePub();
@@ -1327,7 +1320,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				fillRefs.add(Reference.TAG_EDIT_DATA);
 			}
 
-			try (Timing load = Timing.log("Load")) {
+			try {
 				if (update) {
 					page = getLockedPage(id, PermHandler.ObjectPermission.edit);
 				} else {
@@ -1343,19 +1336,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			// transform the page into a REST object
-			com.gentics.contentnode.rest.model.Page restPage = null;
-			try (Timing load = Timing.log("Transform")) {
-				restPage = getPage(page, fillRefs, readOnly);
-			}
+			com.gentics.contentnode.rest.model.Page restPage = getPage(page, fillRefs, readOnly);
 
 			response.setPage(restPage);
 			if (responseMessage == null) {
 				responseMessage = "Loaded page with id { " + id + " } successfully";
 			}
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, responseMessage));
-			try (Timing load = Timing.log("Staging Status")) {
-				response.setStagingStatus(StagingUtil.checkStagingStatus(page, stagingPackageName));
-			}
+			response.setStagingStatus(StagingUtil.checkStagingStatus(page, stagingPackageName));
 			return response;
 		} catch (EntityNotFoundException e) {
 			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
@@ -1774,7 +1762,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Path("/delete/{id}")
 	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) {
 		boolean syncCr = Optional.ofNullable(noCrSync).map(BooleanUtils::negate).orElse(true);
-		try (InstantPublishingTrx ip = new InstantPublishingTrx(syncCr); Timing tim = Timing.log("Delete Page")) {
+		try (InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			// set the channel ID if given
 			boolean isChannelIdset = setChannelToTransaction(nodeId);
 
@@ -1895,7 +1883,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 			@Override
 			public GenericResponse call() throws Exception {
-				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit(); Timing tim = Timing.log("Delete from wastebin")) {
+				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
 					List<Page> pages = new ArrayList<Page>();
 
 					for (String id : ids) {
@@ -1978,7 +1966,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 			@Override
 			public GenericResponse call() throws Exception {
-				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit(); Timing tim = Timing.log("Restore from wastebin")) {
+				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
 					List<Page> pages = new ArrayList<Page>();
 
 					for (String id : ids) {
@@ -2042,7 +2030,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Page page = null;
 		boolean isChannelIdset = false;
 
-		try /* (Timing tim = Timing.log("Cancel")) */ {
+		try {
 			// set the channel ID if given
 			isChannelIdset = setChannelToTransaction(nodeId);
 

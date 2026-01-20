@@ -51,7 +51,6 @@ import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
-import com.gentics.contentnode.etc.Timing;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
@@ -1158,9 +1157,7 @@ public class PageFactory extends AbstractFactory {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
 			// dirt the content cache
-			try (Timing tim = Timing.subLog("Dirt Content Cache")) {
-				t.dirtObjectCache(Content.class, contentId, false);
-			}
+			t.dirtObjectCache(Content.class, contentId, false);
 		}
 
 		/* (non-Javadoc)
@@ -3537,14 +3534,14 @@ public class PageFactory extends AbstractFactory {
 			boolean isNew = this.id == null;
 
 			// save the content (and the whales ;-) )
-			boolean contentModified = Timing.subLogged("Save content", () -> getContent().save());
+			boolean contentModified = getContent().save();
 			isModified |= contentModified;
 			setContentId(getContent().getId());
 
 			// now check whether the object has been modified
 			if (modified || isNew) {
 				// object is modified, so update it
-				Timing.subLogged("Save page object", () -> savePageObject(this, updateEditor));
+				savePageObject(this, updateEditor);
 				modified = false;
 				pageModified = true;
 			} else if (isModified) {
@@ -3554,41 +3551,37 @@ public class PageFactory extends AbstractFactory {
 					eDate = new ContentNodeDate(t.getUnixTimestamp());
 				}
 
-				Timing.subLogged("Update editor", () -> DBUtils.update("UPDATE page SET editor = ?, edate = ?, modified = ? WHERE id = ?", editorId, eDate.getIntTimestamp(), 1, getId()));
+				DBUtils.update("UPDATE page SET editor = ?, edate = ?, modified = ? WHERE id = ?", editorId, eDate.getIntTimestamp(), 1, getId());
 				pageModified = true;
 			}
 
 			// save all the objecttags and check which tags no longer exist (and need to be removed)
-			Map<String, ObjectTag> tags = Timing.subLogged("Get object tags", () -> getObjectTags());
+			Map<String, ObjectTag> tags = getObjectTags();
 			List<Integer> tagIdsToRemove = new Vector<Integer>();
 
 			if (objectTagIds != null) {
 				tagIdsToRemove.addAll(objectTagIds);
 			}
-			try (Timing tim = Timing.subLog("Save object tags")) {
-				for (Iterator<ObjectTag> i = tags.values().iterator(); i.hasNext();) {
-					ObjectTag tag = i.next();
+			for (Iterator<ObjectTag> i = tags.values().iterator(); i.hasNext();) {
+				ObjectTag tag = i.next();
 
-					tag.setNodeObject(this);
-					isModified |= tag.save();
+				tag.setNodeObject(this);
+				isModified |= tag.save();
 
-					// do not remove the tag, which was saved
-					tagIdsToRemove.remove(tag.getId());
-				}
+				// do not remove the tag, which was saved
+				tagIdsToRemove.remove(tag.getId());
 			}
 
 			// eventually remove tags which no longer exist
-			try (Timing tim = Timing.subLog("Delete tags")) {
-				if (!tagIdsToRemove.isEmpty()) {
-					List<ObjectTag> tagsToRemove = t.getObjects(ObjectTag.class, tagIdsToRemove);
+			if (!tagIdsToRemove.isEmpty()) {
+				List<ObjectTag> tagsToRemove = t.getObjects(ObjectTag.class, tagIdsToRemove);
 
-					for (Iterator<ObjectTag> i = tagsToRemove.iterator(); i.hasNext();) {
-						ObjectTag tagToRemove = i.next();
+				for (Iterator<ObjectTag> i = tagsToRemove.iterator(); i.hasNext();) {
+					ObjectTag tagToRemove = i.next();
 
-						tagToRemove.delete();
-					}
-					isModified = true;
+					tagToRemove.delete();
 				}
+				isModified = true;
 			}
 
 			if (isModified) {
@@ -3621,12 +3614,12 @@ public class PageFactory extends AbstractFactory {
 
 			// generate a version, if requested
 			if (createVersion) {
-				Timing.subLogged("Create page version", () -> createPageVersion(this, false, null));
+				createPageVersion(this, false, null);
 				recalculateModifiedFlag();
 			}
 
 			// dirt the page cache
-			Timing.subLogged("Dirt cache", () -> t.dirtObjectCache(Page.class, getId()));
+			t.dirtObjectCache(Page.class, getId());
 
 			// if we added a new language variant, we also need to dirt the other language variants so that their list of language variants gets updated
 			if (isNew) {
@@ -4465,32 +4458,29 @@ public class PageFactory extends AbstractFactory {
 
 			// save the content, if necessary
 			if (isModified) {
-				Timing.subLogged("Save Content Object", () -> saveContentObject(this));
+				saveContentObject(this);
 				this.modified = false;
 			}
 
 			// save all the contenttags and check which tags no longer exist (and need to be removed)
-			Map<String, ContentTag> tags = Timing.subLogged("Get content Tags", () -> getContentTags());
+			Map<String, ContentTag> tags = getContentTags();
 			List<Integer> tagIdsToRemove = new Vector<>();
 
 			if (tagIds != null) {
 				tagIdsToRemove.addAll(tagIds);
 			}
-			try (Timing tim = Timing.subLog("Save tags")) {
-				BatchUpdater batchUpdater = new BatchUpdater();
+			BatchUpdater batchUpdater = new BatchUpdater();
 
-				for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext();) {
-					ContentTag tag = i.next();
+			for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext();) {
+				ContentTag tag = i.next();
 
-					tag.setContentId(getId());
-					isModified |= tag.saveBatch(batchUpdater, null, null);
+				isModified |= tag.saveBatch(batchUpdater, () -> tag.setContentId(getId()), null);
 
-					// do not remove the tag, which was saved
-					tagIdsToRemove.remove(tag.getId());
-				}
-
-				batchUpdater.execute();
+				// do not remove the tag, which was saved
+				tagIdsToRemove.remove(tag.getId());
 			}
+
+			batchUpdater.execute();
 
 			// remove tags which no longer exist
 			if (!tagIdsToRemove.isEmpty()) {
@@ -4505,7 +4495,7 @@ public class PageFactory extends AbstractFactory {
 			}
 
 			if (isModified) {
-				Timing.subLogged("Dirt content cache", () -> t.dirtObjectCache(Content.class, getId()));
+				t.dirtObjectCache(Content.class, getId());
 			}
 
 			return isModified;

@@ -37,7 +37,6 @@ import com.gentics.lib.content.DatatypeHelper;
 import com.gentics.lib.content.DatatypeHelper.SQLDatatype;
 import com.gentics.lib.etc.MiscUtils;
 import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.etc.Timing;
 import com.gentics.lib.io.FileRemover;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
@@ -444,7 +443,7 @@ public class DB {
 	 * @throws SQLException
 	 */
 	public static void query(DBHandle handle, String sql, Object[] params, List<Integer> types, ResultProcessor proc, boolean logErrors) throws SQLException {
-		try (DBTrx trx = new DBTrx(handle, logErrors); Timing tim = Timing.subLog("Query: %s".formatted(sql))) {
+		try (DBTrx trx = new DBTrx(handle, logErrors)) {
 			RuntimeProfiler.beginMark(ComponentsConstants.DB_QUERY_WITH_HANDLE, sql);
 			boolean debug = logger.isDebugEnabled();
 
@@ -594,7 +593,7 @@ public class DB {
 		Statement p = null;
 		long time1 = 0, time2 = 0, time3 = 0;
 
-		try (DBTrx trx = new DBTrx(handle, true); Timing tim = Timing.subLog("Update: %s".formatted(sql))) {
+		try (DBTrx trx = new DBTrx(handle, true)) {
 			RuntimeProfiler.beginMark(ComponentsConstants.DB_UPDATE_WITH_HANDLE, sql);
 			boolean debug = logger.isDebugEnabled();
 
@@ -703,7 +702,7 @@ public class DB {
 
 		long time1 = 0, time2 = 0;
 
-		try (DBTrx trx = new DBTrx(handle, true); Timing tim = Timing.subLog("Batch Update: %s".formatted(sql))) {
+		try (DBTrx trx = new DBTrx(handle, true)) {
 			RuntimeProfiler.beginMark(ComponentsConstants.DB_UPDATE_WITH_HANDLE, sql);
 			boolean debug = logger.isDebugEnabled();
 

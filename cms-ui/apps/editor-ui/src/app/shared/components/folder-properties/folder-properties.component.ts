@@ -102,6 +102,8 @@ export class FolderPropertiesComponent
 
     private autocompleteSubscription: Subscription;
 
+	private editAllowed = false;
+
     constructor(
         changeDetector: ChangeDetectorRef,
         private permissions: PermissionService,
@@ -177,6 +179,36 @@ export class FolderPropertiesComponent
         this.clearAutocomplete();
     }
 
+	protected override onValueChange() {
+		super.onValueChange();
+
+		this.subscriptions.push(this.permissionCheck.pipe(
+		    // Set the control disabled until we know the permissions
+		    tap(() => {
+		        if (this.form) {
+					setControlsEnabled(this.form, CONTROLS, false);
+			        setControlsEnabled(this.form, CONTROLS_I18N, false);
+			        this.changeDetector.markForCheck();
+				}
+		    }),
+		    // Just in case it's getting spammed
+		    debounceTime(50),
+		    switchMap(() => {
+		        return this.permissions.forFolder(this.itemId, this.nodeId).pipe(
+		            map(permission => {
+		                return permission.folder.edit;
+		            }),
+		        );
+		    }),
+		).subscribe(enabled => {
+			this.editAllowed = (enabled && this.mode === FolderPropertiesMode.EDIT);
+			if (this.form) {
+				this.configureForm(this.form.value);
+				this.changeDetector.markForCheck();
+			}
+		}));
+	}
+
     protected createForm(): FormGroup {
         const form = new FormGroup<FormProperties<EditableFolderProps>>({
             name: new FormControl(this.safeValue('name'), [Validators.required, (ctrl) => {
@@ -225,29 +257,8 @@ export class FolderPropertiesComponent
 
     protected configureForm(_value: EditableFolderProps, loud?: boolean): void {
         const options = { onlySelf: loud, emitEvent: loud };
-
-        this.subscriptions.push(this.permissionCheck.pipe(
-            // Set the control disabled until we know the permissions
-            tap(() => {
-                setControlsEnabled(this.form, CONTROLS, false, options);
-                setControlsEnabled(this.form, CONTROLS_I18N, false, options);
-                this.changeDetector.markForCheck();
-            }),
-            // Just in case it's getting spammed
-            debounceTime(50),
-            switchMap(() => {
-                return this.permissions.forFolder(this.itemId, this.nodeId).pipe(
-                    map(permission => {
-                        return permission.folder.edit;
-                    }),
-                );
-            }),
-        ).subscribe(enabled => {
-            this.disabled = this.mode !== FolderPropertiesMode.EDIT || !enabled;
-            setControlsEnabled(this.form, CONTROLS, !this.disabled, options);
-            setControlsEnabled(this.form, CONTROLS_I18N, !this.disabled, options);
-            this.changeDetector.markForCheck();
-        }));
+		setControlsEnabled(this.form, CONTROLS, this.editAllowed, options);
+		setControlsEnabled(this.form, CONTROLS_I18N, this.editAllowed, options);
     }
 
     protected assembleValue(value: EditableFolderProps): EditableFolderProps {

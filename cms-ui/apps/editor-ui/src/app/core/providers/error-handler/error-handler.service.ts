@@ -100,7 +100,7 @@ export class ErrorHandler {
             // debugger;
             if (showNotification) {
                 this.notification.show({
-                    message: error.message || error.toString(),
+                    message: (error.cause as any)?.message || error.message || error.toString(),
                     type: 'alert',
                     delay: 10_000,
                 });

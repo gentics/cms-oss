@@ -278,6 +278,7 @@ test.describe('Form Management', () => {
         });
     });
 
+    // TODO: Flaky on CI
     test('should display the label value as title', {
         annotation: [{
             type: 'ticket',

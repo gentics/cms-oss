@@ -84,7 +84,7 @@ import {
 import { MeshPlaywrightDriver } from './mesh-playwright-driver';
 import { createMeshProxy } from './mesh-proxy';
 import { GCMSPlaywrightDriver } from './playwright-driver';
-import { getDefaultSystemLogin } from './utils';
+import { getDefaultSystemLogin, wait } from './utils';
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
@@ -231,7 +231,7 @@ export class EntityImporter {
         return map;
     }
 
-    public async executeSchedule(idOrData: string | number | ScheduleImportData): Promise<void> {
+    public async executeSchedule(idOrData: string | number | ScheduleImportData, retryCount: number = 0): Promise<void> {
         let id = idOrData;
         if (typeof id === 'object') {
             id = this.get(id)?.id;
@@ -242,14 +242,32 @@ export class EntityImporter {
 
         for (let i = 0; i < 100; i++) {
             schedule = (await this.client.scheduler.get(id).send()).item;
-            if (schedule.status === ScheduleStatus.IDLE) {
-                break;
+            if (
+                schedule.status === ScheduleStatus.IDLE
+                && schedule.lastExecution != null
+                && !schedule.lastExecution.running
+            ) {
+                // If it was successful, then we can safely exit
+                if (schedule.lastExecution.result) {
+                    break;
+                }
+
+                console.warn(`The schedule "${schedule.name}" failed, retries left: ${retryCount}`);
+
+                // Retry limit reached
+                if (retryCount <= 0) {
+                    throw new Error(`The schedule "${schedule.name}" encountered an error and failed`, {
+                        cause: new Error(schedule.lastExecution.log),
+                    });
+                }
+
+                retryCount--;
             }
 
             if (this.options?.logImports) {
                 console.log(`Waiting for the schedule "${schedule.name}" execution to finish`);
             }
-            await new Promise(resolve => setTimeout(resolve, 1_000));
+            await wait(1_000);
         }
     }
 
@@ -1208,7 +1226,7 @@ export async function createClient(options: ClientOptions): Promise<GCMSRestClie
             ssl: baseUrl.protocol === 'https:',
             host:options.isPageContext ? baseUrl.hostname : 'localhost',
             port: parseInt(baseUrl.port, 10),
-            basePath: join(baseUrl.pathname, '/rest'),
+            basePath: join(baseUrl.pathname, '/rest').replaceAll('\\', '/'),
         };
     }
 

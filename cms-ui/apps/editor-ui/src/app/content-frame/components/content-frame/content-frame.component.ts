@@ -44,16 +44,17 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
 import { debounce, isEqual } from 'lodash-es';
 import {
-    BehaviorSubject,
     Observable,
+    Subject,
     SubscribableOrPromise,
     Subscription,
     combineLatest,
     forkJoin,
-    of,
+    of
 } from 'rxjs';
 import {
     catchError,
+    debounceTime,
     distinctUntilChanged,
     filter,
     map,
@@ -157,6 +158,8 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     itemValid = false;
 
     iframeUrl: string;
+    /** Hacky subject to debounce too fast URL changes, which may mess up the edit mode. */
+    private frameUrlSub = new Subject<string>();
     comparePageId = -1;
     comparePageUrl: string;
     // Flags if it should ignore scroll events
@@ -468,6 +471,19 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             mergeMap(activeLanguageId => this.appState.select(state => state.entities.language[activeLanguageId])),
             map(activeLanguage => activeLanguage && activeLanguage.code),
         );
+
+        this.subscriptions.push(this.frameUrlSub.pipe(
+            distinctUntilChanged(isEqual), // Ignore the URL if it's the same
+            debounceTime(100), // Debounce it, as otherwise the iframe may load the wrong one (depends on browser)
+        ).subscribe(newUrl => {
+            this.iframeUrl = newUrl.toString();
+
+            if (this.iframe?.nativeElement?.contentWindow?.location) {
+                this.iframe.nativeElement.contentWindow.location.replace(newUrl);
+            }
+
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngAfterViewInit(): void {
@@ -895,7 +911,8 @@ span.diff-html-added {
                                         },
                                     },
                                 });
-                            });
+                            })
+                            .catch(() => {});
                     case 'form':
                         return this.combinedPropertiesEditor.saveChanges({}, {
                             fetchForConstruct: true,
@@ -917,13 +934,15 @@ span.diff-html-added {
                                         },
                                     },
                                 });
-                            });
+                            })
+                            .catch(() => {});
                     default:
                         return this.combinedPropertiesEditor.saveChanges()
                             .then(() => {
                                 this.currentItemClean = true;
                                 this.changeDetector.markForCheck();
-                            });
+                            })
+                            .catch(() => {});
                 }
             }
 
@@ -1394,14 +1413,7 @@ span.diff-html-added {
     }
 
     private updateIframeUrl(state: EditorState): void {
-        const newUrl = this.urlBuilder.stateToUrl(state, this.currentItem);
-        if (newUrl !== this.iframeUrl) {
-            this.iframeUrl = newUrl;
-
-            if (this.iframe?.nativeElement?.contentWindow?.location) {
-                this.iframe.nativeElement.contentWindow.location.replace(newUrl);
-            }
-        }
+        this.frameUrlSub.next(new URL(this.urlBuilder.stateToUrl(state, this.currentItem), window.location as any).toString());
     }
 
     private allTagsHaveConstructs(item: ItemWithObjectTags<Normalized> | Form<Normalized> | Node<Normalized>): boolean {

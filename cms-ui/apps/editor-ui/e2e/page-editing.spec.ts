@@ -12,14 +12,16 @@ import {
     ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
     loginWithForm,
-    matchesPath, matchesUrl,
+    matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    onRequest,
     openContext,
     PAGE_ONE,
     pickSelectValue,
     TestSize,
+    wait,
     waitForResponseFrom
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
@@ -133,7 +135,7 @@ test.describe('Page Editing', () => {
                 // Save and verify request
                 const saveRequest = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
 
-                // TODO: Investigate why we need this timeout/why save isn't executed immediately.
+                // FIXME: Investigate why we need this timeout/why save isn't executed immediately.
                 // Possible reason being angular event bindings.
                 await page.waitForTimeout(2000);
 
@@ -942,21 +944,84 @@ test.describe('Page Editing', () => {
                     await expect(blocks.last()).not.toHaveAttribute('id', blockId);
                 });
             });
+
+            test('should render new tag after inserting into editable', async ({page}) => {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                const renderUrl = '/rest/page/renderTag/*';
+                let postedEditableContent = "";
+                page.on('request', request => {
+                    if (request.method() === 'POST' && matchesPath(request.url(), renderUrl)) {
+                        const body = JSON.parse(request.postData());
+                        postedEditableContent = body.tags['content'].properties.text.stringValue;
+                    }
+                });
+                const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
+                const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
+                const dropdown = await openContext(category);
+                await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                const createResponse = await createReq;
+                const createResponseBody = await createResponse.json();
+                const tagName = createResponseBody.tag.name;
+                await renderReq;
+
+                expect(postedEditableContent).toContain(`<node ${tagName}>`);
+            });
         });
+    });
+
+    test('should load edit mode correctly when switching from preview mode', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19297',
+        }]
+    }, async ({ page }) => {
+        // Setup aloha-page listener
+        let calls = 0;
+        page.route((url) => matchesUrl(url, '/alohapage'), async (route) => {
+            if (route.request().method() === 'GET') {
+                calls++;
+                // Delay by 3 seconds to emulate rendering
+                await wait(3_000);
+            }
+            return route.continue();
+        });
+
+        // Open page in preview
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, IMPORTER.get(PAGE_ONE).id);
+        await item.locator('.item-primary .item-name-only').click();
+
+        // Wait for preview to be loaded completely
+        const iframe = page.locator('content-frame iframe.master-frame[loaded="true"]');
+        await iframe.waitFor({ timeout: 60_000 });
+        await iframe.contentFrame().locator('main').waitFor({ timeout: 60_000 });
+
+        // Now open edit-mode and wait for it to load
+        await editorAction(page, 'edit');
+        await iframe.waitFor({ timeout: 60_000 });
+        await iframe.contentFrame().locator('main .container [contenteditable="true"]').waitFor({ timeout: 60_000 });
+
+        expect(calls).toEqual(2);
     });
 
     test('should load constructs correctly when switching to edit mode', {
         annotation: {
-            type: 'issue',
+            type: 'ticket',
             description: 'SUP-17542',
         },
     }, async ({ page }) => {
         // Admin request which shouldn't be used/called
         let adminEndpointCalled = false;
-        page.on('request', request => {
-            if (request.method() === 'POST' && matchesPath(request.url(), '/rest/construct')) {
-                adminEndpointCalled = true;
-            }
+        onRequest(page, matchRequest('POST', '/rest/construct'), () => {
+            adminEndpointCalled = true;
         });
 
         // Regular endpoint which should be used

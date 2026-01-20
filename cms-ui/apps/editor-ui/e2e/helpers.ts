@@ -2,8 +2,8 @@
 /// <reference lib="dom"/>
 import { readFileSync } from 'node:fs';
 import { Page as CmsPage } from '@gentics/cms-models';
-import { clickButton, clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, reroute, selectDateInPicker } from '@gentics/e2e-utils';
-import { expect, Frame, Locator, Page } from '@playwright/test';
+import { clickButton, clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, reroute, selectDateInPicker, waitForResponseFrom } from '@gentics/e2e-utils';
+import { expect, Frame, Locator, Page, Response } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
 export function findList(page: Page, type: string): Locator {
@@ -25,6 +25,8 @@ export function findRepoBrowserItem(list: Locator, id: string | number): Locator
 export async function selectNode(element: Page | Locator, nodeId: number | string): Promise<void> {
     const context = await openContext(element.locator('node-selector > gtx-dropdown-list'));
     await context.locator(`.node-selector-list [data-id="${nodeId}"], [data-global-id="${nodeId}"]`).click();
+    // TODO: In rare cases in jenkins, the click doesn't actually navigate to the node/channel.
+    // Therefore add a check here that it actually changed the node
 }
 
 export async function itemAction(item: Locator, action: string): Promise<void> {
@@ -49,8 +51,11 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
 }
 
 export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
-    // Note: This is a simplified version. You'll need to implement file upload handling
+    let uploadReq: Promise<Response>;
+
     if (options?.dragAndDrop) {
+        // First we need to load the files, and read the buffer as base64, since we can't directly send
+        // the file-contents to the window. Inefficient, but the only way I could find to transfer them correctly.
         const data = files.map(f => {
             const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
             return {
@@ -59,6 +64,9 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
                 type: type === 'image' ? 'image/jpeg' : 'text/plain',
             };
         });
+
+        // Create the transfer data from the base64 data in the test-window, so we can send it as event.
+        // Also because in the node context, there's no DataTransfer object, as it's DOM only.
         const dataTransfer = await page.evaluateHandle(async (data) => {
             const transfer = new DataTransfer();
             // Put the binaries/Files into the transfer
@@ -68,24 +76,23 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
             }
             return transfer;
         }, data);
+
+        uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
         await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
-        await page.waitForRequest(request =>
-            request.url().includes('/rest/file/create') ||
-            request.url().includes('/rest/image/create'));
     } else {
+        // Filechooser is a lot simpler, as it can handle native files
         const fileChooserPromise = page.waitForEvent('filechooser');
         const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
         await uploadButton.waitFor({ state: 'visible' });
         await uploadButton.click();
         const fileChooser = await fileChooserPromise;
+
+        uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
         await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
     }
 
     // Wait for upload to complete and return response
-    const response = await page.waitForResponse(response =>
-        response.url().includes('/rest/file/create') ||
-        response.url().includes('/rest/image/create'),
-    );
+    const response = await uploadReq;
     const responseData = await response.json();
 
     const output: Record<string, any> = {};
@@ -428,13 +435,11 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
 }
 
 export async function expectItemOffline(item: Locator): Promise<void> {
-    // TODO: it would be better not to test on the icon
-    await expect(item.locator('icon.main-icon')).toHaveText('cloud_off');
+    await expect(item.locator('item-status-label .status-label')).not.toContainClass('published');
 }
 
 export async function expectItemPublished(item: Locator): Promise<void> {
-    // TODO: it would be better not to test on the icon
-    await expect(item.locator('icon.main-icon')).toHaveText('cloud_upload');
+    await expect(item.locator('item-status-label .status-label')).toContainClass('published');
 }
 
 export async function openToolOrAction(page: Page, id: string): Promise<void> {

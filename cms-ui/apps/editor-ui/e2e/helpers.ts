@@ -104,11 +104,12 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
 
 export async function openPropertiesTab(page: Page): Promise<void> {
     await page.waitForSelector('content-frame .content-frame-container');
-    const previewActivated = await page.locator('content-frame .content-frame-container .properties-tabs .tab-link[data-id="preview"].is-active').count();
+    const tabs = page.locator('content-frame .content-frame-container .properties-tabs');
+    const previewActivated = await tabs.locator('tab-link[data-id="preview"].is-active').count();
     if (previewActivated > 0) {
-        await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="properties"] a');
+        await tabs.locator('.tab-link[data-id="properties"] a').click();
     }
-    await page.click('content-frame .content-frame-container .properties-tabs .tab-link[data-id="item-properties"]');
+    await tabs.locator('.tab-link[data-id="item-properties"]').click();
 }
 
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {

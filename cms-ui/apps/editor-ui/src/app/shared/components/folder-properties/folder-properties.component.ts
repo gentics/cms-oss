@@ -18,7 +18,7 @@ import { EditableFolderProps, Feature, Folder, GtxI18nProperty, Language } from 
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, forkJoin, of, Subscription } from 'rxjs';
+import { BehaviorSubject, forkJoin, of, Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ApplicationStateService } from '../../../state';
@@ -98,7 +98,7 @@ export class FolderPropertiesComponent
     private pubDirPattern: RegExp;
     private parentFolderId$ = new BehaviorSubject<number>(null);
     /** Behaviour to call whenever a new permission check needs to occur */
-    private permissionCheck = new BehaviorSubject<void>(undefined);
+    private permissionCheck = new Subject<void>();
 
     private autocompleteSubscription: Subscription;
 
@@ -160,6 +160,35 @@ export class FolderPropertiesComponent
             this.autocompletePublishDirectory();
             this.changeDetector.markForCheck();
         }));
+
+        this.subscriptions.push(this.permissionCheck.pipe(
+            filter(() => this.itemId != null && this.nodeId != null),
+		    // Set the control disabled until we know the permissions
+		    tap(() => {
+		        if (this.form) {
+					setControlsEnabled(this.form, CONTROLS, false);
+			        setControlsEnabled(this.form, CONTROLS_I18N, false);
+			        this.changeDetector.markForCheck();
+				}
+		    }),
+		    // Just in case it's getting spammed
+		    debounceTime(50),
+		    switchMap(() => {
+		        return this.permissions.forFolder(this.itemId, this.nodeId).pipe(
+		            map(permission => {
+		                return permission.folder.edit;
+		            }),
+		        );
+		    }),
+		).subscribe(enabled => {
+			this.editAllowed = enabled;
+			if (this.form) {
+				this.configureForm(this.form.value);
+				this.changeDetector.markForCheck();
+			}
+		}));
+
+        this.permissionCheck.next();
     }
 
     override ngOnChanges(changes: SimpleChanges): void {
@@ -181,32 +210,7 @@ export class FolderPropertiesComponent
 
 	protected override onValueChange() {
 		super.onValueChange();
-
-		this.subscriptions.push(this.permissionCheck.pipe(
-		    // Set the control disabled until we know the permissions
-		    tap(() => {
-		        if (this.form) {
-					setControlsEnabled(this.form, CONTROLS, false);
-			        setControlsEnabled(this.form, CONTROLS_I18N, false);
-			        this.changeDetector.markForCheck();
-				}
-		    }),
-		    // Just in case it's getting spammed
-		    debounceTime(50),
-		    switchMap(() => {
-		        return this.permissions.forFolder(this.itemId, this.nodeId).pipe(
-		            map(permission => {
-		                return permission.folder.edit;
-		            }),
-		        );
-		    }),
-		).subscribe(enabled => {
-			this.editAllowed = (enabled && this.mode === FolderPropertiesMode.EDIT);
-			if (this.form) {
-				this.configureForm(this.form.value);
-				this.changeDetector.markForCheck();
-			}
-		}));
+        this.permissionCheck.next();
 	}
 
     protected createForm(): FormGroup {
@@ -257,8 +261,8 @@ export class FolderPropertiesComponent
 
     protected configureForm(_value: EditableFolderProps, loud?: boolean): void {
         const options = { onlySelf: loud, emitEvent: loud };
-		setControlsEnabled(this.form, CONTROLS, this.editAllowed, options);
-		setControlsEnabled(this.form, CONTROLS_I18N, this.editAllowed, options);
+		setControlsEnabled(this.form, CONTROLS, this.editAllowed || this.mode === FolderPropertiesMode.CREATE, options);
+		setControlsEnabled(this.form, CONTROLS_I18N, this.editAllowed || this.mode === FolderPropertiesMode.CREATE, options);
     }
 
     protected assembleValue(value: EditableFolderProps): EditableFolderProps {

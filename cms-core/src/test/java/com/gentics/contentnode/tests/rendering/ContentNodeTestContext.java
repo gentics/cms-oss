@@ -242,7 +242,7 @@ public class ContentNodeTestContext {
 	 * @throws JobExecutionException 
 	 */
 	public String login(String login, String password) throws NodeException {
-		if (transaction != null) {
+		if (transaction != null && transaction.isOpen()) {
 			transaction.commit();
 		}
 

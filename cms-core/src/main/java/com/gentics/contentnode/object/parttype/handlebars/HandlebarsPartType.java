@@ -47,7 +47,18 @@ public class HandlebarsPartType extends TextPartType {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
 		renderType.createCMSResolver();
+		int editMode = renderType.getEditMode();
+		boolean editModeChanged = false;
 		try {
+			// when edit mode is edit or realedit, switch to preview mode
+			if (editMode == RenderType.EM_ALOHA) {
+				editModeChanged = true;
+				renderType.setEditMode(RenderType.EM_ALOHA_READONLY);
+			}
+			if (editModeChanged) {
+				renderType.setParameter(CMSResolver.ModeResolver.PARAM_OVERWRITE_EDITMODE, new Integer(editMode));
+			}
+
 			Value value = getValueObject();
 
 			String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
@@ -74,6 +85,13 @@ public class HandlebarsPartType extends TextPartType {
 		} catch (Throwable e) {
 			throw new NodeException(e);
 		} finally {
+			// when edit mode was changed, change it back
+			if (editModeChanged) {
+				renderType.setEditMode(editMode);
+				if (editModeChanged) {
+					renderType.setParameter(CMSResolver.ModeResolver.PARAM_OVERWRITE_EDITMODE, null);
+				}
+			}
 			renderType.popCMSResolver();
 		}
 	}

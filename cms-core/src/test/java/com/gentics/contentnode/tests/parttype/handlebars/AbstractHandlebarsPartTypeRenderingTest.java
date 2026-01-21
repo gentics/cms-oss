@@ -25,6 +25,8 @@ import org.junit.ClassRule;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeDate;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentTag;
@@ -45,6 +47,7 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
 import com.gentics.contentnode.object.parttype.DatasourcePartType;
 import com.gentics.contentnode.object.parttype.FileURLPartType;
@@ -67,6 +70,8 @@ import com.gentics.testutils.GenericTestUtils;
  * Abstract base class for handlebars rendering tests
  */
 public abstract class AbstractHandlebarsPartTypeRenderingTest {
+	protected static final String HBS_TAGNAME = "testtag";
+
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 
@@ -383,7 +388,7 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 				p.setKeyname("hb");
 				p.setName("Handlebars", 1);
 			}).doNotSave().build());
-		}).build();
+		}).as(creator).build();
 
 		overviewConstruct = create(Construct.class, c -> {
 			c.setAutoEnable(true);
@@ -536,10 +541,10 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 			t.setName("Test Template");
 			t.setSource("<node testtag>");
 
-			t.getTemplateTags().put("testtag", create(TemplateTag.class, tag -> {
+			t.getTemplateTags().put(HBS_TAGNAME, create(TemplateTag.class, tag -> {
 				tag.setConstructId(handlebarsConstruct.getId());
 				tag.setEnabled(true);
-				tag.setName("testtag");
+				tag.setName(HBS_TAGNAME);
 				tag.setPublic(true);
 			}).doNotSave().build());
 		}).at(creationTimestamp).as(creator).unlock().build();

@@ -33,17 +33,11 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 		"before[#gtx_render(\"text\")]middle[#gtx_render(\"text\")]after",
 		"before[#gtx_render($cms.tag.parts.text)]middle[#gtx_render($cms.tag.parts.text)]after",
 		"before[#gtx_edit(\"text\")]middle[#gtx_render(\"text\")]after",
-		"before[#gtx_edit($cms.tag.parts.text)]middle[#gtx_render($cms.tag.parts.text)]after"
-	};
-
-	/**
-	 * Flags to mark, which template will render the part in edit mode
-	 */
-	public final static boolean[] EDIT = {
-		false,
-		false,
-		true,
-		true
+		"before[#gtx_render(\"text\")]middle[#gtx_edit(\"text\")]after",
+		"before[#gtx_edit($cms.tag.parts.text)]middle[#gtx_render($cms.tag.parts.text)]after",
+		"before[#gtx_render($cms.tag.parts.text)]middle[#gtx_edit($cms.tag.parts.text)]after",
+		"before[#gtx_edit($cms.page.tags.vtltag.parts.text)]middle[#gtx_render($cms.page.tags.vtltag.parts.text)]after",
+		"before[#gtx_render($cms.page.tags.vtltag.parts.text)]middle[#gtx_edit($cms.page.tags.vtltag.parts.text)]after"
 	};
 
 	/**
@@ -84,13 +78,18 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 	protected boolean templateRendersInEditMode;
 
 	/**
+	 * Whether to expect the editable after rendered content, not before
+	 */
+	protected boolean editAfterRender;
+	/**
 	 * Create a test instance
 	 * @param editMode edit mode
 	 * @param templateIndex template index
 	 */
 	public VelocityRenderingSandboxTest(String editMode, int templateIndex) throws Exception {
 		this.editMode = RenderType.parseEditMode(editMode);
-		this.templateRendersInEditMode = EDIT[templateIndex];
+		this.templateRendersInEditMode = TEMPLATES[templateIndex].contains("gtx_edit");
+		this.editAfterRender = TEMPLATES[templateIndex].indexOf("gtx_edit") > TEMPLATES[templateIndex].indexOf("gtx_render");
 		assertTrue("Given edit mode is unknown", editMode.equals(RenderType.renderEditMode(this.editMode)));
 		updateConstruct(TEMPLATES[templateIndex]);
 	}
@@ -139,7 +138,12 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 			}
 			expected = "<div data-gcn-pageid=\"" + pageId + "\" data-gcn-tagid=\"" + tagId + "\" data-gcn-tagname=\"" + VTL_TAGNAME
 					+ "\" data-gcn-i18n-constructname=\"" + constructName
-					+ "\" class=\"aloha-block\" id=\"GENTICS_BLOCK_" + tagId + "\">before[" + editablePart + "]middle[This is the test content]after</div>";
+					+ "\" class=\"aloha-block\" id=\"GENTICS_BLOCK_" + tagId;
+			if (templateRendersInEditMode && editAfterRender) {
+				expected = expected + "\">before[This is the test content]middle[" + editablePart + "]after</div>";
+			} else {
+				expected = expected + "\">before[" + editablePart + "]middle[This is the test content]after</div>";
+			}
 			break;
 		default:
 			expected = "before[This is the test content]middle[This is the test content]after";

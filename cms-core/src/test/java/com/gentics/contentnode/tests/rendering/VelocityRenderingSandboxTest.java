@@ -30,14 +30,14 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 	 * Tested templates
 	 */
 	public final static String[] TEMPLATES = {
-	/*	"before[#gtx_render(\"text\")]middle[#gtx_render(\"text\")]after",
+		"before[#gtx_render(\"text\")]middle[#gtx_render(\"text\")]after",
 		"before[#gtx_render($cms.tag.parts.text)]middle[#gtx_render($cms.tag.parts.text)]after",
 		"before[#gtx_edit(\"text\")]middle[#gtx_render(\"text\")]after",
 		"before[#gtx_render(\"text\")]middle[#gtx_edit(\"text\")]after",
 		"before[#gtx_edit($cms.tag.parts.text)]middle[#gtx_render($cms.tag.parts.text)]after",
 		"before[#gtx_render($cms.tag.parts.text)]middle[#gtx_edit($cms.tag.parts.text)]after",
 		"before[#gtx_edit($cms.page.tags.vtltag.parts.text)]middle[#gtx_render($cms.page.tags.vtltag.parts.text)]after",
-		"before[#gtx_render($cms.page.tags.vtltag.parts.text)]middle[#gtx_edit($cms.page.tags.vtltag.parts.text)]after",*/
+		"before[#gtx_render($cms.page.tags.vtltag.parts.text)]middle[#gtx_edit($cms.page.tags.vtltag.parts.text)]after",
 		"#if(true)before[#gtx_edit($cms.page.tags.vtltag.parts.text)]middle[#gtx_render($cms.page.tags.vtltag.parts.text)]after#end",
 		"#if(true)before[#gtx_render($cms.page.tags.vtltag.parts.text)]middle[#gtx_edit($cms.page.tags.vtltag.parts.text)]after#end",
 	};

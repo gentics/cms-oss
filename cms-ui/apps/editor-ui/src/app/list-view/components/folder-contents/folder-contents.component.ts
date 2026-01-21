@@ -658,6 +658,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         const doLeave = await dialog.open();
 
         if (doLeave) {
+            this.setEmptySelection();
             this.appState.dispatch(new SetActiveContentPackageAction(null));
             this.appState.dispatch(new SetUIModeAction(UIMode.EDIT));
         }

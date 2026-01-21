@@ -46,7 +46,9 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 		"before[{{{gtx_edit cms.tag.parts.text}}}]middle[{{{gtx_render cms.tag.parts.text}}}]after",
 		"before[{{{gtx_render cms.tag.parts.text}}}]middle[{{{gtx_edit cms.tag.parts.text}}}]after",
 		"before[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_render cms.page.tags.testtag.parts.text}}}]after",
-		"before[{{{gtx_render cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]after"
+		"before[{{{gtx_render cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]after",
+		"{{#if true}}before[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_render cms.page.tags.testtag.parts.text}}}]after{{/if}}",
+		"{{#if true}}before[{{{gtx_render cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]after{{/if}}",
 	};
 
 	/**
@@ -202,10 +204,6 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 			Transaction t = TransactionManager.getCurrentTransaction();
 			boolean textFound = false;
 			for (Part part : c.getParts()) {
-				/*if ("hb".equals(part.getKeyname())) {
-					part.setDefaultValue(t.createObject(Value.class));
-					part.getDefaultValue().setValueText(hbs);
-				}*/
 				if ("text".equals(part.getKeyname())) {
 					textFound = true;
 				}

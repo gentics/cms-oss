@@ -126,33 +126,8 @@ public class OracleContentRepositoryStructure extends AbstractContentRepositoryS
 
 		statement.append("\"").append(columnDefinition.getColumnName()).append("\" ").append(columnDefinition.getDataType().getSqlTypeName());
 		if (columnDefinition.isAutoIncrement()) {
-			String tableName = columnDefinition.getTableName();
-			String triggerName = tableName + "_trigger";
-			String sequenceName = tableName + "_sequence";
-
-			if (upperCase) {
-				triggerName = triggerName.toUpperCase();
-				sequenceName = sequenceName.toUpperCase();
-			}
-
-			StringBuffer sequenceBuffer = new StringBuffer();
-
-			sequenceBuffer.append("CREATE SEQUENCE \"").append(sequenceName).append(
-					"\" MINVALUE 1 MAXVALUE 999999999999999999999999999 INCREMENT BY 1 START WITH 1 CACHE 20 NOORDER NOCYCLE");
-			postStatement.add(sequenceBuffer.toString());
-
-			StringBuffer triggerBuffer = new StringBuffer();
-
-			triggerBuffer.append("CREATE OR REPLACE TRIGGER \"").append(triggerName).append("\"\nBEFORE INSERT ON ").append(tableName).append(" REFERENCING NEW AS NEW FOR EACH ROW BEGIN SELECT ").append(sequenceName).append(
-					".nextval INTO :NEW.ID FROM dual; END;");
-			postStatement.add(triggerBuffer.toString());
-			StringBuffer triggerEnableBuffer = new StringBuffer();
-
-			triggerEnableBuffer.append("ALTER TRIGGER \"").append(triggerName).append("\" ENABLE");
-			postStatement.add(triggerEnableBuffer.toString());
-		}
-
-		if (!columnDefinition.isAutoIncrement()) {
+			statement.append(" GENERATED ALWAYS AS IDENTITY");
+		} else {
 			// check whether the default value is different than the one of the old column definition (if any)
 			boolean addDefault = true;
 			String defaultValue = columnDefinition.getDefaultValue();

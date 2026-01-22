@@ -55,8 +55,8 @@
                     </div>
                 </div>
 
-                <div *ngSwitchCase="FieldType.BINARY" class="field-binary">
-                    <img [src]="field.value" />
+                <div *ngSwitchCase="FieldType.BINARY">
+                    <a [href]="field.value">Download</a>
                 </div>
 
                 <ng-container *ngSwitchCase="FieldType.BOOLEAN">

@@ -87,6 +87,7 @@ import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.lib.db.DBQuery;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
@@ -768,7 +769,7 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 
 				ids.add(obj.getId());
 
-				t.dirtObjectCache(clazz, obj.getId(), true);
+				t.clearCache(clazz, obj.getId());
 			}
 
 			DBUtils.executeMassStatement(deleteSql, ids, 1, null);
@@ -819,7 +820,7 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		if (ttype > 0) {
 			FactoryDataInformation factoryDataInfo = FACTORY_DATA_INFO.get(ttype);
 			if (factoryDataInfo != null) {
-				return batchLoadDbObjects(clazz, ids, info, factoryDataInfo.batchLoadSQL + buildIdSql(ids));
+				return batchLoadDbObjects(clazz, ids, info, factoryDataInfo.batchLoadSQL);
 			}
 		}
 		return Collections.emptyList();
@@ -868,12 +869,14 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		FactoryDataRow row = null;
 
 		try {
-			stmt = t.prepareStatement(sql);
-			stmt.setInt(1, id);
+			try (DBQuery h = DBQuery.handle(sql)) {
+				stmt = t.prepareStatement(sql);
+				stmt.setInt(1, id);
 
-			rs = stmt.executeQuery();
-			if (rs.next()) {
-				row = new FactoryDataRow(rs);
+				rs = stmt.executeQuery();
+				if (rs.next()) {
+					row = new FactoryDataRow(rs);
+				}
 			}
 
 			// if the object shall contain versioned data and a version sql was provided, use it to get the versioned data
@@ -887,31 +890,33 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 				t.closeResultSet(rs);
 				t.closeStatement(stmt);
 
-				// prepare the statement for fetching
-				stmt = t.prepareStatement(versionSQL);
-				for (int i = 0; i < versionSQLParams.length; i++) {
-					switch (versionSQLParams[i]) {
-					case ID:
-						stmt.setInt(i + 1, id);
-						break;
+				try (DBQuery h = DBQuery.handle(versionSQL)) {
+					// prepare the statement for fetching
+					stmt = t.prepareStatement(versionSQL);
+					for (int i = 0; i < versionSQLParams.length; i++) {
+						switch (versionSQLParams[i]) {
+						case ID:
+							stmt.setInt(i + 1, id);
+							break;
 
-					case VERSIONTIMESTAMP:
-						stmt.setInt(i + 1, info.getVersionTimestamp());
-						break;
+						case VERSIONTIMESTAMP:
+							stmt.setInt(i + 1, info.getVersionTimestamp());
+							break;
 
-					default:
-						throw new NodeException(
-								"Error while loading versioned data for object {" + id + "} of class {" + clazz.getName() + "}: unexpected parameter type "
-								+ versionSQLParams[i] + " found");
+						default:
+							throw new NodeException(
+									"Error while loading versioned data for object {" + id + "} of class {" + clazz.getName() + "}: unexpected parameter type "
+											+ versionSQLParams[i] + " found");
+						}
 					}
-				}
 
-				rs = stmt.executeQuery();
-				if (rs.next()) {
-					if (row != null) {
-						row.mergeWithResultSet(rs);
-					} else {
-						row = new FactoryDataRow(rs);
+					rs = stmt.executeQuery();
+					if (rs.next()) {
+						if (row != null) {
+							row.mergeWithResultSet(rs);
+						} else {
+							row = new FactoryDataRow(rs);
+						}
 					}
 				}
 			}
@@ -978,35 +983,26 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 			return objects;
 		}
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		Collection<T> objs = new ArrayList<T>(ids.size());
-
-		Statement stmt = null;
-		ResultSet rs = null;
-
 		try {
-
 			Map<Integer, List<Integer>[]> idMap = fetchIdMap((Collection<Integer>) ids, preloadIdSql);
+			Collection<T> objs = new ArrayList<T>(ids.size());
 
-			stmt = t.getStatement();
-			rs = stmt.executeQuery(sql);
+			DBUtils.executeMassStatement(sql, ids, 1, new SQLExecutor() {
+				@Override
+				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+					while (rs.next()) {
+						int id = rs.getInt("id");
+						List<Integer>[] idLists = (idMap != null ? idMap.get(id) : null);
 
-			while (rs.next()) {
-				Integer id = new Integer(rs.getInt("id"));
-				List<Integer>[] idLists = (idMap != null ? idMap.get(id) : null);
+						objs.add((T) loadResultSet(clazz, id, info, new FactoryDataRow(rs), idLists));
+					}
+				}
+			});
 
-				objs.add((T) loadResultSet(clazz, id, info, new FactoryDataRow(rs), idLists));
-			}
-
+			return objs;
 		} catch (SQLException e) {
 			throw new NodeException("Could not batch-load objects", e);
-		} finally {
-			t.closeResultSet(rs);
-			t.closeStatement(stmt);
 		}
-
-		return objs;
 	}
 
 	/**

@@ -999,6 +999,10 @@ public interface Transaction extends LanguageProvider, PreparedStatementHandler,
 	 */
 	<T extends NodeObject> Set<T> prepareVersionedObjects(Class<T> clazz, Class<? extends NodeObject> mainClazz, Map<Integer, Integer> timestamps) throws NodeException;
 
+	<T extends NodeObject> void prepareObjectData(Class<T> clazz, int id) throws NodeException;
+
+	<T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException;
+
 	/**
 	 * Enable/disable capturing statistics
 	 * @param enable true to enable, false to disable

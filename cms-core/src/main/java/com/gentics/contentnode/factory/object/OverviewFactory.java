@@ -961,9 +961,9 @@ public class OverviewFactory extends AbstractFactory {
     
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
 		if (Overview.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DS_SQL + buildIdSql(ids));
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DS_SQL);
 		} else if (OverviewEntry.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DS_OBJ_SQL + buildIdSql(ids));
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DS_OBJ_SQL);
 		}
 		return null;
 	}

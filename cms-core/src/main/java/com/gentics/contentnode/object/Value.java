@@ -232,9 +232,8 @@ public abstract class Value extends AbstractContentObject implements GCNRenderab
 	 * @return old container
 	 * @throws ReadOnlyException
 	 */
-	public ValueContainer setContainer(ValueContainer container) throws NodeException {
+	public void setContainer(ValueContainer container) throws NodeException {
 		failReadOnly();
-		return null;
 	}
 
 	@Override

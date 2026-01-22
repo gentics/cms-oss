@@ -2710,7 +2710,7 @@ public class FileFactory extends AbstractFactory {
 	}
 
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
-		return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_FILE_SQL + buildIdSql(ids));
+		return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_FILE_SQL);
 	}
 
 	protected <T extends NodeObject> T loadResultSet(Class<T> clazz, Integer id, NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws SQLException {

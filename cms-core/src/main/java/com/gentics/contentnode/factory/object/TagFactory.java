@@ -11,10 +11,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -70,6 +72,7 @@ import com.gentics.contentnode.publish.wrapper.PublishablePage;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 
 import io.reactivex.Observable;
@@ -1706,17 +1709,59 @@ public class TagFactory extends AbstractFactory {
 		if (ContentTag.class.equals(clazz)) {
 			String[] preloadSql = new String[] { "SELECT contenttag_id AS id, id AS id2 FROM value WHERE contenttag_id IN " + idSql};
 
-			tags = batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONTENTTAG_SQL + idSql, preloadSql);
+			tags = batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONTENTTAG_SQL, preloadSql);
 		} else if (TemplateTag.class.equals(clazz)) {
 			String[] preloadSql = new String[] { "SELECT templatetag_id AS id, id AS id2 FROM value WHERE templatetag_id IN " + idSql};
 
-			tags = batchLoadDbObjects(clazz, ids, info, BATCHLOAD_TEMPLATETAG_SQL + idSql, preloadSql);
+			tags = batchLoadDbObjects(clazz, ids, info, BATCHLOAD_TEMPLATETAG_SQL, preloadSql);
 		} else if (ObjectTag.class.equals(clazz)) {
 			String[] preloadSql = new String[] { "SELECT objtag_id AS id, id AS id2 FROM value WHERE objtag_id IN " + idSql};
 
-			tags = batchLoadDbObjects(clazz, ids, info, BATCHLOAD_OBJTAG_SQL + idSql, preloadSql);
+			tags = batchLoadDbObjects(clazz, ids, info, BATCHLOAD_OBJTAG_SQL, preloadSql);
 		}
 		return tags;
+	}
+
+	@Override
+	public <T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		if (ContentTag.class.equals(clazz)) {
+			List<ContentTag> tags = t.getObjects(ContentTag.class, ids);
+
+			// collect the tag Ids for which the valueIds have not been loaded
+			Set<FactoryContentTag> tagsWithoutValueIds = tags.stream().map(c -> FactoryContentTag.class.cast(c))
+					.filter(c -> c.valueIds == null).collect(Collectors.toSet());
+
+			if (!tagsWithoutValueIds.isEmpty()) {
+				Map<Integer, FactoryContentTag> tagsPerId = tagsWithoutValueIds.stream()
+						.collect(Collectors.toMap(Tag::getId, java.util.function.Function.identity()));
+
+				Map<Integer, List<Integer>> valueIdsPerTagId = tagsPerId.keySet().stream()
+						.collect(Collectors.toMap(java.util.function.Function.identity(), id -> new ArrayList<>()));
+
+				DBUtils.executeMassStatement(
+						"SELECT id, contenttag_id FROM value WHERE contenttag_id IN",
+						tagsPerId.keySet(), 1, new SQLExecutor() {
+							public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+								while (rs.next()) {
+									int valueId = rs.getInt("id");
+									int contentTagId = rs.getInt("contenttag_id");
+									valueIdsPerTagId.computeIfAbsent(contentTagId, k -> new ArrayList<>()).add(valueId);
+								}
+							};
+						});
+
+				valueIdsPerTagId.forEach((tagId, valueIds) -> {
+					Optional.ofNullable(tagsPerId.get(tagId)).ifPresent(c -> c.valueIds = valueIds);
+				});
+			}
+
+			// collect all valueIds of the tags
+			Set<Integer> valueIds = tags.stream().map(c -> FactoryContentTag.class.cast(c)).flatMap(c -> c.valueIds.stream())
+					.collect(Collectors.toSet());
+
+			t.prepareObjectData(Value.class, valueIds);
+		}
 	}
 
 	protected <T extends NodeObject> T loadResultSet(Class<T> clazz, Integer id, NodeObjectInfo info,
@@ -1941,6 +1986,8 @@ public class TagFactory extends AbstractFactory {
 			Set<T> preparedTags = new HashSet<T>();
 			Map<Integer, Map<Integer, FactoryDataRow>> contentTagData = getVersionedData("SELECT *, content_id gentics_obj_id FROM contenttag_nodeversion WHERE content_id IN", timestamps);
 
+			Map<Integer, Set<ContentTag>> tagsPerTimestamp = new HashMap<>();
+
 			for (Map.Entry<Integer, Map<Integer, FactoryDataRow>> rowMapEntry : contentTagData.entrySet()) {
 				Integer mainObjId = rowMapEntry.getKey();
 				int versionTimestamp = timestamps.get(mainObjId);
@@ -1952,10 +1999,55 @@ public class TagFactory extends AbstractFactory {
 					try {
 						ContentTag tag = loadResultSet(ContentTag.class, objId, handle.createObjectInfo(ContentTag.class, versionTimestamp), row, null);
 						preparedTags.add((T)tag);
-						handle.putObject(ContentTag.class, tag, versionTimestamp);
+						tagsPerTimestamp.computeIfAbsent(versionTimestamp, key -> new HashSet<>()).add(tag);
+//						handle.putObject(ContentTag.class, tag, versionTimestamp);
 					} catch (SQLException e) {
 						throw new NodeException("Error while batchloading contenttags", e);
 					}
+				}
+			}
+
+			for (Entry<Integer, Set<ContentTag>> entry : tagsPerTimestamp.entrySet()) {
+				int versionTimestamp = entry.getKey();
+				Set<ContentTag> tags = entry.getValue();
+
+				if (!tags.isEmpty()) {
+					String sql = "SELECT id, contenttag_id FROM value_nodeversion WHERE contenttag_id IN (%s) AND (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? GROUP BY id, contenttag_id"
+							.formatted(StringUtils.repeat("?", tags.size(), ","));
+
+					Map<Integer, List<Integer>> valueIdsPerTagId = DBUtils.select(sql, stmt -> {
+						int counter = 1;
+						for (ContentTag tag : tags) {
+							stmt.setInt(counter++, tag.getId());
+						}
+						stmt.setInt(counter++, versionTimestamp);
+						stmt.setInt(counter++, versionTimestamp);
+					}, rs -> {
+						Map<Integer, List<Integer>> result = new HashMap<>();
+						while (rs.next()) {
+							int valueId = rs.getInt("id");
+							int tagId = rs.getInt("contenttag_id");
+
+							result.computeIfAbsent(tagId, k -> new ArrayList<>()).add(valueId);
+						}
+
+						return result;
+					});
+
+					for (ContentTag tag : tags) {
+						List<Integer> valueIds = valueIdsPerTagId.get(tag.getId());
+						if (valueIds != null) {
+							((FactoryContentTag)tag).valueIds = valueIds;
+						}
+					}
+				}
+			}
+
+			// put the tags into the cache now
+			for (Entry<Integer, Set<ContentTag>> entry : tagsPerTimestamp.entrySet()) {
+				int versionTimestamp = entry.getKey();
+				for (ContentTag tag : entry.getValue()) {
+					handle.putObject(ContentTag.class, tag, versionTimestamp);
 				}
 			}
 

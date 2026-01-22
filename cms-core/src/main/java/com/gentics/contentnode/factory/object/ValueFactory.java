@@ -374,10 +374,8 @@ public class ValueFactory extends AbstractFactory {
 			}
 		}
 
-		/* (non-Javadoc)
-		 * @see com.gentics.contentnode.object.Value#setContainer(com.gentics.contentnode.object.ValueContainer)
-		 */
-		public ValueContainer setContainer(ValueContainer container) throws NodeException {
+		@Override
+		public void setContainer(ValueContainer container) throws NodeException {
 			assertEditable();
 			Class<? extends ValueContainer> containerType = null;
 			int containerId = 0;
@@ -409,8 +407,6 @@ public class ValueFactory extends AbstractFactory {
 				this.container = container;
 				modified = true;
 			}
-
-			return (ValueContainer) TransactionManager.getCurrentTransaction().getObject(oldContainerType, oldContainerId);
 		}
 
 		/* (non-Javadoc)
@@ -579,7 +575,7 @@ public class ValueFactory extends AbstractFactory {
 	}
 
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
-		return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_VALUE_SQL + buildIdSql(ids));
+		return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_VALUE_SQL);
 	}
 
 	public Class<? extends NodeObject>[] getPreloadTriggerClasses() {
@@ -670,6 +666,14 @@ public class ValueFactory extends AbstractFactory {
 			return preparedValues;
 		} else {
 			return Collections.emptySet();
+		}
+	}
+
+	@Override
+	public <T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		if (Value.class.equals(clazz)) {
+			t.getObjects(Value.class, ids);
 		}
 	}
 }

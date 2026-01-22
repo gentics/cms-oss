@@ -272,6 +272,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * not possible)
 	 *
 	 * @param id    id of the page
+	 * @param prepareContent true to also pre-load the content (if not already cached).
 	 * @param perms permissions to check
 	 * @return page
 	 * @throws NodeException                   when loading the page fails due to underlying error
@@ -281,11 +282,11 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @throws ReadOnlyException               when the page should be locked, but is locked by
 	 *                                         another user
 	 */
-	public static Page getLockedPage(String id, PermHandler.ObjectPermission... perms)
+	public static Page getLockedPage(String id, boolean prepareContent, PermHandler.ObjectPermission... perms)
 			throws EntityNotFoundException, InsufficientPrivilegesException, ReadOnlyException,
 			NodeException {
 		// first get the page (checking for existance, privileges and other problems)
-		Page page = getPage(id, perms);
+		Page page = getPage(id, prepareContent, perms);
 
 		// now get the page again and lock it this time
 		Transaction t = TransactionManager.getCurrentTransaction();
@@ -295,7 +296,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	}
 
 	/**
-	 * Variant of method {@link #getLockedPage(String, ObjectPermission...)}, that will try to lock
+	 * Variant of method {@link #getLockedPage(String, boolean, ObjectPermission...)}, that will try to lock
 	 * all language variants
 	 *
 	 * @param id    id of the page. This can either be a local or globalid
@@ -310,7 +311,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			PermHandler.ObjectPermission... perms)
 			throws EntityNotFoundException, InsufficientPrivilegesException, ReadOnlyException,
 			NodeException {
-		Page page = getLockedPage(id, perms);
+		Page page = getLockedPage(id, false, perms);
 		List<Page> langVariants = page.getLanguageVariants(false);
 		List<Page> lockedLangVariants = new Vector<Page>(langVariants.size());
 		Transaction t = TransactionManager.getCurrentTransaction();
@@ -338,6 +339,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * current user.
 	 *
 	 * @param id    id of the page
+	 * @param preloadContent true to also pre-load the contents
 	 * @param perms permissions to check
 	 * @return page
 	 * @throws NodeException                   when loading the page fails due to underlying error
@@ -345,7 +347,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @throws InsufficientPrivilegesException when the user doesn't have a requested permission on
 	 *                                         the page
 	 */
-	public static Page getPage(String id, PermHandler.ObjectPermission... perms)
+	public static Page getPage(String id, boolean preloadContent, PermHandler.ObjectPermission... perms)
 			throws EntityNotFoundException, InsufficientPrivilegesException, NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
@@ -378,6 +380,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 					}
 				}
 			}
+		}
+
+		if (preloadContent) {
+			t.prepareObjectData(Page.class, page.getId());
 		}
 
 		return page;
@@ -1089,10 +1095,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			// save)
 			if (request.isClearOfflineAt() || request.isClearPublishAt()) {
 				// clearing offlineAt or publishAt currently requires the publish permission (since that cannot be queued)
-				page = getLockedPage(id, PermHandler.ObjectPermission.edit,
-						PermHandler.ObjectPermission.publish);
+				page = getLockedPage(id, true,
+						PermHandler.ObjectPermission.edit, PermHandler.ObjectPermission.publish);
 			} else {
-				page = getLockedPage(id, PermHandler.ObjectPermission.edit);
+				page = getLockedPage(id, true, PermHandler.ObjectPermission.edit);
 			}
 
 			// Transform the rest PageSaveRequest into a rest page
@@ -1322,9 +1328,9 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 			try {
 				if (update) {
-					page = getLockedPage(id, PermHandler.ObjectPermission.edit);
+					page = getLockedPage(id, true, PermHandler.ObjectPermission.edit);
 				} else {
-					page = getPage(id, ObjectPermission.view);
+					page = getPage(id, true, ObjectPermission.view);
 				}
 			} catch (ReadOnlyException e) {
 				//TODO Why don't we use getPage(id) here?
@@ -1564,7 +1570,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			// pages in "in_work" status)
 			List<Page> pages = new ArrayList<>();
 			for (String pageId : pageIds) {
-				Page page = getPage(pageId, ObjectPermission.edit);
+				Page page = getPage(pageId, false, ObjectPermission.edit);
 				page.unlock();
 				pages.add(page);
 			}
@@ -1767,7 +1773,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			boolean isChannelIdset = setChannelToTransaction(nodeId);
 
 			// get the page (this will check for existence and delete permission)
-			Page page = getPage(id, PermHandler.ObjectPermission.delete);
+			Page page = getPage(id, false, PermHandler.ObjectPermission.delete);
 			throwIfLockedByAnotherUser(page);
 
 			Node node = page.getChannel();
@@ -1805,7 +1811,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 					new Callable<GenericResponse>() {
 						@Override
 						public GenericResponse call() throws Exception {
-							Page page = getPage(String.valueOf(pageId));
+							Page page = getPage(String.valueOf(pageId), false);
 							throwIfLockedByAnotherUser(page);
 
 							// get all (other) language variants, which are visible in the node
@@ -1887,10 +1893,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 					List<Page> pages = new ArrayList<Page>();
 
 					for (String id : ids) {
-						Page page = getPage(id);
+						Page page = getPage(id, false);
 
 						try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
-							page = getPage(id, ObjectPermission.view, ObjectPermission.wastebin);
+							page = getPage(id, true, ObjectPermission.view, ObjectPermission.wastebin);
 						}
 
 						if (!page.isDeleted()) {
@@ -1970,10 +1976,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 					List<Page> pages = new ArrayList<Page>();
 
 					for (String id : ids) {
-						Page page = getPage(id);
+						Page page = getPage(id, false);
 
 						try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
-							page = getPage(id, ObjectPermission.view, ObjectPermission.wastebin);
+							page = getPage(id, true, ObjectPermission.view, ObjectPermission.wastebin);
 						}
 
 						if (!page.isDeleted()) {
@@ -2039,7 +2045,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			// get the last version of the page
 			NodeObjectVersion[] pageVersions = page.getVersions();
 			if (!ObjectTransformer.isEmpty(pageVersions)) {
-				page = getLockedPage(Integer.toString(id), ObjectPermission.edit);
+				page = getLockedPage(Integer.toString(id), false, ObjectPermission.edit);
 				// restore the last page version
 				page.restoreVersion(pageVersions[0], true);
 			}
@@ -2107,12 +2113,15 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		int version = ObjectTransformer.getInt(versionTimestamp, 0);
 		return render(id, nodeId, template, editMode, proxyprefix, linksType, tagmap, inherited,
 				publish, editable -> {
+					Transaction t = TransactionManager.getCurrentTransaction();
 					if (editable) {
-						return getLockedPage(id, ObjectPermission.edit);
+						Page page = getLockedPage(id, true, ObjectPermission.edit);
+						return page;
 					} else if (version > 0) {
-						Page page = getPage(id, ObjectPermission.view);
-						Page versionedPage = TransactionManager.getCurrentTransaction()
-								.getObject(Page.class, page.getId(), version);
+
+						Page page = getPage(id, true, ObjectPermission.view);
+						t.prepareVersionedObjects(Page.class, Page.class, Collections.singletonMap(page.getId(), version));
+						Page versionedPage = t.getObject(Page.class, page.getId(), version);
 
 						if (versionedPage == null) {
 							I18nString message = new CNI18nString("page.notfound");
@@ -2122,7 +2131,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 							return versionedPage;
 						}
 					} else {
-						return getPage(id, ObjectPermission.view);
+						Page page =  getPage(id, true, ObjectPermission.view);
+						return page;
 					}
 				});
 	}
@@ -2133,7 +2143,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	public Response renderContent(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("version") Integer versionTimestamp) {
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
-			Page page = getPage(id, ObjectPermission.view);
+			Page page = getPage(id, true, ObjectPermission.view);
 
 			int version = ObjectTransformer.getInt(versionTimestamp, 0);
 			if (version > 0) {
@@ -2174,7 +2184,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) {
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Transaction t = TransactionManager.getCurrentTransaction();
-			Page page = getPage(id, ObjectPermission.view);
+			Page page = getPage(id, true, ObjectPermission.view);
 
 			String diff = renderDiff(source, daisyDiff, () -> {
 				Page p = t.getObject(Page.class, page.getId(), oldVersion);
@@ -2217,9 +2227,9 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("source") @DefaultValue("false") boolean source,
 			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) {
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
-			Page page = getPage(id, ObjectPermission.view);
+			Page page = getPage(id, true, ObjectPermission.view);
 			Page otherPage = getPage(ObjectTransformer.getString(otherPageId, null),
-					ObjectPermission.view);
+					false, ObjectPermission.view);
 
 			String diff = renderDiff(source, daisyDiff, () -> {
 				return page;
@@ -2302,7 +2312,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("proxyprefix") String proxyprefix,
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType) {
 		return renderTag(tag, nodeId, proxyprefix, linksType,
-				() -> getLockedPage(id, ObjectPermission.edit));
+				() -> getLockedPage(id, false, ObjectPermission.edit));
 	}
 
 	/**
@@ -2536,7 +2546,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Transaction t = getTransaction();
 
 		// get the page
-		Page page = getLockedPage(id, PermHandler.ObjectPermission.edit);
+		Page page = getLockedPage(id, false, PermHandler.ObjectPermission.edit);
 
 		// add a contenttag
 		ContentTag newTag = page.getContent().addContentTag(constructId);
@@ -2581,10 +2591,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	protected TagCreateResponse copyTag(String id, String sourceId, String tagname)
 			throws NodeException {
 		// get the source page
-		Page sourcePage = getPage(sourceId, PermHandler.ObjectPermission.view);
+		Page sourcePage = getPage(sourceId, false, PermHandler.ObjectPermission.view);
 
 		// get the page
-		Page page = getLockedPage(id, PermHandler.ObjectPermission.edit);
+		Page page = getLockedPage(id, false, PermHandler.ObjectPermission.edit);
 
 		// render the tag to collect all "embedded" tags
 		PageRenderResponse renderResponse = render(sourceId, null, "<node " + tagname + ">", true, null,
@@ -2736,7 +2746,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 					Collections.emptyList());
 
 			// get the page
-			Page page = getLockedPage(id, PermHandler.ObjectPermission.edit);
+			Page page = getLockedPage(id, false, PermHandler.ObjectPermission.edit);
 
 			StringBuilder template = new StringBuilder();
 			for (Map.Entry<String, TagCreateRequest> entry : request.getCreate().entrySet()) {
@@ -2834,7 +2844,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		// get the page
 		try {
-			page = getLockedPage(id, PermHandler.ObjectPermission.edit);
+			page = getLockedPage(id, false, PermHandler.ObjectPermission.edit);
 
 			NodeObjectVersion[] versions = page.getVersions();
 			NodeObjectVersion toRestore = null;
@@ -2906,7 +2916,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		// get the page
 		try {
-			page = getLockedPage(pageId, PermHandler.ObjectPermission.edit);
+			page = getLockedPage(pageId, false, PermHandler.ObjectPermission.edit);
 
 			// get tag
 			ContentTag tagToRestore = page.getContentTag(tag);
@@ -2981,7 +2991,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			// get the page in a new transaction
 			Page page = TransactionManager.execute(new ReturnValueExecutable<Page>() {
 				public Page execute() throws NodeException {
-					return getPage(Integer.toString(id));
+					return getPage(Integer.toString(id), true);
 				}
 			});
 			Integer lockKey = ObjectTransformer.getInteger(page.getContentsetId(), 0);
@@ -3168,7 +3178,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		try {
 			// get the page and lock it TODO what kind of permissions do we need?
-			page = getLockedPage(id, ObjectPermission.view);
+			page = getLockedPage(id, false, ObjectPermission.view);
 
 			// get the workflow
 			PublishWorkflow workflow = page.getWorkflow();
@@ -3673,7 +3683,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Path("/takeOffline/{id}")
 	public GenericResponse takeOffline(@PathParam("id") String id, PageOfflineRequest request) {
 		try (AutoCommit ac = new AutoCommit()) {
-			Page page = getPage(id);
+			Page page = getPage(id, false);
 
 			Node node = page.getChannel();
 			if (node == null) {
@@ -3681,7 +3691,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			try (ChannelTrx cTrx = new ChannelTrx(node)) {
-				page = getPage(id, ObjectPermission.view, ObjectPermission.edit);
+				page = getPage(id, false, ObjectPermission.view, ObjectPermission.edit);
 			}
 
 			PageOfflineResult result = null;
@@ -3928,7 +3938,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Deprecated
 	protected Page getPage(Integer id, PermHandler.ObjectPermission... perms)
 			throws EntityNotFoundException, InsufficientPrivilegesException, NodeException {
-		return getPage(Integer.toString(id), perms);
+		return getPage(Integer.toString(id), false, perms);
 	}
 
 	/**
@@ -4365,7 +4375,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			Folder target = t.getObject(Folder.class, request.getFolderId());
 
 			for (String id : request.getIds()) {
-				Page toMove = getPage(id);
+				Page toMove = getPage(id, false);
 				OpResult result = toMove.move(target, ObjectTransformer.getInt(request.getNodeId(), 0),
 						ObjectTransformer.getBoolean(request.isAllLanguages(), true));
 				switch (result.getStatus()) {
@@ -4493,9 +4503,9 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 			try {
 				for (int id : request.getIds()) {
-					Page page = getPage(String.valueOf(id));
+					Page page = getPage(String.valueOf(id), false);
 					try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
-						page = getLockedPage(String.valueOf(id), ObjectPermission.publish);
+						page = getLockedPage(String.valueOf(id), false, ObjectPermission.publish);
 					}
 
 					pages.add(page);

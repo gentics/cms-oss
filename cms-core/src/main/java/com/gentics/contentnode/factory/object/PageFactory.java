@@ -2945,6 +2945,8 @@ public class PageFactory extends AbstractFactory {
 					page.disinheritDefault, asNewPage ? 0 : page.deleted, asNewPage ? 0 : page.deletedBy, asNewPage ? true : page.pageModified, asNewPage ? -1 : page.getUdate(),
 					asNewPage ? null : page.getGlobalId(), page.unpublisherId, page.unpublishedDate, page.futureUnpublisherId, page.futurePublisherId);
 
+			TransactionManager.getCurrentTransaction().prepareObjectData(Page.class, page.getId());
+
 			if (asNewPage) {
 				editableContent = (EditableFactoryContent) page.getContent().copy();
 
@@ -4819,11 +4821,11 @@ public class PageFactory extends AbstractFactory {
 		if (Page.class.equals(clazz)) {
 			String[] preloadSql = new String[] { "SELECT obj_id AS id, id AS id2 FROM objtag WHERE obj_type = " + Page.TYPE_PAGE + " AND obj_id IN " + idSql };
 
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_PAGE_SQL + idSql, preloadSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_PAGE_SQL, preloadSql);
 		} else if (Content.class.equals(clazz)) {
 			String[] preloadSql = new String[] { "SELECT content_id AS id, id AS id2 FROM contenttag WHERE content_id IN " + idSql };
 
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONTENT_SQL + idSql, preloadSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONTENT_SQL, preloadSql);
 		}
 		return null;
 	}
@@ -6907,4 +6909,54 @@ public class PageFactory extends AbstractFactory {
 		}
 	}
 
+	public <T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		if (Page.class.equals(clazz)) {
+			List<Page> pages = t.getObjects(Page.class, ids);
+
+			// collect the content IDs
+			Set<Integer> contentIds = pages.stream().map(p -> FactoryPage.class.cast(p)).map(p -> p.contentId)
+					.collect(Collectors.toSet());
+			t.prepareObjectData(Content.class, contentIds);
+		} else if (Content.class.equals(clazz)) {
+			List<Content> contents = t.getObjects(Content.class, ids);
+
+			// collect the content Ids for which the tagIds have not been loaded
+			Set<FactoryContent> contentsWithoutTagIds = contents.stream().map(c -> FactoryContent.class.cast(c))
+					.filter(c -> c.tagIds == null).collect(Collectors.toSet());
+
+			if (!contentsWithoutTagIds.isEmpty()) {
+				Map<Integer, FactoryContent> contentsPerId = contentsWithoutTagIds.stream()
+						.collect(Collectors.toMap(Content::getId, java.util.function.Function.identity()));
+
+				Map<Integer, List<Integer>> tagIdsPerContentId = contentsPerId.keySet().stream()
+						.collect(Collectors.toMap(java.util.function.Function.identity(), id -> new ArrayList<>()));
+
+				DBUtils.executeMassStatement(
+						"SELECT t.id as id, t.content_id as content_id FROM contenttag t"
+								+ " LEFT JOIN construct c ON c.id = t.construct_id"
+								+ " WHERE c.id IS NOT NULL AND t.content_id IN",
+						contentsPerId.keySet(), 1, new SQLExecutor() {
+							public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+								while (rs.next()) {
+									int tagId = rs.getInt("id");
+									int contentId = rs.getInt("content_id");
+									tagIdsPerContentId.computeIfAbsent(contentId, k -> new ArrayList<>()).add(tagId);
+								}
+							};
+						});
+
+				tagIdsPerContentId.forEach((contentId, tagIds) -> {
+					Optional.ofNullable(contentsPerId.get(contentId)).ifPresent(c -> c.tagIds = tagIds);
+				});
+			}
+
+			// collect all tagIds of the contents
+			Set<Integer> tagIds = contents.stream().map(c -> FactoryContent.class.cast(c)).flatMap(c -> c.tagIds.stream())
+					.collect(Collectors.toSet());
+
+			t.prepareObjectData(ContentTag.class, tagIds);
+		}
+	}
 }

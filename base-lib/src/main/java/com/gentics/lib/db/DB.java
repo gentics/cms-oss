@@ -443,7 +443,7 @@ public class DB {
 	 * @throws SQLException
 	 */
 	public static void query(DBHandle handle, String sql, Object[] params, List<Integer> types, ResultProcessor proc, boolean logErrors) throws SQLException {
-		try (DBTrx trx = new DBTrx(handle, logErrors)) {
+		try (DBTrx trx = new DBTrx(handle, logErrors); DBQuery h = DBQuery.handle(sql)) {
 			RuntimeProfiler.beginMark(ComponentsConstants.DB_QUERY_WITH_HANDLE, sql);
 			boolean debug = logger.isDebugEnabled();
 
@@ -593,7 +593,7 @@ public class DB {
 		Statement p = null;
 		long time1 = 0, time2 = 0, time3 = 0;
 
-		try (DBTrx trx = new DBTrx(handle, true)) {
+		try (DBTrx trx = new DBTrx(handle, true); DBQuery h = DBQuery.handle(sql)) {
 			RuntimeProfiler.beginMark(ComponentsConstants.DB_UPDATE_WITH_HANDLE, sql);
 			boolean debug = logger.isDebugEnabled();
 
@@ -702,7 +702,7 @@ public class DB {
 
 		long time1 = 0, time2 = 0;
 
-		try (DBTrx trx = new DBTrx(handle, true)) {
+		try (DBTrx trx = new DBTrx(handle, true); DBQuery h = DBQuery.handle(sql)) {
 			RuntimeProfiler.beginMark(ComponentsConstants.DB_UPDATE_WITH_HANDLE, sql);
 			boolean debug = logger.isDebugEnabled();
 

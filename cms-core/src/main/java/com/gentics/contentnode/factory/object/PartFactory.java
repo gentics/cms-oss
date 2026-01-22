@@ -737,7 +737,7 @@ public class PartFactory extends AbstractFactory {
 	}
 
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
-		return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_PART_SQL + buildIdSql(ids));
+		return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_PART_SQL);
 	}
 
 	/* (non-Javadoc)

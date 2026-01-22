@@ -207,7 +207,7 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 						publishCount++;
 						break;
 					case SKIPPED:
-						skipped.add(PageResourceImpl.getPage(id, ObjectPermission.view));
+						skipped.add(PageResourceImpl.getPage(id, false, ObjectPermission.view));
 						break;
 					case WORKFLOW:
 					case WORKFLOW_STEP:
@@ -545,7 +545,7 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 				NodeException {
 		if (isAlllang) {
 			// get the page (readonly)
-			Page page = PageResourceImpl.getPage(id);
+			Page page = PageResourceImpl.getPage(id, false);
 
 			Node nodeForPermission = page.getChannel();
 			if (nodeForPermission == null) {
@@ -554,7 +554,7 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 
 			List<Page> pages = null;
 			try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
-				page = PageResourceImpl.getPage(id, ObjectPermission.view, ObjectPermission.edit);
+				page = PageResourceImpl.getPage(id, false, ObjectPermission.view, ObjectPermission.edit);
 
 				pages = new ArrayList<>(page.getLanguageVariants(false));
 				PermFilter.get(ObjectPermission.edit).filter(pages);
@@ -627,7 +627,7 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 		Page page = null;
 
 		// get the page (readonly)
-		page = PageResourceImpl.getPage(id);
+		page = PageResourceImpl.getPage(id, false);
 
 		Node nodeForPermission = page.getChannel();
 		if (nodeForPermission == null) {
@@ -635,7 +635,7 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 		}
 
 		try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
-			page = PageResourceImpl.getPage(id, ObjectPermission.view, ObjectPermission.edit);
+			page = PageResourceImpl.getPage(id, false, ObjectPermission.view, ObjectPermission.edit);
 		}
 
 		// check whether it is inherited
@@ -645,7 +645,7 @@ public class MultiPagePublishJob extends AbstractBackgroundJob {
 
 		try (ChannelTrx trx = new ChannelTrx(nodeForPermission)) {
 			// load the page (and lock it)
-			page = PageResourceImpl.getLockedPage(id, ObjectPermission.view);
+			page = PageResourceImpl.getLockedPage(id, false, ObjectPermission.view);
 
 			try {
 				Map<?, ?> multilevelWorkFlows = t.getNodeConfig().getDefaultPreferences().getPropertyMap("multilevel_pub_workflow");

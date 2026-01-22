@@ -1,5 +1,6 @@
 package com.gentics.contentnode.factory.object;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -10,11 +11,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.Vector;
 
 import com.gentics.api.lib.datasource.VersioningDatasource.Version;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -22,6 +25,7 @@ import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.DB;
 import com.gentics.lib.db.DBHandle;
 import com.gentics.lib.db.ResultProcessor;
+import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.db.SimpleResultProcessor;
 import com.gentics.lib.db.SimpleResultRow;
 import com.gentics.lib.etc.StringUtils;
@@ -670,6 +674,8 @@ public class TableVersion {
 			}
 
 			BatchUpdater batchUpdater = new BatchUpdater();
+			Set<Integer> modifiedIds = new HashSet<>();
+			Set<Integer> deletedIds = new HashSet<>();
 			// iterate over the diff
 			for (Diff rowDiff : diff) {
 				switch (rowDiff.diffType) {
@@ -687,7 +693,7 @@ public class TableVersion {
 					insertParams[index++] = 0;
 
 					if (rowDiff.diffType == Diff.DIFFTYPE_MOD) {
-						update("nodeversionlatest = ?", new Object[] {0}, "id = ?", new Object[] {rowDiff.id});
+						modifiedIds.add(rowDiff.id);
 					}
 					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, insertParams, null, null, null);
 					break;
@@ -704,12 +710,47 @@ public class TableVersion {
 					deleteParams[index++] = 0;
 					deleteParams[index++] = time;
 
-					update("nodeversionlatest = ?, nodeversionremoved = ?", new Object[] { 0, time }, "id = ?", new Object[] { rowDiff.id });
+					deletedIds.add(rowDiff.id);
 					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, deleteParams, null, null, null);
 					break;
 				}
 				}
 			}
+
+			String versionTable = table + "_nodeversion";
+			if (autoIncrement) {
+
+				if (!modifiedIds.isEmpty()) {
+					DBUtils.updateWithPK(versionTable, "auto_id", "nodeversionlatest = ?", new Object[] { 0 },
+							"id IN (%s)".formatted(StringUtils.repeat("?", modifiedIds.size(), ",")),
+							modifiedIds.toArray());
+				}
+				if (!deletedIds.isEmpty()) {
+					DBUtils.updateWithPK(versionTable, "auto_id", "nodeversionlatest = ?, nodeversionremoved = ?",
+							new Object[] { 0, time },
+							"id IN (%s)".formatted(StringUtils.repeat("?", deletedIds.size(), ",")),
+							deletedIds.toArray());
+				}
+			} else {
+				if (!modifiedIds.isEmpty()) {
+					DBUtils.executeMassStatement("UPDATE `%s` SET nodeversionlatest = ? WHERE id IN".formatted(versionTable), modifiedIds, 2, new SQLExecutor() {
+						@Override
+						public void prepareStatement(PreparedStatement stmt) throws SQLException {
+							stmt.setInt(1, 0);
+						}
+					});
+				}
+				if (!deletedIds.isEmpty()) {
+					DBUtils.executeMassStatement("UPDATE `%s` SET nodeversionlatest = ?, nodeversionremoved = ? WHERE id IN".formatted(versionTable), deletedIds, 3, new SQLExecutor() {
+						@Override
+						public void prepareStatement(PreparedStatement stmt) throws SQLException {
+							stmt.setInt(1, 0);
+							stmt.setInt(2, time);
+						}
+					});
+				}
+			}
+
 			batchUpdater.execute();
 
 			return true;
@@ -784,28 +825,15 @@ public class TableVersion {
 	 */
 	public void restoreVersion(Object[] idParams, int time) throws NodeException {
 		try {
-			// get ids of rows to restore
-			String sql = "SELECT gentics_main.id, max(gentics_main.nodeversiontimestamp) nodeversionrtime" + " FROM " + getFromPart()
-					+ " WHERE (nodeversionremoved >" + time + " OR nodeversionremoved = 0) AND nodeversiontimestamp <=" + time + " AND " + getWherePart()
-					+ " GROUP BY id";
-
-			SimpleResultProcessor rowsToRestore = new SimpleResultProcessor();
-			SimpleResultProcessor rsVersions = new SimpleResultProcessor();
-
-			DB.query(getHandle(), sql, idParams, rsVersions);
+			SimpleResultProcessor rowsToRestore = getVersionData(idParams, time);
 
 			if (restoreProcessor != null) {
-				restoreProcessor.preRestore(this, rsVersions);
+				restoreProcessor.preRestore(this, rowsToRestore);
 			}
 
-			for (Iterator<SimpleResultRow> iter = rsVersions.iterator(); iter.hasNext();) {
-				SimpleResultRow row = (SimpleResultRow) iter.next();
-				SimpleResultProcessor data = new SimpleResultProcessor();
+			Set<Integer> idsToDelete = rowsToRestore.asList().stream().map(row -> row.getInt("id")).collect(Collectors.toSet());
 
-				fetchVersionedData(row.getInt("id"), row.getInt("nodeversionrtime"), data, false);
-				rowsToRestore.merge(data);
-				DB.update(getHandle(), "DELETE FROM `" + getTable() + "` WHERE id = ?", new Object[] { row.getInt("id") });
-			}
+			DBUtils.executeMassStatement("DELETE FROM `" + getTable() + "` WHERE id IN ", idsToDelete, 1, null);
 
 			// Although we deleted the rows as we retrieved their data, there may be more rows in the current
 			// version than in the version to be restored, so we have to make a general delete of all rows
@@ -833,7 +861,7 @@ public class TableVersion {
 			insertRowsFromData(rowsToRestore);
 
 			if (restoreProcessor != null) {
-				restoreProcessor.postRestore(this, rsVersions);
+				restoreProcessor.postRestore(this, rowsToRestore);
 			}
 		} catch (SQLException ex) {
 			throw new NodeException("Error while restoring version in table {" + table + "}", ex);
@@ -1098,9 +1126,12 @@ public class TableVersion {
 		List<String> allColumns = getColumns(table);
 		List<Integer> columnTypes = getColumnDataTypes(table);
 
-		String insertSql = "INSERT INTO `" + getTable() + "` (" + makeColumnsSql(allColumns) + ")" + " VALUES (" + makeQuestionMarks(allColumns.size()) + ")";
+		String insertSql = "INSERT INTO `" + getTable() + "` (" + makeColumnsSql(allColumns) + ")" + " VALUES ";
+		String insertSqlParams = "(" + makeQuestionMarks(allColumns.size()) + ")";
 
 		List<Object> params = new ArrayList<Object>();
+
+		BatchUpdater batchUpdater = new BatchUpdater();
 
 		for (Iterator<SimpleResultRow> iter = data.iterator(); iter.hasNext();) {
 			SimpleResultRow row = iter.next();
@@ -1111,8 +1142,11 @@ public class TableVersion {
 
 				params.add(row.getObject(columnName));
 			}
-			DB.update(getHandle(), insertSql, params.toArray(), columnTypes, null, true);
+
+			batchUpdater.add(insertSql, insertSqlParams, Transaction.INSERT_STATEMENT, params.toArray(), null, null, null);
 		}
+
+		batchUpdater.execute();
 	}
 
 	/**

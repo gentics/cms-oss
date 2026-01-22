@@ -38,6 +38,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.lib.db.CountingExecutor;
+import com.gentics.lib.db.DBQuery;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
@@ -104,7 +105,7 @@ public final class DBUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, type);
 
 			if (ex != null) {
@@ -261,7 +262,7 @@ public final class DBUtils {
 		ResultSet res = null;
 		R retVal = null;
 
-		try {
+		try (DBQuery h  = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, type);
 
 			if (prepare != null) {
@@ -295,7 +296,7 @@ public final class DBUtils {
 		PreparedStatement stmt = null;
 		ResultSet res = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareSelectForUpdate(sql);
 
 			if (prepare != null) {
@@ -327,7 +328,7 @@ public final class DBUtils {
 		PreparedStatement stmt = null;
 		ResultSet keys = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareInsertStatement(sql);
 
 			if (args != null) {
@@ -363,7 +364,7 @@ public final class DBUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, Transaction.UPDATE_STATEMENT);
 
 			if (args != null) {
@@ -393,7 +394,7 @@ public final class DBUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, Transaction.UPDATE_STATEMENT);
 
 			for (int i = 0; i < args.length; i++) {
@@ -444,7 +445,7 @@ public final class DBUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, type);
 
 			for (Object[] args : argsList) {
@@ -560,7 +561,7 @@ public final class DBUtils {
 	public static boolean executeMassStatement(String sql, String suffixSql, Collection<?> list, int startIndex, SQLExecutor ex, int type, PreparedStatementHandler stmth) throws NodeException {
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			int maxbinds = MASS_STATEMENT_MAX;
 			int totalsize = list.size();
 
@@ -907,7 +908,7 @@ public final class DBUtils {
 		String sql = String.format("SELECT * FROM %s WHERE %s = ?", table, key1);
 
 		Set<Integer> notFoundId2 = new HashSet<>(ids2);
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			stmt.setInt(1, id1);
 
@@ -964,7 +965,7 @@ public final class DBUtils {
 
 		Set<Integer> ids2 = data.keySet();
 		Set<Integer> notFoundId2 = new HashSet<>(data.keySet());
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			stmt.setInt(1, id1);
 

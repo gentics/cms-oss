@@ -21,6 +21,7 @@ import com.gentics.api.lib.exception.UnknownPropertyException;
 import com.gentics.api.lib.resolving.PropertyResolver;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.resolving.ResolvableComparator;
+import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.NoMcTrx;
@@ -30,17 +31,26 @@ import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.PartType;
+import com.gentics.contentnode.parser.ContentRenderer;
+import com.gentics.contentnode.parser.tag.ParserTag;
+import com.gentics.contentnode.parser.tag.struct.ParseStructRenderer;
 import com.gentics.contentnode.render.FormRendering;
+import com.gentics.contentnode.render.GCNRenderable;
 import com.gentics.contentnode.render.GisRendering;
 import com.gentics.contentnode.render.GisRendering.CropInfo;
 import com.gentics.contentnode.render.GisRendering.ResizeInfo;
+import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUtils;
+import com.gentics.contentnode.render.RenderableResolvable;
+import com.gentics.contentnode.render.RenderableResolvable.Scope;
+import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.lib.render.Renderable;
 import com.gentics.lib.resolving.ResolvableMapWrapper;
 import com.github.jknack.handlebars.Options;
@@ -56,14 +66,30 @@ public class HelperSource {
 	 * @param options options
 	 * @return rendered renderable
 	 */
-	public static String gtx_render(Object renderable, Options options) throws NodeException {
-		if (renderable instanceof Renderable) {
-			return ((Renderable) renderable).render();
-		} else if (renderable != null) {
-			return renderable.toString();
-		} else {
-			return null;
+	public static String gtx_render(Object value, Options options) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		RenderType renderType = t.getRenderType();
+		RenderResult renderResult = t.getRenderResult();
+		if (value instanceof ResolvableMapWrapper) {
+			value = ((ResolvableMapWrapper)value).getWrapped();
 		}
+		if (value instanceof RenderableResolvable) {
+			RenderableResolvable renderable = (RenderableResolvable)value;
+			if (renderable.getWrappedObject() instanceof Tag) {
+				try (Scope scope = renderable.scope()) {
+					return renderTag((Tag)renderable.getWrappedObject(), renderType, renderResult);
+				}
+			} else {
+				return renderable.toString();
+			}
+		} else if (value instanceof Tag) {
+			return renderTag((Tag)value, renderType, renderResult);
+		} else if (value instanceof Renderable) {
+			return ((Renderable) value).render();
+		} else if (value != null) {
+			return value.toString();
+		}
+		return null;
 	}
 
 	/**
@@ -97,7 +123,6 @@ public class HelperSource {
 				renderType.setEditMode(editMode);
 				editModeSet = true;
 			}
-
 			return gtx_render(renderable, options);
 		} finally {
 			// if the original rendermode was restored for rendering the directive, we switch back to the rendermode,
@@ -351,5 +376,30 @@ public class HelperSource {
 		} else {
 			return object;
 		}
+	}
+
+	/**
+	 * Render the given tag in the current edit mode
+	 * @param tag tag to render
+	 * @param renderType rendertype
+	 * @param result render result
+	 * @return rendered tag
+	 * @throws NodeException
+	 */
+	protected static String renderTag(Tag tag, RenderType renderType, RenderResult result) throws NodeException {
+		int editMode = renderType.getEditMode();
+
+		if ((editMode == RenderType.EM_ALOHA) && tag.isEditable()) {
+			StringBuffer source = new StringBuffer();
+			List<ParserTag> omitTags = new ArrayList<ParserTag>();
+			List<ParserTag> omitTagsEdit = new ArrayList<ParserTag>();
+			ParseStructRenderer.renderEditableTag(source, tag.render(result), tag, omitTags, omitTagsEdit, result);
+			return source.toString();
+		} else if (editMode == RenderType.EM_ALOHA_READONLY) {
+			AlohaRenderer alohaRenderer = (AlohaRenderer) RendererFactory.getRenderer(ContentRenderer.RENDERER_ALOHA);
+			return alohaRenderer.block(tag.render(result), tag, result);
+		} else {
+			return tag.render(result);
+}
 	}
 }

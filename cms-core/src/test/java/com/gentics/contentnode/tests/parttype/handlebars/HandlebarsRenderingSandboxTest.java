@@ -1,8 +1,10 @@
 package com.gentics.contentnode.tests.parttype.handlebars;
 
 import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.Builder.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -11,6 +13,7 @@ import java.util.Collection;
 import java.util.regex.Pattern;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -21,9 +24,11 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
+import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
@@ -47,8 +52,8 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 		"before[{{{gtx_render cms.tag.parts.text}}}]middle[{{{gtx_edit cms.tag.parts.text}}}]after",
 		"before[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_render cms.page.tags.testtag.parts.text}}}]after",
 		"before[{{{gtx_render cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]after",
-		"{{#if true}}before[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_render cms.page.tags.testtag.parts.text}}}]after{{/if}}",
-		"{{#if true}}before[{{{gtx_render cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]after{{/if}}",
+		"before[{{{gtx_edit cms.page.tags.url_construct1}}}]middle[{{{gtx_render cms.page.tags.url_construct1}}}]after",
+		"before[{{{gtx_render cms.page.tags.url_construct1}}}]middle[{{{gtx_edit cms.page.tags.url_construct1}}}]after",
 	};
 
 	/**
@@ -78,6 +83,8 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 		return data;
 	}
 
+	static Construct urlConstruct;
+
 	/**
 	 * Edit mode
 	 */
@@ -93,6 +100,16 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 	protected boolean editAfterRender;
 
 	/**
+	 * Whether to expect the whole tag rendering, instead of its distinct part
+	 */
+	protected boolean renderWholeTag;
+
+	/**
+	 * The expected tag content
+	 */
+	protected String tagContent;
+
+	/**
 	 * Create a test instance
 	 * @param editMode edit mode
 	 * @param templateIndex template index
@@ -101,8 +118,34 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 		this.editMode = RenderType.parseEditMode(editMode);
 		this.templateRendersInEditMode = TEMPLATES[templateIndex].contains("gtx_edit");
 		this.editAfterRender = TEMPLATES[templateIndex].indexOf("gtx_edit") > TEMPLATES[templateIndex].indexOf("gtx_render");
+		this.renderWholeTag = TEMPLATES[templateIndex].contains(".") && (TEMPLATES[templateIndex].contains(".tags.") || TEMPLATES[templateIndex].endsWith(".tag")) && !TEMPLATES[templateIndex].contains(".parts.");
+		this.tagContent = TEMPLATES[templateIndex].contains("tags.url_construct") ? "/node/pub/dir/test/Test-Page.de.html" : "This is the test content";
 		assertTrue("Given edit mode is unknown", editMode.equals(RenderType.renderEditMode(this.editMode)));
 		updateConstruct(TEMPLATES[templateIndex]);
+	}
+
+	@BeforeClass
+	public static void setupMore() throws NodeException {
+		urlConstruct = create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setKeyword("url_construct");
+			c.setName("url_construct", 1);
+
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(PageURLPartType.class));
+				p.setEditable(2);
+				p.setHidden(false);
+				p.setKeyname("page");
+			}).doNotSave().build());
+		}).build();
+
+		testPage = update(testPage, p -> {
+			ContentTag urlsTag = p.getContent().addContentTag(urlConstruct.getId());
+			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(testPage);
+			getPartType(PageURLPartType.class, urlsTag, "page").setNode(node);
+		}).unlock().build();
+		testPage = update(testPage, p -> {
+		}).unlock().publish().build();
 	}
 
 	@Before
@@ -150,9 +193,9 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 	 * @throws Exception
 	 */
 	protected String getExpectedContent() throws NodeException {
-		// prepare data which is rendered into the editable tags
 		String pageId = ObjectTransformer.getString(testPage.getId(), null);
 		String tagId = ObjectTransformer.getString(testPage.getContentTag(HBS_TAGNAME).getId(), null);
+		String urlTagId = ObjectTransformer.getString(testPage.getContentTag("url_construct1").getId(), null);
 		String constructName = testPage.getContentTag(HBS_TAGNAME).getConstruct().getName().toString();
 		String valueId = ObjectTransformer.getString(testPage.getContentTag(HBS_TAGNAME).getValues().getByKeyname("text").getId(), null);
 		String expected = null;
@@ -160,21 +203,27 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 		case RenderType.EM_ALOHA:
 			String editablePart = null;
 			if (templateRendersInEditMode) {
-				editablePart = "<div id=\"GENTICS_EDITABLE_" + valueId + "\">This is the test content</div>";
+				if (renderWholeTag) {
+					editablePart = "<div data-gcn-pageid=\"" + pageId + "\" data-gcn-tagid=\"" + urlTagId + "\" data-gcn-tagname=\"url_construct1"
+							+ "\" data-gcn-i18n-constructname=\"url_construct"
+							+ "\" class=\"aloha-block\" id=\"GENTICS_BLOCK_" + urlTagId + "\">" + this.tagContent + "</div>";
+				} else {
+					editablePart = "<div id=\"GENTICS_EDITABLE_" + valueId + "\">" + this.tagContent + "</div>";
+				}
 			} else {
-				editablePart = "This is the test content";
+				editablePart = this.tagContent;
 			}
 			expected = "<div data-gcn-pageid=\"" + pageId + "\" data-gcn-tagid=\"" + tagId + "\" data-gcn-tagname=\"" + HBS_TAGNAME
 					+ "\" data-gcn-i18n-constructname=\"" + constructName
 					+ "\" class=\"aloha-block\" id=\"GENTICS_BLOCK_" + tagId;
 			if (templateRendersInEditMode && editAfterRender) {
-				expected = expected + "\">before[This is the test content]middle[" + editablePart + "]after</div>";
+				expected = expected + "\">before[" + this.tagContent + "]middle[" + editablePart + "]after</div>";
 			} else {
-				expected = expected + "\">before[" + editablePart + "]middle[This is the test content]after</div>";
+				expected = expected + "\">before[" + editablePart + "]middle[" + this.tagContent + "]after</div>";
 			}
 			break;
 		default:
-			expected = "before[This is the test content]middle[This is the test content]after";
+			expected = "before[" + this.tagContent + "]middle[" + this.tagContent + "]after";
 			break;
 		}
 		switch (editMode) {

@@ -975,13 +975,13 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		supply(() -> new PageResourceImpl().delete(page31.getGlobalId().toString(), page31.getNode().getId(), null));
 		supply(() -> new PageResourceImpl().delete(page32.getGlobalId().toString(), page32.getNode().getId(), null));
 
-		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
-		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
+		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), false, ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
+		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), false, ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
 
 		supply(() -> new ContentStagingResourceImpl().importIntoCms(packageName, 5000, false));
 
-		page31 = supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), ObjectPermission.view));
-		page32 = supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), ObjectPermission.view));
+		page31 = supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), false, ObjectPermission.view));
+		page32 = supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), false, ObjectPermission.view));
 		assertNotNull(page31);
 		assertNotNull(page32);
 
@@ -1247,7 +1247,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 			request.setAllLanguages(true);
 			request.setFolderId(folder2.getId());
 			assertResponseOK(new PageResourceImpl().move(page11Id, request));
-			return PageResourceImpl.getPage(page11Id);
+			return PageResourceImpl.getPage(page11Id, false);
 		});
 
 		response = supply(() -> {
@@ -1274,7 +1274,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 			request.setAllLanguages(true);
 			request.setFolderId(folder1.getId());
 			assertResponseOK(new PageResourceImpl().move(page11Id, request));
-			return PageResourceImpl.getPage(page11Id);
+			return PageResourceImpl.getPage(page11Id, false);
 		});
 	}
 

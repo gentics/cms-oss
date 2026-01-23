@@ -1,6 +1,7 @@
 package com.gentics.contentnode.cluster;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import com.gentics.contentnode.object.NodeObject;
 
@@ -27,6 +28,11 @@ public class CacheSyncMessage implements Serializable {
 	 * Object ID
 	 */
 	protected Integer id;
+
+	/**
+	 * Object IDs
+	 */
+	protected Set<Integer> ids;
 
 	/**
 	 * Get the message type
@@ -73,12 +79,30 @@ public class CacheSyncMessage implements Serializable {
 	}
 
 	/**
+	 * Get the object IDs
+	 * @return object IDs
+	 */
+	public Set<Integer> getIds() {
+		return ids;
+	}
+
+	/**
 	 * Set the object ID
 	 * @param id object ID
 	 * @return fluent API
 	 */
 	public CacheSyncMessage setId(Integer id) {
 		this.id = id;
+		return this;
+	}
+
+	/**
+	 * Set the object IDs
+	 * @param ids object IDs
+	 * @return fluent API
+	 */
+	public CacheSyncMessage setIds(Set<Integer> ids) {
+		this.ids = ids;
 		return this;
 	}
 
@@ -93,8 +117,9 @@ public class CacheSyncMessage implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("CacheSyncMessage type: %s%s%s", type.name(),
+		return String.format("CacheSyncMessage type: %s%s%s%s", type.name(),
 				clazz != null ? String.format(", class: %s", clazz.getName()) : "",
-				id != null ? String.format(", id: %s", id) : "");
+				id != null ? String.format(", id: %s", id) : "",
+				ids != null ? String.format(", ids: %s", ids) : "");
 	}
 }

@@ -692,9 +692,7 @@ public class TableVersion {
 					insertParams[index++] = 1;
 					insertParams[index++] = 0;
 
-					if (rowDiff.diffType == Diff.DIFFTYPE_MOD) {
-						modifiedIds.add(rowDiff.id);
-					}
+					modifiedIds.add(rowDiff.id);
 					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, insertParams, null, null, null);
 					break;
 				}

@@ -4126,6 +4126,8 @@ public class PageFactory extends AbstractFactory {
 			final Set<Integer> valueIds = new HashSet<>();
 			final Set<Integer> datasourceIds = new HashSet<>();
 			final Set<Integer> datasourceEntryIds = new HashSet<>();
+			final Set<Integer> overviewIds = new HashSet<>();
+			final Set<Integer> overviewEntryIds = new HashSet<>();
 			final int contentId = ObjectTransformer.getInt(getId(), 0);
 
 			// get the parts of type 32
@@ -4170,7 +4172,6 @@ public class PageFactory extends AbstractFactory {
 			}
 
 			// select overviews contained in the content tags
-			final Set<Integer> overviewIds = new HashSet<>();
 			DBUtils.executeMassStatement("SELECT id FROM ds WHERE contenttag_id IN ", contentTagIds, 1, new SQLExecutor() {
 				@Override
 				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
@@ -4180,11 +4181,24 @@ public class PageFactory extends AbstractFactory {
 				}
 			});
 
+			// select overview entry ids
+			if (!overviewIds.isEmpty()) {
+				DBUtils.executeMassStatement("SELECT id FROM ds_obj WHERE ds_id IN ", overviewIds, 1, new SQLExecutor( ) {
+					@Override
+					public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+						while (rs.next()) {
+							overviewEntryIds.add(rs.getInt("id"));
+						}
+					}
+				});
+			}
+
 			t.clearCache(ContentTag.class, contentTagIds);
 			t.clearCache(Value.class, valueIds);
-			t.clearCache(Overview.class, overviewIds);
 			t.clearCache(Datasource.class, datasourceIds);
 			t.clearCache(DatasourceEntry.class, datasourceEntryIds);
+			t.clearCache(Overview.class, overviewIds);
+			t.clearCache(OverviewEntry.class, overviewEntryIds);
 		}
 
 		/* (non-Javadoc)
@@ -6909,6 +6923,7 @@ public class PageFactory extends AbstractFactory {
 		}
 	}
 
+	@Override
 	public <T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 

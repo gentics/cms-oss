@@ -1243,7 +1243,9 @@ public final class DBUtils {
 					List<Consumer<Integer>> generatedKeyHandlers = entry.getValue().stream().map(Pair::getRight)
 							.collect(Collectors.toList());
 					if (generatedKeyHandlers.size() != generatedKeys.size()) {
-						throw new NodeException();
+						throw new NodeException(
+								"Cannot handle generated keys, because expected to get %d keys, but got %d keys."
+										.formatted(generatedKeyHandlers.size(), generatedKeys.size()));
 					}
 					for (int i = 0; i < generatedKeyHandlers.size(); i++) {
 						Consumer<Integer> h = generatedKeyHandlers.get(i);
@@ -1272,7 +1274,7 @@ public final class DBUtils {
 						.collect(Collectors.toMap(NodeObject::getId, java.util.function.Function.identity()));
 
 				if (!objectMap.isEmpty()) {
-					DBUtils.executeMassStatement("SELECT id, uuid FROM %s WHERE id IN ".formatted(tableName),
+					DBUtils.executeMassStatement("SELECT id, uuid FROM `%s` WHERE id IN ".formatted(tableName),
 							objectMap.keySet(), 1, new SQLExecutor() {
 								public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 									while (rs.next()) {

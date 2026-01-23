@@ -36,6 +36,7 @@ import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Operator;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.factory.DBTable;
@@ -1840,10 +1841,7 @@ public class TagFactory extends AbstractFactory {
 
 		boolean isNew = Tag.isEmptyId(tag.getId());
 
-		String tagName = tag.getName();
-		if (!StringUtils.isEmpty(tagName)) {
-			tagName = tagName.trim();
-		}
+		final String tagName = org.apache.commons.lang3.StringUtils.trim(tag.getName());
 
 		if (isNew) {
 			// for new contenttags, we need to check whether the tag comes from a templatetag
@@ -1854,8 +1852,8 @@ public class TagFactory extends AbstractFactory {
 				}
 			}
 
-			Object[] params = new Object[] {
-					tag.contentId, tag.getConstruct().getId(), tag.getEnabledValue(), tagName, tag.template, ObjectTransformer.getString(tag.getGlobalId(), "")};
+			Supplier<Object[]> paramsSupplier = () -> new Object[] { tag.contentId, tag.getConstruct().getId(),
+					tag.getEnabledValue(), tagName, tag.template, ObjectTransformer.getString(tag.getGlobalId(), "") };
 			com.gentics.contentnode.etc.Consumer<Integer> generatedKeyHandler = key -> {
 				// set the new page id
 				tag.setId(key);
@@ -1870,10 +1868,10 @@ public class TagFactory extends AbstractFactory {
 			};
 
 			if (batchUpdater != null) {
-				batchUpdater.add(INSERT_CONTENTTAG_WO_PARAMS_SQL, INSERT_CONTENTTAG_PARAMS_SQL, Transaction.INSERT_STATEMENT, params, generatedKeyHandler, null, () -> tag.setUnmodified());
+				batchUpdater.add(INSERT_CONTENTTAG_WO_PARAMS_SQL, INSERT_CONTENTTAG_PARAMS_SQL, Transaction.INSERT_STATEMENT, paramsSupplier, generatedKeyHandler, null, () -> tag.setUnmodified());
 			} else {
 				// insert a new record
-				List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENTTAG_SQL, params);
+				List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENTTAG_SQL, paramsSupplier.supply());
 
 				if (keys.size() == 1) {
 					generatedKeyHandler.accept(keys.get(0));
@@ -2007,7 +2005,6 @@ public class TagFactory extends AbstractFactory {
 						ContentTag tag = loadResultSet(ContentTag.class, objId, handle.createObjectInfo(ContentTag.class, versionTimestamp), row, null);
 						preparedTags.add((T)tag);
 						tagsPerTimestamp.computeIfAbsent(versionTimestamp, key -> new HashSet<>()).add(tag);
-//						handle.putObject(ContentTag.class, tag, versionTimestamp);
 					} catch (SQLException e) {
 						throw new NodeException("Error while batchloading contenttags", e);
 					}

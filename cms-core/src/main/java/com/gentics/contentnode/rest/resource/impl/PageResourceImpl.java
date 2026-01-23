@@ -2229,7 +2229,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Page page = getPage(id, true, ObjectPermission.view);
 			Page otherPage = getPage(ObjectTransformer.getString(otherPageId, null),
-					false, ObjectPermission.view);
+					true, ObjectPermission.view);
 
 			String diff = renderDiff(source, daisyDiff, () -> {
 				return page;
@@ -2312,7 +2312,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("proxyprefix") String proxyprefix,
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType) {
 		return renderTag(tag, nodeId, proxyprefix, linksType,
-				() -> getLockedPage(id, false, ObjectPermission.edit));
+				() -> getLockedPage(id, true, ObjectPermission.edit));
 	}
 
 	/**

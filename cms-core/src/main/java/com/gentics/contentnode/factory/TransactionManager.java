@@ -2240,16 +2240,16 @@ public final class TransactionManager {
 		@Override
 		public <T extends NodeObject> void prepareObjectData(Class<T> clazz, int id) throws NodeException {
 			ObjectFactory objectFactory = factoryHandle.getObjectFactory(clazz);
-			if (objectFactory instanceof BatchObjectFactory) {
-				((BatchObjectFactory)objectFactory).prepareObjectData(clazz, id);
+			if (objectFactory instanceof BatchObjectFactory batchObjectFactory) {
+				batchObjectFactory.prepareObjectData(clazz, id);
 			}
 		}
 
 		@Override
 		public <T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException {
 			ObjectFactory objectFactory = factoryHandle.getObjectFactory(clazz);
-			if (objectFactory instanceof BatchObjectFactory) {
-				((BatchObjectFactory)objectFactory).prepareObjectData(clazz, ids);
+			if (objectFactory instanceof BatchObjectFactory batchObjectFactory) {
+				batchObjectFactory.prepareObjectData(clazz, ids);
 			}
 		}
 

@@ -42,9 +42,12 @@ import com.gentics.contentnode.rest.model.Tag.Type;
 import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
+import com.gentics.contentnode.rest.model.request.page.PageCopyRequest;
+import com.gentics.contentnode.rest.model.request.page.TargetFolder;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
+import com.gentics.contentnode.rest.model.response.page.PageCopyResponse;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -153,7 +156,7 @@ public class PageHandlingQueryCountTest {
 
 	@Test
 	public void testCreate() throws NodeException {
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(140); Trx trx = new Trx().at(1000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(140); Trx trx = trxAt(1000)) {
 			createPage();
 		}
 	}
@@ -173,7 +176,7 @@ public class PageHandlingQueryCountTest {
 			return createPage();
 		});
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = new Trx().at(2000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(2000)) {
 			createTags(page);
 		}
 	}
@@ -194,7 +197,7 @@ public class PageHandlingQueryCountTest {
 		// each updated value requires a single update statement
 		int allowed = 180 + numTags;
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = new Trx().at(3000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(3000)) {
 			updateTags(page);
 		}
 	}
@@ -210,7 +213,7 @@ public class PageHandlingQueryCountTest {
 			createTags(page);
 		});
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(100); Trx trx = new Trx().at(3000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(100); Trx trx = trxAt(3000)) {
 			putIntoWastebin(page);
 		}
 	}
@@ -230,7 +233,7 @@ public class PageHandlingQueryCountTest {
 			putIntoWastebin(page);
 		});
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(100); Trx trx = new Trx().at(4000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(100); Trx trx = trxAt(4000)) {
 			removeFromWastebin(page);
 		}
 	}
@@ -250,7 +253,7 @@ public class PageHandlingQueryCountTest {
 			putIntoWastebin(page);
 		});
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = new Trx().at(4000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = trxAt(4000)) {
 			restoreFromWastebin(page);
 		}
 	}
@@ -268,7 +271,7 @@ public class PageHandlingQueryCountTest {
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(50); Trx trx = new Trx().at(3000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(50); Trx trx = trxAt(3000)) {
 			load(page, false);
 		}
 	}
@@ -286,7 +289,7 @@ public class PageHandlingQueryCountTest {
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = new Trx().at(3000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = trxAt(3000)) {
 			load(page, true);
 		}
 	}
@@ -304,7 +307,7 @@ public class PageHandlingQueryCountTest {
 
 		operate(() -> load(page, true));
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(120); Trx trx = new Trx().at(3000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(120); Trx trx = trxAt(3000)) {
 			GenericResponse response = getPageResource().cancel(page.getId(), null);
 			assertResponseCodeOk(response);
 		}
@@ -323,7 +326,7 @@ public class PageHandlingQueryCountTest {
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(50); Trx trx = new Trx(systemUser).at(3000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(50); Trx trx = trxAt(systemUser, 3000)) {
 			render(page, false);
 		}
 	}
@@ -341,7 +344,7 @@ public class PageHandlingQueryCountTest {
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = new Trx(systemUser).at(3000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = trxAt(systemUser, 3000)) {
 			render(page, true);
 		}
 	}
@@ -363,7 +366,7 @@ public class PageHandlingQueryCountTest {
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(50); Trx trx = new Trx(systemUser).at(4000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(50); Trx trx = trxAt(systemUser, 4000)) {
 			renderVersion(page, 2000);
 		}
 	}
@@ -385,9 +388,45 @@ public class PageHandlingQueryCountTest {
 
 		int allowed = 200 + numTags * 8 / 100;
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = new Trx().at(4000)) {
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(4000)) {
 			restoreVersion(page, 2000);
 		}
+	}
+
+	@Test
+	public void testCopy() throws NodeException, PortalCacheException {
+		// number of allowed statements for inserting depends on the number of tags
+		// base is 190 statements
+		// each tag is inserted into contenttag and contenttag_nodeversion (so number of tags times 2)
+		// batched in groups of 100 inserts each
+		// each tag has 8 values, inserted into value and value_nodeversion (so number of tags times 16)
+		// batched in groups of 100 inserts each
+		int allowed = 190 + numTags * 16 / 100 + numTags * 2 / 100;
+
+		Page page = supply(t -> {
+			t.setTimestamp(1000 * 1000);
+			return createPage();
+		});
+		operate(t -> {
+			t.setTimestamp(2000 * 1000);
+			createTags(page);
+		});
+
+		ContentNodeTestUtils.clearNodeObjectCache();
+
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(3000)) {
+			copy(page);
+		}
+	}
+
+	protected Trx trxAt(int timestamp) throws NodeException {
+		return trxAt(null, timestamp);
+	}
+
+	protected Trx trxAt(SystemUser user, int timestamp) throws NodeException {
+		Trx trx = user != null ? new Trx(user) : new Trx();
+		trx.at(timestamp);
+		return trx;
 	}
 
 	protected Page createPage() throws NodeException {
@@ -484,6 +523,15 @@ public class PageHandlingQueryCountTest {
 
 	protected void restoreVersion(Page page, int versionTimestamp) throws NodeException {
 		PageLoadResponse response = getPageResource().restoreVersion(String.valueOf(page.getId()), versionTimestamp);
+		assertResponseCodeOk(response);
+	}
+
+	protected void copy(Page page) throws NodeException {
+		PageCopyRequest request = new PageCopyRequest();
+		request.setCreateCopy(true);
+		request.setSourcePageIds(Arrays.asList(page.getId()));
+		request.setTargetFolders(Arrays.asList(new TargetFolder(folderId, 0)));
+		PageCopyResponse response = getPageResource().copy(request, 0);
 		assertResponseCodeOk(response);
 	}
 }

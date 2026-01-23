@@ -482,7 +482,12 @@ public class ValueFactory extends AbstractFactory {
 
 				// object is modified, so update it
 				isModified = true;
-				saveFactoryObject(this, batchUpdater, before, after);
+				saveFactoryObject(this, batchUpdater, before, () -> {
+					if (after != null) {
+						after.operate();
+					}
+					setUnmodified();
+				});
 				modified = false;
 			}
 
@@ -520,6 +525,13 @@ public class ValueFactory extends AbstractFactory {
 		@Override
 		public void setEditablePart(Part part) {
 			this.part = part;
+		}
+
+		/**
+		 * Set the value to be unmodified
+		 */
+		protected void setUnmodified() {
+			this.modified = false;
 		}
 	}
 

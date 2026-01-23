@@ -523,6 +523,13 @@ public class TagFactory extends AbstractFactory {
 				}
 			}
 		}
+
+		/**
+		 * Set the tag to be unmodified
+		 */
+		protected void setUnmodified() {
+			this.modified = false;
+		}
 	}
 
 	/**
@@ -1863,7 +1870,7 @@ public class TagFactory extends AbstractFactory {
 			};
 
 			if (batchUpdater != null) {
-				batchUpdater.add(INSERT_CONTENTTAG_WO_PARAMS_SQL, INSERT_CONTENTTAG_PARAMS_SQL, Transaction.INSERT_STATEMENT, params, generatedKeyHandler, null, null);
+				batchUpdater.add(INSERT_CONTENTTAG_WO_PARAMS_SQL, INSERT_CONTENTTAG_PARAMS_SQL, Transaction.INSERT_STATEMENT, params, generatedKeyHandler, null, () -> tag.setUnmodified());
 			} else {
 				// insert a new record
 				List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENTTAG_SQL, params);

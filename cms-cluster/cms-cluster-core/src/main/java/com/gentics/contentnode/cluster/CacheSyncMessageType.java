@@ -28,6 +28,14 @@ public enum CacheSyncMessageType {
 	}),
 
 	/**
+	 * Clear the cache for multiple objects
+	 */
+	clearobjects(msg -> {
+		ContentNodeFactory factory = ContentNodeFactory.getInstance();
+		factory.getFactory().clearLocal(msg.getClazz(), msg.getIds());
+	}),
+
+	/**
 	 * Clear the cache for all objects of a type
 	 */
 	cleartype(msg -> {

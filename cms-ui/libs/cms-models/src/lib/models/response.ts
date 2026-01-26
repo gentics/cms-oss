@@ -99,8 +99,13 @@ export interface ResponseMessage {
     isInstantMessage?: boolean;
 }
 
+export interface BackgroundJobResponse extends Response {
+    inBackground: boolean;
+}
+
 /**
  * A response with normalized entities (produced by normalizr) added.
+ * @deprecated Business-Logic models should not be in `cms-models`
  */
 export interface NormalizedResponse extends Response {
     _normalized?: {

@@ -19,7 +19,7 @@ import {
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
 import {
-    addSearchChip, findItem, findList,
+    addSearchChip, expectItemPublished, findItem, findList,
     itemAction, selectNode, setChipOperator, setDateChipValue, setStringChipValue
 } from './helpers';
 
@@ -269,6 +269,8 @@ test.describe('Search', () => {
             await page.waitForTimeout(500); // Allow for notifications to spawn
             await expect(toasts).toHaveCount(1);
             await expect(toasts.locator('.message')).toContainText(publishBody.messages[0].message);
+
+            await expectItemPublished(item)
         })
     });
 

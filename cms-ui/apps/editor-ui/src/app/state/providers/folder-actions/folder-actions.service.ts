@@ -16,7 +16,6 @@ import {
     QueryAssemblerElasticSearchService,
     QueryAssemblerGCMSSearchService,
 } from '@editor-ui/app/shared/providers/query-assembler';
-import { responseMessageToNotification } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
@@ -112,7 +111,6 @@ import {
     TypedItemListResponse,
     folderItemTypePlurals, GcmsPermission, GcmsRolePrivilege, FolderResponse, PermissionResponse,
 } from '@gentics/cms-models';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { normalize, schema } from 'normalizr';

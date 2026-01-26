@@ -1,5 +1,6 @@
 package com.gentics.contentnode.factory.object;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -10,16 +11,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.Vector;
 
 import com.gentics.api.lib.datasource.VersioningDatasource.Version;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
+import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.DB;
 import com.gentics.lib.db.DBHandle;
 import com.gentics.lib.db.ResultProcessor;
+import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.db.SimpleResultProcessor;
 import com.gentics.lib.db.SimpleResultRow;
 import com.gentics.lib.etc.StringUtils;
@@ -35,7 +41,7 @@ public class TableVersion {
 	/**
 	 * Batch size for fetching versioned and current data
 	 */
-	public final static int FETCH_BATCH_SIZE = 500;
+	public final static int FETCH_BATCH_SIZE = 2000;
 
 	/**
 	 * Static store of column names per table
@@ -63,10 +69,16 @@ public class TableVersion {
 	private String columnsList;
 
 	/**
-	 * SQL Statement to insert a new record into the _nodeversion table with existing values
+	 * First part of the SQL Statement to insert a new record into the _nodeversion table with existing values
 	 * if the table does not have nodeversion_autoupdate
 	 */
-	private String insertSQLStatement;
+	private String insertSQLStatementNoParams;
+
+	/**
+	 * Second part of the SQL Statement to insert a new record into the _nodeversion table with existing values
+	 * if the table does not have nodeversion_autoupdate
+	 */
+	private String insertSQLStatementParams;
 
 	/**
 	 * Flag to mark whether the table is supposed to have an auto_increment column (named auto_id)
@@ -77,6 +89,50 @@ public class TableVersion {
 	 * Processor for handling "restore version" operations
 	 */
 	private TableVersionRestoreProcessor restoreProcessor;
+
+	/**
+	 * Restore the version with given timestamp in all the given {@link TableVersion} instances, if at least one has a diff
+	 * @param versions instances
+	 * @param id id
+	 * @param timestamp timestamp to restore
+	 * @throws NodeException
+	 */
+	public static void restoreIfDiff(List<TableVersion> versions, Long id, int timestamp) throws NodeException {
+		restoreIfDiff(versions, new Object[] { id }, timestamp);
+	}
+
+	/**
+	 * Restore the version with given timestamp in all the given {@link TableVersion} instances, if at least one has a diff
+	 * @param versions instances
+	 * @param idParams id parameters
+	 * @param timestamp timestamp to restore
+	 * @throws NodeException
+	 */
+	public static void restoreIfDiff(List<TableVersion> versions, Object[] idParams, int timestamp) throws NodeException {
+		if (hasDiff(versions, idParams, timestamp, -1)) {
+			for (TableVersion v : versions) {
+				v.restoreVersion(idParams, timestamp);
+			}
+		}
+	}
+
+	/**
+	 * Check if at least one of the {@link TableVersion} instances has a diff between the given timestamps
+	 * @param versions instances
+	 * @param idParams id parameters
+	 * @param timestamp1 first timestamp
+	 * @param timestamp2 second timestamp
+	 * @return true if a diff was found
+	 * @throws NodeException
+	 */
+	public static boolean hasDiff(List<TableVersion> versions, Object[] idParams, int timestamp1, int timestamp2) throws NodeException {
+		for (TableVersion v : versions) {
+			if (!v.getDiff(idParams, timestamp1, timestamp2).isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Create an instance of the TableVersion
@@ -217,9 +273,9 @@ public class TableVersion {
 			columnsList += i.next();
 		}
 
-		insertSQLStatement = "INSERT INTO `" + table + "_nodeversion` (" + columnsList
-				+ ", nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) VALUES ("
-				+ StringUtils.repeat("?", tableColumns.size() + 4, ",") + ")";
+		insertSQLStatementNoParams = "INSERT INTO `%s_nodeversion` (%s, nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) VALUES "
+				.formatted(table, columnsList);
+		insertSQLStatementParams = "(%s)".formatted(StringUtils.repeat("?", tableColumns.size() + 4, ","));
 	}
 
 	/**
@@ -617,6 +673,9 @@ public class TableVersion {
 				}
 			}
 
+			BatchUpdater batchUpdater = new BatchUpdater();
+			Set<Integer> modifiedIds = new HashSet<>();
+			Set<Integer> deletedIds = new HashSet<>();
 			// iterate over the diff
 			for (Diff rowDiff : diff) {
 				switch (rowDiff.diffType) {
@@ -633,8 +692,8 @@ public class TableVersion {
 					insertParams[index++] = 1;
 					insertParams[index++] = 0;
 
-					update("nodeversionlatest = ?", new Object[] {0}, "id = ?", new Object[] {rowDiff.id});
-					DB.update(getHandle(), insertSQLStatement, insertParams);
+					modifiedIds.add(rowDiff.id);
+					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, insertParams, null, null, null);
 					break;
 				}
 				case Diff.DIFFTYPE_DEL: {
@@ -649,12 +708,48 @@ public class TableVersion {
 					deleteParams[index++] = 0;
 					deleteParams[index++] = time;
 
-					update("nodeversionlatest = ?, nodeversionremoved = ?", new Object[] { 0, time }, "id = ?", new Object[] { rowDiff.id });
-					DB.update(getHandle(), insertSQLStatement, deleteParams);
+					deletedIds.add(rowDiff.id);
+					batchUpdater.add(insertSQLStatementNoParams, insertSQLStatementParams, Transaction.INSERT_STATEMENT, deleteParams, null, null, null);
 					break;
 				}
 				}
 			}
+
+			String versionTable = table + "_nodeversion";
+			if (autoIncrement) {
+
+				if (!modifiedIds.isEmpty()) {
+					DBUtils.updateWithPK(versionTable, "auto_id", "nodeversionlatest = ?", new Object[] { 0 },
+							"id IN (%s)".formatted(StringUtils.repeat("?", modifiedIds.size(), ",")),
+							modifiedIds.toArray());
+				}
+				if (!deletedIds.isEmpty()) {
+					DBUtils.updateWithPK(versionTable, "auto_id", "nodeversionlatest = ?, nodeversionremoved = ?",
+							new Object[] { 0, time },
+							"id IN (%s)".formatted(StringUtils.repeat("?", deletedIds.size(), ",")),
+							deletedIds.toArray());
+				}
+			} else {
+				if (!modifiedIds.isEmpty()) {
+					DBUtils.executeMassStatement("UPDATE `%s` SET nodeversionlatest = ? WHERE id IN".formatted(versionTable), modifiedIds, 2, new SQLExecutor() {
+						@Override
+						public void prepareStatement(PreparedStatement stmt) throws SQLException {
+							stmt.setInt(1, 0);
+						}
+					});
+				}
+				if (!deletedIds.isEmpty()) {
+					DBUtils.executeMassStatement("UPDATE `%s` SET nodeversionlatest = ?, nodeversionremoved = ? WHERE id IN".formatted(versionTable), deletedIds, 3, new SQLExecutor() {
+						@Override
+						public void prepareStatement(PreparedStatement stmt) throws SQLException {
+							stmt.setInt(1, 0);
+							stmt.setInt(2, time);
+						}
+					});
+				}
+			}
+
+			batchUpdater.execute();
 
 			return true;
 		} catch (SQLException ex) {
@@ -728,28 +823,15 @@ public class TableVersion {
 	 */
 	public void restoreVersion(Object[] idParams, int time) throws NodeException {
 		try {
-			// get ids of rows to restore
-			String sql = "SELECT gentics_main.id, max(gentics_main.nodeversiontimestamp) nodeversionrtime" + " FROM " + getFromPart()
-					+ " WHERE (nodeversionremoved >" + time + " OR nodeversionremoved = 0) AND nodeversiontimestamp <=" + time + " AND " + getWherePart()
-					+ " GROUP BY id";
-
-			SimpleResultProcessor rowsToRestore = new SimpleResultProcessor();
-			SimpleResultProcessor rsVersions = new SimpleResultProcessor();
-
-			DB.query(getHandle(), sql, idParams, rsVersions);
+			SimpleResultProcessor rowsToRestore = getVersionData(idParams, time);
 
 			if (restoreProcessor != null) {
-				restoreProcessor.preRestore(this, rsVersions);
+				restoreProcessor.preRestore(this, rowsToRestore);
 			}
 
-			for (Iterator<SimpleResultRow> iter = rsVersions.iterator(); iter.hasNext();) {
-				SimpleResultRow row = (SimpleResultRow) iter.next();
-				SimpleResultProcessor data = new SimpleResultProcessor();
+			Set<Integer> idsToDelete = rowsToRestore.asList().stream().map(row -> row.getInt("id")).collect(Collectors.toSet());
 
-				fetchVersionedData(row.getInt("id"), row.getInt("nodeversionrtime"), data, false);
-				rowsToRestore.merge(data);
-				DB.update(getHandle(), "DELETE FROM `" + getTable() + "` WHERE id = ?", new Object[] { row.getInt("id") });
-			}
+			DBUtils.executeMassStatement("DELETE FROM `" + getTable() + "` WHERE id IN ", idsToDelete, 1, null);
 
 			// Although we deleted the rows as we retrieved their data, there may be more rows in the current
 			// version than in the version to be restored, so we have to make a general delete of all rows
@@ -777,7 +859,7 @@ public class TableVersion {
 			insertRowsFromData(rowsToRestore);
 
 			if (restoreProcessor != null) {
-				restoreProcessor.postRestore(this, rsVersions);
+				restoreProcessor.postRestore(this, rowsToRestore);
 			}
 		} catch (SQLException ex) {
 			throw new NodeException("Error while restoring version in table {" + table + "}", ex);
@@ -1042,9 +1124,12 @@ public class TableVersion {
 		List<String> allColumns = getColumns(table);
 		List<Integer> columnTypes = getColumnDataTypes(table);
 
-		String insertSql = "INSERT INTO `" + getTable() + "` (" + makeColumnsSql(allColumns) + ")" + " VALUES (" + makeQuestionMarks(allColumns.size()) + ")";
+		String insertSql = "INSERT INTO `" + getTable() + "` (" + makeColumnsSql(allColumns) + ")" + " VALUES ";
+		String insertSqlParams = "(" + makeQuestionMarks(allColumns.size()) + ")";
 
 		List<Object> params = new ArrayList<Object>();
+
+		BatchUpdater batchUpdater = new BatchUpdater();
 
 		for (Iterator<SimpleResultRow> iter = data.iterator(); iter.hasNext();) {
 			SimpleResultRow row = iter.next();
@@ -1055,8 +1140,11 @@ public class TableVersion {
 
 				params.add(row.getObject(columnName));
 			}
-			DB.update(getHandle(), insertSql, params.toArray(), columnTypes, null, true);
+
+			batchUpdater.add(insertSql, insertSqlParams, Transaction.INSERT_STATEMENT, params.toArray(), null, null, null);
 		}
+
+		batchUpdater.execute();
 	}
 
 	/**

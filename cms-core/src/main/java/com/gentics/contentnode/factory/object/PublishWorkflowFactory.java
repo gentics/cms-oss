@@ -110,12 +110,10 @@ public class PublishWorkflowFactory extends AbstractFactory {
 	 * @see com.gentics.lib.base.factory.BatchObjectFactory#batchLoadObjects(java.lang.Class, java.util.Collection, com.gentics.lib.base.object.NodeObjectInfo)
 	 */
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
-		String idSql = buildIdSql(ids);
-
 		if (PublishWorkflow.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM publishworkflow WHERE id IN " + idSql);
+			return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM publishworkflow WHERE id IN ");
 		} else if (PublishWorkflowStep.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM publishworkflow_step WHERE id IN " + idSql);
+			return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM publishworkflow_step WHERE id IN ");
 		} else {
 			throw new NodeException(getClass() + " cannot generate instance of " + clazz);
 		}

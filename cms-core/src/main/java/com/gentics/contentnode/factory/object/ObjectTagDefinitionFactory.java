@@ -120,12 +120,10 @@ public class ObjectTagDefinitionFactory extends AbstractFactory {
 	public <T extends NodeObject> Collection<T> batchLoadObjects(
 			Class<T> clazz, Collection<Integer> ids,
 			NodeObjectInfo info) throws NodeException {
-		String idSql = buildIdSql(ids);
-
 		if (ObjectTagDefinition.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_OBJTAGDEF_SQL + idSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_OBJTAGDEF_SQL);
 		} else if (ObjectTagDefinitionCategory.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_OBJTAGDEF_CAT_SQL + idSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_OBJTAGDEF_CAT_SQL);
 		} else {
 			return Collections.emptyList();
 		}

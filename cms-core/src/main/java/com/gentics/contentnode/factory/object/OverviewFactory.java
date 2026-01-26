@@ -19,7 +19,11 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeDate;
+import com.gentics.contentnode.etc.Operator;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
@@ -73,10 +77,19 @@ public class OverviewFactory extends AbstractFactory {
 		VersionedSQLParam.ID, VersionedSQLParam.VERSIONTIMESTAMP, VersionedSQLParam.VERSIONTIMESTAMP, VersionedSQLParam.ID};
 
 	/**
+	 * First part of the SQL Statement for inserting a ds
+	 */
+	protected final static String INSERT_DS_WO_PARAMS_SQL = "INSERT INTO ds (templatetag_id, contenttag_id, objtag_id, o_type, is_folder, orderkind, orderway, max_obj, recursion, uuid) VALUES ";
+
+	/**
+	 * Second part of the SQL Statement for inserting a ds
+	 */
+	protected final static String INSERT_DS_PARAMS_SQL = "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+	/**
 	 * SQL Statement for inserting a ds
 	 */
-	protected final static String INSERT_DS_SQL = "INSERT INTO ds (templatetag_id, contenttag_id, objtag_id, o_type, is_folder, orderkind, orderway, max_obj, recursion, uuid) VALUES "
-			+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	protected final static String INSERT_DS_SQL = "%s%s".formatted(INSERT_DS_WO_PARAMS_SQL, INSERT_DS_PARAMS_SQL);
 
 	/**
 	 * SQL Statement for updating a ds
@@ -107,10 +120,19 @@ public class OverviewFactory extends AbstractFactory {
 		VersionedSQLParam.ID, VersionedSQLParam.VERSIONTIMESTAMP, VersionedSQLParam.VERSIONTIMESTAMP, VersionedSQLParam.ID};
 
 	/**
+	 * First part of the SQL Statement for inserting a ds entry
+	 */
+	protected final static String INSERT_DS_OBJ_WO_PARAMS_SQL = "INSERT INTO ds_obj (templatetag_id, contenttag_id, objtag_id, ds_id, o_id, node_id, obj_order, auser, adate) VALUES ";
+
+	/**
+	 * Second part of the SQL Statement for inserting a ds entry
+	 */
+	protected final static String INSERT_DS_OBJ_PARAMS_SQL = "(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+	/**
 	 * SQL Statement for inserting a ds entry
 	 */
-	protected final static String INSERT_DS_OBJ_SQL = "INSERT INTO ds_obj (templatetag_id, contenttag_id, objtag_id, ds_id, o_id, node_id, obj_order, auser, adate) VALUES "
-			+ "(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	protected final static String INSERT_DS_OBJ_SQL = "%s%s".formatted(INSERT_DS_OBJ_WO_PARAMS_SQL, INSERT_DS_OBJ_PARAMS_SQL);
 
 	/**
 	 * SQL Statement for updating a ds entry
@@ -492,7 +514,12 @@ public class OverviewFactory extends AbstractFactory {
 		}
 
 		@Override
-		public boolean save() throws InsufficientPrivilegesException,
+		public boolean save() throws InsufficientPrivilegesException, NodeException {
+			return saveBatch(null, null, null);
+		}
+
+		@Override
+		public boolean saveBatch(BatchUpdater batchUpdater, Operator before, Operator after) throws InsufficientPrivilegesException,
 					NodeException {
 			// first check whether the overview is editable
 			assertEditable();
@@ -503,7 +530,7 @@ public class OverviewFactory extends AbstractFactory {
 
 			// save the overview, if necessary
 			if (isModified) {
-				saveOverviewObject(this);
+				saveOverviewObject(this, batchUpdater, before, after);
 				this.modified = false;
 			}
 
@@ -516,11 +543,8 @@ public class OverviewFactory extends AbstractFactory {
 				entryIdsToRemove.addAll(entryIds);
 			}
 			for (OverviewEntry entry : entries) {
-				// make sure the reference is ok
-				entry.setOverview(this);
-
 				// save the entry
-				isModified |= entry.save();
+				isModified |= entry.saveBatch(batchUpdater, () -> entry.setOverview(this), null);
 
 				// do not remove the entry, which was saved
 				entryIdsToRemove.remove(entry.getId());
@@ -861,7 +885,12 @@ public class OverviewFactory extends AbstractFactory {
 		}
 
 		@Override
-		public boolean save() throws InsufficientPrivilegesException,
+		public boolean save() throws InsufficientPrivilegesException, NodeException {
+			return saveBatch(null, null, null);
+		}
+
+		@Override
+		public boolean saveBatch(BatchUpdater batchUpdater, Operator before, Operator after) throws InsufficientPrivilegesException,
 					NodeException {
 			// first check whether the overview entry is editable
 			assertEditable();
@@ -882,7 +911,7 @@ public class OverviewFactory extends AbstractFactory {
 					aDate = new ContentNodeDate(t.getUnixTimestamp());
 				}
 
-				saveOverviewEntryObject(this);
+				saveOverviewEntryObject(this, batchUpdater, before, after);
 				this.modified = false;
 			}
 
@@ -932,9 +961,9 @@ public class OverviewFactory extends AbstractFactory {
     
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
 		if (Overview.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DS_SQL + buildIdSql(ids));
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DS_SQL);
 		} else if (OverviewEntry.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DS_OBJ_SQL + buildIdSql(ids));
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DS_OBJ_SQL);
 		}
 		return null;
 	}
@@ -1019,93 +1048,142 @@ public class OverviewFactory extends AbstractFactory {
 	/**
 	 * Save the overview to the database
 	 * @param overview overview to save
+	 * @param batchUpdater optional batch updater
+	 * @param before optional before handler
+	 * @param after optional after handler 
 	 * @throws NodeException
 	 */
-	private static void saveOverviewObject(EditableFactoryOverview overview) throws NodeException {
+	private static void saveOverviewObject(EditableFactoryOverview overview, BatchUpdater batchUpdater, Operator before, Operator after) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		boolean isNew = Overview.isEmptyId(overview.getId());
 
-		Object templateTagId = 0;
-		Object contentTagId = 0;
-		Object objTagId = 0;
+		Supplier<Integer> templateTagId = () -> {
+			return overview.containerClass == TemplateTag.class ? overview.containerId : 0;
+		};
+		Supplier<Integer> contentTagId = () -> {
+			return overview.containerClass == ContentTag.class ? overview.containerId : 0;
+		};
+		Supplier<Integer> objTagId = () -> {
+			return overview.containerClass == ObjectTag.class ? overview.containerId : 0;
+		};
 
-		if (overview.containerClass == TemplateTag.class) {
-			templateTagId = overview.containerId;
-		} else if (overview.containerClass == ContentTag.class) {
-			contentTagId = overview.containerId;
-		} else if (overview.containerClass == ObjectTag.class) {
-			objTagId = overview.containerId;
-		}
 		int oType = t.getTType(overview.objClass);
 
 		if (isNew) {
 			assertNewGlobalId(overview);
-			// insert a new record
-			List<Integer> keys = DBUtils.executeInsert(INSERT_DS_SQL,
-					new Object[] {
-				templateTagId, contentTagId, objTagId, oType, overview.selectionType, overview.orderKind, overview.orderWay, overview.maxObjects,
-				overview.recursion, ObjectTransformer.getString(overview.getGlobalId(), "")
-			});
 
-			if (keys.size() == 1) {
-				// set the new page id
-				overview.setId(keys.get(0));
-				synchronizeGlobalId(overview);
+			Supplier<Object[]> paramSupplier = () -> new Object[] { templateTagId.supply(), contentTagId.supply(),
+					objTagId.supply(), oType, overview.selectionType, overview.orderKind, overview.orderWay,
+					overview.maxObjects, overview.recursion, ObjectTransformer.getString(overview.getGlobalId(), "") };
+
+			Consumer<Integer> generatedKeysHandler = key -> {
+				// set the new entry id
+				overview.setId(key);
+				if (batchUpdater != null) {
+					batchUpdater.addObjectToSynchronize(overview);
+				} else {
+					synchronizeGlobalId(overview);
+				}
+			};
+
+			if (batchUpdater != null) {
+				batchUpdater.add(INSERT_DS_WO_PARAMS_SQL, INSERT_DS_PARAMS_SQL, Transaction.INSERT_STATEMENT, paramSupplier, generatedKeysHandler, before, after);
 			} else {
-				throw new NodeException("Error while inserting new overview, could not get the insertion id");
+				if (before != null) {
+					before.operate();
+				}
+				// insert a new record
+				List<Integer> keys = DBUtils.executeInsert(INSERT_DS_SQL, paramSupplier.supply());
+
+				if (keys.size() == 1) {
+					generatedKeysHandler.accept(keys.get(0));
+				} else {
+					throw new NodeException("Error while inserting new overview, could not get the insertion id");
+				}
+
+				if (after != null) {
+					after.operate();
+				}
 			}
 		} else {
+			if (before != null) {
+				before.operate();
+			}
 			DBUtils.executeUpdate(UPDATE_DS_SQL,
-					new Object[] {
-				templateTagId, contentTagId, objTagId, oType, overview.selectionType, overview.orderKind, overview.orderWay, overview.maxObjects,
-				overview.recursion, overview.getId()
-			});
+					new Object[] { templateTagId.supply(), contentTagId.supply(), objTagId.supply(), oType,
+							overview.selectionType, overview.orderKind, overview.orderWay, overview.maxObjects,
+							overview.recursion, overview.getId() });
+			if (after != null) {
+				after.operate();
+			}
 		}
 	}
 
 	/**
 	 * Save the overview entry to the database
 	 * @param entry overview entry to save
+	 * @param batchUpdater optional batch updater
+	 * @param before optional before handler
+	 * @param after optional after handler
 	 * @throws NodeException
 	 */
-	private static void saveOverviewEntryObject(EditableFactoryOverviewEntry entry) throws NodeException {
+	private static void saveOverviewEntryObject(EditableFactoryOverviewEntry entry, BatchUpdater batchUpdater, Operator before, Operator after) throws NodeException {
 		boolean isNew = Overview.isEmptyId(entry.getId());
 
-		Object templateTagId = 0;
-		Object contentTagId = 0;
-		Object objTagId = 0;
-
-		if (entry.containerClass == TemplateTag.class) {
-			templateTagId = entry.containerId;
-		} else if (entry.containerClass == ContentTag.class) {
-			contentTagId = entry.containerId;
-		} else if (entry.containerClass == ObjectTag.class) {
-			objTagId = entry.containerId;
-		}
+		Supplier<Integer> templateTagId = () -> {
+			return entry.containerClass == TemplateTag.class ? entry.containerId : 0;
+		};
+		Supplier<Integer> contentTagId = () -> {
+			return entry.containerClass == ContentTag.class ? entry.containerId : 0;
+		};
+		Supplier<Integer> objTagId = () -> {
+			return entry.containerClass == ObjectTag.class ? entry.containerId : 0;
+		};
 
 		if (isNew) {
-			// insert a new record
-			List<Integer> keys = DBUtils.executeInsert(INSERT_DS_OBJ_SQL, new Object[] {
-				templateTagId, contentTagId, objTagId, entry.dsId, entry.objectId, entry.nodeId, entry.objectOrder, entry.aUserId, entry.aDate.getIntTimestamp()
-			});
+			Supplier<Object[]> paramSupplier = () -> new Object[] { templateTagId.supply(), contentTagId.supply(),
+					objTagId.supply(), entry.dsId, entry.objectId, entry.nodeId, entry.objectOrder, entry.aUserId,
+					entry.aDate.getIntTimestamp() };
 
-			// templatetag_id, contenttag_id, objtag_id, ds_id, o_id, obj_order, adate, auser
-			if (keys.size() == 1) {
-				// set the new page id
-				entry.setId(keys.get(0));
+			Consumer<Integer> generatedKeysHandler = key -> {
+				// set the new entry id
+				entry.setId(key);
+			};
+
+			if (batchUpdater != null) {
+				batchUpdater.add(INSERT_DS_OBJ_WO_PARAMS_SQL, INSERT_DS_OBJ_PARAMS_SQL, Transaction.INSERT_STATEMENT, paramSupplier, generatedKeysHandler, before, after);
 			} else {
-				throw new NodeException("Error while inserting new overview entry, could not get the insertion id");
+				if (before != null) {
+					before.operate();
+				}
+				// insert a new record
+				List<Integer> keys = DBUtils.executeInsert(INSERT_DS_OBJ_SQL, paramSupplier.supply());
+
+				if (keys.size() == 1) {
+					generatedKeysHandler.accept(keys.get(0));
+				} else {
+					throw new NodeException("Error while inserting new overview entry, could not get the insertion id");
+				}
+
+				if (after != null) {
+					after.operate();
+				}
 			}
 		} else {
+			if (before != null) {
+				before.operate();
+			}
 			DBUtils.executeUpdate(UPDATE_DS_OBJ_SQL,
-					new Object[] {
-				templateTagId, contentTagId, objTagId, entry.dsId, entry.objectId, entry.nodeId, entry.objectOrder, entry.aUserId, entry.aDate.getIntTimestamp(),
-				entry.getId()
-			});
+					new Object[] { templateTagId.supply(), contentTagId.supply(), objTagId.supply(), entry.dsId,
+							entry.objectId, entry.nodeId, entry.objectOrder, entry.aUserId,
+							entry.aDate.getIntTimestamp(), entry.getId() });
+			if (after != null) {
+				after.operate();
+			}
 		}
 	}
-    
+
 	@Override
 	public boolean isVersioningSupported(Class<? extends NodeObject> clazz) {
 		return Overview.class.equals(clazz) || OverviewEntry.class.equals(clazz);

@@ -44,6 +44,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
@@ -121,7 +122,6 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.StackResolver;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
-import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
@@ -2945,6 +2945,8 @@ public class PageFactory extends AbstractFactory {
 					page.disinheritDefault, asNewPage ? 0 : page.deleted, asNewPage ? 0 : page.deletedBy, asNewPage ? true : page.pageModified, asNewPage ? -1 : page.getUdate(),
 					asNewPage ? null : page.getGlobalId(), page.unpublisherId, page.unpublishedDate, page.futureUnpublisherId, page.futurePublisherId);
 
+			TransactionManager.getCurrentTransaction().prepareObjectData(Page.class, page.getId());
+
 			if (asNewPage) {
 				editableContent = (EditableFactoryContent) page.getContent().copy();
 
@@ -2978,18 +2980,16 @@ public class PageFactory extends AbstractFactory {
 				// check whether the content is currently locked
 				boolean wasLocked = super.getContent().isLocked();
 
-				try {
-					// get the (editable) content, this will also lock the content, or
-					// fail if the content is already locked by someone else
-					Content content = getContent();
-					if (!wasLocked) {
-						// in case there were some changes on the page or the content, we create a new version
-						// the editor of the version will be the last editor of the page (not the current user)
-						// the timestamp will be the timestamp of the last change on the page or the content (not objecttags, since they are not versioned)
-						int versionTimestamp = Math.max(page.getUdate(), content.getEffectiveUdate());
-						createPageVersion(page, false, page.getEditor().getId(), versionTimestamp);
-					}
-				} finally {}
+				// get the (editable) content, this will also lock the content, or
+				// fail if the content is already locked by someone else
+				Content content = getContent();
+				if (!wasLocked) {
+					// in case there were some changes on the page or the content, we create a new version
+					// the editor of the version will be the last editor of the page (not the current user)
+					// the timestamp will be the timestamp of the last change on the page or the content (not objecttags, since they are not versioned)
+					int versionTimestamp = Math.max(page.getUdate(), content.getEffectiveUdate());
+					createPageVersion(page, false, page.getEditor().getId(), versionTimestamp);
+				}
 			}
 		}
 
@@ -3690,9 +3690,7 @@ public class PageFactory extends AbstractFactory {
 			List<TableVersion> contentIdBasedTableVersions = getContentIdBasedTableVersions(true);
 
 			Object[] idParam = new Object[] {tag.getId()};
-			for (TableVersion version : contentIdBasedTableVersions) {
-				version.restoreVersion(idParam, versionTimestamp);
-			}
+			TableVersion.restoreIfDiff(contentIdBasedTableVersions, idParam, versionTimestamp);
 
 			// dirt the tag cache
 			TransactionManager.getCurrentTransaction().dirtObjectCache(ContentTag.class, tag.getId());
@@ -4031,6 +4029,8 @@ public class PageFactory extends AbstractFactory {
 			if (contentTags == null) {
 				contentTags = loadContentTags();
 				t.putIntoLevel2Cache(this, CONTENTTAGS, contentTags);
+			} else if (tagIds == null) {
+				tagIds = contentTags.values().stream().map(ContentTag::getId).collect(Collectors.toList());
 			}
 			return contentTags;
 		}
@@ -4122,12 +4122,19 @@ public class PageFactory extends AbstractFactory {
 		public void dirtCache() throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
-			final List<Integer> contentTagIds = new Vector<Integer>();
-			final List<Integer> valueIds = new Vector<Integer>();
+			final Set<Integer> contentTagIds = new HashSet<>();
+			final Set<Integer> valueIds = new HashSet<>();
+			final Set<Integer> datasourceIds = new HashSet<>();
+			final Set<Integer> datasourceEntryIds = new HashSet<>();
+			final Set<Integer> overviewIds = new HashSet<>();
+			final Set<Integer> overviewEntryIds = new HashSet<>();
 			final int contentId = ObjectTransformer.getInt(getId(), 0);
 
+			// get the parts of type 32
+			final Set<Integer> datasourcePartsIds = DBUtils.select("SELECT id FROM part WHERE type_id = 32", DBUtils.IDS);
+
 			// we will now select all contenttag and value id's for the page in a single sql statement.
-			DBUtils.executeStatement("SELECT c.id tag_id, v.id value_id FROM contenttag c LEFT JOIN value v ON c.id = v.contenttag_id WHERE c.content_id = ?",
+			DBUtils.executeStatement("SELECT c.id tag_id, v.id value_id, v.value_ref, v.part_id FROM contenttag c LEFT JOIN value v ON c.id = v.contenttag_id WHERE c.content_id = ?",
 					new SQLExecutor() {
 				@Override
 				public void prepareStatement(PreparedStatement stmt) throws SQLException {
@@ -4139,22 +4146,59 @@ public class PageFactory extends AbstractFactory {
 					while (rs.next()) {
 						int contentTagId = rs.getInt("tag_id");
 						int valueId = rs.getInt("value_id");
+						int partId = rs.getInt("part_id");
+						int valueRef = rs.getInt("value_ref");
 
-						if (!contentTagIds.contains(contentTagId)) {
-							contentTagIds.add(contentTagId);
-						}
+						contentTagIds.add(contentTagId);
 						valueIds.add(valueId);
+
+						if (datasourcePartsIds.contains(partId)) {
+							datasourceIds.add(valueRef);
+						}
 					}
 				}
 			});
 
-			// get the tags now, this will make sure that it is not necessary to load the tags in single sql statements
-			t.getObjects(ContentTag.class, contentTagIds);
-			t.getObjects(Value.class, valueIds);
-
-			for (Integer tagId :  contentTagIds) {
-				t.dirtObjectCache(ContentTag.class, tagId, false);
+			// select the datasource entry ids
+			if (!datasourceIds.isEmpty()) {
+				DBUtils.executeMassStatement("SELECT id FROM datasource_value WHERE datasource_id IN ", datasourceIds, 1, new SQLExecutor( ) {
+					@Override
+					public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+						while (rs.next()) {
+							datasourceEntryIds.add(rs.getInt("id"));
+						}
+					}
+				});
 			}
+
+			// select overviews contained in the content tags
+			DBUtils.executeMassStatement("SELECT id FROM ds WHERE contenttag_id IN ", contentTagIds, 1, new SQLExecutor() {
+				@Override
+				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+					while (rs.next()) {
+						overviewIds.add(rs.getInt("id"));
+					}
+				}
+			});
+
+			// select overview entry ids
+			if (!overviewIds.isEmpty()) {
+				DBUtils.executeMassStatement("SELECT id FROM ds_obj WHERE ds_id IN ", overviewIds, 1, new SQLExecutor( ) {
+					@Override
+					public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+						while (rs.next()) {
+							overviewEntryIds.add(rs.getInt("id"));
+						}
+					}
+				});
+			}
+
+			t.clearCache(ContentTag.class, contentTagIds);
+			t.clearCache(Value.class, valueIds);
+			t.clearCache(Datasource.class, datasourceIds);
+			t.clearCache(DatasourceEntry.class, datasourceEntryIds);
+			t.clearCache(Overview.class, overviewIds);
+			t.clearCache(OverviewEntry.class, overviewEntryIds);
 		}
 
 		/* (non-Javadoc)
@@ -4441,15 +4485,18 @@ public class PageFactory extends AbstractFactory {
 			if (tagIds != null) {
 				tagIdsToRemove.addAll(tagIds);
 			}
+			BatchUpdater batchUpdater = new BatchUpdater();
+
 			for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext();) {
 				ContentTag tag = i.next();
 
-				tag.setContentId(getId());
-				isModified |= tag.save();
+				isModified |= tag.saveBatch(batchUpdater, () -> tag.setContentId(getId()), null);
 
 				// do not remove the tag, which was saved
 				tagIdsToRemove.remove(tag.getId());
 			}
+
+			batchUpdater.execute();
 
 			// remove tags which no longer exist
 			if (!tagIdsToRemove.isEmpty()) {
@@ -4788,11 +4835,11 @@ public class PageFactory extends AbstractFactory {
 		if (Page.class.equals(clazz)) {
 			String[] preloadSql = new String[] { "SELECT obj_id AS id, id AS id2 FROM objtag WHERE obj_type = " + Page.TYPE_PAGE + " AND obj_id IN " + idSql };
 
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_PAGE_SQL + idSql, preloadSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_PAGE_SQL, preloadSql);
 		} else if (Content.class.equals(clazz)) {
 			String[] preloadSql = new String[] { "SELECT content_id AS id, id AS id2 FROM contenttag WHERE content_id IN " + idSql };
 
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONTENT_SQL + idSql, preloadSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONTENT_SQL, preloadSql);
 		}
 		return null;
 	}
@@ -5402,7 +5449,7 @@ public class PageFactory extends AbstractFactory {
 						pst.executeUpdate();
 
 						// dirt the cache
-						currentTransaction.dirtObjectCache(Content.class, object.getId());
+						currentTransaction.clearCache(Content.class, object.getId());
 
 						// set the content to be locked
 						setLocked = true;
@@ -5440,7 +5487,7 @@ public class PageFactory extends AbstractFactory {
 					}
 				}
 			} else {
-				currentTransaction.dirtObjectCache(Content.class, object.getId());
+				currentTransaction.clearCache(Content.class, object.getId());
 			}
 
 			return (T) new EditableFactoryContent((FactoryContent) object, info, false);
@@ -5794,7 +5841,7 @@ public class PageFactory extends AbstractFactory {
 
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			TableVersion niceUrlVersion = getAlternateUrlTableVersion();
-			niceUrlVersion.restoreVersion(pageId, versionTimestamp);
+			TableVersion.restoreIfDiff(Arrays.asList(niceUrlVersion), pageId, versionTimestamp);
 		}
 
 		// get the table version instances
@@ -5804,9 +5851,7 @@ public class PageFactory extends AbstractFactory {
 		contentIdBasedTableVersions.forEach(tv -> tv.setRestoreProcessor(restoreProcessor));
 
 		// restore the versions
-		for (TableVersion version : contentIdBasedTableVersions) {
-			version.restoreVersion(contentId, versionTimestamp);
-		}
+		TableVersion.restoreIfDiff(contentIdBasedTableVersions, contentId, versionTimestamp);
 
 		// create a new page version
 		if (createPageVersion(page, false, t.getUserId())) {
@@ -6878,4 +6923,55 @@ public class PageFactory extends AbstractFactory {
 		}
 	}
 
+	@Override
+	public <T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		if (Page.class.equals(clazz)) {
+			List<Page> pages = t.getObjects(Page.class, ids);
+
+			// collect the content IDs
+			Set<Integer> contentIds = pages.stream().map(p -> FactoryPage.class.cast(p)).map(p -> p.contentId)
+					.collect(Collectors.toSet());
+			t.prepareObjectData(Content.class, contentIds);
+		} else if (Content.class.equals(clazz)) {
+			List<Content> contents = t.getObjects(Content.class, ids);
+
+			// collect the content Ids for which the tagIds have not been loaded
+			Set<FactoryContent> contentsWithoutTagIds = contents.stream().map(c -> FactoryContent.class.cast(c))
+					.filter(c -> c.tagIds == null).collect(Collectors.toSet());
+
+			if (!contentsWithoutTagIds.isEmpty()) {
+				Map<Integer, FactoryContent> contentsPerId = contentsWithoutTagIds.stream()
+						.collect(Collectors.toMap(Content::getId, java.util.function.Function.identity()));
+
+				Map<Integer, List<Integer>> tagIdsPerContentId = contentsPerId.keySet().stream()
+						.collect(Collectors.toMap(java.util.function.Function.identity(), id -> new ArrayList<>()));
+
+				DBUtils.executeMassStatement(
+						"SELECT t.id as id, t.content_id as content_id FROM contenttag t"
+								+ " LEFT JOIN construct c ON c.id = t.construct_id"
+								+ " WHERE c.id IS NOT NULL AND t.content_id IN",
+						contentsPerId.keySet(), 1, new SQLExecutor() {
+							public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+								while (rs.next()) {
+									int tagId = rs.getInt("id");
+									int contentId = rs.getInt("content_id");
+									tagIdsPerContentId.computeIfAbsent(contentId, k -> new ArrayList<>()).add(tagId);
+								}
+							};
+						});
+
+				tagIdsPerContentId.forEach((contentId, tagIds) -> {
+					Optional.ofNullable(contentsPerId.get(contentId)).ifPresent(c -> c.tagIds = tagIds);
+				});
+			}
+
+			// collect all tagIds of the contents
+			Set<Integer> tagIds = contents.stream().map(c -> FactoryContent.class.cast(c)).flatMap(c -> c.tagIds.stream())
+					.collect(Collectors.toSet());
+
+			t.prepareObjectData(ContentTag.class, tagIds);
+		}
+	}
 }

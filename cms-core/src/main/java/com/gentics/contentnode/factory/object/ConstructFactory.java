@@ -1466,9 +1466,9 @@ public class ConstructFactory extends AbstractFactory {
 				"SELECT part.construct_id AS id, value.id AS id2 FROM part,value WHERE part.id = value.part_id AND "
 						+ "value.contenttag_id = 0 AND value.templatetag_id = 0 AND value.objtag_id = 0 AND " + "part.construct_id IN " + idSql };
 
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_SQL + idSql, preloadSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_SQL, preloadSql);
 		} else if (ConstructCategory.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_CATEGORY_SQL + idSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_CATEGORY_SQL);
 		} else {
 			return null;
 		}

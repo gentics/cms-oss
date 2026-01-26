@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import com.gentics.api.lib.cache.PortalCache;
 import com.gentics.api.lib.cache.PortalCacheException;
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -595,6 +597,39 @@ public class NodeFactory {
 				String cacheGroupName = normalizeClass(clazz).getName();
 
 				cache.removeFromGroup(cacheGroupName, cacheKey);
+			} catch (PortalCacheException e) {
+				throw new NodeException("Error while clearing the factory caches", e);
+			}
+		}
+	}
+
+	/**
+	 * remove a given object and all its versions from the cache.
+	 * @param clazz class of the nodeobject.
+	 * @param id id of the object to remove.
+	 */
+	public void clear(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException {
+		clearLocal(clazz, ids);
+
+		for (CacheService service : cacheServiceLoader) {
+			service.clear(clazz, ids);
+		}
+	}
+
+	/**
+	 * remove a given object and all its versions from the cache.
+	 * @param clazz class of the nodeobject.
+	 * @param id id of the object to remove.
+	 */
+	public void clearLocal(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException {
+		PortalCache cache = getCache(clazz);
+		if (cache != null && clazz != null && !CollectionUtils.isEmpty(ids)) {
+			try {
+				String cacheGroupName = normalizeClass(clazz).getName();
+				for (Integer id : ids) {
+					Object cacheKey = createCacheKey(clazz, id, -1);
+					cache.removeFromGroup(cacheGroupName, cacheKey);
+				}
 			} catch (PortalCacheException e) {
 				throw new NodeException("Error while clearing the factory caches", e);
 			}

@@ -117,7 +117,7 @@ public class MarkupLanguageFactory extends AbstractFactory {
 
 	@Override
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
-		return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM ml WHERE id IN " + buildIdSql(ids));
+		return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM ml WHERE id IN ");
 	}
 
 	@Override

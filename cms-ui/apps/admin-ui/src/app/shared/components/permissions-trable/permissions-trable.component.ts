@@ -28,6 +28,9 @@ export class PermissionsTrableComponent
     public parentType: AccessControlledType;
 
     @Input()
+    public excludedParentType: AccessControlledType;
+
+    @Input()
     public parentName: string;
 
     @Input()
@@ -84,6 +87,7 @@ export class PermissionsTrableComponent
             group: this.group,
             parentId: this.parentId,
             parentType: this.parentType,
+            excludedParentType: this.excludedParentType,
             parentName: this.parentName,
             parentHasChildren: this.parentHasChildren,
             categorizer: this.categorizer,

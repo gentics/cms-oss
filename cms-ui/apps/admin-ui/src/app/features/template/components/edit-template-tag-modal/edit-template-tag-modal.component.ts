@@ -70,7 +70,7 @@ export class EditTemplateTagModalComponent extends BaseModal<TemplateTag> implem
             },
         }).subscribe(() => {
             this.notification.show({
-                message: 'templateTag.tag_saved',
+                message: 'template_tag.tag_saved',
                 translationParams: {
                     name: tag.name,
                 },
@@ -79,7 +79,7 @@ export class EditTemplateTagModalComponent extends BaseModal<TemplateTag> implem
             this.closeFn(tag);
         }, (err) => {
             this.notification.show({
-                message: 'templateTag.tag_save_error',
+                message: 'template_tag.tag_save_error',
                 translationParams: {
                     name: tag.name,
                 },

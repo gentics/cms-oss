@@ -28,24 +28,24 @@ export class TemplateTagTableComponent
     protected rawColumns: TableColumn<TemplateTagBO>[] = [
         {
             id: 'name',
-            label: 'templateTag.name',
+            label: 'template_tag.name',
             fieldPath: 'name',
             sortable: true,
         },
         {
             id: 'construct',
-            label: 'templateTag.tagType',
+            label: 'template_tag.tagType',
             fieldPath: 'constructId',
         },
         {
             id: 'editableInPage',
-            label: 'templateTag.editableInPage',
+            label: 'template_tag.editableInPage',
             fieldPath: 'editableInPage',
             align: 'center',
         },
         {
             id: 'mandatory',
-            label: 'templateTag.mandatory',
+            label: 'template_tag.mandatory',
             fieldPath: 'mandatory',
             align: 'center',
         },

@@ -32,35 +32,35 @@ export class TemplateTagStatusTableComponent
     protected rawColumns: TableColumn<TagStatusBO>[] = [
         {
             id: 'name',
-            label: 'templateTag.name',
+            label: 'template_tag.name',
             fieldPath: 'name',
         },
         {
             id: 'construct',
-            label: 'templateTag.constructName',
+            label: 'template_tag.constructName',
             fieldPath: 'constructName',
         },
         {
             id: 'inSync',
-            label: 'templateTag.inSync',
+            label: 'template_tag.inSync',
             fieldPath: 'inSync',
             align: 'right',
         },
         {
             id: 'outOfSync',
-            label: 'templateTag.outOfSync',
+            label: 'template_tag.outOfSync',
             fieldPath: 'outOfSync',
             align: 'right',
         },
         {
             id: 'missing',
-            label: 'templateTag.missing',
-            fieldPath: 'templateTag.missing',
+            label: 'template_tag.missing',
+            fieldPath: 'template_tag.missing',
             align: 'right',
         },
         {
             id: 'incompatible',
-            label: 'templateTag.incompatible',
+            label: 'template_tag.incompatible',
             fieldPath: 'incompatible',
             align: 'right',
         },
@@ -186,7 +186,7 @@ export class TemplateTagStatusTableComponent
             await this.entityOperations.synchronizeTags(this.templateId, tags.map((tag) => tag.name), forceSync).toPromise();
         } catch (error) {
             this.notification.show({
-                message: 'templateTag.sync_error',
+                message: 'template_tag.sync_error',
                 type: 'alert',
             });
             return;
@@ -194,7 +194,7 @@ export class TemplateTagStatusTableComponent
 
         if (tags.length === 1) {
             this.notification.show({
-                message: 'templateTag.sync_success_singular',
+                message: 'template_tag.sync_success_singular',
                 translationParams: {
                     name: tags[0].name,
                 },
@@ -202,7 +202,7 @@ export class TemplateTagStatusTableComponent
             });
         } else if (tags.length <= 3) {
             this.notification.show({
-                message: 'templateTag.sync_success_plural',
+                message: 'template_tag.sync_success_plural',
                 translationParams: {
                     names: this.i18n.join(tags.map((tag) => tag.name), {
                         quoted: true,
@@ -213,7 +213,7 @@ export class TemplateTagStatusTableComponent
             });
         } else {
             this.notification.show({
-                message: 'templateTag.sync_success_many',
+                message: 'template_tag.sync_success_many',
                 translationParams: {
                     amount: tags.length,
                 },

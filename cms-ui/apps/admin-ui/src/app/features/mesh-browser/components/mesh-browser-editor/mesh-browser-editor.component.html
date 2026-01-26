@@ -56,7 +56,7 @@
                 </div>
 
                 <div *ngSwitchCase="FieldType.BINARY">
-                    <a [href]="field.value">Download</a>
+                    <a [href]="field.value">{{ 'mesh.download_binary_content' | i18n }}</a>
                 </div>
 
                 <ng-container *ngSwitchCase="FieldType.BOOLEAN">

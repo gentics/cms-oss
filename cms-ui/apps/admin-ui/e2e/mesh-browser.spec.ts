@@ -249,7 +249,7 @@ test.describe('Mesh Browser', () => {
 
             const editor = page.locator('gtx-mesh-browser-editor');
             await editor.waitFor();
-            const binaryContent = editor.locator('div.grid-content[data-id="binarycontent"]');
+            const binaryContent = editor.locator('.grid-content[data-id="binarycontent"]');
 
             await expect(binaryContent.locator('a')).toHaveAttribute('href');
         });

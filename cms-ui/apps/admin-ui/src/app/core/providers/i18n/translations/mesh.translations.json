@@ -830,5 +830,9 @@
     "published_state_changed": {
         "en": "Last modified at: {{ date }}",
         "de": "Geändert am: {{ date }}"
+    },
+    "download_binary_content": {
+        "en": "Download binary content",
+        "de": "Binärdaten herunterladen"
     }
 }

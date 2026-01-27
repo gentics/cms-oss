@@ -418,6 +418,9 @@ export class EntityImporter {
 
     public async setupBinaryFiles(map: Record<string, FixtureFile>): Promise<void> {
         await Promise.all(Object.entries(map).map(([key, fixture]) => {
+            if (this.options?.logImports) {
+                console.log(`Importing binary fixture ${fixture.fixturePath}`);
+            }
             return readFile(fixture.fixturePath).then(buffer => {
                 this.binaryMap[key] = {
                     ...fixture,

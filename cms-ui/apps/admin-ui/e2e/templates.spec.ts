@@ -133,4 +133,21 @@ test.describe('Templates Module', () => {
     });
 
     // TODO: Create a folder assignment variant with multiple templates
+
+    test('should handle object properties',     {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19534',
+        }],
+    }, async ({ page }) => {
+        await test.step('Open properties window', async () => {
+            const tplRow = findTableRowById(page, testTemplate.id);
+
+            await tplRow.locator('.data-column[data-id="name"]').click();
+            const form = page.locator('gtx-template-detail .properties-tabs .tab-link[data-id="general"]');
+            await form.waitFor();
+
+            await expect(form.locator('gtx-textarea[formcontrolname="source"] textarea')).toHaveAttribute('placeholder');
+        });
+    });
 });

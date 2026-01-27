@@ -348,7 +348,7 @@ test.describe('Page Management', () => {
         const toasts = page.locator('gtx-toast');
 
         await page.waitForTimeout(500); // Allow for notifications to spawn
-        await expect(toasts).toHaveCount(1);
+        await expect(toasts.all()).toHaveLength(1);
         await expect(toasts.locator('.message')).toContainText(offlineBody.messages[0].message);
     });
 

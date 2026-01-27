@@ -955,16 +955,16 @@ export class FolderActionsService {
             })).toPromise();
 
             if (type !== 'folder') {
-                const foldersToLoad = new Set<{ id: number, nodeId: number }>();
+                const foldersToLoad: { id: number, nodeId: number }[] = [];
                 const loadedFolders = this.appState.now.entities.folder;
 
                 for (const page of collection) {
                     if (loadedFolders[page.folderId] == null || loadedFolders[page.folderId].permissionsMap == null) {
-                        foldersToLoad.add({id: page.folderId, nodeId: page.masterNodeId});
+                        foldersToLoad.push({id: page.folderId, nodeId: page.masterNodeId});
                     }
                 }
 
-                await forkJoin(Array.from(foldersToLoad)
+                await forkJoin(foldersToLoad
                     .map(folderRef => forkJoin([
                         this.client.folder.get(folderRef.id, {nodeId: folderRef.nodeId}),
                         this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, {nodeId: folderRef.nodeId, map: true})
@@ -3001,7 +3001,10 @@ export class FolderActionsService {
      */
     publishPages(pages: Page[], forceInstantPublish: boolean = false): Promise<{ queued: Page<Normalized>[], published: Page<Normalized>[] }> {
         if (pages.length === 0) {
-            console.warn('publishPages() called without page IDs');
+            this.notification.show({
+                type: 'alert',
+                message: 'message.page_publish_without_ids',
+            });
 
             return Promise.resolve({ queued: [], published: [] });
         }
@@ -3117,7 +3120,10 @@ export class FolderActionsService {
      */
     takePagesOffline(pageIds: number[]): Promise<{ queued: Page[], takenOffline: Page[] }> {
         if (pageIds.length === 0) {
-            console.warn('takePagesOffline() called without page IDs');
+            this.notification.show({
+                type: 'alert',
+                message: 'message.page_take_offline_without_ids',
+            });
 
             return Promise.resolve({ queued: [], takenOffline: [] });
         }

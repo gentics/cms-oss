@@ -669,13 +669,21 @@ public class GroupResourceImpl implements GroupResource {
 	@Path("/{id}/perms")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = UserGroup.TYPE_GROUPADMIN, bit = PermHandler.PERM_VIEW)
-	public TypePermissionList getPerms(@PathParam("id") String id, @QueryParam("parentType") String parentType, @QueryParam("parentId") Integer parentId,
+	public TypePermissionList getPerms(@PathParam("id") String id, @QueryParam("parentType") String parentType, @QueryParam("excludedParentType") @DefaultValue("") String excludedParentType, @QueryParam("parentId") Integer parentId,
 			@QueryParam("channelId") Integer channelId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			UserGroup group = MiscUtils.load(UserGroup.class, id);
 
 			if (StringUtils.isEmpty(parentType)) {
-				TypePermissionList response = getTypePermissionList(group, TypePerms.getRootTypes(), null, null);
+				var rootTypes = TypePerms.getRootTypes();
+
+				if (StringUtils.isNotBlank(excludedParentType)) {
+					var excludedType = getPermType(excludedParentType);
+
+					rootTypes = rootTypes.stream().filter(t -> !t.equals(excludedType)).toList();
+				}
+
+				TypePermissionList response = getTypePermissionList(group, rootTypes, null, null);
 				trx.success();
 				return response;
 			} else {

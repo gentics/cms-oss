@@ -6,29 +6,26 @@
     "tags": ["lib", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/esbuild:esbuild",
-            "outputs": ["{options.outputPath}"],
+            "executor": "@nx/rollup:rollup",
+            "outputs": [
+                "{options.outputPath}"
+            ],
             "defaultConfiguration": "production",
             "options": {
                 "main": "{projectRoot}/src/public-api.ts",
                 "outputPath": "dist/{projectRoot}",
-                "outputFileName": "main.js",
                 "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "platform": "node",
-                "generatePackageJson": true,
-                "format": ["esm", "cjs"],
-                "assets": []
+                "project": "{projectRoot}/package.json",
+                "generateExportsField": true,
+                "format": [
+                    "esm",
+                    "cjs"
+                ]
             },
             "configurations": {
-                "development": {
-                    "minify": false
-                },
-                "production": {
-                    "minify": true
-                },
-                "ci": {
-                    "minify": true
-                }
+                "development": {},
+                "production": {},
+                "ci": {}
             }
         },
         "test": {

@@ -87,7 +87,7 @@ import { GCMSPlaywrightDriver } from './playwright-driver';
 import { getDefaultSystemLogin, wait } from './utils';
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
-    logImports: true,
+    logImports: false,
 }
 
 const GLOBAL_FEATURES = Object.values(Feature);

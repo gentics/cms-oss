@@ -1,5 +1,6 @@
-package com.gentics.contentnode.tests.rendering;
+package com.gentics.contentnode.tests.parttype.handlebars;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.Builder.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,7 +27,9 @@ import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Part;
+import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUrl;
@@ -34,22 +38,19 @@ import com.gentics.contentnode.render.RenderUrl;
  * Test cases for rendering velocity parts
  */
 @RunWith(value = Parameterized.class)
-public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest {
+public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRenderingTest {
 
 	/**
 	 * Tested templates
 	 */
 	public final static String[] TEMPLATES = {
-		"before[#gtx_render(\"text\")]middle[#gtx_render(\"text\")]after",
-		"before[#gtx_render($cms.tag.parts.text)]middle[#gtx_render($cms.tag.parts.text)]after",
-		"before[#gtx_edit(\"text\")]middle[#gtx_render(\"text\")]after",
-		"before[#gtx_render(\"text\")]middle[#gtx_edit(\"text\")]after",
-		"before[#gtx_edit($cms.tag.parts.text)]middle[#gtx_render($cms.tag.parts.text)]after",
-		"before[#gtx_render($cms.tag.parts.text)]middle[#gtx_edit($cms.tag.parts.text)]after",
-		"before[#gtx_edit($cms.page.tags.vtltag.parts.text)]middle[#gtx_render($cms.page.tags.vtltag.parts.text)]after",
-		"before[#gtx_render($cms.page.tags.vtltag.parts.text)]middle[#gtx_edit($cms.page.tags.vtltag.parts.text)]after",
-		"before[#gtx_edit($cms.page.tags.url_construct1)]middle[#gtx_render($cms.page.tags.url_construct1)]after",
-		"before[#gtx_render($cms.page.tags.url_construct1)]middle[#gtx_edit($cms.page.tags.url_construct1)]after",
+		"before[{{{gtx_render cms.tag.parts.text}}}]middle[{{{gtx_render cms.tag.parts.text}}}]after",
+		"before[{{{gtx_edit cms.tag.parts.text}}}]middle[{{{gtx_render cms.tag.parts.text}}}]after",
+		"before[{{{gtx_render cms.tag.parts.text}}}]middle[{{{gtx_edit cms.tag.parts.text}}}]after",
+		"before[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_render cms.page.tags.testtag.parts.text}}}]after",
+		"before[{{{gtx_render cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]after",
+		"before[{{{gtx_edit cms.page.tags.url_construct1}}}]middle[{{{gtx_render cms.page.tags.url_construct1}}}]after",
+		"before[{{{gtx_render cms.page.tags.url_construct1}}}]middle[{{{gtx_edit cms.page.tags.url_construct1}}}]after",
 	};
 
 	/**
@@ -90,7 +91,6 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 	 * Flag to mark whether the template renders the part in edit mode
 	 */
 	protected boolean templateRendersInEditMode;
-
 	/**
 	 * Whether to expect the editable after rendered content, not before
 	 */
@@ -111,12 +111,12 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 	 * @param editMode edit mode
 	 * @param templateIndex template index
 	 */
-	public VelocityRenderingSandboxTest(String editMode, int templateIndex) throws Exception {
+	public HandlebarsRenderingSandboxTest(String editMode, int templateIndex) throws Exception {
 		this.editMode = RenderType.parseEditMode(editMode);
 		this.templateRendersInEditMode = TEMPLATES[templateIndex].contains("gtx_edit");
 		this.editAfterRender = TEMPLATES[templateIndex].indexOf("gtx_edit") > TEMPLATES[templateIndex].indexOf("gtx_render");
 		this.renderWholeTag = TEMPLATES[templateIndex].contains(".") && (TEMPLATES[templateIndex].contains(".tags.") || TEMPLATES[templateIndex].endsWith(".tag")) && !TEMPLATES[templateIndex].contains(".parts.");
-		this.tagContent = TEMPLATES[templateIndex].contains("tags.url_construct") ? "/nowhere/82.html" : "This is the test content";
+		this.tagContent = TEMPLATES[templateIndex].contains("tags.url_construct") ? "/node/pub/dir/test/Test-Page.de.html" : "This is the test content";
 		assertTrue("Given edit mode is unknown", editMode.equals(RenderType.renderEditMode(this.editMode)));
 		updateConstruct(TEMPLATES[templateIndex]);
 	}
@@ -136,49 +136,58 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 			}).doNotSave().build());
 		}).build();
 
-		page = update(page, p -> {
+		testPage = update(testPage, p -> {
 			ContentTag urlsTag = p.getContent().addContentTag(urlConstruct.getId());
-			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(page);
+			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(testPage);
 			getPartType(PageURLPartType.class, urlsTag, "page").setNode(node);
 		}).unlock().build();
-		page = update(page, p -> {
+		testPage = update(testPage, p -> {
 		}).unlock().publish().build();
+	}
+
+	@Before
+	public void reset() throws NodeException {
+		testPage = update(testPage, p -> {
+			ContentTag tag = p.getContentTag(HBS_TAGNAME);
+			tag.getValues().getByKeyname("text")
+					.setValueText("This is the test content");
+		}).as(editor).build();
 	}
 
 	@Test
 	public void testRender() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		operate(creator, t -> {
+			// set the render type
+			RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), editMode, "sid", -1);
+			t.setRenderType(renderType);
+			// set the url factory
+			renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
 
-		// set the render type
-		RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), editMode, "sid", -1);
-		t.setRenderType(renderType);
-		// set the url factory
-		renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
+			RenderResult renderResult = new RenderResult();
+			String content = testPage.render(renderResult);
 
-		RenderResult renderResult = new RenderResult();
-		String content = page.render(renderResult);
+			// strip away the head, which probably was rendered for aloha editor (we don't want to test it, because it contains
+			// JSON and the order of the properties might vary on different systems)
+			Pattern pattern = Pattern.compile("<head>.*</head>", Pattern.DOTALL | Pattern.MULTILINE);
+			content = pattern.matcher(content).replaceAll("");
 
-		// strip away the head, which probably was rendered for aloha editor (we don't want to test it, because it contains
-		// JSON and the order of the properties might vary on different systems)
-		Pattern pattern = Pattern.compile("<head>.*</head>", Pattern.DOTALL | Pattern.MULTILINE);
-		content = pattern.matcher(content).replaceAll("");
-
-		assertEquals("Check rendered content", getExpectedContent(), content);
-		assertEquals("Check render result", "OK", renderResult.getReturnCode());
+			assertEquals("Check rendered content", getExpectedContent(), content);
+			assertEquals("Check render result", "OK", renderResult.getReturnCode());
+		});
 	}
 
 	/**
 	 * Get the expected content
 	 * @return
+	 * @throws NodeException 
 	 * @throws Exception
 	 */
-	protected String getExpectedContent() throws Exception {
-		// prepare data which is rendered into the editable tags
-		String pageId = ObjectTransformer.getString(page.getId(), null);
-		String tagId = ObjectTransformer.getString(page.getContentTag(VTL_TAGNAME).getId(), null);
-		String urlTagId = ObjectTransformer.getString(page.getContentTag("url_construct1").getId(), null);
-		String constructName = page.getContentTag(VTL_TAGNAME).getConstruct().getName().toString();
-		String valueId = ObjectTransformer.getString(page.getContentTag(VTL_TAGNAME).getValues().getByKeyname("text").getId(), null);
+	protected String getExpectedContent() throws NodeException {
+		String pageId = ObjectTransformer.getString(testPage.getId(), null);
+		String tagId = ObjectTransformer.getString(testPage.getContentTag(HBS_TAGNAME).getId(), null);
+		String urlTagId = ObjectTransformer.getString(testPage.getContentTag("url_construct1").getId(), null);
+		String constructName = testPage.getContentTag(HBS_TAGNAME).getConstruct().getName().toString();
+		String valueId = ObjectTransformer.getString(testPage.getContentTag(HBS_TAGNAME).getValues().getByKeyname("text").getId(), null);
 		String expected = null;
 		switch (editMode) {
 		case RenderType.EM_ALOHA:
@@ -194,7 +203,7 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 			} else {
 				editablePart = this.tagContent;
 			}
-			expected = "<div data-gcn-pageid=\"" + pageId + "\" data-gcn-tagid=\"" + tagId + "\" data-gcn-tagname=\"" + VTL_TAGNAME
+			expected = "<div data-gcn-pageid=\"" + pageId + "\" data-gcn-tagid=\"" + tagId + "\" data-gcn-tagname=\"" + HBS_TAGNAME
 					+ "\" data-gcn-i18n-constructname=\"" + constructName
 					+ "\" class=\"aloha-block\" id=\"GENTICS_BLOCK_" + tagId;
 			if (templateRendersInEditMode && editAfterRender) {
@@ -214,5 +223,43 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 			break;
 		}
 		return expected;
+	}
+
+	/**
+	 * Update the construct by setting the handlebars template
+	 * 
+	 * @param hbs
+	 *            template
+	 * @throws Exception
+	 */
+	protected static void updateConstruct(String hbs) throws Exception {
+		testPage = update(testPage, p -> {
+			getPartType(HandlebarsPartType.class, p.getContentTag("testtag"), "hb").setText(hbs);
+		}).at(editTimestamp).as(editor).unlock().build();
+
+		testPage = update(testPage, p -> {
+		}).at(publishTimestamp).as(publisher).unlock().publish().build();
+		handlebarsConstruct = update(handlebarsConstruct, c -> {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			boolean textFound = false;
+			for (Part part : c.getParts()) {
+				if ("text".equals(part.getKeyname())) {
+					textFound = true;
+				}
+			}
+			if (!textFound) {
+				Part textPart = t.createObject(Part.class);
+				textPart.setKeyname("text");
+				textPart.setHidden(true);
+				textPart.setEditable(2);
+				textPart.setName("Text", 1);
+				textPart.setName("Text", 2);
+				textPart.setDefaultValue(t.createObject(Value.class));
+				textPart.getDefaultValue().setValueText("This is the test content");
+				textPart.setPartOrder(3);
+				textPart.setPartTypeId(1);
+				c.getParts().add(textPart);
+			}
+		}).as(editor).unlock().build();
 	}
 }

@@ -107,7 +107,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public selectedCount = 0;
 
     // Data Settings
-    public page = 0;
+    public page = 1;
     public perPage = 10;
     public sortBy;
     public sortOrder = TableSortOrder.ASCENDING;

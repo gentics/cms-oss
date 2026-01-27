@@ -442,7 +442,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
                     [ROUTE_PERMISSIONS_KEY]: [
                         {
-                            type: AccessControlledType.CONSTRUCT_ADMIN,
+                            type: AccessControlledType.CONTENT_STAGING_ADMIN,
                             permissions: [
                                 GcmsPermission.READ,
                             ],

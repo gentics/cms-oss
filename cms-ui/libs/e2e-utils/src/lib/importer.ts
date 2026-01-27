@@ -1033,6 +1033,7 @@ export class EntityImporter {
         await this.cleanupPackages();
         await this.cleanupUsers();
         await this.cleanupGroups();
+        await this.cleanupContentStagingPackages();
     }
 
     private async cleanupScheduleTasks(): Promise<void> {
@@ -1058,6 +1059,13 @@ export class EntityImporter {
         for (const cr of crs) {
             await this.cleanupMeshData(cr);
             await this.client.contentRepository.delete(cr.id).send();
+        }
+    }
+
+    private async cleanupContentStagingPackages(): Promise<void> {
+        const pkgs = (await this.client.contentStaging.list().send()).items;
+        for (const pkg of pkgs) {
+            await this.client.contentStaging.delete(pkg.name).send();
         }
     }
 

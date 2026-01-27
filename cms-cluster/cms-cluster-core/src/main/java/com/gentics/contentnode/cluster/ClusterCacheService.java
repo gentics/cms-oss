@@ -1,5 +1,6 @@
 package com.gentics.contentnode.cluster;
 
+import java.util.Set;
 import java.util.function.Supplier;
 
 import com.gentics.contentnode.cache.CacheService;
@@ -47,6 +48,11 @@ public class ClusterCacheService implements CacheService {
 	@Override
 	public void clear(Class<? extends NodeObject> clazz, Integer id) {
 		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.clearobject).setClazz(clazz).setId(id));
+	}
+
+	@Override
+	public void clear(Class<? extends NodeObject> clazz, Set<Integer> ids) {
+		publishMessage(() -> new CacheSyncMessage().setType(CacheSyncMessageType.clearobjects).setClazz(clazz).setIds(ids));
 	}
 
 	@Override

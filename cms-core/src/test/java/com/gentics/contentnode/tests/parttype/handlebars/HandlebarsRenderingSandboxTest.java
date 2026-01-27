@@ -44,10 +44,7 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 	 * Tested templates
 	 */
 	public final static String[] TEMPLATES = {
-		//"before[{{{gtx_render \"text\"}}}]middle[{{{gtx_render \"text\"}}}]after",
 		"before[{{{gtx_render cms.tag.parts.text}}}]middle[{{{gtx_render cms.tag.parts.text}}}]after",
-		//"before[{{{gtx_edit \"text\"}}}]middle[{{{gtx_render \"text\"}}}]after",
-		//"before[{{{gtx_render \"text\"}}}]middle[{{{gtx_edit \"text\"}}}]after",
 		"before[{{{gtx_edit cms.tag.parts.text}}}]middle[{{{gtx_render cms.tag.parts.text}}}]after",
 		"before[{{{gtx_render cms.tag.parts.text}}}]middle[{{{gtx_edit cms.tag.parts.text}}}]after",
 		"before[{{{gtx_edit cms.page.tags.testtag.parts.text}}}]middle[{{{gtx_render cms.page.tags.testtag.parts.text}}}]after",
@@ -159,30 +156,23 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 
 	@Test
 	public void testRender() throws Exception {
-		operate(() -> {
-			String sessionToken = testContext.getContext().login("node", "node");
-			TransactionManager.getCurrentTransaction().commit();
-			Transaction t = testContext.getContext().getContentNodeFactory().startTransaction(sessionToken, true);
-			try {
-				// set the render type
-				RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), editMode, "sid", -1);
-				t.setRenderType(renderType);
-				// set the url factory
-				renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
+		operate(creator, t -> {
+			// set the render type
+			RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), editMode, "sid", -1);
+			t.setRenderType(renderType);
+			// set the url factory
+			renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
 
-				RenderResult renderResult = new RenderResult();
-				String content = testPage.render(renderResult);
+			RenderResult renderResult = new RenderResult();
+			String content = testPage.render(renderResult);
 
-				// strip away the head, which probably was rendered for aloha editor (we don't want to test it, because it contains
-				// JSON and the order of the properties might vary on different systems)
-				Pattern pattern = Pattern.compile("<head>.*</head>", Pattern.DOTALL | Pattern.MULTILINE);
-				content = pattern.matcher(content).replaceAll("");
+			// strip away the head, which probably was rendered for aloha editor (we don't want to test it, because it contains
+			// JSON and the order of the properties might vary on different systems)
+			Pattern pattern = Pattern.compile("<head>.*</head>", Pattern.DOTALL | Pattern.MULTILINE);
+			content = pattern.matcher(content).replaceAll("");
 
-				assertEquals("Check rendered content", getExpectedContent(), content);
-				assertEquals("Check render result", "OK", renderResult.getReturnCode());
-			} finally {
-				t.commit();
-			}
+			assertEquals("Check rendered content", getExpectedContent(), content);
+			assertEquals("Check render result", "OK", renderResult.getReturnCode());
 		});
 	}
 

@@ -1,4 +1,4 @@
-import { Feature, Variant } from '@gentics/cms-models';
+import {Feature, Response as CMSResponse, Variant} from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     dismissNotifications,
@@ -8,17 +8,20 @@ import {
     IMPORT_TYPE,
     isVariant,
     ITEM_TYPE_FOLDER,
-    ITEM_TYPE_PAGE,
+    ITEM_TYPE_PAGE, LANGUAGE_EN,
     loginWithForm,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
     PageImportData,
-    TestSize,
+    TestSize, waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
-import { addSearchChip, findItem, findList, selectNode, setChipOperator, setDateChipValue, setStringChipValue } from './helpers';
+import {
+    addSearchChip, expectItemPublished, findItem, findList,
+    itemAction, selectNode, setChipOperator, setDateChipValue, setStringChipValue
+} from './helpers';
 
 const FOLDER_TEST_ONE: FolderImportData = {
     [IMPORT_TYPE]: ITEM_TYPE_FOLDER,
@@ -65,6 +68,8 @@ const PAGE_TEST_LONG: PageImportData = {
 
     pageName: 'Finally a page with an even longer and more unreasonable name for testing purposes',
     templateId: BASIC_TEMPLATE_ID,
+
+    language: LANGUAGE_EN,
 };
 
 test.describe('Search', () => {
@@ -231,6 +236,42 @@ test.describe('Search', () => {
             // Should be a max of 44px, i.E. two lines + a bit of buffer
             expect(size.height).toBeLessThanOrEqual(46);
         });
+
+        test('should handle actions on search results correctly', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19117',
+            }],
+        }, async ({ page }) => {
+            const SEARCH_TERM = 'test';
+            const SEARCH_ITEM = IMPORTER.get(PAGE_TEST_LONG);
+
+            await searchInput.fill(SEARCH_TERM);
+            const searchReq = page.waitForResponse(matchRequest('GET', '/rest/folder/getPages/*'));
+            await dismissNotifications(page);
+            await searchButton.click();
+            await searchReq;
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, SEARCH_ITEM.id);
+
+            console.log(item);
+
+            const publishReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${SEARCH_ITEM.id}`, {
+                skipStatus: true,
+            });
+            await itemAction(item, 'publish');
+            const publishRes = await publishReq;
+            const publishBody = await publishRes.json() as CMSResponse;
+
+            const toasts = page.locator('gtx-toast');
+
+            await page.waitForTimeout(500); // Allow for notifications to spawn
+            await expect(toasts).toHaveCount(1);
+            await expect(toasts.locator('.message')).toContainText(publishBody.messages[0].message);
+
+            await expectItemPublished(item)
+        })
     });
 
     // -------------------------------

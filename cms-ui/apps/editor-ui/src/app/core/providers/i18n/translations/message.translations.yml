@@ -139,6 +139,9 @@ page_published_at_queued:
 page_published_at_cleared:
     en: 'Automatic publishing for version {{version}} deactivated'
     de: 'Automatisches Veröffentlichen für Version {{version}} deaktiviert'
+page_publish_without_ids:
+    en: 'No IDs provided for pages to publish'
+    de: 'Keine IDs für zu publizierende Seiten angegeben'
 page_take_offline_at:
     en: 'Automatic taking offline of page activated'
     de: 'Automatisches vom Server nehmen für Seite aktiviert'
@@ -151,6 +154,9 @@ page_take_offline_at_queued:
 page_take_offline_at_cleared:
     en: 'Automatic taking offline of page deactivated'
     de: 'Automatisches vom Server nehmen von Seite deaktiviert'
+page_take_offline_without_ids:
+    en: 'No IDs provided for pages to take offline'
+    de: 'Keine IDs für vom Server zu nehmende Seiten angegeben'
 pages_copied:
     en: '{{count}} pages were copied'
     de: '{{count}} Seiten kopiert'

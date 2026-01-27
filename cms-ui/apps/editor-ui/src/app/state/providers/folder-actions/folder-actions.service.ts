@@ -16,7 +16,6 @@ import {
     QueryAssemblerElasticSearchService,
     QueryAssemblerGCMSSearchService,
 } from '@editor-ui/app/shared/providers/query-assembler';
-import { responseMessageToNotification } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
@@ -110,9 +109,8 @@ import {
     TimeManagement,
     TranslationRequestOptions,
     TypedItemListResponse,
-    folderItemTypePlurals,
+    folderItemTypePlurals, GcmsPermission, GcmsRolePrivilege, FolderResponse, PermissionResponse,
 } from '@gentics/cms-models';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { normalize, schema } from 'normalizr';
@@ -194,6 +192,9 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
+import { responseMessageToNotification } from '@gentics/cms-components';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import {TakePagesOfflineModal} from "@editor-ui/app/shared/components";
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -952,6 +953,29 @@ export class FolderActionsService {
                 total: res.numItems,
                 schema: getNormalizrSchema(type),
             })).toPromise();
+
+            if (type !== 'folder') {
+                const foldersToLoad: { id: number, nodeId: number }[] = [];
+                const loadedFolders = this.appState.now.entities.folder;
+
+                for (const page of collection) {
+                    if (loadedFolders[page.folderId] == null || loadedFolders[page.folderId].permissionsMap == null) {
+                        foldersToLoad.push({id: page.folderId, nodeId: page.masterNodeId});
+                    }
+                }
+
+                await forkJoin(foldersToLoad
+                    .map(folderRef => forkJoin([
+                        this.client.folder.get(folderRef.id, {nodeId: folderRef.nodeId}),
+                        this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, {nodeId: folderRef.nodeId, map: true})
+                    ]).pipe(
+                        switchMap(([folder, perms]: [FolderResponse, PermissionResponse]) => {
+                            folder.folder.permissionsMap = perms.permissionsMap;
+                            return this.appState.dispatch(new ItemFetchingSuccessAction('folder', folder.folder));
+                        })
+                    ))).toPromise();
+            }
+
             await this.appState.dispatch(new AddContentStagingMapAction(res.stagingStatus)).toPromise();
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction(type, error.message)).toPromise();
@@ -2976,6 +3000,15 @@ export class FolderActionsService {
      * @param forceInstantPublish If each page publish should have a dedicated publish request to enforce instant publishing for all of them.
      */
     publishPages(pages: Page[], forceInstantPublish: boolean = false): Promise<{ queued: Page<Normalized>[], published: Page<Normalized>[] }> {
+        if (pages.length === 0) {
+            this.notification.show({
+                type: 'alert',
+                message: 'message.page_publish_without_ids',
+            });
+
+            return Promise.resolve({ queued: [], published: [] });
+        }
+
         const pagesToPublish = pages.filter(page => !page.inherited);
         const inheritedPages = pages.filter(page => page.inherited);
 
@@ -3086,6 +3119,15 @@ export class FolderActionsService {
      * Take a page offline (unpublish).
      */
     takePagesOffline(pageIds: number[]): Promise<{ queued: Page[], takenOffline: Page[] }> {
+        if (pageIds.length === 0) {
+            this.notification.show({
+                type: 'alert',
+                message: 'message.page_take_offline_without_ids',
+            });
+
+            return Promise.resolve({ queued: [], takenOffline: [] });
+        }
+
         this.appState.dispatch(new StartListSavingAction('page'));
 
         const requests: Observable<{ id: number, response: Response, failed: boolean }>[] = pageIds.map(id =>

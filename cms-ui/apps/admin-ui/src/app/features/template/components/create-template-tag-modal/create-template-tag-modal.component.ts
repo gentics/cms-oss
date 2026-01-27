@@ -60,7 +60,7 @@ export class CreateTemplateTagModalComponent extends BaseModal<TemplateTag> impl
             },
         }).subscribe(() => {
             this.notification.show({
-                message: 'templateTag.tag_created',
+                message: 'template_tag.tag_created',
                 translationParams: {
                     name: tag.name,
                 },
@@ -69,7 +69,7 @@ export class CreateTemplateTagModalComponent extends BaseModal<TemplateTag> impl
             this.closeFn(tag);
         }, (err) => {
             this.notification.show({
-                message: 'templateTag.tag_save_error',
+                message: 'template_tag.tag_save_error',
                 translationParams: {
                     name: tag.name,
                 },

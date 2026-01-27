@@ -9,7 +9,8 @@
     [(activeTab)]="activePropertiesTab"
     (change)="tagsChanged($event)"
   ></gtx-properties-manager>
-} @else {
+}
+<ng-template #propertiesForm>
   @if (form) {
     <form class="flex-row row" [formGroup]="form">
       <div class="input-container small-12 medium-6 columns">
@@ -64,5 +65,5 @@
       </div>
     </form>
   }
-}
+</ng-template>
 

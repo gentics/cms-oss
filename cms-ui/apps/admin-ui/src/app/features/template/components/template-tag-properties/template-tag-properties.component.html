@@ -9,7 +9,7 @@
           type="text"
           [required]="true"
           maxlength="50"
-          [label]="('templateTag.name' | gtxI18n) + ' *'"
+          [label]="('template_tag.name' | gtxI18n) + ' *'"
           [placeholder]="'template.name' | gtxI18n"
           (blur)="touchFn()"
           formControlName="name"
@@ -18,8 +18,8 @@
       <div class="input-container small-12 medium-6 columns">
         <gtx-select
           [required]="true"
-          [label]="('templateTag.tagType' | gtxI18n ) + ' *'"
-          [placeholder]="'templateTag.tagType' | gtxI18n"
+          [label]="('template_tag.tagType' | gtxI18n ) + ' *'"
+          [placeholder]="'template_tag.tagType' | gtxI18n"
           (blur)="touchFn()"
           formControlName="constructId"
           >
@@ -33,7 +33,7 @@
       <div class="input-container small-12 medium-12 columns checkbox-container">
         <gtx-checkbox
           [required]="true"
-          [label]="'templateTag.editableInPage' | gtxI18n"
+          [label]="'template_tag.editableInPage' | gtxI18n"
           (blur)="touchFn()"
           formControlName="editableInPage"
         ></gtx-checkbox>
@@ -41,7 +41,7 @@
       <div class="input-container small-12 medium-12 columns checkbox-container">
         <gtx-checkbox
           [required]="true"
-          [label]="'templateTag.mandatory' | gtxI18n"
+          [label]="'template_tag.mandatory' | gtxI18n"
           (blur)="touchFn()"
           formControlName="mandatory"
         ></gtx-checkbox>

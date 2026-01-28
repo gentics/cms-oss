@@ -1233,7 +1233,8 @@
         "published_state_archived": "Archiviert",
         "published_state_draft": "Entwurf",
         "published_state_updated": "Geändert",
-        "published_state_changed": "Geändert am: {{ date }}"
+        "published_state_changed": "Geändert am: {{ date }}",
+        "download_binary_content": "Binärdaten herunterladen"
     },
     "object_property": {
         "objectProperty_plural": "Objekteigenschaften",

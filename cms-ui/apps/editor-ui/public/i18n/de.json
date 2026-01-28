@@ -1108,6 +1108,11 @@
         "wastebin_restored_single": "{{type}} wiederhergestellt",
         "wastebin_restored_multiple": "{{count}} {{type}} wiederhergestellt",
         "wastebin_restore_failed_single": "{{type}} konnte nicht wiederhergestellt werden",
-        "wastebin_restore_failed_multiple": "{{count}} {{type}} konnten nicht wiederhergestellt werden"
+        "wastebin_restore_failed_multiple": "{{count}} {{type}} konnten nicht wiederhergestellt werden",
+        "page_publish_without_ids": "Keine IDs für zu publizierende Seiten angegeben",
+        "page_take_offline_without_ids": "Keine IDs für vom Server zu nehmende Seiten angegeben",
+        "page_loaded_error": "Laden der Seite fehlgeschlagen",
+        "file_loaded_error": "Laden der Datei fehlgeschlagen",
+        "image_loaded_error": "Laden des Bildes fehlgeschlagen"
     }
 }

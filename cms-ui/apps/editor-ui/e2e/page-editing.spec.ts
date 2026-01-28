@@ -12,15 +12,18 @@ import {
     ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
     loginWithForm,
-    matchesPath, matchesUrl,
+    matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    onRequest,
     openContext,
     PAGE_ONE,
     pickSelectValue,
     TestSize,
-    waitForResponseFrom
+    wait,
+    waitForResponseFrom,
+    findNotification,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -29,11 +32,12 @@ import {
     ACTION_FORMAT_QUOTE,
     ACTION_REMOVE_FORMAT,
     ACTION_SIMPLE_FORMAT_MAPPING,
-    AUTH
+    AUTH,
 } from './common';
 import {
     createExternalLink,
     createInternalLink,
+    upsertLink,
     editorAction,
     findAlohaComponent,
     findDynamicDropdown,
@@ -133,7 +137,7 @@ test.describe('Page Editing', () => {
                 // Save and verify request
                 const saveRequest = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
 
-                // TODO: Investigate why we need this timeout/why save isn't executed immediately.
+                // FIXME: Investigate why we need this timeout/why save isn't executed immediately.
                 // Possible reason being angular event bindings.
                 await page.waitForTimeout(2000);
 
@@ -190,7 +194,6 @@ test.describe('Page Editing', () => {
                 });
             });
 
-            // FIXME: Bugged
             test('should display list correctly after closing', {
                 annotation: [{
                     type: 'ticket',
@@ -608,6 +611,53 @@ test.describe('Page Editing', () => {
                 await expect(linkElement).toHaveText(LINK_TEXT);
             });
 
+            test('should show an alert and an inactive modal while IO error on opening a link editor', async ({ page }) => {
+                const TEXT_CONTENT = 'Gen ';
+                const LINK_TEXT = 'ticks';
+                const LINK_ITEM = IMPORTER.get(PAGE_ONE);
+                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL)!;
+                const LINK_TITLE = 'My Link Title';
+                const LINK_TARGET = '_blank';
+                const LINK_ANCHOR = 'test-anchor';
+                const LINK_LANGUAGE = 'en';
+
+                // Type content and select text for link
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                // Select text to make into link
+                expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+                await createInternalLink(page, async repoBrowser => {
+                    await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
+                }, async form => {
+                    await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
+                    await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
+                    await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
+                    await form.locator('[data-slot="lang"] input').fill(LINK_LANGUAGE);
+                });
+
+                // Verify link was created
+                const linkElement = mainEditable.locator('a');
+                await expect(linkElement).toHaveAttribute('href', `/alohapage?real=newview&realid=${LINK_ITEM.id}&nodeid=${ITEM_NODE.id}`);
+                await expect(linkElement).toHaveAttribute('hreflang', LINK_LANGUAGE);
+                await expect(linkElement).toHaveAttribute('target', LINK_TARGET);
+                await expect(linkElement).toHaveAttribute('title', LINK_TITLE);
+                await expect(linkElement).toHaveAttribute('data-gentics-aloha-repository', 'com.gentics.aloha.GCN.Page');
+                await expect(linkElement).toHaveAttribute('data-gcn-target-label', LINK_ITEM.name);
+                await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_ITEM.id}`);
+                await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
+                await expect(linkElement).toHaveText(LINK_TEXT);
+
+                page.route(new RegExp(`\\/rest\\/page\\/load\\/${LINK_ITEM.id}`), (route) => {
+                    route.abort('connectionreset');
+                });
+                await upsertLink(page, async (_form) => {
+                    await expect(findNotification(page)).toBeVisible();
+                    await expect(page.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]')).toHaveAttribute('disabled');
+                }, 'secondary');
+            });
+
             async function createLinkCopyPasteTest(page: Page, handler: () => Promise<void>): Promise<void> {
                 const TEXT_CONTENT = 'Example Link';
                 const TEMPLATE = IMPORTER.get(BASIC_TEMPLATE_ID) as Template;
@@ -948,21 +998,84 @@ test.describe('Page Editing', () => {
                     await expect(blocks.last()).not.toHaveAttribute('id', blockId);
                 });
             });
+
+            test('should render new tag after inserting into editable', async ({page}) => {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                const renderUrl = '/rest/page/renderTag/*';
+                let postedEditableContent = "";
+                page.on('request', request => {
+                    if (request.method() === 'POST' && matchesPath(request.url(), renderUrl)) {
+                        const body = JSON.parse(request.postData());
+                        postedEditableContent = body.tags['content'].properties.text.stringValue;
+                    }
+                });
+                const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
+                const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
+                const dropdown = await openContext(category);
+                await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                const createResponse = await createReq;
+                const createResponseBody = await createResponse.json();
+                const tagName = createResponseBody.tag.name;
+                await renderReq;
+
+                expect(postedEditableContent).toContain(`<node ${tagName}>`);
+            });
         });
+    });
+
+    test('should load edit mode correctly when switching from preview mode', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19297',
+        }]
+    }, async ({ page }) => {
+        // Setup aloha-page listener
+        let calls = 0;
+        page.route((url) => matchesUrl(url, '/alohapage'), async (route) => {
+            if (route.request().method() === 'GET') {
+                calls++;
+                // Delay by 3 seconds to emulate rendering
+                await wait(3_000);
+            }
+            return route.continue();
+        });
+
+        // Open page in preview
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, IMPORTER.get(PAGE_ONE).id);
+        await item.locator('.item-primary .item-name-only').click();
+
+        // Wait for preview to be loaded completely
+        const iframe = page.locator('content-frame iframe.master-frame[loaded="true"]');
+        await iframe.waitFor({ timeout: 60_000 });
+        await iframe.contentFrame().locator('main').waitFor({ timeout: 60_000 });
+
+        // Now open edit-mode and wait for it to load
+        await editorAction(page, 'edit');
+        await iframe.waitFor({ timeout: 60_000 });
+        await iframe.contentFrame().locator('main .container [contenteditable="true"]').waitFor({ timeout: 60_000 });
+
+        expect(calls).toEqual(2);
     });
 
     test('should load constructs correctly when switching to edit mode', {
         annotation: {
-            type: 'issue',
+            type: 'ticket',
             description: 'SUP-17542',
         },
     }, async ({ page }) => {
         // Admin request which shouldn't be used/called
         let adminEndpointCalled = false;
-        page.on('request', (request) => {
-            if (request.method() === 'POST' && matchesPath(request.url(), '/rest/construct')) {
-                adminEndpointCalled = true;
-            }
+        onRequest(page, matchRequest('POST', '/rest/construct'), () => {
+            adminEndpointCalled = true;
         });
 
         // Regular endpoint which should be used
@@ -970,8 +1083,8 @@ test.describe('Page Editing', () => {
             params: {
                 nodeId: IMPORTER.get(NODE_MINIMAL).id.toString(),
                 pageId: IMPORTER.get(PAGE_ONE).id.toString(),
-            }
-        },);
+            },
+        });
 
         // Setup page for editing
         const list = findList(page, ITEM_TYPE_PAGE);

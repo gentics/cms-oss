@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Vector;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Datasource;
@@ -124,18 +125,14 @@ public abstract class SelectPartType extends DatasourcePartType {
 		// do not copy the datasource
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.object.parttype.DatasourcePartType#preSave()
-	 */
-	public boolean preSave() throws NodeException {
+	@Override
+	public boolean preSave(BatchUpdater batchUpdater) throws NodeException {
 		// Datasource is static and will not be saved with the Value
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.object.parttype.AbstractPartType#postSave()
-	 */
-	public boolean postSave() throws NodeException {
+	@Override
+	public boolean postSave(BatchUpdater batchUpdater) throws NodeException {
 		// Datasource is static and will not be saved with the Value
 		return false;
 	}

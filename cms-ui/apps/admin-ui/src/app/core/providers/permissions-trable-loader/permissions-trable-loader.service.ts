@@ -11,6 +11,7 @@ export interface PermissionsTrableLoaderOptions {
     group: Group;
     parentId?: number;
     parentType?: AccessControlledType;
+    excludedParentType?: AccessControlledType;
     channelId?: number;
     parentName?: string;
     parentHasChildren?: boolean;
@@ -47,11 +48,21 @@ export class PermissionsTrableLoaderService extends BaseTrableLoaderService<Perm
                     loadOptions.parentId = options.parentId;
                 }
             }
+
+            if (options.excludedParentType) {
+                loadOptions.excludedParentType = options.excludedParentType;
+            }
+
             if (options.channelId) {
                 loadOptions.channelId = options.channelId;
             }
         } else {
             loadOptions.parentType = parent.type;
+
+            if (options.excludedParentType) {
+                loadOptions.excludedParentType = options.excludedParentType;
+            }
+
             if (parent.id) {
                 loadOptions.parentId = parent.id;
             }

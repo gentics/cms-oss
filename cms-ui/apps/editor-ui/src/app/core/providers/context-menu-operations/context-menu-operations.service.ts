@@ -579,9 +579,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             // Wait half a second to let the server unlock the pages
             await new Promise((resolve) => setTimeout(resolve, 500));
             await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
-            const responsePages: Page[] = response.queued.length > 0 ? response.queued : response.takenOffline;
-            const pageLanguages = responsePages.map((page) => page.language);
-            await this.folderActions.refreshList('page', pageLanguages);
+            const languages = new Set([...response.queued, ...response.takenOffline].map(page => page.language));
+            await this.folderActions.refreshList('page', Array.from(languages));
         } catch (error) {
             this.errorHandler.catch(error);
         }

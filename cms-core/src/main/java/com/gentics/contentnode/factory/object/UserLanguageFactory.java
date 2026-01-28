@@ -280,7 +280,7 @@ public class UserLanguageFactory extends AbstractFactory {
 
 	@Override
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
-		return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM language WHERE id IN " + buildIdSql(ids));
+		return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM language WHERE id IN ");
 	}
 
 	@Override

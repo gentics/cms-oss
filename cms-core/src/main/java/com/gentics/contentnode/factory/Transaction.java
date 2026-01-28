@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -612,6 +613,26 @@ public interface Transaction extends LanguageProvider, PreparedStatementHandler,
 	void dirtObjectCache(Class<? extends NodeObject> clazz, Integer id, boolean atCommit) throws NodeException;
 
 	/**
+	 * Clear the cache for a single object of given class and id
+	 * @param clazz object class
+	 * @param id object id
+	 * @throws NodeException
+	 */
+	default void clearCache(Class<? extends NodeObject> clazz, Integer id) throws NodeException {
+		if (id != null) {
+			clearCache(clazz, Collections.singleton(id));
+		}
+	}
+
+	/**
+	 * Clear the cache for objects of the given class having the given internal ids
+	 * @param clazz object class
+	 * @param ids set of object IDs
+	 * @throws NodeException
+	 */
+	void clearCache(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException;
+
+	/**
 	 * Get the start timestamp of this transaction
 	 * @return start timestamp
 	 */
@@ -977,6 +998,24 @@ public interface Transaction extends LanguageProvider, PreparedStatementHandler,
 	 * @throws NodeException
 	 */
 	<T extends NodeObject> Set<T> prepareVersionedObjects(Class<T> clazz, Class<? extends NodeObject> mainClazz, Map<Integer, Integer> timestamps) throws NodeException;
+
+	/**
+	 * Prepare object data for the given object, including subobjects
+	 * @param <T> type of the object class
+	 * @param clazz object class
+	 * @param id object ID
+	 * @throws NodeException
+	 */
+	<T extends NodeObject> void prepareObjectData(Class<T> clazz, int id) throws NodeException;
+
+	/**
+	 * Prepare object data for the given objects, including subobjects
+	 * @param <T> type of the object class
+	 * @param clazz object class
+	 * @param ids object IDs
+	 * @throws NodeException
+	 */
+	<T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException;
 
 	/**
 	 * Enable/disable capturing statistics

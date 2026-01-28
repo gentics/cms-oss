@@ -1526,6 +1526,11 @@ public final class TransactionManager {
 			}
 		}
 
+		@Override
+		public void clearCache(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException {
+			factoryHandle.getFactory().clear(clazz, ids);
+		}
+
 		/**
 		 * Clears the NodeFactory object cache
 		 *
@@ -2229,6 +2234,22 @@ public final class TransactionManager {
 				return ((BatchObjectFactory) objectFactory).batchLoadVersionedObjects(factoryHandle, clazz, mainClazz, timestamps);
 			} else {
 				return Collections.emptySet();
+			}
+		}
+
+		@Override
+		public <T extends NodeObject> void prepareObjectData(Class<T> clazz, int id) throws NodeException {
+			ObjectFactory objectFactory = factoryHandle.getObjectFactory(clazz);
+			if (objectFactory instanceof BatchObjectFactory batchObjectFactory) {
+				batchObjectFactory.prepareObjectData(clazz, id);
+			}
+		}
+
+		@Override
+		public <T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException {
+			ObjectFactory objectFactory = factoryHandle.getObjectFactory(clazz);
+			if (objectFactory instanceof BatchObjectFactory batchObjectFactory) {
+				batchObjectFactory.prepareObjectData(clazz, ids);
 			}
 		}
 

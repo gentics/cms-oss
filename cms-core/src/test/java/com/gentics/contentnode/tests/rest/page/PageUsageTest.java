@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest.page;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
@@ -32,6 +33,7 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.object.File;
@@ -178,6 +180,18 @@ public class PageUsageTest {
 	@BeforeClass
 	public static void setupOnce() throws NodeException, IOException {
 		testContext.getContext().getTransaction().commit();
+
+		// clean up old overview that reference tags, which do not exist
+		Set<Integer> staleOverviewIds = supply(() -> DBUtils.select(
+				"select ds.id from ds left join contenttag on ds.contenttag_id = contenttag.id where ds.contenttag_id != 0 and contenttag.id is null",
+				DBUtils.IDS));
+		if (!staleOverviewIds.isEmpty()) {
+			operate(() -> DBUtils.executeMassStatement("DELETE FROM ds_obj WHERE ds_id IN", staleOverviewIds, 1, null));
+			operate(() -> DBUtils.executeMassStatement("DELETE FROM ds_obj_nodeversion WHERE ds_id IN", staleOverviewIds, 1, null));
+			operate(() -> DBUtils.executeMassStatement("DELETE FROM ds WHERE id IN", staleOverviewIds, 1, null));
+			operate(() -> DBUtils.executeMassStatement("DELETE FROM ds_nodeversion WHERE id IN", staleOverviewIds, 1, null));
+		}
+
 		node = supply(() -> createNode());
 
 		template = create(Template.class, create -> {

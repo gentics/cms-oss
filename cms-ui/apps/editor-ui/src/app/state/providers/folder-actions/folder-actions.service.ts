@@ -95,7 +95,7 @@ import {
     TimeManagement,
     TranslationRequestOptions,
     TypedItemListResponse,
-    folderItemTypePlurals,
+    folderItemTypePlurals, GcmsPermission, GcmsRolePrivilege, FolderResponse, PermissionResponse,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
@@ -195,6 +195,7 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -951,6 +952,29 @@ export class FolderActionsService {
                 total: res.numItems,
                 schema: getNormalizrSchema(type),
             })).toPromise();
+
+            if (type !== 'folder') {
+                const foldersToLoad: { id: number, nodeId: number }[] = [];
+                const loadedFolders = this.appState.now.entities.folder;
+
+                for (const page of collection) {
+                    if (loadedFolders[page.folderId] == null || loadedFolders[page.folderId].permissionsMap == null) {
+                        foldersToLoad.push({id: page.folderId, nodeId: page.masterNodeId});
+                    }
+                }
+
+                await forkJoin(foldersToLoad
+                    .map(folderRef => forkJoin([
+                        this.client.folder.get(folderRef.id, {nodeId: folderRef.nodeId}),
+                        this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, {nodeId: folderRef.nodeId, map: true})
+                    ]).pipe(
+                        switchMap(([folder, perms]: [FolderResponse, PermissionResponse]) => {
+                            folder.folder.permissionsMap = perms.permissionsMap;
+                            return this.appState.dispatch(new ItemFetchingSuccessAction('folder', folder.folder));
+                        })
+                    ))).toPromise();
+            }
+
             await this.appState.dispatch(new AddContentStagingMapAction(res.stagingStatus)).toPromise();
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction(type, error.message)).toPromise();
@@ -1952,6 +1976,7 @@ export class FolderActionsService {
             .catch((error) => {
                 this.appState.dispatch(new ListSavingErrorAction(type as any, error.message));
                 this.errorHandler.catch(error, { notification: true });
+                throw error;
             });
     }
 
@@ -2986,6 +3011,15 @@ export class FolderActionsService {
      * @param forceInstantPublish If each page publish should have a dedicated publish request to enforce instant publishing for all of them.
      */
     publishPages(pages: Page[], forceInstantPublish: boolean = false): Promise<{ queued: Page<Normalized>[]; published: Page<Normalized>[] }> {
+        if (pages.length === 0) {
+            this.notification.show({
+                type: 'alert',
+                message: 'message.page_publish_without_ids',
+            });
+
+            return Promise.resolve({ queued: [], published: [] });
+        }
+
         const pagesToPublish = pages.filter((page) => !page.inherited);
         const inheritedPages = pages.filter((page) => page.inherited);
 
@@ -3059,8 +3093,6 @@ export class FolderActionsService {
 
                 const published: Page<Normalized>[] = [];
                 const queued: Page<Normalized>[] = [];
-                const type = 'page';
-                let message: string;
 
                 // assign to arrays depending on page permissions
                 for (const page of publishedOrQueuedPages) {
@@ -3095,32 +3127,50 @@ export class FolderActionsService {
     /**
      * Take a page offline (unpublish).
      */
-    takePagesOffline(pageIds: number[]): Promise<any> {
+    takePagesOffline(pageIds: number[]): Promise<{ queued: Page[]; takenOffline: Page[] }> {
+        if (pageIds.length === 0) {
+            this.notification.show({
+                type: 'alert',
+                message: 'message.page_take_offline_without_ids',
+            });
+
+            return Promise.resolve({ queued: [], takenOffline: [] });
+        }
+
         this.appState.dispatch(new StartListSavingAction('page'));
 
-        const requests = pageIds.map((id) =>
+        const requests: Observable<{ id: number; response: Response; failed: boolean }>[] = pageIds.map((id) =>
             this.client.page.takeOffline(id, { at: 0, alllang: false }).pipe(
-                map((response) => ({ id, response, failed: response.responseInfo.responseCode !== ResponseCode.OK })),
-                catchError((error: ApiError) => {
-                    const errorMsg = error && error.message || `Error on taking page offline with id ${id}.`;
+                map((response) => ({
+                    id,
+                    response,
+                    failed: response.responseInfo.responseCode !== ResponseCode.OK,
+                })),
+                catchError((error: GCMSRestClientRequestError) => {
+                    const errorMsg = error?.message || `Error on taking page offline with id ${id}.`;
                     this.appState.dispatch(new ListSavingErrorAction('page', errorMsg));
-                    this.errorHandler.catch(error, { notification: true });
-                    return of(error.response);
+                    this.errorHandler.catch(error, { notification: false });
+                    return of({
+                        id,
+                        response: error.data,
+                        failed: true,
+                    });
                 }),
             ),
         );
+        const nodeId = this.getCurrentNodeId();
         const permissionRequests = pageIds.map((id) =>
-            this.permissions.forItem(id, 'page', id).pipe(
+            this.permissions.forItem(id, 'page', nodeId).pipe(
                 first(),
                 map((permissions) => ({ id, permissions })),
             ),
         );
 
-        return forkJoin([...requests, ...permissionRequests]).pipe(
-            map((allResponses) => {
-                // split responses by type
-                const rawResults = allResponses.slice(0, pageIds.length) as Array<{ id: number; response: Response; failed: boolean }>;
-                const permissions = allResponses.slice(pageIds.length) as Array<{ id: number; permissions: PagePermissions }>;
+        return forkJoin([
+            forkJoin(requests),
+            forkJoin(permissionRequests),
+        ]).pipe(
+            map(([rawResults, permissions]) => {
                 // merge results
                 const results: Array<{
                     id: number;
@@ -3134,11 +3184,23 @@ export class FolderActionsService {
                     };
                 });
 
-                const succeeded = results.filter((r) => !r.failed).map((r) => r.id);
-                const badResponses = results.filter((r) => r.failed);
-                const failed = badResponses.map((r) => r.id);
-                const errorResponse = badResponses.length && badResponses[0].response.responseInfo;
-                const messages = rawResults.map((r) => r.response).flatMap((r) => r.messages);
+                const succeeded = [];
+                const failed = [];
+                let errorResponse: Response['responseInfo'] | null = null;
+                const messages = [];
+
+                for (const singleResult of results) {
+                    messages.push(...singleResult.response.messages);
+                    if (!singleResult.failed) {
+                        succeeded.push(singleResult.id);
+                        continue;
+                    }
+                    failed.push(singleResult.id);
+                    errorResponse ??= singleResult.response.responseInfo;
+                }
+
+                const takenOffline: Page[] = [];
+                const queued: Page[] = [];
 
                 if (failed.length) {
                     this.appState.dispatch(new ListSavingErrorAction('page', errorResponse.responseMessage));
@@ -3162,8 +3224,6 @@ export class FolderActionsService {
                         };
                     }
                     this.appState.dispatch(new UpdateEntitiesAction({ page: pageUpdates }));
-                    const takenOffline: Page[] = [];
-                    const queued: Page[] = [];
 
                     // assign to arrays depending on page permissions
                     for (const page of results) {
@@ -3181,9 +3241,9 @@ export class FolderActionsService {
                             this.notification.show(responseMessageToNotification(msg, { delay: 5000, message: '' }));
                         }
                     }
-
-                    return { queued, takenOffline };
                 }
+
+                return { queued, takenOffline };
             }),
             catchError((error) => {
                 this.appState.dispatch(new ListSavingErrorAction('page', error.message));

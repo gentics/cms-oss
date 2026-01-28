@@ -101,7 +101,7 @@
 
         // !important to overwrite inline styles - is there a better way?
         & > .slideable > .left-panel,
-        & > .slideable > .right-panel {
+        & > .slideable.hasRightPanel > .right-panel {
             min-width: 90% !important;
             max-width: 90% !important;
         }

@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
@@ -55,6 +56,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.msg.NodeMessage;
+import com.gentics.contentnode.object.Content;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
@@ -2536,7 +2538,6 @@ public class MiscUtils {
 		}
 	}
 
-
 	/**
 	 * Get the tags embedded in the given tag.
 	 * @param tags The content tags of the page.
@@ -2585,5 +2586,26 @@ public class MiscUtils {
 		}
 
 		return embeddedTags;
+	}
+
+	/**
+	 * Check whether the given page is locked by another user and throw a {@link ReadOnlyException} if it is.
+	 * @param page page to check
+	 * @throws NodeException
+	 */
+	public static void throwIfLockedByAnotherUser(Page page) throws NodeException {
+		if (page == null) {
+			return;
+		}
+
+		Transaction t = TransactionManager.getCurrentTransaction();
+		SystemUser currentUser = t.getObject(SystemUser.class, t.getUserId());
+
+		Content content = page.getContent();
+		if (content.isLocked() && !Objects.equals(page.getContent().getLockedBy(), currentUser)) {
+			throw new ReadOnlyException(
+					"%s is locked for %s since %s".formatted(page, content.getLockedBy(), content.getLockedSince()),
+					"page.readonly.locked", I18NHelper.getName(page));
+		}
 	}
 }

@@ -45,8 +45,10 @@ export class ErrorHandler {
     /** Emits a list of all caught errors when an error is caught. */
     caughtErrors$: Observable<Error[]>;
 
+    // TODO: Use a WeakSet instead?
     private lastError: Error;
     private lastErrorTime: number;
+    // TODO: Remove, as it's unused. Same for `caughtErrors$`
     private errorList = new BehaviorSubject<Error[]>([]);
 
     constructor(
@@ -56,7 +58,6 @@ export class ErrorHandler {
         private translate: I18nService,
         private notification: I18nNotificationService,
     ) {
-
         this.caughtErrors$ = this.errorList.asObservable();
     }
 
@@ -101,7 +102,7 @@ export class ErrorHandler {
             // debugger;
             if (showNotification) {
                 this.notification.show({
-                    message: error.message || error.toString(),
+                    message: (error.cause as any)?.message || error.message || error.toString(),
                     type: 'alert',
                     delay: 10_000,
                 });

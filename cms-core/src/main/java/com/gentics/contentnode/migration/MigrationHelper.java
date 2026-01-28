@@ -158,7 +158,7 @@ public class MigrationHelper {
 		for (Integer pageId : pageIds) {
 
 			// Get the page for the current id
-			Page page = PageResourceImpl.getPage(String.valueOf(pageId), ObjectPermission.view);
+			Page page = PageResourceImpl.getPage(String.valueOf(pageId), true, ObjectPermission.view);
 			List<Tag> pageTags = new ArrayList<Tag>(page.getTags().values());
 
 			// Add constructs of all page tags to the set

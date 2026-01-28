@@ -59,6 +59,7 @@ test.describe('Dev-Tool Packages Module', () => {
 
             await input.fill(TEST_PACKAGE_NAME);
 
+            // TODO: Fails on jenkins - Check CMS logs once available
             const createReq = page.waitForResponse(matchRequest('PUT', `/rest/devtools/packages/${encodeURIComponent(TEST_PACKAGE_NAME)}`));
             const listReq = page.waitForResponse(matchRequest('GET', '/rest/devtools/packages'));
 

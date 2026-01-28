@@ -1,40 +1,41 @@
 @if (objectProperty) {
-  <table class="full-description">
-    @if (objectProperty.description) {
-      <tr>
-        <td class="popover_title">{{ 'editor.description_label' | gtxI18n }}:</td>
-        <td>{{ objectProperty.description }}</td>
-      </tr>
-    }
-    <tr>
-      <td class="popover_title">{{ 'editor.read_only' | gtxI18n }}:</td>
-      <td>{{ (objectProperty.readOnly ? 'common.no' : 'common.yes') | gtxI18n }}</td>
-    </tr>
-    <tr>
-      <td class="popover_title">{{ 'editor.display_content_label' | gtxI18n }}:</td>
-      <td>{{ (objectProperty.tagType?.visibleInMenu ? 'common.yes' : 'common.no') | gtxI18n }}</td>
-    </tr>
-    <tr>
-      <td class="popover_title">{{ 'editor.required_label' | gtxI18n }}:</td>
-      <td>{{ (objectProperty.required ? 'common.yes' : 'common.no') | gtxI18n }}</td>
-    </tr>
-    @if (objectProperty.name || objectProperty.id) {
-      <tr>
-        <td class="popover_title">{{ 'editor.object_property_label' | gtxI18n }}:</td>
-        @if (objectProperty.name) {
-          <td>({{ objectProperty.name }})<br>
-            @if (objectProperty.id) {
-              <span>ID: {{ objectProperty.id }}</span>
-            }
-          </td>
+    <table class="full-description">
+        @if (objectProperty.description) {
+            <tr>
+                <td class="popover_title">{{ 'editor.description_label' | gtxI18n }}:</td>
+                <td>{{ objectProperty.description }}</td>
+            </tr>
         }
-      </tr>
-    }
-    @if (objectProperty.tagType?.name) {
-      <tr>
-        <td class="popover_title">{{ 'editor.tagtype_name_label' | gtxI18n }}:</td>
-        <td>{{ objectProperty.tagType.name }}</td>
-      </tr>
-    }
-  </table>
+
+        <tr>
+            <td class="popover_title">{{ 'editor.read_only' | gtxI18n }}:</td>
+            <td>{{ (objectProperty.readOnly ? 'common.no' : 'common.yes') | gtxI18n }}</td>
+        </tr>
+
+        <tr>
+            <td class="popover_title">{{ 'editor.required_label' | gtxI18n }}:</td>
+            <td>{{ (objectProperty.required ? 'common.yes' : 'common.no') | gtxI18n }}</td>
+        </tr>
+
+        @if (objectProperty.name || objectProperty.id) {
+            <tr>
+                <td class="popover_title">{{ 'editor.object_property_label' | gtxI18n }}:</td>
+                @if (objectProperty.name) {
+                    <td>({{ objectProperty.name }})
+                        <br>
+                        @if (objectProperty.id) {
+                            <span>ID: {{ objectProperty.id }}</span>
+                        }
+                    </td>
+                }
+            </tr>
+        }
+
+        @if (objectProperty.tagType?.name) {
+            <tr>
+                <td class="popover_title">{{ 'editor.tagtype_name_label' | gtxI18n }}:</td>
+                <td>{{ objectProperty.tagType.name }}</td>
+            </tr>
+        }
+    </table>
 }

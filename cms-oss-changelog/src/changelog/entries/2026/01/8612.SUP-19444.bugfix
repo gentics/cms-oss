@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue when trying to take a page offline, which has a broken ui state. Will also display a more meaningful error message.

@@ -268,6 +268,11 @@ export const FIXTURE_IMAGE_ONE: FixtureFile = {
     type: 'image/jpeg',
 };
 
+export const FIXTURE_FILE_ONE: FixtureFile = {
+    fixturePath: 'fixtures/test-print.pdf',
+    type: 'application/pdf',
+};
+
 /*
  * MINIMAL SETUP
  * ---------------------------------------------------------------- */

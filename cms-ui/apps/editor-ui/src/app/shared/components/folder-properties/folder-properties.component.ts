@@ -18,8 +18,9 @@ import { EditableFolderProps, Feature, Folder, GtxI18nProperty, Language } from 
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, forkJoin, of, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, forkJoin, of, Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ApplicationStateService } from '../../../state';
 
 export enum FolderPropertiesMode {
@@ -39,6 +40,7 @@ const CHARS_ALLOWED_PUB_DIR_SEGMENT = [ '_', '.', '-', '~' ];
 const CHARS_REQUIRE_ESCAPE = new Set([ '\\', '/', '{', '}', '[', ']', '(', ')', '.', '^', '$', '*', '+', '-', '?', '!', '=' ]);
 
 const CONTROLS_I18N: (keyof EditableFolderProps)[] = ['nameI18n', 'descriptionI18n', 'publishDirI18n'];
+const CONTROLS: (keyof EditableFolderProps)[] = ['name', 'description', 'publishDir'];
 
 @Component({
     selector: 'gtx-folder-properties',
@@ -49,7 +51,7 @@ const CONTROLS_I18N: (keyof EditableFolderProps)[] = ['nameI18n', 'descriptionI1
         generateFormProvider(FolderPropertiesComponent),
         generateValidatorProvider(FolderPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class FolderPropertiesComponent
     extends BasePropertiesComponent<EditableFolderProps>
@@ -95,11 +97,16 @@ export class FolderPropertiesComponent
 
     private pubDirPattern: RegExp;
     private parentFolderId$ = new BehaviorSubject<number>(null);
+    /** Behaviour to call whenever a new permission check needs to occur */
+    private permissionCheck = new Subject<void>();
 
     private autocompleteSubscription: Subscription;
 
+	private editAllowed = false;
+
     constructor(
         changeDetector: ChangeDetectorRef,
+        private permissions: PermissionService,
         private appState: ApplicationStateService,
         private client: GCMSRestClientService,
     ) {
@@ -153,6 +160,35 @@ export class FolderPropertiesComponent
             this.autocompletePublishDirectory();
             this.changeDetector.markForCheck();
         }));
+
+        this.subscriptions.push(this.permissionCheck.pipe(
+            filter(() => this.itemId != null && this.nodeId != null),
+		    // Set the control disabled until we know the permissions
+		    tap(() => {
+		        if (this.form) {
+					setControlsEnabled(this.form, CONTROLS, false);
+			        setControlsEnabled(this.form, CONTROLS_I18N, false);
+			        this.changeDetector.markForCheck();
+				}
+		    }),
+		    // Just in case it's getting spammed
+		    debounceTime(50),
+		    switchMap(() => {
+		        return this.permissions.forFolder(this.itemId, this.nodeId).pipe(
+		            map(permission => {
+		                return permission.folder.edit;
+		            }),
+		        );
+		    }),
+		).subscribe(enabled => {
+			this.editAllowed = enabled;
+			if (this.form) {
+				this.configureForm(this.form.value);
+				this.changeDetector.markForCheck();
+			}
+		}));
+
+        this.permissionCheck.next();
     }
 
     override ngOnChanges(changes: SimpleChanges): void {
@@ -171,6 +207,11 @@ export class FolderPropertiesComponent
         super.ngOnDestroy();
         this.clearAutocomplete();
     }
+
+	protected override onValueChange() {
+		super.onValueChange();
+        this.permissionCheck.next();
+	}
 
     protected createForm(): FormGroup {
         const form = new FormGroup<FormProperties<EditableFolderProps>>({
@@ -218,9 +259,10 @@ export class FolderPropertiesComponent
         return form;
     }
 
-    protected configureForm(value: EditableFolderProps, loud?: boolean): void {
+    protected configureForm(_value: EditableFolderProps, loud?: boolean): void {
         const options = { onlySelf: loud, emitEvent: loud };
-        setControlsEnabled(this.form, CONTROLS_I18N, this.mode === FolderPropertiesMode.EDIT, options);
+		setControlsEnabled(this.form, CONTROLS, this.editAllowed || this.mode === FolderPropertiesMode.CREATE, options);
+		setControlsEnabled(this.form, CONTROLS_I18N, this.editAllowed || this.mode === FolderPropertiesMode.CREATE, options);
     }
 
     protected assembleValue(value: EditableFolderProps): EditableFolderProps {

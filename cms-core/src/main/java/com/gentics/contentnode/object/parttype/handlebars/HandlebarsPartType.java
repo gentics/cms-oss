@@ -47,7 +47,26 @@ public class HandlebarsPartType extends TextPartType {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
 		renderType.createCMSResolver();
+		int editMode = renderType.getEditMode();
+		boolean editModeChanged = false;
 		try {
+			// The reason we save and restore the current render result and replace it
+			// temporarily with the given render result, is that when a tag is rendered in
+			// Aloha mode, all nested block tags must be added to the given render result,
+			// so that nested blocks are rendered correctly by the gcn-plugin when a 
+			// tag with nested blocks is reloaded.
+			RenderResult previousRenderResult = t.getRenderResult();
+			t.setRenderResult(result);
+
+			// when edit mode is edit or realedit, switch to preview mode
+			if (editMode == RenderType.EM_ALOHA) {
+				editModeChanged = true;
+				renderType.setEditMode(RenderType.EM_ALOHA_READONLY);
+			}
+			if (editModeChanged) {
+				renderType.setParameter(CMSResolver.ModeResolver.PARAM_OVERWRITE_EDITMODE, Integer.valueOf(editMode));
+			}
+
 			Value value = getValueObject();
 
 			String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
@@ -68,12 +87,24 @@ public class HandlebarsPartType extends TextPartType {
 					.resolver(MapValueResolver.INSTANCE, JavaBeanValueResolver.INSTANCE)
 					.combine("cms", new ResolvableMapWrapper(cmsResolver))
 					.build();
-			return handlebarsTemplate.apply(context);
+			String rendered = handlebarsTemplate.apply(context);
+
+			if (null != previousRenderResult) {
+				t.setRenderResult(previousRenderResult);
+			}
+			return rendered;
 		} catch (NodeException e) {
 			throw e;
 		} catch (Throwable e) {
 			throw new NodeException(e);
 		} finally {
+			// when edit mode was changed, change it back
+			if (editModeChanged) {
+				renderType.setEditMode(editMode);
+				if (editModeChanged) {
+					renderType.setParameter(CMSResolver.ModeResolver.PARAM_OVERWRITE_EDITMODE, null);
+				}
+			}
 			renderType.popCMSResolver();
 		}
 	}

@@ -20,7 +20,6 @@ import { randomId } from '@gentics/ui-core/utils/random-id';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Messages', () => {
 
     const IMPORTER = new EntityImporter();

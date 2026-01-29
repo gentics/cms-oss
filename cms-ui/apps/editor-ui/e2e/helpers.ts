@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { Page as CmsPage } from '@gentics/cms-models';
 import { clickButton, clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, reroute, selectDateInPicker, waitForResponseFrom } from '@gentics/e2e-utils';
-import { expect, Frame, Locator, Page, Response } from '@playwright/test';
+import test, { expect, Frame, Locator, Page, Response } from '@playwright/test';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
 export function findList(page: Page, type: string): Locator {
@@ -23,20 +23,26 @@ export function findRepoBrowserItem(list: Locator, id: string | number): Locator
 }
 
 export async function selectNode(element: Page | Locator, nodeId: number | string): Promise<void> {
-    const context = await openContext(element.locator('node-selector > gtx-dropdown-list'));
-    await context.locator(`.node-selector-list [data-id="${nodeId}"], [data-global-id="${nodeId}"]`).click();
-    // TODO: In rare cases in jenkins, the click doesn't actually navigate to the node/channel.
-    // Therefore add a check here that it actually changed the node
+    await test.step(`Select Node "${nodeId}"`, async () => {
+        const context = await openContext(element.locator('node-selector > gtx-dropdown-list'));
+        await context.locator(`.node-selector-list [data-id="${nodeId}"], [data-global-id="${nodeId}"]`).click();
+        // TODO: In rare cases in jenkins, the click doesn't actually navigate to the node/channel.
+        // Therefore add a check here that it actually changed the node
+    });
 }
 
 export async function itemAction(item: Locator, action: string): Promise<void> {
-    const dropdown = await openContext(item.locator('[data-action="item-context"]'));
-    await dropdown.locator(`[data-action="${action}"]`).click();
+    await test.step(`Perform item action "${action}"`, async () => {
+        const dropdown = await openContext(item.locator('[data-action="item-context"]'));
+        await dropdown.locator(`[data-action="${action}"]`).click();
+    });
 }
 
 export async function listAction(list: Locator, action: string): Promise<void> {
-    const dropdown = await openContext(list.locator('[data-action="open-list-context"]'));
-    await dropdown.locator(`[data-action="${action}"]`).click();
+    await test.step(`Perform list action "${action}"`, async () => {
+        const dropdown = await openContext(list.locator('[data-action="open-list-context"]'));
+        await dropdown.locator(`[data-action="${action}"]`).click();
+    });
 }
 
 export async function findImage(list: Locator, id: string | number): Promise<Locator> {
@@ -51,78 +57,87 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
 }
 
 export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
-    let uploadReq: Promise<Response>;
-
-    if (options?.dragAndDrop) {
-        // First we need to load the files, and read the buffer as base64, since we can't directly send
-        // the file-contents to the window. Inefficient, but the only way I could find to transfer them correctly.
-        const data = files.map(f => {
-            const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
-            return {
-                bufferData: `data:application/octet-stream;base64,${buffer}`,
-                name: f,
-                type: type === 'image' ? 'image/jpeg' : 'text/plain',
-            };
-        });
-
-        // Create the transfer data from the base64 data in the test-window, so we can send it as event.
-        // Also because in the node context, there's no DataTransfer object, as it's DOM only.
-        const dataTransfer = await page.evaluateHandle(async (data) => {
-            const transfer = new DataTransfer();
-            // Put the binaries/Files into the transfer
-            for (const file of Object.values(data)) {
-                const blobData = await fetch(file.bufferData).then((res) => res.blob());
-                transfer.items.add(new File([blobData], file.name, { type: file.type }))
-            }
-            return transfer;
-        }, data);
-
-        uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
-        await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
-    } else {
-        // Filechooser is a lot simpler, as it can handle native files
-        const fileChooserPromise = page.waitForEvent('filechooser');
-        const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
-        await uploadButton.waitFor({ state: 'visible' });
-        await uploadButton.click();
-        const fileChooser = await fileChooserPromise;
-
-        uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
-        await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
-    }
-
-    // Wait for upload to complete and return response
-    const response = await uploadReq;
-    const responseData = await response.json();
-
     const output: Record<string, any> = {};
-    files.forEach(file => {
-        output[file] = responseData.file || responseData.image;
+
+    await test.step(`Uploading ${files.length} ${type[0].toUpperCase()}${type.substring(1)}${files.length !== 1 ? 's' : ''}`, async () => {
+        let uploadReq: Promise<Response>;
+
+        if (options?.dragAndDrop) {
+            // First we need to load the files, and read the buffer as base64, since we can't directly send
+            // the file-contents to the window. Inefficient, but the only way I could find to transfer them correctly.
+            const data = files.map(f => {
+                const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
+                return {
+                    bufferData: `data:application/octet-stream;base64,${buffer}`,
+                    name: f,
+                    type: type === 'image' ? 'image/jpeg' : 'text/plain',
+                };
+            });
+
+            // Create the transfer data from the base64 data in the test-window, so we can send it as event.
+            // Also because in the node context, there's no DataTransfer object, as it's DOM only.
+            const dataTransfer = await page.evaluateHandle(async (data) => {
+                const transfer = new DataTransfer();
+                // Put the binaries/Files into the transfer
+                for (const file of Object.values(data)) {
+                    const blobData = await fetch(file.bufferData).then((res) => res.blob());
+                    transfer.items.add(new File([blobData], file.name, { type: file.type }))
+                }
+                return transfer;
+            }, data);
+
+            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
+            await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
+        } else {
+            // Filechooser is a lot simpler, as it can handle native files
+            const fileChooserPromise = page.waitForEvent('filechooser');
+            const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
+            await uploadButton.waitFor({ state: 'visible' });
+            await uploadButton.click();
+            const fileChooser = await fileChooserPromise;
+
+            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
+            await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
+        }
+
+        // Wait for upload to complete and return response
+        const response = await uploadReq;
+        const responseData = await response.json();
+
+        files.forEach(file => {
+            output[file] = responseData.file || responseData.image;
+        });
     });
+
     return output;
 }
 
 export async function openPropertiesTab(page: Page): Promise<void> {
-    await page.waitForSelector('content-frame .content-frame-container');
-    const tabs = page.locator('content-frame .content-frame-container .properties-tabs');
-    const previewActivated = await tabs.locator('tab-link[data-id="preview"].is-active').count();
-    if (previewActivated > 0) {
-        await tabs.locator('.tab-link[data-id="properties"] a').click();
-    }
-    await tabs.locator('.tab-link[data-id="item-properties"]').click();
+    await test.step('Open properties-tab', async () => {
+        await page.waitForSelector('content-frame .content-frame-container');
+        const tabs = page.locator('content-frame .content-frame-container .properties-tabs');
+        const previewActivated = await tabs.locator('tab-link[data-id="preview"].is-active').count();
+        if (previewActivated > 0) {
+            await tabs.locator('.tab-link[data-id="properties"] a').click();
+        }
+        await tabs.locator('.tab-link[data-id="properties"]').click();
+    });
 }
 
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {
     await openPropertiesTab(page);
-    const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
-    const isExpanded = await group.evaluate(el => el.classList.contains('expanded'));
 
-    if (!isExpanded) {
-        await group.locator('.collapsible-header').click();
-    }
+    await test.step('Open properties editor', async () => {
+        const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
+        const isExpanded = await group.evaluate(el => el.classList.contains('expanded'));
 
-    const tab = group.locator(`.tab-link[data-id="object.${name}"]`);
-    await tab.click();
+        if (!isExpanded) {
+            await group.locator('.collapsible-header').click();
+        }
+
+        const tab = group.locator(`.tab-link[data-id="object.${name}"]`);
+        await tab.click();
+    });
 }
 
 export async function closeObjectPropertyEditor(page: Page, force: boolean = true): Promise<void> {
@@ -202,7 +217,7 @@ export function selectEditorTab(page: Page, id: string): Promise<void> {
     return page.locator(`gtx-page-editor-tabs button[data-id="${id}"]`).click();
 }
 
-export async function upsertLink(page: Page, handler: (form: Locator) => Promise<void>, action: string = 'primary'): Promise<void> {
+export async function upsertLink(page: Page, handler: (form: Locator) => Promise<void>, action: string = 'primary'): Promise<Locator> {
     await selectEditorTab(page, 'formatting');
 
     const linkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button', action: action });
@@ -214,17 +229,18 @@ export async function upsertLink(page: Page, handler: (form: Locator) => Promise
 
     await handler(form);
 
-    await modal.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]').click();
+    return modal;
 }
 
 export async function createExternalLink(
     page: Page,
     formHandler: (form: Locator) => Promise<void>,
 ): Promise<void> {
-    return upsertLink(page, async form => {
+    const modal = await upsertLink(page, async form => {
         // Fill out rest of the form
         await formHandler(form);
     });
+    await clickModalAction(modal, 'confirm');
 }
 
 export async function createInternalLink(
@@ -232,7 +248,7 @@ export async function createInternalLink(
     repoHandler: (repoBrowser: Locator) => Promise<void>,
     formHandler: (form: Locator) => Promise<void>,
 ): Promise<void> {
-    return upsertLink(page, async form => {
+    const modal = await upsertLink(page, async form => {
         // Select internal page
         await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
         const repoBrowser = page.locator('repository-browser');
@@ -242,6 +258,7 @@ export async function createInternalLink(
         // Fill out rest of the form
         await formHandler(form);
     });
+    await clickModalAction(modal, 'confirm');
 }
 
 export function findDynamicDropdown(page: Page, ref: string): Locator {

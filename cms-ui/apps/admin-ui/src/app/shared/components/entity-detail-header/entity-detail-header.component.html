@@ -14,6 +14,7 @@
             flat
             type="primary"
             size="small"
+            data-action="save"
             [disabled]="saveDisabled"
             [gtxActionAllowed]="saveActionAllowedId"
             [aaInstanceId]="saveActionAllowedInstanceId"
@@ -29,6 +30,7 @@
             flat
             type="primary"
             size="small"
+            data-action="cancel"
             (click)="cancelClick.emit()"
         >
             <icon left>close</icon>

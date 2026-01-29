@@ -20,7 +20,6 @@ import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import test, { expect, Locator, Response } from '@playwright/test';
 import { navigateToModule } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Content-Maintenance Module', () => {
 
     const IMPORTER = new EntityImporter();

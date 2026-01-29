@@ -22,7 +22,6 @@ const EXAMPLE_TASK_ONE: ScheduleTaskImportData = {
     command: 'sleep.sh',
 };
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Scheduler Module', () => {
     const IMPORTER = new EntityImporter();
 

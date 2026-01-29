@@ -942,7 +942,7 @@ export class FolderActionsService {
             ).toPromise();
 
             const collectionKey = type === 'image' ? 'files' : `${type}s`;
-            const collection: any[] = (res as any)[collectionKey] || (res as any).items;
+            const collection: { folderId: number; masterNodeId?: number }[] = (res as any)[collectionKey] || (res as any).items;
 
             await this.appState.dispatch(new ListFetchingSuccessAction(type, {
                 fetchAll,
@@ -955,25 +955,32 @@ export class FolderActionsService {
             })).toPromise();
 
             if (type !== 'folder') {
-                const foldersToLoad: { id: number, nodeId: number }[] = [];
+                const foldersToLoad: { id: number, nodeId?: number }[] = [];
                 const loadedFolders = this.appState.now.entities.folder;
 
-                for (const page of collection) {
-                    if (loadedFolders[page.folderId] == null || loadedFolders[page.folderId].permissionsMap == null) {
-                        foldersToLoad.push({id: page.folderId, nodeId: page.masterNodeId});
+                for (const item of collection) {
+                    if (loadedFolders[item.folderId] == null || loadedFolders[item.folderId].permissionsMap == null) {
+                        foldersToLoad.push({ id: item.folderId, nodeId: item.masterNodeId });
                     }
                 }
 
-                await forkJoin(foldersToLoad
-                    .map(folderRef => forkJoin([
-                        this.client.folder.get(folderRef.id, {nodeId: folderRef.nodeId}),
-                        this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, {nodeId: folderRef.nodeId, map: true})
-                    ]).pipe(
+                await forkJoin(foldersToLoad.map(folderRef => {
+                    const options: any = {};
+                    if (folderRef.nodeId) {
+                        options.nodeId = folderRef.nodeId;
+                    }
+
+                    return forkJoin([
+                        this.client.folder.get(folderRef.id, options),
+                        this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, { ...options, map: true })
+                    ])
+                    .pipe(
                         switchMap(([folder, perms]: [FolderResponse, PermissionResponse]) => {
                             folder.folder.permissionsMap = perms.permissionsMap;
                             return this.appState.dispatch(new ItemFetchingSuccessAction('folder', folder.folder));
                         })
-                    ))).toPromise();
+                    );
+                })).toPromise();
             }
 
             await this.appState.dispatch(new AddContentStagingMapAction(res.stagingStatus)).toPromise();
@@ -1217,9 +1224,14 @@ export class FolderActionsService {
     getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>>;
     async getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>> {
         this.appState.dispatch(new StartListFetchingAction(type, undefined, true));
-        const nodeId = options && options.nodeId || this.getCurrentNodeId();
 
-        options = Object.assign({}, options, { nodeId, construct: true });
+        // Create a copy to not modify the original argument/object
+        options = Object.assign({}, options, { construct: true });
+
+        const nodeId = options && options.nodeId || this.getCurrentNodeId();
+        if (nodeId != null) {
+            options.nodeId = nodeId;
+        }
 
         let fetchPromise: Promise<InheritableItem<Raw> | Template<Raw>>;
 

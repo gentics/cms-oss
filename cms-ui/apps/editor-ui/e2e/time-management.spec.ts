@@ -21,7 +21,6 @@ import {
 import {expect, Locator, test} from '@playwright/test';
 import { findItem, findList, itemAction, selectNode } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Time Management', () => {
 
     const IMPORTER = new EntityImporter();

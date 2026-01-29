@@ -15,7 +15,6 @@ import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { navigateToModule } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Dev-Tool Packages Module', () => {
     const IMPORTER = new EntityImporter();
 

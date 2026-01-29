@@ -1167,7 +1167,7 @@ describe('PermissionService', () => {
             expect(perms.create).toBe(true);
         });
 
-        it('returns permissions of the parent folder when called for a folder', () => {
+        it('returns permissions of the specified folder when called for a folder', () => {
 
             const testState: MockAppState = {
                 entities: {
@@ -1200,7 +1200,7 @@ describe('PermissionService', () => {
                     },
                 },
             };
-            testState.entities.folder[PARENTFOLDER].permissionsMap.permissions = {
+            testState.entities.folder[FOLDER].permissionsMap.permissions = {
                 deletefolder: true,
                 updatefolder: false,
             };

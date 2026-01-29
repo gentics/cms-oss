@@ -105,6 +105,12 @@ test.describe('Page Management', () => {
         });
     });
 
+    test.afterEach(async () => {
+        try {
+            await IMPORTER.client.page.update(TEST_PAGE.id, { unlock: true, page: {} }).send();
+        } catch (err) {}
+    });
+
     async function setupWithPermissions(page: Page, permissions: ImportPermissions[]): Promise<void> {
         await test.step('Test User Setup', async () => {
             const TEST_GROUP = cloneWithSymbols(TEST_GROUP_BASE);
@@ -119,7 +125,7 @@ test.describe('Page Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
         });
     }
 
@@ -180,6 +186,7 @@ test.describe('Page Management', () => {
             await itemAction(item, 'properties');
             const form = page.locator('content-frame combined-properties-editor .properties-content gtx-page-properties');
             await form.locator('[formcontrolname="name"] input').fill(CHANGE_PAGE_NAME);
+            // eslint-disable-next-line playwright/no-wait-for-timeout
             await page.waitForTimeout(500); // Have to wait for internals to propagate
 
             await editorAction(page, 'save');
@@ -346,8 +353,9 @@ test.describe('Page Management', () => {
 
         const toasts = page.locator('gtx-toast');
 
+        // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(500); // Allow for notifications to spawn
-        await expect(await toasts.all()).toHaveLength(1);
+        expect(await toasts.all()).toHaveLength(1);
         await expect(toasts.locator('.message')).toContainText(offlineBody.messages[0].message);
     });
 
@@ -387,7 +395,7 @@ test.describe('Page Management', () => {
         const form = page.locator('content-frame combined-properties-editor .properties-content gtx-page-properties');
         await form.locator('[formcontrolname="niceUrl"] input').fill(NICE_URL);
 
-        let errorMessages: string[] = [];
+        const errorMessages: string[] = [];
         page.on('console', (msg) => {
             if (msg.type() === 'error') {
                 errorMessages.push(msg.text());
@@ -403,10 +411,11 @@ test.describe('Page Management', () => {
         const resMessage = resBody.messages[0].message;
 
         // Delay for multiple toasts to appear
+        // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(500);
 
         const toasts = page.locator('gtx-toast');
-        await expect(toasts).toHaveCount(1);
+        expect(await toasts.all()).toHaveLength(1);
         await expect(toasts.locator('.message'))
             .toContainText(resMessage.replace('<br/>', '\n'));
         expect(errorMessages).toHaveLength(1);
@@ -455,9 +464,10 @@ test.describe('Page Management', () => {
         await expectItemPublished(item);
 
         await test.step('Take page offline', async () => {
+            // eslint-disable-next-line playwright/no-conditional-in-test
             if (!successful) {
                 // Mock an error
-                await page.route(url => matchesUrl(url, `/rest/page/takeOffline/${TEST_PAGE.id}`), (route) => {
+                await page.route((url) => matchesUrl(url, `/rest/page/takeOffline/${TEST_PAGE.id}`), (route) => {
                     return route.fulfill({
                         status: 200, // Old endpoint which still returns 200 on failure
                         json: {
@@ -479,6 +489,7 @@ test.describe('Page Management', () => {
             await itemAction(item, 'take-offline');
             const offlineRes = await offlineReq;
             const offlineBody = await offlineRes.json() as CMSResponse;
+            // eslint-disable-next-line playwright/no-conditional-in-test
             toastMessage = successful
                 ? offlineBody.messages[0].message
                 : offlineBody.responseInfo.responseMessage;
@@ -495,10 +506,11 @@ test.describe('Page Management', () => {
 
             await expect(toasts.locator('.message')).toContainText(toastMessage);
 
+            // eslint-disable-next-line playwright/no-conditional-in-test
             if (successful) {
                 await expect(toasts.locator('.gtx-toast')).toContainClass('success');
                 // Item should be updated correctly in the list as well
-            await expectItemOffline(item);
+                await expectItemOffline(item);
             } else {
                 await expect(toasts.locator('.gtx-toast')).toContainClass('alert');
                 // Since an error occurred, page should still be published

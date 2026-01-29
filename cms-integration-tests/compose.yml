@@ -73,7 +73,7 @@ services:
       # Mesh CR Settings
       CR_URL_MESH_CR: http://mesh:8080/example
       CR_USERNAME_MESH_CR: admin
-      CR_PASSWORD_MESH_CR: admin
+      CR_PASSWORD_MESH_CR: mesh_integrationTest#admin
 
       # DB CR Settings
       CR_URL_MARIADB_CR: jdbc:mariadb://mariadb:3306/cr

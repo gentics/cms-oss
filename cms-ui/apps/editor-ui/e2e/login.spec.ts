@@ -88,13 +88,13 @@ test.describe('Login', () => {
         });
 
         test('should be able to login with SSO', async ({ page }) => {
-            await navigateToApp(page);
+            await navigateToApp(page, '/', true);
             await loginWithForm(page, KEYCLOAK_LOGIN);
             await page.locator('project-editor').waitFor();
         });
 
         test('should be able to skip SSO and login directly', async ({ page }) => {
-            await navigateToApp(page, '', true);
+            await navigateToApp(page, '');
             await loginWithForm(page, AUTH.admin);
             await page.locator('project-editor').waitFor();
         });

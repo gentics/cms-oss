@@ -1,6 +1,6 @@
 @if (breadcrumbs) {
   <div class="item-breadcrumbs">
-    @for (breadcrumb of breadcrumbs.id; track breadcrumb) {
+    @for (breadcrumb of breadcrumbs; track breadcrumb.id) {
       @if (linkPaths) {
         <a
             class="item-breadcrumb"

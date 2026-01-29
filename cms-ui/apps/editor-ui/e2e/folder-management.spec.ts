@@ -13,7 +13,7 @@ import {
     navigateToApp,
     NODE_MINIMAL,
     TestSize,
-    UserImportData
+    UserImportData,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Page, test } from '@playwright/test';
@@ -101,7 +101,7 @@ test.describe('Folder Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
         });
     }
 
@@ -109,14 +109,14 @@ test.describe('Folder Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                     { type: GcmsPermission.CREATE, value: true },
                 ],
-            }
+            },
         ]);
 
         const list = findList(page, ITEM_TYPE_FOLDER);
@@ -129,7 +129,7 @@ test.describe('Folder Management', () => {
         await form.locator('[formcontrolname="publishDir"] input').fill(NEW_FOLDER_PATH);
 
         const [response] = await Promise.all([
-            page.waitForResponse(resp => resp.url().includes('/rest/folder/create') && resp.status() === 200),
+            page.waitForResponse((resp) => resp.url().includes('/rest/folder/create') && resp.status() === 200),
             modal.locator('.modal-footer [data-action="confirm"]').click({ force: true }),
         ]);
 
@@ -143,17 +143,17 @@ test.describe('Folder Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                     { type: GcmsPermission.UPDATE_FOLDER, value: true },
                 ],
-            }
+            },
         ]);
 
-        const folder = IMPORTER.get(FOLDER_A)!;
+        const folder = IMPORTER.get(FOLDER_A);
         const list = findList(page, ITEM_TYPE_FOLDER);
         const item = findItem(list, folder.id);
 
@@ -163,6 +163,7 @@ test.describe('Folder Management', () => {
 
         const form = page.locator('content-frame combined-properties-editor .properties-content gtx-folder-properties');
         await form.locator('[formcontrolname="name"] input').fill(CHANGE_FOLDER_NAME);
+        // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(500); // Have to wait for internals to propagate
 
         await editorAction(page, 'save');
@@ -174,7 +175,7 @@ test.describe('Folder Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -193,7 +194,7 @@ test.describe('Folder Management', () => {
             },
         ]);
 
-        const folder = IMPORTER.get(FOLDER_A)!;
+        const folder = IMPORTER.get(FOLDER_A);
         let list = findList(page, ITEM_TYPE_FOLDER);
         let item = findItem(list, folder.id);
 
@@ -218,7 +219,7 @@ test.describe('Folder Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -235,11 +236,11 @@ test.describe('Folder Management', () => {
             },
         ]);
 
-        const folder = IMPORTER.get(FOLDER_A)!;
+        const folder = IMPORTER.get(FOLDER_A);
         const list = findList(page, ITEM_TYPE_FOLDER);
         const item = findItem(list, folder.id);
 
-        await test.step('Folder-Properties are readonly', async() => {
+        await test.step('Folder-Properties are readonly', async () => {
             await itemAction(item, 'properties');
             await expect(page.locator('content-frame gtx-editor-toolbar [data-action="save"] gtx-button button[type=button]'))
                 .toHaveAttribute('disabled');

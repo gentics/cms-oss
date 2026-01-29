@@ -1,5 +1,5 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
-import { Page as CmsPage, PageSaveRequest, Template } from '@gentics/cms-models';
+import { Page as CmsPage, PageSaveRequest, Raw, StringTagPartProperty, Template } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
@@ -615,7 +615,7 @@ test.describe('Page Editing', () => {
                 const TEXT_CONTENT = 'Gen ';
                 const LINK_TEXT = 'ticks';
                 const LINK_ITEM = IMPORTER.get(PAGE_ONE);
-                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL)!;
+                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL);
                 const LINK_TITLE = 'My Link Title';
                 const LINK_TARGET = '_blank';
                 const LINK_ANCHOR = 'test-anchor';
@@ -630,7 +630,7 @@ test.describe('Page Editing', () => {
                 expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
                 await createInternalLink(page, async (repoBrowser) => {
                     await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
-                }, async form => {
+                }, async (form) => {
                     await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
                     await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
                     await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
@@ -649,7 +649,7 @@ test.describe('Page Editing', () => {
                 await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
                 await expect(linkElement).toHaveText(LINK_TEXT);
 
-                page.route(url => matchesUrl(url, `/rest/page/load/${LINK_ITEM.id}`), (route) => {
+                page.route((url) => matchesUrl(url, `/rest/page/load/${LINK_ITEM.id}`), (route) => {
                     route.abort('connectionreset');
                 });
 
@@ -983,7 +983,7 @@ test.describe('Page Editing', () => {
                     const targetImage = blocks.first();
 
                     const blockId = await originImage.getAttribute('id');
-                    const targetRect = await targetImage.evaluate(el => el.getBoundingClientRect());
+                    const targetRect = await targetImage.evaluate((el) => el.getBoundingClientRect());
 
                     await originImage.locator('.aloha-block-handle .gcn-construct-drag-handle').dragTo(targetImage, {
                         targetPosition: {
@@ -1000,7 +1000,8 @@ test.describe('Page Editing', () => {
                 });
             });
 
-            test('should render new tag after inserting into editable', async ({page}) => {
+            // TODO: Investigate why it should be in the request body to begin with
+            test('should render new tag after inserting into editable', async ({ page }) => {
                 // Clear the content
                 await mainEditable.click();
                 await mainEditable.clear();
@@ -1010,23 +1011,17 @@ test.describe('Page Editing', () => {
                 const controls = toolbar.locator('gtx-construct-controls');
                 const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
 
-                const renderUrl = '/rest/page/renderTag/*';
-                let postedEditableContent = "";
-                page.on('request', request => {
-                    if (request.method() === 'POST' && matchesPath(request.url(), renderUrl)) {
-                        const body = JSON.parse(request.postData());
-                        postedEditableContent = body.tags['content'].properties.text.stringValue;
-                    }
-                });
                 const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
-                const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
+                const renderReq = waitForResponseFrom(page, 'POST', '/rest/page/renderTag/*');
                 const dropdown = await openContext(category);
                 await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+
                 const createResponse = await createReq;
                 const createResponseBody = await createResponse.json();
                 const tagName = createResponseBody.tag.name;
-                await renderReq;
 
+                const renderBody = (await renderReq).request().postDataJSON() as CmsPage<Raw>;
+                const postedEditableContent = (renderBody.tags['content'].properties.text as StringTagPartProperty).stringValue;
                 expect(postedEditableContent).toContain(`<node ${tagName}>`);
             });
         });
@@ -1036,7 +1031,7 @@ test.describe('Page Editing', () => {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19297',
-        }]
+        }],
     }, async ({ page }) => {
         // Setup aloha-page listener
         let calls = 0;

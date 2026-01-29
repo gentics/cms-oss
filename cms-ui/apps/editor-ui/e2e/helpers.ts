@@ -129,7 +129,7 @@ export async function openPropertiesTab(page: Page): Promise<void> {
         if (previewActivated > 0) {
             await tabs.locator('.tab-link[data-id="properties"] a').click();
         }
-        await tabs.locator('.tab-link[data-id="properties"]').click();
+        // await tabs.locator('.tab-link[data-id="properties"]').click();
     });
 }
 

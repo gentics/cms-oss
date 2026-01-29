@@ -91,7 +91,7 @@
 		<!-- Mail -->
 		<greenmail.version>2.1.2</greenmail.version>
 		<mail-api.version>2.1.3</mail-api.version>
-		<angus-mail.version>2.0.3</angus-mail.version>
+		<angus-mail.version>2.0.5</angus-mail.version>
 
 		<!-- TODO: integrate generic-testutils -->
 		<generic-testutils.version>1.15.10</generic-testutils.version>

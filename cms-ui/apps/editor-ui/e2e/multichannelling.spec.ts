@@ -47,7 +47,6 @@ import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 import { findItem, findList, getAlohaIFrame, getEditorToolbarContext, itemAction, selectNode, setupHelperWindowFunctions } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Multichannelling', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 

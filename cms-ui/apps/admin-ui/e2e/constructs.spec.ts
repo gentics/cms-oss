@@ -89,7 +89,6 @@ const EXAMPLE_NODE_TWO: NodeImportData = {
     templates: [],
 };
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Constructs Module', () => {
 
     const IMPORTER = new EntityImporter();

@@ -24,6 +24,7 @@ import {
     wait,
     waitForResponseFrom,
     findNotification,
+    matchesPath,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -58,7 +59,6 @@ import {
 
 const CLASS_ACTIVE = 'active';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Page Editing', () => {
     // Mark this suite as slow - Because it is
     // test.slow();
@@ -628,7 +628,7 @@ test.describe('Page Editing', () => {
 
                 // Select text to make into link
                 expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
-                await createInternalLink(page, async repoBrowser => {
+                await createInternalLink(page, async (repoBrowser) => {
                     await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
                 }, async form => {
                     await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
@@ -649,10 +649,11 @@ test.describe('Page Editing', () => {
                 await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
                 await expect(linkElement).toHaveText(LINK_TEXT);
 
-                page.route(new RegExp(`\\/rest\\/page\\/load\\/${LINK_ITEM.id}`), (route) => {
+                page.route(url => matchesUrl(url, `/rest/page/load/${LINK_ITEM.id}`), (route) => {
                     route.abort('connectionreset');
                 });
-                await upsertLink(page, async (_form) => {
+
+                await upsertLink(page, async () => {
                     await expect(findNotification(page)).toBeVisible();
                     await expect(page.locator('.modal-footer [data-action="confirm"] button[data-action="primary"]')).toHaveAttribute('disabled');
                 }, 'secondary');
@@ -778,7 +779,7 @@ test.describe('Page Editing', () => {
                 await expect(mainEditable).toHaveText('Hello from Playwright!');
             });
 
-            // FIXME: Bugged
+            // FIXME: Ticket created, SUP-19576
             test('should be possible to insert a link with a keybind', {
                 annotation: [{
                     type: 'ticket',

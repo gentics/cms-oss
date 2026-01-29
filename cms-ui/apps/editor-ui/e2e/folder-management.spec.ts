@@ -27,7 +27,6 @@ import {
     selectNode,
 } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Folder Management', () => {
 
     const IMPORTER = new EntityImporter();

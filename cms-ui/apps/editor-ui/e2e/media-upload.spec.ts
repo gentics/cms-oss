@@ -23,7 +23,6 @@ import {
     uploadFiles,
 } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Media Upload', () => {
     const IMPORTER = new EntityImporter();
 

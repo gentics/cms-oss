@@ -11,7 +11,6 @@ import {
 import { test } from '@playwright/test';
 import { AUTH } from './common';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
 

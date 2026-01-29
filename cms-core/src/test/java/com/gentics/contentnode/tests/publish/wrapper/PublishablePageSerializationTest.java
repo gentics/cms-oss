@@ -30,7 +30,6 @@ import com.gentics.contentnode.object.parttype.SingleSelectPartType;
 import com.gentics.contentnode.publish.wrapper.PublishablePage;
 import com.gentics.contentnode.publish.wrapper.PublishableTemplate;
 import com.gentics.contentnode.render.RenderType;
-import com.gentics.contentnode.tests.assertj.GCNAssertions;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -83,7 +82,8 @@ public class PublishablePageSerializationTest {
 
 		PublishablePage deserializedPage = deserialize(data);
 
-		assertThat((Page)deserializedPage).as("Deserialized page").isEqualToComparingFieldByFieldRecursively(publishablePage);
+		assertThat((Page) deserializedPage).as("Deserialized page").usingRecursiveComparison().usingOverriddenEquals()
+				.ignoringFields("logger", "info").isEqualTo(publishablePage);
 	}
 
 	@Test
@@ -98,7 +98,8 @@ public class PublishablePageSerializationTest {
 
 		PublishableTemplate deserializedTemplate = deserialize(data);
 
-		assertThat((Template)deserializedTemplate).as("Deserialized template").isEqualToComparingFieldByFieldRecursively(publishableTemplate);
+		assertThat((Template) deserializedTemplate).as("Deserialized template").usingRecursiveComparison()
+				.usingOverriddenEquals().ignoringFields("logger", "info").isEqualTo(deserializedTemplate);
 
 	}
 

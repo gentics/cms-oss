@@ -22,7 +22,6 @@ import {
     uploadFiles,
 } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Media Management', () => {
     const IMPORTER = new EntityImporter();
 
@@ -75,7 +74,7 @@ test.describe('Media Management', () => {
         item = findItem(list, FILE.id);
         await itemAction(item, 'properties');
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await expect(page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
+        await expect(colorSelect.locator('gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
     });
 
     test('should be possible to create a new image and edit the object-properties', async ({ page }) => {
@@ -100,7 +99,7 @@ test.describe('Media Management', () => {
         item = findItem(list, IMAGE.id);
         await itemAction(item, 'properties');
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
-        await expect(page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
+        await expect(colorSelect.locator('gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
     });
 
     test('should display the updated value even after switching object-properties', async ({ page }) => {
@@ -129,7 +128,7 @@ test.describe('Media Management', () => {
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
 
         // Verify the value is still selected
-        const selectedValue = await page.locator('gentics-tag-editor select-tag-property-editor gtx-select .view-value')
+        const selectedValue = await colorSelect.locator('.view-value')
             .getAttribute('data-value');
         expect(selectedValue).toBe(String(COLOR_ID));
     });

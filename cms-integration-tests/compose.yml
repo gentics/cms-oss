@@ -83,8 +83,8 @@ services:
     volumes:
       - ./cms/commands:/cms/scheduler-commands
       - ./cms/conf:/cms/conf
-      - ./cms/packages:/cms/packages
-      - ./cms/logs:/cms/logs
+      - ./cms/packages:/cms/packages:x
+      - ./cms/logs:/cms/logs:x
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/rest/auth/globalprefix"]

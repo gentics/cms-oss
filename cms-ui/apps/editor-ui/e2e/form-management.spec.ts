@@ -20,7 +20,6 @@ import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 

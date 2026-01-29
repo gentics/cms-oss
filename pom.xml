@@ -60,7 +60,7 @@
 		<jjwt.version>0.11.0</jjwt.version>
 		<nimbus-jose-jwt.version>9.37.4</nimbus-jose-jwt.version>
 		<mockito.version>5.0.0</mockito.version>
-		<testcontainers.version>1.21.3</testcontainers.version>
+		<testcontainers.version>1.21.4</testcontainers.version>
 		<jsonpath.version>2.9.0</jsonpath.version>
 		<jsonsmart.version>2.5.2</jsonsmart.version>
 		<log4j.version>2.24.3</log4j.version>
@@ -91,7 +91,7 @@
 		<!-- Mail -->
 		<greenmail.version>2.1.2</greenmail.version>
 		<mail-api.version>2.1.3</mail-api.version>
-		<angus-mail.version>2.0.3</angus-mail.version>
+		<angus-mail.version>2.0.5</angus-mail.version>
 
 		<!-- TODO: integrate generic-testutils -->
 		<generic-testutils.version>1.15.10</generic-testutils.version>
@@ -101,7 +101,7 @@
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 		<mavenRootBuildTimestamp>${maven.build.timestamp}</mavenRootBuildTimestamp>
 		<test.jvm.home>${env.JAVA_HOME}</test.jvm.home>
-		<assertj.version>3.4.1</assertj.version>
+		<assertj.version>3.27.7</assertj.version>
 		<junit5.version>5.8.1</junit5.version>
 		<hsqldb.version>2.7.2</hsqldb.version>
 

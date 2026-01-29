@@ -26,7 +26,6 @@ import {
     selectNode,
 } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Link Checker', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 

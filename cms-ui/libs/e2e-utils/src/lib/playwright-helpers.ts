@@ -1,6 +1,6 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
-import { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
+import test, { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import {
     ATTR_CONTEXT_ID,
     ATTR_MULTIPLE,
@@ -155,31 +155,35 @@ export function waitForKeycloakAuthPage(page: Page): Promise<void> {
 }
 
 export async function navigateToApp(page: Page, path: string = '', withSSO: boolean = false): Promise<void> {
-    if (path.startsWith('/')) {
-        path = path.substring(1);
-    }
+    await test.step(`Navigating to "${path}"`, async () => {
+        if (path.startsWith('/')) {
+            path = path.substring(1);
+        }
 
-    let appPath = process.env[ENV_E2E_APP_PATH];
-    if (appPath === '/') {
-        appPath = '';
-    }
+        let appPath = process.env[ENV_E2E_APP_PATH];
+        if (appPath === '/') {
+            appPath = '';
+        }
 
-    const fullPath = `${appPath}/${!withSSO ? '?skip-sso' : ''}#/${path}`;
-    await page.goto(fullPath);
+        const fullPath = `${appPath}/${!withSSO ? '?skip-sso' : ''}#/${path}`;
+        await page.goto(fullPath);
+    });
 }
 
 export async function loginWithForm(source: Page | Locator, loginData: LoginInformation | UserImportData): Promise<void> {
     const username = (loginData as UserImportData).login ?? (loginData as LoginInformation).username;
 
-    await source.locator('gtx-input[formcontrolname="username"] input:not([disabled]), input[name="username"]')
-        .first()
-        .fill(username);
-    await source.locator('gtx-input[formcontrolname="password"] input:not([disabled]), input[name="password"]')
-        .first()
-        .fill(loginData.password);
-    await source.locator('button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled])')
-        .first()
-        .click();
+    await test.step(`Logging in as "${username}"`, async () => {
+        await source.locator('gtx-input[formcontrolname="username"] input:not([disabled]), input[name="username"]')
+            .first()
+            .fill(username);
+        await source.locator('gtx-input[formcontrolname="password"] input:not([disabled]), input[name="password"]')
+            .first()
+            .fill(loginData.password);
+        await source.locator('button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled])')
+            .first()
+            .click();
+    });
 }
 
 export function findContextContent(page: Page, id: string): Locator {

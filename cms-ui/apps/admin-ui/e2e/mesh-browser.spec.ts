@@ -2,8 +2,6 @@ import { ContentRepository } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     CONTENT_REPOSITORY_MESH,
-    MESH_SCHEMA_CONTENT,
-    MESH_SCHEMA_FOLDER,
     EntityImporter,
     findTableRowById,
     FOLDER_A,
@@ -14,22 +12,27 @@ import {
     LANGUAGE_EN,
     loginWithForm,
     matchRequest,
+    MESH_SCHEMA_CONTENT,
+    MESH_SCHEMA_FOLDER,
+    MESH_SCHEMA_BIN_CONTENT,
     navigateToApp,
     NODE_MINIMAL,
     openContext,
     PAGE_ONE,
+    FILE_ONE,
+    IMAGE_ONE,
+    FIXTURE_IMAGE_ONE,
+    FIXTURE_FILE_ONE,
     PAGE_ONE_DE,
     PageImportData,
     SCHEDULE_PUBLISHER,
     TestSize,
-    waitForPublishDone,
 } from '@gentics/e2e-utils';
 import { GraphQLRequest } from '@gentics/mesh-models';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { navigateToModule } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Mesh Browser', () => {
 
     const IMPORTER = new EntityImporter();
@@ -47,6 +50,10 @@ test.describe('Mesh Browser', () => {
 
         await IMPORTER.cleanupTest();
         await IMPORTER.syncPackages(TestSize.MINIMAL);
+        await IMPORTER.setupBinaryFiles({
+            [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_ONE,
+            [FILE_ONE[IMPORT_ID]]: FIXTURE_FILE_ONE,
+        });
         await IMPORTER.setupTest(TestSize.MINIMAL);
         testCr = IMPORTER.get(CONTENT_REPOSITORY_MESH);
         // Make sure that mesh is properly setup
@@ -101,8 +108,8 @@ test.describe('Mesh Browser', () => {
             // Publish the pages
             await IMPORTER.client.page.publish(IMPORTER.get(PAGE_ONE).id, { alllang: true }).send();
             await IMPORTER.client.page.publish(IMPORTER.get(PAGE_GERMAN).id, { alllang: true }).send();
-            await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
-            await waitForPublishDone(page, IMPORTER.client);
+            await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER, 3);
+            // await waitForPublishDone(page, IMPORTER.client);
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
@@ -184,6 +191,66 @@ test.describe('Mesh Browser', () => {
 
             const langIndicatorPage = editor.locator('.language-indicator');
             await expect(langIndicatorPage).toHaveText(LANGUAGE_EN);
+        });
+    });
+
+    test.describe('Browsing details', () => {
+        test.beforeEach('Details setup', async ({ page }) => {
+            test.slow();
+            await IMPORTER.importData([
+                FILE_ONE,
+                IMAGE_ONE,
+                SCHEDULE_PUBLISHER,
+            ], TestSize.MINIMAL);
+
+            await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
+
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+
+            // Navigate to constructs module
+            await navigateToModule(page, 'mesh-browser');
+
+            // Click into the Mesh CR
+            const row = findTableRowById(page, testCr.id);
+            await row.waitFor();
+            await row.click();
+
+            // Wait for folders to be loaded
+            const folderLoad = page.waitForResponse(request => {
+                if (!matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/*/graphql')(request)) {
+                    return false;
+                }
+                const gqlReq: GraphQLRequest = request.request().postDataJSON();
+                return gqlReq.variables?.schemaName === MESH_SCHEMA_FOLDER;
+            }, { timeout: 5_000 });
+
+            // Fill in Mesh credentials and submit
+            await loginWithForm(page.locator('.login-form'), AUTH.mesh);
+
+            // Now the schema list should appear
+            await folderLoad;
+
+            await page.locator('.schema-list-wrapper').waitFor();
+        });
+
+        test('should be able to view binary data link in a detail view', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19256',
+            }],
+        }, async ({ page }) => {
+            const folders = page.locator(`gtx-mesh-browser-schema-items[data-id="${MESH_SCHEMA_FOLDER}"]`);
+            await folders.locator('.schema-content .schema-element .title').click();
+
+            const binaries = page.locator(`gtx-mesh-browser-schema-items[data-id="${MESH_SCHEMA_BIN_CONTENT}"]`);
+            await binaries.locator('.schema-content .schema-element .title').first().click();
+
+            const editor = page.locator('gtx-mesh-browser-editor');
+            await editor.waitFor();
+            const binaryContent = editor.locator('.grid-content[data-id="binarycontent"]');
+
+            await expect(binaryContent.locator('a')).toHaveAttribute('href');
         });
     });
 

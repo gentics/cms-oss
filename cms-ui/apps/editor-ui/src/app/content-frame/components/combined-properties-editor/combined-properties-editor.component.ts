@@ -807,16 +807,15 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             updatePromise = this.saveCurrentObjectProperty(options);
         }
 
-        this.appState.dispatch(new StartSavingAction());
         return updatePromise
             .then(() => {
                 this.appState.dispatch(new SaveSuccessAction());
                 this.markContentAsModifiedInState(false);
                 this.markObjectPropertiesAsModifiedInState(false, true);
             })
-            .catch((error) => {
-                this.appState.dispatch(new SaveErrorAction(error.message));
-                this.errorHandler.catch(error, { notification: true });
+            .catch((err) => {
+                this.appState.dispatch(new SaveErrorAction(err?.message));
+                throw err;
             });
     }
 
@@ -958,6 +957,11 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                     this.item$.next(this.item);
                     this.itemChange.emit(this.item);
                     this.changeDetector.markForCheck();
+                })
+                .catch(error => {
+                    this.appState.dispatch(new SaveErrorAction(error.message));
+                    this.errorHandler.catch(error, { notification: true });
+                    throw error;
                 });
         }
 

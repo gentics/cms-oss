@@ -7,6 +7,10 @@ export interface HelperWindow extends Window {
     updateAlohaRange: typeof updateAlohaRange;
 }
 
+export interface UploadOptions {
+    dragAndDrop?: boolean;
+}
+
 export const AUTH = {
     /** @deprecated Use a dedicated user from your test instead. */
     admin: {

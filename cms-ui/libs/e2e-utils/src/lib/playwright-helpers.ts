@@ -1,6 +1,6 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
-import { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
+import test, { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import {
     ATTR_CONTEXT_ID,
     ATTR_MULTIPLE,
@@ -98,6 +98,18 @@ export function matchRequest(method: string, path: string | RegExp, options?: Re
     };
 }
 
+export function onRequest(
+    page: Page,
+    matcher: (req: Request) => boolean,
+    handler: (req: Request) => any,
+): void {
+    page.on('request', req => {
+        if (matcher(req)) {
+            handler(req);
+        }
+    });
+}
+
 /**
  * Simple wrapper function for `page.waitForResponse` and {@link matchRequest}, but with an error-handler
  * to tell which request actually failed, because otherwise you have to guess.
@@ -120,7 +132,12 @@ export function waitForResponseFrom(
         .catch(err => {
             // The actual class isn't publicly available, which is why we have to do this hacky workaround.
             if (err instanceof Error && (err.constructor.name === 'TargetClosedError' || err.constructor.name === 'TimeoutError')) {
-                err.message = `Reached timeout for request "${method} ${path}"`;
+                const timeoutStr = timeout >= 1000 ? (timeout / 1000) + 's' : (timeout + 'ms');
+                if (path instanceof RegExp) {
+                    err.message = `Reached timeout (${timeoutStr}) for request "${method}" matching "${path.source}"`;
+                } else {
+                    err.message = `Reached timeout (${timeoutStr}) for request "${method} ${path}"`;
+                }
             }
 
             throw err;
@@ -138,31 +155,35 @@ export function waitForKeycloakAuthPage(page: Page): Promise<void> {
 }
 
 export async function navigateToApp(page: Page, path: string = '', withSSO: boolean = false): Promise<void> {
-    if (path.startsWith('/')) {
-        path = path.substring(1);
-    }
+    await test.step(`Navigating to "${path}"`, async () => {
+        if (path.startsWith('/')) {
+            path = path.substring(1);
+        }
 
-    let appPath = process.env[ENV_E2E_APP_PATH];
-    if (appPath === '/') {
-        appPath = '';
-    }
+        let appPath = process.env[ENV_E2E_APP_PATH];
+        if (appPath === '/') {
+            appPath = '';
+        }
 
-    const fullPath = `${appPath}/${!withSSO ? '?skip-sso' : ''}#/${path}`;
-    await page.goto(fullPath);
+        const fullPath = `${appPath}/${!withSSO ? '?skip-sso' : ''}#/${path}`;
+        await page.goto(fullPath);
+    });
 }
 
 export async function loginWithForm(source: Page | Locator, loginData: LoginInformation | UserImportData): Promise<void> {
     const username = (loginData as UserImportData).login ?? (loginData as LoginInformation).username;
 
-    await source.locator('gtx-input[formcontrolname="username"] input:not([disabled]), input[name="username"]')
-        .first()
-        .fill(username);
-    await source.locator('gtx-input[formcontrolname="password"] input:not([disabled]), input[name="password"]')
-        .first()
-        .fill(loginData.password);
-    await source.locator('button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled])')
-        .first()
-        .click();
+    await test.step(`Logging in as "${username}"`, async () => {
+        await source.locator('gtx-input[formcontrolname="username"] input:not([disabled]), input[name="username"]')
+            .first()
+            .fill(username);
+        await source.locator('gtx-input[formcontrolname="password"] input:not([disabled]), input[name="password"]')
+            .first()
+            .fill(loginData.password);
+        await source.locator('button[type="submit"]:not([disabled]), input[type="submit"]:not([disabled])')
+            .first()
+            .click();
+    });
 }
 
 export function findContextContent(page: Page, id: string): Locator {

@@ -1536,7 +1536,7 @@ public class TemplateFactory extends AbstractFactory {
 		String idSql = buildIdSql(ids);
 		String[] preloadSql = new String[] { "SELECT template_id AS id, id AS id2 FROM templatetag WHERE template_id IN " + idSql };
 
-		return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_TEMPLATE_SQL + idSql, preloadSql);
+		return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_TEMPLATE_SQL, preloadSql);
 	}
 
 	protected <T extends NodeObject> T loadResultSet(Class<T> clazz, Integer id, NodeObjectInfo info, FactoryDataRow rs, List<Integer>[] idLists) throws SQLException {

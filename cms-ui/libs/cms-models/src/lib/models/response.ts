@@ -96,6 +96,7 @@ export interface ResponseMessage {
     type: 'CRITICAL' | 'INFO' | 'SUCCESS' | 'WARNING';
     fieldName?: string;
     image?: string;
+    isInstantMessage?: boolean;
 }
 
 /**

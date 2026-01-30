@@ -3,7 +3,7 @@ import { AlohaLinkTargetComponent, ExtendedLinkTarget } from '@gentics/aloha-mod
 import { File, Image, ItemRequestOptions, Page } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { generateFormProvider } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { NEVER, Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RepositoryBrowserClient } from '../../../shared/providers';
@@ -22,7 +22,7 @@ let componentId = 0;
     styleUrls: ['./aloha-link-target-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaLinkTargetRendererComponent)],
-    standalone: false
+    standalone: false,
 })
 export class AlohaLinkTargetRendererComponent
     extends BaseAlohaRendererComponent<AlohaLinkTargetComponent, ExtendedLinkTarget>
@@ -39,6 +39,7 @@ export class AlohaLinkTargetRendererComponent
         protected repositoryBrowserClient: RepositoryBrowserClient,
         protected client: GCMSRestClientService,
         protected i18n: I18nService,
+        private notification: I18nNotificationService,
     ) {
         super(changeDetector, element, aloha);
     }
@@ -92,28 +93,26 @@ export class AlohaLinkTargetRendererComponent
             }
 
             this.loadedTargetElement = pickedItem as LinkableItem;
-            let path: string = (pickedItem as any)?.publishPath || '';
+            let path: string = (pickedItem as any).publishPath || '';
 
             // Remove starting slash
             if (path.length > 1 && path[0] === '/') {
                 path = path.substring(1);
             }
 
-            if (pickedItem != null) {
-                // Create the absolute publish path from the item' path
-                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                path = `${(pickedItem as any).path}${path}`;
-            }
+            // Create the absolute publish path from the item' path
+            // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+            path = `${(pickedItem as any).path}${path}`;
 
             this.triggerChange({
                 ...(this.value || ({} as any)),
                 target: path,
-                isInternal: pickedItem != null,
-                internalTargetLabel: pickedItem?.name || '',
-                internalTargetId: pickedItem?.id,
-                internalTargetType: pickedItem?.type,
-                internalTargetLang: (pickedItem as any)?.language || '',
-                internalTargetNodeId: (pickedItem as any)?.nodeId,
+                isInternal: true,
+                internalTargetLabel: pickedItem.name || '',
+                internalTargetId: pickedItem.id,
+                internalTargetType: pickedItem.type,
+                internalTargetLang: (pickedItem as any).language || '',
+                internalTargetNodeId: (pickedItem as any).nodeId,
             });
         });
     }
@@ -189,14 +188,18 @@ export class AlohaLinkTargetRendererComponent
                 });
             },
             error: err => {
-                // Item could not be loaded
-                this.loadedTargetElement = null;
+                console.log(err);
+                this.notification.show({
+                    type: 'alert',
+                    message: `message.${this.value.internalTargetType}_loaded_error`,
+                });
                 this.triggerChange({
-                    ...(this.value || ({} as any)),
+                    ...({} as any),
                     target: '',
+                    anchor: null,
                     isInternal: false,
                 });
             },
-        },);
+        });
     }
 }

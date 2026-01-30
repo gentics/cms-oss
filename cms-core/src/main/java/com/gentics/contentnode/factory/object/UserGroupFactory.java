@@ -97,9 +97,7 @@ public class UserGroupFactory extends AbstractFactory {
 	 * @see com.gentics.lib.base.factory.BatchObjectFactory#batchLoadObjects(java.lang.Class, java.util.Collection, com.gentics.lib.base.object.NodeObjectInfo)
 	 */
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
-		String idSql = buildIdSql(ids);
-
-		return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM usergroup WHERE id IN " + idSql);
+		return batchLoadDbObjects(clazz, ids, info, "SELECT * FROM usergroup WHERE id IN ");
 	}
 
 	@SuppressWarnings("unchecked")

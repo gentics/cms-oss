@@ -299,7 +299,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
         if (page?.languageVariants) {
             Object.values(page.languageVariants).forEach((pageId) => {
                 const page = this.entityResolver.getPage(pageId);
-                if (page.queued === true) {
+                if (page != null && page.queued === true) {
                     pages.push(page);
                 }
             });
@@ -397,7 +397,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     private hasOnlineItem(item: InheritableItem, isPage: boolean, isForm: boolean, inherited: boolean): boolean {
         if (isPage) {
             const page = item as Page;
-            if (page?.online && !page.queued) {
+            if (page != null && page.online && !page.queued) {
                 return !this.isDeleted && !inherited;
             }
         }
@@ -408,7 +408,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
                     return false;
                 }
                 const page = this.entityResolver.getPage(pageId);
-                if (page?.online && !page.queued) {
+                if (page != null && page.online && !page.queued) {
                     hasOnlineItem = true;
                 }
                 return true;

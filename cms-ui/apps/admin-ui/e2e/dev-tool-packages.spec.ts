@@ -15,7 +15,6 @@ import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { navigateToModule } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Dev-Tool Packages Module', () => {
     const IMPORTER = new EntityImporter();
 
@@ -59,6 +58,7 @@ test.describe('Dev-Tool Packages Module', () => {
 
             await input.fill(TEST_PACKAGE_NAME);
 
+            // TODO: Fails on jenkins - Check CMS logs once available
             const createReq = page.waitForResponse(matchRequest('PUT', `/rest/devtools/packages/${encodeURIComponent(TEST_PACKAGE_NAME)}`));
             const listReq = page.waitForResponse(matchRequest('GET', '/rest/devtools/packages'));
 

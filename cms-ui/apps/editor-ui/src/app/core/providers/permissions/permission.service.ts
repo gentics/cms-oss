@@ -457,13 +457,10 @@ export class PermissionService {
         return item$.pipe(
             take(1),
             switchMap((item) => {
-                const parentFolderId = this.getParentFolderId(item);
-                itemType =
-                    itemType ||
-                    (item )
-                        .type;
+                itemType = itemType || (item).type;
                 itemId = itemId === undefined ? item.id : itemId;
-                const parentPerms$ = this.forFolder(parentFolderId, nodeId);
+                const folderId = itemType === 'folder' ? itemId : this.getParentFolderId(item);
+                const perms$ = this.forFolder(folderId, nodeId);
 
                 switch (itemType) {
                     case 'folder':
@@ -472,7 +469,7 @@ export class PermissionService {
                     case 'page':
                     case 'file':
                     case 'image':
-                        return parentPerms$.pipe(
+                        return perms$.pipe(
                             map((privs) => privs[itemType]),
                         );
                     default:
@@ -583,7 +580,7 @@ export class PermissionService {
         const entity = entityPath && entityPath[id];
         let parentFolder$: Observable<number>;
         if (entity) {
-            parentFolder$ = of(this.getParentFolderId(entity));
+            parentFolder$ = of(type === 'folder' ? id : this.getParentFolderId(entity));
         } else {
             parentFolder$ = this.api.folders.getItem(
                 id,
@@ -592,13 +589,13 @@ export class PermissionService {
             ).pipe(
                 map((res) => {
                     const item = (<any>res)[type] as
-                        | Folder
-                        | Form
-                        | Page
-                        | File
-                        | Image;
+                      | Folder
+                      | Form
+                      | Page
+                      | File
+                      | Image;
                     return item.type === 'folder'
-                        ? (item ).motherId
+                        ? (item).motherId
                         : (item as Page | Form).folderId;
                 }),
             );

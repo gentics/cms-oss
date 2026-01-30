@@ -17,7 +17,6 @@ import {
     selectNode,
 } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('App', () => {
     const IMPORTER = new EntityImporter();
 

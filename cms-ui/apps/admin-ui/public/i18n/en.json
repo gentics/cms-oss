@@ -1233,7 +1233,8 @@
         "published_state_archived": "Archived",
         "published_state_draft": "Draft",
         "published_state_updated": "Updated",
-        "published_state_changed": "Last modified at: {{ date }}"
+        "published_state_changed": "Last modified at: {{ date }}",
+        "download_binary_content": "Download binary content"
     },
     "object_property": {
         "objectProperty_plural": "Object Properties",

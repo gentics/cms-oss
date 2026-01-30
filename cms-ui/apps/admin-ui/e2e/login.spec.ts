@@ -11,7 +11,6 @@ import {
 import { test } from '@playwright/test';
 import { AUTH } from './common';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
 
@@ -43,6 +42,7 @@ test.describe('Login', () => {
             await page.locator('gtx-dashboard').waitFor();
         });
 
+        // FIXME: broken in FF
         test('should skip login if already logged in', async ({ page }) => {
             await navigateToApp(page);
 
@@ -90,13 +90,13 @@ test.describe('Login', () => {
         });
 
         test('should be able to login with SSO', async ({ page }) => {
-            await navigateToApp(page);
+            await navigateToApp(page, '/', true);
             await loginWithForm(page, KEYCLOAK_LOGIN);
             await page.locator('gtx-dashboard').waitFor();
         });
 
         test('should be able to skip SSO and login directly', async ({ page }) => {
-            await navigateToApp(page, '', true);
+            await navigateToApp(page, '');
             await loginWithForm(page, AUTH.admin);
             await page.locator('gtx-dashboard').waitFor();
         });

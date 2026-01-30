@@ -24,7 +24,6 @@ import { randomId } from '@gentics/ui-core/utils/random-id';
 import test from '@playwright/test';
 import { editorAction, findItem, findList, itemAction, openToolOrAction, selectNode } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Publish Queue', () => {
 
     const IMPORTER = new EntityImporter();

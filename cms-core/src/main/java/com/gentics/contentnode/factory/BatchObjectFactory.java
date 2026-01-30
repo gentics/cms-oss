@@ -6,6 +6,7 @@
 package com.gentics.contentnode.factory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,4 +47,25 @@ public interface BatchObjectFactory extends ObjectFactory {
 	 */
 	<T extends NodeObject> Set<T> batchLoadVersionedObjects(FactoryHandle handle, Class<T> clazz, Class<? extends NodeObject> mainClazz,
 			Map<Integer, Integer> timestamps) throws NodeException;
+
+	/**
+	 * Prepare object data for the given object, including subobjects
+	 * @param <T> type of the object class
+	 * @param clazz object class
+	 * @param id object ID
+	 * @throws NodeException
+	 */
+	default <T extends NodeObject> void prepareObjectData(Class<T> clazz, int id) throws NodeException {
+		prepareObjectData(clazz, Collections.singleton(id));
+	}
+
+	/**
+	 * Prepare object data for the given objects, including subobjects
+	 * @param <T> type of the object class
+	 * @param clazz object class
+	 * @param ids object IDs
+	 * @throws NodeException
+	 */
+	default <T extends NodeObject> void prepareObjectData(Class<T> clazz, Collection<Integer> ids) throws NodeException {
+	}
 }

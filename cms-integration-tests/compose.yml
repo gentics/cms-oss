@@ -52,6 +52,8 @@ services:
     ports:
       - 8080:8080
 
+    entrypoint: "/cms/conf/tests-entrypoint.sh"
+
     environment:
       # General Container Settings
       TZ: "Europe/Vienna"
@@ -71,7 +73,7 @@ services:
       # Mesh CR Settings
       CR_URL_MESH_CR: http://mesh:8080/example
       CR_USERNAME_MESH_CR: admin
-      CR_PASSWORD_MESH_CR: admin
+      CR_PASSWORD_MESH_CR: mesh_integrationTest#admin
 
       # DB CR Settings
       CR_URL_MARIADB_CR: jdbc:mariadb://mariadb:3306/cr
@@ -81,8 +83,8 @@ services:
     volumes:
       - ./cms/commands:/cms/scheduler-commands
       - ./cms/conf:/cms/conf
-      - ./cms/packages:/cms/packages
-      - ./cms/logs:/cms/logs
+      - ./cms/packages:/cms/packages:x
+      - ./cms/logs:/cms/logs:x
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/rest/auth/globalprefix"]

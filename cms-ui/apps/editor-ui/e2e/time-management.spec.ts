@@ -21,7 +21,6 @@ import {
 import {expect, Locator, test} from '@playwright/test';
 import { findItem, findList, itemAction, selectNode } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Time Management', () => {
 
     const IMPORTER = new EntityImporter();
@@ -105,6 +104,7 @@ test.describe('Time Management', () => {
         await selectNode(page, NODE.id);
     });
 
+    // TODO: Flaky on CI
     test('should be able to remove the planned publish date', {
         annotation: [{
             type: 'ticket',

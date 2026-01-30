@@ -25,7 +25,6 @@ import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
 import { findItem, findList, itemAction, selectNode } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('List Loading', () => {
 
     const IMPORTER = new EntityImporter();

@@ -7283,12 +7283,12 @@ public class FolderFactory extends AbstractFactory {
 			String[] preloadSql = new String[] {
 				"SELECT obj_id AS id, id AS id2 FROM objtag WHERE obj_type = " + Folder.TYPE_FOLDER + " AND obj_id IN " + idSql };
 
-			Collection<Folder> folders = batchLoadDbObjects(Folder.class, ids, info, BATCHLOAD_FOLDER_SQL + idSql, preloadSql);
+			Collection<Folder> folders = batchLoadDbObjects(Folder.class, ids, info, BATCHLOAD_FOLDER_SQL, preloadSql);
 			batchLoadI18nData(folders);
 			return (Collection<T>) folders;
 		}
 		if (Node.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_NODE_SQL + idSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_NODE_SQL);
 		}
 		return null;
 	}

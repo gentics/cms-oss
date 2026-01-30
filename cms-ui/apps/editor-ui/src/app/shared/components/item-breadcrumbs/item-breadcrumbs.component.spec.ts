@@ -47,9 +47,15 @@ describe('ItemBreadcrumbsComponent', () => {
     });
 
     function assertBreadcrumbNamesMatch(actualElements: NodeListOf<Element>, expectedBreadcrumbs: FolderBreadcrumb[]): void {
-        expectedBreadcrumbs.forEach((breadcrumb, i) => {
-            expect(actualElements[i].textContent).toContain(breadcrumb.name);
-        });
+        for (let i = 0; i < expectedBreadcrumbs.length; i++) {
+            const expected = expectedBreadcrumbs[i].name;
+            if (actualElements[i] == null) {
+                expect(actualElements[i]).withContext(`Breadcrumb on ${i} is missing`).toBeDefined();
+                continue;
+            }
+            const actual = actualElements[i].textContent;
+            expect(actual).withContext(`Breadcrumb on ${i} has incorrect content: "${actual}", expected "${expected}"`).toContain(expected);
+        }
     }
 
     it('displays linked breadcrumbs for a raw page',

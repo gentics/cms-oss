@@ -1109,6 +1109,11 @@
         "wastebin_restored_single": "{{type}} restored",
         "wastebin_restored_multiple": "{{count}} {{type}} restored",
         "wastebin_restore_failed_single": "Failed to restore {{type}}",
-        "wastebin_restore_failed_multiple": "Failed to restore {{count}} {{type}}"
+        "wastebin_restore_failed_multiple": "Failed to restore {{count}} {{type}}",
+        "page_publish_without_ids": "No IDs provided for pages to publish",
+        "page_take_offline_without_ids": "No IDs provided for pages to take offline",
+        "page_loaded_error": "Could not load page",
+        "file_loaded_error": "Could not load file",
+        "image_loaded_error": "Could not load image"
     }
 }

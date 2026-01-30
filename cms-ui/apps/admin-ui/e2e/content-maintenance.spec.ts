@@ -20,7 +20,6 @@ import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import test, { expect, Locator, Response } from '@playwright/test';
 import { navigateToModule } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Content-Maintenance Module', () => {
 
     const IMPORTER = new EntityImporter();
@@ -121,9 +120,7 @@ test.describe('Content-Maintenance Module', () => {
 
         await test.step('Open Admin-UI', async () => {
             await navigateToApp(page);
-            const permReq = page.waitForResponse(matchRequest('GET', '/rest/info/maintenance'));
             await loginWithForm(page, TEST_USER);
-            await permReq;
             nodeLoadReq = page.waitForResponse(matchRequest('GET', '/rest/node'));
             module = await navigateToModule(page, 'content-maintenance');
         });

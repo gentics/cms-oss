@@ -14,9 +14,10 @@ import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { FormProperties, GenticsUICoreModule } from '@gentics/ui-core';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { EditableProperties, emptyItemInfo } from '../../../common/models';
+import { EditableProperties, EditorPermissions, emptyItemInfo } from '../../../common/models';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ApplicationStateService, SetFeatureAction } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { DynamicDisableDirective } from '../../directives/dynamic-disable/dynamic-disable.directive';
@@ -120,6 +121,7 @@ const SANITIZATION_RESULT = 'sanitizationResult';
         <gtx-folder-properties
             #form
             [nodeId]="nodeId"
+            [itemId]="itemId"
             [folderId]="folderId"
             [value]="properties"
             [disabled]="disabled"
@@ -134,6 +136,7 @@ class TestComponent {
     form: FolderPropertiesComponent;
 
     nodeId: number;
+    itemId: number;
     folderId: number;
     properties: EditableProperties;
     simplePropertiesChanged = jasmine.createSpy('simplePropertiesChanged');
@@ -152,6 +155,16 @@ function createFolderListResponse(folders: Folder[] = []): FolderListResponse {
             responseMessage: 'Successfully loaded subfolders',
         },
     };
+}
+
+class MockPermissionService implements Partial<PermissionService> {
+    forFolder(folderId: number, nodeId: number): Observable<EditorPermissions> {
+        return of({
+            folder: {
+                edit: true,
+            }
+        } as any);
+    }
 }
 
 describe('FolderPropertiesComponent', () => {
@@ -174,6 +187,7 @@ describe('FolderPropertiesComponent', () => {
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                { provide: PermissionService, useClass: MockPermissionService },
             ],
         });
 
@@ -251,6 +265,9 @@ describe('FolderPropertiesComponent', () => {
                     name: TEST_STRING_FOLDER_NAME,
                     publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
+                    nameI18n: {},
+                    descriptionI18n: {},
+                    publishDirI18n: {},
                 });
                 expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
             }),
@@ -279,6 +296,9 @@ describe('FolderPropertiesComponent', () => {
                     name: TEST_STRING_FOLDER_NAME,
                     publishDir: SANITIZATION_RESULT,
                     description: '',
+                    nameI18n: {},
+                    descriptionI18n: {},
+                    publishDirI18n: {},
                 });
                 expect((client.folder.sanitizePublshDirectory as jasmine.Spy).calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${ACTIVE_FOLDER_PUBLISH_DIR}${TEST_STRING_FOLDER_NAME}` });
             }),
@@ -295,6 +315,9 @@ describe('FolderPropertiesComponent', () => {
                     name: '',
                     publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
+                    nameI18n: {},
+                    descriptionI18n: {},
+                    publishDirI18n: {},
                 };
                 fixture.detectChanges();
 
@@ -308,6 +331,9 @@ describe('FolderPropertiesComponent', () => {
                     name: TEST_STRING_FOLDER_NAME,
                     publishDir: PSEUDO_EMPTY_DEFAULT_DIRECTORY_NAME_TO_BYPASS_REQUIRED_VALIDATOR,
                     description: '',
+                    nameI18n: {},
+                    descriptionI18n: {},
+                    publishDirI18n: {},
                 });
                 expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
             }),
@@ -338,6 +364,9 @@ describe('FolderPropertiesComponent', () => {
                     name: TEST_STRING_FOLDER_NAME,
                     publishDir: SANITIZATION_RESULT,
                     description: '',
+                    nameI18n: {},
+                    descriptionI18n: {},
+                    publishDirI18n: {},
                 });
                 expect((client.folder.sanitizePublshDirectory as jasmine.Spy).calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${TEST_STRING_FOLDER_NAME}` });
             }),
@@ -351,10 +380,11 @@ describe('FolderPropertiesComponent', () => {
 
         it('with feature setting autocomplete_folder_path = FALSE and pub_dir_segment = FALSE',
             componentTest(() => TestComponent, (fixture, instance) => {
-
                 const TEST_STRING_DIRECTORY_NAME = '/custom_publish_dir/';
 
                 instance.mode = FolderPropertiesMode.EDIT;
+                instance.itemId = 1;
+                instance.nodeId = 1;
                 instance.properties = {
                     name: TEST_STRING_FOLDER_NAME,
                     publishDir: TEST_STRING_DIRECTORY_NAME,
@@ -365,7 +395,7 @@ describe('FolderPropertiesComponent', () => {
                 };
                 fixture.detectChanges();
 
-                expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME);
+                expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME);3
 
                 setInputValue(fixture, 'name', TEST_STRING_FOLDER_NAME_NEW);
 
@@ -391,6 +421,8 @@ describe('FolderPropertiesComponent', () => {
                 state.dispatch(new SetFeatureAction(Feature.AUTOCOMPLETE_FOLDER_PATH, true));
 
                 instance.mode = FolderPropertiesMode.EDIT;
+                instance.itemId = 1;
+                instance.nodeId = 1;
                 instance.properties = {
                     name: TEST_STRING_FOLDER_NAME,
                     publishDir: TEST_STRING_DIRECTORY_NAME,
@@ -429,6 +461,8 @@ describe('FolderPropertiesComponent', () => {
                 setPubDirSegmentToTrueInInitialState(state);
 
                 instance.mode = FolderPropertiesMode.EDIT;
+                instance.itemId = 1;
+                instance.nodeId = 1;
                 instance.properties = {
                     name: TEST_STRING_FOLDER_NAME,
                     publishDir: TEST_STRING_DIRECTORY_NAME,
@@ -468,6 +502,8 @@ describe('FolderPropertiesComponent', () => {
                 setPubDirSegmentToTrueInInitialState(state);
 
                 instance.mode = FolderPropertiesMode.EDIT;
+                instance.itemId = 1;
+                instance.nodeId = 1;
                 instance.properties = {
                     name: TEST_STRING_FOLDER_NAME,
                     publishDir: TEST_STRING_DIRECTORY_NAME,

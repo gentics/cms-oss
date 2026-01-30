@@ -313,6 +313,7 @@ public interface GroupResource {
 	 * Otherwise, the permissions on child types/instances of the given parentType/parentId will be returned.
 	 * @param id group ID
 	 * @param parentType optional parent type
+	 * @param excludedParentType optional parent type to exclude from the result
 	 * @param parentId optional parent ID
 	 * @param channelId optional channel ID
 	 * @return Permissions response
@@ -320,7 +321,7 @@ public interface GroupResource {
 	 */
 	@GET
 	@Path("/{id}/perms")
-	TypePermissionList getPerms(@PathParam("id") String id, @QueryParam("parentType") String parentType, @QueryParam("parentId") Integer parentId,
+	TypePermissionList getPerms(@PathParam("id") String id, @QueryParam("parentType") String parentType, @QueryParam("excludedParentType") @DefaultValue("") String excludedParentType, @QueryParam("parentId") Integer parentId,
 			@QueryParam("channelId") Integer channelId) throws Exception;
 
 	/**

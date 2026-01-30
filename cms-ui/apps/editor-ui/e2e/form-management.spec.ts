@@ -20,7 +20,6 @@ import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
@@ -278,6 +277,7 @@ test.describe('Form Management', () => {
         });
     });
 
+    // TODO: Flaky on CI
     test('should display the label value as title', {
         annotation: [{
             type: 'ticket',

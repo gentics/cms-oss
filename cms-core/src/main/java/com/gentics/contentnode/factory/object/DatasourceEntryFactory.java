@@ -231,12 +231,14 @@ public class DatasourceEntryFactory extends AbstractFactory {
 	}
 
 	public <T extends NodeObject> Collection<T> batchLoadObjects(Class<T> clazz, Collection<Integer> ids, NodeObjectInfo info) throws NodeException {
-		final String idSql = buildIdSql(ids);
-
 		if (Datasource.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DATASOURCE_SQL + idSql);
+			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DATASOURCE_SQL);
 		} else if (DatasourceEntry.class.equals(clazz)) {
-			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DATASOURCE_VALUE_SQL + idSql + " ORDER BY sorder ASC");
+			List<T> entries = new ArrayList<>(batchLoadDbObjects(clazz, ids, info, BATCHLOAD_DATASOURCE_VALUE_SQL));
+			entries.sort((e1, e2) -> {
+				return Integer.compare(((DatasourceEntry) e1).getSortOrder(), ((DatasourceEntry) e2).getSortOrder());
+			});
+			return entries;
 		} else {
 			return null;
 		}

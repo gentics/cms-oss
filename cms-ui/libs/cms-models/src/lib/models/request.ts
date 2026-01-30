@@ -1807,6 +1807,11 @@ export interface GroupPermissionsListOptions {
      */
     parentType?: AccessControlledType;
 
+    /**
+     * `AccessControlledType`, which to exclude from the fetched list of permission types.
+     */
+    excludedParentType?: AccessControlledType;
+
 }
 
 /**

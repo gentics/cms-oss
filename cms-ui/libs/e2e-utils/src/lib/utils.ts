@@ -12,6 +12,12 @@ import {
     ENV_E2E_CMS_VARIANT,
 } from './config';
 
+export function wait(millisecs: number): Promise<void> {
+    return new Promise((resolve) => {
+        setTimeout(resolve, millisecs);
+    });
+}
+
 export function envAll(env: string | string[]): boolean;
 export function envAll(...vars: string[]): boolean {
     return vars.every((envName) => process.env[envName]);
@@ -420,10 +426,6 @@ export function matchesPath(url: string | URL, path: string | RegExp): boolean {
         } else {
             matches = path.test(urlObj.pathname);
         }
-
-        // if (matches) {
-        //     console.log('Found matching path', { url, path });
-        // }
 
         return matches;
     } catch (err) {

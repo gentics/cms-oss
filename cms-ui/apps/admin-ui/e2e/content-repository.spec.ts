@@ -65,7 +65,6 @@ const SELECTORS = {
 const CLASS_ACTIVE = /active/;
 const CLASS_GRANTED = /granted/;
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Content Repositories Module', () => {
 
     const IMPORTER = new EntityImporter({
@@ -340,7 +339,7 @@ test.describe('Content Repositories Module', () => {
 
             test.beforeEach(async ({ page }) => {
                 await IMPORTER.importData([SCHEDULE_PUBLISHER]);
-                await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER);
+                await IMPORTER.executeSchedule(SCHEDULE_PUBLISHER, 3);
                 await loginWithCR(page);
             });
 

@@ -1,109 +1,110 @@
 <div class="mesh-browser-detail">
-
-  <gtx-entity-detail-header
-    [saveDisabled]="true"
-    (cancelClick)="detailsClose()"
+    <gtx-entity-detail-header
+        [saveDisabled]="true"
+        (cancelClick)="detailsClose()"
     >
-    <h2>
-      {{ title }}
-      <span class="language-indicator">{{ language }}</span>
-    </h2>
-  </gtx-entity-detail-header>
+        <h2>
+            {{ title }}
+            <span class="language-indicator">{{ language }}</span>
+        </h2>
+    </gtx-entity-detail-header>
 
-  <gtx-mesh-browser-breadcrumbs
-    [language]="language"
-    [entries]="breadcrumb"
+    <gtx-mesh-browser-breadcrumbs
+        [language]="language"
+        [entries]="breadcrumb"
     />
 
-  <div class="field-grid">
-    <div class="grid-content header-element">
-      <div class="grid-item-label">UUID</div>
-      <div class="grid-item-value">
-        <gtx-mesh-copy-value
-          class="copy-uuid"
-          [value]="node"
-          [animate]="true"
-          />
-      </div>
-    </div>
-
-    <div class="grid-content header-element">
-      <div class="grid-item-label">{{ 'mesh.version' | gtxI18n }}</div>
-      <div class="grid-item-value">
-        <code>{{ version }}</code>
-      </div>
-    </div>
-
-    <div class="grid-content">
-      <div class="grid-separator-container">
-        <hr class="grid-separator" />
-      </div>
-      <div class="grid-separator-filler"></div>
-    </div>
-
-    @for (field of fields; track identify($index, field)) {
-      <div
-        class="grid-content"
-        [attr.data-id]="field.id"
-        >
-        <div class="grid-item-label">{{ field.label }}</div>
-        <div class="grid-item-value">
-          @switch (field.type) {
-            @case (FieldType.LIST) {
-              <div class="value-container">
-                @for (field of field.value; track field) {
-                  <div class="field-value">
-                    {{ field }}
-                  </div>
-                }
-              </div>
-            }
-            @case (FieldType.BINARY) {
-              <div class="field-binary">
-                <img [src]="field.value" />
-              </div>
-            }
-            @case (FieldType.BOOLEAN) {
-              <icon
-                class="gtx-table-cell-boolean"
-                [ngClass]="field.value != null ? 'gtx-table-cell-boolean-' + field.value : 'gtx-table-cell-boolean-null'"
-              >{{ field.value == null ? 'question_mark' : (field.value ? 'check' : 'close') }}</icon>
-            }
-            @case (FieldType.NODE) {
-              <div (click)="loadNode(field.value?.uuid)" class="field-node">
-                <icon left>share</icon>
-                <span class="node-name">{{ field.value?.displayName || field.value?.uuid }}</span>
-              </div>
-            }
-            @case (FieldType.MICRO_NODE) {
-              <div class="micronode-container value-container">
-                @for (field of field.value.fields | keyvalue; track field.key) {
-                  <div class="micronode-field">
-                    <label class="field-label">{{ field.key }}</label>
-                    @if (!field.value['uuid']) {
-                      <span class="field-value">
-                        {{ field.value }}<br>
-                      </span>
-                    } @else {
-                      <div (click)="loadNode(field.value['uuid'])" class="field-node">
-                        <icon>share</icon>
-                        {{ field.value['uuid'] }}
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            }
-            @default {
-              <span class="field-value">
-                {{ field.value }}
-              </span>
-            }
-          }
+    <div class="field-grid">
+        <div class="grid-content header-element">
+            <div class="grid-item-label">UUID</div>
+            <div class="grid-item-value">
+                <gtx-mesh-copy-value
+                    class="copy-uuid"
+                    [value]="node"
+                    [animate]="true"
+                />
+            </div>
         </div>
-      </div>
-    }
-  </div>
 
+        <div class="grid-content header-element">
+            <div class="grid-item-label">{{ 'mesh.version' | gtxI18n }}</div>
+            <div class="grid-item-value">
+                <code>{{ version }}</code>
+            </div>
+        </div>
+
+        <div class="grid-content">
+            <div class="grid-separator-container">
+                <hr class="grid-separator" />
+            </div>
+            <div class="grid-separator-filler"></div>
+        </div>
+
+        @for (field of fields; track identify($index, field)) {
+            <div class="grid-content" [attr.data-id]="field.id">
+                <div class="grid-item-label">{{ field.label }}</div>
+                <div class="grid-item-value">
+                    @switch (field.type) {
+                        @case (FieldType.LIST) {
+                            <div class="value-container">
+                                @for (field of field.value; track field) {
+                                <div class="field-value">
+                                    {{ field }}
+                                </div>
+                                }
+                            </div>
+                        }
+                        @case (FieldType.BINARY) {
+                            <div class="field-binary">
+                                <a target="_blank" [href]="field.value">{{ 'mesh.download_binary_content' | i18n }}</a>
+                            </div>
+                        }
+                        @case (FieldType.BOOLEAN) {
+                            <icon
+                                class="gtx-table-cell-boolean"
+                                [ngClass]="field.value != null ? 'gtx-table-cell-boolean-' + field.value : 'gtx-table-cell-boolean-null'"
+                            >{{
+                                field.value == null ? 'question_mark' : field.value
+                                    ? 'check'
+                                    : 'close'
+                            }}</icon>
+                        }
+                        @case (FieldType.NODE) {
+                            <div (click)="loadNode(field.value?.uuid)" class="field-node">
+                                <icon left>share</icon>
+                                <span class="node-name">{{
+                                    field.value?.displayName || field.value?.uuid
+                                }}</span>
+                            </div>
+                        }
+                        @case (FieldType.MICRO_NODE) {
+                            <div class="micronode-container value-container">
+                                @for (field of field.value.fields | keyvalue; track field.key) {
+                                    <div class="micronode-field">
+                                        <label class="field-label">{{ field.key }}</label>
+                                        @if (!field.value['uuid']) {
+                                            <span class="field-value">{{ field.value }}<br /></span>
+                                        } @else {
+                                            <div
+                                                (click)="loadNode(field.value['uuid'])"
+                                                class="field-node"
+                                            >
+                                                <icon>share</icon>
+                                                {{ field.value['uuid'] }}
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        @default {
+                            <span class="field-value">
+                                {{ field.value }}
+                            </span>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>
 </div>
-

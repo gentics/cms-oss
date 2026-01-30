@@ -1,4 +1,4 @@
-import { Node, Template } from '@gentics/cms-models';
+import { Node, Template, TemplateSaveRequest } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
@@ -14,6 +14,7 @@ import {
     selectTableRow,
     selectTrableRow,
     TestSize,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -24,7 +25,6 @@ const LINK_TO_NODE_MODAL = 'gtx-assign-templates-to-nodes-modal';
 const LINK_TO_FOLDER_ACTION = 'linkToFolder';
 const LINK_TO_FOLDER_MODAL = 'gtx-assign-templates-to-folders-modal';
 
-test.describe.configure({ mode: 'serial' });
 test.describe('Templates Module', () => {
     const IMPORTER = new EntityImporter();
 
@@ -133,4 +133,34 @@ test.describe('Templates Module', () => {
     });
 
     // TODO: Create a folder assignment variant with multiple templates
+
+    test('should be able to edit properties', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19534',
+        }],
+    }, async ({ page }) => {
+        const NEW_DESCRIPTION = 'Hello World foobar';
+
+        await test.step('Open properties window', async () => {
+            const tplRow = findTableRowById(page, testTemplate.id);
+            await tplRow.locator('.data-column[data-id="name"]').click();
+        });
+
+        const detail = page.locator('gtx-template-detail');
+        const manager = detail.locator('gtx-properties-manager');
+
+        await test.step('Update description', async () => {
+            const form = manager.locator('.editor-wrapper form');
+            await form.locator('[formControlName="description"] input').fill(NEW_DESCRIPTION);
+
+            await page.waitForTimeout(500); // Wait for form data to propagate
+            const saveReq = waitForResponseFrom(page, 'POST', `/rest/template/${testTemplate.id}`);
+            await detail.locator('gtx-entity-detail-header [data-action="save"] button').click();
+            const saveRes = await saveReq;
+            const saveBody = saveRes.request().postDataJSON() as TemplateSaveRequest;
+
+            expect(saveBody.template.description).toEqual(NEW_DESCRIPTION);
+        });
+    });
 });

@@ -9,24 +9,41 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.etc.Operator;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.lib.db.CountingExecutor;
+import com.gentics.lib.db.DBQuery;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
+
+import io.reactivex.Observable;
 
 public final class DBUtils {
 	/**
@@ -88,7 +105,7 @@ public final class DBUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, type);
 
 			if (ex != null) {
@@ -245,7 +262,7 @@ public final class DBUtils {
 		ResultSet res = null;
 		R retVal = null;
 
-		try {
+		try (DBQuery h  = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, type);
 
 			if (prepare != null) {
@@ -279,7 +296,7 @@ public final class DBUtils {
 		PreparedStatement stmt = null;
 		ResultSet res = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareSelectForUpdate(sql);
 
 			if (prepare != null) {
@@ -311,7 +328,7 @@ public final class DBUtils {
 		PreparedStatement stmt = null;
 		ResultSet keys = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareInsertStatement(sql);
 
 			if (args != null) {
@@ -347,7 +364,7 @@ public final class DBUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, Transaction.UPDATE_STATEMENT);
 
 			if (args != null) {
@@ -377,7 +394,7 @@ public final class DBUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, Transaction.UPDATE_STATEMENT);
 
 			for (int i = 0; i < args.length; i++) {
@@ -428,7 +445,7 @@ public final class DBUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, type);
 
 			for (Object[] args : argsList) {
@@ -544,7 +561,7 @@ public final class DBUtils {
 	public static boolean executeMassStatement(String sql, String suffixSql, Collection<?> list, int startIndex, SQLExecutor ex, int type, PreparedStatementHandler stmth) throws NodeException {
 		PreparedStatement stmt = null;
 
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			int maxbinds = MASS_STATEMENT_MAX;
 			int totalsize = list.size();
 
@@ -891,7 +908,7 @@ public final class DBUtils {
 		String sql = String.format("SELECT * FROM %s WHERE %s = ?", table, key1);
 
 		Set<Integer> notFoundId2 = new HashSet<>(ids2);
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			stmt.setInt(1, id1);
 
@@ -948,7 +965,7 @@ public final class DBUtils {
 
 		Set<Integer> ids2 = data.keySet();
 		Set<Integer> notFoundId2 = new HashSet<>(data.keySet());
-		try {
+		try (DBQuery h = DBQuery.handle(sql)) {
 			stmt = t.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			stmt.setInt(1, id1);
 
@@ -1092,5 +1109,227 @@ public final class DBUtils {
 	@FunctionalInterface
 	public static interface HandleStatement {
 		void handle(PreparedStatement stmt) throws SQLException, NodeException;
+	}
+
+	/**
+	 * Helper class for doing batch updates and inserts.
+	 */
+	public static class BatchUpdater
+			extends LinkedHashMap<Triple<String, String, Integer>, List<Pair<Supplier<Object[]>, Consumer<Integer>>>> {
+		private static final long serialVersionUID = -4645606515695387249L;
+
+		/**
+		 * Map of objects, which need to be synchronized with their uuid's in the database. (Keys are the table names)
+		 */
+		private Map<String, Set<NodeObject>> objectsToSynchronize = new HashMap<>();
+
+		/**
+		 * Set of objects, which were created and for which missing references need to be resolved
+		 */
+		private Set<NodeObject> updateMissingReferences = new HashSet<>();
+
+		/**
+		 * Map of handlers to be executed before a batch of sql statements
+		 */
+		private Map<Triple<String, String, Integer>, List<Operator>> beforeHandlers = new HashMap<>();
+
+		/**
+		 * Map of handlers to be executed after a batch of sql statements
+		 */
+		private Map<Triple<String, String, Integer>, List<Operator>> afterHandlers = new HashMap<>();
+
+		/**
+		 * Add the given SQL statement to be executed in batches. For updates, the complete statement can be given as parameter sql. For inserts,
+		 * the statement should be split into the parts <code>INSERT INTO [tablename] ([columns]) VALUES </code>
+		 * (given as parameter sql) and <code>(?, ?, ...)</code> (given as parameter paramSql).
+		 * @param sql either complete sql statement or INSERT part
+		 * @param paramSql null or parameter list
+		 * @param type statement type
+		 * @param paramSupplier supplier for the parameters
+		 * @param generatedKeysHandler optional handler for generated keys (for insert statements)
+		 * @param before optional handler to perform right before the queries are executed
+		 * @param after optional handler to perform right after the queries are executed
+		 */
+		public void add(String sql, String paramSql, int type, Supplier<Object[]> paramSupplier,
+				Consumer<Integer> generatedKeysHandler, Operator before, Operator after) {
+			Triple<String, String, Integer> batchKey = Triple.of(sql, paramSql, type);
+			computeIfAbsent(batchKey, key -> new ArrayList<>()).add(Pair.of(paramSupplier, generatedKeysHandler));
+			if (before != null) {
+				beforeHandlers.computeIfAbsent(batchKey, key -> new ArrayList<>()).add(before);
+			}
+			if (after != null) {
+				afterHandlers.computeIfAbsent(batchKey, key -> new ArrayList<>()).add(after);
+			}
+		}
+
+		/**
+		 * Variant of {@link #add(String, String, int, Supplier, Consumer, Operator, Operator)} with static parameter values
+		 * @param sql either complete sql statement or INSERT part
+		 * @param paramSql null or parameter list
+		 * @param type statement type
+		 * @param params parameters
+		 * @param generatedKeysHandler optional handler for generated keys (for insert statements)
+		 * @param before optional handler to perform right before the queries are executed
+		 * @param after optional handler to perform right after the queries are executed
+		 */
+		public void add(String sql, String paramSql, int type, Object[] params, Consumer<Integer> generatedKeysHandler, Operator before, Operator after) {
+			add(sql, paramSql, type, () -> params, generatedKeysHandler, before, after);
+		}
+
+		/**
+		 * Add an object, for which the uuid needs to be synchronized
+		 * @param object object
+		 * @throws NodeException
+		 */
+		public void addObjectToSynchronize(final NodeObject object) throws NodeException {
+			if (object != null && object.getGlobalId() == null) {
+				Transaction t = TransactionManager.getCurrentTransaction();
+				String tableName = t.getTable(object.getObjectInfo().getObjectClass());
+				objectsToSynchronize.computeIfAbsent(tableName, key -> new HashSet<>()).add(object);
+			}
+		}
+
+		/**
+		 * Add object for which missing references need to be updated
+		 * @param object object
+		 */
+		public void updateMissingReferences(NodeObject object) {
+			if (object != null) {
+				updateMissingReferences.add(object);
+			}
+		}
+
+		/**
+		 * Execute all collected statements
+		 * @throws NodeException
+		 */
+		public void execute() throws NodeException {
+			// do the collected batch statements
+			for (Map.Entry<Triple<String, String, Integer>, List<Pair<Supplier<Object[]>, Consumer<Integer>>>> entry : entrySet()) {
+				String sql = entry.getKey().getLeft();
+				String paramSql = entry.getKey().getMiddle();
+				int type = entry.getKey().getRight();
+
+				// execute before handlers
+				for (Operator handler : beforeHandlers.getOrDefault(entry.getKey(), Collections.emptyList())) {
+					handler.operate();
+				}
+
+				// supply the parameters
+				List<Object[]> params = new ArrayList<>();
+				for (Pair<Supplier<Object[]>, Consumer<Integer>> pair : entry.getValue()) {
+					params.add(pair.getLeft().supply());
+				}
+
+				// execute the statements
+				if (type == Transaction.INSERT_STATEMENT) {
+					final List<Integer> generatedKeys = new ArrayList<>();
+
+					AtomicReference<Throwable> error = new AtomicReference<>();
+					Observable.fromIterable(params).buffer(100).subscribe(batch -> {
+						Object[] combinedParams = batch.stream().flatMap(array -> Arrays.asList(array).stream()).collect(Collectors.toList()).toArray();
+						String fullSql = "%s%s".formatted(sql, StringUtils.repeat(paramSql, batch.size(), ", "));
+						generatedKeys.addAll(DBUtils.executeInsert(fullSql, combinedParams));
+					}, error::set);
+					if (error.get() != null) {
+						Throwable t = error.get();
+						if (t instanceof NodeException) {
+							throw (NodeException) t;
+						} else {
+							throw new NodeException(t);
+						}
+					}
+
+					List<Consumer<Integer>> generatedKeyHandlers = entry.getValue().stream().map(Pair::getRight)
+							.collect(Collectors.toList());
+					if (generatedKeyHandlers.size() != generatedKeys.size()) {
+						throw new NodeException(
+								"Cannot handle generated keys, because expected to get %d keys, but got %d keys."
+										.formatted(generatedKeyHandlers.size(), generatedKeys.size()));
+					}
+					for (int i = 0; i < generatedKeyHandlers.size(); i++) {
+						Consumer<Integer> h = generatedKeyHandlers.get(i);
+						if (h != null) {
+							h.accept(generatedKeys.get(i));
+						}
+					}
+				} else {
+					DBUtils.executeBatchStatement(sql, type, params, null);
+				}
+
+				// execute the after handlers
+				for (Operator handler : afterHandlers.getOrDefault(entry.getKey(), Collections.emptyList())) {
+					handler.operate();
+				}
+			}
+			// clear collected statements
+			clear();
+			beforeHandlers.clear();
+			afterHandlers.clear();
+
+			// synchronize the uuids of objects
+			for (Map.Entry<String, Set<NodeObject>> entry : objectsToSynchronize.entrySet()) {
+				String tableName = entry.getKey();
+				Map<Integer, NodeObject> objectMap = entry.getValue().stream().filter(o -> !o.isNew())
+						.collect(Collectors.toMap(NodeObject::getId, java.util.function.Function.identity()));
+
+				if (!objectMap.isEmpty()) {
+					DBUtils.executeMassStatement("SELECT id, uuid FROM `%s` WHERE id IN ".formatted(tableName),
+							objectMap.keySet(), 1, new SQLExecutor() {
+								public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+									while (rs.next()) {
+										int id = rs.getInt("id");
+										GlobalId globalId = new GlobalId(rs.getString("uuid"));
+
+										NodeObject object = objectMap.get(id);
+										if (object != null) {
+											object.setGlobalId(globalId);
+										}
+									}
+								};
+							});
+				}
+			}
+			// clear object to synchronize
+			objectsToSynchronize.clear();
+
+			// update missing references
+			Map<String, Integer> resolvedReferences = updateMissingReferences.stream()
+					.filter(o -> !o.isNew() && o.getGlobalId() != null)
+					.collect(Collectors.toMap(o -> o.getGlobalId().toString(), NodeObject::getId));
+
+			if (!resolvedReferences.isEmpty()) {
+				// left is the internal ID of the target, right is the id of the value to update (source_id)
+				List<Pair<Integer, Integer>> valueIds = new ArrayList<>();
+				List<Integer> referenceIds = new ArrayList<>();
+
+				String sql = "SELECT id, source_id, target_uuid FROM missingreference WHERE source_tablename = ? AND target_uuid IN";
+				DBUtils.executeMassStatement(sql, resolvedReferences.keySet(), 2, new SQLExecutor() {
+					public void prepareStatement(PreparedStatement stmt) throws SQLException {
+						stmt.setString(1, "value");
+					};
+
+					@Override
+					public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+						while (rs.next()) {
+							int refId = rs.getInt("id");
+							int sourceId = rs.getInt("source_id");
+							String targetUuid = rs.getString("target_uuid");
+
+							referenceIds.add(refId);
+							valueIds.add(Pair.of(resolvedReferences.get(targetUuid), sourceId));
+						}
+					}
+				});
+
+				List<Object[]> params = valueIds.stream().map(pair -> new Object[] {pair.getLeft(), pair.getRight()}).collect(Collectors.toList());
+				DBUtils.executeBatchUpdate("UPDATE `value` SET value_ref = ? WHERE id = ?", params);
+
+				DBUtils.executeMassStatement("DELETE FROM `missingreference` WHERE id IN", null, referenceIds, 1, null, Transaction.DELETE_STATEMENT);
+			}
+
+			// clear objects to update missing references
+			updateMissingReferences.clear();
+		}
 	}
 }

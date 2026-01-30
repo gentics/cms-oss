@@ -7,8 +7,11 @@ import {
     FolderItemType,
     FolderItemTypePlural,
     folderItemTypes,
+    FolderResponse,
     Language,
     NodeFeature,
+    PermissionResponse,
+    ResponseCode,
 } from '@gentics/cms-models';
 import {
     getExampleFileData,
@@ -470,11 +473,38 @@ describe('FolderActionsService', () => {
 
         describe('action calls', () => {
             function testActionCallFor(type: FolderItemType): void {
+                // Mock a responses from the CMS
+                spyOn(client.folder, 'get').and.callFake((id) => {
+                    return of({
+                        messages: [],
+                        responseInfo: {
+                            responseCode: ResponseCode.OK,
+                            responseMessage: '',
+                        },
+                        folder: {
+                            id: id,
+                            permissionsMap: {},
+                        },
+                    } as FolderResponse);
+                });
+                spyOn(client.permission, 'getInstance').and.callFake((type, instanceId) => {
+                    return of({
+                        messages: [],
+                        responseInfo: {
+                            responseCode: ResponseCode.OK,
+                            responseMessage: '',
+                        },
+                        perm: '0000000000',
+                        permissionsMap: {},
+                    } as PermissionResponse);
+                });
+
                 folderActions.getItems(PARENT_ID, type, false);
                 tick(500);
 
-                const currentState = state.now.folder[plural[type]];
-                expect(state.now.folder.lastError).toEqual('');
+                const folderState = state.now.folder;
+                const currentState = folderState[plural[type]];
+                expect(folderState.lastError).toEqual('');
                 expect(currentState).toEqual(jasmine.objectContaining({
                     creating: false,
                     fetching: false,

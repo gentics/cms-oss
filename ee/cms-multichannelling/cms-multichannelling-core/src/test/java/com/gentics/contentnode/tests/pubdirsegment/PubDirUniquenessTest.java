@@ -6,7 +6,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -456,7 +456,10 @@ public class PubDirUniquenessTest {
 			Trx.supply(() -> createFile(folder2, "file.txt", "Contents".getBytes()));
 		}
 
-		boolean expectFailure = !feature && siblings;
+		// we expect this to fail, when
+		// a) we are turning the feature on (was off) and the folders are siblings (because the folders would have the same segment then)
+		// b) we are turning the feature off (was on) and the folders are no siblings but contain conflicting files (because the files would then have the same paths)
+		boolean expectFailure = (!feature && siblings) || (feature && conflicts && !siblings);
 		try {
 			node = Trx.supply(() -> update(node, n -> n.setPubDirSegment(!n.isPubDirSegment())));
 			if (expectFailure) {
@@ -468,7 +471,7 @@ public class PubDirUniquenessTest {
 			assertDataConsistent();
 		} catch (NodeException e) {
 			if (!expectFailure) {
-				fail("Changing to pub_dir_segments unexpectedly failed");
+				fail("Changing to pub_dir_segments unexpectedly failed", e);
 			}
 		}
 	}

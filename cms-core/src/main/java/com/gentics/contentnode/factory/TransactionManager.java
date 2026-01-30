@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTransientException;
 import java.sql.Statement;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,7 +68,7 @@ public final class TransactionManager {
 	/**
 	 * Keepalive interval (in ms). Default is 1 hour
 	 */
-	public final static int KEEPALIVE_INTERVAL = 60 * 60 * 1000;
+	public final static long KEEPALIVE_INTERVAL = Duration.of(1, ChronoUnit.HOURS).toMillis();
 
 	/**
 	 * sequence for transaction ids
@@ -267,7 +269,7 @@ public final class TransactionManager {
 	 */
 	public static boolean isTransactionRunning(long id) {
 		synchronized (openTransactions) {
-			int foundAt = Collections.binarySearch(openTransactions, new Long(id));
+			int foundAt = Collections.binarySearch(openTransactions, id);
 
 			return foundAt >= 0;
 		}
@@ -764,7 +766,7 @@ public final class TransactionManager {
 			this.userId = user;
 			this.useConnectionPool = useConnectionPool;
 
-			this.id = new Long(id);
+			this.id = id;
 			parallelOpenTransactions = TransactionManager.getOpenTransactions();
 			this.factoryHandle = factoryHandle;
 			this.renderResult = new RenderResult();
@@ -1834,7 +1836,11 @@ public final class TransactionManager {
 			 * @see com.gentics.lib.db.Connector#getConnection()
 			 */
 			public PoolConnection getConnection() throws SQLException {
-				return new PoolConnection((int) getId(), TransactionImpl.this.getConnection(), true);
+				try {
+					return new PoolConnection((int) getId(), TransactionImpl.this.getConnection(), true);
+				} catch (TransactionException e) {
+					throw new SQLException(e);
+				}
 			}
 
 			/* (non-Javadoc)
@@ -1875,7 +1881,7 @@ public final class TransactionManager {
 		/**
 		 * @see com.gentics.contentnode.factory.Transaction#getConnection()
 		 */
-		public Connection getConnection() {
+		public Connection getConnection() throws TransactionException {
 			return connection;
 		}
 

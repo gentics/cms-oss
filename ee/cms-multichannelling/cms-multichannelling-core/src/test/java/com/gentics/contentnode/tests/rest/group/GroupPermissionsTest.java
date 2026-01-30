@@ -185,7 +185,7 @@ public class GroupPermissionsTest {
 			exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %d.", testedGroup.getId()));
 		}
 		TypePermissionList response = supply(testUser, () -> {
-			return new GroupResourceImpl().getPerms(Integer.toString(testedGroup.getId()), null, null, null);
+			return new GroupResourceImpl().getPerms(Integer.toString(testedGroup.getId()), null, null, null, null);
 		});
 		assertResponseCodeOk(response);
 		assertThat(response.getItems()).as("Types list").usingElementComparatorOnFields("type").containsExactly(
@@ -477,7 +477,7 @@ public class GroupPermissionsTest {
 			exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %d.", testedGroup.getId()));
 		}
 		TypePermissionList response = supply(testUser, () -> {
-			return new GroupResourceImpl().getPerms(Integer.toString(testedGroup.getId()), TypePerms.content.name(), null, null);
+			return new GroupResourceImpl().getPerms(Integer.toString(testedGroup.getId()), TypePerms.content.name(), null, null, null);
 		});
 		assertResponseCodeOk(response);
 		boolean editable = tested.isSub() && groupsPerm;
@@ -552,7 +552,7 @@ public class GroupPermissionsTest {
 	 */
 	protected void assertFolders(Node node, TypePermissions...expected) throws NodeException {
 		TypePermissionList response = supply(testUser, () -> {
-			return new GroupResourceImpl().getPerms(Integer.toString(testedGroup.getId()), TypePerms.node.name(), node.getFolder().getId(), null);
+			return new GroupResourceImpl().getPerms(Integer.toString(testedGroup.getId()), TypePerms.node.name(), null, node.getFolder().getId(), null);
 		});
 		assertResponseCodeOk(response);
 
@@ -571,7 +571,7 @@ public class GroupPermissionsTest {
 	 */
 	protected void assertFolders(Folder folder, Integer channelId, TypePermissions...expected) throws NodeException {
 		TypePermissionList response = supply(testUser, () -> {
-			return new GroupResourceImpl().getPerms(Integer.toString(testedGroup.getId()), TypePerms.folder.name(), folder.getId(), channelId);
+			return new GroupResourceImpl().getPerms(Integer.toString(testedGroup.getId()), TypePerms.folder.name(), null, folder.getId(), channelId);
 		});
 		assertResponseCodeOk(response);
 

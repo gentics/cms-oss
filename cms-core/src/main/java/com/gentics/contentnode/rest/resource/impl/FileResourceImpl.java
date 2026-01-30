@@ -541,7 +541,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 							return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 						} else {
 							// Save data to an existing file
-							return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
+							return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 						}
 					});
 
@@ -724,7 +724,8 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						response = createFile(in, folder.getId(), nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 					} else {
 						// Save data to an existing file
-						response = saveFile(in, fileId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
+						File file = MiscUtils.load(File.class, Integer.toString(fileId));
+						response = saveFile(in, fileId, filename, mediaType.get(), description, file.getNiceUrl(), file.getAlternateUrls(), null, file.getObjectTags());
 					}
 
 					if (conversionFailed) {
@@ -895,7 +896,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 								mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap());
 						} else {
 							// Save data to an existing file
-							response = saveFile(fileDataInputStream, fileId, request.getName(), mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
+							response = saveFile(fileDataInputStream, fileId, request.getName(), mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap());
 						}
 
 						if (conversionFailed) {
@@ -1141,10 +1142,11 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @param niceUrl The files nice URL.
 	 * @param alternateUrls The files alternate URLs.
 	 * @param properties Additional values to save to the files object properties.
+	 * @param tags 
 	 * @return A {@code FileUploadResponse} corresponding to the saved file.
 	 * @throws NodeException
 	 */
-	private FileUploadResponse saveFile(InputStream input, int fileId, String fileName, String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties) throws NodeException {
+	private FileUploadResponse saveFile(InputStream input, int fileId, String fileName, String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties, Map<String, ObjectTag> tags) throws NodeException {
 		Transaction t = getTransaction();
 
 		File file = (ContentFile) t.getObject(File.class, fileId, true);
@@ -1170,7 +1172,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			throw new NodeException(msg, new Exception(i18nMessage.toString()));
 		}
 
-		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties, Collections.emptyMap());
+		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties, tags);
 	}
 
 	/**

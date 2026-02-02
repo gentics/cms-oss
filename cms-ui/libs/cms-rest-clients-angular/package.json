@@ -5,7 +5,7 @@
   "peerDependencies": {
     "@angular/common": ">=20.3.0",
     "@angular/core": ">=20.3.0",
-    "@gentics/cms-models": "^6.2.3"
+    "@gentics/cms-models": "^6.4.0"
   },
   "devDependencies": {
     "@angular/common": ">=20.3.0",

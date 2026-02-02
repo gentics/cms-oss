@@ -5,14 +5,14 @@
   "peerDependencies": {
     "@angular/common": ">=20.3.0",
     "@angular/core": ">=20.3.0",
-    "@gentics/ui-core": "^6.2.3",
+    "@gentics/ui-core": "^6.4.1",
     "cropperjs": "^1.5.13",
     "tslib": "^2.5.0"
   },
   "devDependencies": {
     "@angular/common": ">=20.3.0",
     "@angular/core": ">=20.3.0",
-    "@gentics/ui-core": "^6.4.0",
+    "@gentics/ui-core": "^6.4.1",
     "cropperjs": "^1.5.13"
   }
 }

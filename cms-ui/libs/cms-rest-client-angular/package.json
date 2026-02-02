@@ -5,15 +5,15 @@
   "peerDependencies": {
     "@angular/common": ">=20.3.0",
     "@angular/core": ">=20.3.0",
-    "@gentics/cms-models": "^6.2.3",
-    "@gentics/cms-rest-client": "^6.2.3",
+    "@gentics/cms-models": "^6.4.1",
+    "@gentics/cms-rest-client": "^6.4.1",
     "@gentics/mesh-models": "^3.2.0"
   },
   "devDependencies": {
     "@angular/common": ">=20.3.0",
     "@angular/core": ">=20.3.0",
-    "@gentics/cms-models": "^6.4.0",
-    "@gentics/cms-rest-client": "^6.4.0",
+    "@gentics/cms-models": "^6.4.1",
+    "@gentics/cms-rest-client": "^6.4.1",
     "@gentics/mesh-models": "^3.2.0"
   }
 }

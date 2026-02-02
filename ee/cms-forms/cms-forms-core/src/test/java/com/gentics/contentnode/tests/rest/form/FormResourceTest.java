@@ -604,7 +604,7 @@ public class FormResourceTest {
 
 		try (Trx trx = new Trx(); WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
 			Form inWastebin = trx.getTransaction().getObject(Form.class, formId);
-			assertThat(inWastebin).as("Form in wastebin").isNotNull().hasFieldOrPropertyWithValue("deleted", true);
+			assertThat(inWastebin).as("Form in wastebin").isNotNull().isDeleted();
 		}
 	}
 
@@ -1124,7 +1124,7 @@ public class FormResourceTest {
 				perm(subFolder, PermType.createform));
 
 		Form form = execute(id -> TransactionManager.getCurrentTransaction().getObject(Form.class, id), response.getItem().getId());
-		assertThat(form).as("Form").isNotNull().hasFieldOrPropertyWithValue("deleted", false);
+		assertThat(form).as("Form").isNotNull().isNotDeleted();
 
 		consume(Folder::delete, subFolder);
 		form = execute(id -> {
@@ -1133,7 +1133,7 @@ public class FormResourceTest {
 				return t.getObject(Form.class, id);
 			}
 		}, response.getItem().getId());
-		assertThat(form).as("Form").isNotNull().hasFieldOrPropertyWithValue("deleted", true);
+		assertThat(form).as("Form").isNotNull().isDeleted();
 	}
 
 	@Test
@@ -1152,7 +1152,7 @@ public class FormResourceTest {
 				perm(subFolder, PermType.createform));
 
 		Form form = execute(id -> TransactionManager.getCurrentTransaction().getObject(Form.class, id), response.getItem().getId());
-		assertThat(form).as("Form").isNotNull().hasFieldOrPropertyWithValue("deleted", false);
+		assertThat(form).as("Form").isNotNull().isNotDeleted();
 
 		consume(id -> assertResponseOK(getFolderResource().delete(id, null, null)), subFolderId);
 		consume(id -> assertResponseOK(getFolderResource().deleteFromWastebin(id, 0)), subFolderId);
@@ -1181,7 +1181,7 @@ public class FormResourceTest {
 				perm(subFolder, PermType.createform));
 
 		Form form = execute(id -> TransactionManager.getCurrentTransaction().getObject(Form.class, id), response.getItem().getId());
-		assertThat(form).as("Form").isNotNull().hasFieldOrPropertyWithValue("deleted", false);
+		assertThat(form).as("Form").isNotNull().isNotDeleted();
 
 		consume(f -> f.delete(true), subFolder);
 		form = execute(id -> {

@@ -39,7 +39,8 @@
                     "watch": true
                 },
                 "ci": {
-                    "color": false
+                    "color": false,
+                    "jestConfig": "libs/cms-rest-client/jest.config.ci.ts"
                 }
             }
         }

@@ -30,7 +30,8 @@
                 "{workspaceRoot}/{projectRoot}",
                 "{workspaceRoot}/dist/{projectRoot}"
             ],
-            "preserveLocalDependencyProtocols": false
+            "preserveLocalDependencyProtocols": false,
+            "preserveMatchingDependencyRanges": false
         },
         "changelog": {
             "git": {

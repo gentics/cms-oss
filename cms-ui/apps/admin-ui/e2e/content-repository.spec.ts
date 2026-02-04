@@ -24,6 +24,7 @@ import {
     selectTab,
     selectTableRow,
     TestSize,
+    MESH_LOGIN,
 } from '@gentics/e2e-utils';
 import { UserUpdateRequest } from '@gentics/mesh-models';
 import { expect, Locator, test } from '@playwright/test';
@@ -156,7 +157,7 @@ test.describe('Content Repositories Module', () => {
         test('should be possible to login via manual credentials and to logout again', async ({ page }) => {
             await expect(managementContent).toBeHidden();
 
-            await loginWithForm(management.locator('.login-form'), AUTH.mesh);
+            await loginWithForm(management.locator('.login-form'), MESH_LOGIN);
             await managementContent.waitFor({ state: 'visible' });
 
             await logoutMeshManagement(page);
@@ -174,6 +175,7 @@ test.describe('Content Repositories Module', () => {
         });
 
         test.describe('Login Gate forces new password', () => {
+            const TEMPORARY_NEW_PASSWORD = 'admin-test';
 
             // Cleanup of the admin-user in case the test broke somehow which would leave us
             // with a broken user and break all other tests which need the user for login.
@@ -187,9 +189,8 @@ test.describe('Content Repositories Module', () => {
                     // If we need a pw-reset, then we do it with a manual login which sets the new PW
                     if (res?.i18nKey === 'auth_login_password_change_required') {
                         await IMPORTER.client.executeMappedJsonRequest(RequestMethod.POST, `/contentrepositories/${testCr.id}/proxy/api/v2/auth/login`, {
-                            username: AUTH.mesh.username,
-                            password: AUTH.mesh.password,
-                            newPassword: AUTH.mesh.newPassword,
+                            ...MESH_LOGIN,
+                            newPassword: TEMPORARY_NEW_PASSWORD,
                         }).send();
                         loggedIn = true;
                     }
@@ -204,17 +205,18 @@ test.describe('Content Repositories Module', () => {
                 } catch (err) {
                     if (!loggedIn) {
                         // Login with the temp password
-                        await IMPORTER.client.executeMappedJsonRequest(RequestMethod.POST, `/contentrepositories/${testCr.id}/proxy/api/v2/auth/login`, {
-                            username: AUTH.mesh.username,
-                            password: AUTH.mesh.newPassword,
-                        }).send();
+                        await IMPORTER.client.executeMappedJsonRequest(
+                            RequestMethod.POST,
+                            `/contentrepositories/${testCr.id}/proxy/api/v2/auth/login`,
+                            MESH_LOGIN,
+                        ).send();
                     }
 
                     // Get our user so we can update it
                     const me = await IMPORTER.client.executeMappedJsonRequest(RequestMethod.GET, `/contentrepositories/${testCr.id}/proxy/api/v2/auth/me`).send();
                     // Reset the password to the original
                     await IMPORTER.client.executeMappedJsonRequest(RequestMethod.POST, `/contentrepositories/${testCr.id}/proxy/api/v2/users/${me.uuid}`, {
-                        password: AUTH.mesh.password,
+                        password: MESH_LOGIN.password,
                     }).send();
                 }
             });
@@ -230,7 +232,7 @@ test.describe('Content Repositories Module', () => {
                     await usersLoad;
 
                     // Edit user and force password change
-                    userRow = findTableRowByText(managementContent, AUTH.mesh.username);
+                    userRow = findTableRowByText(managementContent, MESH_LOGIN.username);
                     await findTableAction(userRow, 'edit').click();
 
                     const userModal = page.locator('gtx-mesh-user-modal');
@@ -252,9 +254,9 @@ test.describe('Content Repositories Module', () => {
                     const newPassword = loginForm.locator(SELECTORS.LOGIN_FORM.NEW_PASSWORD);
                     await newPassword.waitFor({ state: 'visible' });
 
-                    await loginForm.locator(SELECTORS.LOGIN_FORM.USERNAME).fill(AUTH.mesh.username);
-                    await loginForm.locator(SELECTORS.LOGIN_FORM.PASSWORD).fill(AUTH.mesh.password);
-                    await newPassword.fill(AUTH.mesh.newPassword);
+                    await loginForm.locator(SELECTORS.LOGIN_FORM.USERNAME).fill(MESH_LOGIN.username);
+                    await loginForm.locator(SELECTORS.LOGIN_FORM.PASSWORD).fill(MESH_LOGIN.password);
+                    await newPassword.fill(TEMPORARY_NEW_PASSWORD);
 
                     const pwResetLoginReq = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/auth/login'));
                     await loginForm.locator(SELECTORS.LOGIN_FORM.SUBMIT).click();
@@ -270,14 +272,14 @@ test.describe('Content Repositories Module', () => {
 
                     const userModal = page.locator('gtx-mesh-user-modal');
                     await userModal.locator(SELECTORS.FORM.PASSWORD_CHECKBOX).click();
-                    await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).first().fill(AUTH.mesh.password);
-                    await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).last().fill(AUTH.mesh.password);
+                    await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).first().fill(MESH_LOGIN.password);
+                    await userModal.locator(SELECTORS.FORM.PASSWORD_INPUTS).last().fill(MESH_LOGIN.password);
 
                     const updateReq = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/users/*'));
                     await clickModalAction(userModal, 'confirm');
                     const resetRes = await updateReq;
                     const resetReqData: UserUpdateRequest = resetRes.request().postDataJSON();
-                    expect(resetReqData.password).toEqual(AUTH.mesh.password);
+                    expect(resetReqData.password).toEqual(MESH_LOGIN.password);
                 });
 
                 await test.step('Login with CR data should work again', async () => {
@@ -361,7 +363,7 @@ test.describe('Content Repositories Module', () => {
                     await exampleRow.waitFor({ state: 'visible' });
                     const projectId = await exampleRow.evaluate((el) => {
                         return el.getAttribute('data-id');
-                    })
+                    });
                     await expandTrableRow(exampleRow);
 
                     const nodesRow = findTrableRowById(permModal, `_project_${projectId}_nodes`);
@@ -379,7 +381,10 @@ test.describe('Content Repositories Module', () => {
                     const editModal = page.locator('gtx-mesh-role-permissions-edit-modal');
                     await editModal.locator('gtx-checkbox[formcontrolname="readPublished"] label').click();
 
-                    const loadRequest = page.waitForResponse(matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*'));
+                    const loadRequest = page.waitForResponse(matchRequest(
+                        'POST',
+                        '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*',
+                    ));
                     await clickModalAction(editModal, 'confirm');
                     await loadRequest;
                 });
@@ -389,7 +394,10 @@ test.describe('Content Repositories Module', () => {
 
                 await test.step('Apply permissions recursively to child nodes', async () => {
                     // Apply permissions recursively
-                    const recursiveLoadReq = page.waitForResponse(matchRequest('GET', '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*'));
+                    const recursiveLoadReq = page.waitForResponse(matchRequest(
+                        'GET',
+                        '/rest/contentrepositories/*/proxy/api/v2/roles/*/permissions/projects/*/nodes/*',
+                    ));
                     await findTableAction(minimalRow, 'applyRecursive').click();
                     await clickModalAction(page.locator('gtx-modal-dialog'), 'confirm');
                     await recursiveLoadReq;

@@ -252,7 +252,7 @@ test.describe('Page Editing', () => {
                         await formatButton.click();
 
                         // Verify format is applied
-                        const formattedText = mainEditable.locator(format.tag);
+                        const formattedText = mainEditable.locator(format[1]);
                         await expect(formattedText).toHaveText(TEXT);
                         await mainEditable.click();
 
@@ -1000,7 +1000,6 @@ test.describe('Page Editing', () => {
                 });
             });
 
-            // TODO: Investigate why it should be in the request body to begin with
             test('should render new tag after inserting into editable', async ({ page }) => {
                 // Clear the content
                 await mainEditable.click();

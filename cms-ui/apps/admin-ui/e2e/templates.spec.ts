@@ -65,9 +65,9 @@ test.describe('Templates Module', () => {
     test('should open node assignment modal for single template', async ({ page }) => {
         const tplRow = await findTableRowById(page, testTemplate.id);
 
-        const modal = page.locator(LINK_TO_NODE_MODAL);
-        const nodeTable = modal.locator('gtx-node-table');
-        const nodeRow = await findTableRowById(nodeTable, testNode.id);
+        let modal: Locator;
+        let nodeTable: Locator;
+        let nodeRow: Locator;
 
         await test.step('Unassign from node', async () => {
             const nodeLoad = page.waitForResponse(matchRequest('GET', '/rest/node'));
@@ -75,6 +75,10 @@ test.describe('Templates Module', () => {
 
             await findTableAction(tplRow, LINK_TO_NODE_ACTION).click();
             await Promise.all([nodeLoad, tplNodesLoad]);
+
+            modal = page.locator(LINK_TO_NODE_MODAL);
+            nodeTable = modal.locator('gtx-node-table');
+            nodeRow = await findTableRowById(nodeTable, testNode.id);
 
             await expect(nodeRow).toContainClass('selected');
             await selectTableRow(nodeRow);
@@ -143,7 +147,7 @@ test.describe('Templates Module', () => {
         const NEW_DESCRIPTION = 'Hello World foobar';
 
         await test.step('Open properties window', async () => {
-            const tplRow = findTableRowById(page, testTemplate.id);
+            const tplRow = await findTableRowById(page, testTemplate.id);
             await tplRow.locator('.data-column[data-id="name"]').click();
         });
 

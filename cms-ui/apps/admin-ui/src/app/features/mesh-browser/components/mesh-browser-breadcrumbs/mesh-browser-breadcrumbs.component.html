@@ -1,12 +1,19 @@
 <div class="breadcrumb-container">
-  @for (entry of entries; track entry.uuid; let first = $first) {
-    @if (!first) {
-      <icon class="separator">keyboard_arrow_right</icon>
+    @for (entry of entries; track entry.uuid; let first = $first; let last = $last) {
+        @if (!first) {
+            <icon class="separator">keyboard_arrow_right</icon>
+        }
+        @if (last) {
+            <span
+                class="breadcrumb-item last"
+                [title]="entry.displayName ?? entry.uuid"
+            >{{ entry.displayName ?? entry.uuid }}</span>
+        } @else {
+            <a
+                class="breadcrumb-item"
+                [title]="entry.displayName ?? entry.uuid "
+                [routerLink]="['../..', entry.uuid , language]"
+            >{{ entry.displayName ?? entry.uuid }}</a>
+        }
     }
-    <a
-      title="{{ entry.displayName }}"
-      class="breadcrumb-item"
-      [routerLink]="['../..', entry.uuid , language]"
-    >{{ entry.displayName }}</a>
-  }
 </div>

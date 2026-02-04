@@ -152,7 +152,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     editorNodeId: number;
     currentNode: Node;
     editorIsOpen = false;
-    isImageLoading = false;
     editMode: EditMode;
     // currently only used by form editor (not properties editing)
     itemValid = false;

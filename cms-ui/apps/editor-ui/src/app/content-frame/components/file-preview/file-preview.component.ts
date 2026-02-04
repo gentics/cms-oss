@@ -1,40 +1,39 @@
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
-    ElementRef,
-    EventEmitter,
     Input,
     OnChanges,
-    OnDestroy,
-    Output,
-    SimpleChanges,
-    ViewChild,
+    OnDestroy
 } from '@angular/core';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File as FileModel,
-    Folder,
     Image as ImageModel,
     PermissionsMapCollection,
     RotateParameters,
-    User,
+    User
 } from '@gentics/cms-models';
-import { ProgressBarComponent } from '@gentics/ui-core';
-import { Observable, Subscription, of } from 'rxjs';
-import { map, publishReplay, refCount, startWith, switchMap } from 'rxjs/operators';
+import { ChangesOf } from '@gentics/ui-core';
+import { Subscription } from 'rxjs';
+import { publishReplay, refCount } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
-import { isEditableImage } from '../../../common/utils/is-editable-image';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
-import { ApplicationStateService, ApplyImageDimensionsAction, FolderActionsService } from '../../../state';
+import { ApplicationStateService, FolderActionsService } from '../../../state';
+
+interface ImageVariant {
+    mediaQuery: string;
+    url: string;
+}
 
 @Component({
-    selector: 'file-preview',
-    templateUrl: './file-preview.tpl.html',
-    styleUrls: ['./file-preview.scss'],
+    selector: 'gtx-file-preview',
+    templateUrl: './file-preview.component.html',
+    styleUrls: ['./file-preview.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
@@ -43,89 +42,80 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     @Input()
     public file: FileModel | ImageModel;
 
-    @Output()
-    public imageLoading = new EventEmitter<boolean>();
+    @Input()
+    public nodeId: number;
 
-    @ViewChild('thumbnailImage')
-    public thumbnailImage: ElementRef;
+    public imageVariants: ImageVariant[] = [];
+    public imageUrl: string;
 
-    imageUrl: string;
-    downloadUrl: string;
-    fileExtension: string;
-    keepFileName = true;
-    nodeId: number;
-    private maxImageFullsizeDimensions = this.calculateMaxImageDimensions();
-    private subscriptions = new Subscription();
-    isEditableImage = isEditableImage;
-    hasFileEditPermission$: Observable<boolean>;
+    public downloadUrl: string;
+    public fileExtension: string;
+    public keepFileName = true;
 
-    get displayDimensions(): any {
-        return (this.file.type === 'image' && this.file.sizeX !== 0 && this.file.sizeY !== 0) ?
-            { width: this.file.sizeX, height: this.file.sizeY } :
-            // If there are no valid sizes, this is the fallback size
-            // to display SVGs in Internet Explorer (which should maintain its aspect ratio).
-            { width: 480, height: 270 };
-    }
+    public canEdit = false;
+    public loading = false;
+    public replacing = false;
 
-    private dismissErrorMessage(): void {}
+    private subscription: Subscription;
 
-    constructor(private resourceUrlBuilder: ResourceUrlBuilder,
+    constructor(
+        private changeDetector: ChangeDetectorRef,
+        private resourceUrlBuilder: ResourceUrlBuilder,
         private navigationService: NavigationService,
         private appState: ApplicationStateService,
         public permissions: PermissionService,
         private entityResolver: EntityResolver,
         private notification: I18nNotification,
-        private folderActions: FolderActionsService) {
-        this.subscriptions.add(
-            this.appState.select(state => state.entities).subscribe(entities => {
-                this.hasFileEditPermission$ = this.appState.select(() =>
-                    this.file.type === 'file' ? entities.file[this.file.id].folderId : entities.image[this.file.id].folderId)
-                    .pipe(
-                        switchMap(folderId => this.appState.select(state => state.entities.folder[folderId])),
-                        switchMap((folder: Folder) => {
-                            if (folder) {
-                                const permissionsMap = folder.permissionsMap;
-                                const isFile = this.file.type === 'file';
-                                if (!permissionsMap) {
-                                    return this.permissions.getFolderPermissionMap(folder.id).pipe(
-                                        map((permissionsMap: PermissionsMapCollection) => {
-                                            return this.hasEditPermission(permissionsMap, isFile);
-                                        }),
-                                    );
-                                }
-                                return of(this.hasEditPermission(permissionsMap, isFile));
-                            }
-                            return of(false);
-                        }),
-                    );
-            }),
-        );
-    }
+        private folderActions: FolderActionsService
+    ) {}
 
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(changes: ChangesOf<this>): void {
         const fileChanged = changes['file'];
         if (fileChanged) {
+            this.loadPermissions();
+
             if (this.file.type === 'image') {
                 const prev: ImageModel = fileChanged.previousValue || {};
                 const next: ImageModel = fileChanged.currentValue || {};
-                if (next.id !== prev.id || next.sizeX !== prev.sizeX || next.sizeY !== prev.sizeY || next.edate !== prev.edate) {
-                    this.dismissErrorMessage();
-                    const imageUrl = this.generateImageUrl();
-                    if (imageUrl !== this.imageUrl) {
-                        this.imageLoading.emit(true);
-                    }
+
+                if (fileChanged.firstChange || next.id !== prev.id || next.edate !== prev.edate) {
+                    this.generateImageUrls();
                 }
             }
+
             this.fileExtension = getFileExtension(this.file.name);
             this.generateDownloadUrl();
         }
-
-        this.nodeId = this.appState.now.editor.nodeId;
     }
 
     ngOnDestroy(): void {
-        this.dismissErrorMessage();
-        this.subscriptions.unsubscribe();
+        this.subscription.unsubscribe();
+    }
+
+    private loadPermissions(): void {
+        // Cancel loading of current permissions
+        if (this.subscription != null) {
+            this.subscription.unsubscribe();
+        }
+
+        this.canEdit = false;
+
+        // Just in case
+        if (this.file == null) {
+            this.subscription = null;
+            this.loading = false;
+            this.changeDetector.markForCheck();
+            return;
+        }
+
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
+        this.subscription = this.permissions.getFolderPermissionMap(this.file.folderId).subscribe(perms => {
+            this.canEdit = this.hasEditPermission(perms, this.file.type === 'file');
+            this.loading = false;
+            this.changeDetector.markForCheck();
+        });
     }
 
     editImage(): void {
@@ -157,9 +147,14 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         this.folderActions.rotateImage(rotateParameters);
     }
 
-    replaceFile(files: File[], uploadProgress: ProgressBarComponent): void {
+    replaceFile(files: File[]): void {
         if (!files || !files.length) {
             console.error('No files selected in FilePreview::replaceFile()');
+            return;
+        }
+
+        // Already working, can't start another
+        if (this.replacing) {
             return;
         }
 
@@ -177,11 +172,6 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             refCount(),
         );
 
-        uploadProgress.start(upload.pipe(
-            startWith(0),
-            map(() => 1),
-        ));
-
         if (this.keepFileName && (this.file.fileType !== files[0].type) ) {
             this.notification.show({
                 message: 'message.file_type_changed_warning',
@@ -194,7 +184,14 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             });
         }
 
+        this.replacing = true;
+        this.changeDetector.markForCheck();
+
         upload.subscribe(() => {
+            this.replacing = false;
+            this.generateImageUrls();
+            this.changeDetector.markForCheck();
+
             if (!this.keepFileName) {
                 this.notification.show({
                     message: 'message.file_replaced_with_success',
@@ -228,18 +225,8 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         }
     }
 
-    onImageLoadSuccess(): void {
-        this.imageLoading.emit(false);
-        const image = this.thumbnailImage.nativeElement as HTMLImageElement;
-        const unknownDimension = (this.file.type === 'image') ? this.file.sizeX === 0 || this.file.sizeY === 0 : false;
-
-        if (unknownDimension && image.naturalWidth !== 0 && image.naturalHeight !== 0) {
-            this.appState.dispatch(new ApplyImageDimensionsAction(this.file.id, image.naturalWidth, image.naturalHeight));
-        }
-    }
-
-    private onImageLoadError(event: ErrorEvent): void {
-        this.imageLoading.emit(false);
+    public onImageLoadError(event: ErrorEvent): void {
+        console.error(event);
         const toast = this.notification.show({
             message: 'message.image_load_error',
             translationParams: {
@@ -247,15 +234,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             },
             type: 'default',
             delay: 5000,
-            action: {
-                label: 'common.retry_button',
-                onClick: (): void => {
-                    const img = event.target as HTMLImageElement;
-                    img.setAttribute('src', this.generateImageUrl());
-                },
-            },
         });
-        this.dismissErrorMessage = () => toast.dismiss();
     }
 
     private generateDownloadUrl(): string {
@@ -264,18 +243,20 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         return this.downloadUrl = this.resourceUrlBuilder.fileDownload(this.file.id, nodeId);
     }
 
-    private generateImageUrl(): string {
+    private generateImageUrls(): void {
         const image = this.file as ImageModel;
-        // since this component is currently only used in the ContentFrame, we can use the nodeId stored in the editor state
-        const nodeId = this.appState.now.editor.nodeId;
-        if (image.sizeX < this.maxImageFullsizeDimensions && image.sizeX < this.maxImageFullsizeDimensions) {
-            return this.imageUrl = this.resourceUrlBuilder.imageFullsize(this.file.id, nodeId, this.file.edate || this.file.cdate);
-        } else {
-            const factor = Math.min(this.maxImageFullsizeDimensions / image.sizeX, this.maxImageFullsizeDimensions / image.sizeY);
-            const width = Math.round(factor * image.sizeX);
-            const height = Math.round(factor * image.sizeY);
-            const fileType = this.file.fileType;
-            return this.imageUrl = this.resourceUrlBuilder.imageThumbnail(this.file.id, width, height, nodeId, this.file.edate || this.file.cdate, fileType);
+
+        this.imageVariants = [];
+        this.imageUrl = this.resourceUrlBuilder.imageFullsize(this.file.id, this.nodeId, this.file.edate || this.file.cdate);
+
+        const widths = [460, 860, 1400, 1920];
+        for (const resizeWidth of widths) {
+            if (image.sizeX > resizeWidth) {
+                this.imageVariants.push({
+                    mediaQuery: `(max-width: ${resizeWidth}px)`,
+                    url: this.resourceUrlBuilder.imageThumbnail(this.file.id, resizeWidth, 'auto', this.nodeId, this.file.edate || this.file.cdate),
+                });
+            }
         }
     }
 
@@ -285,10 +266,6 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
     get editor(): User {
         return this.entityResolver.getUser((<any> this.file.editor) as number);
-    }
-
-    private calculateMaxImageDimensions(): number {
-        return Math.min(2000, Math.max(screen.width, screen.height));
     }
 
     private hasEditPermission(permissionsMap: PermissionsMapCollection, isFile: boolean): boolean {

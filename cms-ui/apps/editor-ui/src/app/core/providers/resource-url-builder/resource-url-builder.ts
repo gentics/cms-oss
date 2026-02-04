@@ -48,12 +48,12 @@ export class ResourceUrlBuilder {
      * if the given file type is resizable by gentics image store a url with resizing is returned
      * if no or an incompatible file type is is given, the url to the full sized original image is returned
      */
-    imageThumbnail(imageId: number, width: number, height: number, nodeId: number, changeDate?: number, fileType?: string): string {
+    imageThumbnail(imageId: number, width: number | string, height: number | string, nodeId: number, changeDate?: number, fileType?: string): string {
         // Append a string that changes when the image is updated to force the change detection to re-request the image.
         const cacheBust = changeDate ? String(changeDate) : Math.random().toString(36).substr(5);
 
         const data = {
-            cachebust: cacheBust,
+            // cachebust: cacheBust,
         };
         if (nodeId) {
             data['nodeId'] = nodeId;
@@ -61,7 +61,7 @@ export class ResourceUrlBuilder {
 
         const params = this.createParamsString(data);
 
-        return `${IMAGESTORE_URL}/${Math.round(width)}/${Math.round(height)}/prop${API_BASE_URL}/file/content/load/${imageId}?${params}`;
+        return `${IMAGESTORE_URL}/${typeof width === 'string' ? width : Math.round(width)}/${typeof height === 'string' ? height: Math.round(height)}/prop${API_BASE_URL}/file/content/load/${imageId}?${params}`;
     }
 
     /**

@@ -12,6 +12,24 @@
     margin: auto 0;
 }
 
+.mesh-browser-detail gtx-entity-detail-header {
+    &::ng-deep .gtx-entity-details-tab-content-header {
+        padding-left: 0;
+
+        h2 {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 0.25rem;
+            align-items: center;
+        }
+    }
+
+    .node-icon {
+        color: $gtx-color-primary;
+    }
+}
+
 .gtx-table-cell-boolean-true {
     color: $gtx-color-success;
 }
@@ -28,7 +46,7 @@
     display: grid;
     grid-template-columns: minmax(150px, auto) auto;
     font-size: 18px;
-    gap: 0.75rem 1rem;
+    gap: 1rem;
     position: relative;
     padding-top: 2rem;
 
@@ -37,11 +55,12 @@
     }
 
     .grid-item-label {
-        display: block;
+        display: flex;
         color: $gtx-color-dark-gray;
         text-transform: uppercase;
         word-break: break-all;
         text-overflow: ellipsis;
+        align-items: center;
     }
 
     .grid-item-value {
@@ -80,9 +99,8 @@
     overflow-x: hidden;
     overflow-y: auto;
     max-height: 200px;
-    min-height: 2.3rem;
+    min-height: 2.725rem;
     word-wrap: break-word;
-    margin-bottom: 0.5rem;
 }
 
 .field-binary {
@@ -161,5 +179,4 @@
     color: #ffb84f;
     font-weight: 400;
     border: 1px solid rgba(255, 184, 79, .3);
-    margin-left: 0.5rem;
 }

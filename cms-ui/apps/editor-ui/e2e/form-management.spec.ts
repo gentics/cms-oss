@@ -18,7 +18,7 @@ import {
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
-import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
+import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode, getAlohaIFrame } from './helpers';
 
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -102,6 +102,86 @@ test.describe('Form Management', () => {
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
         await expect(item).toBeVisible();
+    });
+
+    test('should add a text input with label', async ({ page }) => {
+        const EDITING_FORM = IMPORTER.get(FORM_ONE);
+
+        const loadReq = page.waitForResponse(matchRequest('GET', '/rest/form', {
+            params: {
+                folderId: `${EDITING_FORM.folderId}`,
+            },
+        }));
+        await navigateToApp(page);
+        await loginWithForm(page, AUTH.admin);
+        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        await loadReq;
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, EDITING_FORM.id);
+        await itemAction(item, 'edit');
+
+        // Wait for editor to be ready
+        const editable = page.locator('.form-editor-form');
+        await editable.waitFor();
+
+        const dropZone = editable.locator('.form-element-drop-zone');
+        let textInput = page.locator('gtx-form-editor-menu .form-element-type--used-as-title')
+            .getByText('Eingabefeld', { exact: true });
+        if (await textInput.count() < 1) {
+            textInput = page.locator('gtx-form-editor-menu .form-element-type--used-as-title')
+                .getByText('Input Field', { exact: true });
+        }
+        await dropZone.waitFor();
+        await textInput.waitFor();
+        await textInput.dragTo(dropZone);
+
+        const formElement = editable.locator('.form-element-container-inner.is-interactive-in-editor');
+        await formElement.waitFor();
+        const formElementEditor = formElement.locator('.form-element-properties-editor-container--opened');
+        if (!(await formElementEditor.isVisible())) {
+            await formElement.locator('icon.form-element-btn-properties-editor-toggle').click();
+        }
+        await expect(formElementEditor).toBeVisible();
+
+        const formElementInput = formElementEditor.locator('.form-element-properties-editor-property');
+        const inputBox = formElementInput.locator('input.input-element[type="text"]').nth(2);
+
+        await test.step('Correct input is saved', async () => {
+            await inputBox.clear();
+            await inputBox.fill('abcdefgh');
+
+            // Save and verify request
+            const saveRequest = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
+
+            // TODO: Investigate why we need this timeout/why save isn't executed immediately.
+            // Possible reason being angular event bindings.
+            await page.waitForTimeout(2000);
+
+            await editorAction(page, 'save');
+
+            const response = await saveRequest;
+            const data = await response.request().postDataJSON();
+            expect(data.data.elements[0].value_i18n.en).toStrictEqual('abcdefgh');
+        });
+
+        await test.step('Untrimmed input is saved', async () => {
+            await inputBox.clear();
+            await inputBox.fill('    abcdefgh    ');
+
+            // Save and verify request
+            const saveRequest = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
+
+            // TODO: Investigate why we need this timeout/why save isn't executed immediately.
+            // Possible reason being angular event bindings.
+            await page.waitForTimeout(2000);
+
+            await editorAction(page, 'save');
+
+            const response = await saveRequest;
+            const data = await response.request().postDataJSON();
+            expect(data.data.elements[0].value_i18n.en).toStrictEqual('abcdefgh');
+        });
     });
 
     test('should be able to change success-page correctly', {

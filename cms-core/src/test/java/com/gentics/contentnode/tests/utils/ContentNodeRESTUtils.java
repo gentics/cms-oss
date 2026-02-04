@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -29,8 +31,6 @@ import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.TemplateResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
-
-import software.amazon.awssdk.utils.StringUtils;
 
 /**
  * Static helper class for using the REST API in Tests

@@ -118,7 +118,7 @@ export async function openPropertiesTab(page: Page): Promise<void> {
 
         // This is for images and files, which open in the "preview" tab initially
         const tabs = page.locator('content-frame .content-frame-container > .properties-tabs');
-        const previewActivated = await tabs.locator('tab-link[data-id="preview"].is-active').count();
+        const previewActivated = await tabs.locator('.tab-link[data-id="preview"].is-active').count();
 
         // If the image/file is in preview, then we need to open the "properties" tab
         if (previewActivated > 0) {

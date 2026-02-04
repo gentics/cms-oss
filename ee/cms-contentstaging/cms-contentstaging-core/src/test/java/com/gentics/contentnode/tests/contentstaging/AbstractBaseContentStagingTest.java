@@ -18,6 +18,8 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.gentics.contentnode.object.ContentFile;
+import com.gentics.contentnode.tests.assertj.GCNAssertions;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -340,7 +342,12 @@ public abstract class AbstractBaseContentStagingTest<T extends StageableNodeObje
 		consume(NodeObject::delete, object);
 		try (Trx trx = new Trx(); WastebinFilter wbf = WastebinFilter.get(true, node)) {
 			object = object.reload();
-			assertThat(object).as("Object in wastebin").isNotNull().hasFieldOrPropertyWithValue("deleted", true);
+
+			// We cannot use hasFieldOrPropertyWithValue("deleted", true) here, because NodeObject have both a
+			// isDeleted() and a getDeleted() method, and hasFieldOrPropertyWithValue() uses the wrong getter that does
+			// not yield a boolean but a timestamp.
+			assertThat(object).as("Object exists").isNotNull();
+			assertThat(object.isDeleted()).as("Object is in wastebin").isTrue();
 			trx.success();
 		}
 
@@ -382,7 +389,7 @@ public abstract class AbstractBaseContentStagingTest<T extends StageableNodeObje
 			object = object.reload();
 			assertThat(object).as("Deleted object").isNull();
 			folder = folder.reload();
-			assertThat(folder).as("Folder in wastebin").isNotNull().hasFieldOrPropertyWithValue("deleted", true);
+			assertThat(folder).as("Folder in wastebin").isNotNull().isDeleted(true);
 			trx.success();
 		}
 

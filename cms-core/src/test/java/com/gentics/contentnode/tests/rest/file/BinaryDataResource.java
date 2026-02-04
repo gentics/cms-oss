@@ -8,8 +8,11 @@ import jakarta.ws.rs.Path;
  */
 @Path("/binary")
 public final class BinaryDataResource {
+
+	public static final String CONTENT = "testcontent";
+
 	@GET
 	public byte[] data() {
-		return "testcontent".getBytes();
+		return CONTENT.getBytes();
 	}
 }

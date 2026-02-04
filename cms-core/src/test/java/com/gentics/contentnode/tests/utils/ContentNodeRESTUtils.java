@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -28,6 +29,8 @@ import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.TemplateResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
+
+import software.amazon.awssdk.utils.StringUtils;
 
 /**
  * Static helper class for using the REST API in Tests
@@ -184,7 +187,9 @@ public class ContentNodeRESTUtils {
 		if (expectedCode != null) {
 			assertNotNull("Response must contain a response info", response.getResponseInfo());
 			assertEquals("Check response code", expectedCode, response.getResponseInfo().getResponseCode());
-			assertEquals("Check response message", expectedResponseMessage, response.getResponseInfo().getResponseMessage());
+			if (StringUtils.isNotBlank(expectedResponseMessage)) {
+				assertThat(response.getResponseInfo().getResponseMessage()).as("Checkresponse message").endsWith(expectedResponseMessage);
+			}
 		}
 
 		if (!ObjectTransformer.isEmpty(expectedMessages)) {

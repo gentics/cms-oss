@@ -1,3 +1,1 @@
-[Link Checker CT] - Changed the way the Link Checker CT loaded translations. Now does a static import of the translations instead of loading them dynamically. 
-
-This fixes an issue where some labels of the Link Checker CT were not correctly translated due to race condition between rendering and loading the translations.
+Link Checker Custom Tool: Fixed missing translations for filters.

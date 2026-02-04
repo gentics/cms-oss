@@ -541,7 +541,12 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 							return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 						} else {
 							// Save data to an existing file
-							return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
+							File file = MiscUtils.load(File.class, Integer.toString(finalFileId));
+							if (file != null) {
+								return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, file.getNiceUrl(), file.getAlternateUrls(), null, file.getObjectTags());
+							} else {
+								return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
+							}
 						}
 					});
 

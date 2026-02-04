@@ -492,13 +492,11 @@ public class FileUploadManipulatorTest {
 		try (Trx trx = new Trx(createSession(testUser.getLogin()), true);
 				PropertyTrx pTrx = new FileUploadManipulatorURL(url);
 				PropertyTrx localServer = new PropertyTrx("cn_local_server", "http://localhost:" + restContext.getPort())) {
-			String data = TESTCONTENT;
-			uploadMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("blah.txt", node.getFolder().getId(), node.getId(), "", true,
-					data);
+			uploadMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("blah.txt", node.getFolder().getId(), node.getId(), "", true, new String(expected, StandardCharsets.UTF_8));
 			FileResource resource = ContentNodeRESTUtils.getFileResource();
 			FileUploadResponse uploadResponse = resource.create(uploadMultiPart);
 			if (uploadResponse.getFile() != null) {
-				assertThat(uploadResponse.getFile().getFileSize()).isEqualTo(data.getBytes(StandardCharsets.UTF_8).length);
+				assertThat(uploadResponse.getFile().getFileSize()).isEqualTo(expected.length);
 				assertThat(uploadResponse.getFile().getFileSize().longValue()).isEqualTo(new java.io.File(ConfigurationValue.DBFILES_PATH.get(), uploadResponse.getFile().getId() + ".bin").length());
 			}
 			asserter.accept(uploadResponse);

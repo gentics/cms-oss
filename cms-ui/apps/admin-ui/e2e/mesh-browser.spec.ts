@@ -3,8 +3,12 @@ import {
     BASIC_TEMPLATE_ID,
     CONTENT_REPOSITORY_MESH,
     EntityImporter,
+    FILE_ONE,
     findTableRowById,
+    FIXTURE_FILE_ONE,
+    FIXTURE_IMAGE_ONE,
     FOLDER_A,
+    IMAGE_ONE,
     IMPORT_ID,
     IMPORT_TYPE,
     ITEM_TYPE_PAGE,
@@ -12,17 +16,14 @@ import {
     LANGUAGE_EN,
     loginWithForm,
     matchRequest,
+    MESH_LOGIN,
+    MESH_SCHEMA_BIN_CONTENT,
     MESH_SCHEMA_CONTENT,
     MESH_SCHEMA_FOLDER,
-    MESH_SCHEMA_BIN_CONTENT,
     navigateToApp,
     NODE_MINIMAL,
     openContext,
     PAGE_ONE,
-    FILE_ONE,
-    IMAGE_ONE,
-    FIXTURE_IMAGE_ONE,
-    FIXTURE_FILE_ONE,
     PAGE_ONE_DE,
     PageImportData,
     SCHEDULE_PUBLISHER,
@@ -123,7 +124,7 @@ test.describe('Mesh Browser', () => {
             await row.click();
 
             // Fill in Mesh credentials and submit
-            await loginWithForm(page.locator('.login-form'), AUTH.mesh);
+            await loginWithForm(page.locator('.login-form'), MESH_LOGIN);
 
             // Now the schema list should appear
             page.locator('.schema-list-wrapper').waitFor();
@@ -212,12 +213,11 @@ test.describe('Mesh Browser', () => {
             await navigateToModule(page, 'mesh-browser');
 
             // Click into the Mesh CR
-            const row = findTableRowById(page, testCr.id);
-            await row.waitFor();
+            const row = await findTableRowById(page, testCr.id);
             await row.click();
 
             // Wait for folders to be loaded
-            const folderLoad = page.waitForResponse(request => {
+            const folderLoad = page.waitForResponse((request) => {
                 if (!matchRequest('POST', '/rest/contentrepositories/*/proxy/api/v2/*/graphql')(request)) {
                     return false;
                 }
@@ -226,7 +226,7 @@ test.describe('Mesh Browser', () => {
             }, { timeout: 5_000 });
 
             // Fill in Mesh credentials and submit
-            await loginWithForm(page.locator('.login-form'), AUTH.mesh);
+            await loginWithForm(page.locator('.login-form'), MESH_LOGIN);
 
             // Now the schema list should appear
             await folderLoad;
@@ -289,7 +289,7 @@ test.describe('Mesh Browser', () => {
             }, { timeout: 5_000 });
 
             // Fill in Mesh credentials and submit
-            await loginWithForm(page.locator('.login-form'), AUTH.mesh);
+            await loginWithForm(page.locator('.login-form'), MESH_LOGIN);
 
             // Now the schema list should appear
             await folderLoad;

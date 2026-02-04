@@ -4030,7 +4030,7 @@ public class PageFactory extends AbstractFactory {
 				contentTags = loadContentTags();
 				t.putIntoLevel2Cache(this, CONTENTTAGS, contentTags);
 			} else if (tagIds == null) {
-				tagIds = contentTags.values().stream().map(ContentTag::getId).collect(Collectors.toList());
+				loadContentTagIds();
 			}
 			return contentTags;
 		}

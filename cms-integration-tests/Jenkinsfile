@@ -112,6 +112,12 @@ spec:
 
                         try {
                             dir(path: 'cms-integration-tests') {
+                                // set write permissions to the group for directories, which must be writable
+                                // in the container. This is necessary because when using a rootless docker host
+                                // the user with guid 1000 on the host is mapped onto user with guid 0 (root) in the container
+                                sh "chown :1000 cms/packages cms/logs -R"
+                                sh "chmod g+w cms/packages cms/logs -R"
+
                                 // Start services
                                 sh "${composeCmd} up -d --wait --quiet-pull"
                             }

@@ -1,9 +1,9 @@
-import { TemplateDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { Node, Raw, TemplateBO, TemplateCreateRequest } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
+import { TemplateDataService } from '../../../../shared';
 
 @Component({
     selector: 'gtx-create-template-modal',

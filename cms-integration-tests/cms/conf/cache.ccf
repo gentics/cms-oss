@@ -1,0 +1,52 @@
+# DEFAULT CACHE REGION
+## maximum of 1000 objects per cache
+## objects will be removed if longer than 15 minutes idle
+## maximum object lifetime is 30 minutes
+## memory shrinker will actively remove old items every 5 minutes
+jcs.default=
+jcs.default.cacheattributes.MaxObjects=1000
+jcs.default.cacheattributes.UseMemoryShrinker=true
+jcs.default.cacheattributes.MaxMemoryIdleTimeSeconds=900
+jcs.default.cacheattributes.ShrinkerIntervalSeconds=300
+jcs.default.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.default.elementattributes.IsEternal=false
+jcs.default.elementattributes.MaxLifeSeconds=1800
+
+# PRE-DEFINED CACHE REGIONS
+jcs.region.gentics-content-imagestorecache=DC
+jcs.region.gentics-content-imagestorecache.cacheattributes.MaxObjects=0
+jcs.region.gentics-content-imagestorecache.elementattributes.MaxLifeSeconds=86400
+jcs.region.gentics-nodeobjects=
+jcs.region.gentics-nodeobjects.cacheattributes.MaxObjects=100000
+jcs.region.gentics-nodeobjects.elementattributes.MaxLifeSeconds=86400
+jcs.region.gentics-nodeobjects.elementattributes.MaxMemoryIdleTimeSeconds=86400
+
+jcs.region.gentics-publishable-objects=PUB
+jcs.region.gentics-publishable-objects.cacheattributes.MaxObjects=0
+jcs.region.gentics-publishable-objects.elementattributes.MaxLifeSeconds=86400
+
+# CACHE REGION FOR EXTENSIBLE PARTTYPES
+# disable disk cache since objects stored in this cache
+# might not be fully serializable
+jcs.region.gentics-content-extensibleparttype=
+jcs.region.gentics-content-extensibleparttype.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.region.gentics-content-extensibleparttype.cacheattributes.MemoryCacheName=org.apache.jcs.engine.memory.lru.LRUMemoryCache
+jcs.region.gentics-content-extensibleparttype.cacheattributes.MaxObjects=1000
+jcs.region.gentics-content-extensibleparttype.cacheattributes.useLateral=false
+jcs.region.gentics-content-extensibleparttype.cacheattributes.useRemote=false
+jcs.region.gentics-content-extensibleparttype.cacheattributes.useDisk=false
+jcs.region.gentics-content-extensibleparttype.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.region.gentics-content-extensibleparttype.elementattributes.IsSpool=false
+jcs.region.gentics-content-extensibleparttype.elementattributes.IsRemote=false
+jcs.region.gentics-content-extensibleparttype.elementattributes.IsLateral=false
+
+# AVAILABLE AUXILIARY CACHES not used
+jcs.auxiliary.DC=org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory
+jcs.auxiliary.DC.attributes=org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes
+jcs.auxiliary.DC.attributes.DiskPath=${com.gentics.contentnode.cache.path}
+jcs.auxiliary.DC.attributes.MaxKeySize=10000
+
+jcs.auxiliary.PUB=org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory
+jcs.auxiliary.PUB.attributes=org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes
+jcs.auxiliary.PUB.attributes.DiskPath=${com.gentics.contentnode.cache.path}
+jcs.auxiliary.PUB.attributes.MaxKeySize=1000000

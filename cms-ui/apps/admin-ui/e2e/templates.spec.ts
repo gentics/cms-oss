@@ -1,4 +1,4 @@
-import { Node, Template, TemplateSaveRequest } from '@gentics/cms-models';
+import { Node, Template, TemplateResponse, TemplateSaveRequest } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
@@ -11,14 +11,15 @@ import {
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    pickSelectValue,
     selectTableRow,
     selectTrableRow,
     TestSize,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { expect, Locator, test } from '@playwright/test';
+import { expect, Locator, Response, test } from '@playwright/test';
 import { AUTH } from './common';
-import { navigateToModule } from './helpers';
+import { findEntityTableActionButton, navigateToModule } from './helpers';
 
 const LINK_TO_NODE_ACTION = 'linkToNode';
 const LINK_TO_NODE_MODAL = 'gtx-assign-templates-to-nodes-modal';
@@ -28,6 +29,8 @@ const LINK_TO_FOLDER_MODAL = 'gtx-assign-templates-to-folders-modal';
 test.describe('Templates Module', () => {
     const IMPORTER = new EntityImporter();
 
+    let templateModule: Locator;
+    let templateTable: Locator;
     let testTemplate: Template;
     let testNode: Node;
 
@@ -54,12 +57,45 @@ test.describe('Templates Module', () => {
         await loginWithForm(page, AUTH.admin);
 
         // Navigate to the scheduler
-        await navigateToModule(page, 'templates');
+        templateModule = await navigateToModule(page, 'templates');
 
         // select our "empty node", as unassign from the test node, and it
         // wouldn't show up anymore and just cause issues.
-        const nodeTable = page.locator('gtx-node-table');
+        const nodeTable = templateModule.locator('gtx-node-table');
         await clickTableRow(await findTableRowById(nodeTable, IMPORTER.dummyNode));
+        templateTable = templateModule.locator('gtx-template-table');
+    });
+
+    test('should be able to create a template', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19607',
+        }],
+    }, async ({ page }) => {
+        const TEMPLATE_NAME = 'Test Template';
+        const TEMPLATE_MARKUP = '1';
+        let templateId: number;
+        let listReq: Promise<Response>;
+
+        await test.step('Create Template', async () => {
+            await findEntityTableActionButton(templateTable, 'create').click();
+            const modal = page.locator('gtx-create-template-modal');
+            const form = modal.locator('gtx-template-properties form');
+
+            await form.locator('[formControlName="name"] input').fill(TEMPLATE_NAME);
+            await pickSelectValue(form.locator('[formControlName="markupLanguage"]'), TEMPLATE_MARKUP);
+
+            const saveReq = waitForResponseFrom(page, 'POST', '/rest/template');
+            listReq = waitForResponseFrom(page, 'GET', '/rest/template');
+            await clickModalAction(modal, 'confirm');
+            const saveRes = await saveReq;
+            templateId = (await saveRes.json() as TemplateResponse).template.id;
+        });
+
+        await test.step('Visible in Table', async () => {
+            await listReq;
+            await expect(await findTableRowById(templateTable, templateId)).toBeVisible();
+        });
     });
 
     test('should open node assignment modal for single template', async ({ page }) => {

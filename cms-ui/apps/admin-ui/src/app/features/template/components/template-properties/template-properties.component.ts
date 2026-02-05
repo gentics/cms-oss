@@ -1,10 +1,10 @@
-import { MarkupLanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { TagEditorChange } from '@gentics/cms-integration-api-models';
 import { IndexById, MarkupLanguage, Node, Raw, TemplateBO } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { MarkupLanguageDataService } from '../../../../shared';
 
 export enum TemplatePropertiesMode {
     CREATE = 'create',
@@ -20,7 +20,7 @@ export enum TemplatePropertiesMode {
         generateFormProvider(TemplatePropertiesComponent),
         generateValidatorProvider(TemplatePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class TemplatePropertiesComponent extends BasePropertiesComponent<TemplateBO> implements OnInit {
 
@@ -46,7 +46,7 @@ export class TemplatePropertiesComponent extends BasePropertiesComponent<Templat
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.markupData.watchAllEntities().subscribe(values => {
+        this.subscriptions.push(this.markupData.watchAllEntities().subscribe((values) => {
             this.markupLanguages = {};
             for (const ml of values) {
                 this.markupLanguages[`${ml.id}`] = ml;
@@ -58,9 +58,9 @@ export class TemplatePropertiesComponent extends BasePropertiesComponent<Templat
     public tagsChanged(event: TagEditorChange): void {
         // Ignore all events which are not for the current template
         if (!event
-            || event.entityType !== 'template'
-            || `${event.entityId}` !== `${this.value?.id || ''}`
-            || event.nodeId !== this.node?.id
+          || event.entityType !== 'template'
+          || `${event.entityId}` !== `${this.value?.id || ''}`
+          || event.nodeId !== this.node?.id
         ) {
             return;
         }

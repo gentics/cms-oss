@@ -131,6 +131,10 @@ $file-color: $gcms-color-file;
         transition: height 200ms ease, opacity 200ms ease;;
         will-change: opacity;
 
+        &.vector img {
+            min-width: 250px;
+        }
+
         &.loading {
             opacity: 0.001;
             transition-duration: 0s;

@@ -20,6 +20,7 @@
         <div
             class="thumbnail"
             [class.loading]="loading"
+            [class.vector]="imageDimensions == null"
             [style.aspect-ratio]="imageDimensions?.width > 0 ? `${imageDimensions.width}/${imageDimensions.height}`: null"
         >
             <picture class="previewed-image">

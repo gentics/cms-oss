@@ -7,9 +7,13 @@ import {
     NODE_MINIMAL,
     navigateToApp,
     pickSelectValue,
+    FIXTURE_IMAGE_JPEG1,
+    FIXTURE_IMAGE_JPEG2,
+    FIXTURE_FILE_TXT1,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
-import { AUTH, FIXTURE_TEST_FILE_TXT_1, FIXTURE_TEST_IMAGE_JPG_1, FIXTURE_TEST_IMAGE_JPG_2 } from './common';
+import { AUTH } from './common';
 import {
     closeObjectPropertyEditor,
     editorAction,
@@ -54,8 +58,8 @@ test.describe('Media Management', () => {
 
     test('should be possible to create a new file and edit the object-properties', async ({ page }) => {
         // Upload file and wait for response
-        const uploadedFiles = await uploadFiles(page, ITEM_TYPE_FILE, [FIXTURE_TEST_FILE_TXT_1]);
-        const FILE = uploadedFiles[FIXTURE_TEST_FILE_TXT_1];
+        const uploadedFiles = await uploadFiles(page, ITEM_TYPE_FILE, [FIXTURE_FILE_TXT1]);
+        const FILE = uploadedFiles[FIXTURE_FILE_TXT1.fixturePath];
 
         // Open properties
         let list = findList(page, ITEM_TYPE_FILE);
@@ -79,8 +83,8 @@ test.describe('Media Management', () => {
 
     test('should be possible to create a new image and edit the object-properties', async ({ page }) => {
         // Upload image and wait for response
-        const uploadedFiles = await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_1]);
-        const IMAGE = uploadedFiles[FIXTURE_TEST_IMAGE_JPG_1];
+        const uploadedFiles = await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_IMAGE_JPEG1]);
+        const IMAGE = uploadedFiles[FIXTURE_IMAGE_JPEG1.fixturePath];
 
         // Open properties
         let list = findList(page, ITEM_TYPE_IMAGE);
@@ -104,8 +108,8 @@ test.describe('Media Management', () => {
 
     test('should display the updated value even after switching object-properties', async ({ page }) => {
         // Upload image and wait for response
-        const uploadedFiles = await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_TEST_IMAGE_JPG_2]);
-        const IMAGE = uploadedFiles[FIXTURE_TEST_IMAGE_JPG_2];
+        const uploadedFiles = await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_IMAGE_JPEG2]);
+        const IMAGE = uploadedFiles[FIXTURE_IMAGE_JPEG2.fixturePath];
 
         // Open properties
         let list = findList(page, ITEM_TYPE_IMAGE);
@@ -131,5 +135,45 @@ test.describe('Media Management', () => {
         const selectedValue = await colorSelect.locator('.view-value')
             .getAttribute('data-value');
         expect(selectedValue).toBe(String(COLOR_ID));
+    });
+
+    test('should be able to replace an existing image', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19525',
+        }],
+    }, async ({ page }) => {
+        // Upload image and wait for response
+        const uploadedFiles = await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_IMAGE_JPEG1]);
+        const IMAGE = uploadedFiles[FIXTURE_IMAGE_JPEG1.fixturePath];
+
+        // Open properties
+        let list = findList(page, ITEM_TYPE_IMAGE);
+        let item = await findImage(list, IMAGE.id);
+        await itemAction(item, 'properties');
+
+        // Verify current state and upload a replacement image
+        const preview = page.locator('content-frame gtx-file-preview');
+        const thumbnail = preview.locator('.image-preview .thumbnail');
+
+        // Wait for the image to be visible/loaded
+        await thumbnail.locator('.previewed-image img').waitFor({ state: 'visible' });
+        const imageRect = await thumbnail.locator('.previewed-image img').evaluate((el) => el.getBoundingClientRect());
+        const details = preview.locator('.image-details');
+        const dimensions = await details.locator('.dimensions').textContent();
+        const fileSize = await details.locator('.filesize').textContent();
+
+        const replaceFilePicker = preview.locator('[data-action="replace"] input[type="file"]');
+        const replaceReq = waitForResponseFrom(page, 'POST', `/rest/file/save/${IMAGE.id}`, {
+            timeout: 20_000,
+        });
+        await replaceFilePicker.setInputFiles(FIXTURE_IMAGE_JPEG2.fixturePath);
+        await replaceReq;
+
+        await expect(details.locator('.dimensions')).not.toHaveText(dimensions);
+        await expect(details.locator('.filesize')).not.toHaveText(fileSize);
+        const newRect = await thumbnail.locator('.previewed-image img').evaluate((el) => el.getBoundingClientRect());
+
+        expect(`${imageRect.width}x${imageRect.height}`).not.toEqual(`${newRect.width}x${newRect.height}`);
     });
 });

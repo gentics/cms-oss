@@ -1,6 +1,6 @@
-import { AvailableImageFormats, Image } from "@gentics/cms-models";
+import { ModifiableImageFormats, Image } from "@gentics/cms-models";
 
-export function getImageTypeFromFileName(fileName: string): AvailableImageFormats | null {
+export function getImageTypeFromFileName(fileName: string): ModifiableImageFormats | null {
     const idx = fileName.lastIndexOf('.');
 
     // If the file has no extension
@@ -30,7 +30,7 @@ export function getImageTypeFromFileName(fileName: string): AvailableImageFormat
     return null;
 }
 
-export function getImageTypeFromMimeType(mimeType: string): AvailableImageFormats | null {
+export function getImageTypeFromMimeType(mimeType: string): ModifiableImageFormats | null {
     switch (mimeType.toLowerCase()) {
         case 'image/bmp':
             return 'bmp';
@@ -51,6 +51,6 @@ export function getImageTypeFromMimeType(mimeType: string): AvailableImageFormat
     return null;
 }
 
-export function getImageType(image: Image): AvailableImageFormats | null {
+export function getImageType(image: Image): ModifiableImageFormats | null {
     return getImageTypeFromMimeType(image.fileType) ?? getImageTypeFromFileName(image.name);
 }

@@ -1313,7 +1313,10 @@ export interface MultiUnlocalizeRequest extends UnlocalizeRequest {
     ids: number[];
 }
 
-export type AvailableImageFormats =
+/**
+ * Image formats which can be modified in/with the CMS via the `resize` and `rotate` endpoints.
+ */
+export type ModifiableImageFormats =
  'png'
 | 'jpg'
 | 'bmp'
@@ -1338,7 +1341,7 @@ export interface CropResizeParameters {
     height: number;
     mode: string;
     resizeMode: string;
-    targetFormat: AvailableImageFormats;
+    targetFormat: ModifiableImageFormats;
     copyFile: boolean;
     fpX?: number;
     fpY?: number;
@@ -1351,7 +1354,7 @@ export interface RotateParameters {
     image: {
         id: number;
     };
-    targetFormat: AvailableImageFormats;
+    targetFormat: ModifiableImageFormats;
     copyFile: boolean;
     rotate: 'cw' | 'ccw';
 }

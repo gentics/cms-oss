@@ -7,6 +7,7 @@ import static com.gentics.mesh.util.URIUtils.encodeSegment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ProtocolException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -43,6 +44,7 @@ import jakarta.ws.rs.core.StreamingOutput;
 import jakarta.ws.rs.core.UriBuilder;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.translate.CharSequenceTranslator;
@@ -2884,21 +2886,15 @@ public class MeshPublisher implements AutoCloseable {
 								throw new NodeException(String.format("Cannot publish %s, binary data not found", file));
 							}
 
-							if (supportsPublishOnCreate) {
-								return client.updateNodeBinaryField(
-										task.project.name,
-										task.uuid,
-										getMeshLanguage(file),
-										"draft",
-										"binarycontent",
-										in,
-										file.getFilesize(),
-										file.getFilename(),
-										file.getFiletype(),
-										true,
-										task.project.enforceBranch(task.nodeId))
-									.toSingle();
-							}
+							Predicate<Throwable> isEOS = e -> {
+								while (e != null) {
+									if (e instanceof ProtocolException) {
+										return true;
+									}
+									e = e.getCause();
+								}
+								return false;
+							};
 
 							return client.updateNodeBinaryField(
 									task.project.name,
@@ -2910,8 +2906,44 @@ public class MeshPublisher implements AutoCloseable {
 									file.getFilesize(),
 									file.getFilename(),
 									file.getFiletype(),
+									supportsPublishOnCreate,
 									task.project.enforceBranch(task.nodeId))
-								.toSingle();
+								.toSingle()
+								.onErrorResumeNext(error -> {
+									if (isEOS.test(error)) {
+										return Trx.supply(() -> {
+											try {
+												logger.warn(String.format("I/O error while attempting to publish binary %s with ID %d: %s, retrying with fallback", (file.isImage() ? "image" : "file"), file.getId(), error.getMessage()));
+												java.io.File tmpFile = new java.io.File(System.getProperty("java.io.tmpdir"), file.getGlobalId() + ".tmp");
+												FileUtils.copyInputStreamToFile(file.getFileStream(), tmpFile);
+												//tmpFile = new java.io.File(System.getProperty("java.io.tmpdir"), file.getGlobalId() + ".tmp");
+
+												return client.updateNodeBinaryField(
+														task.project.name,
+														task.uuid,
+														getMeshLanguage(file),
+														"draft",
+														"binarycontent",
+														FileUtils.openInputStream(tmpFile),
+														tmpFile.length(),
+														file.getFilename(),
+														file.getFiletype(),
+														supportsPublishOnCreate,
+														task.project.enforceBranch(task.nodeId))
+													.toSingle()
+													.doFinally(() -> {
+														if (tmpFile != null && tmpFile.exists()) {
+															tmpFile.delete();
+														}
+													});
+											} catch (IOException e1) {
+												return Single.error(e1);
+											}
+										});
+									} else {
+										return Single.error(error);
+									}
+								});
 						});
 					});
 				}

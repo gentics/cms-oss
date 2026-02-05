@@ -2,9 +2,11 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    EventEmitter,
     Input,
     OnChanges,
-    OnDestroy
+    OnDestroy,
+    Output
 } from '@angular/core';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
@@ -15,8 +17,8 @@ import {
     User
 } from '@gentics/cms-models';
 import { ChangesOf } from '@gentics/ui-core';
-import { Subscription } from 'rxjs';
-import { publishReplay, refCount } from 'rxjs/operators';
+import { from, Subscription } from 'rxjs';
+import { publishReplay, refCount, switchMap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
@@ -45,8 +47,12 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     @Input()
     public nodeId: number;
 
+    @Output()
+    public fileChange = new EventEmitter<FileModel | ImageModel>();
+
     public imageVariants: ImageVariant[] = [];
     public imageUrl: string;
+    public imageDimensions: { width: number; height: number } | null = null;
 
     public downloadUrl: string;
     public fileExtension: string;
@@ -54,9 +60,9 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
     public canEdit = false;
     public loading = false;
-    public replacing = false;
 
-    private subscription: Subscription;
+    private permSubscription: Subscription;
+    private modifySubscription: Subscription;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
@@ -70,39 +76,44 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     ) {}
 
     ngOnChanges(changes: ChangesOf<this>): void {
-        const fileChanged = changes['file'];
+        const fileChanged = changes.file;
         if (fileChanged) {
-            this.loadPermissions();
-
-            if (this.file.type === 'image') {
-                const prev: ImageModel = fileChanged.previousValue || {};
-                const next: ImageModel = fileChanged.currentValue || {};
-
-                if (fileChanged.firstChange || next.id !== prev.id || next.edate !== prev.edate) {
-                    this.generateImageUrls();
-                }
-            }
-
-            this.fileExtension = getFileExtension(this.file.name);
-            this.generateDownloadUrl();
+            this.handleFileUpdate();
         }
     }
 
     ngOnDestroy(): void {
-        this.subscription.unsubscribe();
+        if (this.permSubscription != null) {
+            this.permSubscription.unsubscribe();
+        }
+        if (this.modifySubscription != null) {
+            this.modifySubscription.unsubscribe();
+        }
+    }
+
+    private handleFileUpdate(): void {
+        this.loadPermissions();
+
+        if (this.file.type === 'image') {
+            this.generateImageUrls();
+            this.imageDimensions = { width: this.file.sizeX, height: this.file.sizeY };
+        }
+
+        this.fileExtension = getFileExtension(this.file.name);
+        this.generateDownloadUrl();
     }
 
     private loadPermissions(): void {
         // Cancel loading of current permissions
-        if (this.subscription != null) {
-            this.subscription.unsubscribe();
+        if (this.permSubscription != null) {
+            this.permSubscription.unsubscribe();
         }
 
         this.canEdit = false;
 
         // Just in case
         if (this.file == null) {
-            this.subscription = null;
+            this.permSubscription = null;
             this.loading = false;
             this.changeDetector.markForCheck();
             return;
@@ -111,7 +122,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.subscription = this.permissions.getFolderPermissionMap(this.file.folderId).subscribe(perms => {
+        this.permSubscription = this.permissions.getFolderPermissionMap(this.file.folderId).subscribe(perms => {
             this.canEdit = this.hasEditPermission(perms, this.file.type === 'file');
             this.loading = false;
             this.changeDetector.markForCheck();
@@ -124,6 +135,11 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     }
 
     rotateImage(direction: 'cw' | 'ccw'): void {
+        // Don't start another operation while it's already loading
+        if (this.loading) {
+            return;
+        }
+
         let targetFormat;
         switch (this.file.fileType) {
             case 'image/jpeg':
@@ -144,7 +160,16 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             copyFile: false,
             rotate: direction,
         };
-        this.folderActions.rotateImage(rotateParameters);
+
+        this.modifySubscription = this.folderActions.rotateImage(rotateParameters).subscribe((loadedImage) => {
+            this.fileChange.emit(loadedImage);
+
+            this.file = loadedImage;
+            this.handleFileUpdate();
+
+            this.loading = false;
+            this.changeDetector.markForCheck();
+        });
     }
 
     replaceFile(files: File[]): void {
@@ -154,7 +179,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         }
 
         // Already working, can't start another
-        if (this.replacing) {
+        if (this.loading) {
             return;
         }
 
@@ -184,34 +209,57 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             });
         }
 
-        this.replacing = true;
+        this.loading = true;
         this.changeDetector.markForCheck();
 
-        upload.subscribe(() => {
-            this.replacing = false;
-            this.generateImageUrls();
-            this.changeDetector.markForCheck();
+        this.modifySubscription = upload.pipe(
+            switchMap(() => this.folderActions.getImage(this.file.id, { nodeId: this.nodeId })),
+        ).subscribe({
+            next: (loadedImage) => {
+                this.fileChange.emit(loadedImage);
 
-            if (!this.keepFileName) {
+                this.file = loadedImage;
+                this.handleFileUpdate();
+
+                this.loading = false;
+                this.changeDetector.markForCheck();
+
+                if (!this.keepFileName) {
+                    this.notification.show({
+                        message: 'message.file_replaced_with_success',
+                        translationParams: {
+                            fileName: this.file.name,
+                            newFileName: files[0].name,
+                        },
+                        type: 'success',
+                        delay: 5000,
+                    });
+                } else {
+                    this.notification.show({
+                        message: 'message.file_replaced_success',
+                        translationParams: {
+                            fileName: this.file.name,
+                        },
+                        type: 'success',
+                        delay: 5000,
+                    });
+                }
+            },
+            error: err => {
+                this.loading = false;
+                this.changeDetector.markForCheck();
+
+                // TODO: Use error-handler
                 this.notification.show({
-                    message: 'message.file_replaced_with_success',
+                    message: 'message.file_uploads_error',
                     translationParams: {
-                        fileName: this.file.name,
-                        newFileName: files[0].name,
+                        _type: this.file.type,
+                        files: this.file.name,
                     },
-                    type: 'success',
-                    delay: 5000,
+                    type: 'alert',
+                    delay: 10000,
                 });
-            } else {
-                this.notification.show({
-                    message: 'message.file_replaced_success',
-                    translationParams: {
-                        fileName: this.file.name,
-                    },
-                    type: 'success',
-                    delay: 5000,
-                });
-            }
+            },
         });
     }
 

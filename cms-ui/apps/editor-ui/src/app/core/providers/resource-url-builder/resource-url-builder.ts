@@ -53,7 +53,7 @@ export class ResourceUrlBuilder {
         const cacheBust = changeDate ? String(changeDate) : Math.random().toString(36).substr(5);
 
         const data = {
-            // cachebust: cacheBust,
+            cachebust: cacheBust,
         };
         if (nodeId) {
             data['nodeId'] = nodeId;

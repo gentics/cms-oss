@@ -69,6 +69,7 @@ services:
       ELASTICSEARCH_URL:
       CONF_FILES: cms
       KEYCLOAK_ACTIVE: false
+      LOGS_PATH: custom-logs
 
       # Mesh CR Settings
       CR_URL_MESH_CR: http://mesh:8080/example
@@ -84,7 +85,7 @@ services:
       - ./cms/commands:/cms/scheduler-commands
       - ./cms/conf:/cms/conf
       - ./cms/packages:/cms/packages:x
-      - ./cms/logs:/cms/logs:x
+      - ./cms/logs:/cms/custom-logs:rw
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/rest/auth/globalprefix"]

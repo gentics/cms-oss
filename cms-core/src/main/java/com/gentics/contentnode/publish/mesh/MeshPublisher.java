@@ -2886,16 +2886,6 @@ public class MeshPublisher implements AutoCloseable {
 								throw new NodeException(String.format("Cannot publish %s, binary data not found", file));
 							}
 
-							Predicate<Throwable> isEOS = e -> {
-								while (e != null) {
-									if (e instanceof ProtocolException) {
-										return true;
-									}
-									e = e.getCause();
-								}
-								return false;
-							};
-
 							return client.updateNodeBinaryField(
 									task.project.name,
 									task.uuid,
@@ -2910,6 +2900,15 @@ public class MeshPublisher implements AutoCloseable {
 									task.project.enforceBranch(task.nodeId))
 								.toSingle()
 								.onErrorResumeNext(error -> {
+									Predicate<Throwable> isEOS = e -> {
+										while (e != null) {
+											if (e instanceof ProtocolException) {
+												return true;
+											}
+											e = e.getCause();
+										}
+										return false;
+									};
 									if (isEOS.test(error)) {
 										return Trx.supply(() -> {
 											try {

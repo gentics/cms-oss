@@ -8,23 +8,22 @@ import {
     OnDestroy,
     Output
 } from '@angular/core';
-import { EditMode } from '@gentics/cms-integration-api-models';
+import { getImageType } from '@gentics/cms-components';
 import {
     File as FileModel,
     Image as ImageModel,
     PermissionsMapCollection,
-    RotateParameters,
-    User
+    RotateParameters
 } from '@gentics/cms-models';
 import { ChangesOf } from '@gentics/ui-core';
-import { from, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { publishReplay, refCount, switchMap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
-import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
+import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 interface ImageVariant {
@@ -66,13 +65,13 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
     constructor(
         private changeDetector: ChangeDetectorRef,
-        private resourceUrlBuilder: ResourceUrlBuilder,
-        private navigationService: NavigationService,
         private appState: ApplicationStateService,
-        public permissions: PermissionService,
-        private entityResolver: EntityResolver,
+        private resourceUrlBuilder: ResourceUrlBuilder,
+        private permissions: PermissionService,
+        private folderActions: FolderActionsService,
+        private overlay: EditorOverlayService,
+        private errorHandler: ErrorHandler,
         private notification: I18nNotification,
-        private folderActions: FolderActionsService
     ) {}
 
     ngOnChanges(changes: ChangesOf<this>): void {
@@ -96,7 +95,9 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
         if (this.file.type === 'image') {
             this.generateImageUrls();
-            this.imageDimensions = { width: this.file.sizeX, height: this.file.sizeY };
+            this.imageDimensions = this.file.sizeX > 0
+                ? { width: this.file.sizeX, height: this.file.sizeY }
+                : null;
         }
 
         this.fileExtension = getFileExtension(this.file.name);
@@ -130,8 +131,33 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
     }
 
     editImage(): void {
-        const nodeId = this.appState.now.editor.nodeId;
-        this.navigationService.modal(nodeId, 'image', this.file.id, EditMode.EDIT).navigate();
+        if (this.loading) {
+            return;
+        }
+
+        this.loading = true;
+        this.changeDetector.markForCheck();
+
+        this.overlay.editImage({
+            itemId: this.file.id,
+            nodeId: this.nodeId,
+        }).then((updatedImage) => {
+            if (!updatedImage) {
+                return;
+            }
+
+            this.fileChange.emit(updatedImage);
+
+            this.file = updatedImage;
+            this.handleFileUpdate();
+
+            this.loading = false;
+            this.changeDetector.markForCheck();
+        }).catch(() => {
+            // Error is already handled in the main function
+            this.loading = false;
+            this.changeDetector.markForCheck();
+        });
     }
 
     rotateImage(direction: 'cw' | 'ccw'): void {
@@ -140,18 +166,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             return;
         }
 
-        let targetFormat;
-        switch (this.file.fileType) {
-            case 'image/jpeg':
-                targetFormat = 'jpg';
-                break;
-            case 'image/png':
-                targetFormat = 'png';
-                break;
-            default:
-                targetFormat = 'png';
-                break;
-        }
+        const targetFormat = getImageType(this.file as ImageModel);
         const rotateParameters: RotateParameters = {
             image: {
                 id: this.file.id,
@@ -249,7 +264,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
                 this.loading = false;
                 this.changeDetector.markForCheck();
 
-                // TODO: Use error-handler
+                this.errorHandler.catch(err, { notification: false });
                 this.notification.show({
                     message: 'message.file_uploads_error',
                     translationParams: {
@@ -306,14 +321,6 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
                 });
             }
         }
-    }
-
-    get creator(): User {
-        return this.entityResolver.getUser((<any> this.file.creator) as number);
-    }
-
-    get editor(): User {
-        return this.entityResolver.getUser((<any> this.file.editor) as number);
     }
 
     private hasEditPermission(permissionsMap: PermissionsMapCollection, isFile: boolean): boolean {

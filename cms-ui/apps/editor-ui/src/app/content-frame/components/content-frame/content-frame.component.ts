@@ -1399,7 +1399,12 @@ span.diff-html-added {
                 return;
             }
 
-            if (this.currentItem !== item && !isEqual(this.currentItem, item)) {
+            if (
+                this.currentItem.type !== 'image'
+                && this.currentItem.type !== 'file'
+                && this.currentItem !== item
+                && !isEqual(this.currentItem, item)
+            ) {
                 this.currentItem = {
                     ...this.currentItem,
                     ...structuredClone(item),

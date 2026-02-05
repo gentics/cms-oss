@@ -17,7 +17,11 @@
 
     <div *ngIf="file.type === 'image'" class="image-preview">
         <div class="filename">{{ file.name }}</div>
-        <div class="thumbnail" [class.loading]="loading">
+        <div
+            class="thumbnail"
+            [class.loading]="loading"
+            [style.aspect-ratio]="imageDimensions?.width > 0 ? `${imageDimensions.width}/${imageDimensions.height}`: null"
+        >
             <picture class="previewed-image">
                 <source
                     *ngFor="let variant of imageVariants"
@@ -37,19 +41,19 @@
 
     <div class="author-details">
         <div
-            *ngIf="creator"
+            *ngIf="file.creator"
             class="created"
             [innerHTML]="'editor.file_preview_creator_label' | i18n:{
-                name: creator.firstName + ' ' + creator.lastName,
+                name: file.creator.firstName + ' ' + file.creator.lastName,
                 date: (file.cdate | i18nDate),
                 time: (file.cdate | i18nDate:'time')
             }"
         ></div>
         <div
             class="edited"
-            *ngIf="file.cdate !== file.edate && editor"
+            *ngIf="file.cdate !== file.edate && file.editor"
             [innerHTML]="'editor.file_preview_editor_label' | i18n:{
-                name: editor.firstName + ' ' + editor.lastName,
+                name: file.editor.firstName + ' ' + file.editor.lastName,
                 date: (file.edate | i18nDate),
                 time: (file.edate | i18nDate:'time')
             }"
@@ -57,7 +61,7 @@
     </div>
 
     <div class="actions-container">
-        <div *ngIf="file.type === 'image'" class="actions-row">
+        <div *ngIf="file.type === 'image' && imageDimensions" class="actions-row">
             <gtx-button
                 flat
                 data-action="rotate-left"
@@ -79,7 +83,7 @@
 
         <div class="actions-row">
             <gtx-button
-                *ngIf="file.type === 'image'"
+                *ngIf="file.type === 'image' && imageDimensions"
                 flat
                 data-action="edit-image"
                 (click)="editImage()"

@@ -52,8 +52,6 @@ services:
     ports:
       - 8080:8080
 
-    entrypoint: "/cms/conf/tests-entrypoint.sh"
-
     environment:
       # General Container Settings
       TZ: "Europe/Vienna"

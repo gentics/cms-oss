@@ -1,6 +1,6 @@
 {
   "name": "@gentics/form-generator",
-  "version": "6.3.11",
+  "version": "6.3.12",
   "license": "Apache-2.0",
   "peerDependencies": {
     "@angular/animations": ">=19.0.0",
@@ -17,8 +17,8 @@
     "@angular/common": ">=19.0.0",
     "@angular/core": ">=19.0.0",
     "@angular/forms": ">=19.0.0",
-    "@gentics/cms-components": "^6.3.11",
-    "@gentics/cms-models": "^6.3.11",
+    "@gentics/cms-components": "^6.3.12",
+    "@gentics/cms-models": "^6.3.12",
     "lodash-es": "^4.17.15",
     "uuid": "^9.0.0"
   },

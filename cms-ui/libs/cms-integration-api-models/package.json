@@ -1,18 +1,18 @@
 {
   "name": "@gentics/cms-integration-api-models",
-  "version": "6.4.1",
+  "version": "6.4.2",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@gentics/aloha-models": "^6.4.1",
-    "@gentics/cms-models": "^6.4.1",
-    "@gentics/cms-rest-client": "^6.4.1",
+    "@gentics/aloha-models": "^6.4.2",
+    "@gentics/cms-models": "^6.4.2",
+    "@gentics/cms-rest-client": "^6.4.2",
     "@types/jquery": "^3.5.19",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@gentics/aloha-models": "^6.4.1",
-    "@gentics/cms-models": "^6.4.1",
-    "@gentics/cms-rest-client": "^6.4.1",
+    "@gentics/aloha-models": "^6.4.2",
+    "@gentics/cms-models": "^6.4.2",
+    "@gentics/cms-rest-client": "^6.4.2",
     "@types/jquery": "^3.5.19",
     "rxjs": "^7.8.1"
   }

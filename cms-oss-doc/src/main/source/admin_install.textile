@@ -47,8 +47,8 @@ Restart=on-failure
 # Replace "YOUR_LICENSE_KEY" in the following line with your actual license key.
 Environment="LICENSEKEY=YOUR_LICENSE_KEY"
 # Only one of the two following lines may be uncommented. This example assumes that the enterprise version is used, adapt the following two lines if the OSS version should be used instead.
-# ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.files=cms -cp cms-oss-server.jar --add-opens=java.base/java.lang=ALL-UNNAMED com.gentics.contentnode.server.Runner
-ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.files=cms -cp cms-server.jar --add-opens=java.base/java.lang=ALL-UNNAMED com.gentics.contentnode.server.Runner
+# ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.path=conf -Dcom.gentics.contentnode.config.files=cms -cp cms-oss-server.jar --add-opens=java.base/java.lang=ALL-UNNAMED com.gentics.contentnode.server.Runner
+ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.path=conf -Dcom.gentics.contentnode.config.files=cms -cp cms-server.jar --add-opens=java.base/java.lang=ALL-UNNAMED com.gentics.contentnode.server.Runner
 WorkingDirectory=/cms
 LimitMEMLOCK=infinity
 LimitNOFILE=65536
@@ -59,6 +59,8 @@ LimitCORE=infinity
 [Install]
 WantedBy=multi-user.target
 </shell>
+
+Please note that @-Dcom.gentics.contentnode.config.path=conf@ can be omitted, as having a default value of @conf@. Here we mention it to make the whole config path clear, consisting of @user.dir@ + @com.gentics.contentnode.config.path@ + @com.gentics.contentnode.config.files@ , which in this case corresponds to /cms/conf/cms . 
 
 The license key can alternatively also be set by storing the key in @/cms/keys/license.key@.
 

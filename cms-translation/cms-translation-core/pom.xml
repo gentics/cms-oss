@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.gentics.cms</groupId>
     <artifactId>cms-translation</artifactId>
-    <version>6.4.2-SNAPSHOT</version>
+    <version>6.4.2</version>
   </parent>
 
   <artifactId>cms-translation-core</artifactId>

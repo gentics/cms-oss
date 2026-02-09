@@ -5,6 +5,10 @@ import {
     clickModalAction,
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
+    CONSTRUCT_TEST_SELECT_COLOR,
+    CONSTRUCT_TEST_SELECT_COLOR_HIDDEN,
+    CONSTRUCT_TEST_SELECT_COLOR_INLINE,
+    CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE,
     EntityImporter,
     FIXTURE_IMAGE_ONE,
     IMAGE_ONE,
@@ -15,10 +19,10 @@ import {
     matchesUrl,
     matchRequest,
     navigateToApp,
-    NODE_MINIMAL,
+    NODE_FULL,
     onRequest,
     openContext,
-    PAGE_ONE,
+    PAGE_EIGHT,
     pickSelectValue,
     TestSize,
     wait,
@@ -73,7 +77,7 @@ test.describe('Page Editing', () => {
 
         await test.step('Test Bootstrapping', async () => {
             await IMPORTER.cleanupTest();
-            await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
+            await IMPORTER.bootstrapSuite(TestSize.FULL);
         });
     });
 
@@ -89,7 +93,7 @@ test.describe('Page Editing', () => {
             await IMPORTER.setupBinaryFiles({
                 [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_ONE,
             });
-            await IMPORTER.setupTest(TestSize.MINIMAL);
+            await IMPORTER.setupTest(TestSize.FULL);
         });
 
         await test.step('Specialized Test Setup', async () => {
@@ -100,7 +104,7 @@ test.describe('Page Editing', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_FULL)!.id);
         });
     });
 
@@ -122,7 +126,7 @@ test.describe('Page Editing', () => {
 
         test.describe('Basic Editing', () => {
             test.beforeEach(async ({page}) => {
-                editingPage = IMPORTER.get(PAGE_ONE);
+                editingPage = IMPORTER.get(PAGE_EIGHT);
                 await openEditingPageInEditmode(page);
             });
 
@@ -189,7 +193,7 @@ test.describe('Page Editing', () => {
                     await editorAction(page, 'close');
 
                     await page.locator('content-frame').waitFor({state: 'detached'});
-                    await expect(page.locator('folder-contents')).toBeInViewport({ratio: 1.0});
+                    await expect(page.locator('folder-contents')).toBeInViewport({ratio: 0.3});
                 });
             });
 
@@ -220,13 +224,13 @@ test.describe('Page Editing', () => {
                 await page.locator('content-frame').waitFor({state: 'detached'});
                 // Ratio is "rather low", as the content may overflow/cause scrolling, and that
                 // also counts towards viewport visibilty.
-                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.8 });
+                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.3 });
             });
         });
 
         test.describe('Formatting', () => {
             test.beforeEach(() => {
-                editingPage = IMPORTER.get(PAGE_ONE);
+                editingPage = IMPORTER.get(PAGE_EIGHT);
             });
 
             test.describe('add and remove basic formats', () => {
@@ -564,15 +568,15 @@ test.describe('Page Editing', () => {
 
         test.describe('Links', () => {
             test.beforeEach(async ({page}) => {
-                editingPage = IMPORTER.get(PAGE_ONE);
+                editingPage = IMPORTER.get(PAGE_EIGHT);
                 await openEditingPageInEditmode(page);
             });
 
             test('should be able to select an internal page as link', async ({ page }) => {
                 const TEXT_CONTENT = 'Hello ';
                 const LINK_TEXT = 'World';
-                const LINK_ITEM = IMPORTER.get(PAGE_ONE);
-                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL)!;
+                const LINK_ITEM = IMPORTER.get(PAGE_EIGHT);
+                const ITEM_NODE = IMPORTER.get(NODE_FULL)!;
                 const LINK_TITLE = 'My Link Title';
                 const LINK_TARGET = '_blank';
                 const LINK_ANCHOR = 'test-anchor';
@@ -610,8 +614,8 @@ test.describe('Page Editing', () => {
             test('should show an alert and an inactive modal while IO error on opening a link editor', async ({ page }) => {
                 const TEXT_CONTENT = 'Gen ';
                 const LINK_TEXT = 'ticks';
-                const LINK_ITEM = IMPORTER.get(PAGE_ONE);
-                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL)!;
+                const LINK_ITEM = IMPORTER.get(PAGE_EIGHT);
+                const ITEM_NODE = IMPORTER.get(NODE_FULL)!;
                 const LINK_TITLE = 'My Link Title';
                 const LINK_TARGET = '_blank';
                 const LINK_ANCHOR = 'test-anchor';
@@ -736,7 +740,7 @@ test.describe('Page Editing', () => {
                     description: 'SUP-18537',
                 }],
             }, async ({page}) => {
-                const LINK_ITEM = IMPORTER.get(PAGE_ONE);
+                const LINK_ITEM = IMPORTER.get(PAGE_EIGHT);
                 await createLinkCopyPasteTest(page, async () => {
                     await createInternalLink(page, async repoBrowser => {
                         await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
@@ -905,7 +909,7 @@ test.describe('Page Editing', () => {
             });
 
             async function editPageAndCreateTable(page) {
-                editingPage = IMPORTER.get(PAGE_ONE);
+                editingPage = IMPORTER.get(PAGE_EIGHT);
 
                 await openEditingPageInEditmode(page);
                 await mainEditable.click();
@@ -921,7 +925,7 @@ test.describe('Page Editing', () => {
 
         test.describe('Constructs', () => {
             test.beforeEach(async ({page}) => {
-                editingPage = IMPORTER.get(PAGE_ONE);
+                editingPage = IMPORTER.get(PAGE_EIGHT);
                 await openEditingPageInEditmode(page);
             });
 
@@ -1007,7 +1011,7 @@ test.describe('Page Editing', () => {
                 const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
 
                 const renderUrl = '/rest/page/renderTag/*';
-                let postedEditableContent = "";
+                let postedEditableContent = '';
                 page.on('request', request => {
                     if (request.method() === 'POST' && matchesPath(request.url(), renderUrl)) {
                         const body = JSON.parse(request.postData());
@@ -1025,6 +1029,58 @@ test.describe('Page Editing', () => {
 
                 expect(postedEditableContent).toContain(`<node ${tagName}>`);
             });
+
+            async function testEditButton(page: Page, tagId: string, showButton: boolean): Promise<void> {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                const renderUrl = '/rest/page/renderTag/*';
+                let postedEditableContent = '';
+                page.on('request', request => {
+                    if (request.method() === 'POST' && matchesPath(request.url(), renderUrl)) {
+                        const body = JSON.parse(request.postData());
+                        postedEditableContent = body.tags['content'].properties.text.stringValue;
+                    }
+                });
+                const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
+                const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
+                const dropdown = await openContext(category);
+                await dropdown.locator(`[data-global-id="${tagId}"]`).click();
+                const createResponse = await createReq;
+                const createResponseBody = await createResponse.json();
+                const tagName = createResponseBody.tag.name;
+                await renderReq;
+
+                const editButton = mainEditable.locator(`.aloha-block[data-gcn-tagname="${tagName}"] .aloha-block-handle .gcn-construct-button-edit`);
+                if (showButton) {
+                    await editButton.waitFor();
+                    await expect(editButton).toBeVisible();
+                } else {
+                    expect(await editButton.count()).toBeLessThan(1);
+                }
+            }
+
+            test('should render an editable tag with edit button', async ({page}) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR, true);
+            });
+
+            test('should render a hidden tag with no edit button', async ({page}) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_HIDDEN, false);
+            });
+
+            test('should render an inline tag with no edit button', async ({page}) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_INLINE, false);
+            });
+
+            test('should render a non-editable tag with no edit button', async ({page}) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE, false);
+            });
         });
     });
 
@@ -1032,7 +1088,7 @@ test.describe('Page Editing', () => {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19297',
-        }]
+        }],
     }, async ({ page }) => {
         // Setup aloha-page listener
         let calls = 0;
@@ -1047,7 +1103,7 @@ test.describe('Page Editing', () => {
 
         // Open page in preview
         const list = findList(page, ITEM_TYPE_PAGE);
-        const item = findItem(list, IMPORTER.get(PAGE_ONE).id);
+        const item = findItem(list, IMPORTER.get(PAGE_EIGHT).id);
         await item.locator('.item-primary .item-name-only').click();
 
         // Wait for preview to be loaded completely
@@ -1078,14 +1134,14 @@ test.describe('Page Editing', () => {
         // Regular endpoint which should be used
         const constructLoadRequest = waitForResponseFrom(page, 'GET', '/rest/construct', {
             params: {
-                nodeId: IMPORTER.get(NODE_MINIMAL).id.toString(),
-                pageId: IMPORTER.get(PAGE_ONE).id.toString(),
+                nodeId: IMPORTER.get(NODE_FULL).id.toString(),
+                pageId: IMPORTER.get(PAGE_EIGHT).id.toString(),
             },
         });
 
         // Setup page for editing
         const list = findList(page, ITEM_TYPE_PAGE);
-        const item = findItem(list, IMPORTER.get(PAGE_ONE).id);
+        const item = findItem(list, IMPORTER.get(PAGE_EIGHT).id);
         await itemAction(item, 'edit');
 
         // Switch to preview mode first

@@ -1041,13 +1041,6 @@ test.describe('Page Editing', () => {
                 const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
 
                 const renderUrl = '/rest/page/renderTag/*';
-                let postedEditableContent = '';
-                page.on('request', request => {
-                    if (request.method() === 'POST' && matchesPath(request.url(), renderUrl)) {
-                        const body = JSON.parse(request.postData());
-                        postedEditableContent = body.tags['content'].properties.text.stringValue;
-                    }
-                });
                 const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
                 const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
                 const dropdown = await openContext(category);

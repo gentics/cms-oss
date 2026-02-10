@@ -6,3 +6,4 @@ export * from './observable-stopper';
 export * from './type-ids/type-ids';
 export * from './forms/forms';
 export * from './notification-utils/notification-utils';
+export * from './image-type/image-type';

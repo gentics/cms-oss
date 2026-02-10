@@ -41,7 +41,11 @@ export class CreatePageModalComponent extends BaseModal<Page<Raw>> implements On
     }
 
     ngOnInit(): void {
-        this.control = new FormControl({});
+        const languages = this.appState.now.entities.language;
+
+        this.control = new FormControl({
+            language: languages[this.appState.now.folder.activeLanguage]?.code,
+        });
 
         this.subscriptions.push(this.appState.select(state => state.folder.pages.creating).subscribe(loading => {
             this.loading = loading;

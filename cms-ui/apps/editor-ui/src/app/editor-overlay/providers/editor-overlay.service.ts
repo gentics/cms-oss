@@ -1,4 +1,5 @@
 import { Injectable, Type } from '@angular/core';
+import { getImageType } from '@gentics/cms-components';
 import { CropResizeParameters, File, Form, Image, InheritableItem, Page, Raw } from '@gentics/cms-models';
 import { IModalDialog, IModalInstance, IModalOptions, ModalService } from '@gentics/ui-core';
 import { Subject } from 'rxjs';
@@ -51,8 +52,12 @@ export class EditorOverlayService {
             .then(modal => modal.open())
             .then(result => {
                 const params = result.params;
-                const fileExt = image.name.substr(image.name.lastIndexOf('.') + 1).toLowerCase();
-                const format: 'png' | 'jpg' = fileExt === 'jpg' || fileExt === 'jpeg' ? 'jpg' : 'png';
+                const format = getImageType(image);
+
+                if (format == null) {
+                    const fileExt = image.name.substring(image.name.lastIndexOf('.') + 1).toLowerCase();
+                    throw new Error(`Unsupported image type "${fileExt}"`);
+                }
 
                 const apiParams: CropResizeParameters = {
                     image: {

@@ -1314,6 +1314,18 @@ export interface MultiUnlocalizeRequest extends UnlocalizeRequest {
 }
 
 /**
+ * Image formats which can be modified in/with the CMS via the `resize` and `rotate` endpoints.
+ */
+export type ModifiableImageFormats =
+ 'png'
+| 'jpg'
+| 'bmp'
+| 'gif'
+| 'tiff'
+| 'wbmp'
+| 'webp';
+
+/**
  * This object is derived from the gcnImagePlugin when using the crop and resize. It is used in making a request to the
  * `image/resize` endpoint to do a crop/resize on an image.
  */
@@ -1329,7 +1341,7 @@ export interface CropResizeParameters {
     height: number;
     mode: string;
     resizeMode: string;
-    targetFormat: 'png' | 'jpg';
+    targetFormat: ModifiableImageFormats;
     copyFile: boolean;
     fpX?: number;
     fpY?: number;
@@ -1342,7 +1354,7 @@ export interface RotateParameters {
     image: {
         id: number;
     };
-    targetFormat: 'png' | 'jpg';
+    targetFormat: ModifiableImageFormats;
     copyFile: boolean;
     rotate: 'cw' | 'ccw';
 }

@@ -6,7 +6,7 @@ import {
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
     EntityImporter,
-    FIXTURE_IMAGE_ONE,
+    FIXTURE_IMAGE_JPEG1,
     IMAGE_ONE,
     IMPORT_ID,
     ITEM_TYPE_IMAGE,
@@ -25,6 +25,7 @@ import {
     waitForResponseFrom,
     findNotification,
     matchesPath,
+    copyText,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -87,7 +88,7 @@ test.describe('Page Editing', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupBinaryFiles({
-                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_ONE,
+                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_JPEG1,
             });
             await IMPORTER.setupTest(TestSize.MINIMAL);
         });
@@ -160,6 +161,27 @@ test.describe('Page Editing', () => {
                 await cancelRequest;
             });
 
+            test('should be possible to paste plain text', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19262',
+                }],
+            }, async ({ page, context }) => {
+                const TEST_TEXT = 'Hello from Playwright!';
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                // Firefox doesn't have these permission, and would fail the test
+                if (context.browser().browserType().name() !== 'firefox') {
+                    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+                }
+
+                await copyText(page, TEST_TEXT);
+
+                await mainEditable.focus();
+                await mainEditable.press('ControlOrMeta+v');
+                await expect(mainEditable).toHaveText(TEST_TEXT);
+            });
 
             test.describe('Mobile view', () => {
                 test.use({ viewport: { width: 450, height: 812 } });
@@ -758,21 +780,6 @@ test.describe('Page Editing', () => {
                         await form.locator('[data-slot="title"] input').fill('A very interesting site');
                     });
                 });
-            });
-
-            test('should be possible to paste plain text', {
-                annotation: [{
-                    type: 'ticket',
-                    description: 'SUP-19262',
-                }],
-            }, async ({page, context}) => {
-                await mainEditable.click();
-                await mainEditable.clear();
-
-                await context.grantPermissions(['clipboard-write']);
-                await page.evaluate(() => navigator.clipboard.writeText('Hello from Playwright!'));
-                await mainEditable.press('ControlOrMeta+v');
-                await expect(mainEditable).toHaveText('Hello from Playwright!');
             });
 
             // FIXME: Ticket created, SUP-19576

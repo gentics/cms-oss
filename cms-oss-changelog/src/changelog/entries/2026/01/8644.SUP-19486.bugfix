@@ -1,0 +1,2 @@
+Error handling in cases where the connection to the backend database is lost during a publish process
+has been improved to avoid situations where the publish process is stuck.

@@ -619,12 +619,17 @@ public class StructureCopy {
 	/**
 	 * Get the db connection
 	 * @return connection
+	 * @throws StructureCopyException if the connection could not be fetched
 	 */
-	public Connection getConnection() {
+	public Connection getConnection() throws StructureCopyException {
 		if (conn != null) {
 			return conn;
 		} else if (t != null) {
-			return t.getConnection();
+			try {
+				return t.getConnection();
+			} catch (TransactionException e) {
+				throw new StructureCopyException("Could not get connection", e);
+			}
 		} else {
 			return null;
 		}
@@ -792,8 +797,9 @@ public class StructureCopy {
 
 		/**
 		 * Create an instance of the connector
+		 * @throws StructureCopyException if the connection could not be fetched
 		 */
-		public StructureCopyConnector() {
+		public StructureCopyConnector() throws StructureCopyException {
 			// create the poolconnection instance
 			poolConnection = new PoolConnection(0, StructureCopy.this.getConnection());
 		}

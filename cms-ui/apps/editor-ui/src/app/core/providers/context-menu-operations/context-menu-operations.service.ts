@@ -616,7 +616,12 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     localize(item: InheritableItem, activeNodeId: number): void {
         const localizingEditedItem: boolean = item.id === this.state.now.editor.itemId;
         this.folderActions.localizeItem(item.type, item.id, activeNodeId)
-            .then((item: InheritableItem) => {
+            .then((item: InheritableItem | null) => {
+                // It's null when the localization is being done in the background
+                if (item == null) {
+                    return;
+                }
+
                 this.folderActions.refreshList(item.type);
                 if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
                     this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();

@@ -112,7 +112,6 @@ public interface File extends Resolvable, StageableChanneledNodeObject, Disinher
 	 * @return the size of the file in bytes.
 	 * @throws NodeException 
 	 */
-	@FieldGetter("filesize")
 	long getFilesizeFromBinary() throws NodeException;
 
 	/**

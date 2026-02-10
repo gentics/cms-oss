@@ -1,16 +1,16 @@
 /* eslint-disable import/no-nodejs-modules */
 /// <reference lib="dom"/>
-import { File as CMSFile, Image as CMSImage, Page as CmsPage } from '@gentics/cms-models';
+import { File as CMSFile, Image as CMSImage, Page as CmsPage, FileOrImage } from '@gentics/cms-models';
 import {
     clickButton,
     clickModalAction,
     dismissNotifications,
     FixtureFile,
     ITEM_TYPE_PAGE,
+    matchRequest, onResponse,
     openContext,
     reroute,
-    selectDateInPicker,
-    waitForResponseFrom,
+    selectDateInPicker
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -67,11 +67,34 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
     return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
-export async function uploadFiles(page: Page, type: 'file' | 'image', files: FixtureFile[], options?: UploadOptions): Promise<Record<string, any>> {
+export async function uploadFiles(
+    page: Page,
+    type: 'file' | 'image',
+    files: FixtureFile[], options?: UploadOptions,
+): Promise<Record<string, CMSFile | CMSImage>> {
     const output: Record<string, CMSFile | CMSImage> = {};
+    const baseNames: Record<string, FixtureFile> = files.reduce((acc, fixture) => {
+        acc[basename(fixture.fixturePath)] = fixture;
+        return acc;
+    }, {});
 
     await test.step(`Uploading ${files.length} ${type[0].toUpperCase()}${type.substring(1)}${files.length !== 1 ? 's' : ''}`, async () => {
-        let uploadReq: Promise<Response>;
+        const uploadReq: Promise<Response[]> = new Promise((resolve) => {
+            const responses: Response[] = [];
+            let done = false;
+
+            onResponse(page, matchRequest('POST', /\/rest\/(file|image)\/create/), (req, res) => {
+                if (done) {
+                    return;
+                }
+
+                responses.push(res);
+                done = responses.length === files.length;
+                if (done) {
+                    resolve(responses);
+                }
+            });
+        });
 
         if (options?.dragAndDrop) {
             // First we need to load the files, and read the buffer as base64, since we can't directly send
@@ -98,9 +121,6 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: Fix
                 return transfer;
             }, data);
 
-            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g, {
-                timeout: 20_000,
-            });
             await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         } else {
             // Filechooser is a lot simpler, as it can handle native files
@@ -110,19 +130,17 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: Fix
             await uploadButton.click();
             const fileChooser = await fileChooserPromise;
 
-            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g, {
-                timeout: 20_000,
-            });
             await fileChooser.setFiles(files.map(f => f.fixturePath));
         }
 
         // Wait for upload to complete and return response
-        const response = await uploadReq;
-        const responseData = await response.json();
+        const responses = await uploadReq;
+        for (const fileRes of responses) {
+            const responseData = await fileRes.json();
+            const obj: FileOrImage = responseData.file || responseData.image;
 
-        files.forEach(file => {
-            output[file.fixturePath] = responseData.file || responseData.image;
-        });
+            output[baseNames[obj.name].fixturePath] = responseData.file || responseData.image;
+        }
     });
 
     return output;

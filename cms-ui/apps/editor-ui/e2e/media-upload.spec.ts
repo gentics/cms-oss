@@ -77,7 +77,8 @@ test.describe('Media Upload', () => {
 
     test('should be possible to upload multiple image files', async ({ page }) => {
         const list = findList(page, ITEM_TYPE_IMAGE);
-        await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_IMAGE_PNG1, FIXTURE_IMAGE_PNG2]);
+        const files = await uploadFiles(page, ITEM_TYPE_IMAGE, [FIXTURE_IMAGE_PNG1, FIXTURE_IMAGE_PNG2]);
         await expect(list.locator('.list-body item-list-row, .list-body masonry-item')).toHaveCount(2);
+        expect(files[FIXTURE_IMAGE_PNG1.fixturePath]).not.toEqual(files[FIXTURE_IMAGE_PNG2.fixturePath]);
     });
 });

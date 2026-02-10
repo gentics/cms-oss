@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue where long object property lists could be cut off at 100% zoom when tab titles wrapped, making lower entries unreachable.

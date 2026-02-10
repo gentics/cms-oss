@@ -24,7 +24,7 @@ services:
       retries: 3
 
   mesh:
-    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-3.1.0}
+    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-hotfix-3.1.x}
 
     environment:
       # General Container Settings
@@ -48,7 +48,7 @@ services:
       retries: 3
 
   cms:
-    image: docker.gentics.com/gentics/cms-oss:${CI_CMS_VERSION:-ci-devtest}
+    image: docker.gentics.com/gentics/cms-oss:${CI_CMS_VERSION:-hotfix-6.3.x}
     ports:
       - 8080:8080
 

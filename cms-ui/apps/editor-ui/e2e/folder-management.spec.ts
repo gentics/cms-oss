@@ -214,7 +214,12 @@ test.describe('Folder Management', () => {
         await expect(page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
     });
 
-    test('should not be possible to edit the folder object-properties, if no permissions set', async ({ page }) => {
+    test('should not be possible to edit the folder object-properties, if no permissions set', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19186',
+        }],
+    }, async ({ page }) => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,

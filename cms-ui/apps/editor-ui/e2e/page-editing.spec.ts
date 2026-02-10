@@ -29,6 +29,7 @@ import {
     waitForResponseFrom,
     findNotification,
     matchesPath,
+    copyText,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -164,6 +165,27 @@ test.describe('Page Editing', () => {
                 await cancelRequest;
             });
 
+            test('should be possible to paste plain text', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19262',
+                }],
+            }, async ({ page, context }) => {
+                const TEST_TEXT = 'Hello from Playwright!';
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                // Firefox doesn't have these permission, and would fail the test
+                if (context.browser().browserType().name() !== 'firefox') {
+                    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+                }
+
+                await copyText(page, TEST_TEXT);
+
+                await mainEditable.focus();
+                await mainEditable.press('ControlOrMeta+v');
+                await expect(mainEditable).toHaveText(TEST_TEXT);
+            });
 
             test.describe('Mobile view', () => {
                 test.use({ viewport: { width: 450, height: 812 } });
@@ -762,20 +784,6 @@ test.describe('Page Editing', () => {
                         await form.locator('[data-slot="title"] input').fill('A very interesting site');
                     });
                 });
-            });
-
-            test('should be possible to paste plain text', {
-                annotation: [{
-                    type: 'ticket',
-                    description: 'SUP-19262',
-                }],
-            }, async ({ page }) => {
-                await mainEditable.click();
-                await mainEditable.clear();
-
-                await page.evaluate(() => navigator.clipboard.writeText('Hello from Playwright!'));
-                await mainEditable.press('ControlOrMeta+v');
-                await expect(mainEditable).toHaveText('Hello from Playwright!');
             });
 
             // FIXME: Ticket created, SUP-19576

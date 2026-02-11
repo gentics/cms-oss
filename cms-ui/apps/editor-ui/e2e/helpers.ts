@@ -1,9 +1,20 @@
 /* eslint-disable import/no-nodejs-modules */
 /// <reference lib="dom"/>
+import { File as CMSFile, Image as CMSImage, Page as CmsPage } from '@gentics/cms-models';
+import {
+    clickButton,
+    clickModalAction,
+    dismissNotifications,
+    FixtureFile,
+    ITEM_TYPE_PAGE,
+    openContext,
+    reroute,
+    selectDateInPicker,
+    waitForResponseFrom,
+} from '@gentics/e2e-utils';
+import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { Page as CmsPage } from '@gentics/cms-models';
-import { clickButton, clickModalAction, dismissNotifications, ITEM_TYPE_PAGE, openContext, reroute, selectDateInPicker, waitForResponseFrom } from '@gentics/e2e-utils';
-import test, { expect, Frame, Locator, Page, Response } from '@playwright/test';
+import { basename } from 'node:path';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS } from './common';
 
 export function findList(page: Page, type: string): Locator {
@@ -56,8 +67,8 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
     return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
-export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
-    const output: Record<string, any> = {};
+export async function uploadFiles(page: Page, type: 'file' | 'image', files: FixtureFile[], options?: UploadOptions): Promise<Record<string, any>> {
+    const output: Record<string, CMSFile | CMSImage> = {};
 
     await test.step(`Uploading ${files.length} ${type[0].toUpperCase()}${type.substring(1)}${files.length !== 1 ? 's' : ''}`, async () => {
         let uploadReq: Promise<Response>;
@@ -66,11 +77,12 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
             // First we need to load the files, and read the buffer as base64, since we can't directly send
             // the file-contents to the window. Inefficient, but the only way I could find to transfer them correctly.
             const data = files.map(f => {
-                const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
+                const buffer = readFileSync(f.fixturePath).toString('base64');
+
                 return {
                     bufferData: `data:application/octet-stream;base64,${buffer}`,
-                    name: f,
-                    type: type === 'image' ? 'image/jpeg' : 'text/plain',
+                    name: f.name ?? basename(f.fixturePath),
+                    type: f.type,
                 };
             });
 
@@ -86,7 +98,9 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
                 return transfer;
             }, data);
 
-            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
+            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g, {
+                timeout: 20_000,
+            });
             await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         } else {
             // Filechooser is a lot simpler, as it can handle native files
@@ -96,8 +110,10 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
             await uploadButton.click();
             const fileChooser = await fileChooserPromise;
 
-            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
-            await fileChooser.setFiles(files.map(f => `./fixtures/${f}`));
+            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g, {
+                timeout: 20_000,
+            });
+            await fileChooser.setFiles(files.map(f => f.fixturePath));
         }
 
         // Wait for upload to complete and return response
@@ -105,7 +121,7 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
         const responseData = await response.json();
 
         files.forEach(file => {
-            output[file] = responseData.file || responseData.image;
+            output[file.fixturePath] = responseData.file || responseData.image;
         });
     });
 

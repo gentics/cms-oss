@@ -6,7 +6,7 @@ import {
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
     EntityImporter,
-    FIXTURE_IMAGE_ONE,
+    FIXTURE_IMAGE_JPEG1,
     IMAGE_ONE,
     IMPORT_ID,
     ITEM_TYPE_IMAGE,
@@ -87,7 +87,7 @@ test.describe('Page Editing', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupBinaryFiles({
-                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_ONE,
+                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_JPEG1,
             });
             await IMPORTER.setupTest(TestSize.MINIMAL);
         });
@@ -765,11 +765,10 @@ test.describe('Page Editing', () => {
                     type: 'ticket',
                     description: 'SUP-19262',
                 }],
-            }, async ({page, context}) => {
+            }, async ({ page }) => {
                 await mainEditable.click();
                 await mainEditable.clear();
 
-                await context.grantPermissions(['clipboard-write']);
                 await page.evaluate(() => navigator.clipboard.writeText('Hello from Playwright!'));
                 await mainEditable.press('ControlOrMeta+v');
                 await expect(mainEditable).toHaveText('Hello from Playwright!');

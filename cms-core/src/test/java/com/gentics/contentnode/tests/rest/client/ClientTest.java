@@ -7,11 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jakarta.ws.rs.client.ClientRequestContext;
-import jakarta.ws.rs.client.ClientRequestFilter;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
-
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.JerseyClientBuilder;
@@ -38,6 +33,7 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.rest.client.RestClient;
+import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
@@ -50,6 +46,11 @@ import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.contentnode.testutils.RESTAppContext.LoggedInClient;
+
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Test cases for the RestClient
@@ -173,7 +174,7 @@ public class ClientTest {
 	 */
 	@Test
 	public void testLogin() throws NodeException, RestException {
-		RestClient client = new RestClient(restContext.getBaseUri());
+		RestClient client = new JerseyRestClientImpl(restContext.getBaseUri());
 		client.login(LOGIN, PASSWORD);
 
 		// assert successful login
@@ -219,7 +220,7 @@ public class ClientTest {
 	@Test
 	public void testClientFilter() throws Exception {
 		final AtomicInteger filterCounter = new AtomicInteger();
-		RestClient client = new RestClient(() -> {
+		RestClient client = new JerseyRestClientImpl(() -> {
 			ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider());
 			return JerseyClientBuilder.createClient(clientConfig).register(JacksonFeature.class).register(new ClientRequestFilter() {
 				@Override

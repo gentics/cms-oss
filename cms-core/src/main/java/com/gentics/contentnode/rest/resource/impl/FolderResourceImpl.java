@@ -1819,7 +1819,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 		try {
 			// set the channel
-			channelIdSet = setChannelToTransaction(templateListParams.nodeId);
+			channelIdSet = setChannelToTransaction(templateListParams.folderNodeId);
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, inFolder.folderId)) {
@@ -2843,7 +2843,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 					TemplateListResponse templateList = getTemplates(
 							folderId,
 							inFolder,
-							new TemplateListParameterBean().setNodeId(nodeId).setInherited(inherited),
+							new TemplateListParameterBean().setFolderNodeId(nodeId).setInherited(inherited),
 							new LegacyFilterParameterBean(),
 							new LegacySortParameterBean(),
 							new LegacyPagingParameterBean(),

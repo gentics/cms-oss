@@ -253,7 +253,8 @@
                     .collapsible-body {
                         visibility: visible;
                         opacity: 1;
-                        max-height: 100vh;
+                        max-height: none;
+                        overflow: visible;
                         transition:
                             visibility 0s,
                             opacity 0.15s ease-in 0.10s,

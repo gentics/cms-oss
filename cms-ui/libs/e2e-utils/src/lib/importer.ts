@@ -1045,7 +1045,7 @@ export class EntityImporter {
         await this.cleanupGroups();
     }
 
-     private async cleanupObjectProperties(): Promise<void> {
+    private async cleanupObjectProperties(): Promise<void> {
         const objectProperties = (await this.client.objectProperty.list().send()).items || [];
         for (const op of objectProperties) {
             if (CORE_OBJECT_PROPERTIES.includes(op.globalId)) {

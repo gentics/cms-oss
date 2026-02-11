@@ -77,6 +77,14 @@ public final class ImageUtils {
 		return read(() -> new ByteArrayInputStream(data));
 	}
 
+	/**
+	 * Write the image with the given format into the target output stream
+	 * @param image image to encode
+	 * @param formatName format name
+	 * @param target target output stream
+	 * @return true when writing succeeded, false if not
+	 * @throws IOException
+	 */
 	public final static boolean write(PlanarImage image, String formatName, OutputStream target) throws IOException {
 		if ("webp".equals(formatName)) {
 			ImmutableImage iimage = ImmutableImage.fromAwt(image.getAsBufferedImage());

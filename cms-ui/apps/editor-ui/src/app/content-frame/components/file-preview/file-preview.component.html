@@ -1,127 +1,141 @@
 <div class="preview-pane" [ngClass]="file.type || ''">
-    <div *ngIf="file.type === 'file'" class="file-preview">
-        <div class="file-icon" [ngClass]="fileExtension || ''">
-            <icon>insert_drive_file</icon>
-            <span
-                *ngIf="fileExtension"
-                class="extension"
-                [ngClass]="'len-' + fileExtension?.length"
-            >{{ fileExtension | uppercase }}</span>
+    @if (file.type === 'file') {
+        <div class="file-preview">
+            <div class="file-icon" [ngClass]="fileExtension || ''">
+                <icon>insert_drive_file</icon>
+                @if (fileExtension) {
+                    <span
+                        class="extension"
+                        [ngClass]="'len-' + fileExtension?.length"
+                    >{{ fileExtension | uppercase }}</span>
+                }
+            </div>
+            <div class="file-details">
+                <div class="name">{{ file.name }}</div>
+                <div class="type">{{ file.fileType }}</div>
+                <div class="size">{{ file.fileSize | filesize }}</div>
+            </div>
         </div>
-        <div class="file-details">
-            <div class="name">{{ file.name }}</div>
-            <div class="type">{{ file.fileType }}</div>
-            <div class="size">{{ file.fileSize | filesize }}</div>
-        </div>
-    </div>
+    }
 
-    <div *ngIf="file.type === 'image'" class="image-preview">
-        <div class="filename">{{ file.name }}</div>
-        <div
-            class="thumbnail"
-            [class.loading]="loading"
-            [class.vector]="imageDimensions == null"
-            [style.aspect-ratio]="imageDimensions?.width > 0 ? `${imageDimensions.width}/${imageDimensions.height}`: null"
-        >
-            <picture class="previewed-image">
-                <source
-                    *ngFor="let variant of imageVariants"
-                    [srcset]="variant.url"
-                    [media]="variant.mediaQuery"
-                    [type]="file.fileType"
-                />
-                <img [src]="imageUrl" alt="" />
-            </picture>
+    @if (file.type === 'image') {
+        <div class="image-preview">
+            <div class="filename">{{ file.name }}</div>
+            <div
+                class="thumbnail"
+                [class.loading]="loading"
+                [class.vector]="imageDimensions == null"
+                [style.aspect-ratio]="imageDimensions?.width > 0 ? `${imageDimensions.width}/${imageDimensions.height}`: null"
+            >
+                <picture class="previewed-image">
+                    @for (variant of imageVariants; track variant.url) {
+                        <source
+                            [srcset]="variant.url"
+                            [media]="variant.mediaQuery"
+                            [type]="file.fileType"
+                        />
+                    }
+                    <img [src]="imageUrl" alt="" />
+                </picture>
+            </div>
+            <div class="image-details">
+                <span class="dimensions">{{ imageDimensions | imagedimensions | i18n }}</span>
+                <span class="separator"> - </span>
+                <span class="filesize">{{ file.fileSize | filesize }}</span>
+            </div>
         </div>
-        <div class="image-details">
-            <span class="dimensions">{{ imageDimensions | imagedimensions | i18n }}</span>
-            <span class="separator"> - </span>
-            <span class="filesize">{{ file.fileSize | filesize }}</span>
-        </div>
-    </div>
+    }
 
     <div class="author-details">
-        <div
-            *ngIf="file.creator"
-            class="created"
-            [innerHTML]="'editor.file_preview_creator_label' | i18n:{
-                name: file.creator.firstName + ' ' + file.creator.lastName,
-                date: (file.cdate | i18nDate),
-                time: (file.cdate | i18nDate:'time')
-            }"
-        ></div>
-        <div
-            class="edited"
-            *ngIf="file.cdate !== file.edate && file.editor"
-            [innerHTML]="'editor.file_preview_editor_label' | i18n:{
-                name: file.editor.firstName + ' ' + file.editor.lastName,
-                date: (file.edate | i18nDate),
-                time: (file.edate | i18nDate:'time')
-            }"
-        ></div>
+        @if (file.creator) {
+            <div
+                class="created"
+                [innerHTML]="'editor.file_preview_creator_label' | i18n:{
+                    name: file.creator.firstName + ' ' + file.creator.lastName,
+                    date: (file.cdate | i18nDate),
+                    time: (file.cdate | i18nDate:'time')
+                }"
+            ></div>
+        }
+        @if (file.cdate !== file.edate && file.editor) {
+            <div
+                class="edited"
+                [innerHTML]="'editor.file_preview_editor_label' | i18n:{
+                    name: file.editor.firstName + ' ' + file.editor.lastName,
+                    date: (file.edate | i18nDate),
+                    time: (file.edate | i18nDate:'time')
+                }"
+            ></div>
+        }
     </div>
 
     <div class="actions-container">
-        <div *ngIf="file.type === 'image' && imageDimensions" class="actions-row">
-            <gtx-button
-                flat
-                data-action="rotate-left"
-                [disabled]="!canEdit"
-                (click)="rotateImage('ccw')"
-            >
-                <icon left>rotate_left</icon> {{ 'editor.rotate_image_left_button' | i18n }}
-            </gtx-button>
+        @if (file.type === 'image' && imageDimensions) {
+            <div class="actions-row">
+                <gtx-button
+                    flat
+                    data-action="rotate-left"
+                    [disabled]="!canEdit"
+                    (click)="rotateImage('ccw')"
+                >
+                    <icon left>rotate_left</icon> {{ 'editor.rotate_image_left_button' | i18n }}
+                </gtx-button>
 
-            <gtx-button
-                flat
-                data-action="rotate-right"
-                (click)="rotateImage('cw')"
-                [disabled]="!canEdit"
-            >
-                <icon left>rotate_right</icon> {{ 'editor.rotate_image_right_button' | i18n }}
-            </gtx-button>
-        </div>
+                <gtx-button
+                    flat
+                    data-action="rotate-right"
+                    (click)="rotateImage('cw')"
+                    [disabled]="!canEdit"
+                >
+                    <icon left>rotate_right</icon> {{ 'editor.rotate_image_right_button' | i18n }}
+                </gtx-button>
+            </div>
+        }
 
         <div class="actions-row">
-            <gtx-button
-                *ngIf="file.type === 'image' && imageDimensions"
-                flat
-                data-action="edit-image"
-                (click)="editImage()"
-                [disabled]="!canEdit"
-            >
-                <icon left>edit</icon> {{ 'editor.edit_image_button' | i18n }}
-            </gtx-button>
-
-            <a *ngIf="file.type === 'file'" [href]="downloadUrl" [download]="file.name" target="_blank">
-                <gtx-button flat data-action="download">
-                    <icon left>file_download</icon> {{ 'editor.download_file_button' | i18n }}
-                </gtx-button>
-            </a>
-
-            <div
-                *ngIf="canEdit"
-                class="action-replace"
-                [overrideSlot]="file.type === 'image' ? 'replaceImageButton' : 'replaceFileButton'"
-            >
-                <gtx-progress-bar [active]="loading"></gtx-progress-bar>
-                <gtx-file-picker
+            @if (file.type === 'image' && imageDimensions) {
+                <gtx-button
                     flat
-                    data-action="replace"
-                    [overrideSlot]="file.type === 'image' ? 'replaceImageButton' : 'replaceFileButton'"
-                    [overrideParams]="{ FOLDERID: file.folderId, NODEID: nodeId }"
-                    [accept]="acceptedFiles()"
-                    (fileSelect)="replaceFile($event, uploadBar)"
-                    (fileSelectReject)="replaceFile($event, uploadBar)"
+                    data-action="edit-image"
+                    (click)="editImage()"
+                    [disabled]="!canEdit"
                 >
-                    <icon left>file_upload</icon>
-                    <span>{{ ('editor.upload_new_' + file.type + '_button') | i18n }}</span>
-                </gtx-file-picker>
+                    <icon left>edit</icon> {{ 'editor.edit_image_button' | i18n }}
+                </gtx-button>
+            }
 
-                <div class="keep-filename">
-                    <gtx-checkbox [(ngModel)]="keepFileName" [label]="'editor.keep_filename_label' | i18n"></gtx-checkbox>
+            @if (file.type === 'file') {
+                <a [href]="downloadUrl" [download]="file.name" target="_blank">
+                    <gtx-button flat data-action="download">
+                        <icon left>file_download</icon> {{ 'editor.download_file_button' | i18n }}
+                    </gtx-button>
+                </a>
+            }
+
+            @if (canEdit) {
+                <div
+                    class="action-replace"
+                    [overrideSlot]="file.type === 'image' ? 'replaceImageButton' : 'replaceFileButton'"
+                >
+                    <gtx-progress-bar [active]="loading"></gtx-progress-bar>
+                    <gtx-file-picker
+                        flat
+                        data-action="replace"
+                        [overrideSlot]="file.type === 'image' ? 'replaceImageButton' : 'replaceFileButton'"
+                        [overrideParams]="{ FOLDERID: file.folderId, NODEID: nodeId }"
+                        [accept]="acceptedFiles()"
+                        (fileSelect)="replaceFile($event, uploadBar)"
+                        (fileSelectReject)="replaceFile($event, uploadBar)"
+                    >
+                        <icon left>file_upload</icon>
+                        <span>{{ ('editor.upload_new_' + file.type + '_button') | i18n }}</span>
+                    </gtx-file-picker>
+
+                    <div class="keep-filename">
+                        <gtx-checkbox [(ngModel)]="keepFileName" [label]="'editor.keep_filename_label' | i18n"></gtx-checkbox>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </div>

@@ -46,3 +46,51 @@
     margin-bottom: 13px;
     margin-top: -18px;
 }
+
+.file-name-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    gtx-input {
+        flex: 1 1 auto;
+
+        &::ng-deep input {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+            border-right-width: 1px solid;
+        }
+
+        &.ng-invalid + .suggest-button {
+            border-color: $gtx-color-alert;
+        }
+    }
+
+    .suggest-button {
+        flex: 0 0;
+        border-left: none;
+        border-top: 2px solid $gtx-color-light-gray;
+        border-right: 2px solid $gtx-color-light-gray;
+        border-bottom: 2px solid $gtx-color-light-gray;
+        background: $gtx-color-very-light-gray;
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+        display: flex;
+        flex-direction: column;
+        height: 2.5rem;
+        justify-content: center;
+        transition: 300ms;
+        margin-top: 20px;
+        align-self: flex-start;
+        font-size: 1rem;
+
+        icon {
+            color: inherit;
+            font-size: inherit;
+        }
+    }
+
+    &.focused .suggest-button {
+        border-color: $gtx-color-primary;
+    }
+}

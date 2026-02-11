@@ -20,6 +20,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -31,18 +32,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
-import jakarta.ws.rs.ClientErrorException;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.StreamingOutput;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.assertj.core.api.Condition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.uri.UriComponent;
+import org.junit.After;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -87,13 +83,21 @@ import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.staging.StagingErrorKind;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.GCNFeature;
 
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.StreamingOutput;
+
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.MULTICHANNELLING })
 public class ContentStagingResourceTest extends AbstractContentStagingTest {
-
 
 	@Test
 	public void testList() throws Exception {
@@ -118,6 +122,81 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 
 		assertResponseOK(response);
 		assertThat(response.getItems()).as("Content Packages").hasSize(2);
+	}
+
+	@After
+	public void after() throws IOException, NodeException {
+		cleanup();
+	}
+
+	@Test
+	public void testPaginatedList() throws Exception {
+		for (int i = 0; i <= 100; i++) {
+			String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+			directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
+		}
+
+		for (int i = 0; i <= 11; i++) {
+			final int ii = i;
+			ContentPackageListResponse response = assertRequiredPermissions(group, "tester", "tester", restContext, 
+					target -> target.path(CONTENT_ROOT).path(PACKAGE_SUBROOT).queryParam("pageSize", 10).queryParam("page", ii).request().get(ContentPackageListResponse.class), 
+					Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
+					Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
+					Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_VIEW));
+
+			assertResponseOK(response);
+			assertThat(response.getItems()).as("Content Packages " + i).hasSize(i == 11 ? 1 : 10);
+			assertThat(response.getHasMoreItems()).as("More items " + i).isEqualTo(i < 11);
+			assertThat(response.getNumItems()).as("Total items " + i).isEqualTo(101);
+		}
+	}
+
+	@Test
+	public void testFilteredList() throws Exception {
+		for (int i = 0; i <= 100; i++) {
+			String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+			directCreate(packageNameHuman, i + "th " + DEFAULT_PACKAGE_DESCRIPTION);
+		}
+
+		for (int i = 0; i <= 5; i++) {
+			ContentPackageListResponse response = new ContentStagingResourceImpl().list(new FilterParameterBean().setQuery("8th "), null, new PagingParameterBean().setPage(i).setPageSize(2));
+			assertResponseOK(response);
+			assertThat(response.getItems()).as("Content Packages " + i).hasSize(i <= 5 ? 2 : 0);
+			assertThat(response.getHasMoreItems()).as("More items " + i).isEqualTo(i < 5);
+			assertThat(response.getNumItems()).as("Total items " + i).isEqualTo(10);
+		}
+	}
+
+	@Test
+	public void testSortedList() throws Exception {
+		for (int i = 0; i <= 100; i++) {
+			String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+			directCreate(packageNameHuman, i + "th " + DEFAULT_PACKAGE_DESCRIPTION);
+		}
+
+		for (int i = 0; i <= 11; i++) {
+			ContentPackageListResponse response = new ContentStagingResourceImpl().list(null, new SortParameterBean().setSort("-description"), new PagingParameterBean().setPage(i).setPageSize(10));
+			assertResponseOK(response);
+			assertThat(response.getHasMoreItems()).as("More items " + i).isEqualTo(i < 11);
+			assertThat(response.getNumItems()).as("Total items " + i).isEqualTo(101);
+			assertThat(response.getItems()).as("Content Packages " + i).hasSize(i == 11 ? 1 : 10).isSortedAccordingTo((a,b) -> b.getDescription().compareTo(a.getDescription()));
+		}
+	}
+
+	@Test
+	public void testFilteredSortedList() throws Exception {
+		for (int i = 0; i <= 100; i++) {
+			String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+			directCreate(packageNameHuman, i + "th " + DEFAULT_PACKAGE_DESCRIPTION);
+		}
+
+		for (int i = 0; i <= 5; i++) {
+			ContentPackageListResponse response = new ContentStagingResourceImpl().list(new FilterParameterBean().setQuery("8th "), new SortParameterBean().setSort("-description"), new PagingParameterBean().setPage(i).setPageSize(2));
+			assertResponseOK(response);
+			assertThat(response.getHasMoreItems()).as("More items " + i).isEqualTo(i < 5);
+			assertThat(response.getNumItems()).as("Total items " + i).isEqualTo(10);
+			assertThat(response.getItems()).as("Content Packages " + i).hasSize(i <= 5 ? 2 : 0).isSortedAccordingTo((a,b) -> b.getDescription().compareTo(a.getDescription()));
+		}
 	}
 
 	@Test
@@ -1114,7 +1193,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		});
 		assertThat(list.getItems())
 			.isNotEmpty()
-			.hasSize(8)
+			.hasSize(2)
 			.areAtMost(1, new Condition<StagedContentPackage>(pkg -> pkg.getName().equals(newPackageName), "names match"))
 			.areAtMost(1, new Condition<StagedContentPackage>(pkg -> pkg.getName().equals(packageName), "names match"));
 	}

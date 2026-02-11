@@ -290,7 +290,6 @@ public class AbstractContentStagingTest {
 		return supply(user,	() -> new ContentStagingResourceImpl().read(name));
 	}
 
-
 	protected void assertContentPackageResponse(ContentPackageLoadResponse response, int start, int end, String name, String description) throws NodeException {
 		String sanitized = supply(() -> FileFactory.sanitizeName(name));
 		assertResponseOK(response);

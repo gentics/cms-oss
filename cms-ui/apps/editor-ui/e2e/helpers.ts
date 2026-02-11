@@ -112,8 +112,8 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
     return output;
 }
 
-export async function openPropertiesTab(page: Page): Promise<void> {
-    await test.step('Open properties-tab', async () => {
+export async function openFilePropertiesTab(page: Page): Promise<void> {
+    await test.step('Open file properties-tab', async () => {
         await page.waitForSelector('content-frame .content-frame-container');
 
         // This is for images and files, which open in the "preview" tab initially
@@ -127,11 +127,15 @@ export async function openPropertiesTab(page: Page): Promise<void> {
     });
 }
 
+export function getPropertiesTabs(page: Page): Locator {
+    return page.locator('content-frame combined-properties-editor .properties-tabs');
+}
+
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {
-    await openPropertiesTab(page);
+    await openFilePropertiesTab(page);
 
     await test.step('Open properties editor', async () => {
-        const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
+        const group = getPropertiesTabs(page).locator(`.tab-group[data-id="${categoryId}"]`);
         const isExpanded = await group.evaluate(el => el.classList.contains('expanded'));
 
         if (!isExpanded) {
@@ -141,6 +145,10 @@ export async function openObjectPropertyEditor(page: Page, categoryId: string | 
         const tab = group.locator(`.tab-link[data-id="object.${name}"]`);
         await tab.click();
     });
+}
+
+export async function openTagList(page: Page): Promise<void> {
+    await getPropertiesTabs(page).locator('.tab-link[data-id="item-tag-list"]').click();
 }
 
 export async function closeObjectPropertyEditor(page: Page, force: boolean = true): Promise<void> {

@@ -1,9 +1,9 @@
 {
-  "globalId" : "994d.d84f0a55-37ad-11ef-a38e-0242ac110002",
-  "keyword" : "test_select_color",
+  "globalId" : "a1f7.d84f0a55-37ad-11ef-a38e-0242ac110002",
+  "keyword" : "test_select_color_inline",
   "name" : {
-    "de" : "[Test] Farbauswahl",
-    "en" : "[Test] Color Select"
+    "de" : "[Test] Farbauswahl Inline",
+    "en" : "[Test] Color Select Inline"
   },
   "description" : {
     "de" : "",
@@ -17,7 +17,7 @@
   "autoEnable" : true,
   "externalEditorUrl" : "",
   "parts" : [ {
-    "globalId" : "994d.4335959a-37b8-11ef-a38e-0242ac110002",
+    "globalId" : "a1f7.4335959a-37b8-11ef-a38e-0242ac110002",
     "name" : {
       "de" : "Auswahl",
       "en" : "Select"
@@ -29,7 +29,7 @@
     "mlId" : 0,
     "visible" : false,
     "required" : true,
-    "inlineEditable" : false,
+    "inlineEditable" : true,
     "hideInEditor" : false,
     "externalEditorUrl" : "",
     "regexId" : 0

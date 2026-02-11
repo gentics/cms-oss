@@ -8,8 +8,11 @@ import jakarta.ws.rs.Path;
  */
 @Path("/binaryalt")
 public final class BinaryAltDataResource {
+
+	public static final String CONTENT = "alternativetestcontent_äÖßÜ";
+
 	@GET
 	public byte[] data() {
-		return "alternativetestcontent".getBytes();
+		return CONTENT.getBytes();
 	}
 }

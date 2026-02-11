@@ -416,6 +416,17 @@ public class FileFactory extends AbstractFactory {
 		}
 
 		/* (non-Javadoc)
+		 * @see com.gentics.contentnode.object.File#getFilesizeFromBinary()
+		 */
+		@Override
+		public long getFilesizeFromBinary() throws NodeException {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
+
+			return fileFactory.loadFilesize(this);
+		}
+
+		/* (non-Javadoc)
 		 * @see com.gentics.contentnode.object.File#isBroken()
 		 */
 		public boolean isBroken() throws NodeException {
@@ -2533,6 +2544,36 @@ public class FileFactory extends AbstractFactory {
 	 */
 	protected java.io.File getBinFile(File file) {
 		return new java.io.File(dbFilesDir, file.getId() + ".bin");
+	}
+
+	protected long loadFilesize(File file) throws NodeException {
+		boolean contentFileDataInDb = getConfiguration().getDefaultPreferences().getFeature("contentfile_data_to_db");
+		if (!contentFileDataInDb) {
+			java.io.File dbFile = getBinFile(file);
+			return dbFile.length();
+		} else {
+			logger.debug("Fetching binarycontent length of contentfiledata record for file with id { " + file.getId() + " } ");
+			Transaction t = TransactionManager.getCurrentTransaction();
+
+			PreparedStatement stmt = null;
+			ResultSet rs = null;
+
+			try {
+				stmt = t.prepareStatement("SELECT LENGTH(binarycontent) AS length FROM contentfiledata WHERE contentfile_id = ?");
+				stmt.setObject(1, file.getId());
+				rs = stmt.executeQuery();
+				if (rs.next()) {
+					return rs.getLong("length");
+				} else {
+					throw new NodeException("Did not find the binary content for file with id { " + file.getId() + " } in the database");
+				}
+			} catch (SQLException e) {
+				throw new NodeException("Error while loading binary content for file with id { " + file.getId() + " } in the database");
+			} finally {
+				t.closeResultSet(rs);
+				t.closeStatement(stmt);
+			}
+		}
 	}
 
 	/**

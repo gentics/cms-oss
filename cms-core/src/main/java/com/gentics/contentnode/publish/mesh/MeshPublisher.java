@@ -37,11 +37,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response.Status;
-import jakarta.ws.rs.core.StreamingOutput;
-import jakarta.ws.rs.core.UriBuilder;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -242,6 +237,10 @@ import io.reactivex.functions.BiPredicate;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
 import io.vertx.core.json.JsonObject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.StreamingOutput;
+import jakarta.ws.rs.core.UriBuilder;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -2884,22 +2883,6 @@ public class MeshPublisher implements AutoCloseable {
 								throw new NodeException(String.format("Cannot publish %s, binary data not found", file));
 							}
 
-							if (supportsPublishOnCreate) {
-								return client.updateNodeBinaryField(
-										task.project.name,
-										task.uuid,
-										getMeshLanguage(file),
-										"draft",
-										"binarycontent",
-										in,
-										file.getFilesize(),
-										file.getFilename(),
-										file.getFiletype(),
-										true,
-										task.project.enforceBranch(task.nodeId))
-									.toSingle();
-							}
-
 							return client.updateNodeBinaryField(
 									task.project.name,
 									task.uuid,
@@ -2907,9 +2890,10 @@ public class MeshPublisher implements AutoCloseable {
 									"draft",
 									"binarycontent",
 									in,
-									file.getFilesize(),
+									file.getFilesizeFromBinary(),
 									file.getFilename(),
 									file.getFiletype(),
+									supportsPublishOnCreate,
 									task.project.enforceBranch(task.nodeId))
 								.toSingle();
 						});

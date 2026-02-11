@@ -42,10 +42,10 @@
             class="preview-form"
             [class.hidden]="(propertiesTab$ | async) !== 'preview'"
         >
-            <file-preview
+            <gtx-file-preview
                 [file]="currentItem"
-                (imageLoading)="isImageLoading = $event"
-            ></file-preview>
+                [nodeId]="currentNode.id"
+            ></gtx-file-preview>
         </div>
     }
 

@@ -155,7 +155,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     editorNodeId: number;
     currentNode: Node;
     editorIsOpen = false;
-    isImageLoading = false;
     editMode: EditMode;
     // currently only used by form editor (not properties editing)
     itemValid = false;
@@ -1538,7 +1537,12 @@ span.diff-html-added {
                 return;
             }
 
-            if (this.currentItem !== item && !isEqual(this.currentItem, item)) {
+            if (
+                this.currentItem.type !== 'image'
+                && this.currentItem.type !== 'file'
+                && this.currentItem !== item
+                && !isEqual(this.currentItem, item)
+            ) {
                 this.currentItem = {
                     ...this.currentItem,
                     ...structuredClone(item),

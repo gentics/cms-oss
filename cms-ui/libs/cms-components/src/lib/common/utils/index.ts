@@ -8,3 +8,4 @@ export * from './notification-utils/notification-utils';
 export * from './observable-stopper/observable-stopper';
 export * from './rxjs-discard-operator/discard.opertator';
 export * from './type-ids/type-ids';
+export * from './image-type/image-type';

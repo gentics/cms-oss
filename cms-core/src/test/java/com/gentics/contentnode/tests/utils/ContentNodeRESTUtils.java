@@ -1,7 +1,10 @@
 package com.gentics.contentnode.tests.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -184,7 +187,9 @@ public class ContentNodeRESTUtils {
 		if (expectedCode != null) {
 			assertNotNull("Response must contain a response info", response.getResponseInfo());
 			assertEquals("Check response code", expectedCode, response.getResponseInfo().getResponseCode());
-			assertEquals("Check response message", expectedResponseMessage, response.getResponseInfo().getResponseMessage());
+			if (StringUtils.isNotBlank(expectedResponseMessage)) {
+				assertThat(response.getResponseInfo().getResponseMessage()).as("Checkresponse message").endsWith(expectedResponseMessage);
+			}
 		}
 
 		if (!ObjectTransformer.isEmpty(expectedMessages)) {

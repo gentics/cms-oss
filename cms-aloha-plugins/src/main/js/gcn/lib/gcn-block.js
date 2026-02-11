@@ -107,32 +107,6 @@ define([
 	}
 
 	/**
-	 * Gets the construct matching the specified construct id from the given
-	 * node or page.
-	 *
-	 * @param {NodeAPI|PageAPI} object The object for which to query for the
-	 *                                 construct.
-	 * @param {number} constructId The id of the construct to be retreived.
-	 * @param {function(object)} success Callback function that will recieved
-	 *                                  the successfully retreived construct.
-	 * @param {function} error Function that will be invoked if construct
-	 *                         cannot be retreived.
-	 */
-	function getConstruct(object, constructId, success, error) {
-		object.constructs(function (constructs) {
-			var keyword;
-			for (keyword in constructs) {
-				if (constructs.hasOwnProperty(keyword) &&
-						constructs[keyword].id === constructId) {
-					success(constructs[keyword]);
-					return;
-				}
-			}
-			error();
-		}, error);
-	}
-
-	/**
 	 * Checks whether a construct is permitted inside an editable based on the
 	 * editable's white-list configuration.
 	 *
@@ -216,7 +190,7 @@ define([
 		$(editableHost.obj).attr('data-gcn-copy', 'true');
 
 		srcPage.tag(srcTagname, function (tag) {
-			getConstruct(srcPage, tag.prop('constructId'), function (construct) {
+			Util.getConstructFromId(tag.prop('constructId')).then(function (construct) {
 				var gcnPlugin = Aloha.require('gcn/gcn-plugin');
 				var $editable = $block.closest('.aloha-editable');
 				var config = gcnPlugin.getEditableConfig($editable);
@@ -466,7 +440,7 @@ define([
 			var block = this;
 			var $block = block.$element;
 
-			getConstruct(getPageFromPlugin($block.attr('data-gcn-pageid'), {update:false}), Number.parseInt($block.attr('data-gcn-constructid')), function (construct) {
+			Util.getConstructFromId($block.attr('data-gcn-constructid')).then(function (construct) {
 				const needsEditButton = construct.parts.some(part => !part.hideInEditor && part.editable && !part.liveEditable)
 				doRenderBlockHandles(block, needsEditButton);
 			}, function (error) {

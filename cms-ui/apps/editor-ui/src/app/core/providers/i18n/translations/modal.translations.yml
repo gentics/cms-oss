@@ -308,7 +308,7 @@ display_field_selector_title:
     de: Anzeigefelder auswählen
 edit_inherited_body:
     en: '"{{name}}" is inherited from "{{master}}". You can either edit the original or create a localized version in "{{local}}" to edit.'
-    de: '"{{name}}" ist von "{{master}}"" vererbt. Sie können entweder das Original bearbeiten oder eine lokale Version in "{{local}}" erstellen.'
+    de: '"{{name}}" ist von "{{master}}" vererbt. Sie können entweder das Original bearbeiten oder eine lokale Version in "{{local}}" erstellen.'
 edit_inherited_title:
     en: '{{type}} is inherited'
     de: '{{type}} ist vererbt'

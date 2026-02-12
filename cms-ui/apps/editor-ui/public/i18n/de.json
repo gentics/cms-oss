@@ -745,7 +745,7 @@
         "disinherit_default_label": "Standardmäßig nicht vererben",
         "disinherited_from_label": "Vererbung von {{channel}} entfernt",
         "display_field_selector_title": "Anzeigefelder auswählen",
-        "edit_inherited_body": "\"{{name}}\" ist von \"{{master}}\"\" vererbt. Sie können entweder das Original bearbeiten oder eine lokale Version in \"{{local}}\" erstellen.",
+        "edit_inherited_body": "\"{{name}}\" ist von \"{{master}}\" vererbt. Sie können entweder das Original bearbeiten oder eine lokale Version in \"{{local}}\" erstellen.",
         "edit_inherited_title": "{{type}} ist vererbt",
         "edit_original_button": "Original bearbeiten",
         "files": "Dateien",

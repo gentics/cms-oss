@@ -2,6 +2,20 @@ package com.gentics.contentnode.rest.resource;
 
 import java.util.List;
 
+import org.glassfish.jersey.media.multipart.MultiPart;
+
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
+import com.gentics.contentnode.rest.model.response.ContentPackageFolderResponse;
+import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
+import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.StagingStatusResponse;
+import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -15,19 +29,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.PathSegment;
 import jakarta.ws.rs.core.Response;
-
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-
-import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
-import com.gentics.contentnode.rest.model.response.ContentPackageFolderResponse;
-import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
-import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.StagingStatusResponse;
-import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 
 /**
  * Content Staging REST API
@@ -160,7 +161,7 @@ public interface ContentStagingResource {
 	@POST
 	@Path("/package/{name}/zip")
 	@Consumes("multipart/form-data")
-	ContentPackageLoadResponse upload(@PathParam("name") String name, FormDataMultiPart multiPart) throws Exception;
+	ContentPackageLoadResponse upload(@PathParam("name") String name, MultiPart multiPart) throws Exception;
 
 
 	/**

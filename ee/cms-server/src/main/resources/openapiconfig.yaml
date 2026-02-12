@@ -1,0 +1,23 @@
+resourcePackages:
+- com.gentics.contentnode.rest.resource
+prettyPrint: true
+cacheTTL: 0
+openAPI:
+  info:
+    version: ${project.version}
+    title: GcmsApi
+    description: OpenAPI specification for Gentics CMS Enterprise
+    contact:
+      url: ${project.url}
+  components:
+    securitySchemes:
+      sid:
+        type: apiKey
+        description: CMS SID
+        name: sid
+        in: query
+  securityRequirements:
+    one:
+      entries:
+        entry:
+          name: sid

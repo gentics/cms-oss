@@ -4,7 +4,6 @@ import static com.gentics.contentnode.rest.util.MiscUtils.require;
 import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
 import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
-import com.gentics.contentnode.staging.StagingErrorRecommendation;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -36,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -52,23 +52,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.PathSegment;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-import jakarta.ws.rs.core.StreamingOutput;
-
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -76,14 +59,13 @@ import org.apache.commons.codec.net.URLCodec;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.comparators.ComparatorChain;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.tuple.Pair;
+import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -166,6 +148,7 @@ import com.gentics.contentnode.staging.StagedPage;
 import com.gentics.contentnode.staging.StagingBase;
 import com.gentics.contentnode.staging.StagingError;
 import com.gentics.contentnode.staging.StagingErrorKind;
+import com.gentics.contentnode.staging.StagingErrorRecommendation;
 import com.gentics.contentnode.staging.StagingErrors;
 import com.gentics.contentnode.staging.StoredChannel;
 import com.gentics.contentnode.staging.StoredContentPackage;
@@ -182,6 +165,22 @@ import com.gentics.lib.log.NodeLogger;
 
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.StreamingOutput;
 
 @Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ MediaType.APPLICATION_JSON })
@@ -733,15 +732,16 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	@jakarta.ws.rs.Path("/package/{name}/zip")
 	@Consumes("multipart/form-data")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
-	public ContentPackageLoadResponse upload(@PathParam("name") String name, FormDataMultiPart multiPart) throws NodeException {
+	public ContentPackageLoadResponse upload(@PathParam("name") String name, MultiPart multiPart) throws NodeException {
 		Path path = checkFeatureGetPath();
 		if (multiPart.getBodyParts().isEmpty()) {
 			throw new NodeException(new CNI18nString("rest.file.upload.request_invalid").toString());
 		}
 
-		FormDataBodyPart upload = Optional.ofNullable(multiPart.getField("fileBinaryData"))
-				.orElseThrow(() -> new NodeException(I18NHelper.get("rest.file.upload.request_invalid")));
-		String fileName = Optional.ofNullable(multiPart.getField("fileName")).map(FormDataBodyPart::getValue).orElse(upload.getContentDisposition().getFileName());
+		BodyPart upload = multiPart.getBodyParts().stream().filter(part -> "fileBinaryData".equals(part.getContentDisposition().getParameters().get("name")))
+				.findAny().orElseThrow(() -> new NodeException(I18NHelper.get("rest.file.upload.request_invalid")));
+		String fileName = multiPart.getBodyParts().stream().filter(part -> "fileName".equals(part.getContentDisposition().getParameters().get("name")))
+				.findAny().map(part -> Objects.toString(part.getEntity())).orElse(upload.getContentDisposition().getFileName());
 
 		Path packagePath = path.resolve(name);
 		Path backupPath = packagePath.getParent().resolve(name + ".old");

@@ -11,6 +11,7 @@ import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.openapitools.client.ApiException;
 import org.openapitools.client.api.DefaultApi;
 import org.openapitools.client.model.AuthenticationResponse;
+import org.openapitools.client.model.GenericResponse;
 import org.openapitools.client.model.LoginRequest;
 import org.openapitools.client.model.LoginResponse;
 import org.openapitools.client.model.ResponseInfo;
@@ -28,13 +29,14 @@ import com.gentics.contentnode.rest.client.exceptions.NotFoundRestException;
 import com.gentics.contentnode.rest.client.exceptions.PermissionRestException;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.User;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.version.Main;
 
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.client.ClientResponseFilter;
+import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * A class to test the generated client of OpenAPI specification
@@ -48,6 +50,7 @@ public class OpenAPIClient implements RestClient {
 
 	public OpenAPIClient(String url) {
 		this.client = new DefaultApi();
+		this.client.getApiClient().setBasePath(url.endsWith("/") ? url.substring(0, url.length()-1) : url);
 		this.base = this.client.getApiClient().getHttpClient().target(url);
 		// add client filters to handle cookies
 		base.register((ClientRequestFilter) requestContext -> {
@@ -70,10 +73,20 @@ public class OpenAPIClient implements RestClient {
 		request.setPassword(password);
 		try {
 			LoginResponse response = client.login(sid, request);
+			assertResponseObject(response);
+			assertResponseInfo(response.getResponseInfo());
 			this.sid = response.getSid();
 		} catch (ApiException e) {
 			throw new RestException("OpenAPI login failed", e);
 		}
+		// TODO FIXME We need a fully featured CMS API REST client, in order to perform targeted API calls, 
+		// and not building Jersey context manually
+		LoginResponse response = base.path("auth").path("login").request(MediaType.APPLICATION_JSON_TYPE)
+				.post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE), LoginResponse.class);
+
+		assertResponseObject(response);
+		assertResponseInfo(response.getResponseInfo());
+		sid = response.getSid();
 	}
 
 	@Override
@@ -91,22 +104,44 @@ public class OpenAPIClient implements RestClient {
 		} catch (ApiException e) {
 			throw new RestException("OpenAPI sso login failed", e);
 		}
+
+		// TODO FIXME We need a fully featured CMS API REST client, in order to perform targeted API calls, 
+		// and not building Jersey context manually
+		response = base.path("auth").path("ssologin").request(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.TEXT_PLAIN).get(String.class);
+		if (response.equals(ResponseCode.NOTFOUND.toString())) {
+			throw new NotFoundRestException("");
+		} else if (response.equals(ResponseCode.FAILURE.toString())) {
+			throw new FailureRestException("");
+		} else {
+			sid = response;
+		}
 	}
 
 	@Override
 	public void logout() throws RestException {
-		try {
-			client.logout(sid, true);
-		} catch (ApiException e) {
-			throw new RestException("OpenAPI logout failed", e);
-		}
+		GenericResponse response;
+//		try {
+//			response = client.logout(sid, true);
+//			sid = null;
+//			assertResponseObject(response);
+//			assertResponseInfo(response.getResponseInfo());
+//		} catch (ApiException e) {
+//			throw new RestException("OpenAPI logout failed", e);
+//		}
+
+		// TODO FIXME We need a fully featured CMS API REST client, in order to perform targeted API calls, 
+		// and not building Jersey context manually
+		response = base.path("auth").path("logout").path(sid).request(MediaType.APPLICATION_JSON_TYPE).post(null, GenericResponse.class);
+		sid = null;
+		assertResponseObject(response);
+		assertResponseInfo(response.getResponseInfo());
 	}
 
 	@Override
 	public User authenticate(String sid, String sessionSecret) throws RestException {
 		try {
 			AuthenticationResponse response = client.validate(sid + sessionSecret);
-			assertResponse(response);
+			assertResponseObject(response);
 			assertResponseInfo(response.getResponseInfo());
 		} catch (ApiException e) {
 			throw new RestException("OpenAPI authenticate failed", e);
@@ -114,7 +149,7 @@ public class OpenAPIClient implements RestClient {
 		return null;
 	}
 
-	public void assertResponse(Object response) throws RestException {
+	public void assertResponseObject(Object response) throws RestException {
 		if (response == null) {
 			throw new RestException("No response returned.");
 		}
@@ -160,7 +195,7 @@ public class OpenAPIClient implements RestClient {
 		VersionResponse serverVersion;
 		try {
 			serverVersion = client.currentVersion();
-			assertResponse(serverVersion);
+			assertResponseObject(serverVersion);
 		} catch (ApiException e) {
 			throw new RestException("OpenAPI version failed", e);
 		}
@@ -210,8 +245,8 @@ public class OpenAPIClient implements RestClient {
 	}
 
 	@Override
-	public void assertResponse(GenericResponse response) throws RestException {
-		assertResponse(response);
+	public void assertResponse(com.gentics.contentnode.rest.model.response.GenericResponse response) throws RestException {
+		assertResponseObject(response);
 		ObjectMapper mapper = Synchronizer.mapper();
 		try {
 			String responseString = mapper.writeValueAsString(response.getResponseInfo());

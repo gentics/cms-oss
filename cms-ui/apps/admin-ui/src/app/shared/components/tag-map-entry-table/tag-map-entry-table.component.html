@@ -15,6 +15,7 @@
       flat
       size="small"
       type="primary"
+      data-action="add"
       [disabled]="disabled || !canEditCR"
       (click)="handleCreateButton()"
       >
@@ -25,6 +26,7 @@
       flat
       size="small"
       type="primary"
+      data-action="reload"
       [disabled]="disabled || loading"
       (click)="reload()"
       >

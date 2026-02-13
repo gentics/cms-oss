@@ -219,7 +219,7 @@ export class TagMapEntryTableComponent
             debounceTime(50),
             filter((id) => id != null),
             switchMap((id) => {
-                const perms = this.permissions.getUserActionPermsForId('content_repository.updateContentRepositoryInstance');
+                const perms = this.permissions.getUserActionPermsForId('contentRepository.updateContentRepositoryInstance');
                 const instancePerms = {
                     ...perms.instancePermissions,
                     instanceId: id,

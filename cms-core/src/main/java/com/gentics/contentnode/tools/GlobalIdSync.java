@@ -51,7 +51,6 @@ import com.gentics.contentnode.object.ValueList;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.expressionparser.functions.FunctionRegistry;
 import com.gentics.lib.jaxb.JAXBHelper;
 
 /**
@@ -60,15 +59,15 @@ import com.gentics.lib.jaxb.JAXBHelper;
  * 
  * <ol>
  * <li>Read the info from the source system:<br/>
- * <code>/Node/bin/java.sh com.gentics.contentnode.tools.GlobalIdSync -config "http://localhost/.Node/?do=24" -read construct,objprop -out info.json</code>
+ * <code>java -cp cms-server.jar com.gentics.contentnode.tools.GlobalIdSync -read construct,objprop -out info.json</code>
  * </li>
  * <li>Transfer the file info.json to the target system</li>
  * <li>Try to match the objects:<br/>
- * <code>/Node/bin/java.sh com.gentics.contentnode.tools.GlobalIdSync -config "http://localhost/.Node/?do=24" -match info.json -out info_match.json</code>
+ * <code>java -cp cms-server.jar com.gentics.contentnode.tools.GlobalIdSync -match info.json -out info_match.json</code>
  * </li>
  * <li>Check and possibly modify the file info_match.json</li>
  * <li>Generate update SQL:<br/>
- * <code>/Node/bin/java.sh com.gentics.contentnode.tools.GlobalIdSync -config "http://localhost/.Node/?do=24" -sql info_match.json -out update.sql</code>
+ * <code>java -cp cms-server.jar com.gentics.contentnode.tools.GlobalIdSync -sql info_match.json -out update.sql</code>
  * </li>
  * <li>Run the SQL Statements found in update.sql on the target system</li>
  * </ol>
@@ -80,6 +79,16 @@ public class GlobalIdSync {
 	 * Factory
 	 */
 	private static ContentNodeFactory factory;
+
+	private final static String READ_PARAM_NAME = "read";
+
+	private final static String OUT_PARAM_NAME = "out";
+
+	private final static String MATCH_PARAM_NAME = "match";
+
+	private final static String SQL_PARAM_NAME = "sql";
+
+	private final static String EXEC_PARAM_NAME = "exec";
 
 	/**
 	 * Name of the "constructs" property
@@ -120,20 +129,20 @@ public class GlobalIdSync {
 		}
 
 		try {
-			initFactory(line.getOptionValue("config"));
+			initFactory();
 			startTransaction();
 
 			// read the data for the given types
-			if (line.hasOption("read")) {
+			if (line.hasOption(READ_PARAM_NAME)) {
 				Writer out = null;
 
-				if (line.hasOption("out")) {
-					out = new FileWriter(new File(line.getOptionValue("out")));
+				if (line.hasOption(OUT_PARAM_NAME)) {
+					out = new FileWriter(new File(line.getOptionValue(OUT_PARAM_NAME)));
 				} else {
 					out = new PrintWriter(System.out);
 				}
 
-				String[] readValues = line.getOptionValues("read");
+				String[] readValues = line.getOptionValues(READ_PARAM_NAME);
 				List<ObjectType> types = new Vector<ObjectType>();
 
 				for (String readValue : readValues) {
@@ -144,37 +153,37 @@ public class GlobalIdSync {
 					}
 				}
 				readObjectInfo(out, (ObjectType[]) types.toArray(new ObjectType[types.size()]));
-			} else if (line.hasOption("match")) {
+			} else if (line.hasOption(MATCH_PARAM_NAME)) {
 				Writer out = null;
-				if (line.hasOption("out")) {
-					out = new FileWriter(new File(line.getOptionValue("out")));
+				if (line.hasOption(OUT_PARAM_NAME)) {
+					out = new FileWriter(new File(line.getOptionValue(OUT_PARAM_NAME)));
 				} else {
 					out = new PrintWriter(System.out);
 				}
 
-				matchObjects(new FileReader(new File(line.getOptionValue("match"))), out);
-			} else if (line.hasOption("sql")) {
+				matchObjects(new FileReader(new File(line.getOptionValue(MATCH_PARAM_NAME))), out);
+			} else if (line.hasOption(SQL_PARAM_NAME)) {
 				PrintWriter out = null;
 
-				if (line.hasOption("out")) {
-					out = new PrintWriter(new File(line.getOptionValue("out")), "UTF8");
+				if (line.hasOption(OUT_PARAM_NAME)) {
+					out = new PrintWriter(new File(line.getOptionValue(OUT_PARAM_NAME)), "UTF8");
 				} else {
 					out = new PrintWriter(System.out);
 				}
 
-				createUpdateSQL(new FileReader(new File(line.getOptionValue("sql"))), out, false);
+				createUpdateSQL(new FileReader(new File(line.getOptionValue(SQL_PARAM_NAME))), out, false);
 				out.flush();
 				out.close();
-			} else if (line.hasOption("exec")) {
+			} else if (line.hasOption(EXEC_PARAM_NAME)) {
 				PrintWriter out = null;
 
-				if (line.hasOption("out")) {
-					out = new PrintWriter(new File(line.getOptionValue("out")), "UTF8");
+				if (line.hasOption(OUT_PARAM_NAME)) {
+					out = new PrintWriter(new File(line.getOptionValue(OUT_PARAM_NAME)), "UTF8");
 				} else {
 					out = new PrintWriter(System.out);
 				}
 
-				createUpdateSQL(new FileReader(new File(line.getOptionValue("exec"))), out, true);
+				createUpdateSQL(new FileReader(new File(line.getOptionValue(EXEC_PARAM_NAME))), out, true);
 				out.flush();
 				out.close();
 				TransactionManager.getCurrentTransaction().commit();
@@ -486,12 +495,11 @@ public class GlobalIdSync {
 	private static Options createOptions() {
 		Options options = new Options();
 
-		options.addOption(OptionBuilder.isRequired().hasArg().withDescription("URL to get configuration").create("config"));
-		options.addOption(OptionBuilder.withDescription("Read the object info for the given object types").hasArgs().withValueSeparator(',').create("read"));
-		options.addOption(OptionBuilder.hasArg().withDescription("Filename for writing object information (use in combination with -read)").create("out"));
-		options.addOption(OptionBuilder.withDescription("Match the object info read from the file").hasArg().create("match"));
-		options.addOption(OptionBuilder.withDescription("Create SQL Statements for updating the globalids").hasArg().create("sql"));
-		options.addOption(OptionBuilder.withDescription("Create and execute SQL Statements for updating the globalids").hasArg().create("exec"));
+		options.addOption(OptionBuilder.withDescription("Read the object info for the given object types").hasArgs().withValueSeparator(',').create(READ_PARAM_NAME));
+		options.addOption(OptionBuilder.hasArg().withDescription("Filename for writing object information (use in combination with -read)").create(OUT_PARAM_NAME));
+		options.addOption(OptionBuilder.withDescription("Match the object info read from the file").hasArg().create(MATCH_PARAM_NAME));
+		options.addOption(OptionBuilder.withDescription("Create SQL Statements for updating the globalids").hasArg().create(SQL_PARAM_NAME));
+		options.addOption(OptionBuilder.withDescription("Create and execute SQL Statements for updating the globalids").hasArg().create(EXEC_PARAM_NAME));
 		return options;
 	}
 
@@ -521,17 +529,13 @@ public class GlobalIdSync {
 	/**
 	 * Initialize the factory
 	 * 
-	 * @param configKey
-	 *            config key
 	 * @throws Exception
 	 */
-	private static void initFactory(String configKey) throws Exception {
+	private static void initFactory() throws Exception {
 		// set test mode (no background jobs started)
 		System.setProperty("com.gentics.contentnode.testmode", "true");
 		// disable cache
 		System.setProperty("com.gentics.portalnode.portalcache", "false");
-
-//		System.setProperty(NodeConfigRuntimeConfiguration.PROPERTY_CN_URL, configKey);
 
 		// this will initialize the configuration
 		NodeConfigRuntimeConfiguration.getDefault();

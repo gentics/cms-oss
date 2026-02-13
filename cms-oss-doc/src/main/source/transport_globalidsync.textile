@@ -7,7 +7,7 @@ endprologue.
 
 h3. Usage
 
-WARNING: It is strongly recommended to stop the Tomcat on the target system before using the Tool. If this is not done, and modifications happen while the tool is used (even in between different steps), data may be corrupted.
+WARNING: It is strongly recommended to stop the cms on the target system before using the Tool. If this is not done, and modifications happen while the tool is used (even in between different steps), data may be corrupted.
 
 Synchronization is done in multiple steps:
 
@@ -15,7 +15,7 @@ h4. Read the info from the source system
 
 <shell>/cms$ java -cp cms-server.jar com.gentics.contentnode.tools.GlobalIdSync -read construct,objprop,datasource -out info.json</shell>
 
-This will connect to the database (connection properties are read from the given config url), will read the global IDs of all objects of the specified type and will
+This will connect to the database (connection properties are read from the cms configuration), will read the global IDs of all objects of the specified type and will
 output the result in JSON format into the file <code>info.json</code>
 
 The format of the file <code>info.json</code> is as follows:
@@ -75,9 +75,9 @@ h4. Transfer the file info.json to the target system
 
 The file <code>info.json</code> must be copied to the target system. All following steps are done on the target system.
 
-h4. Activate maintenance mode and stop tomcat on target system
+h4. Activate maintenance mode and stop cms on target system
 
-While doing all following steps, it is mandatory, that absolutely no data is changed on the target system. It is best to activate the maintenance mode and stop the tomcat to achieve this.
+While doing all following steps, it is mandatory, that absolutely no data is changed on the target system. It is best to activate the maintenance mode and stop the cms to achieve this.
 Failing to do so may lead to data inconsistencies!
 
 h4. Match the objects
@@ -150,9 +150,9 @@ h4. Generate and execute update SQL
 
 Same as the previous step, but will also *execute* the statements. This is the only step, that will actually change data in the database.
 
-h4. Restart tomcat and disable maintenance mode
+h4. Restart cms and disable maintenance mode
 
-This will reactivate the system. After restarting the tomcat and before enabling the maintenance mode, the system may be tested for errors.
+This will reactivate the system. After restarting the cms and before enabling the maintenance mode, the system may be tested for errors.
 
 h3. Command Line Parameters
 

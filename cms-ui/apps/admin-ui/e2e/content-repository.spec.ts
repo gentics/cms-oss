@@ -42,6 +42,7 @@ const SELECTORS = {
     TABS: {
         CONTAINER: '.gtx-entity-detail > gtx-tabs',
         MANAGEMENT: 'gtx-mesh-management',
+        TAGMAP: 'gtx-tag-map-entry-table',
     },
     PROJECT: {
         TABLE: 'gtx-mesh-project-table',
@@ -60,6 +61,9 @@ const SELECTORS = {
         PASSWORD_CHECKBOX: '.password-checkbox label',
         PASSWORD_INPUTS: '[data-control="password"] input',
         FORCE_PASSWORD: '[data-control="forcePasswordChange"] label',
+    },
+    TAGMAP: {
+        ADD_BUTTON: 'gtx-button[data-action=add] button',
     },
 } as const;
 
@@ -127,6 +131,21 @@ test.describe('Content Repositories Module', () => {
 
         const management = tabs.locator(SELECTORS.TABS.MANAGEMENT);
         await management.waitFor({ state: 'visible' });
+    });
+
+    test('should be able to add tagmap entry', async({ page }) => {
+        const row = await findTableRowById(master, testCr.id);
+        await row.waitFor({ state: 'visible' });
+        await clickTableRow(row);
+
+        const tabs = page.locator(`${SELECTORS.EDITOR} ${SELECTORS.TABS.CONTAINER}`);
+        await selectTab(tabs, 'tagmap');
+
+        const tagmap = tabs.locator(SELECTORS.TABS.TAGMAP);
+        await tagmap.waitFor({ state: 'visible' });
+
+        const addbutton = tagmap.locator(SELECTORS.TAGMAP.ADD_BUTTON);
+        await expect(addbutton).toBeEnabled();
     });
 
     test.describe('Mesh Management', () => {

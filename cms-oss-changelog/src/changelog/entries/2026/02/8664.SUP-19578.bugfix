@@ -1,0 +1,1 @@
+Editor User Interface/Aloha Editor: Now an `Edit` tag button is hidden, if the tag does not have editable parts to be shown in the modal dialog.

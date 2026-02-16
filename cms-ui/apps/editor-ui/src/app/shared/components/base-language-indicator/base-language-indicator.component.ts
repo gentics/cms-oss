@@ -3,8 +3,9 @@ import { ItemLanguageClickEvent, UIMode } from '@editor-ui/app/common/models';
 import { ItemListRowMode } from '@editor-ui/app/common/models';
 import { Form, Language, Normalized, Page, StagedItemsMap } from '@gentics/cms-models';
 import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
-import { first, map, mergeMap, takeUntil } from 'rxjs/operators';
+import { distinctUntilChanged, map, mergeMap, takeUntil } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
+import { isEqual } from 'lodash-es';
 
 @Directive()
 export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> | Form<Normalized>>
@@ -126,13 +127,16 @@ export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> 
             this.languageVariantsIds$,
             this.allItems$,
         ]).pipe(
-            first(),
+            // We need to keep listening for status updates, so we don't use first().
             map(([variantsIds, allItems]) => {
                 return Object.keys(allItems)
                     .reduce((items: { [key: number]: T }, key: string) => {
                         return -1 < variantsIds.indexOf(parseInt(key, 10)) ? { ...items, ...{ [key]: allItems[key] } } : items;
                     }, {});
             }),
+            // To prevent unnecessary change detection runs on every single store update use distinctUntilChanged(isEqual).
+            distinctUntilChanged((a, b) => isEqual(a, b)),
+
         );
 
         this.displayDeleted$ = this.appState.select(state => state.folder.displayDeleted);

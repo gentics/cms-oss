@@ -1,6 +1,8 @@
 import {
     AccessControlledType,
     GcmsPermission,
+    NodePageLanguageCode,
+    NodeUrlMode,
     Page as CMSPage,
     Response as CMSResponse,
     ResponseCode,
@@ -15,9 +17,11 @@ import {
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
+    IMPORT_TYPE_NODE,
     IMPORT_TYPE_USER,
     ImportPermissions,
     ITEM_TYPE_PAGE,
+    NodeImportData,
     loginWithForm,
     matchesUrl,
     matchRequest,
@@ -69,6 +73,38 @@ test.describe('Page Management', () => {
         group: TEST_GROUP_BASE,
     };
 
+    const NODE_SINGLE_LANGUAGE: NodeImportData = {
+        [IMPORT_TYPE]: IMPORT_TYPE_NODE,
+        [IMPORT_ID]: 'singleLanguageNode',
+    
+        node: {
+            name : 'Single Language',
+            publishDir : '',
+            binaryPublishDir : '',
+            pubDirSegment : true,
+            publishImageVariants : false,
+            host : 'singlelanguage.localhost',
+            publishFs : false,
+            publishFsPages : false,
+            publishFsFiles : false,
+            publishContentMap : true,
+            publishContentMapPages : true,
+            publishContentMapFiles : true,
+            publishContentMapFolders : true,
+            urlRenderWayPages: NodeUrlMode.AUTOMATIC,
+            urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
+            omitPageExtension : false,
+            pageLanguageCode : NodePageLanguageCode.FILENAME,
+            meshPreviewUrlProperty : '',
+        },
+        description: 'single language test',
+    
+        languages : ['en'],
+        templates: [
+            '57a5.5db4acfa-3224-11ef-862c-0242ac110002',
+        ],
+    };
+
     const NEW_PAGE_NAME = 'Hello World';
     const CHANGE_PAGE_NAME = 'Foo bar change';
     const OBJECT_PROPERTY = 'test_color';
@@ -111,9 +147,14 @@ test.describe('Page Management', () => {
         } catch (err) {}
     });
 
-    async function setupWithPermissions(page: Page, permissions: ImportPermissions[]): Promise<void> {
+    async function setupWithPermissions(
+        page: Page,
+        permissions: ImportPermissions[],
+        node: NodeImportData = NODE_MINIMAL,
+    ): Promise<void> {
         await test.step('Test User Setup', async () => {
             const TEST_GROUP = cloneWithSymbols(TEST_GROUP_BASE);
+
             TEST_GROUP.permissions = permissions;
 
             await IMPORTER.importData([
@@ -125,7 +166,7 @@ test.describe('Page Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
+            await selectNode(page, IMPORTER.get(node)!.id);
         });
     }
 
@@ -555,5 +596,71 @@ test.describe('Page Management', () => {
     }, async ({ page }) => {
         await setupInstantPublishing();
         await testPageTakeOffline(page, false);
+    });
+
+    test('should display correct publish status for page in a node with one language', async ({ page }) => {
+        const nodeData = cloneWithSymbols(NODE_SINGLE_LANGUAGE);
+        const cr = IMPORTER.get(CONTENT_REPOSITORY_MESH);
+        if (cr) {
+            nodeData.node.contentRepositoryId = cr.id;
+        }
+
+        await IMPORTER.importData([nodeData]);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(nodeData).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.CREATE_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                    { type: GcmsPermission.PUBLISH_PAGES, value: true },
+                ],
+            },
+        ], nodeData);
+
+        await setupInstantPublishing();
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        let createReq: Promise<Response>;
+
+        await test.step('Change Status Icon Settings', async () => {
+            await list.locator('gtx-dropdown-list [data-action="open-list-context"] button').click();
+            const modal = page.locator('gtx-dropdown-content-wrapper');
+            await modal.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
+        });
+
+        await test.step('Create a new Page', async () => {
+            await list.locator('.header-controls [data-action="create-new-item"] button').click();
+            const modal = page.locator('create-page-modal');
+            const form = modal.locator('gtx-page-properties');
+            await form.locator('[formcontrolname="name"] input').fill(NEW_PAGE_NAME);
+            createReq = page.waitForResponse(matchRequest('POST', '/rest/page/create'));
+            await modal.locator('.modal-footer [data-action="confirm"] button').click();
+        });
+
+        const response = await createReq;
+        const responseBody = await response.json();
+        const pageId = responseBody.page.id;
+        const pageItem = findItem(list, pageId);
+
+        await expect(pageItem).toBeVisible();
+        await expect(pageItem.locator('.status-label i.material-icons')).toHaveText('cloud_off');
+
+        await test.step('Publish Page from context menu', async () => {
+            await page.locator('gtx-button[data-action="close"] button').click();
+            await pageItem.locator('gtx-dropdown-list[data-action="item-context"] button').click();
+            const modal = page.locator('gtx-dropdown-content-wrapper');
+            const publishReq = page.waitForResponse(matchRequest('POST', `/rest/page/publish/${pageId}`));
+            await modal.locator('gtx-dropdown-item[data-action="publish"]').click();
+            await publishReq;
+        });
+
+        await expectItemPublished(pageItem);
+        await expect(pageItem.locator('.status-label i.material-icons')).toHaveText('cloud_upload');
+
     });
 });

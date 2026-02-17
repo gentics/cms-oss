@@ -15,7 +15,6 @@ export * from './settings';
 export * from './staging';
 
 // State models
-export * from './auth-state';
 export * from './content-staging-state';
 export * from './app-state';
 export * from './editor-state';

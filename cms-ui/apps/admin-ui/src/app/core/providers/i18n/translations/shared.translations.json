@@ -862,5 +862,13 @@
     "keycloak_not_available": {
         "en": "Something went wrong while accessing Keycloak. Using login without Single Sign-On instead.",
         "de": "Beim Zugriff auf Keycloak ist etwas schief gelaufen. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet."
+    },
+    "keycloak_invalid_config":{
+        "en": "The configuration for Keycloak is invalid. Using login without Single Sign-On instead.",
+        "de": "Die konfiguration für Keycloak ist nicht valide. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet."
+    },
+    "keycloak_unknown_error": {
+        "en": "An unexpected error occurred while checking Keycloak availability. Using login without Single Sign-On instead.",
+        "de": "Ein unerwarteter Fehler ist bei der Keycloak überprüfung aufgetreten. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet."
     }
 }

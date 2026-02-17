@@ -3,7 +3,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ADMIN_UI_LINK } from '@editor-ui/app/common/config/config';
 import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
 import { FolderActionsService } from '@editor-ui/app/state/providers/folder-actions/folder-actions.service';
-import { I18nService, KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
+import { I18nService } from '@gentics/cms-components';
+import { SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components/auth';
 import { cancelEvent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
@@ -36,11 +37,10 @@ export class NoNodesComponent implements OnInit, OnDestroy {
         private i18n: I18nService,
         private folderActions: FolderActionsService,
         private navigationService: NavigationService,
-        private keycloak: KeycloakService,
     ) {}
 
     ngOnInit(): void {
-        this.adminUILink = ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
+        this.adminUILink = ADMIN_UI_LINK + (this.appState.now.auth.ssoSkipped ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : '');
 
         this.subscriptions.push(this.appState.select(state => state.folder.nodesLoaded).pipe(
             filter(loaded => loaded),
@@ -51,7 +51,7 @@ export class NoNodesComponent implements OnInit, OnDestroy {
             this.checkForDefaultNode();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.auth.isAdmin).subscribe(isAdmin => {
+        this.subscriptions.push(this.appState.select(state => state.ui.isAdmin).subscribe(isAdmin => {
             this.isAdmin = isAdmin;
             const msg = this.i18n.instant(`editor.${isAdmin ? 'admin' : 'user'}_no_nodes_message`);
             this.errorMessage = this.sanitizer.bypassSecurityTrustHtml(msg);

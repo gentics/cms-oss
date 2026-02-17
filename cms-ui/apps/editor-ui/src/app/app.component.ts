@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostBinding, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { KeycloakService, WindowRef } from '@gentics/cms-components';
+import { WindowRef } from '@gentics/cms-components';
+import { KeycloakService } from '@gentics/cms-components/auth';
 import { EditMode, GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
     I18nLanguage,
     Node,
     NodeFeature,
-    Normalized,
+    Raw,
     User,
-    Version,
+    Version
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
@@ -84,7 +85,7 @@ export class AppComponent implements OnInit {
         debounceTime(50),
     );
     uiState$: Observable<UIState>;
-    currentUser$: Observable<User<Normalized>>;
+    currentUser$: Observable<User<Raw>>;
     nodeRootLink$: Observable<any>;
     keycloakSignOut$: Observable<boolean>;
     toolLinkcheckerAvailable$: Observable<boolean>;
@@ -206,15 +207,12 @@ export class AppComponent implements OnInit {
 
         this.currentUser$ = this.appState.select(state => state.auth).pipe(
             filter(auth => auth.isLoggedIn),
-            switchMap(auth => {
+            map(auth => {
                 // get all content repositories when user is authenticated
                 this.contentRepositoryActions.fetchAllContentrepositories();
-
-                return this.appState.select(state => state.entities.user[auth.currentUserId]).pipe(
-                    filter(user => user != null),
-                    take(1),
-                );
+                return auth.user;
             }),
+            first(),
         );
 
         this.uiState$ = this.appState.select(state => state.ui);
@@ -240,7 +238,7 @@ export class AppComponent implements OnInit {
         });
 
         const onLogin$ = this.appState.select(state => state.auth).pipe(
-            distinctUntilChanged(isEqual, state => state.currentUserId),
+            distinctUntilChanged(isEqual, state => state.user?.id),
             filter(state => state.isLoggedIn === true),
         );
 

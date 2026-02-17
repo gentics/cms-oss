@@ -6,7 +6,7 @@ import {
     Output,
 } from '@angular/core';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
-import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
+import { I18nLanguage, Normalized, Raw, User } from '@gentics/cms-models';
 
 /**
  * The right-hand side menu for user information and settings.
@@ -60,7 +60,7 @@ export class GtxUserMenuComponent {
     /** If TRUE, this user menu is rendered as open. */
     @Input() opened = false;
     /** The current user whose name is dispalyed. */
-    @Input() user: User<Normalized>;
+    @Input() user: User<Raw>;
     /** All languages available to choose from in language switcher. */
     @Input() supportedLanguages: I18nLanguage[] = [];
     /** The language currently selected */

@@ -1,9 +1,10 @@
 import { ConstructorOf, ObservableStopper } from '@admin-ui/common';
-import { Injectable, Injector } from '@angular/core';
+import { Injectable, Injector, ModuleWithProviders } from '@angular/core';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { IS_NORMALIZED, RecursivePartial } from '@gentics/cms-models';
 import { Actions, NgxsModule, Store } from '@ngxs/store';
 import { ActionContext } from '@ngxs/store/src/actions-stream';
-import { cloneDeep as _cloneDeep, merge as _merge } from'lodash-es'
+import { cloneDeep as _cloneDeep, merge as _merge } from 'lodash-es';
 import { Observable, OperatorFunction } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AppState } from '../../app-state';
@@ -138,9 +139,10 @@ export class TestAppState extends AppStateService {
 /**
  * Imports for setting up unit tests that require the AppState.
  */
-export function assembleTestAppStateImports(): any[] {
+export function assembleTestAppStateImports(): ModuleWithProviders<any>[] {
     return [
         NgxsModule.forRoot(STATE_MODULES),
+        AuthenticationModule.forRoot(),
     ];
 }
 

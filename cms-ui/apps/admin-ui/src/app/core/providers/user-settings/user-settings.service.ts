@@ -1,8 +1,9 @@
 import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
-import { AppStateService, AuthStateModel, SelectState } from '@admin-ui/state';
+import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { AuthStateModel } from '@gentics/cms-components/auth';
 import { isEqual } from 'lodash-es';
-import { Observable, combineLatest } from 'rxjs';
+import { combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise, startWith, switchMap, takeUntil } from 'rxjs/operators';
 import { objectDiff } from '../../../common';
 import { SetBackendLanguage, SetUILanguage, SetUISettings } from '../../../state/ui/ui.actions';
@@ -23,12 +24,6 @@ const SERVER_SETTING_NAMES = USER_SETTING_NAMES.map(key => SETTINGS_WITHOUT_PREF
 
 @Injectable()
 export class UserSettingsService extends InitializableServiceBase {
-
-    @SelectState(state => state.ui)
-    protected uiState$: Observable<UIStateModel>;
-
-    @SelectState(state => state.auth)
-    protected auth$: Observable<AuthStateModel>;
 
     /**
      * Whenever this is true, any changes coming from the app state should not be
@@ -62,7 +57,7 @@ export class UserSettingsService extends InitializableServiceBase {
         this.appState.dispatch(new SetUILanguage(uiLang));
         this.appState.dispatch(new SetBackendLanguage(uiLang));
 
-        this.uiState$.pipe(
+        this.appState.select(state => state.ui).pipe(
             distinctUntilChanged((a: UIStateModel, b: UIStateModel) => a.language === b.language),
             map(ui => ui.language),
             takeUntil(this.stopper.stopper$),
@@ -76,7 +71,7 @@ export class UserSettingsService extends InitializableServiceBase {
      * Loads the user's settings when he logs in.
      */
     private loadUserSettingsOnLogin(): void {
-        this.auth$.pipe(
+        this.appState.select(state => state.auth).pipe(
             // Only trigger when logged in state changed...
             distinctUntilChanged((a: AuthStateModel, b: AuthStateModel) => a.isLoggedIn === b.isLoggedIn && a.sid === b.sid),
             // ... and only go further if user is logged in
@@ -84,41 +79,40 @@ export class UserSettingsService extends InitializableServiceBase {
             // Then get all keys
             switchMap(() => this.serverStorage.getAll()),
             takeUntil(this.stopper.stopper$),
-        )
-            .subscribe(data => {
-                if (this.serverStorage.supported !== false) {
-                    this.loading = true;
+        ).subscribe(data => {
+            if (this.serverStorage.supported !== false) {
+                this.loading = true;
 
-                    const settings = Object.keys(data)
-                        .filter(key => SERVER_SETTING_NAMES.includes(key))
-                        .reduce((r, k) => ({...r, [this.convertFromServerKey(k)]: data[k]}), {});
+                const settings = Object.keys(data)
+                    .filter(key => SERVER_SETTING_NAMES.includes(key))
+                    .reduce((r, k) => ({...r, [this.convertFromServerKey(k)]: data[k]}), {});
 
-                    this.appState.dispatch(new SetUISettings(settings))
-                        .toPromise()
-                        .then(() => {
-                            this.loading = false;
-                        });
-                }
+                this.appState.dispatch(new SetUISettings(settings))
+                    .toPromise()
+                    .then(() => {
+                        this.loading = false;
+                    });
+            }
 
-                /**
-                 * UI language used to be hardcoded and is now available via `i18n`endpoint.
-                 * This method fetches all available and current active UI language and stores it to state and localstorage.
-                 * In case fetching fails, fallback language logic should be in place by localstorage and browser language.
-                 */
-                this.languageHandler.getActiveBackendLanguage().subscribe(language => {
-                    this.appState.dispatch(new SetUILanguage(language));
-                    this.appState.dispatch(new SetBackendLanguage(language));
-                });
+            /**
+             * UI language used to be hardcoded and is now available via `i18n`endpoint.
+             * This method fetches all available and current active UI language and stores it to state and localstorage.
+             * In case fetching fails, fallback language logic should be in place by localstorage and browser language.
+             */
+            this.languageHandler.getActiveBackendLanguage().subscribe(language => {
+                this.appState.dispatch(new SetUILanguage(language));
+                this.appState.dispatch(new SetBackendLanguage(language));
             });
+        });
     }
 
     /**
      * Subscribes to all settings changes in the app state and saves changes to the server.
      */
     private saveSettingsOnChange(): void {
-        combineLatest([this.uiState$, this.auth$]).pipe(
+        combineLatest([this.appState.select(state => state.ui), this.appState.select(state => state.auth)]).pipe(
             distinctUntilChanged(([uiA, authA], [uiB, authB]) => uiA.language === uiB.language
-                && isEqual(uiA.settings[authA.currentUserId], uiB.settings[authB.currentUserId]),
+                && isEqual(uiA.settings[authA.user?.id], uiB.settings[authB.user?.id]),
             ),
             filter(([, auth]) => auth.isLoggedIn && !this.loading),
             debounceTime(50),
@@ -126,10 +120,14 @@ export class UserSettingsService extends InitializableServiceBase {
             pairwise(),
             takeUntil(this.stopper.stopper$),
         ).subscribe(([[uiPrev], [ui, auth]]) => {
-            const currentUserId = (auth as AuthStateModel).currentUserId;
+            const currentUserId = (auth as AuthStateModel).user?.id;
             // Only store the settings if server storage is supported, the user is still logged in,
             // and the currentUserId is still the same as the one before the debounce.
-            if (this.serverStorage.supported !== false && this.appState.now.auth.isLoggedIn && this.appState.now.auth.currentUserId === currentUserId) {
+            if (
+                this.serverStorage.supported !== false
+                && this.appState.now.auth.isLoggedIn
+                && this.appState.now.auth.user?.id === currentUserId
+            ) {
                 const previousSettings = uiPrev.settings[currentUserId] || {};
                 const currentSettings = ui.settings[currentUserId];
                 const changedSettings: UIStateSettings = objectDiff(currentSettings, previousSettings);

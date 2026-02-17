@@ -13,6 +13,13 @@ export enum BreadcrumbLocation {
 }
 
 @ActionDeclaration(UI_STATE_KEY)
+export class UpdateIsAdminAction {
+    constructor(
+        public isAdmin: boolean,
+    ) {}
+}
+
+@ActionDeclaration(UI_STATE_KEY)
 export class SetBreadcrumbExpandedAction {
     constructor(
         public location: BreadcrumbLocation,

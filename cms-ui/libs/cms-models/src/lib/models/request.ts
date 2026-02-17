@@ -1711,6 +1711,8 @@ export interface UserRequestOptions {
     groups?: boolean;
 }
 
+export interface MeRequestOptions extends UserRequestOptions, LoginOptions {}
+
 /**
  * Options which may be passed as query parameters to the `<type>/user/id/groups` endpoints
  */

@@ -1,5 +1,5 @@
 import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
-import { AppStateService, INITIAL_AUTH_STATE } from '@admin-ui/state';
+import { AppStateService } from '@admin-ui/state';
 import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
@@ -13,6 +13,7 @@ import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
 import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ServerStorageService } from '../server-storage';
 import { UI_SETTINGS_DEBOUNCE_MS, UserSettingsService } from './user-settings.service';
+import { INITIAL_AUTH_STATE } from '@gentics/cms-components/auth';
 
 const LOCAL_STORAGE_UI_LANGUAGE = 'en';
 const I18N_SERVICE_INFERRED_LANGUAGE = 'de';
@@ -152,7 +153,9 @@ describe('UserSettingsService', () => {
             appState.mockState({
                 auth: {
                     isLoggedIn: true,
-                    currentUserId: userId,
+                    user: {
+                        id: userId,
+                    },
                     sid: userId + 1,
                 },
             });

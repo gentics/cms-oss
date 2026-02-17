@@ -49,6 +49,7 @@ describe('UIStateModule', () => {
     it('sets the correct initial state', () => {
         expect(appState.now.ui).toEqual({
             alerts: {},
+            isAdmin: false,
             contentFrameBreadcrumbsExpanded: false,
             itemListBreadcrumbsExpanded: false,
             repositoryBrowserBreadcrumbsExpanded: false,

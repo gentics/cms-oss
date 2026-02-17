@@ -8,23 +8,25 @@ import { normalize } from 'normalizr';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
-import {
-    ChangePasswordAction,
-    LoginErrorAction,
-    LoginSuccessAction,
-    LogoutErrorAction,
-    LogoutSuccessAction,
-    StartLoginAction,
-    StartLogoutAction,
-    StartValidationAction,
-    UpdateIsAdminAction,
-    ValidationErrorAction,
-    ValidationSuccessAction,
-} from '../../modules/auth/auth.actions';
 import { AddEntitiesAction } from '../../modules/entity/entity.actions';
 import { UpdateSearchFilterAction } from '../../modules/folder/folder.actions';
 import { ApplicationStateService } from '../application-state/application-state.service';
 import { FolderActionsService } from '../folder-actions/folder-actions.service';
+import {
+    ChangePasswordError,
+    ChangePasswordStart,
+    ChangePasswordSuccess,
+    LoginError,
+    LoginStart,
+    LoginSuccess,
+    LogoutError,
+    LogoutStart,
+    LogoutSuccess,
+    ValidateError,
+    ValidateStart,
+    ValidateSuccess,
+} from '@gentics/cms-components/auth';
+import { UpdateIsAdminAction } from '../../modules';
 
 @Injectable()
 export class AuthActionsService {
@@ -49,17 +51,17 @@ export class AuthActionsService {
             return false;
         }
 
-        await this.appState.dispatch(new StartValidationAction()).toPromise();
+        await this.appState.dispatch(new ValidateStart()).toPromise();
 
         try {
             const res = await this.client.user.me({ sid } as any).toPromise();
             const normalizedUser = normalize(res.user, userSchema);
             await this.appState.dispatch(new AddEntitiesAction(normalizedUser)).toPromise();
-            await this.appState.dispatch(new ValidationSuccessAction(sid, res.user)).toPromise();
+            await this.appState.dispatch(new ValidateSuccess(sid, res.user)).toPromise();
             return true;
         } catch (error) {
             this.localStorage.setSid(null);
-            await this.appState.dispatch(new ValidationErrorAction(error.message)).toPromise();
+            await this.appState.dispatch(new ValidateError(error.message)).toPromise();
 
             if (error instanceof GCMSRestClientRequestError && error.responseCode !== 401) {
                 this.errorHandler.catch(error);
@@ -79,14 +81,14 @@ export class AuthActionsService {
     }
 
     async login(username: string, password: string, returnUrl?: string): Promise<boolean> {
-        await this.appState.dispatch(new StartLoginAction()).toPromise();
+        await this.appState.dispatch(new LoginStart()).toPromise();
 
         try {
             const res = await this.client.auth.login({ login: username, password }).toPromise();
             this.localStorage.setSid(res.sid);
             const normalizedUser = normalize(res.user, userSchema);
             await this.appState.dispatch(new AddEntitiesAction(normalizedUser)).toPromise();
-            await this.appState.dispatch(new LoginSuccessAction(res.sid, res.user)).toPromise();
+            await this.appState.dispatch(new LoginSuccess(res.sid, res.user)).toPromise();
 
             if (returnUrl) {
                 this.router.navigateByUrl(returnUrl);
@@ -96,19 +98,19 @@ export class AuthActionsService {
 
             return true;
         } catch (error) {
-            this.appState.dispatch(new LoginErrorAction(error.message));
+            this.appState.dispatch(new LoginError(error.message));
             this.errorHandler.catch(error);
             return false;
         }
     }
 
     async logout(sid: number): Promise<void> {
-        await this.appState.dispatch(new StartLogoutAction()).toPromise();
+        await this.appState.dispatch(new LogoutStart()).toPromise();
 
         try {
             await this.client.auth.logout(sid).toPromise();
             this.localStorage.setSid(null);
-            await this.appState.dispatch(new LogoutSuccessAction()).toPromise();
+            await this.appState.dispatch(new LogoutSuccess()).toPromise();
             await this.appState.dispatch(new UpdateSearchFilterAction({
                 changing: false,
                 valid: false,
@@ -119,7 +121,7 @@ export class AuthActionsService {
                 message: error.message,
                 type: 'alert',
             });
-            await this.appState.dispatch(new LogoutErrorAction(error.message)).toPromise();
+            await this.appState.dispatch(new LogoutError(error.message)).toPromise();
         }
     }
 
@@ -127,7 +129,7 @@ export class AuthActionsService {
      * Update the user's password.
      */
     async changePassword(userId: number, newPassword: string): Promise<boolean> {
-        await this.appState.dispatch(new ChangePasswordAction(true)).toPromise();
+        await this.appState.dispatch(new ChangePasswordStart()).toPromise();
 
         try {
             await this.client.user.update(userId, {
@@ -138,10 +140,10 @@ export class AuthActionsService {
                 message: 'message.updated_password',
                 type: 'success',
             });
-            await this.appState.dispatch(new ChangePasswordAction(false)).toPromise();
+            await this.appState.dispatch(new ChangePasswordSuccess()).toPromise();
             return true;
         } catch (error) {
-            await this.appState.dispatch(new ChangePasswordAction(false, error.message || error)).toPromise();
+            await this.appState.dispatch(new ChangePasswordError(error.message || error)).toPromise();
             this.errorHandler.catch(error);
             return false;
         }

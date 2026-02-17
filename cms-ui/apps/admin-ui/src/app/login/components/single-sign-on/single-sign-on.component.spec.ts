@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { KeycloakService } from '@gentics/cms-components';
+import { AuthenticationModule, KeycloakService } from '@gentics/cms-components/auth';
 import { Store } from '@ngxs/store';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { ErrorHandler } from '../../../core/providers/error-handler';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { AuthOperations } from '../../../core/providers/operations/auth/auth.operations';
 import { AppStateService } from '../../../state';
-import { TestAppState } from '../../../state/utils/test-app-state';
+import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
 import { MockStore } from '../../../state/utils/test-app-state/test-store.mock';
 import { SingleSignOnComponent } from './single-sign-on.component';
 
@@ -26,7 +26,7 @@ class MockKeycloakService {
 class MockRouter {}
 
 @Component({
-    template: '<single-sign-on></single-sign-on>',
+    template: '<gtx-single-sign-on/>',
     standalone: false,
 })
 class TestComponent implements OnInit {
@@ -46,7 +46,9 @@ describe('SingleSignOn', () => {
 
     beforeEach(() => {
         configureComponentTest({
-            imports: [],
+            imports: [
+                ...assembleTestAppStateImports(),
+            ],
             providers: [
                 { provide: ActivatedRoute, useClass: MockActivatedRoute },
                 { provide: AppStateService, useClass: TestAppState },
@@ -54,7 +56,6 @@ describe('SingleSignOn', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: KeycloakService, useClass: MockKeycloakService },
                 { provide: Router, useClass: MockRouter },
-                { provide: Store, useClass: MockStore },
             ],
             declarations: [
                 SingleSignOnComponent,

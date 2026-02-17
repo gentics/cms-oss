@@ -1,13 +1,13 @@
-import { API_BASE_URL } from '@admin-ui/common/utils/base-urls/base-urls';
-import { ObservableStopper } from '@admin-ui/common/utils/observable-stopper/observable-stopper';
 import { AuthOperations, ErrorHandler } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { KeycloakService } from '@gentics/cms-components';
-import { BehaviorSubject } from 'rxjs';
-import { filter, take, takeUntil } from 'rxjs/operators';
+import { API_BASE_URL } from '@gentics/cms-components';
+import { AuthStateModel, KeycloakService } from '@gentics/cms-components/auth';
+import { BaseComponent } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
+import { distinctUntilChanged, filter, take } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-single-sign-on',
@@ -16,35 +16,48 @@ import { filter, take, takeUntil } from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class SingleSignOnComponent implements OnInit, OnDestroy {
+export class SingleSignOnComponent extends BaseComponent implements OnInit {
 
-    enabled$ = new BehaviorSubject(false);
-    url: SafeUrl;
-
-    private stopper = new ObservableStopper();
+    public showLogin = false;
+    public url: SafeUrl;
+    public available = false;
+    public showButton = false;
 
     constructor(
+        changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
         private authOps: AuthOperations,
         private domSanitizer: DomSanitizer,
         private errorHandler: ErrorHandler,
-        public keycloakService: KeycloakService,
+        private keycloakService: KeycloakService,
         private route: ActivatedRoute,
         private router: Router,
-    ) { }
+    ) {
+        super(changeDetector);
+    }
 
     ngOnInit(): void {
-        if (!this.keycloakService.showSSOButton) {
-            if (this.keycloakService.keycloakEnabled) {
-                this.attemptSsoWithKeycloak();
-            } else {
-                this.attemptSsoWithIframe();
+        this.subscriptions.push(this.appState.select(state => state.auth).pipe(
+            distinctUntilChanged<AuthStateModel>(isEqual),
+        ).subscribe((state) => {
+            this.available = state.keycloakAvailable;
+            this.showButton = state.showSingleSignOnButton;
+            this.changeDetector.markForCheck();
+
+            if (this.available != null) {
+                if (!this.showButton) {
+                    if (this.available) {
+                        this.attemptSsoWithKeycloak();
+                    } else {
+                        this.attemptSsoWithIframe();
+                    }
+                }
             }
-        }
+        }));
     }
 
     login(): void {
-        if (this.keycloakService.keycloakEnabled) {
+        if (this.available) {
             this.keycloakService.login();
             this.attemptSsoWithKeycloak();
         } else {
@@ -52,33 +65,29 @@ export class SingleSignOnComponent implements OnInit, OnDestroy {
         }
     }
 
-    ngOnDestroy(): void {
-        this.stopper.stop();
-    }
-
     attemptSsoWithKeycloak(): void {
-        this.keycloakService.attemptCmsLogin().subscribe((result: string) => {
+        this.subscriptions.push(this.keycloakService.attemptCmsLogin().subscribe((result: string) => {
             this.handleSsoResponse(result);
             const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
             const onLogin$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
                 filter(isLoggedIn => !!isLoggedIn),
-                takeUntil(this.stopper.stopper$),
             );
             onLogin$.subscribe(() => {
                 this.router.navigateByUrl(returnUrl);
             });
-        });
+        }));
     }
 
     attemptSsoWithIframe(): void {
-        this.appState.select(state => state.auth).pipe(
+        this.subscriptions.push(this.appState.select(state => state.auth).pipe(
             filter(auth => !!auth),
             take(1),
             filter(auth => !auth.isLoggedIn),
         ).subscribe(() => {
             this.url = this.domSanitizer.bypassSecurityTrustResourceUrl(`${API_BASE_URL}/auth/ssologin?ts=${Date.now()}`);
-            this.enabled$.next(true);
-        });
+            this.showLogin = true;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     frameLoaded(frame: HTMLIFrameElement): void {
@@ -88,7 +97,8 @@ export class SingleSignOnComponent implements OnInit, OnDestroy {
         } catch (error) {
             this.errorHandler.catch(error, { notification: false });
         } finally {
-            this.enabled$.next(false);
+            this.showLogin = false;
+            this.changeDetector.markForCheck();
         }
     }
 

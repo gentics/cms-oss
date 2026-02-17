@@ -148,7 +148,9 @@ function editImageState(): void {
     appState.mockState({
         auth: {
             changingPassword: false,
-            currentUserId: 1,
+            user: {
+                id: 1,
+            } as any,
             isLoggedIn: true,
             lastError: '',
             loggingIn: false,

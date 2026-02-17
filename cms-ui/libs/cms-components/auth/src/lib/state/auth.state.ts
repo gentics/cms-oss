@@ -1,11 +1,16 @@
 import { Injectable } from '@angular/core';
-import { StateContext } from '@ngxs/store';
-
-import { ActionDefinition, AppStateBranch, defineInitialState } from '../utils/state-utils';
+import { ActionDefinition } from '@gentics/cms-components';
+import { State, StateContext } from '@ngxs/store';
 import {
+    AuthStateModel,
     ChangePasswordError,
     ChangePasswordStart,
     ChangePasswordSuccess,
+    INITIAL_AUTH_STATE,
+    KeycloakConnectionState,
+    KeycloakLoadError,
+    KeycloakLoadStart,
+    KeycloakLoadSuccess,
     LoginError,
     LoginStart,
     LoginSuccess,
@@ -13,33 +18,13 @@ import {
     LogoutStart,
     LogoutSuccess,
     ResetAuth,
+    SingleSignOnSkipped,
     ValidateError,
     ValidateStart,
-    ValidateSuccess,
-} from './auth.actions';
+    ValidateSuccess
+} from '../models';
 
-export interface AuthStateModel {
-    isLoggedIn: boolean;
-    loggingIn: boolean;
-    loggingOut: boolean;
-    changingPassword: boolean;
-    currentUserId: number;
-    /** The GCMS session ID */
-    sid: number;
-    lastError: string;
-}
-
-export const INITIAL_AUTH_STATE = defineInitialState<AuthStateModel>({
-    isLoggedIn: false,
-    loggingIn: false,
-    loggingOut: false,
-    changingPassword: false,
-    currentUserId: null,
-    sid: null,
-    lastError: null,
-});
-
-@AppStateBranch<AuthStateModel>({
+@State({
     name: 'auth',
     defaults: INITIAL_AUTH_STATE,
 })
@@ -58,7 +43,7 @@ export class AuthStateModule {
         ctx.patchState({
             isLoggedIn: true,
             loggingIn: false,
-            currentUserId: action.user.id,
+            user: action.user,
             sid: action.sid,
             lastError: '',
         });
@@ -84,7 +69,7 @@ export class AuthStateModule {
         ctx.patchState({
             loggingOut: false,
             isLoggedIn: false,
-            currentUserId: null,
+            user: null,
             sid: null,
         });
     }
@@ -114,7 +99,7 @@ export class AuthStateModule {
         ctx.patchState({
             isLoggedIn: true,
             loggingIn: false,
-            currentUserId: action.user.id,
+            user: action.user,
             sid: action.sid,
             lastError: '',
         });
@@ -151,4 +136,52 @@ export class AuthStateModule {
         });
     }
 
+    @ActionDefinition(KeycloakLoadStart)
+    handleKeycloakLoadStart(ctx: StateContext<AuthStateModel>): void {
+        ctx.patchState({
+            keycloakAvailable: null,
+            keycloakError: null,
+            showSingleSignOnButton: false,
+        });
+    }
+
+    @ActionDefinition(KeycloakLoadSuccess)
+    handleKeycloakLoadSuccess(ctx: StateContext<AuthStateModel>, action: KeycloakLoadSuccess): void {
+        ctx.patchState({
+            keycloakAvailable: action.available,
+            keycloakError: null,
+            showSingleSignOnButton: action.ssoButton,
+        });
+    }
+
+    @ActionDefinition(KeycloakLoadError)
+    handleKeycloakLoadError(ctx: StateContext<AuthStateModel>, action: KeycloakLoadError): void {
+        let message: string;
+
+        switch (action.con) {
+            case KeycloakConnectionState.UNREACHABLE:
+                message = 'shared.keycloak_not_available';
+                break;
+            case KeycloakConnectionState.INVALID_CONFIG:
+                message = 'shared.keycloak_invalid_config';
+                break;
+            case KeycloakConnectionState.ERROR:
+            default:
+                message = 'shared.keycloak_unknown_error';
+                break;
+        }
+
+        ctx.patchState({
+            keycloakAvailable: false,
+            keycloakError: message,
+            showSingleSignOnButton: false,
+        });
+    }
+
+    @ActionDefinition(SingleSignOnSkipped)
+    handleSingleSignOnSkipped(ctx: StateContext<AuthStateModel>, action: SingleSignOnSkipped): void {
+        ctx.patchState({
+            ssoSkipped: action.skipped,
+        });
+    }
 }

@@ -33,6 +33,9 @@
             "@editor-ui/*": ["apps/editor-ui/src/*"],
             "@gentics/aloha-models": ["libs/aloha-models/src/public-api"],
             "@gentics/cms-components": ["libs/cms-components/src/public-api"],
+            "@gentics/cms-components/auth": [
+                "libs/cms-components/auth/src/public-api"
+            ],
             "@gentics/cms-integration-api-models": [
                 "libs/cms-integration-api-models/src/public-api"
             ],

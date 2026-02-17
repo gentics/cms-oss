@@ -3,7 +3,7 @@ import { Component, EventEmitter, Injectable, NO_ERRORS_SCHEMA, Pipe, PipeTransf
 import { TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
+import { CmsComponentsModule } from '@gentics/cms-components';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -46,6 +46,7 @@ import { IconCheckboxComponent } from './shared/components/icon-checkbox/icon-ch
 import { ActionAllowedDirective } from './shared/directives/action-allowed/action-allowed.directive';
 import { AppStateService } from './state';
 import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from './state/utils/test-app-state';
+import { AuthenticationModule, KeycloakService } from '@gentics/cms-components/auth';
 
 class MockApiBase {
     get: any = jasmine.createSpy('ApiBase.get').and.returnValue(NEVER);
@@ -172,6 +173,7 @@ describe('AppComponent', () => {
                 RouterTestingModule,
                 HttpClientTestingModule,
                 AngularSvgIconModule.forRoot(),
+                AuthenticationModule.forRoot(),
             ],
             declarations: [
                 ActionAllowedDirective,

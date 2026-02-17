@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
-import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME, WindowRef } from '@gentics/cms-components';
+import { WindowRef } from '@gentics/cms-components';
+import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components/auth';
 import { TagEditorChange, TagEditorChangeMessage } from '@gentics/cms-integration-api-models';
 import { EntityType } from '@gentics/cms-models';
 import { environment } from '../../../../environments/environment';
+import { AppStateService } from '@admin-ui/state';
 
 interface TagEditorURL {
     nodeId?: number;
@@ -51,7 +53,7 @@ export class TagEditorWrapperComponent implements OnDestroy, OnChanges {
 
     constructor(
         private windowRef: WindowRef,
-        private keycloak: KeycloakService,
+        private appState: AppStateService,
     ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -103,7 +105,7 @@ export class TagEditorWrapperComponent implements OnDestroy, OnChanges {
 
         // If the admin-ui has been opened to skip the sso-/keycloak-login,
         // then we want to open the editor-ui with the same flag.
-        if (this.keycloak.ssoSkipped()) {
+        if (this.appState.now.auth.ssoSkipped) {
             tmpUrl.searchParams.set(SKIP_KEYCLOAK_PARAMETER_NAME, '');
         }
 

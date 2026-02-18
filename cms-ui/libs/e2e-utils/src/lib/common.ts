@@ -154,6 +154,11 @@ export const CONSTRUCT_TEST_IMAGE = '994d.5be00ab6-37b8-11ef-a38e-0242ac110002';
 export const CONSTRUCT_TEST_OVERVIEW = 'a1f6.c849b53a-8413-11f0-b405-621fd600b3e6';
 export const CONSTRUCT_TEST_TEXT = '3821.174e1f5c-3244-11ef-872a-0242ac110002';
 
+// "Gentics CMP Default" category
+export const CONSTRUCT_CATEGORY_CORE = '3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5';
+// "Integration Tests" category
+export const CONSTRUCT_CATEGORY_TESTS = '57a5.00407459-3223-11ef-862c-0242ac110002';
+
 export const CORE_CONSTRUCTS = [
     CONSTRUCT_ALOHA_LINK,
     CONSTRUCT_ALOHA_TEXT,
@@ -174,17 +179,15 @@ export const OBJECT_PROPERTY_NAV_SORTING = 'A547.69486';
 export const OBJECT_PROPERTY_STARTPAGE = 'A547.69535';
 export const OBJECT_PROPERTY_COPYRIGHT = 'A547.74284';
 
+export const OBJECT_PROPERTY_CATEGORY_CORE = '3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5';
+export const OBJECT_PROPERTY_CATEGORY_TESTS = '994d.e54046e7-37b9-11ef-a38e-0242ac110002';
+
 export const CORE_OBJECT_PROPERTIES = [
     OBJECT_PROPERTY_HIDE_IN_NAV,
     OBJECT_PROPERTY_NAV_SORTING,
     OBJECT_PROPERTY_STARTPAGE,
     OBJECT_PROPERTY_COPYRIGHT,
 ];
-
-// "Gentics CMP Default" category
-export const CONSTRUCT_CATEGORY_CORE = '3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5';
-// "Integration Tests" category
-export const CONSTRUCT_CATEGORY_TESTS = '57a5.00407459-3223-11ef-862c-0242ac110002';
 
 // Internal tasks, which are defined by their internal commands
 export const TASK_CONVERT_IMAGES = 'convertimages';

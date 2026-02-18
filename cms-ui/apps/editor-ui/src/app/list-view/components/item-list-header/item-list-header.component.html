@@ -90,14 +90,18 @@
             ></upload-button>
         </ng-container>
 
-        <gtx-dropdown-list align="right">
+        <gtx-dropdown-list
+            align="right"
+            data-action="open-list-context"
+            [attr.data-context-id]="itemType + '-list-options'"
+        >
             <gtx-dropdown-trigger>
-                <gtx-button icon type="secondary" data-action="open-list-context">
+                <gtx-button icon type="secondary" data-context-trigger>
                     <icon>more_vert</icon>
                 </gtx-button>
             </gtx-dropdown-trigger>
 
-            <gtx-dropdown-content class="item-list-header-context">
+            <gtx-dropdown-content class="item-list-header-context" [attr.data-context-id]="itemType + '-list-options'">
                 <gtx-dropdown-item
                     *ngIf="itemType === 'image'"
                     data-action="toggle-display-type"

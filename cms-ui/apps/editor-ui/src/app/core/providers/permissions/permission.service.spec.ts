@@ -17,6 +17,7 @@ import { MockAppState, TestApplicationState } from '../../../state/test-applicat
 import { Api } from '../api/api.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { PermissionService } from './permission.service';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 
 const NODE = 11;
 const FOLDER = 22;
@@ -294,7 +295,10 @@ describe('PermissionService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                AuthenticationModule.forRoot(),
+            ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
@@ -319,7 +323,14 @@ describe('PermissionService', () => {
     }
 
     function mockUserChange(newUserId: number): void {
-        state.mockState({ auth: { ...state.now.auth, currentUserId: newUserId } });
+        state.mockState({
+            auth: {
+                ...state.now.auth,
+                user: {
+                    id: newUserId
+                } as any,
+            }
+        });
     }
 
     describe('all$', () => {
@@ -338,7 +349,9 @@ describe('PermissionService', () => {
             testState = {
                 auth: {
                     isLoggedIn: true,
-                    currentUserId: USER,
+                    user: {
+                        id: USER,
+                    } as any,
                 },
                 entities: {
                     folder: {
@@ -478,7 +491,11 @@ describe('PermissionService', () => {
 
             // Logout
             state.mockState({
-                auth: { ...state.now.auth, isLoggedIn: false, currentUserId: null },
+                auth: {
+                    ...state.now.auth,
+                    isLoggedIn: false,
+                    user: null,
+                },
                 entities: { ...state.now.entities, folder: {} },
             });
             expect(emitted.length).toBe(1, 're-emitted after logout');
@@ -494,7 +511,13 @@ describe('PermissionService', () => {
 
             // Login as second user
             state.mockState({
-                auth: { ...state.now.auth, isLoggedIn: true, currentUserId: USER + 1 },
+                auth: {
+                    ...state.now.auth,
+                    isLoggedIn: true,
+                    user: {
+                        id: USER + 1,
+                    } as any
+                },
             });
 
             expect(emitted.length).toBe(3);
@@ -566,7 +589,9 @@ describe('PermissionService', () => {
             testState = {
                 auth: {
                     isLoggedIn: true,
-                    currentUserId: USER,
+                    user: {
+                        id: USER,
+                    } as any,
                 },
                 entities: {
                     folder: {

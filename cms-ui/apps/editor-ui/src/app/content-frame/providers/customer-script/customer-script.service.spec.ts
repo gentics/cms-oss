@@ -33,7 +33,9 @@ describe('CustomerScriptService', () => {
     const mockAppState: MockAppState = {
         auth: {
             sid: 123,
-            currentUserId: 99,
+            user: {
+                id: 99,
+            } as any,
         },
         entities: {
             page: { 1: mockPage },

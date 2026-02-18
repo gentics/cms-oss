@@ -1,7 +1,7 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
-import { VersionCompatibility, UsersnapSettings, Variant, Update } from '@gentics/cms-models';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
+import { Update, UsersnapSettings, Variant, VersionCompatibility } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import { AuthStateModule } from '../auth/auth.state';
 import { AppStateService } from '../providers/app-state/app-state.service';
 import { TEST_APP_STATE, TestAppState } from '../utils/test-app-state';
 import {
@@ -66,7 +66,10 @@ describe('UiStateModule', () => {
 
     beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot([AuthStateModule, UIStateModule])],
+            imports: [
+                NgxsModule.forRoot([UIStateModule]),
+                AuthenticationModule.forRoot(),
+            ],
             providers: [TEST_APP_STATE],
         }).compileComponents();
         appState = TestBed.inject(AppStateService) as any;
@@ -123,7 +126,9 @@ describe('UiStateModule', () => {
         appState.mockState({
             auth: {
                 isLoggedIn: true,
-                currentUserId: 5,
+                user: {
+                    id: 5,
+                },
             },
         });
 

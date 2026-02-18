@@ -1,6 +1,5 @@
 export * from './apply-instance-permissions/apply-instance-permissions';
 export * from './business-objects/business-objects';
-export * from './deep-freeze/deep-freeze';
 export * from './detail-routes/detail-routes';
 export * from './form-utils';
 export * from './instance-permissions/instance-permissions';

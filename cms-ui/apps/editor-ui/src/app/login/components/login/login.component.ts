@@ -1,45 +1,55 @@
-import { Component, OnInit } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { BaseComponent, FormProperties } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { ApplicationStateService, AuthActionsService } from '../../../state';
 
+interface LoginData {
+    username: string;
+    password: string;
+}
+
 @Component({
-    selector: 'login',
-    templateUrl: './login.tpl.html',
-    styleUrls: ['./login.scss'],
+    selector: 'gtx-login',
+    templateUrl: './login.component.html',
+    styleUrls: ['./login.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class LoginComponent implements OnInit {
-    errorMessage$: Observable<string>;
-    loginForm: UntypedFormGroup;
+export class LoginComponent extends BaseComponent implements OnInit {
+
     public keycloakError?: string;
+    public loginForm: FormGroup<FormProperties<LoginData>>;
 
     constructor(
+        changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private route: ActivatedRoute,
-        private router: Router,
         private authActions: AuthActionsService,
     ) {
-        const navigation = this.router.currentNavigation();
-
-        if (navigation?.extras?.state) {
-            this.keycloakError = navigation?.extras?.state['keycloakError'];
-        }
+        super(changeDetector);
     }
 
     ngOnInit(): void {
-        this.loginForm = new UntypedFormGroup({
-            username: new UntypedFormControl('', Validators.required),
-            password: new UntypedFormControl('', Validators.required),
+        this.loginForm = new FormGroup<FormProperties<LoginData>>({
+            username: new FormControl('', Validators.required),
+            password: new FormControl('', Validators.required),
         });
-        this.errorMessage$ = this.appState.select(state => state.auth.lastError);
+
+        this.subscriptions.push(this.appState.select((state) => state.auth.keycloakError).pipe(
+            distinctUntilChanged(isEqual),
+        ).subscribe((errMsg) => {
+            this.keycloakError = errMsg;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     login(): void {
         if (this.loginForm.valid) {
             const { username, password } = this.loginForm.value;
-            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/no-nodes';
             this.authActions.login(username, password, returnUrl);
         }
     }

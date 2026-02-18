@@ -12,6 +12,7 @@ import {
     Normalized,
     Raw,
 } from '@gentics/cms-models';
+import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
 import { debounce as _debounce, values as _values, isEqual } from 'lodash-es';
 import { Observable, ReplaySubject, Subject, of as observableOf, throwError } from 'rxjs';
 import {
@@ -26,7 +27,7 @@ import {
     tap,
 } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { batchedMap, deepFreeze } from '../../../common/utils';
+import { batchedMap } from '../../../common/utils';
 import { AddEntities, AppStateService, DeleteAllEntitiesInBranch, DeleteEntities, EntityStateModel, SelectState } from '../../../state';
 
 interface CachedDenormalizedValue<

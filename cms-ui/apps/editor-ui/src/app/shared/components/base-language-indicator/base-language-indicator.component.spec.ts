@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { ApplicationStateService, FolderActionsService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { Page } from '@gentics/cms-models'; 
+import { Page } from '@gentics/cms-models';
 import { configureComponentTest } from '../../../../testing';
+import { ApplicationStateService, FolderActionsService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { BaseLanguageIndicatorComponent } from './base-language-indicator.component';
 
 @Component({
-    template: ``,
+    template: '',
     standalone: false,
 })
 class TestLanguageIndicatorComponent extends BaseLanguageIndicatorComponent<Page> {
@@ -15,7 +15,6 @@ class TestLanguageIndicatorComponent extends BaseLanguageIndicatorComponent<Page
         appState: ApplicationStateService,
         folderActions: FolderActionsService,
     ) {
-        // @ts-ignore
         super('page', appState, folderActions);
     }
 }
@@ -60,7 +59,7 @@ describe('BaseLanguageIndicatorComponent', () => {
         tick();
 
         let emittedVariants: any;
-        instance.languageVariants$.subscribe(variants => emittedVariants = variants);
+        instance.languageVariants$.subscribe((variants) => emittedVariants = variants);
         tick();
 
         expect(emittedVariants).toEqual({
@@ -71,7 +70,7 @@ describe('BaseLanguageIndicatorComponent', () => {
 
     it('emits languageVariants$ when store updates', fakeAsync(() => {
         const mockPage1 = { id: 1, globalId: '1', online: false } as any;
-        
+
         state.mockState({
             entities: {
                 page: {
@@ -85,7 +84,7 @@ describe('BaseLanguageIndicatorComponent', () => {
         tick();
 
         let emittedVariants: any;
-        instance.languageVariants$.subscribe(variants => emittedVariants = variants);
+        instance.languageVariants$.subscribe((variants) => emittedVariants = variants);
         tick();
 
         expect(emittedVariants[1].online).toBe(false);
@@ -94,7 +93,7 @@ describe('BaseLanguageIndicatorComponent', () => {
         state.mockState({
             entities: {
                 page: {
-                        1: updatedPage1,
+                    1: updatedPage1,
                 },
             },
         });
@@ -105,7 +104,7 @@ describe('BaseLanguageIndicatorComponent', () => {
 
     it('does not emit when store updates unrelated items', fakeAsync(() => {
         const mockPage1 = { id: 1, globalId: '1' } as any;
-        
+
         state.mockState({
             entities: {
                 page: {
@@ -122,13 +121,13 @@ describe('BaseLanguageIndicatorComponent', () => {
         instance.languageVariants$.subscribe(() => emissionCount++);
         tick();
 
-        expect(emissionCount).toBe(1); 
+        expect(emissionCount).toBe(1);
 
         state.mockState({
             entities: {
                 page: {
-                    1: mockPage1, 
-                    2: { id: 2 } as any, 
+                    1: mockPage1,
+                    2: { id: 2 } as any,
                 },
             },
         });

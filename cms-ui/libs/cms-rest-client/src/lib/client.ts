@@ -21,6 +21,7 @@ import {
     GCMSI18nAPI,
     GCMSImageAPI,
     GCMSInfoAPI,
+    GCMSKeycloakAPI,
     GCMSLanguageAPI,
     GCMSLicenseAPI,
     GCMSLinkCheckerAPI,
@@ -919,5 +920,9 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (body) => this.executeMappedJsonRequest(POST, 'license/update', body),
         contentRepositories: (options) => this.executeMappedJsonRequest(GET, 'license/contentRepositories', null, options),
         push: (body) => this.executeMappedJsonRequest(POST, 'license/push', body),
-    };
+    } as const;
+
+    public keycloak: GCMSKeycloakAPI = {
+        configuration: () => this.executeMappedJsonRequest(GET, 'keycloak'),
+    } as const;
 }

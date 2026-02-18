@@ -1,9 +1,3 @@
-import { deepFreeze } from '../../../common/utils/deep-freeze/deep-freeze';
-import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
-import { AppStateService } from '../../../state/providers/app-state/app-state.service';
-import { AddEntities, UpdateEntities } from '../../../state/entity/entity.actions';
-import { EntityStateModel, INITIAL_ENTITY_STATE } from '../../../state/entity/entity.state';
-import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state/test-app-state.mock';
 import { Injectable } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
@@ -25,9 +19,15 @@ import {
     getExamplePageData,
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing';
+import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
 import { cloneDeep } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
+import { AddEntities, UpdateEntities } from '../../../state/entity/entity.actions';
+import { EntityStateModel, INITIAL_ENTITY_STATE } from '../../../state/entity/entity.state';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
+import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state/test-app-state.mock';
 import { EntityManagerService } from './entity-manager.service';
 
 interface NormalizationWorkerRequest<T extends NormalizableEntityType, E extends NormalizableEntityTypesMapBO<Raw>[T]> {

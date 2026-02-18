@@ -97,12 +97,6 @@ export function createConfiguration(
             bypassCSP: true,
             /* Make sure we have a consistent timezone for our tests. */
             timezoneId: 'Europe/Vienna',
-            /* Setup permissions we need in the tests */
-            permissions: [
-                /* We need to be able to read and write to the clipboard */
-                'clipboard-read',
-                'clipboard-write',
-            ]
         },
         /*
          * None of our tests can be run in parallel, as they all access the same CMS instance

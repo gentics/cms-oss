@@ -1,5 +1,5 @@
 import { AbstractControl } from '@angular/forms';
-import { deepFreeze } from '../deep-freeze/deep-freeze';
+import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
 
 /**
  * Allows interaction with the form in a single detail tab.

@@ -207,5 +207,10 @@
         "datepicker_weekday_minimal_thursday": "Do",
         "datepicker_weekday_minimal_friday": "Fr",
         "datepicker_weekday_minimal_saturday":"Sa"
+    },
+    "shared": {
+        "keycloak_not_available": "Beim Zugriff auf Keycloak ist etwas schief gelaufen. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet.",
+        "keycloak_invalid_config": "Die konfiguration für Keycloak ist nicht valide. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet.",
+        "keycloak_unknown_error": "Ein unerwarteter Fehler ist bei der Keycloak überprüfung aufgetreten. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet."
     }
 }

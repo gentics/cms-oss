@@ -2,13 +2,8 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import {
-    API_BASE_URL,
-    CmsComponentsModule,
-    FALLBACK_LANGUAGE,
-    GCMS_UI_SERVICES_PROVIDER,
-    I18nDatePickerFormatService,
-} from '@gentics/cms-components';
+import { API_BASE_URL, CmsComponentsModule, FALLBACK_LANGUAGE, GCMS_UI_SERVICES_PROVIDER, I18nDatePickerFormatService } from '@gentics/cms-components';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
@@ -165,6 +160,7 @@ const PROVIDERS = [
         TranslateModule.forRoot({
             fallbackLang: FALLBACK_LANGUAGE,
         }),
+        AuthenticationModule.forRoot(),
     ],
     exports: [
         BrowserModule,

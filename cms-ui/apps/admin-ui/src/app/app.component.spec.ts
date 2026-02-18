@@ -3,7 +3,8 @@ import { Component, Injectable, NO_ERRORS_SCHEMA, OnDestroy, Pipe, PipeTransform
 import { TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
+import { CmsComponentsModule } from '@gentics/cms-components';
+import { KeycloakService } from '@gentics/cms-components/auth';
 import { ModelType, Node, NodeListRequestOptions } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';

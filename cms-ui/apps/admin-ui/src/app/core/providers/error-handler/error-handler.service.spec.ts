@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { LogoutSuccess } from '@gentics/cms-components/auth';
 import { ResponseCode } from '@gentics/cms-models';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { Actions, ActionType, ofActionDispatched } from '@ngxs/store';
 import { Observable } from 'rxjs';
-import { AppStateService, LogoutSuccess } from '../../../state';
+import { AppStateService } from '../../../state';
 import { assembleTestAppStateImports, TEST_APP_STATE, TestAppState } from '../../../state/utils/test-app-state';
 import { ErrorHandler } from './error-handler.service';
 

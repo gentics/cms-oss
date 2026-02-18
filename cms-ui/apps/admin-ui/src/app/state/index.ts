@@ -1,6 +1,4 @@
 export * from './app-state';
-export * from './auth/auth.actions';
-export * from './auth/auth.state';
 export * from './entity/entity.actions';
 export * from './entity/entity.state';
 export * from './features/features.actions';

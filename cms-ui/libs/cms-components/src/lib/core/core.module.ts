@@ -29,10 +29,10 @@ import {
 import {
     EntriesPipe,
     FilterPipe,
-    I18nPipe,
     I18nDatePipe,
     I18nDurationPipe,
     I18nNumberPipe,
+    I18nPipe,
     I18nRelativeDatePipe,
     SafePipe,
     StripRichContentPipe,
@@ -43,7 +43,6 @@ import {
     I18nNotificationService,
     I18nRelativeDateService,
     I18nService,
-    KeycloakService,
     WindowRef,
 } from './providers';
 
@@ -97,7 +96,6 @@ const PROVIDERS: Provider[] = [
     I18nDatePickerFormatService,
     I18nService,
     WindowRef,
-    KeycloakService,
     ...PIPES,
 
 ];

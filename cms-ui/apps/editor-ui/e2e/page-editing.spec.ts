@@ -1055,23 +1055,43 @@ test.describe('Page Editing', () => {
                     await editButton.waitFor();
                     await expect(editButton).toBeVisible();
                 } else {
-                    expect(await editButton.count()).toBeLessThan(1);
+                    await expect(editButton).not.toBeAttached();
                 }
             }
 
-            test('should render an editable tag with edit button', async ({page}) => {
+            test('should render an editable tag with edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }]
+            }, async ({page}) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR, true);
             });
 
-            test('should render a hidden tag with no edit button', async ({page}) => {
+            test('should render a hidden tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }]
+            }, async ({page}) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_HIDDEN, false);
             });
 
-            test('should render an inline tag with no edit button', async ({page}) => {
+            test('should render an inline tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }]
+            }, async ({page}) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_INLINE, false);
             });
 
-            test('should render a non-editable tag with no edit button', async ({page}) => {
+            test('should render a non-editable tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }]
+            }, async ({page}) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE, false);
             });
         });

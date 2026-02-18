@@ -1,0 +1,45 @@
+{
+  "globalId" : "a1f6.d84f0a55-37ad-11ef-a38e-0242ac110002",
+  "keyword" : "test_select_color_hidden",
+  "name" : {
+    "de" : "[Test] Farbauswahl versteckt",
+    "en" : "[Test] Color Select hidden"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : false,
+  "autoEnable" : true,
+  "externalEditorUrl" : "",
+  "parts" : [ {
+    "globalId" : "a1f6.4335959a-37b8-11ef-a38e-0242ac110002",
+    "name" : {
+      "de" : "Auswahl",
+      "en" : "Select"
+    },
+    "keyword" : "select",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false,
+    "hideInEditor" : true,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

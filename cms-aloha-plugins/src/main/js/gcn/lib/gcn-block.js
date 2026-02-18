@@ -107,32 +107,6 @@ define([
 	}
 
 	/**
-	 * Gets the construct matching the specified construct id from the given
-	 * node or page.
-	 *
-	 * @param {NodeAPI|PageAPI} object The object for which to query for the
-	 *                                 construct.
-	 * @param {number} constructId The id of the construct to be retreived.
-	 * @param {function(object)} success Callback function that will recieved
-	 *                                  the successfully retreived construct.
-	 * @param {function} error Function that will be invoked if construct
-	 *                         cannot be retreived.
-	 */
-	function getConstruct(object, constructId, success, error) {
-		object.constructs(function (constructs) {
-			var keyword;
-			for (keyword in constructs) {
-				if (constructs.hasOwnProperty(keyword) &&
-						constructs[keyword].id === constructId) {
-					success(constructs[keyword]);
-					return;
-				}
-			}
-			error();
-		}, error);
-	}
-
-	/**
 	 * Checks whether a construct is permitted inside an editable based on the
 	 * editable's white-list configuration.
 	 *
@@ -216,7 +190,7 @@ define([
 		$(editableHost.obj).attr('data-gcn-copy', 'true');
 
 		srcPage.tag(srcTagname, function (tag) {
-			getConstruct(srcPage, tag.prop('constructId'), function (construct) {
+			Util.getConstructFromId(tag.prop('constructId')).then(function (construct) {
 				var gcnPlugin = Aloha.require('gcn/gcn-plugin');
 				var $editable = $block.closest('.aloha-editable');
 				var config = gcnPlugin.getEditableConfig($editable);
@@ -240,6 +214,165 @@ define([
 				}
 			}, error); // Construct not found
 		}, error); // Tag not found
+	}
+
+	function doRenderBlockHandles(block, editable) {
+		var $block = block.$element;
+		// Check whether the handles have already been added (only
+		// do add them "IfNeeded").
+		if ($block.children('.aloha-construct-buttons-container').length) {
+			var editableHost = Aloha.getEditableHost($block);
+
+			PubSub.pub('gcn.block.handles-available', {
+				host: editableHost,
+				block: block,
+				$el: $block,
+			});
+
+			return;
+		}
+
+		// Do not render block handles for blocks that are currently copied
+		if (!$block.attr('data-gcn-constructid')) {
+			return;
+		}
+
+		var canBeDeleted = block.shouldDestroy();
+
+		var tagname = $block.attr('data-gcn-tagname');
+
+		// Escape possible html elements and quotes in construct name
+		var constructname = $('<div/>').text($block.attr('data-gcn-i18n-constructname')).html().replace(/"/g, '&quot;');
+		if (tagname && constructname) {
+			tagname += ' (' + constructname + ')';
+		}
+
+		var $blockHandleContainer = $('<span>', {
+			class: 'aloha-block-handle aloha-construct-buttons-container aloha-cleanme', 
+			title: tagname,
+		});
+
+		if (block.isDraggable()) {
+			// Make the block dragable on default
+			$blockHandleContainer.addClass('aloha-block-draghandle');
+
+			var dragHandle$ = $('<div>', {
+				class: 'gcn-construct-drag-handle aloha-block-handle',
+			}).append($('<i>', {
+				class: 'material-symbols-outlined aloha-block-button-icon',
+				text: 'drag_pan'
+			})).appendTo($blockHandleContainer);
+
+			if (!$block.hasClass('ui-draggable-disabled')) {
+				dragHandle$.addClass('aloha-block-draghandle');
+			}
+		}
+
+		if (editable) {
+			var $editButton = $('<button>', {
+				class: 'gcn-block-button gcn-construct-button-edit',
+				title: i18n.t('edit.msg').replace('$1', tagname || ''),
+			}).append($('<i>', {
+				class: 'material-symbols-outlined aloha-block-button-icon',
+				text: 'edit'
+			})).click(function ($event) {
+				Aloha.GCN.openTagFill(
+					$block.attr('data-gcn-tagid'),
+					$block.attr('data-gcn-pageid')
+				);
+
+				// Aloha Blocks sets the
+				// `Aloha.Selection.preventSelectionChangedFlag' when a click
+				// event is initialized on a block element.  This is done in
+				// order to be able to select nested blocks.  When the click
+				// event is triggered by cause we clicked on the edit button
+				// inside the block, however, we must reset the flag so that
+				// when the TagFill modal is closed, the next
+				// `aloha-selection-changed' event will be processed as needed.
+				//
+				// See rt#51554
+				Aloha.Selection.preventSelectionChangedFlag = false;
+
+				$event.preventDefault();
+				return false;
+			});
+			$blockHandleContainer.append($editButton);
+		}
+
+		if (canBeDeleted) {
+			var $deleteButton = $('<button>', {
+				class: 'gcn-block-button gcn-construct-button-delete',
+				title: i18n.t('delete.msg').replace('$1', tagname || ''),
+			}).append($('<i>', {
+				class: 'material-symbols-outlined aloha-block-button-icon',
+				text: 'delete'
+			})).click(function ($event) {
+				block.confirmedDestroy(function () {
+					block.deleteInstance();
+				}, $block.attr('data-gcn-tagname'));
+				$event.preventDefault();
+				return false;
+			});
+			$blockHandleContainer.append($deleteButton);
+		}
+
+		setTimeout(function () {
+			$blockHandleContainer.show();
+		}, 0);
+
+		$block.prepend($blockHandleContainer);
+		Ephemera.markElement($blockHandleContainer);
+
+		function setSizeProperties() {
+			$block.css(STYLE_BLOCK_CONTENT_HEIGHT, $block.height() + 'px');
+			$block.css(STYLE_BLOCK_CONTENT_WIDTH, $block.width() + 'px');
+			$block.css(STYLE_BLOCK_HANDLE_HEIGHT, $blockHandleContainer.height() + 'px');
+			$block.css(STYLE_BLOCK_HANDLE_WIDTH, $blockHandleContainer.width() + 'px');
+		}
+		block._observer = new ResizeObserver(setSizeProperties);
+		block._observer.observe($block[0]);
+		block._observer.observe($blockHandleContainer[0]);
+		setSizeProperties();
+
+		// Additional double-click handler for click type construct blocks.
+		$block.on('dblclick', function($event) {
+			var type = $block.attr('data-gcn-construct-ctl-style');
+			if (type !== 'click') {
+				return;
+			}
+
+			Aloha.GCN.openTagFill(
+				$block.attr('data-gcn-tagid'),
+				$block.attr('data-gcn-pageid'),
+				{ withDelete: canBeDeleted }
+			);
+
+			// Aloha Blocks sets the
+			// `Aloha.Selection.preventSelectionChangedFlag' when a click
+			// event is initialized on a block element.  This is done in
+			// order to be able to select nested blocks.  When the click
+			// event is triggered by cause we clicked on the edit button
+			// inside the block, however, we must reset the flag so that
+			// when the TagFill modal is closed, the next
+			// `aloha-selection-changed' event will be processed as needed.
+			//
+			// See rt#51554
+			Aloha.Selection.preventSelectionChangedFlag = false;
+
+			$event.preventDefault();
+			return false;
+		});
+
+		var editableHost = Aloha.getEditableHost($block);
+		if (editableHost) {
+			editableHost.smartContentChange({type: 'block-change'});
+		}
+
+		PubSub.pub('gcn.block.handles-available', {
+			host: editableHost,
+			block: block,
+			$el: $block,
+		});
 	}
 
 	/**
@@ -307,159 +440,12 @@ define([
 			var block = this;
 			var $block = block.$element;
 
-			// Check whether the handles have already been added (only
-			// do add them "IfNeeded").
-			if ($block.children('.aloha-construct-buttons-container').length) {
-				var editableHost = Aloha.getEditableHost($block);
-
-				PubSub.pub('gcn.block.handles-available', {
-					host: editableHost,
-					block: block,
-					$el: $block,
-				});
-
-				return;
-			}
-
-			// Do not render block handles for blocks that are currently copied
-			if (!$block.attr('data-gcn-constructid')) {
-				return;
-			}
-
-			var canBeDeleted = block.shouldDestroy();
-
-			var tagname = $block.attr('data-gcn-tagname');
-
-			// Escape possible html elements and quotes in construct name
-			var constructname = $('<div/>').text($block.attr('data-gcn-i18n-constructname')).html().replace(/"/g, '&quot;');
-			if (tagname && constructname) {
-				tagname += ' (' + constructname + ')';
-			}
-
-			var $blockHandleContainer = $('<span>', {
-				class: 'aloha-block-handle aloha-construct-buttons-container aloha-cleanme', 
-				title: tagname,
-			});
-
-			if (block.isDraggable()) {
-				// Make the block dragable on default
-				$blockHandleContainer.addClass('aloha-block-draghandle');
-
-				var dragHandle$ = $('<div>', {
-					class: 'gcn-construct-drag-handle aloha-block-handle',
-				}).append($('<i>', {
-					class: 'material-symbols-outlined aloha-block-button-icon',
-					text: 'drag_pan'
-				})).appendTo($blockHandleContainer);
-
-				if (!$block.hasClass('ui-draggable-disabled')) {
-					dragHandle$.addClass('aloha-block-draghandle');
-				}
-			}
-
-			var $editButton = $('<button>', {
-				class: 'gcn-block-button gcn-construct-button-edit',
-				title: i18n.t('edit.msg').replace('$1', tagname || ''),
-			}).append($('<i>', {
-				class: 'material-symbols-outlined aloha-block-button-icon',
-				text: 'edit'
-			})).click(function ($event) {
-				Aloha.GCN.openTagFill(
-					$block.attr('data-gcn-tagid'),
-					$block.attr('data-gcn-pageid')
-				);
-
-				// Aloha Blocks sets the
-				// `Aloha.Selection.preventSelectionChangedFlag' when a click
-				// event is initialized on a block element.  This is done in
-				// order to be able to select nested blocks.  When the click
-				// event is triggered by cause we clicked on the edit button
-				// inside the block, however, we must reset the flag so that
-				// when the TagFill modal is closed, the next
-				// `aloha-selection-changed' event will be processed as needed.
-				//
-				// See rt#51554
-				Aloha.Selection.preventSelectionChangedFlag = false;
-
-				$event.preventDefault();
-				return false;
-			});
-
-			$blockHandleContainer.append($editButton);
-
-			if (canBeDeleted) {
-				var $deleteButton = $('<button>', {
-					class: 'gcn-block-button gcn-construct-button-delete',
-					title: i18n.t('delete.msg').replace('$1', tagname || ''),
-				}).append($('<i>', {
-					class: 'material-symbols-outlined aloha-block-button-icon',
-					text: 'delete'
-				})).click(function ($event) {
-					block.confirmedDestroy(function () {
-						block.deleteInstance();
-					}, $block.attr('data-gcn-tagname'));
-					$event.preventDefault();
-					return false;
-				});
-				$blockHandleContainer.append($deleteButton);
-			}
-
-			setTimeout(function () {
-				$blockHandleContainer.show();
-			}, 0);
-
-			$block.prepend($blockHandleContainer);
-			Ephemera.markElement($blockHandleContainer);
-
-			function setSizeProperties() {
-				$block.css(STYLE_BLOCK_CONTENT_HEIGHT, $block.height() + 'px');
-				$block.css(STYLE_BLOCK_CONTENT_WIDTH, $block.width() + 'px');
-				$block.css(STYLE_BLOCK_HANDLE_HEIGHT, $blockHandleContainer.height() + 'px');
-				$block.css(STYLE_BLOCK_HANDLE_WIDTH, $blockHandleContainer.width() + 'px');
-			}
-			block._observer = new ResizeObserver(setSizeProperties);
-			block._observer.observe($block[0]);
-			block._observer.observe($blockHandleContainer[0]);
-			setSizeProperties();
-
-			// Additional double-click handler for click type construct blocks.
-			$block.on('dblclick', function($event) {
-				var type = $block.attr('data-gcn-construct-ctl-style');
-				if (type !== 'click') {
-					return;
-				}
-
-				Aloha.GCN.openTagFill(
-					$block.attr('data-gcn-tagid'),
-					$block.attr('data-gcn-pageid'),
-					{ withDelete: canBeDeleted }
-				);
-
-				// Aloha Blocks sets the
-				// `Aloha.Selection.preventSelectionChangedFlag' when a click
-				// event is initialized on a block element.  This is done in
-				// order to be able to select nested blocks.  When the click
-				// event is triggered by cause we clicked on the edit button
-				// inside the block, however, we must reset the flag so that
-				// when the TagFill modal is closed, the next
-				// `aloha-selection-changed' event will be processed as needed.
-				//
-				// See rt#51554
-				Aloha.Selection.preventSelectionChangedFlag = false;
-
-				$event.preventDefault();
-				return false;
-			});
-
-			var editableHost = Aloha.getEditableHost($block);
-			if (editableHost) {
-				editableHost.smartContentChange({type: 'block-change'});
-			}
-
-			PubSub.pub('gcn.block.handles-available', {
-				host: editableHost,
-				block: block,
-				$el: $block,
+			Util.getConstructFromId($block.attr('data-gcn-constructid')).then(function (construct) {
+				const needsEditButton = construct.parts.some(part => !part.hideInEditor && part.editable && !part.liveEditable)
+				doRenderBlockHandles(block, needsEditButton);
+			}, function (error) {
+				console.log(error);
+				doRenderBlockHandles(block, true);
 			});
 		},
 

@@ -5,6 +5,10 @@ import {
     clickModalAction,
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
+    CONSTRUCT_TEST_SELECT_COLOR,
+    CONSTRUCT_TEST_SELECT_COLOR_HIDDEN,
+    CONSTRUCT_TEST_SELECT_COLOR_INLINE,
+    CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE,
     EntityImporter,
     FIXTURE_IMAGE_JPEG1,
     IMAGE_ONE,
@@ -1006,7 +1010,7 @@ test.describe('Page Editing', () => {
                 const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
 
                 const renderUrl = '/rest/page/renderTag/*';
-                let postedEditableContent = "";
+                let postedEditableContent = '';
                 page.on('request', request => {
                     if (request.method() === 'POST' && matchesPath(request.url(), renderUrl)) {
                         const body = JSON.parse(request.postData());
@@ -1024,6 +1028,71 @@ test.describe('Page Editing', () => {
 
                 expect(postedEditableContent).toContain(`<node ${tagName}>`);
             });
+
+            async function testEditButton(page: Page, tagId: string, showButton: boolean): Promise<void> {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                const renderUrl = '/rest/page/renderTag/*';
+                const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
+                const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
+                const dropdown = await openContext(category);
+                await dropdown.locator(`[data-global-id="${tagId}"]`).click();
+                const createResponse = await createReq;
+                const createResponseBody = await createResponse.json();
+                const tagName = createResponseBody.tag.name;
+                await renderReq;
+
+                const editButton = mainEditable.locator(`.aloha-block[data-gcn-tagname="${tagName}"] .aloha-block-handle .gcn-construct-button-edit`);
+                if (showButton) {
+                    await editButton.waitFor();
+                    await expect(editButton).toBeVisible();
+                } else {
+                    await expect(editButton).not.toBeAttached();
+                }
+            }
+
+            test('should render an editable tag with edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }]
+            }, async ({page}) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR, true);
+            });
+
+            test('should render a hidden tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }]
+            }, async ({page}) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_HIDDEN, false);
+            });
+
+            test('should render an inline tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }]
+            }, async ({page}) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_INLINE, false);
+            });
+
+            test('should render a non-editable tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }]
+            }, async ({page}) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE, false);
+            });
         });
     });
 
@@ -1031,7 +1100,7 @@ test.describe('Page Editing', () => {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19297',
-        }]
+        }],
     }, async ({ page }) => {
         // Setup aloha-page listener
         let calls = 0;

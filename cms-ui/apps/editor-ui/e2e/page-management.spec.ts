@@ -32,6 +32,8 @@ import {
     TestSize,
     UserImportData,
     waitForResponseFrom,
+    openContext,
+    clickModalAction,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, Page, Response, test } from '@playwright/test';
@@ -76,7 +78,7 @@ test.describe('Page Management', () => {
     const NODE_SINGLE_LANGUAGE: NodeImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_NODE,
         [IMPORT_ID]: 'singleLanguageNode',
-    
+
         node: {
             name : 'Single Language',
             publishDir : '',
@@ -98,7 +100,7 @@ test.describe('Page Management', () => {
             meshPreviewUrlProperty : '',
         },
         description: 'single language test',
-    
+
         languages : ['en'],
         templates: [
             '57a5.5db4acfa-3224-11ef-862c-0242ac110002',
@@ -626,11 +628,11 @@ test.describe('Page Management', () => {
 
         const list = findList(page, ITEM_TYPE_PAGE);
         let createReq: Promise<Response>;
+        let listOptions = list.locator('[data-action="open-list-context"]');
 
         await test.step('Change Status Icon Settings', async () => {
-            await list.locator('gtx-dropdown-list [data-action="open-list-context"] button').click();
-            const modal = page.locator('gtx-dropdown-content-wrapper');
-            await modal.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
+            const dropdown = await openContext(listOptions);
+            await dropdown.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
         });
 
         await test.step('Create a new Page', async () => {
@@ -639,7 +641,7 @@ test.describe('Page Management', () => {
             const form = modal.locator('gtx-page-properties');
             await form.locator('[formcontrolname="name"] input').fill(NEW_PAGE_NAME);
             createReq = page.waitForResponse(matchRequest('POST', '/rest/page/create'));
-            await modal.locator('.modal-footer [data-action="confirm"] button').click();
+            await clickModalAction(modal, 'confirm');
         });
 
         const response = await createReq;
@@ -650,12 +652,12 @@ test.describe('Page Management', () => {
         await expect(pageItem).toBeVisible();
         await expect(pageItem.locator('.status-label i.material-icons')).toHaveText('cloud_off');
 
+        // Close the edit-mode, as creating a new page will always open it
+        await editorAction(page, 'close');
+
         await test.step('Publish Page from context menu', async () => {
-            await page.locator('gtx-button[data-action="close"] button').click();
-            await pageItem.locator('gtx-dropdown-list[data-action="item-context"] button').click();
-            const modal = page.locator('gtx-dropdown-content-wrapper');
             const publishReq = page.waitForResponse(matchRequest('POST', `/rest/page/publish/${pageId}`));
-            await modal.locator('gtx-dropdown-item[data-action="publish"]').click();
+            await itemAction(pageItem, 'publish');
             await publishReq;
         });
 

@@ -29,6 +29,7 @@ import {
     waitForResponseFrom,
     findNotification,
     matchesPath,
+    copyText,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -164,6 +165,29 @@ test.describe('Page Editing', () => {
 
                 const res = await cancelRequest;
                 expect(res.ok()).toBe(true);
+            });
+
+            test('should be possible to paste plain text', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19262',
+                }],
+            }, async ({ page, context }) => {
+                const TEST_TEXT = 'Hello from Playwright!';
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                // Firefox doesn't have these permission, and would fail the test
+                // eslint-disable-next-line playwright/no-conditional-in-test
+                if (context.browser().browserType().name() !== 'firefox') {
+                    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+                }
+
+                await copyText(page, TEST_TEXT);
+
+                await mainEditable.focus();
+                await mainEditable.press('ControlOrMeta+v');
+                await expect(mainEditable).toHaveText(TEST_TEXT);
             });
 
             test.describe('Mobile view', () => {
@@ -768,20 +792,6 @@ test.describe('Page Editing', () => {
                 });
             });
 
-            test('should be possible to paste plain text', {
-                annotation: [{
-                    type: 'ticket',
-                    description: 'SUP-19262',
-                }],
-            }, async ({ page }) => {
-                await mainEditable.click();
-                await mainEditable.clear();
-
-                await page.evaluate(() => navigator.clipboard.writeText('Hello from Playwright!'));
-                await mainEditable.press('ControlOrMeta+v');
-                await expect(mainEditable).toHaveText('Hello from Playwright!');
-            });
-
             // FIXME: Ticket created, SUP-19576
             test('should be possible to insert a link with a keybind', {
                 annotation: [{
@@ -1060,8 +1070,8 @@ test.describe('Page Editing', () => {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-19578',
-                }]
-            }, async ({page}) => {
+                }],
+            }, async ({ page }) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR, true);
             });
 
@@ -1069,8 +1079,8 @@ test.describe('Page Editing', () => {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-19578',
-                }]
-            }, async ({page}) => {
+                }],
+            }, async ({ page }) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_HIDDEN, false);
             });
 
@@ -1078,8 +1088,8 @@ test.describe('Page Editing', () => {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-19578',
-                }]
-            }, async ({page}) => {
+                }],
+            }, async ({ page }) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_INLINE, false);
             });
 
@@ -1087,8 +1097,8 @@ test.describe('Page Editing', () => {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-19578',
-                }]
-            }, async ({page}) => {
+                }],
+            }, async ({ page }) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE, false);
             });
         });

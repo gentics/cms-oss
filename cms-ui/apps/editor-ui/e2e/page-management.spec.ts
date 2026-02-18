@@ -1,13 +1,14 @@
 import {
     AccessControlledType,
+    Page as CMSPage,
+    Response as CMSResponse,
     GcmsPermission,
     NodePageLanguageCode,
     NodeUrlMode,
-    Page as CMSPage,
-    Response as CMSResponse,
     ResponseCode,
 } from '@gentics/cms-models';
 import {
+    clickModalAction,
     clickNotificationAction,
     CONTENT_REPOSITORY_MESH,
     EntityImporter,
@@ -21,19 +22,20 @@ import {
     IMPORT_TYPE_USER,
     ImportPermissions,
     ITEM_TYPE_PAGE,
-    NodeImportData,
+    LANGUAGE_DE,
+    LANGUAGE_EN,
     loginWithForm,
     matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    NodeImportData,
+    openContext,
     PAGE_ONE,
     SCHEDULE_PUBLISHER,
     TestSize,
     UserImportData,
-    waitForResponseFrom,
-    openContext,
-    clickModalAction,
+    waitForResponseFrom
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, Page, Response, test } from '@playwright/test';
@@ -205,6 +207,45 @@ test.describe('Page Management', () => {
 
         // The new page should now be displayed in the list
         await expect(findItem(list, pageId)).toBeVisible();
+    });
+
+    test('should have folder language pre-selected when creating a page', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19579',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.CREATE_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const header = list.locator('.header-controls');
+        const langSelector = list.locator('language-context-selector');
+
+        async function testLanguage(lang: string): Promise<void> {
+            await test.step(`Should pre-select language "${lang}" correctly`, async () => {
+                const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+                await dropdown.locator(`gtx-dropdown-item[data-id="${lang}"]`).click();
+                await header.locator('[data-action="create-new-item"]').click();
+                const modal = page.locator('create-page-modal');
+                await expect(modal.locator('gtx-page-properties [formControlName="language"] .view-value')).toHaveAttribute('data-value', lang);
+                await clickModalAction(modal, 'cancel');
+            });
+        }
+
+        await testLanguage(LANGUAGE_DE);
+        await testLanguage(LANGUAGE_EN);
     });
 
     test('should be possible to edit the page properties', async ({ page }) => {

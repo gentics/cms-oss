@@ -430,7 +430,6 @@ describe('PagePropertiesComponent', () => {
         <gtx-page-properties
             #propertiesForm
             [page]="page"
-            [enableFileNameSuggestion]="true"
             [folderId]="folderId"
             [nodeId]="nodeId"
             [value]="properties"

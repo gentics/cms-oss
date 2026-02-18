@@ -22,12 +22,16 @@ import {
     ImportPermissions,
     ITEM_TYPE_PAGE,
     NodeImportData,
+    LANGUAGE_DE,
+    LANGUAGE_EN,
     loginWithForm,
     matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    onRequest,
     PAGE_ONE,
+    pickSelectValue,
     SCHEDULE_PUBLISHER,
     TestSize,
     UserImportData,
@@ -46,6 +50,7 @@ import {
     findList,
     itemAction,
     openObjectPropertyEditor,
+    openTagList,
     selectNode,
 } from './helpers';
 
@@ -80,28 +85,28 @@ test.describe('Page Management', () => {
         [IMPORT_ID]: 'singleLanguageNode',
 
         node: {
-            name : 'Single Language',
-            publishDir : '',
-            binaryPublishDir : '',
-            pubDirSegment : true,
-            publishImageVariants : false,
-            host : 'singlelanguage.localhost',
-            publishFs : false,
-            publishFsPages : false,
-            publishFsFiles : false,
-            publishContentMap : true,
-            publishContentMapPages : true,
-            publishContentMapFiles : true,
-            publishContentMapFolders : true,
+            name: 'Single Language',
+            publishDir: '',
+            binaryPublishDir: '',
+            pubDirSegment: true,
+            publishImageVariants: false,
+            host: 'singlelanguage.localhost',
+            publishFs: false,
+            publishFsPages: false,
+            publishFsFiles: false,
+            publishContentMap: true,
+            publishContentMapPages: true,
+            publishContentMapFiles: true,
+            publishContentMapFolders: true,
             urlRenderWayPages: NodeUrlMode.AUTOMATIC,
             urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
-            omitPageExtension : false,
-            pageLanguageCode : NodePageLanguageCode.FILENAME,
-            meshPreviewUrlProperty : '',
+            omitPageExtension: false,
+            pageLanguageCode: NodePageLanguageCode.FILENAME,
+            meshPreviewUrlProperty: '',
         },
         description: 'single language test',
 
-        languages : ['en'],
+        languages: ['en'],
         templates: [
             '57a5.5db4acfa-3224-11ef-862c-0242ac110002',
         ],
@@ -168,7 +173,7 @@ test.describe('Page Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(node)!.id);
+            await selectNode(page, IMPORTER.get(node).id);
         });
     }
 
@@ -600,6 +605,33 @@ test.describe('Page Management', () => {
         await testPageTakeOffline(page, false);
     });
 
+    test('should be able to switch properties tabs without saving changes modal', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19560',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+        await itemAction(item, 'properties');
+        await openTagList(page);
+
+        await page.waitForTimeout(500);
+        await expect(page.locator('confirm-navigation-modal')).not.toBeAttached();
+    });
+
     test('should display correct publish status for page in a node with one language', async ({ page }) => {
         const nodeData = cloneWithSymbols(NODE_SINGLE_LANGUAGE);
         const cr = IMPORTER.get(CONTENT_REPOSITORY_MESH);
@@ -628,7 +660,7 @@ test.describe('Page Management', () => {
 
         const list = findList(page, ITEM_TYPE_PAGE);
         let createReq: Promise<Response>;
-        let listOptions = list.locator('[data-action="open-list-context"]');
+        const listOptions = list.locator('[data-action="open-list-context"]');
 
         await test.step('Change Status Icon Settings', async () => {
             const dropdown = await openContext(listOptions);
@@ -663,6 +695,113 @@ test.describe('Page Management', () => {
 
         await expectItemPublished(pageItem);
         await expect(pageItem.locator('.status-label i.material-icons')).toHaveText('cloud_upload');
+    });
 
+    test('should suggest names for new pages correctly', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19560',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.CREATE_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        await list.locator('.header-controls [data-action="create-new-item"] button').click();
+
+        const modal = page.locator('create-page-modal');
+        const form = modal.locator('gtx-page-properties');
+        const fileName = form.locator('[formcontrolname="fileName"] input');
+        const pageName = form.locator('[formcontrolname="name"] input');
+        const lang = form.locator('[formcontrolname="language"]');
+
+        let didRequest = false;
+        let checkForRequests = false;
+        onRequest(page, matchRequest('POST', '/rest/page/suggest/filename'), () => {
+            if (checkForRequests) {
+                didRequest = true;
+            }
+        });
+
+        // Set the language first so we are sure about the requests being sent
+        await pickSelectValue(lang, LANGUAGE_DE);
+
+        // Simple name first
+        await test.step('Simple name', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await pageName.fill(NEW_PAGE_NAME);
+            await suggestReq;
+            await expect(fileName).toHaveValue('Hello-World.de.html');
+        });
+
+        // Update the name, file-name should update accordingly
+        await test.step('Extend the name', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await pageName.press('1');
+            await suggestReq;
+            await expect(fileName).toHaveValue('Hello-World1.de.html');
+        });
+
+        // Change the language, which should change the file-name as well
+        await test.step('Language change', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await pickSelectValue(lang, LANGUAGE_EN);
+            await suggestReq;
+            await expect(fileName).toHaveValue('Hello-World1.en.html');
+        });
+
+        // Update the file-name manually, to disable automatic suggestions
+        await fileName.fill('example');
+
+        // Changes to the page-name and language shouldn't trigger any suggestions now
+        await test.step('No update after manual change', async () => {
+            didRequest = false;
+            checkForRequests = true;
+
+            await pageName.fill('Something new');
+            await pickSelectValue(lang, LANGUAGE_DE);
+
+            await page.waitForTimeout(500);
+            expect(didRequest).toBe(false);
+            checkForRequests = false;
+        });
+
+        // Manual suggestion should set it
+        await test.step('Trigger manual syggestion', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await form.locator('[data-action="suggest-filename"]').click();
+            await suggestReq;
+            await expect(fileName).toHaveValue('Something-new.de.html');
+        });
+
+        await test.step('Changing page-name should not update', async () => {
+            didRequest = false;
+            checkForRequests = true;
+
+            await pageName.fill(NEW_PAGE_NAME);
+            await page.waitForTimeout(500);
+            expect(didRequest).toBe(false);
+            await expect(fileName).toHaveValue('Something-new.de.html');
+            checkForRequests = false;
+        });
+
+        await test.step('Clearing file-name creates suggestion', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await fileName.fill('');
+            await fileName.blur();
+            await suggestReq;
+            await expect(fileName).toHaveValue('Hello-World.de.html');
+        });
     });
 });

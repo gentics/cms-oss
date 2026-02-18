@@ -143,16 +143,19 @@ export async function openPropertiesTab(page: Page): Promise<void> {
     });
 }
 
+export async function ensureObjectPropertyGroupExpanded(group: Locator): Promise<void> {
+    const isExpanded = await group.evaluate((el) => el.classList.contains('expanded'));
+    if (!isExpanded) {
+        await group.locator('.collapsible-header').click();
+    }
+}
+
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {
     await openPropertiesTab(page);
 
     await test.step('Open properties editor', async () => {
         const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
-        const isExpanded = await group.evaluate((el) => el.classList.contains('expanded'));
-
-        if (!isExpanded) {
-            await group.locator('.collapsible-header').click();
-        }
+        await ensureObjectPropertyGroupExpanded(group);
 
         const tab = group.locator(`.tab-link[data-id="object.${name}"]`);
         await tab.click();

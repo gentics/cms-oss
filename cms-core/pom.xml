@@ -360,6 +360,9 @@
 							<generateModelTests>false</generateModelTests>
 							<configOptions>
 								<sourceFolder>/</sourceFolder>
+								<useJakartaEe>true</useJakartaEe>
+								<openApiNullable>false</openApiNullable>
+								<useOptional>true</useOptional>
 							</configOptions>
 							<library>jersey3</library>
 						</configuration>
@@ -710,14 +713,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>javax.annotation</groupId>
-			<artifactId>javax.annotation-api</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.openapitools</groupId>
-			<artifactId>jackson-databind-nullable</artifactId>
-			<scope>test</scope>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>

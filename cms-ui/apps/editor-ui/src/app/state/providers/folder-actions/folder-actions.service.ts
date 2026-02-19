@@ -20,6 +20,7 @@ import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
     AnyModelType,
+    BackgroundJobResponse,
     BaseListResponse,
     File as CMSFile,
     ChannelSyncRequest,
@@ -2126,37 +2127,39 @@ export class FolderActionsService {
         await this.appState.dispatch(new StartListSavingAction(type)).toPromise();
 
         try {
+            let res: BackgroundJobResponse;
             switch (type) {
                 case 'file':
-                    await this.client.file.localize(itemId, { channelId }).toPromise();
+                    res = await this.client.file.localize(itemId, { channelId }).toPromise();
                     break;
                 case 'folder':
-                    await this.client.folder.localize(itemId, { channelId }).toPromise();
+                    res = await this.client.folder.localize(itemId, { channelId }).toPromise();
                     break;
                 case 'image':
-                    await this.client.image.localize(itemId, { channelId }).toPromise();
+                    res = await this.client.image.localize(itemId, { channelId }).toPromise();
                     break;
                 case 'page':
-                    await this.client.page.localize(itemId, { channelId }).toPromise();
+                    res = await this.client.page.localize(itemId, { channelId }).toPromise();
                     break;
 
                 case 'form':
                 default:
                     // Do nothing?
+                    return null;
             }
 
-            this.notification.show({
-                type: 'success',
-                message: 'message.localized_item',
-                translationParams: {
-                    _type: type,
-                },
-            });
+            this.notification.showFromResponse(res);
+
             await this.appState.dispatch(new ListSavingSuccessAction(type)).toPromise();
+
+            if (res.inBackground) {
+                return null;
+            }
+
             return this.getItem(itemId, type) as Promise<InheritableItem<Raw>>;
         } catch (error) {
             await this.appState.dispatch(new ListSavingErrorAction(type, error.message)).toPromise();
-            this.errorHandler.catch(error);
+            this.errorHandler.catch(error, { notification: true });
         }
     }
 
@@ -3180,7 +3183,7 @@ export class FolderActionsService {
             forkJoin(requests),
             forkJoin(permissionRequests)
         ]).pipe(
-            map(([rawResults, permissions]) => {
+            switchMap(([rawResults, permissions]) => {
                 // merge results
                 const results: Array<{
                     id: number;
@@ -3194,6 +3197,7 @@ export class FolderActionsService {
                     };
                 });
 
+                const loaders: Promise<any>[] = [];
                 const succeeded = []
                 const failed = [];
                 let errorResponse: Response['responseInfo'] | null = null;
@@ -3213,7 +3217,7 @@ export class FolderActionsService {
                 const queued: Page[] = [];
 
                 if (failed.length) {
-                    this.appState.dispatch(new ListSavingErrorAction('page', errorResponse.responseMessage));
+                    loaders.push(this.appState.dispatch(new ListSavingErrorAction('page', errorResponse.responseMessage)).toPromise());
                     this.notification.show({
                         message: 'message.take_pages_offline_error',
                         translationParams: {
@@ -3226,14 +3230,16 @@ export class FolderActionsService {
                 }
 
                 if (succeeded.length) {
-                    this.appState.dispatch(new ListSavingSuccessAction('page'));
                     const pageUpdates: { [id: number]: Partial<Page<Normalized>> } = {};
                     for (const id of pageIds) {
                         pageUpdates[id] = {
                             online: false,
                         };
                     }
-                    this.appState.dispatch(new UpdateEntitiesAction({ page: pageUpdates }));
+                    // Update the entities, then mark the list as finished saving
+                    loaders.push(this.appState.dispatch(new UpdateEntitiesAction({ page: pageUpdates })).toPromise()
+                        .then(() => this.appState.dispatch(new ListSavingSuccessAction('page')).toPromise())
+                    );
 
                     // assign to arrays depending on page permissions
                     for (const page of results) {
@@ -3253,12 +3259,14 @@ export class FolderActionsService {
                     }
                 }
 
-                return { queued, takenOffline };
+                return Promise.all(loaders).then(() => ({ queued, takenOffline }));
             }),
             catchError(error => {
-                this.appState.dispatch(new ListSavingErrorAction('page', error.message));
                 this.errorHandler.catch(error, { notification: true });
-                return of({ queued: [], takenOffline: [] });
+                return this.appState.dispatch(new ListSavingErrorAction('page', error.message)).toPromise()
+                    .then(() => {
+                        return { queued: [], takenOffline: [] };
+                    });
             }),
         ).toPromise();
     }

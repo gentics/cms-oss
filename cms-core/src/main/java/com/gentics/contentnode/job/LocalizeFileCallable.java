@@ -8,6 +8,8 @@ import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.lib.i18n.CNI18nString;
@@ -65,7 +67,8 @@ public class LocalizeFileCallable extends AbstractLocalizeCallable {
 			localCopy.save();
 
 			I18nString message = new CNI18nString("file.localize.success");
-			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, message.toString()));
+			String translated = message.toString();
+			return new GenericResponse(new Message(Type.SUCCESS, translated), new ResponseInfo(ResponseCode.OK, translated));
 		}
 	}
 }

@@ -17,6 +17,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
+import com.gentics.contentnode.rest.model.response.BackgroundJobResponse;
 import jakarta.ws.rs.WebApplicationException;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -77,7 +78,7 @@ public class Operator {
 
 	/**
 	 * Start the executor thread pool with given size
-	 * @param poolsize size of the pool
+	 * @param newPoolsize size of the pool
 	 */
 	public static void start(int newPoolsize) {
 		// if the executor is not shut down and the poolsize did not change, we do nothing
@@ -107,7 +108,7 @@ public class Operator {
 	 * @param callable callable to execute
 	 * @return either the response from the callable (if executed in foreground) or a response containing a message, that the job is done in background
 	 */
-	public static GenericResponse execute(String description, long timeout, Callable<GenericResponse> callable) {
+	public static BackgroundJobResponse execute(String description, long timeout, Callable<GenericResponse> callable) {
 		return executeLocked(description, timeout, null, callable, null, null);
 	}
 
@@ -119,7 +120,7 @@ public class Operator {
 	 * @param callable callable to execute
 	 * @return response
 	 */
-	public static GenericResponse executeLocked(String description, long timeout, Lock lock, Callable<GenericResponse> callable) {
+	public static BackgroundJobResponse executeLocked(String description, long timeout, Lock lock, Callable<GenericResponse> callable) {
 		return executeLocked(description, timeout, lock, callable, null, null);
 	}
 
@@ -132,7 +133,7 @@ public class Operator {
 	 * @param errorHandler optional error handler
 	 * @return response
 	 */
-	public static GenericResponse executeLocked(String description, long timeout, Lock lock, Callable<GenericResponse> callable, Function<Exception, WebApplicationException> errorHandler) {
+	public static BackgroundJobResponse executeLocked(String description, long timeout, Lock lock, Callable<GenericResponse> callable, Function<Exception, WebApplicationException> errorHandler) {
 		return executeLocked(description, timeout, lock, callable, errorHandler, null);
 	}
 
@@ -146,7 +147,7 @@ public class Operator {
 	 * @param backgroundCallback optional callback that is called when the operation is sent to background
 	 * @return response
 	 */
-	public static GenericResponse executeLocked(String description, long timeout, Lock lock,
+	public static BackgroundJobResponse executeLocked(String description, long timeout, Lock lock,
 			Callable<GenericResponse> callable, Function<Exception, WebApplicationException> errorHandler,
 			Runnable backgroundCallback) {
 		try {
@@ -155,9 +156,9 @@ public class Operator {
 
 			try {
 				if (timeout <= 0) {
-					return futureResult.get();
+					return new BackgroundJobResponse(futureResult.get());
 				} else {
-					return futureResult.get(timeout, TimeUnit.MILLISECONDS);
+					return new BackgroundJobResponse(futureResult.get(timeout, TimeUnit.MILLISECONDS));
 				}
 			} catch (TimeoutException e) {
 				wrapper.sendToBackground();
@@ -166,23 +167,25 @@ public class Operator {
 				if (backgroundCallback != null) {
 					backgroundCallback.run();
 				}
-				return new GenericResponse(new Message(Type.INFO, msg.toString()), new ResponseInfo(ResponseCode.OK, msg.toString()));
+				String translatedMsg = msg.toString();
+
+				return new BackgroundJobResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg), true);
 			}
-		} catch (Exception e) {
-			if (e.getCause() instanceof ReadOnlyException) {
-				return new GenericResponse(new Message(Message.Type.CRITICAL, e.getCause().getLocalizedMessage()), new ResponseInfo(ResponseCode.FAILURE, ""));
+		} catch (Exception exception) {
+			if (exception.getCause() instanceof ReadOnlyException) {
+				return new BackgroundJobResponse(new Message(Message.Type.CRITICAL, exception.getCause().getLocalizedMessage()), new ResponseInfo(ResponseCode.FAILURE, ""));
 			} else {
 				// for ExecutionExceptions, we are more interested in the causing exception
-				if (e instanceof ExecutionException && e.getCause() instanceof Exception) {
-					e = (Exception) e.getCause();
+				if (exception instanceof ExecutionException && exception.getCause() instanceof Exception) {
+					exception = (Exception) exception.getCause();
 				}
-			logger.error("Error while " + description, e);
+				logger.error("Error while " + description, exception);
 				if (errorHandler != null) {
-					throw errorHandler.apply(e);
+					throw errorHandler.apply(exception);
 				} else {
 					I18nString message = new CNI18nString("rest.general.error");
-					return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
-							+ description + ": " + e.getLocalizedMessage()));
+					return new BackgroundJobResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
+							+ description + ": " + exception.getLocalizedMessage()));
 				}
 			}
 		}
@@ -197,7 +200,7 @@ public class Operator {
 	 * @return either the response from the callable (if executed in foreground) or a response containing a message, that the job is done in background
 	 * @throws NodeException
 	 */
-	public static GenericResponse executeRethrowing(String description, long timeout, Callable<GenericResponse> callable) throws NodeException {
+	public static BackgroundJobResponse executeRethrowing(String description, long timeout, Callable<GenericResponse> callable) throws NodeException {
 		return executeLockedRethrowing(description, timeout, null, callable);
 	}
 
@@ -209,7 +212,7 @@ public class Operator {
 	 * @param callable callable to execute
 	 * @return response
 	 */
-	public static GenericResponse executeLockedRethrowing(String description, long timeout, Lock lock, Callable<GenericResponse> callable) throws NodeException {
+	public static BackgroundJobResponse executeLockedRethrowing(String description, long timeout, Lock lock, Callable<GenericResponse> callable) throws NodeException {
 		try {
 			RestCallable wrapper = new RestCallable(description, lock, callable);
 			wrapper.setThrowNodeException(true);
@@ -217,15 +220,17 @@ public class Operator {
 
 			try {
 				if (timeout <= 0) {
-					return futureResult.get();
+					return new BackgroundJobResponse(futureResult.get());
 				} else {
-					return futureResult.get(timeout, TimeUnit.MILLISECONDS);
+					return new BackgroundJobResponse(futureResult.get(timeout, TimeUnit.MILLISECONDS));
 				}
 			} catch (TimeoutException e) {
 				wrapper.sendToBackground();
 				I18nString msg = new CNI18nString("job_sent_to_background");
 				msg.setParameter("0", description);
-				return new GenericResponse(new Message(Type.INFO, msg.toString()), new ResponseInfo(ResponseCode.OK, msg.toString()));
+				String translatedMsg = msg.toString();
+
+				return new BackgroundJobResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg));
 			}
 		} catch (NodeException e) {
 			throw e;
@@ -235,7 +240,7 @@ public class Operator {
 			}
 			logger.error("Error while " + description, e);
 			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
+			return new BackgroundJobResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
 					+ description + ": " + e.getLocalizedMessage()));
 		}
 	}
@@ -247,9 +252,9 @@ public class Operator {
 	 * @param wrappedCallables list of wrapped callables
 	 * @return merged response
 	 */
-	protected static GenericResponse execute(String description, long timeout, List<RestCallable> wrappedCallables) {
+	protected static BackgroundJobResponse execute(String description, long timeout, List<RestCallable> wrappedCallables) {
 		if (wrappedCallables.isEmpty()) {
-			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, ""));
+			return new BackgroundJobResponse(null, new ResponseInfo(ResponseCode.OK, ""));
 		}
 		try {
 			QueueResult queueResult = new QueueResult(description, wrappedCallables.size());
@@ -260,7 +265,7 @@ public class Operator {
 			}
 
 			try {
-				GenericResponse merged = new GenericResponse();
+				BackgroundJobResponse merged = new BackgroundJobResponse();
 				long remainingTimeout = timeout;
 				for (Future<GenericResponse> futureResult : futureResults) {
 					if (timeout <= 0) {
@@ -282,12 +287,13 @@ public class Operator {
 
 				I18nString msg = new CNI18nString("job_sent_to_background");
 				msg.setParameter("0", description);
-				return new GenericResponse(new Message(Type.INFO, msg.toString()), new ResponseInfo(ResponseCode.OK, msg.toString()));
+				String translatedMsg = msg.toString();
+				return new BackgroundJobResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg), true);
 			}
 		} catch (Exception e) {
 			logger.error("Error while " + description, e);
 			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
+			return new BackgroundJobResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
 					+ description + ": " + e.getLocalizedMessage()));
 		}
 	}
@@ -297,7 +303,7 @@ public class Operator {
 	 * @param response response to merge
 	 * @param merged response to merge into
 	 */
-	protected static void mergeInto(GenericResponse response, GenericResponse merged) {
+	protected static void mergeInto(GenericResponse response, BackgroundJobResponse merged) {
 		if (merged.getResponseInfo() == null) {
 			merged.setResponseInfo(response.getResponseInfo());
 		} else if (merged.getResponseInfo().getResponseCode() == ResponseCode.OK && response.getResponseInfo() != null
@@ -474,7 +480,7 @@ public class Operator {
 		 */
 		protected boolean background = false;
 
-		protected GenericResponse mergedResponse = new GenericResponse(null, null);
+		protected BackgroundJobResponse mergedResponse = new BackgroundJobResponse(null, null);
 
 		protected QueueResult(String description, int queueSize) throws NodeException {
 			this.userId = TransactionManager.getCurrentTransaction().getUserId();

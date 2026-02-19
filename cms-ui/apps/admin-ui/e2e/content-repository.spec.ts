@@ -63,7 +63,7 @@ const SELECTORS = {
         FORCE_PASSWORD: '[data-control="forcePasswordChange"] label',
     },
     TAGMAP: {
-        ADD_BUTTON: 'gtx-button[data-action=add] button',
+        CREATE_BUTTON: 'gtx-button[data-action=create] button',
     },
 } as const;
 
@@ -144,8 +144,8 @@ test.describe('Content Repositories Module', () => {
         const tagmap = tabs.locator(SELECTORS.TABS.TAGMAP);
         await tagmap.waitFor({ state: 'visible' });
 
-        const addbutton = tagmap.locator(SELECTORS.TAGMAP.ADD_BUTTON);
-        await expect(addbutton).toBeEnabled();
+        const createbutton = tagmap.locator(SELECTORS.TAGMAP.CREATE_BUTTON);
+        await expect(createbutton).toBeEnabled();
     });
 
     test.describe('Mesh Management', () => {

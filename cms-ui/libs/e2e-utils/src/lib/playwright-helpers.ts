@@ -67,7 +67,7 @@ export function mockResponse<T>(
 }
 
 export function reroute(method: string, path: string): (route: Route) => Promise<void> {
-    return async route => {
+    return async (route) => {
         const res = await route.fetch({
             method: method,
             url: path,
@@ -103,7 +103,7 @@ export function onRequest(
     matcher: (req: Request) => boolean,
     handler: (req: Request) => any,
 ): void {
-    page.on('request', req => {
+    page.on('request', (req) => {
         if (matcher(req)) {
             handler(req);
         }
@@ -115,7 +115,7 @@ export function onResponse(
     matcher: (req: Request, res: Response) => boolean,
     handler: (req: Request, res: Response) => any,
 ): void {
-    page.on('response', res => {
+    page.on('response', (res) => {
         const req = res.request();
         if (matcher(req, res)) {
             handler(req, res);
@@ -126,7 +126,6 @@ export function onResponse(
 /**
  * Simple wrapper function for `page.waitForResponse` and {@link matchRequest}, but with an error-handler
  * to tell which request actually failed, because otherwise you have to guess.
- *
  * @param page The playwright page object
  * @param method The method of the request
  * @param path The path of the request
@@ -142,7 +141,7 @@ export function waitForResponseFrom(
     const timeout = options?.timeout ?? 5_000;
 
     return page.waitForResponse(matchRequest(method, path, options), { timeout })
-        .catch(err => {
+        .catch((err) => {
             // The actual class isn't publicly available, which is why we have to do this hacky workaround.
             if (err instanceof Error && (err.constructor.name === 'TargetClosedError' || err.constructor.name === 'TimeoutError')) {
                 const timeoutStr = timeout >= 1000 ? (timeout / 1000) + 's' : (timeout + 'ms');
@@ -370,7 +369,7 @@ export async function waitForPublishDone(page: Page, client: GCMSRestClient): Pr
 }
 
 export async function clickButton(source: Locator, options?: ButtonClickOptions): Promise<void> {
-    const nodeType = await source.evaluate(el => el.nodeName);
+    const nodeType = await source.evaluate((el) => el.nodeName);
 
     // For a simple button, simply click it without any other stuff
     if (nodeType === 'BUTTON') {
@@ -485,7 +484,9 @@ export function copyText(page: Page, text: string): Promise<void> {
         textArea.focus();
         textArea.select();
 
-        document.execCommand("copy");
+        document.execCommand('copy');
         document.body.removeChild(textArea);
+
+        return null;
     }, text);
 }

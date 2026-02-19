@@ -5,7 +5,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentsModule, KeycloakService, WindowRef } from '@gentics/cms-components';
+import { CmsComponentsModule, WindowRef } from '@gentics/cms-components';
+import { AuthenticationModule, KeycloakService } from '@gentics/cms-components/auth';
 import { NodeFeature } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -13,6 +14,7 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { componentTest, configureComponentTest } from '../testing';
 import { AppComponent as OriginalApp } from './app.component';
+import { ActionsSelectorComponent } from './core';
 import { LoggingInOverlay } from './core/components/logging-in-overlay/logging-in-overlay.component';
 import { EntityResolver } from './core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from './core/providers/error-handler/error-handler.service';
@@ -38,7 +40,6 @@ import {
     UIActionsService,
 } from './state';
 import { MockAppState, TestApplicationState } from './state/test-application-state.mock';
-import { ActionsSelectorComponent } from './core';
 
 // Override polling method
 class App extends OriginalApp {
@@ -239,6 +240,7 @@ describe('AppComponent', () => {
                 ReactiveFormsModule,
                 HttpClientModule,
                 FormsModule,
+                AuthenticationModule.forRoot(),
             ],
             declarations: [
                 App,
@@ -367,7 +369,9 @@ describe('AppComponent', () => {
                         auth: {
                             isAdmin: true,
                             isLoggedIn: true,
-                            currentUserId: 123,
+                            user: {
+                                id: 123,
+                            } as any,
                             loggingIn: false,
                         },
                         entities: {
@@ -430,7 +434,7 @@ describe('AppComponent', () => {
 
             beforeEach(() => {
                 mockInitialState = {
-                    auth: { isAdmin: false, isLoggedIn: false, loggingIn: true },
+                    auth: { isLoggedIn: false, loggingIn: true },
                     folder: {
                         activeNode: 1,
                         searchFiltersChanging: false,
@@ -455,6 +459,9 @@ describe('AppComponent', () => {
                             1: { folderId: 33, id: 1 },
                         },
                     },
+                    ui: {
+                        isAdmin: false,
+                    }
                 };
                 state.mockState(mockInitialState);
             });

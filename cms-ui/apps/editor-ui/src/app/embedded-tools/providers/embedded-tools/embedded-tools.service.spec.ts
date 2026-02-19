@@ -1,6 +1,7 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NavigationEnd, Router } from '@angular/router';
-import { KeycloakService, WindowRef } from '@gentics/cms-components';
+import { WindowRef } from '@gentics/cms-components';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { EmbeddedTool } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
@@ -8,15 +9,13 @@ import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
 import { Subject } from 'rxjs';
-import { Api, ApiBase } from '../../../core/providers/api';
-import { MockApiBase } from '../../../core/providers/api/api-base.mock';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { ToolApiChannelService } from '../tool-api-channel/tool-api-channel.service';
 import { EmbeddedToolsService } from './embedded-tools.service';
 
 describe('EmbeddedToolsService', () => {
-    let api: Api;
+    let client: GCMSTestRestClientService;
     let router: MockRouter;
     let service: EmbeddedToolsService;
     let state: TestApplicationState;
@@ -24,25 +23,25 @@ describe('EmbeddedToolsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                AuthenticationModule.forRoot(),
+                NgxsModule.forRoot(STATE_MODULES),
+            ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: ApiBase, useClass: MockApiBase },
                 { provide: ModalService, useClass: MockModalService },
                 { provide: Router, useClass: MockRouter },
                 { provide: TranslateService, useClass: MockTranslateService },
                 { provide: ToolApiChannelService, useClass: MockApiChannelService },
                 { provide: WindowRef, useClass: MockWindowRef },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
-                KeycloakService,
-                Api,
                 EmbeddedToolsService,
             ],
         });
 
         state = TestBed.get(ApplicationStateService);
-        api = TestBed.get(Api);
-        spyOn(api.admin, 'getAvailableEmbeddedTools').and.callThrough();
+        client = TestBed.inject(GCMSRestClientService) as any;
+        spyOn(client.admin, 'getTools').and.callThrough();
 
         testTool = {
             id: 1,
@@ -60,7 +59,9 @@ describe('EmbeddedToolsService', () => {
     function pretendUserWasLoggedIn(): void {
         state.mockState({
             auth: {
-                currentUserId: 1,
+                user: {
+                    id: 1,
+                } as any,
             },
         });
     }
@@ -70,7 +71,7 @@ describe('EmbeddedToolsService', () => {
         it('does not send any requests or update the tools state until a user is logged in', () => {
             service.loadAvailableToolsWhenLoggedIn();
 
-            expect(api.admin.getAvailableEmbeddedTools).not.toHaveBeenCalled();
+            expect(client.admin.getTools).not.toHaveBeenCalled();
             expect(state.now.tools.visible).toBeUndefined();
             expect(state.now.tools.received).toEqual(false);
         });
@@ -78,12 +79,12 @@ describe('EmbeddedToolsService', () => {
         it('loads the tools from the server when a user is logged in', () => {
             service.loadAvailableToolsWhenLoggedIn();
             pretendUserWasLoggedIn();
-            expect(api.admin.getAvailableEmbeddedTools).toHaveBeenCalled();
+            expect(client.admin.getTools).toHaveBeenCalled();
         });
 
         it('updates the state on success', fakeAsync(() => {
             const responseSubject = new Subject<{ tools: EmbeddedTool[] }>();
-            api.admin.getAvailableEmbeddedTools = (() => responseSubject as any);
+            client.admin.getTools = (() => responseSubject as any);
 
             service.loadAvailableToolsWhenLoggedIn();
 
@@ -100,7 +101,7 @@ describe('EmbeddedToolsService', () => {
 
         it('updates the state on error', () => {
             const responseSubject = new Subject<{ tools: any }>();
-            api.admin.getAvailableEmbeddedTools = (() => responseSubject as any);
+            client.admin.getTools = (() => responseSubject as any);
 
             service.loadAvailableToolsWhenLoggedIn();
             pretendUserWasLoggedIn();

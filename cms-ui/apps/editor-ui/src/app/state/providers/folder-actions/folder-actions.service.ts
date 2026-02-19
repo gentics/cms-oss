@@ -365,7 +365,7 @@ export class FolderActionsService {
         const nodes = this.appState.now.folder.nodes.list
             .map(nodeId => this.entityResolver.getNode(nodeId))
             .filter(node => node != null);
-        const lastUsedNodeId = Number(this.localStore.getForUser(this.appState.now.auth.currentUserId, SETTING_LAST_NODE_ID));
+        const lastUsedNodeId = Number(this.localStore.getForUser(this.appState.now.auth.user?.id, SETTING_LAST_NODE_ID));
         if (Number.isInteger(lastUsedNodeId)) {
             const foundNode = nodes.find(node => node.id === lastUsedNodeId);
             if (foundNode) {

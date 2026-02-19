@@ -1,5 +1,7 @@
+import { AppStateService } from '@admin-ui/state';
+import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import {
-    AppStateService,
     ChangePasswordError,
     ChangePasswordStart,
     ChangePasswordSuccess,
@@ -11,30 +13,25 @@ import {
     LogoutSuccess,
     ValidateError,
     ValidateStart,
-    ValidateSuccess,
-} from '@admin-ui/state';
-import { Injectable, Injector } from '@angular/core';
-import { Router } from '@angular/router';
-import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
+    ValidateSuccess
+} from '@gentics/cms-components/auth';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
-import { EntityManagerService } from '../../entity-manager';
+import { ErrorHandler } from '../../error-handler';
 import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
-import { OperationsBase } from '../operations.base';
 
 @Injectable()
-export class AuthOperations extends OperationsBase {
+export class AuthOperations {
 
     constructor(
-        injector: Injector,
+        private errorHandler: ErrorHandler,
         private appState: AppStateService,
         private editorLocalStorage: EditorUiLocalStorageService,
-        private entities: EntityManagerService,
         private router: Router,
         private notification: I18nNotificationService,
-        private api: GcmsApi,
-    ) {
-        super(injector);
-    }
+        private client: GCMSRestClientService,
+    ) {}
 
     /**
      * Validates the specified sid with the API.
@@ -42,22 +39,22 @@ export class AuthOperations extends OperationsBase {
     validateSessionId(sid: number): void {
         this.appState.dispatch(new ValidateStart());
 
-        this.api.auth.validate(sid)
-            .subscribe(res => {
+        this.client.user.me({ sid: sid }).subscribe({
+            next: res => {
                 this.appState.dispatch(new ValidateSuccess(sid, res.user));
                 if (this.readSidFromEditorUi() !== sid) {
                     this.storeSidForEditorUi(sid);
                 }
-                this.entities.addEntity('user', res.user);
             },
-            (error: ApiError) => {
+            error: (error: GCMSRestClientRequestError) => {
                 this.storeSidForEditorUi(null);
                 this.appState.dispatch(new ValidateError(error.message));
 
-                if (error.reason !== 'auth') {
+                if (error.responseCode !== 401) {
                     this.errorHandler.catch(error);
                 }
-            });
+            },
+        });
     }
 
     /**
@@ -75,30 +72,33 @@ export class AuthOperations extends OperationsBase {
     login(username: string, password: string, returnUrl: string): void {
         this.appState.dispatch(new LoginStart());
 
-        this.api.auth.login(username, password)
-            .subscribe(res => {
+        this.client.auth.login({
+            login: username,
+            password: password,
+        }).subscribe({
+            next: res => {
                 this.storeSidForEditorUi(res.sid);
                 this.appState.dispatch(new LoginSuccess(res.sid, res.user));
                 if (returnUrl) {
                     this.router.navigateByUrl(returnUrl);
                 }
-                this.entities.addEntity('user', res.user);
             },
-            (error: ApiError) => {
+            error: (error: GCMSRestClientRequestError) => {
                 this.appState.dispatch(new LoginError(error.message));
                 this.errorHandler.catch(error);
-            });
+            },
+        });
     }
 
     logout(sid: number): Promise<any> {
         this.appState.dispatch(new LogoutStart());
 
-        return this.api.auth.logout(sid).toPromise()
-            .then(res => {
+        return this.client.auth.logout(sid).toPromise()
+            .then(() => {
                 this.storeSidForEditorUi(null);
                 this.appState.dispatch(new LogoutSuccess());
-            },
-            (error: ApiError) => {
+            })
+            .catch((error: GCMSRestClientRequestError) => {
                 this.appState.dispatch(new LogoutError(error.message));
                 this.errorHandler.catch(error);
             });
@@ -110,8 +110,10 @@ export class AuthOperations extends OperationsBase {
     changePassword(userId: number, newPassword: string): Promise<any> {
         this.appState.dispatch(new ChangePasswordStart());
 
-        return this.api.auth.changePassword(userId, newPassword).toPromise()
-            .then(res => {
+        return this.client.user.update(userId, {
+            password: newPassword,
+        }).toPromise()
+            .then(() => {
                 this.storeSidForEditorUi(null);
                 this.notification.show({
                     message: 'modal.updated_password',

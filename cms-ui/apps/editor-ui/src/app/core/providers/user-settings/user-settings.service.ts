@@ -67,7 +67,7 @@ export class UserSettingsService {
      * Watches the app state and loads user settings when a user logs in.
      */
     loadUserSettingsWhenLoggedIn(): void {
-        this.appState.select(state => state.auth.currentUserId).pipe(
+        this.appState.select(state => state.auth.user?.id).pipe(
             filter(id => id != null),
             switchMap(id => this.appState.select(state => state.ui.nodesLoaded).pipe(
                 filter(loaded => loaded),

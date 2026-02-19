@@ -1,14 +1,6 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { LoginResponse, Raw, Response, ResponseCode, User, ValidateSidResponse } from '@gentics/cms-models';
-import { getExampleFolderData } from '@gentics/cms-models/testing';
-import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { ActionType, ofActionDispatched } from '@ngxs/store';
-import { of as observableOf } from 'rxjs';
-import { delay, map, takeUntil } from 'rxjs/operators';
-import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
 import {
-    AppStateService,
     ChangePasswordError,
     ChangePasswordStart,
     ChangePasswordSuccess,
@@ -21,25 +13,25 @@ import {
     ValidateError,
     ValidateStart,
     ValidateSuccess,
-} from '../../../../state';
+} from '@gentics/cms-components/auth';
+import { LoginResponse, Raw, Response, ResponseCode, User, UserUpdateResponse, ValidateSidResponse } from '@gentics/cms-models';
+import { getExampleFolderData } from '@gentics/cms-models/testing';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { ApiError } from '@gentics/cms-rest-clients-angular';
+import { ActionType, ofActionDispatched } from '@ngxs/store';
+import { of as observableOf } from 'rxjs';
+import { delay, map, takeUntil } from 'rxjs/operators';
+import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
+import { AppStateService } from '../../../../state';
 import { assembleTestAppStateImports, TestAppState } from '../../../../state/utils/test-app-state';
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
-import { EntityManagerService } from '../../entity-manager';
-import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { ErrorHandler } from '../../error-handler/error-handler.service';
 import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
 import { MockI18nNotificationService } from '../../i18n-notification/i18n-notification.service.mock';
 import { AuthOperations } from './auth.operations';
-
-class MockGcmsApi {
-    auth = {
-        validate: jasmine.createSpy('validate').and.stub(),
-        login: jasmine.createSpy('login').and.stub(),
-        logout: jasmine.createSpy('logout').and.stub(),
-        changePassword: jasmine.createSpy('changePassword').and.stub(),
-    };
-}
 
 class MockRouter {
     navigateByUrl = jasmine.createSpy('navigateByUrl').and.stub();
@@ -57,10 +49,9 @@ const ERROR_MSG = 'Auth Error';
 
 describe('AuthOperations', () => {
 
-    let api: MockGcmsApi;
+    let client: GCMSTestRestClientService;
     let authOps: AuthOperations;
     let editorUiLocalStorage: MockEditorUiLocalStorage;
-    let entities: MockEntityManagerService;
     let errorHandler: MockErrorHandler;
     let state: TestAppState;
     let stopper: ObservableStopper;
@@ -76,19 +67,15 @@ describe('AuthOperations', () => {
                 { provide: AppStateService, useExisting: TestAppState },
                 MockEditorUiLocalStorage,
                 { provide: EditorUiLocalStorageService, useExisting: MockEditorUiLocalStorage },
-                MockEntityManagerService,
-                { provide: EntityManagerService, useExisting: MockEntityManagerService },
                 MockErrorHandler,
                 { provide: ErrorHandler, useExisting: MockErrorHandler },
-                MockGcmsApi,
-                { provide: GcmsApi, useExisting: MockGcmsApi },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 { provide: I18nNotificationService, useClass: MockI18nNotificationService },
                 { provide: Router, useClass: MockRouter },
             ],
         }).compileComponents();
 
-        entities = TestBed.inject(MockEntityManagerService);
-        api = TestBed.inject(MockGcmsApi);
+        client = TestBed.inject(GCMSRestClientService) as any;
         authOps = TestBed.inject(AuthOperations);
         editorUiLocalStorage = TestBed.inject(MockEditorUiLocalStorage);
         errorHandler = TestBed.inject(MockErrorHandler);
@@ -136,7 +123,7 @@ describe('AuthOperations', () => {
 
         it('works for a success response', fakeAsync(() => {
             editorUiLocalStorage.getSid.and.returnValue(null);
-            api.auth.validate.and.returnValue(
+           spyOn(client.user, 'me').and.returnValue(
                 observableOf<ValidateSidResponse>({
                     responseInfo: { responseCode: ResponseCode.OK },
                     user: MOCK_USER,
@@ -145,27 +132,26 @@ describe('AuthOperations', () => {
 
             authOps.validateSessionId(SID);
             expect(validateStartDispatched).toBe(true);
-            expect(api.auth.validate).toHaveBeenCalledWith(SID);
+            expect(client.user.me).toHaveBeenCalledWith({ sid: SID });
 
             tick();
             expect(validateSuccessDispatched).toBe(true);
             expect(validateErrorDispatched).toBe(false);
             // The SID was not yet in the editor local storage, so it should be added.
             expect(editorUiLocalStorage.setSid).toHaveBeenCalledWith(SID);
-            expect(entities.addEntity).toHaveBeenCalledWith('user', MOCK_USER);
         }));
 
         it('works for an error response', fakeAsync(() => {
-            api.auth.validate.and.returnValue(
+            spyOn(client.user, 'me').and.returnValue(
                 observableOf(null).pipe(
                     delay(0),
-                    map(() => { throw new ApiError(ERROR_MSG, 'auth'); }),
+                    map(() => { throw new GCMSRestClientRequestError(ERROR_MSG, null, 401); }),
                 ),
             );
 
             authOps.validateSessionId(SID);
             expect(validateStartDispatched).toBe(true);
-            expect(api.auth.validate).toHaveBeenCalledWith(SID);
+            expect(client.user.me).toHaveBeenCalledWith({ sid: SID });
 
             tick();
             expect(validateSuccessDispatched).toBe(false);
@@ -176,7 +162,7 @@ describe('AuthOperations', () => {
 
     it('validateSessionFromLocalStorage() works', fakeAsync(() => {
         const validateSpy = spyOn(authOps, 'validateSessionId').and.callThrough();
-        api.auth.validate.and.returnValue(
+        spyOn(client.user, 'me').and.returnValue(
             observableOf<ValidateSidResponse>({
                 responseInfo: { responseCode: ResponseCode.OK },
                 user: MOCK_USER,
@@ -229,8 +215,8 @@ describe('AuthOperations', () => {
         });
 
         it('login works for a success response', fakeAsync(() => {
-            const router = TestBed.get(Router) as MockRouter;
-            api.auth.login.and.returnValue(
+            const router: MockRouter = TestBed.inject(Router) as any;
+            spyOn(client.auth, 'login').and.returnValue(
                 observableOf<LoginResponse>({
                     responseInfo: { responseCode: ResponseCode.OK },
                     sid: SID,
@@ -240,19 +226,21 @@ describe('AuthOperations', () => {
 
             authOps.login('admin', 'pwd', '/');
             expect(loginStartDispatched).toBe(true);
-            expect(api.auth.login).toHaveBeenCalledWith('admin', 'pwd');
+            expect(client.auth.login).toHaveBeenCalledWith({
+                login: 'admin',
+                password: 'pwd',
+            });
 
             tick();
             expect(loginSuccessDispatched).toBe(true);
             expect(loginErrorDispatched).toBe(false);
             expect(editorUiLocalStorage.setSid).toHaveBeenCalledWith(SID);
             expect(router.navigateByUrl).toHaveBeenCalledWith('/');
-            expect(entities.addEntity).toHaveBeenCalledWith('user', MOCK_USER);
         }));
 
         it('login works for an error response', fakeAsync(() => {
-            const error = new ApiError(ERROR_MSG, 'auth');
-            api.auth.login.and.returnValue(
+            const error = new GCMSRestClientRequestError(ERROR_MSG, null, 400);
+            spyOn(client.auth, 'login').and.returnValue(
                 observableOf(null).pipe(
                     delay(0),
                     map(() => { throw error; }),
@@ -261,7 +249,10 @@ describe('AuthOperations', () => {
 
             authOps.login('admin', 'pwd', '/');
             expect(loginStartDispatched).toBe(true);
-            expect(api.auth.login).toHaveBeenCalledWith('admin', 'pwd');
+            expect(client.auth.login).toHaveBeenCalledWith({
+                login: 'admin',
+                password: 'pwd',
+            });
 
             tick();
             expect(loginSuccessDispatched).toBe(false);
@@ -302,7 +293,7 @@ describe('AuthOperations', () => {
         });
 
         it('works for a success response', fakeAsync(() => {
-            api.auth.logout.and.returnValue(
+            spyOn(client.auth, 'logout').and.returnValue(
                 observableOf<Response>({
                     responseInfo: { responseCode: ResponseCode.OK },
                 }).pipe(delay(0)),
@@ -310,7 +301,7 @@ describe('AuthOperations', () => {
 
             authOps.logout(SID);
             expect(logoutStartDispatched).toBe(true);
-            expect(api.auth.logout).toHaveBeenCalledWith(SID);
+            expect(client.auth.logout).toHaveBeenCalledWith(SID);
 
             tick();
             expect(logoutSuccessDispatched).toBe(true);
@@ -320,7 +311,7 @@ describe('AuthOperations', () => {
 
         it('works for an error response', fakeAsync(() => {
             const error = new ApiError(ERROR_MSG, 'failed');
-            api.auth.logout.and.returnValue(
+            spyOn(client.auth, 'logout').and.returnValue(
                 observableOf(null).pipe(
                     delay(0),
                     map(() => { throw error; }),
@@ -329,7 +320,7 @@ describe('AuthOperations', () => {
 
             authOps.logout(SID);
             expect(logoutStartDispatched).toBe(true);
-            expect(api.auth.logout).toHaveBeenCalledWith(SID);
+            expect(client.auth.logout).toHaveBeenCalledWith(SID);
 
             tick();
             expect(logoutSuccessDispatched).toBe(false);
@@ -369,15 +360,19 @@ describe('AuthOperations', () => {
         });
 
         it('works for a success response', fakeAsync(() => {
-            api.auth.changePassword.and.returnValue(
-                observableOf<Response>({
+            spyOn(client.user, 'update').and.returnValue(
+                observableOf<UserUpdateResponse>({
                     responseInfo: { responseCode: ResponseCode.OK },
+                    user: MOCK_USER,
+                    messages: [],
                 }).pipe(delay(0)),
             );
 
             authOps.changePassword(MOCK_USER.id, 'newPwd');
             expect(changePwdStartDispatched).toBe(true);
-            expect(api.auth.changePassword).toHaveBeenCalledWith(MOCK_USER.id, 'newPwd');
+            expect(client.user.update).toHaveBeenCalledWith(MOCK_USER.id, {
+                password: 'newPwd',
+            });
 
             tick();
             expect(changePwdSuccessDispatched).toBe(true);
@@ -385,8 +380,8 @@ describe('AuthOperations', () => {
         }));
 
         it('works for an error response', fakeAsync(() => {
-            const error = new ApiError(ERROR_MSG, 'failed');
-            api.auth.changePassword.and.returnValue(
+            const error = new GCMSRestClientRequestError(ERROR_MSG, null, 400);
+            spyOn(client.user, 'update').and.returnValue(
                 observableOf(null).pipe(
                     delay(0),
                     map(() => { throw error; }),
@@ -395,7 +390,9 @@ describe('AuthOperations', () => {
 
             authOps.changePassword(MOCK_USER.id, 'newPwd');
             expect(changePwdStartDispatched).toBe(true);
-            expect(api.auth.changePassword).toHaveBeenCalledWith(MOCK_USER.id, 'newPwd');
+            expect(client.user.update).toHaveBeenCalledWith(MOCK_USER.id, {
+                password: 'newPwd',
+            });
 
             tick();
             expect(changePwdSuccessDispatched).toBe(false);

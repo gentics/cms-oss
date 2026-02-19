@@ -1,5 +1,4 @@
 import { ConstructorOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '@admin-ui/common';
-import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
 import { AddTypePermissionsMap, AppStateService } from '@admin-ui/state';
 import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
@@ -20,6 +19,7 @@ import {
     ResponseCode,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { Observable, throwError, timer } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';

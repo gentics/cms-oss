@@ -260,7 +260,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         );
 
         const onLogin$ = this.appState.select(state => state.auth).pipe(
-            distinctUntilChanged(isEqual, state => state.currentUserId),
+            distinctUntilChanged(isEqual, state => state.user?.id),
             filter(state => state.isLoggedIn === true),
         );
 
@@ -856,7 +856,7 @@ span.diff-html-added {
             return false;
         }
 
-        const currentUserId = this.appState.now.auth.currentUserId;
+        const currentUserId = this.appState.now.auth.user?.id;
 
         return typeof item.lockedBy === 'number'
             ? item.lockedBy !== currentUserId

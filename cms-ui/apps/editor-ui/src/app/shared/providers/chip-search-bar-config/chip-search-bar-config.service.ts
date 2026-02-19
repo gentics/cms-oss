@@ -265,7 +265,7 @@ export class ChipSearchBarConfigService {
             }),
         );
 
-        this.activeUserId$ = this.state.select(state => state.auth.currentUserId.toString());
+        this.activeUserId$ = this.state.select(state => state.auth.user?.id.toString());
         this.users$ = this.state.select(state => state.entities.user).pipe(
             distinctUntilChanged(isEqual),
             map(items => Object.values(items).map((user: User<Normalized>) => ({

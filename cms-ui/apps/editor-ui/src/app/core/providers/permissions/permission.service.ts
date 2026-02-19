@@ -157,7 +157,7 @@ export class PermissionService {
             distinctUntilChanged((a, b) =>
                 a.folder.activeFolder === b.folder.activeFolder &&
                 a.folder.activeNode === b.folder.activeNode &&
-                a.auth.currentUserId === b.auth.currentUserId &&
+                a.auth.user?.id === b.auth.user?.id &&
                 a.folder.activeLanguage === b.folder.activeLanguage,
             ),
             filter((state) => state.auth.isLoggedIn),
@@ -171,7 +171,7 @@ export class PermissionService {
                 map((folder) => ({
                     folder,
                     node: state.folder.activeNode,
-                    user: state.auth.currentUserId,
+                    user: state.auth.user?.id,
                 })),
             )),
             switchMap((current) => {
@@ -302,7 +302,7 @@ export class PermissionService {
         };
 
         const user$ = this.appState
-            .select((state) => state.auth.currentUserId)
+            .select((state) => state.auth.user?.id)
             .pipe(filter((userId) => userId != null));
 
         this.viewInbox$ = user$.pipe(

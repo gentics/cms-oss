@@ -1,4 +1,3 @@
-import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
 import { ObservableStopper } from '@admin-ui/common/utils/observable-stopper/observable-stopper';
 import { AppStateService } from '@admin-ui/state';
 import { AddEntities, UpdateEntities } from '@admin-ui/state/entity/entity.actions';
@@ -25,6 +24,7 @@ import {
     getExamplePageData,
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing';
+import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
 import { cloneDeep } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';

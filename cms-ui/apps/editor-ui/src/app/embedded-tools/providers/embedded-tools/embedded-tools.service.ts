@@ -10,14 +10,15 @@ import {
     ToolsFetchingErrorAction,
     ToolsFetchingSuccessAction,
 } from '@editor-ui/app/state';
-import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME, WindowRef } from '@gentics/cms-components';
+import { WindowRef } from '@gentics/cms-components';
+import { SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components/auth';
 import { EmbeddedTool } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { filter, map, pairwise, startWith, switchMap, take, tap } from 'rxjs/operators';
 import { ADMIN_UI_LINK } from '../../../common/config/config';
-import { Api } from '../../../core/providers/api/api.service';
 import { ToolApiChannelService } from '../tool-api-channel/tool-api-channel.service';
 import { TabbedTool } from './tabbed-tool';
 
@@ -33,14 +34,13 @@ export class EmbeddedToolsService implements OnDestroy {
     adminUITabWindow: Window;
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private channelService: ToolApiChannelService,
         private state: ApplicationStateService,
         private modalService: ModalService,
         private router: Router,
         private translate: TranslateService,
         private windowRef: WindowRef,
-        private keycloak : KeycloakService,
     ) {
         // Required to prevent cyclic dependencies.
         channelService.registerToolsService(this);
@@ -51,10 +51,10 @@ export class EmbeddedToolsService implements OnDestroy {
     }
 
     loadAvailableToolsWhenLoggedIn(): void {
-        const sub = this.state.select(state => state.auth.currentUserId).pipe(
+        const sub = this.state.select(state => state.auth.user?.id).pipe(
             filter(id => id != null),
             tap(() => this.state.dispatch(new StartToolsFetchingAction())),
-            switchMap(() => this.api.admin.getAvailableEmbeddedTools()),
+            switchMap(() => this.client.admin.getTools()),
         ).subscribe(response => {
             this.state.dispatch(new ToolsFetchingSuccessAction(response.tools));
         }, () => {
@@ -141,7 +141,7 @@ export class EmbeddedToolsService implements OnDestroy {
         const window: Window = this.windowRef.nativeWindow;
 
         if (!this.adminUITabWindow) {
-            this.adminUITabWindow = window.open(ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : ''), '_blank');
+            this.adminUITabWindow = window.open(ADMIN_UI_LINK + (this.state.now.auth.ssoSkipped ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : ''), '_blank');
             this.adminUITabWindow.addEventListener('beforeunload', () => {
                 this.adminUITabWindow = null;
             });

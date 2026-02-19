@@ -1,6 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, TestModuleMetadata, getTestBed } from '@angular/core/testing';
 import { STATE_MODULES } from '@editor-ui/app/state';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { mockPipe } from '@gentics/ui-core/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
@@ -31,7 +32,10 @@ export class MockTranslateService {
 export function configureComponentTest(config: TestModuleMetadata): TestBed {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
-        imports: [NgxsModule.forRoot(STATE_MODULES)],
+        imports: [
+            NgxsModule.forRoot(STATE_MODULES),
+            AuthenticationModule.forRoot(),
+        ],
         declarations: [mockPipe('i18n')],
         providers: [{ provide: TranslateService, useClass: MockTranslateService }],
         schemas: [NO_ERRORS_SCHEMA],

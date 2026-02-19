@@ -11,6 +11,7 @@ import { Api } from '../api/api.service';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { I18nNotification, TranslatedNotificationOptions } from '../i18n-notification/i18n-notification.service';
 import { MaintenanceModeService } from './maintenance-mode.service';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 
 describe('MaintenanceModeService', () => {
 
@@ -25,7 +26,10 @@ describe('MaintenanceModeService', () => {
         const api = new Api(new GcmsApi(apiBase as ApiBase));
 
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                AuthenticationModule.forRoot(),
+            ],
             providers: [
                 { provide: Api, useValue: api },
                 { provide: ApplicationStateService, useClass: TestApplicationState },

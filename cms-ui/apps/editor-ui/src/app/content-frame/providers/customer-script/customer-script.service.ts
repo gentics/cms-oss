@@ -326,7 +326,7 @@ export class CustomerScriptService implements OnDestroy {
             sid: state.auth.sid,
             uiLanguage: state.ui.language,
             uiVersion: state.ui.uiVersion,
-            userId: state.auth.currentUserId,
+            userId: state.auth.user?.id,
         };
     }
 

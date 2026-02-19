@@ -153,6 +153,7 @@ import {
     ItemListOptions,
     ItemListResponse,
     ItemRequestOptions,
+    KeycloakConfiguration,
     Language,
     LanguageCreateRequest,
     LanguageListOptions,
@@ -190,6 +191,7 @@ import {
     MaintenanceModeResponse,
     MarkupLanguageListOptions,
     MarkupLanguageListResponse,
+    MeRequestOptions,
     MessageListOptions,
     MessageListResponse,
     MessageReadRequest,
@@ -1049,7 +1051,7 @@ export interface AbstractUserAPI extends BasicAPI {
     update: (id: number | string, body: UserUpdateRequest) => UserUpdateResponse;
     delete: (id: number | string) => void;
 
-    me: (options?: UserRequestOptions) => UserResponse;
+    me: (options?: MeRequestOptions) => UserResponse;
     getFullUserData: () => UserDataResponse;
     getUserData: (key: string) => UserDataResponse;
     setUserData: (key: string, body: any) => Response;
@@ -1087,6 +1089,10 @@ export interface AbstractLicenseAPI extends BasicAPI {
     update: (data: LicenseUpdateRequest) => LicenseUpdateResponse;
     contentRepositories: (options?: LicenseContentRepositoryInfoOptions) => LicenseContentRepositoryInfoResponse;
     push: (data: PushLicenseRequest) => Response;
+}
+
+export interface AbstractKeycloakAPI extends BasicAPI {
+    configuration: () => KeycloakConfiguration;
 }
 
 export interface AbstractRootAPI {
@@ -1131,4 +1137,5 @@ export interface AbstractRootAPI {
     usersnap: AbstractUsersnapAPI;
     validation: AbstractValidationAPI;
     license: AbstractLicenseAPI;
+    keycloak: AbstractKeycloakAPI;
 }

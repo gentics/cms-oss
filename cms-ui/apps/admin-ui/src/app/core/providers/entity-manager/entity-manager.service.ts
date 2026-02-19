@@ -1,5 +1,4 @@
 import { batchedMap } from '@admin-ui/common';
-import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
 import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
 import { AppStateService, SelectState } from '@admin-ui/state';
 import { AddEntities, DeleteAllEntitiesInBranch, DeleteEntities } from '@admin-ui/state/entity/entity.actions';
@@ -17,6 +16,7 @@ import {
     Normalized,
     Raw,
 } from '@gentics/cms-models';
+import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
 import { debounce as _debounce, values as _values, isEqual } from 'lodash-es';
 import { Observable, ReplaySubject, Subject, of as observableOf, throwError } from 'rxjs';
 import {

@@ -9,10 +9,11 @@ import {
 import { MeshModule } from '@admin-ui/mesh';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
-import { NgModule, Optional, SkipSelf, inject, provideAppInitializer } from '@angular/core';
+import { inject, NgModule, Optional, provideAppInitializer, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CmsComponentsModule, KeycloakService } from '@gentics/cms-components';
+import { CmsComponentsModule } from '@gentics/cms-components';
+import { AuthenticationModule, KeycloakService } from '@gentics/cms-components/auth';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
@@ -78,8 +79,8 @@ import {
     PermissionsTrableLoaderService,
     RoleOperations,
     RouteEntityResolverService,
-    ScheduleHandlerService,
     ScheduleExecutionOperations,
+    ScheduleHandlerService,
     ScheduleOperations,
     ScheduleTaskOperations,
     ServerStorageService,
@@ -117,7 +118,14 @@ export function initializeApp(appState: AppStateService, client: GCMSRestClientS
             client.setSessionId(sid);
         });
 
-        return keycloak.checkKeycloakAuth();
+        return keycloak.checkKeycloakAuth().then(() => {
+            // No additonal setup required
+            // This is just an empty body so the app init works as expected
+        }).catch((err) => {
+            console.error(err);
+            // Nothing else to handle, as the regular login workflow will take over,
+            // and the login form will display the information to the user if needed.
+        });
     };
 }
 
@@ -247,6 +255,7 @@ const PROVIDERS: any[] = [
         SharedModule,
         StateModule,
         MeshModule,
+        AuthenticationModule.forRoot(),
     ],
     exports: [
         TranslateModule,

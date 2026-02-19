@@ -130,7 +130,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
             const commonPermissions = Object.values(userGroups.perms).reduce((accumulator, currentList) => {
                 return accumulator.filter(permission => currentList.includes(permission));
             });
-            if (this.currentEntity.id !== this.appState.now.auth.currentUserId && !commonPermissions.includes(GcmsPermission.EDIT)) {
+            if (this.currentEntity.id !== this.appState.now.auth.user?.id && !commonPermissions.includes(GcmsPermission.EDIT)) {
                 this.fgProperties.disable();
             } else {
                 this.fgProperties.enable();

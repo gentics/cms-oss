@@ -38,11 +38,6 @@ export class I18nNotification {
             for (const msg of response.messages) {
                 this.notification.show(responseMessageToNotification(msg));
             }
-        } else {
-            this.notification.show({
-                type: responseCodeToNotificationOptionsType(response.responseInfo.responseCode),
-                message: response.responseInfo.responseMessage,
-            });
         }
     }
 

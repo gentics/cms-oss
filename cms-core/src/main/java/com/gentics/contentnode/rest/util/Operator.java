@@ -163,17 +163,15 @@ public class Operator {
 			} catch (TimeoutException e) {
 				wrapper.sendToBackground();
 				I18nString msg = new CNI18nString("job_sent_to_background");
-				String translatedMsg = msg.toString();
 				msg.setParameter("0", description);
 				if (backgroundCallback != null) {
 					backgroundCallback.run();
 				}
+				String translatedMsg = msg.toString();
 
 				return new BackgroundJobResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg), true);
 			}
-		} catch (Exception e) {
-			Exception exception = e;
-
+		} catch (Exception exception) {
 			if (exception.getCause() instanceof ReadOnlyException) {
 				return new BackgroundJobResponse(new Message(Message.Type.CRITICAL, exception.getCause().getLocalizedMessage()), new ResponseInfo(ResponseCode.FAILURE, ""));
 			} else {

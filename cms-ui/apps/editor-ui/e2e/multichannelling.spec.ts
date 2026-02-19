@@ -262,7 +262,7 @@ test.describe('Multichannelling', () => {
             await wait(500);
             const notifications = page.locator('gtx-toast');
             expect(await notifications.all()).toHaveLength(1);
-            await expect(notifications.locator('.message')).toContainText(localizeBody.responseInfo.responseMessage);
+            await expect(notifications.locator('.message')).toContainText(localizeBody.messages[0].message);
 
             await expect(item.locator('.item-primary .localized-icon')).not.toBeVisible();
         });

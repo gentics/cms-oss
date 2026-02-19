@@ -5,10 +5,23 @@
         [autofocus]="mode === PagePropertiesMode.CREATE"
     ></gtx-input>
 
-    <gtx-input
-        [label]="'editor.item_filename_label' | i18n"
-        formControlName="fileName"
-    ></gtx-input>
+    <div class="file-name-wrapper" [class.focused]="fileNameFocused">
+        <gtx-input
+            [label]="'editor.item_filename_label' | i18n"
+            formControlName="fileName"
+            (focus)="onFileNameFocus()"
+            (blur)="onFileNameBlur()"
+            (valueChange)="onFileNameChange()"
+        ></gtx-input>
+
+        <button
+            class="suggest-button"
+            data-action="suggest-filename"
+            (click)="suggestNewFileName(true)"
+        >
+            <icon>wand_stars</icon>
+        </button>
+    </div>
 
     <gtx-input
         [label]="'editor.item_description_label' | i18n"

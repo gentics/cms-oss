@@ -5,6 +5,7 @@ import {
     EventEmitter,
     Input,
     OnChanges,
+    OnDestroy,
     OnInit,
     Output,
     SimpleChange,
@@ -28,8 +29,8 @@ import {
     setControlsEnabled,
 } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { combineLatest } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, switchMap } from 'rxjs/operators';
+import { combineLatest, Observable, of, Subject, Subscription } from 'rxjs';
+import { debounceTime, delay, delayWhen, distinctUntilChanged, filter, map, switchMap } from 'rxjs/operators';
 import { numberBetween } from '../../../common/utils/custom-validators';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -65,9 +66,6 @@ export class PagePropertiesComponent
     public folderId: number;
 
     @Input()
-    public enableFileNameSuggestion: boolean;
-
-    @Input()
     public item?: Page;
 
     @Input()
@@ -100,6 +98,17 @@ export class PagePropertiesComponent
     // or checked async via an async-validator.
     urlPattern = '[\\w\\._\\-\\/]+';
 
+    /** The file-name used for the last suggestion request */
+    private suggestionOldPageName: string;
+    /** The language used for the last suggestion request */
+    private suggestionOldLanguage: string;
+    /** If the file-name input is currently focused */
+    public fileNameFocused = false;
+    /** If the currently set fileName was generated */
+    private fileNameGenerated = false;
+    /** Subject which is triggered, whenever a new suggestion is needed. */
+    private suggestionSubject = new Subject<boolean>();
+
     constructor(
         changeDetector: ChangeDetectorRef,
         private client: GCMSRestClientService,
@@ -125,34 +134,19 @@ export class PagePropertiesComponent
             this.changeDetector.markForCheck();
         }));
 
-        if (this.item?.fileName) {
-            this.form.controls.fileName.markAsDirty();
-        }
-
         this.subscriptions.push(this.form.valueChanges.pipe(
-            filter(value => this.enableFileNameSuggestion
-                && this.form.controls.fileName.pristine
+            filter(value =>
                 // Make sure we have the required properties at least set before we attempt to request
-                && value?.name && value?.language && value?.templateId != null,
+                value?.language && value?.templateId != null,
             ),
             map(value => ({
-                folderId: this.folderId,
-                nodeId: this.nodeId,
-
                 pageName: value.name,
-                fileName: '',
                 language: value.language,
                 templateId: value.templateId,
             })),
             distinctUntilChanged(isEqual),
-            debounceTime(100),
-            switchMap(req => this.client.page.suggestFileName(req)),
-        ).subscribe(res => {
-            if (res?.fileName && this.form.controls.fileName.pristine) {
-                this.form.patchValue({ fileName: res.fileName }, { emitEvent: false });
-                this.triggerChange(this.assembleValue(this.form.value));
-                this.changeDetector.markForCheck();
-            }
+        ).subscribe(() => {
+            this.suggestNewFileName();
         }));
 
         this.subscriptions.push(combineLatest([
@@ -184,6 +178,53 @@ export class PagePropertiesComponent
                 ctrl.setValue(templates[0].id);
             }
 
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.suggestionSubject.pipe(
+            debounceTime(100),
+            switchMap((forced) => {
+                const { templateId, name, language } = this.form.value;
+
+                let newName: Observable<string> = of('');
+                if (name) {
+                    newName = this.client.page.suggestFileName({
+                        pageName: name,
+                        folderId: this.folderId,
+                        nodeId: this.nodeId,
+                        language: language,
+                        templateId: templateId,
+
+                        fileName: '',
+                    }).pipe(
+                        map(res => res.fileName),
+                    );
+                }
+
+                return newName.pipe(
+                    map((fileName) => ({
+                        forced,
+                        templateId,
+                        pageName: name,
+                        language,
+                        fileName,
+                    })),
+                );
+            }),
+        ).subscribe((data) => {
+            // Don't actually perform the update if the user started to focus the file name
+            // in the meantime.
+            if (this.fileNameFocused) {
+                return;
+            }
+
+            this.form.controls.fileName.setValue(data.fileName);
+            // Update the "old" properties in here, since only now they are actually "old"
+            this.suggestionOldPageName = data.pageName;
+            this.suggestionOldLanguage = data.language;
+            // If the file name was "forced", we don't actually want to mark it as generated,
+            // as new changes to the name would update it then.
+            this.fileNameGenerated = this.fileNameGenerated || !data.forced;
             this.changeDetector.markForCheck();
         }));
     }
@@ -272,6 +313,45 @@ export class PagePropertiesComponent
             });
             this.form.patchValue(tmpObj);
         }
+    }
+
+    protected suggestNewFileName(force: boolean = false): void {
+        const { templateId, name, language, fileName } = this.form.value;
+
+        if (
+            // Don't update the file-name while it's focused, would screw up the editing
+            this.fileNameFocused
+            // Don't need to update, as the content is still the same
+            || (fileName && name === this.suggestionOldPageName && language === this.suggestionOldLanguage)
+            || (!force && (
+                // Don't update if the user has changed the file-name manually
+                (this.form.controls.fileName.dirty && fileName)
+                // Don't override the file-name if it was already set previously
+                || (this.form.controls.fileName.pristine && !this.fileNameGenerated && fileName)
+            ))
+            // Can't request a file-name without a template - No idea why
+            || templateId == null
+            // Need the folder and node id
+            || this.folderId == null
+            || this.nodeId == null
+        ) {
+            return;
+        }
+
+        this.suggestionSubject.next(force);
+    }
+
+    public onFileNameFocus(): void {
+        this.fileNameFocused = true;
+    }
+
+    public onFileNameBlur(): void {
+        this.fileNameFocused = false;
+        this.suggestNewFileName();
+    }
+
+    public onFileNameChange(): void {
+        this.fileNameGenerated = false;
     }
 
     public async linkToTemplatesClicked(event: Event): Promise<void> {

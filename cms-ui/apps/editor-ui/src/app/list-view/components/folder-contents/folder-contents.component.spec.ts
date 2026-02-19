@@ -515,7 +515,9 @@ describe('FolderContentsComponent', () => {
         expect(state instanceof ApplicationStateService).toBeTruthy();
         state.mockState({
             auth: {
-                currentUserId: 1,
+                user: {
+                    id: 1,
+                } as any,
                 sid: 1,
                 loggingIn: false,
                 isLoggedIn: true,

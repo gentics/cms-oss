@@ -1,12 +1,13 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { I18nService } from '@gentics/cms-components';
+import { INITIAL_AUTH_STATE } from '@gentics/cms-components/auth';
 import { MockI18nService } from '@gentics/cms-components/testing';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { of } from 'rxjs';
 import { first, takeUntil } from 'rxjs/operators';
 import { createDelayedObservable } from '../../../../testing';
 import { InterfaceOf, ObservableStopper } from '../../../common';
-import { AppStateService, INITIAL_AUTH_STATE } from '../../../state';
+import { AppStateService } from '../../../state';
 import { SetUILanguage, SetUISettings } from '../../../state/ui/ui.actions';
 import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
 import { EditorUiLocalStorageService } from '../editor-ui-local-storage';
@@ -148,7 +149,9 @@ describe('UserSettingsService', () => {
             appState.mockState({
                 auth: {
                     isLoggedIn: true,
-                    currentUserId: userId,
+                    user: {
+                        id: userId,
+                    },
                     sid: userId + 1,
                 },
             });

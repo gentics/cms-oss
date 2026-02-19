@@ -17,6 +17,7 @@ export interface Alert {
 
 export interface UIState {
     mode: UIMode;
+    isAdmin: boolean;
     alerts: Alerts;
     contentFrameBreadcrumbsExpanded: boolean;
     itemListBreadcrumbsExpanded: boolean;

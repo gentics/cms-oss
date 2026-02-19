@@ -29,6 +29,7 @@ import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl'
 import { TranslatorImpl } from '../../common/impl/translator-impl';
 import { TagEditorModal } from '../../components/tag-editor-modal/tag-editor-modal.component';
 import { EditTagInfo, TagEditorService } from './tag-editor.service';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 
 describe('TagEditorService', () => {
 
@@ -41,7 +42,10 @@ describe('TagEditorService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                AuthenticationModule.forRoot(),
+            ],
             declarations: [
                 TagEditorModal,
             ],

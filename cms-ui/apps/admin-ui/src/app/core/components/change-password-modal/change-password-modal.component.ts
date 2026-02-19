@@ -46,7 +46,7 @@ export class ChangePasswordModalComponent implements IModalDialog {
     }
 
     changePassword(): void {
-        const userId = this.userId || this.appState.now.auth.currentUserId;
+        const userId = this.userId || this.appState.now.auth.user?.id;
         const password = this.form.get('password1').value;
         this.authOps.changePassword(userId, password)
             .then(() => this.closeFn());

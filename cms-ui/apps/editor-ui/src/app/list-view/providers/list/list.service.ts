@@ -67,7 +67,7 @@ export class ListService implements OnDestroy {
      */
     init(route: ActivatedRoute): void {
         const onLogin$ = this.state.select(state => state.auth).pipe(
-            distinctUntilChanged(isEqual, state => state.currentUserId),
+            distinctUntilChanged(isEqual, state => state.user?.id),
             filter(state => state.isLoggedIn === true),
         );
         const routeParams$ = onLogin$.pipe(

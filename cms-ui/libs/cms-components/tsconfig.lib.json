@@ -7,10 +7,13 @@
         "types": ["node", "jquery"],
         "moduleResolution": "bundler"
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts",
+        "auth/src/**/*.ts"
+    ],
     "exclude": [
-        "src/test.ts",
-        "src/**/*.spec.ts",
+        "test.ts",
+        "**/*.spec.ts",
         "cypress/**/*",
         "cypress.config.ts",
         "**/*.cy.ts",

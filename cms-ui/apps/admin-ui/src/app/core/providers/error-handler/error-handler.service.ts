@@ -1,15 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { LogoutSuccess } from '@gentics/cms-components/auth';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AdminUIModuleRoutes } from '../../../common';
 import { ServiceBase } from '../../../shared/providers/service-base/service.base';
-import { AppStateService, LogoutSuccess } from '../../../state';
-
-/* TODO: Move this to cms-components to re-use across all apps. */
+import { AppStateService } from '../../../state';
 
 /**
  * A central error handler that shows a notification for occuring errors,

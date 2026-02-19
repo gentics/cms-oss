@@ -1,11 +1,12 @@
 import { HttpClientModule } from '@angular/common/http';
-import { Component, Injectable, Input, OnDestroy, PipeTransform } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { TestBed, discardPeriodicTasks, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentsModule, I18nService, KeycloakService, WindowRef } from '@gentics/cms-components';
+import { CmsComponentsModule, I18nService, WindowRef } from '@gentics/cms-components';
+import { AuthenticationModule, KeycloakService } from '@gentics/cms-components/auth';
 import { MockI18nService } from '@gentics/cms-components/testing';
 import { NodeFeature } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
@@ -227,6 +228,7 @@ describe('AppComponent', () => {
                 ReactiveFormsModule,
                 HttpClientModule,
                 FormsModule,
+                AuthenticationModule.forRoot(),
             ],
             declarations: [
                 App,
@@ -353,7 +355,9 @@ describe('AppComponent', () => {
                         auth: {
                             isAdmin: true,
                             isLoggedIn: true,
-                            currentUserId: 123,
+                            user: {
+                                id: 123,
+                            } as any,
                             loggingIn: false,
                         },
                         entities: {
@@ -422,7 +426,7 @@ describe('AppComponent', () => {
 
             beforeEach(() => {
                 mockInitialState = {
-                    auth: { isAdmin: false, isLoggedIn: false, loggingIn: true },
+                    auth: { isLoggedIn: false, loggingIn: true },
                     folder: {
                         activeNode: 1,
                         searchFiltersChanging: false,
@@ -447,6 +451,9 @@ describe('AppComponent', () => {
                             1: { folderId: 33, id: 1 },
                         },
                     },
+                    ui: {
+                        isAdmin: false,
+                    }
                 };
                 state.mockState(mockInitialState);
             });

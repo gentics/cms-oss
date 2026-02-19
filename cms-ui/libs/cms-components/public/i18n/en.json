@@ -206,5 +206,10 @@
         "datepicker_weekday_minimal_thursday": "Th",
         "datepicker_weekday_minimal_friday": "Fr",
         "datepicker_weekday_minimal_saturday": "Sa"
+    },
+    "shared": {
+        "keycloak_not_available": "Something went wrong while accessing Keycloak. Using login without Single Sign-On instead.",
+        "keycloak_invalid_config": "The configuration for Keycloak is invalid. Using login without Single Sign-On instead.",
+        "keycloak_unknown_error": "An unexpected error occurred while checking Keycloak availability. Using login without Single Sign-On instead."
     }
 }

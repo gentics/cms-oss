@@ -33,7 +33,7 @@ export class EditorOverlay implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         const onLogin$ = this.appState.select((state) => state.auth).pipe(
-            distinctUntilChanged(isEqual, (state) => state.currentUserId),
+            distinctUntilChanged(isEqual, (state) => state.user?.id),
             filter((state) => state.isLoggedIn === true),
         );
 

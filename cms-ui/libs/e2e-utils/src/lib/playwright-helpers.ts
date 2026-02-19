@@ -110,6 +110,19 @@ export function onRequest(
     });
 }
 
+export function onResponse(
+    page: Page,
+    matcher: (req: Request, res: Response) => boolean,
+    handler: (req: Request, res: Response) => any,
+): void {
+    page.on('response', res => {
+        const req = res.request();
+        if (matcher(req, res)) {
+            handler(req, res);
+        }
+    });
+}
+
 /**
  * Simple wrapper function for `page.waitForResponse` and {@link matchRequest}, but with an error-handler
  * to tell which request actually failed, because otherwise you have to guess.
@@ -137,6 +150,9 @@ export function waitForResponseFrom(
                     err.message = `Reached timeout (${timeoutStr}) for request "${method}" matching "${path.source}"`;
                 } else {
                     err.message = `Reached timeout (${timeoutStr}) for request "${method} ${path}"`;
+                }
+                if (Object.keys(options?.params ?? {}).length > 0) {
+                    err.message += ` with params ${JSON.stringify(options.params)}`;
                 }
             }
 
@@ -450,4 +466,26 @@ export async function pickDate(source: Locator, date?: Date): Promise<void> {
     }
 
     await clickModalAction(modal, 'confirm');
+}
+
+export function copyText(page: Page, text: string): Promise<void> {
+    return page.evaluate((text) => {
+        // clipboard may be null, as it's an insecure context.
+        // see https://developer.mozilla.org/en-US/docs/Web/API/Clipboard
+        if (navigator.clipboard != null) {
+            return navigator.clipboard.writeText(text);
+        }
+
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.height = '0';
+        textArea.style.width = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+    }, text);
 }

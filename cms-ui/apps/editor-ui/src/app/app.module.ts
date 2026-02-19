@@ -1,7 +1,7 @@
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { inject, NgModule, provideAppInitializer } from '@angular/core';
 import { PreloadAllModules, RouterModule } from '@angular/router';
-import { KeycloakService } from '@gentics/cms-components';
+import { KeycloakService } from '@gentics/cms-components/auth';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
@@ -34,7 +34,14 @@ const PROVIDERS: any[] = [
             client.setSessionId(sid);
         });
 
-        return keycloak.checkKeycloakAuth();
+        return keycloak.checkKeycloakAuth().then(() => {
+            // No additonal setup required
+            // This is just an empty body so the app init works as expected
+        }).catch((err) => {
+            console.error(err);
+            // Nothing else to handle, as the regular login workflow will take over,
+            // and the login form will display the information to the user if needed.
+        });
     }),
 ];
 

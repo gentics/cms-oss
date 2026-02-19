@@ -1,22 +1,20 @@
-@if (keycloakService.showSSOButton && !(enabled$ | async)) {
-  <div
-    class="line"
-  ></div>
+@if (showButton && !showLogin) {
+    <div class="line"></div>
 }
 
 <div class="sso-container">
-  @if (enabled$ | async) {
-    <iframe
-      #iframe
-      [src]="url"
-      (load)="frameLoaded(iframe)"
-    ></iframe>
-  }
+    @if (showLogin) {
+        <iframe
+            #iframe
+            [src]="url"
+            (load)="frameLoaded(iframe)"
+        ></iframe>
+    }
 
-  @if (keycloakService.showSSOButton && !(enabled$ | async)) {
-    <gtx-button
-      size="large"
-      (click)="login()"
-    >{{ 'common.login_sso_button_label' | gtxI18n }}</gtx-button>
-  }
+    @if (showButton && !showLogin) {
+        <gtx-button
+            size="large"
+            (click)="login()"
+        >{{ 'common.login_sso_button_label' | gtxI18n }}</gtx-button>
+    }
 </div>

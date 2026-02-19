@@ -26,6 +26,7 @@ import {
     AbstractI18nAPI,
     AbstractImageAPI,
     AbstractInfoAPI,
+    AbstractKeycloakAPI,
     AbstractLanguageAPI,
     AbstractLicenseAPI,
     AbstractLinkCheckerAPI,
@@ -164,6 +165,7 @@ export class GCMSRestClientService implements APIDefinition {
             usersnap: asAngularAPI<AbstractUsersnapAPI>(this.client.usersnap),
             validation: asAngularAPI<AbstractValidationAPI>(this.client.validation),
             license: asAngularAPI<AbstractLicenseAPI>(this.client.license),
+            keycloak: asAngularAPI<AbstractKeycloakAPI>(this.client.keycloak),
         };
     }
 
@@ -354,5 +356,9 @@ export class GCMSRestClientService implements APIDefinition {
 
     get license(): AngularAPI<AbstractLicenseAPI> {
         return this.apis.license;
+    }
+
+    get keycloak(): AngularAPI<AbstractKeycloakAPI> {
+        return this.apis.keycloak;
     }
 }

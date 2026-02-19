@@ -5,8 +5,12 @@ import {
     clickModalAction,
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
+    CONSTRUCT_TEST_SELECT_COLOR,
+    CONSTRUCT_TEST_SELECT_COLOR_HIDDEN,
+    CONSTRUCT_TEST_SELECT_COLOR_INLINE,
+    CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE,
     EntityImporter,
-    FIXTURE_IMAGE_ONE,
+    FIXTURE_IMAGE_JPEG1,
     IMAGE_ONE,
     IMPORT_ID,
     ITEM_TYPE_IMAGE,
@@ -25,6 +29,7 @@ import {
     waitForResponseFrom,
     findNotification,
     matchesPath,
+    copyText,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -87,7 +92,7 @@ test.describe('Page Editing', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupBinaryFiles({
-                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_ONE,
+                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_JPEG1,
             });
             await IMPORTER.setupTest(TestSize.MINIMAL);
         });
@@ -160,6 +165,29 @@ test.describe('Page Editing', () => {
 
                 const res = await cancelRequest;
                 expect(res.ok()).toBe(true);
+            });
+
+            test('should be possible to paste plain text', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19262',
+                }],
+            }, async ({ page, context }) => {
+                const TEST_TEXT = 'Hello from Playwright!';
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                // Firefox doesn't have these permission, and would fail the test
+                // eslint-disable-next-line playwright/no-conditional-in-test
+                if (context.browser().browserType().name() !== 'firefox') {
+                    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+                }
+
+                await copyText(page, TEST_TEXT);
+
+                await mainEditable.focus();
+                await mainEditable.press('ControlOrMeta+v');
+                await expect(mainEditable).toHaveText(TEST_TEXT);
             });
 
             test.describe('Mobile view', () => {
@@ -764,21 +792,6 @@ test.describe('Page Editing', () => {
                 });
             });
 
-            test('should be possible to paste plain text', {
-                annotation: [{
-                    type: 'ticket',
-                    description: 'SUP-19262',
-                }],
-            }, async ({ page, context }) => {
-                await mainEditable.click();
-                await mainEditable.clear();
-
-                await context.grantPermissions(['clipboard-write']);
-                await page.evaluate(() => navigator.clipboard.writeText('Hello from Playwright!'));
-                await mainEditable.press('ControlOrMeta+v');
-                await expect(mainEditable).toHaveText('Hello from Playwright!');
-            });
-
             // FIXME: Ticket created, SUP-19576
             test('should be possible to insert a link with a keybind', {
                 annotation: [{
@@ -1022,6 +1035,71 @@ test.describe('Page Editing', () => {
                 const renderBody = (await renderReq).request().postDataJSON() as CmsPage<Raw>;
                 const postedEditableContent = (renderBody.tags['content'].properties.text as StringTagPartProperty).stringValue;
                 expect(postedEditableContent).toContain(`<node ${tagName}>`);
+            });
+
+            async function testEditButton(page: Page, tagId: string, showButton: boolean): Promise<void> {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                const renderUrl = '/rest/page/renderTag/*';
+                const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
+                const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
+                const dropdown = await openContext(category);
+                await dropdown.locator(`[data-global-id="${tagId}"]`).click();
+                const createResponse = await createReq;
+                const createResponseBody = await createResponse.json();
+                const tagName = createResponseBody.tag.name;
+                await renderReq;
+
+                const editButton = mainEditable.locator(`.aloha-block[data-gcn-tagname="${tagName}"] .aloha-block-handle .gcn-construct-button-edit`);
+                if (showButton) {
+                    await editButton.waitFor();
+                    await expect(editButton).toBeVisible();
+                } else {
+                    await expect(editButton).not.toBeAttached();
+                }
+            }
+
+            test('should render an editable tag with edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }],
+            }, async ({ page }) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR, true);
+            });
+
+            test('should render a hidden tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }],
+            }, async ({ page }) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_HIDDEN, false);
+            });
+
+            test('should render an inline tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }],
+            }, async ({ page }) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_INLINE, false);
+            });
+
+            test('should render a non-editable tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }],
+            }, async ({ page }) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE, false);
             });
         });
     });

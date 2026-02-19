@@ -544,7 +544,9 @@ describe('ContentFrameComponent', () => {
             auth: {
                 isLoggedIn: true,
                 // Not really used anywhere
-                currentUserId: CURRENT_USER_ID,
+                user: {
+                    id: CURRENT_USER_ID,
+                } as any,
             },
         });
 

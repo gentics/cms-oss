@@ -4,6 +4,5 @@ export * from './i18n-notification/i18n-notification.service';
 export * from './i18n-relative-date/i18n-relative-date.service';
 export * from './i18n/i18n.service';
 export * from './initializable-service-base/initializable-service.base';
-export * from './keycloak/keycloak.service';
 export * from './service-base/service.base';
 export * from './window-ref';

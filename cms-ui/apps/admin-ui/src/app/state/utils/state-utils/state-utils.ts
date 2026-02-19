@@ -1,4 +1,4 @@
-import { deepFreeze } from '@admin-ui/common/utils/deep-freeze/deep-freeze';
+import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
 import { ConstructorOf } from '@admin-ui/common/utils/util-types/util-types';
 import { Action, Select, State } from '@ngxs/store';
 import { ɵStateClass, ɵStoreOptions } from '@ngxs/store/internals';
@@ -10,6 +10,8 @@ export const NO_ACTION_CLASS_ERROR_MSG =
 /**
  * Typed verion of the ngxs `@Select` decorator.
  * @param selector a function to select a part of the `AppState`
+ * @deprecated Select the state value via `.select` manually and cleanup the subscription.
+ * @deprecated Since it's just a wrapper of ngxs's `Select`, which is also deprecated: https://www.ngxs.io/deprecations/select-decorator-deprecation
  */
 export function SelectState<R>(selector: (state: AppState) => R): (target: any, name: string) => void {
     return (target: any, name: string) => {

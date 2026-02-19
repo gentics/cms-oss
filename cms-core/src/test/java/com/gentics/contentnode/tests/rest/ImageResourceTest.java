@@ -16,14 +16,19 @@ import static org.junit.Assert.fail;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
-import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.operator.TransposeDescriptor;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.jmage.filter.FilterException;
@@ -32,6 +37,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -48,6 +57,7 @@ import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
 import com.gentics.contentnode.rest.resource.ImageResource;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.lib.image.ImageUtils;
 import com.gentics.lib.image.ResizeFilter;
 import com.gentics.lib.image.SmarterResizeFilter;
 
@@ -57,21 +67,22 @@ import fi.iki.santtu.md5.MD5OutputStream;
 /**
  * Tests for the REST {@link ImageResourceImpl} class.
  */
+@RunWith(value = Parameterized.class)
 public class ImageResourceTest {
-	public final static String IMAGE_NAME = "image-dpi66x44-res311x211.jpg";
+	public final static List<String> IMAGE_NAMES = Arrays.asList("image-dpi66x44-res311x211.jpg", "image-dpi66x44-res311x211.webp");
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 	private static Node node;
 	private ImageFile testImage;
 
-	private static String rotateCWMd5;
+	private static Map<String, String> rotateCWMd5 = new HashMap<>();
 
-	private static String rotateCCWMd5;
+	private static Map<String, String> rotateCCWMd5 = new HashMap<>();
 
-	private static String rotateAndResizeCWMd5;
+	private static Map<String, String> rotateAndResizeCWMd5 = new HashMap<>();
 
-	private static String rotateAndResizeCCWMd5;
+	private static Map<String, String> rotateAndResizeCCWMd5 = new HashMap<>();
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException, IOException, FilterException {
@@ -79,57 +90,58 @@ public class ImageResourceTest {
 		node = supply(() -> createNode());
 
 		// determine MD5 Sums of resized and rotated test image
-		rotateCWMd5 = rotateCW();
-		rotateCCWMd5 = rotateCCW();
-		rotateAndResizeCWMd5 = rotateAndResizeCW();
-		rotateAndResizeCCWMd5 = rotateAndResizeCCW();
+		for (String name : IMAGE_NAMES) {
+			rotateCWMd5.put(name, rotateCW(name));
+			rotateCCWMd5.put(name, rotateCCW(name));
+			rotateAndResizeCWMd5.put(name, rotateAndResizeCW(name));
+			rotateAndResizeCCWMd5.put(name, rotateAndResizeCCW(name));
+		}
+	}
+
+	@Parameters(name = "{index}: image {0}")
+	public static Collection<Object[]> data() {
+		return IMAGE_NAMES.stream().map(name -> new Object[] {name}).collect(Collectors.toList());
 	}
 
 	/**
 	 * Rotate the test image CW
+	 * @param name source image name
 	 * @return MD5 sum of rotated image
 	 * @throws IOException
 	 */
-	protected static String rotateCW() throws IOException {
-		PlanarImage image = null;
-		try (InputStream originalBinaryStream = ImageResourceTest.class.getResourceAsStream(IMAGE_NAME)) {
-			image = PlanarImage.wrapRenderedImage(ImageIO.read(originalBinaryStream));
-		}
+	protected static String rotateCW(String name) throws IOException {
+		PlanarImage image = ImageUtils.read(() -> ImageResourceTest.class.getResourceAsStream(name));
 		image = JAI.create("transpose", new ParameterBlock().addSource(image).add(TransposeDescriptor.ROTATE_90), null);
 
 		MD5OutputStream md5OS = new MD5OutputStream(new NullOutputStream());
-		ImageIO.write(image.getAsBufferedImage(), "jpg", md5OS);
+		ImageUtils.write(image, FilenameUtils.getExtension(name), md5OS);
 		return MD5.asHex(md5OS.hash());
 	}
 
 	/**
 	 * Rotate the test image CCW
+	 * @param name source image name
 	 * @return MD5 sum of rotated image
 	 * @throws IOException
 	 */
-	protected static String rotateCCW() throws IOException {
-		PlanarImage image = null;
-		try (InputStream originalBinaryStream = ImageResourceTest.class.getResourceAsStream(IMAGE_NAME)) {
-			image = PlanarImage.wrapRenderedImage(ImageIO.read(originalBinaryStream));
-		}
+	protected static String rotateCCW(String name) throws IOException {
+		PlanarImage image = ImageUtils.read(() -> ImageResourceTest.class.getResourceAsStream(name));
 		image = JAI.create("transpose", new ParameterBlock().addSource(image).add(TransposeDescriptor.ROTATE_270), null);
 
 		MD5OutputStream md5OS = new MD5OutputStream(new NullOutputStream());
-		ImageIO.write(image.getAsBufferedImage(), "jpg", md5OS);
+		ImageUtils.write(image, FilenameUtils.getExtension(name), md5OS);
 		return MD5.asHex(md5OS.hash());
 	}
 
 	/**
 	 * Rotate CW and resize the test image to 100x200
+	 * @param name source image name
 	 * @return MD5 sum of rotated and resized image
 	 * @throws IOException
 	 * @throws FilterException
 	 */
-	protected static String rotateAndResizeCW() throws IOException, FilterException {
-		PlanarImage image = null;
-		try (InputStream originalBinaryStream = ImageResourceTest.class.getResourceAsStream(IMAGE_NAME)) {
-			image = PlanarImage.wrapRenderedImage(ImageIO.read(originalBinaryStream));
-		}
+	protected static String rotateAndResizeCW(String name) throws IOException, FilterException {
+		PlanarImage image = ImageUtils.read(() -> ImageResourceTest.class.getResourceAsStream(name));
 		image = JAI.create("transpose", new ParameterBlock().addSource(image).add(TransposeDescriptor.ROTATE_90), null);
 
 		Properties resizeProperties = new Properties();
@@ -142,21 +154,19 @@ public class ImageResourceTest {
 		image = resizeFilter.filter(image);
 
 		MD5OutputStream md5OS = new MD5OutputStream(new NullOutputStream());
-		ImageIO.write(image.getAsBufferedImage(), "jpg", md5OS);
+		ImageUtils.write(image, FilenameUtils.getExtension(name), md5OS);
 		return MD5.asHex(md5OS.hash());
 	}
 
 	/**
 	 * Rotate CCW and resize test image to 200x400
+	 * @param name source image name
 	 * @return MD5 sum of rotated and resized image
 	 * @throws IOException
 	 * @throws FilterException
 	 */
-	protected static String rotateAndResizeCCW() throws IOException, FilterException {
-		PlanarImage image = null;
-		try (InputStream originalBinaryStream = ImageResourceTest.class.getResourceAsStream(IMAGE_NAME)) {
-			image = PlanarImage.wrapRenderedImage(ImageIO.read(originalBinaryStream));
-		}
+	protected static String rotateAndResizeCCW(String name) throws IOException, FilterException {
+		PlanarImage image = ImageUtils.read(() -> ImageResourceTest.class.getResourceAsStream(name));
 		image = JAI.create("transpose", new ParameterBlock().addSource(image).add(TransposeDescriptor.ROTATE_270), null);
 
 		Properties resizeProperties = new Properties();
@@ -169,15 +179,18 @@ public class ImageResourceTest {
 		image = resizeFilter.filter(image);
 
 		MD5OutputStream md5OS = new MD5OutputStream(new NullOutputStream());
-		ImageIO.write(image.getAsBufferedImage(), "jpg", md5OS);
+		ImageUtils.write(image, FilenameUtils.getExtension(name), md5OS);
 		return MD5.asHex(md5OS.hash());
 	}
+
+	@Parameter(0)
+	public String name;
 
 	@Before
 	public void setup() throws NodeException, IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(IMAGE_NAME), out);
-		testImage = (ImageFile) supply(() -> createImage(node.getFolder(), IMAGE_NAME, out.toByteArray()));
+		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(name), out);
+		testImage = (ImageFile) supply(() -> createImage(node.getFolder(), name, out.toByteArray()));
 	}
 
 	@After
@@ -205,7 +218,7 @@ public class ImageResourceTest {
 	public void testLoadImageTooBig() throws NodeException, IOException {
 		testContext.getContext().getNodeConfig().getDefaultPreferences().setProperty("images_maxdimensions", "100x100");
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(IMAGE_NAME), out);
+		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(name), out);
 		try {
 			supply(() -> createImage(node.getFolder(), "too_big_image.jpg", out.toByteArray()));
 			fail("Should not allow an uploaded image violating max dimensions configuration");
@@ -222,7 +235,7 @@ public class ImageResourceTest {
 	public void testLoadImageInvalidConfig() throws NodeException, IOException {
 		testContext.getContext().getNodeConfig().getDefaultPreferences().setProperty("images_maxdimensions", "bogus");
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(IMAGE_NAME), out);
+		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(name), out);
 		supply(() -> createImage(node.getFolder(), "image.jpg", out.toByteArray()));
 		testContext.getContext().getNodeConfig().getDefaultPreferences().setProperty("images_maxdimensions", FileFactory.DEFAULT_MAX_DIMENSIONS);	
 	}
@@ -254,7 +267,7 @@ public class ImageResourceTest {
 		request.setImage(image);
 		request.setHeight(100);
 		request.setWidth(200);
-		request.setTargetFormat("jpg");
+		request.setTargetFormat(FilenameUtils.getExtension(name));
 		request.setResizeMode("force");
 
 		FileUploadResponse saveResponse = supply(() -> getImageResource().resize(request));
@@ -281,7 +294,7 @@ public class ImageResourceTest {
 		request.setImage(image);
 		request.setHeight(100);
 		request.setWidth(200);
-		request.setTargetFormat("jpg");
+		request.setTargetFormat(FilenameUtils.getExtension(name));
 		request.setResizeMode("force");
 
 		FileUploadResponse saveResponse = supply(() -> getImageResource().resize(request));
@@ -305,7 +318,7 @@ public class ImageResourceTest {
 		request.setImage(image);
 		request.setHeight(100);
 		request.setWidth(200);
-		request.setTargetFormat("jpg");
+		request.setTargetFormat(FilenameUtils.getExtension(name));
 		request.setResizeMode("force");
 		request.setRotate(ImageRotate.cw);
 
@@ -319,7 +332,7 @@ public class ImageResourceTest {
 		assertEquals("A file should have the same id.", saveResponse.getFile().getId().intValue(), image.getId().intValue());
 
 		testImage = execute(ImageFile::reload, testImage);
-		assertThat(testImage.getMd5()).as("MD5 Sum of resized and rotated Image").isEqualTo(rotateAndResizeCWMd5);
+		assertThat(testImage.getMd5()).as("MD5 Sum of resized and rotated Image").isEqualTo(rotateAndResizeCWMd5.get(name));
 	}
 
 	@Test
@@ -331,7 +344,7 @@ public class ImageResourceTest {
 		request.setImage(image);
 		request.setHeight(200);
 		request.setWidth(400);
-		request.setTargetFormat("jpg");
+		request.setTargetFormat(FilenameUtils.getExtension(name));
 		request.setResizeMode("force");
 		request.setRotate(ImageRotate.ccw);
 
@@ -345,7 +358,7 @@ public class ImageResourceTest {
 		assertEquals("A file should have the same id.", saveResponse.getFile().getId().intValue(), image.getId().intValue());
 
 		testImage = execute(ImageFile::reload, testImage);
-		assertThat(testImage.getMd5()).as("MD5 Sum of resized and rotated Image").isEqualTo(rotateAndResizeCCWMd5);
+		assertThat(testImage.getMd5()).as("MD5 Sum of resized and rotated Image").isEqualTo(rotateAndResizeCCWMd5.get(name));
 	}
 
 	@Test
@@ -354,14 +367,14 @@ public class ImageResourceTest {
 		image.setId(testImage.getId());
 
 		ImageLoadResponse response = supply(() -> getImageResource().rotate(new ImageRotateRequest().setImage(image)
-				.setCopyFile(false).setRotate(ImageRotate.cw).setTargetFormat("jpg")));
+				.setCopyFile(false).setRotate(ImageRotate.cw).setTargetFormat(FilenameUtils.getExtension(name))));
 		assertResponseOK(response);
 		assertThat(response.getImage()).as("Image").isNotNull();
 		assertThat(response.getImage().getSizeX()).as("Image width").isEqualTo(211);
 		assertThat(response.getImage().getSizeY()).as("Image height").isEqualTo(311);
 		assertThat(response.getImage().getId()).as("Image ID").isEqualTo(image.getId());
 		ImageFile resized = supply(t -> t.getObject(ImageFile.class, response.getImage().getId()));
-		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCWMd5);
+		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCWMd5.get(name));
 	}
 
 	@Test
@@ -370,14 +383,14 @@ public class ImageResourceTest {
 		image.setId(testImage.getId());
 
 		ImageLoadResponse response = supply(() -> getImageResource().rotate(new ImageRotateRequest().setImage(image)
-				.setCopyFile(false).setRotate(ImageRotate.ccw).setTargetFormat("jpg")));
+				.setCopyFile(false).setRotate(ImageRotate.ccw).setTargetFormat(FilenameUtils.getExtension(name))));
 		assertResponseOK(response);
 		assertThat(response.getImage()).as("Image").isNotNull();
 		assertThat(response.getImage().getSizeX()).as("Image width").isEqualTo(211);
 		assertThat(response.getImage().getSizeY()).as("Image height").isEqualTo(311);
 		assertThat(response.getImage().getId()).as("Image ID").isEqualTo(image.getId());
 		ImageFile resized = supply(t -> t.getObject(ImageFile.class, response.getImage().getId()));
-		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCCWMd5);
+		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCCWMd5.get(name));
 	}
 
 	@Test
@@ -386,14 +399,14 @@ public class ImageResourceTest {
 		image.setId(testImage.getId());
 
 		ImageLoadResponse response = supply(() -> getImageResource().rotate(new ImageRotateRequest().setImage(image)
-				.setCopyFile(true).setRotate(ImageRotate.cw).setTargetFormat("jpg")));
+				.setCopyFile(true).setRotate(ImageRotate.cw).setTargetFormat(FilenameUtils.getExtension(name))));
 		assertResponseOK(response);
 		assertThat(response.getImage()).as("Image").isNotNull();
 		assertThat(response.getImage().getSizeX()).as("Image width").isEqualTo(211);
 		assertThat(response.getImage().getSizeY()).as("Image height").isEqualTo(311);
 		assertThat(response.getImage().getId()).as("Image ID").isNotEqualTo(image.getId());
 		ImageFile resized = supply(t -> t.getObject(ImageFile.class, response.getImage().getId()));
-		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCWMd5);
+		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCWMd5.get(name));
 	}
 
 	@Test
@@ -402,14 +415,14 @@ public class ImageResourceTest {
 		image.setId(testImage.getId());
 
 		ImageLoadResponse response = supply(() -> getImageResource().rotate(new ImageRotateRequest().setImage(image)
-				.setCopyFile(true).setRotate(ImageRotate.ccw).setTargetFormat("jpg")));
+				.setCopyFile(true).setRotate(ImageRotate.ccw).setTargetFormat(FilenameUtils.getExtension(name))));
 		assertResponseOK(response);
 		assertThat(response.getImage()).as("Image").isNotNull();
 		assertThat(response.getImage().getSizeX()).as("Image width").isEqualTo(211);
 		assertThat(response.getImage().getSizeY()).as("Image height").isEqualTo(311);
 		assertThat(response.getImage().getId()).as("Image ID").isNotEqualTo(image.getId());
 		ImageFile resized = supply(t -> t.getObject(ImageFile.class, response.getImage().getId()));
-		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCCWMd5);
+		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCCWMd5.get(name));
 	}
 
 	/**

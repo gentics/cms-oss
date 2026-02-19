@@ -1,11 +1,12 @@
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { NgModule } from '@angular/core';
+import { inject, NgModule, provideAppInitializer } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { TranslateModule } from '@ngx-translate/core';
-import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NgxPaginationModule } from 'ngx-pagination';
+import * as DE_TRANSLATIONS from '../assets/i18n/de.json';
+import * as EN_TRANSLATIONS from '../assets/i18n/en.json';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './components/app/app.component';
 import { DetailChipComponent } from './components/detail-chip/detail-chip.component';
@@ -72,10 +73,6 @@ import { CmsComponentsModule } from '@gentics/cms-components';
         FormsModule,
         CmsComponentsModule.forRoot(),
         TranslateModule.forRoot({
-            loader: provideTranslateHttpLoader({
-                prefix: './assets/i18n/',
-                suffix: '.json',
-            }),
             fallbackLang: 'en',
         }),
         AppRoutingModule,
@@ -88,6 +85,11 @@ import { CmsComponentsModule } from '@gentics/cms-components';
         ToolApiService,
         UserSettingsService,
         provideHttpClient(withInterceptorsFromDi()),
+        provideAppInitializer(() => {
+            const translations = inject(TranslateService);
+            translations.setTranslation('de', DE_TRANSLATIONS, true);
+            translations.setTranslation('en', EN_TRANSLATIONS, true);
+        })
     ],
 })
 export class AppModule { }

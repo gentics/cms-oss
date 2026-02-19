@@ -1530,3 +1530,12 @@ export interface LicenseInfoResponse extends Response {
 export interface LicenseUpdateResponse extends LicenseInfoResponse {}
 
 export type LicenseContentRepositoryInfoResponse = ListResponse<ContentRepositoryLicense>;
+
+// KEYCLOAK /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface KeycloakConfiguration {
+    'auth-server-url': string;
+    realm: string;
+    resource: string;
+    showSSOButton: boolean;
+}

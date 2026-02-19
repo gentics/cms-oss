@@ -107,7 +107,7 @@ export class EntityStateModule {
         const state = ctx.getState();
         const currentAppState = this.appState.now;
         const activeLanguage = currentAppState.folder.activeLanguage;
-        const currentUserId = currentAppState.auth.currentUserId;
+        const currentUserId = currentAppState.auth.user?.id;
 
         let privilegeKey: keyof FolderPrivileges;
 

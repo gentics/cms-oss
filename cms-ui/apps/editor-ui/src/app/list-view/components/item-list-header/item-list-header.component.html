@@ -68,7 +68,7 @@
 <div class="header-controls right-items">
     @if (!selectedItems.length) {
         <div class="type-actions">
-            @if (nodeLanguages?.length !== 1 && (itemType === 'page' || itemType === 'form')) {
+            @if (nodeLanguages?.length > 1 && (itemType === 'page' || itemType === 'form')) {
                 <language-context-selector
                     [availableLanguages]="nodeLanguages"
                     [activeLanguage]="folderLanguage"
@@ -107,17 +107,18 @@
                 }
             }
 
-            <gtx-dropdown-list align="right">
+            <gtx-dropdown-list
+                align="right"
+                data-action="open-list-context"
+                [attr.data-context-id]="itemType + '-list-options'"
+            >
                 <gtx-dropdown-trigger>
-                    <gtx-button
-                        icon
-                        type="secondary"
-                        data-action="open-list-context"
-                    >
+                    <gtx-button icon type="secondary" data-context-trigger>
                         <icon>more_vert</icon>
                     </gtx-button>
                 </gtx-dropdown-trigger>
-                <gtx-dropdown-content class="item-list-header-context">
+
+                <gtx-dropdown-content class="item-list-header-context" [attr.data-context-id]="itemType + '-list-options'">
                     @if (itemType === 'image') {
                         <gtx-dropdown-item
                             data-action="toggle-display-type"

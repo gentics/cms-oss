@@ -5,8 +5,8 @@ import {
     EntityImporter,
     FILE_ONE,
     findTableRowById,
-    FIXTURE_FILE_ONE,
-    FIXTURE_IMAGE_ONE,
+    FIXTURE_FILE_PDF1,
+    FIXTURE_IMAGE_JPEG1,
     FOLDER_A,
     IMAGE_ONE,
     IMPORT_ID,
@@ -52,8 +52,8 @@ test.describe('Mesh Browser', () => {
         await IMPORTER.cleanupTest();
         await IMPORTER.syncPackages(TestSize.MINIMAL);
         await IMPORTER.setupBinaryFiles({
-            [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_ONE,
-            [FILE_ONE[IMPORT_ID]]: FIXTURE_FILE_ONE,
+            [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_JPEG1,
+            [FILE_ONE[IMPORT_ID]]: FIXTURE_FILE_PDF1,
         });
         await IMPORTER.setupTest(TestSize.MINIMAL);
         testCr = IMPORTER.get(CONTENT_REPOSITORY_MESH);

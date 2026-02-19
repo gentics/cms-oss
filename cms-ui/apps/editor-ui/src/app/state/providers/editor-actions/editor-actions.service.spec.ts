@@ -64,7 +64,9 @@ describe('EditorActionsService', () => {
         beforeEach(() => {
             state.mockState({
                 auth: {
-                    currentUserId: 1,
+                    user: {
+                        id: 1,
+                    } as any,
                 },
                 editor: {
                     itemId: 42,

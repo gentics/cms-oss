@@ -1,18 +1,21 @@
 /* eslint-disable import-x/no-nodejs-modules */
 /// <reference lib="dom"/>
-import { Page as CmsPage } from '@gentics/cms-models';
+import { File as CMSFile, Image as CMSImage, Page as CmsPage, FileOrImage } from '@gentics/cms-models';
 import {
     clickButton,
     clickModalAction,
     dismissNotifications,
+    FixtureFile,
     ITEM_TYPE_PAGE,
+    matchRequest,
+    onResponse,
     openContext,
     reroute,
     selectDateInPicker,
-    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { basename } from 'node:path';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS, UploadOptions } from './common';
 
 export function findList(page: Page, type: string): Locator {
@@ -65,21 +68,46 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
     return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
-export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
-    const output: Record<string, any> = {};
+export async function uploadFiles(
+    page: Page,
+    type: 'file' | 'image',
+    files: FixtureFile[],
+    options?: UploadOptions,
+): Promise<Record<string, CMSFile | CMSImage>> {
+    const output: Record<string, CMSFile | CMSImage> = {};
+    const baseNames: Record<string, FixtureFile> = files.reduce((acc, fixture) => {
+        acc[basename(fixture.fixturePath)] = fixture;
+        return acc;
+    }, {});
 
     await test.step(`Uploading ${files.length} ${type[0].toUpperCase()}${type.substring(1)}${files.length !== 1 ? 's' : ''}`, async () => {
-        let uploadReq: Promise<Response>;
+        const uploadReq: Promise<Response[]> = new Promise((resolve) => {
+            const responses: Response[] = [];
+            let done = false;
+
+            onResponse(page, matchRequest('POST', /\/rest\/(file|image)\/create/), (_req, res) => {
+                if (done) {
+                    return;
+                }
+
+                responses.push(res);
+                done = responses.length === files.length;
+                if (done) {
+                    resolve(responses);
+                }
+            });
+        });
 
         if (options?.dragAndDrop) {
             // First we need to load the files, and read the buffer as base64, since we can't directly send
             // the file-contents to the window. Inefficient, but the only way I could find to transfer them correctly.
             const data = files.map((f) => {
-                const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
+                const buffer = readFileSync(f.fixturePath).toString('base64');
+
                 return {
                     bufferData: `data:application/octet-stream;base64,${buffer}`,
-                    name: f,
-                    type: type === 'image' ? 'image/jpeg' : 'text/plain',
+                    name: f.name ?? basename(f.fixturePath),
+                    type: f.type,
                 };
             });
 
@@ -95,7 +123,6 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
                 return transfer;
             }, data);
 
-            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
             await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         } else {
             // Filechooser is a lot simpler, as it can handle native files
@@ -105,24 +132,24 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
             await uploadButton.click();
             const fileChooser = await fileChooserPromise;
 
-            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
-            await fileChooser.setFiles(files.map((f) => `./fixtures/${f}`));
+            await fileChooser.setFiles(files.map((f) => f.fixturePath));
         }
 
         // Wait for upload to complete and return response
-        const response = await uploadReq;
-        const responseData = await response.json();
+        const responses = await uploadReq;
+        for (const fileRes of responses) {
+            const responseData = await fileRes.json();
+            const obj: FileOrImage = responseData.file || responseData.image;
 
-        files.forEach((file) => {
-            output[file] = responseData.file || responseData.image;
-        });
-
+            output[baseNames[obj.name].fixturePath] = responseData.file || responseData.image;
+        }
     });
+
     return output;
 }
 
-export async function openPropertiesTab(page: Page): Promise<void> {
-    await test.step('Open properties-tab', async () => {
+export async function openFilePropertiesTab(page: Page): Promise<void> {
+    await test.step('Open file properties-tab', async () => {
         await page.waitForSelector('content-frame .content-frame-container');
 
         // This is for images and files, which open in the "preview" tab initially
@@ -136,20 +163,31 @@ export async function openPropertiesTab(page: Page): Promise<void> {
     });
 }
 
+export async function ensureObjectPropertyGroupExpanded(group: Locator): Promise<void> {
+    const isExpanded = await group.evaluate((el) => el.classList.contains('expanded'));
+    if (!isExpanded) {
+        await group.locator('.collapsible-header').click();
+    }
+}
+
+export function getPropertiesTabs(page: Page): Locator {
+    return page.locator('content-frame combined-properties-editor .properties-tabs');
+}
+
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {
-    await openPropertiesTab(page);
+    await openFilePropertiesTab(page);
 
     await test.step('Open properties editor', async () => {
-        const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
-        const isExpanded = await group.evaluate((el) => el.classList.contains('expanded'));
-
-        if (!isExpanded) {
-            await group.locator('.collapsible-header').click();
-        }
+        const group = getPropertiesTabs(page).locator(`.tab-group[data-id="${categoryId}"]`);
+        await ensureObjectPropertyGroupExpanded(group);
 
         const tab = group.locator(`.tab-link[data-id="object.${name}"]`);
         await tab.click();
     });
+}
+
+export async function openTagList(page: Page): Promise<void> {
+    await getPropertiesTabs(page).locator('.tab-link[data-id="item-tag-list"]').click();
 }
 
 export async function closeObjectPropertyEditor(page: Page, force: boolean = true): Promise<void> {

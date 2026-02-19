@@ -54,7 +54,7 @@ export class FavouritesService implements OnDestroy {
         );
 
         this.userSubscription = appState
-            .select(state => state.auth.currentUserId)
+            .select(state => state.auth.user?.id)
             .subscribe(userId => this.userId = userId);
     }
 

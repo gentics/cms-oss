@@ -16,11 +16,12 @@ import {
     ResponseCode,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { Observable, throwError, timer } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { MockErrorHandler, createDelayedObservable } from '../../../../testing';
-import { ConstructorOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF, deepFreeze } from '../../../common';
+import { ConstructorOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../../../common';
 import { AddTypePermissionsMap, AppStateService } from '../../../state';
 import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
 import { ErrorHandler } from '../error-handler';

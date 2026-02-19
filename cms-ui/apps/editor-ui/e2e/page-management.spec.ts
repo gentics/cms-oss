@@ -1,11 +1,14 @@
 import {
     AccessControlledType,
-    GcmsPermission,
     Page as CMSPage,
     Response as CMSResponse,
+    GcmsPermission,
+    NodePageLanguageCode,
+    NodeUrlMode,
     ResponseCode,
 } from '@gentics/cms-models';
 import {
+    clickModalAction,
     clickNotificationAction,
     CONTENT_REPOSITORY_MESH,
     EntityImporter,
@@ -15,19 +18,26 @@ import {
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
+    IMPORT_TYPE_NODE,
     IMPORT_TYPE_USER,
     ImportPermissions,
     ITEM_TYPE_PAGE,
+    LANGUAGE_DE,
+    LANGUAGE_EN,
     loginWithForm,
     matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    NodeImportData,
+    onRequest,
+    openContext,
     PAGE_ONE,
+    pickSelectValue,
     SCHEDULE_PUBLISHER,
     TestSize,
     UserImportData,
-    waitForResponseFrom,
+    waitForResponseFrom
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, Page, Response, test } from '@playwright/test';
@@ -40,6 +50,7 @@ import {
     findList,
     itemAction,
     openObjectPropertyEditor,
+    openTagList,
     selectNode,
 } from './helpers';
 
@@ -67,6 +78,38 @@ test.describe('Page Management', () => {
         password: 'somethingsomething',
 
         group: TEST_GROUP_BASE,
+    };
+
+    const NODE_SINGLE_LANGUAGE: NodeImportData = {
+        [IMPORT_TYPE]: IMPORT_TYPE_NODE,
+        [IMPORT_ID]: 'singleLanguageNode',
+
+        node: {
+            name : 'Single Language',
+            publishDir : '',
+            binaryPublishDir : '',
+            pubDirSegment : true,
+            publishImageVariants : false,
+            host : 'singlelanguage.localhost',
+            publishFs : false,
+            publishFsPages : false,
+            publishFsFiles : false,
+            publishContentMap : true,
+            publishContentMapPages : true,
+            publishContentMapFiles : true,
+            publishContentMapFolders : true,
+            urlRenderWayPages: NodeUrlMode.AUTOMATIC,
+            urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
+            omitPageExtension : false,
+            pageLanguageCode : NodePageLanguageCode.FILENAME,
+            meshPreviewUrlProperty : '',
+        },
+        description: 'single language test',
+
+        languages : ['en'],
+        templates: [
+            '57a5.5db4acfa-3224-11ef-862c-0242ac110002',
+        ],
     };
 
     const NEW_PAGE_NAME = 'Hello World';
@@ -111,9 +154,14 @@ test.describe('Page Management', () => {
         } catch (err) {}
     });
 
-    async function setupWithPermissions(page: Page, permissions: ImportPermissions[]): Promise<void> {
+    async function setupWithPermissions(
+        page: Page,
+        permissions: ImportPermissions[],
+        node: NodeImportData = NODE_MINIMAL,
+    ): Promise<void> {
         await test.step('Test User Setup', async () => {
             const TEST_GROUP = cloneWithSymbols(TEST_GROUP_BASE);
+
             TEST_GROUP.permissions = permissions;
 
             await IMPORTER.importData([
@@ -125,7 +173,7 @@ test.describe('Page Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
+            await selectNode(page, IMPORTER.get(node)!.id);
         });
     }
 
@@ -162,6 +210,45 @@ test.describe('Page Management', () => {
 
         // The new page should now be displayed in the list
         await expect(findItem(list, pageId)).toBeVisible();
+    });
+
+    test('should have folder language pre-selected when creating a page', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19579',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.CREATE_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const header = list.locator('.header-controls');
+        const langSelector = list.locator('language-context-selector');
+
+        async function testLanguage(lang: string): Promise<void> {
+            await test.step(`Should pre-select language "${lang}" correctly`, async () => {
+                const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+                await dropdown.locator(`gtx-dropdown-item[data-id="${lang}"]`).click();
+                await header.locator('[data-action="create-new-item"]').click();
+                const modal = page.locator('create-page-modal');
+                await expect(modal.locator('gtx-page-properties [formControlName="language"] .view-value')).toHaveAttribute('data-value', lang);
+                await clickModalAction(modal, 'cancel');
+            });
+        }
+
+        await testLanguage(LANGUAGE_DE);
+        await testLanguage(LANGUAGE_EN);
     });
 
     test('should be possible to edit the page properties', async ({ page }) => {
@@ -555,5 +642,205 @@ test.describe('Page Management', () => {
     }, async ({ page }) => {
         await setupInstantPublishing();
         await testPageTakeOffline(page, false);
+    });
+
+    test('should be able to switch properties tabs without saving changes modal', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19560',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+        await itemAction(item, 'properties');
+        await openTagList(page);
+
+        await page.waitForTimeout(500);
+        await expect(page.locator('confirm-navigation-modal')).not.toBeAttached();
+    });
+
+    test('should suggest names for new pages correctly', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19560',
+        }]
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.CREATE_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        await list.locator('.header-controls [data-action="create-new-item"] button').click();
+
+        const modal = page.locator('create-page-modal');
+        const form = modal.locator('gtx-page-properties');
+        const fileName = form.locator('[formcontrolname="fileName"] input');
+        const pageName = form.locator('[formcontrolname="name"] input');
+        const lang = form.locator('[formcontrolname="language"]');
+
+        let didRequest = false;
+        let checkForRequests = false;
+        onRequest(page, matchRequest('POST', '/rest/page/suggest/filename'), () => {
+            if (checkForRequests) {
+                didRequest = true;
+            }
+        });
+
+        // Set the language first so we are sure about the requests being sent
+        await pickSelectValue(lang, LANGUAGE_DE);
+
+        // Simple name first
+        await test.step('Simple name', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await pageName.fill(NEW_PAGE_NAME);
+            await suggestReq;
+            await expect(fileName).toHaveValue('Hello-World.de.html');
+        });
+
+        // Update the name, file-name should update accordingly
+        await test.step('Extend the name', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await pageName.press('1');
+            await suggestReq;
+            await expect(fileName).toHaveValue('Hello-World1.de.html');
+        });
+
+        // Change the language, which should change the file-name as well
+        await test.step('Language change', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await pickSelectValue(lang, LANGUAGE_EN);
+            await suggestReq;
+            await expect(fileName).toHaveValue('Hello-World1.en.html');
+        });
+
+        // Update the file-name manually, to disable automatic suggestions
+        await fileName.fill('example');
+
+        // Changes to the page-name and language shouldn't trigger any suggestions now
+        await test.step('No update after manual change', async () => {
+            didRequest = false;
+            checkForRequests = true;
+
+            await pageName.fill('Something new');
+            await pickSelectValue(lang, LANGUAGE_DE);
+
+            await page.waitForTimeout(500);
+            expect(didRequest).toBe(false);
+            checkForRequests = false;
+        });
+
+        // Manual suggestion should set it
+        await test.step('Trigger manual syggestion', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await form.locator('[data-action="suggest-filename"]').click();
+            await suggestReq;
+            await expect(fileName).toHaveValue('Something-new.de.html');
+        });
+
+        await test.step('Changing page-name should not update', async () => {
+            didRequest = false;
+            checkForRequests = true;
+
+            await pageName.fill(NEW_PAGE_NAME);
+            await page.waitForTimeout(500);
+            expect(didRequest).toBe(false);
+            await expect(fileName).toHaveValue('Something-new.de.html');
+            checkForRequests = false;
+        });
+
+        await test.step('Clearing file-name creates suggestion', async () => {
+            const suggestReq = waitForResponseFrom(page, 'POST', '/rest/page/suggest/filename');
+            await fileName.fill('');
+            await fileName.blur();
+            await suggestReq;
+            await expect(fileName).toHaveValue('Hello-World.de.html');
+        });
+    });
+
+    test('should display correct publish status for page in a node with one language', async ({ page }) => {
+        const nodeData = cloneWithSymbols(NODE_SINGLE_LANGUAGE);
+        const cr = IMPORTER.get(CONTENT_REPOSITORY_MESH);
+        if (cr) {
+            nodeData.node.contentRepositoryId = cr.id;
+        }
+
+        await IMPORTER.importData([nodeData]);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(nodeData).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.CREATE_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                    { type: GcmsPermission.PUBLISH_PAGES, value: true },
+                ],
+            },
+        ], nodeData);
+
+        await setupInstantPublishing();
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        let createReq: Promise<Response>;
+        let listOptions = list.locator('[data-action="open-list-context"]');
+
+        await test.step('Change Status Icon Settings', async () => {
+            const dropdown = await openContext(listOptions);
+            await dropdown.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
+        });
+
+        await test.step('Create a new Page', async () => {
+            await list.locator('.header-controls [data-action="create-new-item"] button').click();
+            const modal = page.locator('create-page-modal');
+            const form = modal.locator('gtx-page-properties');
+            await form.locator('[formcontrolname="name"] input').fill(NEW_PAGE_NAME);
+            createReq = page.waitForResponse(matchRequest('POST', '/rest/page/create'));
+            await clickModalAction(modal, 'confirm');
+        });
+
+        const response = await createReq;
+        const responseBody = await response.json();
+        const pageId = responseBody.page.id;
+        const pageItem = findItem(list, pageId);
+
+        await expect(pageItem).toBeVisible();
+        await expect(pageItem.locator('.status-label i.material-icons')).toHaveText('cloud_off');
+
+        // Close the edit-mode, as creating a new page will always open it
+        await editorAction(page, 'close');
+
+        await test.step('Publish Page from context menu', async () => {
+            const publishReq = page.waitForResponse(matchRequest('POST', `/rest/page/publish/${pageId}`));
+            await itemAction(pageItem, 'publish');
+            await publishReq;
+        });
+
+        await expectItemPublished(pageItem);
+        await expect(pageItem.locator('.status-label i.material-icons')).toHaveText('cloud_upload');
     });
 });

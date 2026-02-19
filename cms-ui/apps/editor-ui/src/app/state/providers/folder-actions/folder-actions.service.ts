@@ -96,6 +96,7 @@ import {
     TranslationRequestOptions,
     TypedItemListResponse,
     folderItemTypePlurals, GcmsPermission, GcmsRolePrivilege, FolderResponse, PermissionResponse,
+    FileRequestOptions,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
@@ -363,7 +364,7 @@ export class FolderActionsService {
         const nodes = this.appState.now.folder.nodes.list
             .map((nodeId) => this.entityResolver.getNode(nodeId))
             .filter((node) => node != null);
-        const lastUsedNodeId = Number(this.localStore.getForUser(this.appState.now.auth.currentUserId, SETTING_LAST_NODE_ID));
+        const lastUsedNodeId = Number(this.localStore.getForUser(this.appState.now.auth.user?.id, SETTING_LAST_NODE_ID));
         if (Number.isInteger(lastUsedNodeId)) {
             const foundNode = nodes.find((node) => node.id === lastUsedNodeId);
             if (foundNode) {
@@ -776,8 +777,8 @@ export class FolderActionsService {
     /**
      * Get an individual file.
      */
-    getFile(fileId: number): Promise<CMSFile<Raw>> {
-        return this.getItem(fileId, 'file');
+    getFile(fileId: number, options?: FileRequestOptions): Promise<CMSFile<Raw>> {
+        return this.getItem(fileId, 'file', options);
     }
 
     /**
@@ -804,8 +805,8 @@ export class FolderActionsService {
     /**
      * Get an individual image.
      */
-    getImage(imageId: number): Promise<Image<Raw>> {
-        return this.getItem(imageId, 'image');
+    getImage(imageId: number, options?: ImageRequestOptions): Promise<Image<Raw>> {
+        return this.getItem(imageId, 'image', options);
     }
 
     /**
@@ -1216,7 +1217,7 @@ export class FolderActionsService {
     getItem(itemId: number, type: 'folder', options?: FolderRequestOptions, throwError?: boolean): Promise<Folder<Raw>>;
     getItem(itemId: number, type: 'page', options?: PageRequestOptions, throwError?: boolean): Promise<Page<Raw>>;
     getItem(itemId: number, type: 'image', options?: ImageRequestOptions, throwError?: boolean): Promise<Image<Raw>>;
-    getItem(itemId: number, type: 'file', options?: FolderRequestOptions, throwError?: boolean): Promise<CMSFile<Raw>>;
+    getItem(itemId: number, type: 'file', options?: FileRequestOptions, throwError?: boolean): Promise<CMSFile<Raw>>;
     getItem(itemId: number, type: 'form', options?: FormRequestOptions, throwError?: boolean): Promise<Form<Raw>>;
     getItem(itemId: number | string, type: 'template', options?: TemplateRequestOptions, throwError?: boolean): Promise<Template<Raw>>;
     getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>>;
@@ -1523,27 +1524,33 @@ export class FolderActionsService {
     /**
      * Rotate an image.
      */
-    async rotateImage(rotateParams: RotateParameters): Promise<void> {
-        await this.appState.dispatch(new StartListSavingAction('image')).toPromise();
-        try {
-            const res = await this.client.image.rotate(rotateParams).toPromise();
-            await this.appState.dispatch(new EditImageSuccessAction(res.image)).toPromise();
-            this.notification.show({
-                message: 'message.image_updated',
-                type: 'success',
-            });
-        } catch (error) {
-            await this.appState.dispatch(new ListSavingErrorAction('image', error.message)).toPromise();
-            this.errorHandler.catch(error, { notification: false });
-            this.notification.show({
-                message: 'message.image_update_error',
-                translationParams: {
-                    error: error.message,
-                },
-                type: 'alert',
-                delay: 10000,
-            });
-        }
+    rotateImage(rotateParams: RotateParameters): Observable<Image> {
+        return this.appState.dispatch(new StartListSavingAction('image')).pipe(
+            switchMap(() => this.client.image.rotate(rotateParams)),
+            tap((res) => this.appState.dispatch(new EditImageSuccessAction(res.image))),
+            map((res) => {
+                this.notification.show({
+                    message: 'message.image_updated',
+                    type: 'success',
+                });
+                return res.image;
+            }),
+            catchError((error) => {
+                this.errorHandler.catch(error, { notification: false });
+                this.notification.show({
+                    message: 'message.image_update_error',
+                    translationParams: {
+                        error: error.message,
+                    },
+                    type: 'alert',
+                    delay: 10000,
+                });
+
+                return this.appState.dispatch(new ListSavingErrorAction('image', error.message)).pipe(
+                    () => throwError(() => error)
+                );
+            }),
+        );
     }
 
     /**

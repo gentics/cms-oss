@@ -155,7 +155,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     editorNodeId: number;
     currentNode: Node;
     editorIsOpen = false;
-    isImageLoading = false;
     editMode: EditMode;
     // currently only used by form editor (not properties editing)
     itemValid = false;
@@ -268,7 +267,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         );
 
         const onLogin$ = this.appState.select((state) => state.auth).pipe(
-            distinctUntilChanged(isEqual, (state) => state.currentUserId),
+            distinctUntilChanged(isEqual, (state) => state.user?.id),
             filter((state) => state.isLoggedIn === true),
         );
 
@@ -488,7 +487,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         this.subscriptions.push(this.frameUrlSub.pipe(
             distinctUntilChanged(isEqual), // Ignore the URL if it's the same
             debounceTime(100), // Debounce it, as otherwise the iframe may load the wrong one (depends on browser)
-        ).subscribe(newUrl => {
+        ).subscribe((newUrl) => {
             this.iframeUrl = newUrl.toString();
 
             if (this.iframe?.nativeElement?.contentWindow?.location) {
@@ -887,7 +886,7 @@ span.diff-html-added {
             return false;
         }
 
-        const currentUserId = this.appState.now.auth.currentUserId;
+        const currentUserId = this.appState.now.auth.user?.id;
 
         return typeof item.lockedBy === 'number'
             ? item.lockedBy !== currentUserId
@@ -1538,7 +1537,12 @@ span.diff-html-added {
                 return;
             }
 
-            if (this.currentItem !== item && !isEqual(this.currentItem, item)) {
+            if (
+                this.currentItem.type !== 'image'
+                && this.currentItem.type !== 'file'
+                && this.currentItem !== item
+                && !isEqual(this.currentItem, item)
+            ) {
                 this.currentItem = {
                     ...this.currentItem,
                     ...structuredClone(item),

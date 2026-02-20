@@ -762,6 +762,7 @@ export class EntityImporter {
         };
 
         const created = (await this.client.form.create(body).send()).item;
+        await this.client.form.unlock(created.id).send();
         return created;
     }
 

@@ -162,9 +162,9 @@ export class NodePropertiesComponent
         loud = !!loud;
         const options = { emitEvent: loud, onlySelf: true };
 
-        setControlsEnabled(this.form, CR_CONTROLS, value?.contentRepositoryId > 0, options);
-        setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, value?.publishContentMap, options);
-        setControlsEnabled(this.form, FS_CONTROLS, value?.publishFs, options);
+        setControlsEnabled(this.form, CR_CONTROLS, !this.disabled && value?.contentRepositoryId > 0, options);
+        setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, !this.disabled && value?.publishContentMap, options);
+        setControlsEnabled(this.form, FS_CONTROLS, !this.disabled && value?.publishFs, options);
 
         let cr: ContentRepository | null = null;
         if (this.form.value.contentRepositoryId > 0) {
@@ -177,8 +177,8 @@ export class NodePropertiesComponent
             this.publishDirsLinked = true;
         }
 
-        setControlsEnabled(this.form, ['publishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
-        setControlsEnabled(this.form, ['binaryPublishDir'], cr == null || !isMeshCr || isProjectPerNode, options);
+        setControlsEnabled(this.form, ['publishDir'], !this.disabled && (cr == null || !isMeshCr || isProjectPerNode), options);
+        setControlsEnabled(this.form, ['binaryPublishDir'], !this.disabled && (cr == null || !isMeshCr || isProjectPerNode), options);
 
         // We have to use the current/up to date form-value here, as the controls might have been disabled before and therefore are always undefined.
         this.form.updateValueAndValidity();

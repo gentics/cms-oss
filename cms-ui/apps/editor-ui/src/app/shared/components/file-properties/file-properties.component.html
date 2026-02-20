@@ -17,7 +17,7 @@
     ></gtx-input>
 
     <gtx-checkbox
-        *ngIf="form.controls.forceOnline.enabled"
+        *ngIf="contentAutoOfflineEnabled"
         class="checkbox-input"
         [label]="'editor.forcePublish_label' | i18n"
         formControlName="forceOnline"

@@ -112,8 +112,8 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
             }, options);
         }
 
-        setControlsEnabled(this.form, ['url'], value?.linkType === RichContentLinkType.URL, options);
-        setControlsEnabled(this.form, ['nodeId', 'itemId'], value?.linkType !== RichContentLinkType.URL);
+        setControlsEnabled(this.form, ['url'], !this.disabled && value?.linkType === RichContentLinkType.URL, options);
+        setControlsEnabled(this.form, ['nodeId', 'itemId'], !this.disabled && value?.linkType !== RichContentLinkType.URL);
     }
 
     protected assembleValue(value: RichContentLink): RichContentLink {

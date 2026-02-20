@@ -73,6 +73,7 @@
         border-right: 2px solid $gtx-color-light-gray;
         border-bottom: 2px solid $gtx-color-light-gray;
         background: $gtx-color-very-light-gray;
+        color: $gtx-color-dark-gray;
         border-top-right-radius: 3px;
         border-bottom-right-radius: 3px;
         display: flex;
@@ -83,10 +84,16 @@
         margin-top: 20px;
         align-self: flex-start;
         font-size: 1rem;
+        cursor: pointer;
 
         icon {
             color: inherit;
             font-size: inherit;
+        }
+
+        &:hover,
+        &:focus {
+            color: $gtx-color-primary;
         }
     }
 

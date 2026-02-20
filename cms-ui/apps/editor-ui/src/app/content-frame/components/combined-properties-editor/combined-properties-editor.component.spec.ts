@@ -384,7 +384,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 expect(navService.detailOrModal).toHaveBeenCalledWith(
                     mockNode.id, 'page', mockPage.id, 'editProperties', { openTab: 'properties', propertiesTab: expectedObjProp.name, readOnly: false },
                 );
-                expect(permissionService.forItem).toHaveBeenCalledWith(mockPage.id, 'page', state.now.editor.nodeId);
+                expect(permissionService.forItemInLanguage).toHaveBeenCalledWith('page', mockPage.id, state.now.editor.nodeId, mockPage.language);
 
                 // Make sure that the appropriate components exist.
                 expect(fixture.debugElement.query(By.css(ITEM_PROPERTIES_EDITOR_SELECTOR))).toBeFalsy();
@@ -516,7 +516,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 const onTagChangeFn: TagChangedFn = tagEditorHost.editTagLive.calls.argsFor(0)[2];
                 expect(state.now.editor).toEqual(jasmine.objectContaining({
                     objectPropertiesModified: false,
-                    modifiedObjectPropertiesValid: true,
+                    modifiedObjectPropertiesValid: false,
                 }));
 
                 // Report a valid modification.
@@ -603,7 +603,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 expect(tagEditorHost.editTagLive.calls.argsFor(0)[0]).toEqual(editedObjProp);
                 expect(state.now.editor).toEqual(jasmine.objectContaining({
                     objectPropertiesModified: false,
-                    modifiedObjectPropertiesValid: true,
+                    modifiedObjectPropertiesValid: false,
                 }));
             }),
         );
@@ -628,7 +628,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 const onTagChangeFn: TagChangedFn = tagEditorHost.editTagLive.calls.argsFor(0)[2];
                 expect(state.now.editor).toEqual(jasmine.objectContaining({
                     objectPropertiesModified: false,
-                    modifiedObjectPropertiesValid: true,
+                    modifiedObjectPropertiesValid: false,
                 }));
 
                 // Report a valid modification.
@@ -717,7 +717,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 const onTagChangeFn: TagChangedFn = tagEditorHost.editTagLive.calls.argsFor(0)[2];
                 expect(state.now.editor).toEqual(jasmine.objectContaining({
                     objectPropertiesModified: false,
-                    modifiedObjectPropertiesValid: true,
+                    modifiedObjectPropertiesValid: false,
                 }));
 
                 // Report a valid modification.
@@ -792,7 +792,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 const onTagChangeFn: TagChangedFn = tagEditorHost.editTagLive.calls.argsFor(0)[2];
                 expect(state.now.editor).toEqual(jasmine.objectContaining({
                     objectPropertiesModified: false,
-                    modifiedObjectPropertiesValid: true,
+                    modifiedObjectPropertiesValid: false,
                 }));
 
                 // Report a valid modification.
@@ -1687,6 +1687,7 @@ class MockErrorHandler {
 
 class MockPermissionService {
     forItem = jasmine.createSpy('forItem').and.returnValue(observableOf({ edit: true }));
+    forItemInLanguage = jasmine.createSpy('forItemInLanguage').and.returnValue(observableOf({ edit: true }));
 }
 
 class MockCustomScriptHostService {

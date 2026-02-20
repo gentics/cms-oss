@@ -66,8 +66,8 @@ export class FilePropertiesComponent extends BasePropertiesComponent<EditableFil
 
     protected configureForm(value: EditableFileProps, loud?: boolean): void {
         const options = { emitEvent: loud };
-        setControlsEnabled(this.form, ['forceOnline'], this.contentAutoOfflineEnabled, options);
-        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], this.niceUrlsEnabled, options);
+        setControlsEnabled(this.form, ['forceOnline'], !this.disabled && this.contentAutoOfflineEnabled, options);
+        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], !this.disabled && this.niceUrlsEnabled, options);
     }
 
     protected assembleValue(value: EditableFileProps): EditableFileProps {

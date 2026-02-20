@@ -318,6 +318,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.cancelEditingDebounced(this.currentItem);
                     }
                     this.currentItem = item as any;
+                    this.currentItemClean = true;
                     this.onItemUpdate();
                     this.changeDetector.markForCheck();
 

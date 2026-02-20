@@ -5,10 +5,9 @@ import {
     EventEmitter,
     Input,
     OnChanges,
-    OnDestroy,
     OnInit,
     Output,
-    SimpleChange,
+    SimpleChange
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
@@ -29,8 +28,8 @@ import {
     setControlsEnabled,
 } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { combineLatest, Observable, of, Subject, Subscription } from 'rxjs';
-import { debounceTime, delay, delayWhen, distinctUntilChanged, filter, map, switchMap } from 'rxjs/operators';
+import { combineLatest, Observable, of, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, switchMap } from 'rxjs/operators';
 import { numberBetween } from '../../../common/utils/custom-validators';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -262,9 +261,9 @@ export class PagePropertiesComponent
 
     protected configureForm(value: EditablePageProps, loud?: boolean): void {
         const options = { onlySelf: false, emitEvent: loud };
-        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], this.niceUrlEnabled, options);
-        setControlsEnabled(this.form, ['language'], !this.disableLanguageSelect, options);
-        setControlsEnabled(this.form, ['templateId'], this.mode === PagePropertiesMode.CREATE || this.viewTemplatesAllowed);
+        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], !this.disabled && this.niceUrlEnabled, options);
+        setControlsEnabled(this.form, ['language'], !this.disabled && !this.disableLanguageSelect, options);
+        setControlsEnabled(this.form, ['templateId'], !this.disabled && (this.mode === PagePropertiesMode.CREATE || this.viewTemplatesAllowed));
     }
 
     protected assembleValue(value: EditablePageProps): EditablePageProps {

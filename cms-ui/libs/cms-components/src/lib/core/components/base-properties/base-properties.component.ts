@@ -309,9 +309,9 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
          */
 
         // No change has to be applied
-        if ((this.form.enabled && !this.disabled) || (this.form.disabled && this.disabled)) {
-            return;
-        }
+        // if ((this.form.enabled && !this.disabled) || (this.form.disabled && this.disabled)) {
+        //     return;
+        // }
 
         if (this.disabled) {
             this.form.disable({ emitEvent: false });

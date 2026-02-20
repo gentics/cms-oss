@@ -117,8 +117,7 @@ export class FormPropertiesComponent
         super.ngOnInit();
 
         this.subscriptions.push(this.appState.select(state => state.folder.activeFormLanguage).pipe(
-            mergeMap(activeLanguageId => this.appState.select(state => state.entities.language[activeLanguageId])),
-            map(activeLanguage => activeLanguage && activeLanguage.code),
+            map(activeLanguageId => this.appState.now.entities.language[activeLanguageId]?.code),
         ).subscribe(activeLanguageCode => {
             /**
              * We need to set the language manually in the form editor service.
@@ -143,7 +142,8 @@ export class FormPropertiesComponent
         super.ngOnChanges(changes);
 
         if (changes.disableLanguageSelect && this.form) {
-            setControlsEnabled(this.form, ['languages'], !this.disableLanguageSelect);
+            this.configureForm(this.form.value);
+            this.form.updateValueAndValidity();
         }
     }
 
@@ -233,17 +233,14 @@ export class FormPropertiesComponent
             description: new FormControl(this.safeValue('description') || ''),
             successPageId: new FormControl(this.safeValue('successPageId') || 0),
             successNodeId: new FormControl(this.safeValue('successNodeId') || 0),
-            languages: new FormControl({
-                value: this.safeValue('languages') || null,
-                disabled: this.disableLanguageSelect,
-            }),
+            languages: new FormControl(this.safeValue('languages') || null),
 
             data: this.dataGroup,
         });
     }
 
     protected configureForm(value: EditableFormProps, loud?: boolean): void {
-
+        setControlsEnabled(this.form, ['languages'], !this.disabled && !this.disableLanguageSelect);
     }
 
     protected assembleValue(value: EditableFormProps): EditableFormProps {

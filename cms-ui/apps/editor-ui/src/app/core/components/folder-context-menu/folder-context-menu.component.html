@@ -1,65 +1,65 @@
-<gtx-dropdown-list align="right">
+<gtx-dropdown-list align="right" data-context-id="folder-options">
     <gtx-dropdown-trigger>
-        <gtx-button icon type="secondary">
+        <gtx-button data-context-trigger icon type="secondary">
             <icon>more_vert</icon>
         </gtx-button>
     </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content>
+    <gtx-dropdown-content data-context-id="folder-options">
         <ng-container *ngIf="uiMode === UIMode.EDIT">
-            <gtx-dropdown-item (click)="nodePropertiesClicked()" *ngIf="buttons.nodeProperties" class="node-properties">
+            <gtx-dropdown-item (click)="nodePropertiesClicked()" *ngIf="buttons.nodeProperties" class="node-properties" data-action="node-properties">
                 <icon left>settings_applications</icon>
                 {{ 'editor.node_properties_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="propertiesClicked()" *ngIf="buttons.properties">
+            <gtx-dropdown-item (click)="propertiesClicked()" *ngIf="buttons.properties" data-action="properties">
                 <icon left>settings</icon>
                 {{ 'editor.folder_properties_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="localizeClicked(item)" *ngIf="buttons.localize">
+            <gtx-dropdown-item (click)="localizeClicked(item)" *ngIf="buttons.localize" data-action="localize">
                 <icon left>insert_drive_file</icon>
                 {{ 'editor.localize_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="inheritanceClicked()" *ngIf="buttons.inheritanceSettings && !isBaseFolder">
+            <gtx-dropdown-item (click)="inheritanceClicked()" *ngIf="buttons.inheritanceSettings && !isBaseFolder" data-action="inheritance-settings">
                 <icon left>input</icon>
                 {{ 'editor.inheritance_settings_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="synchronizeClicked()" *ngIf="buttons.synchronizeChannel && !isBaseFolder">
+            <gtx-dropdown-item (click)="synchronizeClicked()" *ngIf="buttons.synchronizeChannel && !isBaseFolder" data-action="synchronize-channel">
                 <icon left>file_upload</icon>
                 {{ 'editor.synchronize_channel_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="copyClicked()" *ngIf="buttons.copy && !isBaseFolder">
+            <gtx-dropdown-item (click)="copyClicked()" *ngIf="buttons.copy && !isBaseFolder" data-action="copy">
                 <icon left>file_copy</icon>
                 {{ 'editor.copy_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="moveClicked()" *ngIf="buttons.move && !isBaseFolder">
+            <gtx-dropdown-item (click)="moveClicked()" *ngIf="buttons.move && !isBaseFolder" data-action="move">
                 <icon left>subdirectory_arrow_right</icon>
                 {{ 'editor.move_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="linkToTemplatesClicked()" *ngIf="buttons.linkTemplates">
+            <gtx-dropdown-item (click)="linkToTemplatesClicked()" *ngIf="buttons.linkTemplates" data-action="link-templates">
                 <icon left>link</icon>
                 {{ 'editor.link_templates_to_folder_button' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="deleteClicked()" *ngIf="buttons.delete && !isBaseFolder" class="alert">
+            <gtx-dropdown-item (click)="deleteClicked()" *ngIf="buttons.delete && !isBaseFolder" class="alert" data-action="delete">
                 <icon left>delete</icon>
                 {{ 'editor.delete_label' | i18n }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item (click)="deleteClicked()" *ngIf="buttons.unlocalize && !isBaseFolder" class="alert">
+            <gtx-dropdown-item (click)="deleteClicked()" *ngIf="buttons.unlocalize && !isBaseFolder" class="alert" data-action="restore">
                 <icon left>restore_page</icon>
                 {{ 'editor.delete_localized_label' | i18n }}
             </gtx-dropdown-item>
         </ng-container>
 
         <ng-container *ngIf="uiMode === UIMode.STAGING">
-            <gtx-dropdown-item *ngIf="buttons.staging" (click)="stagingClicked(false)">
+            <gtx-dropdown-item *ngIf="buttons.staging" (click)="stagingClicked(false)" data-action="stage">
                 <icon left>{{ (stagingMap?.[folder.globalId]?.included ? 'remove' : 'inventory') }}</icon>
                 {{ 'editor.' + (stagingMap?.[folder.globalId]?.included ? 'un' : '')  + 'stage_item_label' | i18n:{
                     itemType: ('common.type_folder' | i18n),
@@ -67,7 +67,7 @@
                 } }}
             </gtx-dropdown-item>
 
-            <gtx-dropdown-item *ngIf="buttons.staging && !stagingMap?.[folder.globalId]?.included" (click)="stagingClicked(true)">
+            <gtx-dropdown-item *ngIf="buttons.staging && !stagingMap?.[folder.globalId]?.included" (click)="stagingClicked(true)" data-action="stage-recursive">
                 <icon left>input</icon>
                 {{ 'editor.stage_item_recursive_label' | i18n:{
                     itemType: 'common.type_folder' | i18n,

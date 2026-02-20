@@ -20,6 +20,7 @@
             [label]="('editor.node_hostname_type_label' | i18n) + ' *'"
             [value]="hostnameType"
             [clearable]="false"
+            [disabled]="disabled"
             (valueChange)="updateHostnameType($event)"
         >
             <gtx-option

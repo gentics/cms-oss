@@ -316,12 +316,16 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         ]).pipe(
             debounceTime(100),
             switchMap(([item, nodeId]) => {
-                const itemType = item.type === 'node' || item.type === 'channel'
-                    ? 'folder'
-                    : item.type;
-                return (item as any).language
-                    ? this.permissionService.forItemInLanguage(itemType, item.id, nodeId, (item as any).language)
-                    : this.permissionService.forItem(item.id, itemType, nodeId);
+                let itemId = item.id;
+                let itemType = item.type;
+
+                if (itemType === 'node' || itemType === 'channel') {
+                    itemId = (item as Node).folderId;
+                    itemType = 'folder';
+                }
+                return typeof (item as any).language === 'string'
+                    ? this.permissionService.forItemInLanguage(itemType, itemId, nodeId, (item as any).language)
+                    : this.permissionService.forItem(itemId, itemType, nodeId);
             })
         ).subscribe((perms) => {
             this.itemPermissions = perms;

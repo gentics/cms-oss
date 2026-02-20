@@ -91,8 +91,9 @@ export class PropertiesEditorComponent
     override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
-        if (changes.permissions) {
+        if (changes.permissions && this.control) {
             setEnabled(this.control, this.permissions.edit);
+            this.control.updateValueAndValidity();
         }
 
         if (changes.itemClean && !changes.itemClean.firstChange && this.itemClean && this.control) {

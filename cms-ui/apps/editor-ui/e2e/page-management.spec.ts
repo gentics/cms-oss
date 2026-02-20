@@ -275,7 +275,7 @@ test.describe('Page Management', () => {
         await expect(item.locator('.item-name .item-name-only')).toHaveText(CHANGE_PAGE_NAME);
     });
 
-    test('should not be possible to edit the file properties without permissions', {
+    test('should not be possible to edit the page properties without permissions', {
             annotation: [{
                 type: 'ticket',
                 description: 'SUP-19638',

@@ -310,6 +310,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
         this.subscriptions.push(combineLatest([
             this.item$.pipe(
+                filter((item) => item != null),
                 distinctUntilChanged(isEqual, (item) => ({ id: item.id, type: item.type, lang: (item as any).language })),
             ),
             currNodeId$,

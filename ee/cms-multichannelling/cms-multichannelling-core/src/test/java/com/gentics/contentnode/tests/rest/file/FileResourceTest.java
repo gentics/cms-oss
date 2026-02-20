@@ -3,15 +3,15 @@ package com.gentics.contentnode.tests.rest.file;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.ws.rs.client.Entity;
-
 import org.apache.commons.lang3.tuple.Pair;
+import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.junit.Assert;
@@ -34,8 +34,12 @@ import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.FileCopyRequest;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
+import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.page.TargetFolder;
+import com.gentics.contentnode.rest.model.response.FileLoadResponse;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
@@ -43,6 +47,8 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
+
+import jakarta.ws.rs.client.Entity;
 
 @GCNFeature(set = { Feature.NICE_URLS, Feature.MULTICHANNELLING })
 public class FileResourceTest {
@@ -53,6 +59,8 @@ public class FileResourceTest {
 	private static RESTAppContext restContext = new RESTAppContext(RESTAppContext.Type.jetty);
 	@ClassRule
 	public static RESTAppContext binarySourceContext = new RESTAppContext(new ResourceConfig().registerResources(Resource.builder(BinaryDataResource.class).build()));
+	@ClassRule
+	public static RESTAppContext binaryAltSourceContext = new RESTAppContext(new ResourceConfig().registerResources(Resource.builder(BinaryAltDataResource.class).build()));
 
 	@ClassRule
 	public static RuleChain chain = RuleChain.outerRule(testContext).around(restContext);
@@ -273,6 +281,55 @@ public class FileResourceTest {
 	}
 
 	@Test
+	public void testKeepNiceAlternateUrlsPropsAfterFileReplace() throws NodeException {
+		String objPropName = "copyright";
+		String objPropValue = "Copyright";
+
+		FileUploadResponse response = createWithProperties(objPropName, objPropValue);
+
+		com.gentics.contentnode.rest.model.File file = new com.gentics.contentnode.rest.model.File();
+		file.setUrl(binaryAltSourceContext.getBaseUri() + "binaryalt");
+		file.setName("binaryalt.txt");
+		FileSaveRequest fileSaveRequest = new FileSaveRequest();
+		fileSaveRequest.setFile(file);
+
+		GenericResponse saveResponse = Trx.supply(systemUser, () -> getFileResource().save(response.getFile().getId(), fileSaveRequest));
+		assertThat(saveResponse.getResponseInfo().getResponseCode()).as("File replace response status").isEqualTo(ResponseCode.OK);
+
+		FileLoadResponse loadedFile = Trx.supply(systemUser, () -> getFileResource().load(response.getFile().getId().toString(), false, true, null, null));
+		assertThat(loadedFile.getResponseInfo().getResponseCode()).as("File load response status").isEqualTo(ResponseCode.OK);
+
+		assertThat(loadedFile.getFile().getName()).as("Filename after save request").isEqualTo("binaryalt.txt");
+		assertThat(loadedFile.getFile().getNiceUrl()).as("Nice URL after save request").isEqualTo(response.getFile().getNiceUrl());
+		assertThat(loadedFile.getFile().getAlternateUrls()).as("Alternate URLs after save request").containsExactlyElementsOf(response.getFile().getAlternateUrls());
+		assertThat(loadedFile.getFile().getTags().entrySet()).as("Tags after save request")
+			.usingElementComparator((a,b) -> a.getKey().compareTo(b.getKey()) + a.getValue().getProperties().get("text").getStringValue().compareTo(b.getValue().getProperties().get("text").getStringValue()))
+			.containsExactlyElementsOf(response.getFile().getTags().entrySet());
+
+		saveResponse = Trx.supply(systemUser, () -> {
+			try {
+				MultiPart multipart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("whatever.txt", folder.getId(), node.getId(), "whatever_new_file", true, "random_new_text_content_1234");
+				return getFileResource().save(response.getFile().getId(), multipart);
+			} catch (ParseException e) {
+				throw new NodeException(e);
+			}
+		});
+		assertThat(saveResponse.getResponseInfo().getResponseCode()).as("File replace response status").isEqualTo(ResponseCode.OK);
+
+		loadedFile = Trx.supply(systemUser, () -> getFileResource().load(response.getFile().getId().toString(), false, true, null, null));
+		assertThat(loadedFile.getResponseInfo().getResponseCode()).as("File load response status").isEqualTo(ResponseCode.OK);
+
+		assertThat(loadedFile.getFile().getName()).as("Filename after multipart request").isEqualTo("whatever.txt");
+		assertThat(loadedFile.getFile().getNiceUrl()).as("Nice URL after multipart request").isEqualTo(response.getFile().getNiceUrl());
+		assertThat(loadedFile.getFile().getAlternateUrls()).as("Alternate URLs after multipart request").containsExactlyElementsOf(response.getFile().getAlternateUrls());
+		assertThat(loadedFile.getFile().getTags().entrySet()).as("Tags after multipart request")
+			.usingElementComparator((a,b) -> a.getKey().compareTo(b.getKey()) + a.getValue().getProperties().get("text").getStringValue().compareTo(b.getValue().getProperties().get("text").getStringValue()))
+			.containsExactlyElementsOf(response.getFile().getTags().entrySet());
+
+		Trx.operate(t -> t.getObject(File.class, file.getId(), true).delete(true));
+	}
+
+	@Test
 	public void testCopyWithPropertiesTargetFolder() throws NodeException {
 		String objPropName = "copyright";
 		String objPropValue = "Copyright";
@@ -335,14 +392,14 @@ public class FileResourceTest {
 	 * @param properties The properties to set (needs existing object properties with the corresponding keynames).
 	 * @return The response for the created file.
 	 */
-	private FileUploadResponse createFromUrl(String filename, String niceUrl, Set<String> alternateUrls, Pair<String, String>...properties) throws NodeException {
+	private FileUploadResponse createFromUrl(String filename, String sourceUrl, String niceUrl, Set<String> alternateUrls, Pair<String, String>...properties) throws NodeException {
 		FileCreateRequest request = new FileCreateRequest();
 
 		request.setFolderId(folder.getId());
 		request.setName(filename);
 		request.setNodeId(node.getId());
 		request.setOverwriteExisting(false);
-		request.setSourceURL(binarySourceContext.getBaseUri() + "binary");
+		request.setSourceURL(sourceUrl);
 		request.setNiceURL(niceUrl);
 		request.setAlternateURLs(alternateUrls);
 
@@ -367,7 +424,7 @@ public class FileResourceTest {
 				throw new RuntimeException(e);
 			}
 		});
-		FileUploadResponse response = Trx.supply(systemUser, () -> createFromUrl("testfile.txt", niceUrl, alternateUrls, Pair.of(objPropName, objPropValue)));
+		FileUploadResponse response = Trx.supply(systemUser, () -> createFromUrl("testfile.txt", binarySourceContext.getBaseUri() + "binary", niceUrl, alternateUrls, Pair.of(objPropName, objPropValue)));
 
 		ContentNodeRESTUtils.assertResponseOK(response);
 

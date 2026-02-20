@@ -2277,7 +2277,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			Transaction t = getTransaction();
 
 			// check for sufficient provided data
-			if ((GlobalId.isGlobalId(id) || ObjectTransformer.getInt(id, -1) <= 0) || request == null || request.getFolder() == null) {
+			if (!MiscUtils.isGlobalOrLocalId(id) || request == null || request.getFolder() == null) {
 				I18nString message = new CNI18nString("rest.general.insufficientdata");
 
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
@@ -2897,7 +2897,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 		try {
 			// check for sufficient provided data
-			if ((GlobalId.isGlobalId(id) || ObjectTransformer.getInt(id, -1) <= 0) || request == null || request.getPageId() <= 0) {
+			if (!MiscUtils.isGlobalOrLocalId(id) || request == null || request.getPageId() <= 0) {
 				I18nString message = new CNI18nString("rest.general.insufficientdata");
 
 				return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
@@ -3329,9 +3329,11 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			folder.setPublishDirI18n(I18nMap.TRANSFORM2NODE.apply(pubDirI18n));
 		}
 		if (checkDuplicatePubDir) {
-			Pair<String, NodeObject> conflictingObject = FolderFactory.isPubDirAvailable(folder);
+			Pair<String, NodeObject> conflictingObject = FolderFactory.isPubDirAvailable(folder, true);
 			if (conflictingObject != null) {
-				CNI18nString message = new CNI18nString("error.pubdir.exists");
+				conflictingObject.getRight().getTType();
+
+				CNI18nString message = new CNI18nString("error.pubdir.exists.%s".formatted(MiscUtils.getTypeDescriptor(conflictingObject.getRight())));
 				message.addParameter(conflictingObject.getLeft());
 				message.addParameter(I18NHelper.getPath(conflictingObject.getRight()));
 				return new Message(Message.Type.CRITICAL, message.toString());

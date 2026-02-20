@@ -9,7 +9,6 @@ import static com.gentics.api.lib.etc.ObjectTransformer.getInteger;
 import static com.gentics.contentnode.i18n.I18NHelper.getLocation;
 import static java.util.Objects.requireNonNull;
 
-import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -69,6 +68,7 @@ import com.gentics.contentnode.factory.PublishData;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
@@ -123,7 +123,6 @@ import com.gentics.contentnode.resolving.StackResolver;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.db.SimpleResultProcessor;
 import com.gentics.lib.db.SimpleResultRow;
@@ -237,6 +236,13 @@ public class PageFactory extends AbstractFactory {
 	 */
 	protected final static ServiceLoaderUtil<PageService> pageFactoryServiceLoader = ServiceLoaderUtil
 			.load(PageService.class);
+
+	/**
+	 * Function that gets the filename of the page
+	 */
+	final static Function<Page, Set<String>> NAME_FUNCTION = page -> {
+		return Collections.singleton(page.getFilename());
+	};
 
 	/**
 	 * Implementation class of a page, contains internal data and implements getters for them
@@ -5147,80 +5153,18 @@ public class PageFactory extends AbstractFactory {
 	 * @throws NodeException
 	 */
 	private static void makePageFilenameUnique(Page page) throws NodeException {
-		boolean foundUniqueFilename = false;
-		Pattern fileNamePattern = Pattern.compile("([^.]*?)(0*)((?:[1-9][0-9]*)?)(?:\\.(.+))?");
-
 		try {
 			Folder pageFolder;
 			try (NoMcTrx nmt = new NoMcTrx()) {
 				pageFolder = page.getFolder();
 			}
-			Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(pageFolder, new ChannelTreeSegment(page, false));
+			ChannelTreeSegment segment = new ChannelTreeSegment(page, false);
+			Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(pageFolder, segment);
+			Set<String> obstructors = DisinheritUtils.getUsedFilenames(page,
+					UniquifyHelper.FILENAME_SEARCH_PATTERN.apply(page.getFilename()), pcf, segment).keySet();
 
-			Matcher fileNameMatcher = fileNamePattern.matcher(page.getFilename());
-			if (!fileNameMatcher.matches()) {
-				throw new NodeException("Error while making proposed filename {" + page.getFilename() + "} for {" + page
-						+ "} unique. Filename does not match the expected pattern.");
-			}
-			String baseFileName = fileNameMatcher.group(1);
-			String leadingZeros = fileNameMatcher.group(2);
-			int counterLength = fileNameMatcher.group(3).length();
-			String extension = fileNameMatcher.group(4);
+			page.setFilename(UniquifyHelper.makeFilenameUnique(page.getFilename(), obstructors));
 
-			String searchFilenamePattern = CNStringUtils.escapeRegex(baseFileName) + "([0-9]*)";
-			if (!StringUtils.isEmpty(extension)) {
-				searchFilenamePattern += "\\." + CNStringUtils.escapeRegex(extension);
-			}
-
-			Set<String> filenameCollisions = DisinheritUtils.getUsedFilenames(page, searchFilenamePattern, pcf, null);
-
-			// Update the filename multiple times and repeat the filename collision checks
-			while (!foundUniqueFilename) {
-
-				// int collisionCount = checkFilenameCollisions(page, fileName);
-				if (filenameCollisions.contains(page.getFilename().toLowerCase())) {
-					// we found a page with conflicting filename
-					fileNameMatcher = fileNamePattern.matcher(page.getFilename());
-
-					if (fileNameMatcher.matches()) {
-						baseFileName = fileNameMatcher.group(1);
-						leadingZeros = fileNameMatcher.group(2);
-						counterLength = fileNameMatcher.group(3).length();
-						BigInteger counter = counterLength > 0 ? new BigInteger(fileNameMatcher.group(3)) : BigInteger.ZERO;
-
-						extension = fileNameMatcher.group(4);
-
-						String newCounter = String.valueOf(counter.add(BigInteger.ONE));
-
-						// We remove a leading zero if we get a new digit
-						if (newCounter.length() > counterLength && leadingZeros.length() > 0) {
-							leadingZeros = leadingZeros.substring(1);
-						}
-
-						// If the filename is too long, we first try to remove
-						// digits from the basename and if that doesn't help
-						// from the extension
-						while (baseFileName.length() + leadingZeros.length() + newCounter.length() + (extension == null ? 0 : 1 + extension.length()) > 64) {
-							if (baseFileName.length() > 0) {
-								baseFileName = baseFileName.substring(0, baseFileName.length() - 1);
-								continue;
-							}
-							if (extension != null && extension.length() > 1) {
-								extension = extension.substring(0, extension.length() - 1);
-								continue;
-							}
-							throw new NodeException("Error while making proposed filename {" + page.getFilename() + "} for {" + page + "} unique. Cannot shorten filename.");
-						}
-
-						page.setFilename(baseFileName + leadingZeros + newCounter + (extension == null ? "" : "." + extension));
-					} else {
-						throw new NodeException("Error while making proposed filename {" + page.getFilename() + "} for {" + page + "} unique. Filename does not match the expected pattern.");
-					}
-				} else {
-					// we found no conflicting page
-					foundUniqueFilename = true;
-				}
-			}
 		} catch (NodeException e) {
 			throw new NodeException("Error while fixing filename for {" + page + "}", e);
 		}
@@ -6514,13 +6458,14 @@ public class PageFactory extends AbstractFactory {
 	 * @return the other object using the filename or null if the filename is available
 	 * @throws NodeException
 	 */
-	public static NodeObject isFilenameAvailable(Page page) throws NodeException {
+	public static NodeObject getFilenameObstructor(Page page) throws NodeException {
 		if (page == null) {
 			throw new NodeException("Cannot check filename availability without page");
 		}
 		ChannelTreeSegment objectSegment = new ChannelTreeSegment(page, false);
 		Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(page.getFolder(), objectSegment);
-		return DisinheritUtils.getObjectUsingFilename(page, pcf, null);
+
+		return DisinheritUtils.getFilenameObstructor(page, pcf, () -> page.getFilename());
 	}
 
 	/**

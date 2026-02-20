@@ -15,15 +15,15 @@ import { EditableProperties } from '@editor-ui/app/common/models';
 import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import {
     InheritableItem,
+    ItemPermissions,
     Language,
     Node,
     Template,
 } from '@gentics/cms-models';
-import { BaseFormElementComponent, generateFormProvider, setEnabled } from '@gentics/ui-core';
+import { BaseFormElementComponent, ChangesOf, generateFormProvider, setEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, combineLatest } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, skip, switchMap, tap } from 'rxjs/operators';
-import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { combineLatest } from 'rxjs';
+import { distinctUntilChanged, skip } from 'rxjs/operators';
 import { NodePropertiesMode } from '../node-properties/node-properties.component';
 
 @Component({
@@ -44,6 +44,9 @@ export class PropertiesEditorComponent
     public item: InheritableItem | Node;
 
     @Input({ required: true })
+    public permissions: ItemPermissions;
+
+    @Input({ required: true })
     public nodeId: number;
 
     @Input({ required: true })
@@ -58,21 +61,17 @@ export class PropertiesEditorComponent
     @Output()
     public itemCleanChange = new EventEmitter<boolean>();
 
-    /** Behaviour to call whenever a new permission check needs to occur */
-    private permissionCheck = new BehaviorSubject<void>(undefined);
-
     public control: FormControl<EditableProperties>;
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private permissions: PermissionService,
         private appState: ApplicationStateService,
     ) {
         super(changeDetector);
     }
 
     ngOnInit(): void {
-        this.control = new FormControl({ value: this.value, disabled: true }, Validators.required);
+        this.control = new FormControl({ value: this.value, disabled: !this.permissions?.edit }, Validators.required);
 
         this.subscriptions.push(this.control.valueChanges.pipe(
             distinctUntilChanged(isEqual),
@@ -87,47 +86,13 @@ export class PropertiesEditorComponent
         ]).subscribe(() => {
             this.appState.dispatch(new MarkObjectPropertiesAsModifiedAction(this.control.dirty, this.control.valid));
         }));
-
-        this.subscriptions.push(this.permissionCheck.pipe(
-            // Set the control disabled until we know the permissions
-            tap(() => {
-                setEnabled(this.control, false);
-                this.changeDetector.markForCheck();
-            }),
-            // Just in case it's getting spammed
-            debounceTime(50),
-            switchMap(() => {
-                if (this.item.type === 'folder') {
-                    return this.permissions.forFolder(this.item.id, this.nodeId).pipe(
-                        map(permission => {
-                            return permission.folder.edit;
-                        }),
-                    );
-                } else if (this.item.type === 'node' || this.item.type === 'channel') {
-                    return this.permissions.forFolder(this.item.folderId, this.item.id).pipe(
-                        map(permission => {
-                            return permission.folder.edit;
-                        }),
-                    );
-                }
-
-                return this.permissions.forItem(this.item, this.nodeId).pipe(
-                    map(permission => {
-                        return permission.edit;
-                    }),
-                );
-            }),
-        ).subscribe(enabled => {
-            setEnabled(this.control, enabled, { onlySelf: true });
-            this.changeDetector.markForCheck();
-        }));
     }
 
-    override ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {
+    override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
-        if (changes.item || changes.nodeId) {
-            this.permissionCheck.next();
+        if (changes.permissions) {
+            setEnabled(this.control, this.permissions.edit);
         }
 
         if (changes.itemClean && !changes.itemClean.firstChange && this.itemClean && this.control) {

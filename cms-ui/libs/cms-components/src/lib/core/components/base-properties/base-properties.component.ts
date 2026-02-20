@@ -134,7 +134,8 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      */
     protected initializeForm(): void {
         this.form = this.createForm();
-        this.configureForm(this.form.value as T);
+        // Update the internal disabled state, apply it to the form, and triggers a configuration
+        this.onDisabledChange();
         this.form.markAsPristine();
 
         // For some reason, changes from `configureForm` are only really applied,
@@ -313,9 +314,9 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         }
 
         if (this.disabled) {
-            this.form.enable({ emitEvent: false });
+            this.form.disable({ emitEvent: false });
             Object.values(this.form.controls).forEach(ctrl => {
-                ctrl.enable({ emitEvent: false });
+                ctrl.disable({ emitEvent: false });
             });
         } else {
             this.form.enable({ emitEvent: false });

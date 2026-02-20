@@ -81,6 +81,7 @@
                 *ngIf="(itemProperties$ | async) as itemProps"
                 [item]="item"
                 [nodeId]="currentNode?.id"
+                [permissions]="itemPermissions"
                 [value]="editingProperties"
                 [templates]="itemProps.templates"
                 [languages]="itemProps.languages"

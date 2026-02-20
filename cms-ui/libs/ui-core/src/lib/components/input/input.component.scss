@@ -53,7 +53,8 @@
         }
     }
 
-    .clear-button:hover::ng-deep .btn {
+    .clear-button:hover::ng-deep .btn,
+    .clear-button:focus::ng-deep .btn {
         color: $gtx-color-alert !important;
     }
 

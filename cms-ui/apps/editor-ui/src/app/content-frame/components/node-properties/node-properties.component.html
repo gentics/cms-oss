@@ -25,6 +25,7 @@
         [label]="('editor.node_hostname_type_label' | gtxI18n) + ' *'"
         [value]="hostnameType"
         [clearable]="false"
+        [disabled]="disabled"
         (valueChange)="updateHostnameType($event)"
         >
         @for (type of HOSTNAME_TYPES; track type.id) {

@@ -1,7 +1,12 @@
 import { Injectable } from '@angular/core';
-import { NotificationService } from '@gentics/ui-core';
-import { TranslatedNotificationOptions } from '../../../common/models';
+import { Response } from '@gentics/cms-models';
+import { INotificationOptions, NotificationService } from '@gentics/ui-core';
+import { responseMessageToNotification } from '../../../common/utils';
 import { I18nService } from '../i18n/i18n.service';
+
+export interface TranslatedNotificationOptions extends INotificationOptions {
+    translationParams?: { [key: string]: any };
+}
 
 /**
  * A drop-in replacement for the GUIC Notification service, which is able to transparently
@@ -25,6 +30,15 @@ export class I18nNotificationService {
             options.action.label = this.i18n.instant(options.action.label, options.translationParams);
         }
         return this.notification.show(options);
+    }
+
+    // Should probably be moved to a shared service instead
+    showFromResponse(response: Response): void {
+        if (response.messages?.length > 0) {
+            for (const msg of response.messages) {
+                this.notification.show(responseMessageToNotification(msg));
+            }
+        }
     }
 
     destroyAllToasts(): void {

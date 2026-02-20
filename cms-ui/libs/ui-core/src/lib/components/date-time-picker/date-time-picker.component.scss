@@ -35,6 +35,15 @@
         height: 2.5rem;
         justify-content: center;
         margin-top: 20px;
+
+        icon {
+            color: inherit;
+        }
+
+        &:hover::ng-deep .btn,
+        &:focus::ng-deep .btn {
+            color: $gtx-color-alert !important;
+        }
     }
 
     &.ng-touched.ng-invalid {

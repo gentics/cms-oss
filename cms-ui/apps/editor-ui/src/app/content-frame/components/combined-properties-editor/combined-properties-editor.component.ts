@@ -67,6 +67,7 @@ import {
     of,
 } from 'rxjs';
 import {
+    debounceTime,
     delay,
     distinctUntilChanged,
     filter,
@@ -323,6 +324,31 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             distinctUntilChanged(isEqual),
         );
 
+        this.subscriptions.push(combineLatest([
+            this.item$.pipe(
+                filter((item) => item != null),
+                distinctUntilChanged(isEqual, (item) => ({ id: item.id, type: item.type, lang: (item as any).language })),
+            ),
+            currNodeId$,
+        ]).pipe(
+            debounceTime(100),
+            switchMap(([item, nodeId]) => {
+                let itemId = item.id;
+                let itemType = item.type;
+
+                if (itemType === 'node' || itemType === 'channel') {
+                    itemId = (item as Node).folderId;
+                    itemType = 'folder';
+                }
+                return typeof (item as any).language === 'string'
+                    ? this.permissionService.forItemInLanguage(itemType, itemId, nodeId, (item as any).language)
+                    : this.permissionService.forItem(itemId, itemType, nodeId);
+            })
+        ).subscribe((perms) => {
+            this.itemPermissions = perms;
+            this.changeDetector.markForCheck();
+        }))
+
         this.itemWithObjectProperties$ = this.item$.pipe(
             switchMap((item) => this.loadFolderWithTags(item)),
             map((changedItem) => ({ changedItem, objProperties: this.generateObjectPropertiesList(changedItem) })),
@@ -445,10 +471,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             filter((objProp) => !!objProp && !!objProp.tag.tagType),
             switchMap((objProp) => combineLatest([
                 of(objProp),
-                this.loadItemPermissions(objProp.item),
                 tagEditorHost$,
             ])),
-            filter(([,,host]) => host != null),
+            filter(([,host]) => host != null),
             tap(() => {
                 // Workaround: Trigger AfterContentInit Life-cycle hook to initialize active state of the tabs
                 if (this.propertiesTabs) {
@@ -457,9 +482,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             }),
         );
 
-        const editObjPropSub = objPropAndTagEditor$.subscribe(([objProp, itemPermissions, tagEditorHost]) => {
+        const editObjPropSub = objPropAndTagEditor$.subscribe(([objProp, tagEditorHost]) => {
             // Update item permissions
-            this.itemPermissions = itemPermissions;
             this.editObjectProperty(objProp.tag, objProp.item, tagEditorHost);
             this.changeDetector.markForCheck();
         });
@@ -1077,13 +1101,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         return this.client.folder.templates(folder.id, options).pipe(
             map((response) => response.templates),
         );
-    }
-
-    private loadItemPermissions(item: ItemWithObjectTags | Node): Observable<ItemPermissions> {
-        const isNode = item.type === 'node' || item.type === 'channel';
-        const itemId = isNode ? (item).folderId : item.id;
-        const itemType = isNode ? 'folder' : item.type as FolderItemOrTemplateType;
-        return this.permissionService.forItem(itemId, itemType, this.currentNode.id);
     }
 
     private editObjectProperty(objProp: EditableObjectTag, item: ItemWithObjectTags, tagEditorHost: TagEditorHostComponent): void {

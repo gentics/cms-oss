@@ -1,0 +1,2 @@
+The "GlobalIdSync":https://www.gentics.com/Content.Node/cmp8/guides/transport_globalidsync.html tool will no longer require the
+unused parameter @-config@.

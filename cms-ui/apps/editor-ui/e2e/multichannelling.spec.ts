@@ -1,6 +1,7 @@
 import { TAB_ID_CONSTRUCTS } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
+    BackgroundJobResponse,
     Page as CMSPage,
     Feature,
     GcmsPermission,
@@ -11,6 +12,7 @@ import {
     NodeUrlMode,
     PageLocalizeRequest,
     PageResponse,
+    ResponseCode,
     Variant,
 } from '@gentics/cms-models';
 import {
@@ -28,6 +30,7 @@ import {
     isVariant,
     ITEM_TYPE_PAGE,
     loginWithForm,
+    matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_FULL,
@@ -41,6 +44,8 @@ import {
     pickSelectValue,
     TestSize,
     UserImportData,
+    wait,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, test } from '@playwright/test';
@@ -405,6 +410,84 @@ test.describe('Multichannelling', () => {
                 const resData: PageResponse = await loadRes.json();
                 expect(resData.page.tags[testTag.name].inherited).toBe(true);
             });
+        });
+    });
+
+    test.describe('Localization', () => {
+        test.beforeEach(async ({ page }) => {
+            await navigateToApp(page);
+            await loginWithForm(page, TEST_USER);
+            await selectNode(page, channelNode.id);
+        });
+
+        test('should handle a localization correctly', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19214',
+            }],
+        }, async ({ page }) => {
+            const TEST_PAGE = IMPORTER.get(PAGE_FOUR);
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, TEST_PAGE.id);
+
+            const localizeReq = waitForResponseFrom(page, 'POST', `/rest/page/localize/${TEST_PAGE.id}`);
+            await itemAction(item, 'localize');
+            const localizeRes = await localizeReq;
+            const localizeBody = await localizeRes.json() as BackgroundJobResponse;
+
+            await wait(500);
+            const notifications = page.locator('gtx-toast');
+            expect(await notifications.all()).toHaveLength(1);
+            await expect(notifications.locator('.message')).toContainText(localizeBody.messages[0].message);
+
+            await expect(item.locator('.item-primary .localized-icon')).not.toBeVisible();
+        });
+
+        test('should handle a background localization correctly', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19214',
+            }],
+        }, async ({ page }) => {
+            const TEST_PAGE = IMPORTER.get(PAGE_FOUR);
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, TEST_PAGE.id);
+            const backgroundMessage = "Your job 'mocked' needs longer to finish. It is now running in background. You will be informed when it is finished.";
+
+            await page.route(url => matchesUrl(url, `/rest/page/localize/${TEST_PAGE.id}`), async (route, req) => {
+                if (req.method() !== 'POST') {
+                    return route.continue();
+                }
+
+                // Wait a bit, and then return with a mocked background job
+                await wait(2_000);
+                return route.fulfill({
+                    status: 200,
+                    json: {
+                        messages: [{
+                            type: 'INFO',
+                            timestamp: new Date().getTime(),
+                            message: backgroundMessage,
+                        }],
+                        responseInfo: {
+                            responseCode: ResponseCode.OK,
+                            responseMessage: backgroundMessage,
+                        },
+                        inBackground: true,
+                    } as BackgroundJobResponse,
+                });
+            });
+
+            const localizeReq = waitForResponseFrom(page, 'POST', `/rest/page/localize/${TEST_PAGE.id}`);
+            await itemAction(item, 'localize');
+            await localizeReq;
+
+            await wait(500);
+            const notifications = page.locator('gtx-toast');
+            expect(await notifications.all()).toHaveLength(1);
+            await expect(notifications.locator('.message')).toContainText(backgroundMessage);
+
+            await expect(item.locator('.item-primary .inherited-icon')).toBeVisible();
         });
     });
 });

@@ -670,7 +670,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                         return Promise.resolve([null, null]);
                 }
             })
-            .then(([item, type]: [Page, 'full' | 'partial' | null]) => {
+            .then(([item, type]: [Page | null, 'full' | 'partial' | null]) => {
                 if (item == null) {
                     return;
                 }

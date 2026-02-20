@@ -120,6 +120,7 @@
                     <gtx-radio-button
                         [label]="'editor.item_localized_mail_custom' | i18n"
                         [value]="true"
+                        [disabled]="disabled"
                     ></gtx-radio-button>
 
                     <div
@@ -148,6 +149,7 @@
                     <gtx-radio-button
                         [label]="'editor.item_localized_mail_temp' | i18n"
                         [value]="false"
+                        [disabled]="disabled"
                     ></gtx-radio-button>
 
                     <div
@@ -195,6 +197,7 @@
                 data-id="success-page"
                 [label]="'editor.internal_page' | i18n"
                 [value]="true"
+                [disabled]="disabled"
             ></gtx-radio-button>
 
             <div
@@ -224,6 +227,7 @@
                 data-id="success-url"
                 [label]="'editor.external_url' | i18n"
                 [value]="false"
+                [disabled]="disabled"
             ></gtx-radio-button>
 
             <div

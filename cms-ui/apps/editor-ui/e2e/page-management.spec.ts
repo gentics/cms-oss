@@ -282,6 +282,34 @@ test.describe('Page Management', () => {
         await expect(item.locator('.item-name .item-name-only')).toHaveText(CHANGE_PAGE_NAME);
     });
 
+    test('should not be possible to edit the page properties without permissions', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19638',
+            }],
+        }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            }
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        await itemAction(item, 'properties');
+
+        const form = page.locator('content-frame combined-properties-editor .properties-content gtx-page-properties');
+        await expect(form.locator('[formcontrolname="name"] input')).toBeDisabled();
+        await expect(form.locator('[formcontrolname="description"] input')).toBeDisabled();
+    });
+
     test('should be possible to publish the page after saving properties', {
         annotation: [{
             type: 'ticket',

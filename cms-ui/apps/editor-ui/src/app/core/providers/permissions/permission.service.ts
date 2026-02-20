@@ -536,44 +536,44 @@ export class PermissionService {
         type: 'folder',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<FolderPermissions>;
     public forItemInLanguage(
         type: 'form',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<FormPermissions>;
     public forItemInLanguage(
         type: 'page',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<PagePermissions>;
     public forItemInLanguage(
         type: 'file',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<FilePermissions>;
     public forItemInLanguage(
         type: 'image',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<ImagePermissions>;
     public forItemInLanguage(
         type: FolderItemType,
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<ItemPermissions>;
 
     public forItemInLanguage(
         type: FolderItemType,
         id: number,
         nodeId: number,
-        lang: number | null,
+        lang: number | string | null,
     ): Observable<ItemPermissions> {
         const entityState = this.appState.now.entities;
         const entityPath = entityState[type];

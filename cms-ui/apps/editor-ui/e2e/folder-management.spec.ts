@@ -217,6 +217,33 @@ test.describe('Folder Management', () => {
         await expect(item.locator('.item-name .item-name-only')).toHaveText(CHANGE_FOLDER_NAME);
     });
 
+    test('should not be possible to edit the folder properties without permissions', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19638',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                ],
+            }
+        ]);
+
+        const folder = IMPORTER.get(FOLDER_A)!;
+        const list = findList(page, ITEM_TYPE_FOLDER);
+        const item = findItem(list, folder.id);
+        await itemAction(item, 'properties');
+
+        const form = page.locator('content-frame combined-properties-editor .properties-content gtx-folder-properties');
+        await expect(form.locator('[formcontrolname="name"] input')).toBeDisabled();
+        await expect(form.locator('[formcontrolname="description"] input')).toBeDisabled();
+    });
+
     test('should be possible to edit the folder object-properties', async ({ page }) => {
         await setupWithPermissions(page, [
             {

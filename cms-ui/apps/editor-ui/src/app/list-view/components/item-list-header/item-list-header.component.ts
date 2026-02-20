@@ -283,7 +283,11 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
      * The language context for the pages has been changed.
      */
     selectLanguage(language: Language): void {
-        this.userSettings.setActiveLanguage(language?.id);
+        if (this.itemType === 'form') {
+            this.userSettings.setActiveFormLanguage(language.id);
+        } else {
+            this.userSettings.setActiveLanguage(language?.id);
+        }
     }
 
     toggleDisplayAllLanguages(): void {

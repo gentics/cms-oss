@@ -1,6 +1,7 @@
 import {
     AccessControlledType,
     AssignEntityToContentPackageOptions,
+    BackgroundJobResponse,
     BaseListOptionsWithPaging,
     BulkLinkUpdateRequest,
     CancelPageEditOptions,
@@ -606,7 +607,7 @@ export interface AbstractFileAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: LocalizeRequest) => Response;
+    localize: (id: number | string, body: LocalizeRequest) => BackgroundJobResponse;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 
@@ -658,7 +659,7 @@ export interface AbstractFolderAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: LocalizeRequest) => Response;
+    localize: (id: number | string, body: LocalizeRequest) => BackgroundJobResponse;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 
@@ -773,7 +774,7 @@ export interface AbstractImageAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: LocalizeRequest) => Response;
+    localize: (id: number | string, body: LocalizeRequest) => BackgroundJobResponse;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 
@@ -933,7 +934,7 @@ export interface AbstractPageAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: PageLocalizeRequest) => Response;
+    localize: (id: number | string, body: PageLocalizeRequest) => BackgroundJobResponse;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 

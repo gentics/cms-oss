@@ -5,8 +5,7 @@ import {
     Input,
     OnChanges,
     OnDestroy,
-    OnInit,
-    SimpleChanges,
+    OnInit
 } from '@angular/core';
 import {
     FormControl,
@@ -16,11 +15,10 @@ import {
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableFolderProps, Feature, Folder, GtxI18nProperty, Language } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { ChangesOf, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, forkJoin, of, Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
-import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { BehaviorSubject, forkJoin, of, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 
 export enum FolderPropertiesMode {
@@ -97,16 +95,11 @@ export class FolderPropertiesComponent
 
     private pubDirPattern: RegExp;
     private parentFolderId$ = new BehaviorSubject<number>(null);
-    /** Behaviour to call whenever a new permission check needs to occur */
-    private permissionCheck = new Subject<void>();
 
     private autocompleteSubscription: Subscription;
 
-	private editAllowed = false;
-
     constructor(
         changeDetector: ChangeDetectorRef,
-        private permissions: PermissionService,
         private appState: ApplicationStateService,
         private client: GCMSRestClientService,
     ) {
@@ -130,12 +123,7 @@ export class FolderPropertiesComponent
             ])),
         ).subscribe(([loadRes, listRes]) => {
             this.parentFolder = loadRes.folder;
-            // If we have our own ID provided, we have to exclude our own element from the sibling data
-            // Otherwise we mark properties as duplicates, which aren't because we count our current
-            // state as well, which should not be the case.
-            this.sibilingFolders = this.itemId != null
-                ? listRes.folders.filter(folder => folder.id !== this.itemId)
-                : listRes.folders;
+            this.sibilingFolders = listRes.folders;
 
             if (this.form) {
                 this.form.updateValueAndValidity();
@@ -160,38 +148,9 @@ export class FolderPropertiesComponent
             this.autocompletePublishDirectory();
             this.changeDetector.markForCheck();
         }));
-
-        this.subscriptions.push(this.permissionCheck.pipe(
-            filter(() => this.itemId != null && this.nodeId != null),
-		    // Set the control disabled until we know the permissions
-		    tap(() => {
-		        if (this.form) {
-					setControlsEnabled(this.form, CONTROLS, false);
-			        setControlsEnabled(this.form, CONTROLS_I18N, false);
-			        this.changeDetector.markForCheck();
-				}
-		    }),
-		    // Just in case it's getting spammed
-		    debounceTime(50),
-		    switchMap(() => {
-		        return this.permissions.forFolder(this.itemId, this.nodeId).pipe(
-		            map(permission => {
-		                return permission.folder.edit;
-		            }),
-		        );
-		    }),
-		).subscribe(enabled => {
-			this.editAllowed = enabled;
-			if (this.form) {
-				this.configureForm(this.form.value);
-				this.changeDetector.markForCheck();
-			}
-		}));
-
-        this.permissionCheck.next();
     }
 
-    override ngOnChanges(changes: SimpleChanges): void {
+    override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.folderId) {
@@ -207,11 +166,6 @@ export class FolderPropertiesComponent
         super.ngOnDestroy();
         this.clearAutocomplete();
     }
-
-	protected override onValueChange() {
-		super.onValueChange();
-        this.permissionCheck.next();
-	}
 
     protected createForm(): FormGroup {
         const form = new FormGroup<FormProperties<EditableFolderProps>>({
@@ -261,8 +215,8 @@ export class FolderPropertiesComponent
 
     protected configureForm(_value: EditableFolderProps, loud?: boolean): void {
         const options = { onlySelf: loud, emitEvent: loud };
-		setControlsEnabled(this.form, CONTROLS, this.editAllowed || this.mode === FolderPropertiesMode.CREATE, options);
-		setControlsEnabled(this.form, CONTROLS_I18N, this.editAllowed || this.mode === FolderPropertiesMode.CREATE, options);
+		setControlsEnabled(this.form, CONTROLS, !this.disabled || (this.mode === FolderPropertiesMode.CREATE), options);
+		setControlsEnabled(this.form, CONTROLS_I18N, !this.disabled || (this.mode === FolderPropertiesMode.CREATE), options);
     }
 
     protected assembleValue(value: EditableFolderProps): EditableFolderProps {
@@ -281,8 +235,23 @@ export class FolderPropertiesComponent
         return value;
     }
 
+    protected override onValueReset(): void {
+        if (this.form) {
+            this.form.updateValueAndValidity();
+        }
+    }
+
     protected sibilingsHaveEqualProperty<T extends keyof Folder>(property: T, value: Folder[T]): boolean {
-        return this.sibilingFolders.some(folder => isEqual(folder[property], value));
+        for (const sibling of this.sibilingFolders) {
+            // Ignore our own folder, as otherwise it might be true all the time
+            if (sibling.id === this.itemId) {
+                continue;
+            }
+            if (isEqual(sibling[property], value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected updateAllowedCharacters(): void {

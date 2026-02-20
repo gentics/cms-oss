@@ -17,7 +17,7 @@
     formControlName="description"
   ></gtx-input>
 
-  @if (form.controls.forceOnline.enabled) {
+  @if (contentAutoOfflineEnabled) {
     <gtx-checkbox
       class="checkbox-input"
       [label]="'editor.forcePublish_label' | gtxI18n"

@@ -7,7 +7,7 @@ import {
     OnChanges,
     OnInit,
     Output,
-    SimpleChange,
+    SimpleChange
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
@@ -261,9 +261,9 @@ export class PagePropertiesComponent
 
     protected configureForm(_value: EditablePageProps, loud?: boolean): void {
         const options = { onlySelf: false, emitEvent: loud };
-        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], this.niceUrlEnabled, options);
-        setControlsEnabled(this.form, ['language'], !this.disableLanguageSelect, options);
-        setControlsEnabled(this.form, ['templateId'], this.mode === PagePropertiesMode.CREATE || this.viewTemplatesAllowed);
+        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], !this.disabled && this.niceUrlEnabled, options);
+        setControlsEnabled(this.form, ['language'], !this.disabled && !this.disableLanguageSelect, options);
+        setControlsEnabled(this.form, ['templateId'], !this.disabled && (this.mode === PagePropertiesMode.CREATE || this.viewTemplatesAllowed));
     }
 
     protected assembleValue(value: EditablePageProps): EditablePageProps {

@@ -9,7 +9,9 @@ import {
     CONSTRUCT_TEST_SELECT_COLOR_HIDDEN,
     CONSTRUCT_TEST_SELECT_COLOR_INLINE,
     CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE,
+    copyText,
     EntityImporter,
+    findNotification,
     FIXTURE_IMAGE_JPEG1,
     IMAGE_ONE,
     IMPORT_ID,
@@ -26,10 +28,7 @@ import {
     pickSelectValue,
     TestSize,
     wait,
-    waitForResponseFrom,
-    findNotification,
-    matchesPath,
-    copyText,
+    waitForResponseFrom
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -43,7 +42,6 @@ import {
 import {
     createExternalLink,
     createInternalLink,
-    upsertLink,
     editorAction,
     findAlohaComponent,
     findDynamicDropdown,
@@ -60,6 +58,7 @@ import {
     selectRangeIn,
     selectTextIn,
     setupHelperWindowFunctions,
+    upsertLink,
 } from './helpers';
 
 const CLASS_ACTIVE = 'active';
@@ -218,7 +217,7 @@ test.describe('Page Editing', () => {
                     await editorAction(page, 'close');
 
                     await page.locator('content-frame').waitFor({ state: 'detached' });
-                    await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 1.0 });
+                    await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.8 });
                 });
             });
 

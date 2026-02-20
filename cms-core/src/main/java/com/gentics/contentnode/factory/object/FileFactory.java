@@ -64,6 +64,7 @@ import com.gentics.contentnode.factory.NodeFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
@@ -91,6 +92,7 @@ import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
@@ -2317,8 +2319,6 @@ public class FileFactory extends AbstractFactory {
 	 * @return
 	 */
 	public static String suggestNewFilename(File file) throws NodeException {
-		Pattern p = Pattern.compile("^(.*)_([0-9]{1,2})\\.([^\\.]*)$");
-
 		ChannelTreeSegment targetSegment = new ChannelTreeSegment(file, false);
 		Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(file.getFolder(), targetSegment);
 
@@ -2326,62 +2326,10 @@ public class FileFactory extends AbstractFactory {
 			throw new NodeException("Filename must not be null. Can't check for duplicate files and suggest a new filename");
 		}
 
-		Matcher m = p.matcher(file.getName());
-		boolean matchFound = m.find();
-		String newFilename = file.getName();
-
-		String subname, extension;
-		Integer number;
-
-		if (matchFound) {
-			subname = m.group(1);
-			number = Integer.parseInt(m.group(2));
-			extension = m.group(3);
-
-		} else {
-			p = Pattern.compile("^(.*)\\.([^\\.]*)$");
-			m = p.matcher(file.getName());
-			matchFound = m.find();
-
-			if (matchFound) {
-				subname = m.group(1);
-				extension = m.group(2);
-				number = new Integer(0);
-
-			} else {
-				subname = file.getName();
-				number = new Integer(0);
-				extension = "";
-			}
-		}
-
-		// If filename greater then 61 characters, the filename will be made
-		// shorter to add an extension to the end of the subname.
-		if (file.getName().length() > 61 && subname.length() > 3) {
-			subname = subname.substring(0, Math.max(3, subname.length() - 3));
-		}
-
-		// find the next free number
-		while (!DisinheritUtils.isFilenameAvailable(file, pcf) && number < 1000) {
-			number++;
-
-			// check if subname already ends with "_"
-			if (subname.endsWith("_")) {
-				if (!StringUtils.isEmpty(extension)) {
-					newFilename = String.format("%s%d.%s", subname, number, extension);
-				} else {
-					newFilename = String.format("%s%d", subname, number);
-				}
-			} else {
-				if (!StringUtils.isEmpty(extension)) {
-					newFilename = String.format("%s_%d.%s", subname, number, extension);
-				} else {
-					newFilename = String.format("%s_%d", subname, number);
-				}
-			}
-			file.setName(newFilename);
-		}
-		return file.getName();
+		Set<String> obstructors = DisinheritUtils.getUsedFilenames(file, CNStringUtils.escapeRegex(file.getFilename()), pcf, null).keySet();
+		String uniqueFilename = UniquifyHelper.makeFilenameUnique(file.getName(), obstructors);
+		file.setName(uniqueFilename);
+		return uniqueFilename;
 	}
 
 	/**
@@ -2406,6 +2354,22 @@ public class FileFactory extends AbstractFactory {
 		}
 		return FileUtil.sanitizeName(
 				name, sanitizeCharacters, replacementChararacter, preservedCharacters);
+	}
+
+	/**
+	 * Check whether the file proposed filename is available
+	 * @param file file with proposed filename
+	 * @return the other object using the filename or null if the filename is available
+	 * @throws NodeException
+	 */
+	public static NodeObject getFilenameObstructor(File file) throws NodeException {
+		if (file == null) {
+			throw new NodeException("Cannot check filename availability without file");
+		}
+		ChannelTreeSegment objectSegment = new ChannelTreeSegment(file, false);
+		Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(file.getFolder(), objectSegment);
+
+		return DisinheritUtils.getFilenameObstructor(file, pcf, () -> file.getName());
 	}
 
 	/**

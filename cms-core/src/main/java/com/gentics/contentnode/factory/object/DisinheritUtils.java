@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -1087,7 +1088,7 @@ public class DisinheritUtils {
 	 * @return set of filenames (empty if no conflicts are found) all made lowercase
 	 * @throws NodeException
 	 */
-	public static Set<String> getUsedFilenames(Disinheritable<?> checkObject, String filenamePatternStr, Set<Folder> potentialConflictingFolders,
+	public static Map<String, NodeObject> getUsedFilenames(Disinheritable<?> checkObject, String filenamePatternStr, Set<Folder> potentialConflictingFolders,
 			ChannelTreeSegment overrideRestrictions) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Set<Folder> masterFolders = new HashSet<>(); // maybe pass as a parameter?
@@ -1137,7 +1138,14 @@ public class DisinheritUtils {
 		Map<String, Set<Node>> potentialFileNiceUrlPatterns = new HashMap<>();
 		for (Node node : objectSegment.getAllNodes()) {
 			try (ChannelTrx cTrx = new ChannelTrx(node); HandleDependenciesTrx hTrx = new HandleDependenciesTrx(false)) {
-				Pattern urlPattern = Pattern.compile(String.format("%s%s", CNStringUtils.escapeRegex(checkObject.getFullPublishPath(true)), filenamePatternStr), Pattern.CASE_INSENSITIVE);
+				String publishPath;
+				if (checkObject.getParentObject() instanceof Disinheritable<?> parent) {
+					publishPath = parent.getFullPublishPath(true);
+				} else {
+					publishPath = "/";
+				}
+
+				Pattern urlPattern = Pattern.compile(String.format("%s%s", CNStringUtils.escapeRegex(publishPath), filenamePatternStr), Pattern.CASE_INSENSITIVE);
 				publishUrlsPatterns.computeIfAbsent(urlPattern, key -> new HashSet<>()).add(node);
 
 				// check nice URL pattern for pages
@@ -1159,11 +1167,11 @@ public class DisinheritUtils {
 		}
 
 		Map<Node, MultiChannellingFallbackList> fileFallbacks = MultichannellingFactory.performMultichannelMultichannellingFallback(selectFilesByNameSQL, parameterArray, objectSegment.getAllNodes());
-		Set<String> filenameSet = new HashSet<>();
+		Map<String, NodeObject> filenameSet = new HashMap<>();
 
 		for (Entry<Node, MultiChannellingFallbackList> entry : fileFallbacks.entrySet()) {
 			List<File> files = t.getObjects(File.class, entry.getValue().getObjectIds(), false, false);
-			filenameSet.addAll(checkMatchingUrls(files, publishUrlsPatterns));
+			filenameSet.putAll(checkMatchingUrls(files, publishUrlsPatterns));
 		}
 
 		String selectPagesFromVersionsSQL = "SELECT DISTINCT p.id FROM page p LEFT JOIN page_nodeversion pn ON p.id = pn.id WHERE (pn.filename REGEXP ? OR p.filename REGEXP ?) AND p.deleted = 0 AND p.folder_id IN "
@@ -1206,7 +1214,7 @@ public class DisinheritUtils {
 						return Flowable.fromArray(p);
 					}).toList().blockingGet();
 
-					filenameSet.addAll(checkMatchingUrls(pagesWithPublished, publishUrlsPatterns));
+					filenameSet.putAll(checkMatchingUrls(pagesWithPublished, publishUrlsPatterns));
 				}
 			}
 		}
@@ -1246,7 +1254,7 @@ public class DisinheritUtils {
 				};
 
 				for (String check : pageChecks) {
-					filenameSet.addAll(getFilenamesOfVisibleObjects(DBUtils.select(check, prep, ret), nodes, Page.class));
+					filenameSet.putAll(getFilenamesOfVisibleObjects(DBUtils.select(check, prep, ret), nodes, Page.class));
 				}
 			}
 
@@ -1262,7 +1270,40 @@ public class DisinheritUtils {
 				};
 
 				for (String check : fileChecks) {
-					filenameSet.addAll(getFilenamesOfVisibleObjects(DBUtils.select(check, prep, ret), nodes, File.class));
+					filenameSet.putAll(getFilenamesOfVisibleObjects(DBUtils.select(check, prep, ret), nodes, File.class));
+				}
+			}
+		}
+
+		boolean pubDirSegment = Optional.ofNullable(checkObject.getOwningNode()).map(Node::isPubDirSegment)
+				.orElse(false);
+		int folderId = Optional.ofNullable(checkObject.getParentObject()).map(NodeObject::getId).orElse(0);
+		if (pubDirSegment && folderId > 0) {
+			// when pub dir segments is activated, we also need to add the sibling folders with their pub dirs
+			String folderPubDirSQL = "SELECT id FROM folder WHERE pub_dir REGEXP ? AND deleted = 0 AND channelset_id != ?";
+			Set<Integer> folderIds = DBUtils.select(folderPubDirSQL, ps -> {
+				ps.setString(1, filenamePatternStr);
+				ps.setInt(2, checkObject.getChannelSetId());
+			}, DBUtils.IDS);
+			List<Folder> folders = t.getObjects(Folder.class, folderIds);
+			for (Folder folder : folders) {
+				filenameSet.put(StringUtils.toRootLowerCase(folder.getPublishDir()), folder);
+			}
+
+			String folderI18nPubDirSQL = "SELECT fi.folder_id FROM folder_i18n fi LEFT JOIN folder f ON fi.folder_id = f.id WHERE fi.pub_dir REGEXP ? AND f.deleted = 0 AND channelset_id != ?";
+			DBUtils.select(folderI18nPubDirSQL, ps -> {
+				ps.setString(1, folderI18nPubDirSQL);
+				ps.setInt(2, checkObject.getChannelSetId());
+			}, DBUtils.IDS);
+			folders = t.getObjects(Folder.class, folderIds);
+
+			Pattern filenamePattern = Pattern.compile(filenamePatternStr, Pattern.CASE_INSENSITIVE);
+
+			for (Folder folder : folders) {
+				for (String i18nPubDir : folder.getPublishDirI18n().values()) {
+					if (filenamePattern.matcher(i18nPubDir).matches()) {
+						filenameSet.put(StringUtils.toRootLowerCase(i18nPubDir), folder);
+					}
 				}
 			}
 		}
@@ -1278,9 +1319,9 @@ public class DisinheritUtils {
 	 * @return set of filenames
 	 * @throws NodeException
 	 */
-	protected static Set<String> getFilenamesOfVisibleObjects(Map<Integer, Set<String>> urlMap, Set<Node> nodes,
+	protected static Map<String, NodeObject> getFilenamesOfVisibleObjects(Map<Integer, Set<String>> urlMap, Set<Node> nodes,
 			Class<? extends LocalizableNodeObject<? extends NodeObject>> clazz) throws NodeException {
-		Set<String> filenameSet = new HashSet<>();
+		Map<String, NodeObject> filenameSet = new HashMap<>();
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		MiscUtils.doBuffered(urlMap.keySet(), 100, idList -> {
@@ -1288,7 +1329,7 @@ public class DisinheritUtils {
 				for (Node n : nodes) {
 					if (MultichannellingFactory.isVisibleInNode(n, p)) {
 						for (String url : urlMap.get(p.getId())) {
-							filenameSet.add(NodeObjectWithAlternateUrls.NAME.apply(url));
+							filenameSet.put(NodeObjectWithAlternateUrls.NAME.apply(url), p);
 						}
 					}
 				}
@@ -1616,16 +1657,42 @@ public class DisinheritUtils {
 	}
 
 	/**
+	 * Get the object obstructing the (proposed) filename of the given object or null
+	 * @param checkObject object to check
+	 * @param pcf folders potentially containing the obstructors
+	 * @param filenameSupplier supplier for the proposed filename
+	 * @return obstructor or null if there is none
+	 * @throws NodeException
+	 */
+	public static NodeObject getFilenameObstructor(Disinheritable<?> checkObject, Set<Folder> pcf,
+			Supplier<String> filenameSupplier) throws NodeException {
+		if (checkObject == null) {
+			throw new NodeException("Cannot check filename availability without file");
+		}
+
+		String filename = StringUtils.toRootLowerCase(filenameSupplier.supply());
+
+		Map<String, NodeObject> usedFilenames = DisinheritUtils.getUsedFilenames(checkObject,
+				CNStringUtils.escapeRegex(filename), pcf, null);
+
+		if (usedFilenames.containsKey(filename)) {
+			return usedFilenames.get(filename);
+		} else {
+			return null;
+		}
+	}
+
+	/**
 	 * Check whether the full publish path of any of the given objects matches any of the publish URL patterns
 	 * for any of the nodes. Collect and return the filenames (lower case) of all matching objects
 	 * @param toCheck objects to check
 	 * @param publishUrlsPatterns map of publish URL patterns to set of nodes to check against
-	 * @return set of filenames for matching objects
+	 * @return map of filenames for matching objects
 	 * @throws NodeException
 	 */
-	private static Set<String> checkMatchingUrls(Collection<? extends Disinheritable<? extends NodeObject>> toCheck,
+	private static Map<String, NodeObject> checkMatchingUrls(Collection<? extends Disinheritable<? extends NodeObject>> toCheck,
 			Map<Pattern, Set<Node>> publishUrlsPatterns) throws NodeException {
-		Set<String> filenames = new HashSet<>();
+		Map<String, NodeObject>filenames = new HashMap<>();
 		for (Disinheritable<? extends NodeObject> f : toCheck) {
 			String filename = f.getFilename();
 			for (Map.Entry<Pattern, Set<Node>> urlPatternEntry : publishUrlsPatterns.entrySet()) {
@@ -1639,7 +1706,7 @@ public class DisinheritUtils {
 					try (ChannelTrx cTrx = new ChannelTrx(n)) {
 						String fileUrl = String.format("%s%s", f.getFullPublishPath(true), filename);
 						if (urlPattern.matcher(fileUrl).matches()) {
-							filenames.add(filename.toLowerCase());
+							filenames.put(filename.toLowerCase(), f);
 						}
 					}
 				}

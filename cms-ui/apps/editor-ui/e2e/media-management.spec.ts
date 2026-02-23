@@ -91,6 +91,7 @@ test.describe('Media Management', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupTest(TestSize.MINIMAL);
+            await IMPORTER.syncPackages(TestSize.MINIMAL);
         });
     });
 

@@ -252,9 +252,9 @@ test.describe('Form Management', () => {
 
             // Validate that the page has been selected
             await page.waitForTimeout(3_000);
-            expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
-            expect(successPicker.locator('.value-display input')).toHaveValue(SUCCESS_PAGE.name);
-            expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
+            await expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
+            await expect(successPicker.locator('.value-display input')).toHaveValue(SUCCESS_PAGE.name);
+            await expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
         });
 
         await test.step('Validate success page save', async () => {
@@ -284,8 +284,8 @@ test.describe('Form Management', () => {
             await pageLoadReq;
 
             // Validate that the picker has the correct values loaded again
-            expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
-            expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
+            await expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
+            await expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
         });
 
         await test.step('Set external success url', async () => {

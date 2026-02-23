@@ -7,7 +7,7 @@ import { API_BASE_URL } from '@gentics/cms-components';
 import { AuthStateModel, KeycloakService } from '@gentics/cms-components/auth';
 import { BaseComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { distinctUntilChanged, filter, take } from 'rxjs/operators';
+import { distinctUntilChanged, filter, first, take } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-single-sign-on',
@@ -39,18 +39,18 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     ngOnInit(): void {
         this.subscriptions.push(this.appState.select(state => state.auth).pipe(
             distinctUntilChanged<AuthStateModel>(isEqual),
+            filter(auth => auth.keycloakAvailable != null),
+            first(),
         ).subscribe((state) => {
             this.available = state.keycloakAvailable;
             this.showButton = state.showSingleSignOnButton;
             this.changeDetector.markForCheck();
 
-            if (this.available != null) {
-                if (!this.showButton) {
-                    if (this.available) {
-                        this.attemptSsoWithKeycloak();
-                    } else {
-                        this.attemptSsoWithIframe();
-                    }
+            if (!this.showButton) {
+                if (this.available) {
+                    this.attemptSsoWithKeycloak();
+                } else {
+                    this.attemptSsoWithIframe();
                 }
             }
         }));

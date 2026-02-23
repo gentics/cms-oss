@@ -15,7 +15,7 @@ services:
     extends:
       file: compose.yml
       service: cms
-    image: docker.gentics.com/gentics/cms:${CI_CMS_VERSION:-hotfix-6.3.x}
+    image: docker.gentics.com/gentics/cms:${CI_CMS_VERSION:-hotfix-6.4.x}
 
     environment:
       ELASTICSEARCH_ENABLED: "true"

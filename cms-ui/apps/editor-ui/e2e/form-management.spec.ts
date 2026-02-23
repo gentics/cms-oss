@@ -1,4 +1,4 @@
-import { AccessControlledType, CmsFormElementI18nValue, CmsFormElementKeyI18nValuePair, Form, FormSaveRequest, GcmsPermission, NodeFeature, Variant } from '@gentics/cms-models';
+import { AccessControlledType, CmsFormElementKeyI18nValuePair, FormSaveRequest, GcmsPermission, NodeFeature, Variant } from '@gentics/cms-models';
 import {
     clickNotificationAction,
     EntityImporter,
@@ -25,10 +25,9 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { expect, Page, test } from '@playwright/test';
-import { AUTH } from './common';
-import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { expect, Page, test } from '@playwright/test';
+import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
 
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -108,7 +107,7 @@ test.describe('Form Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
         });
     }
 
@@ -116,14 +115,14 @@ test.describe('Form Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.VIEW_FORM, value: true },
                     { type: GcmsPermission.CREATE_FORM, value: true },
                 ],
-            }
+            },
         ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -156,16 +155,16 @@ test.describe('Form Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.VIEW_FORM, value: true },
                 ],
-            }
+            },
         ]);
 
-        const formEntity = IMPORTER.get(FORM_ONE)!;
+        const formEntity = IMPORTER.get(FORM_ONE);
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, formEntity.id);
 
@@ -188,13 +187,13 @@ test.describe('Form Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.VIEW_FORM, value: true },
                 ],
-            }
+            },
         ]);
 
         await loadReq;
@@ -218,7 +217,7 @@ test.describe('Form Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -226,7 +225,7 @@ test.describe('Form Management', () => {
                     { type: GcmsPermission.UPDATE_FORM, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                 ],
-            }
+            },
         ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -252,17 +251,17 @@ test.describe('Form Management', () => {
 
             // Validate that the page has been selected
             await page.waitForTimeout(3_000);
-            expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
-            expect(successPicker.locator('.value-display input')).toHaveValue(SUCCESS_PAGE.name);
-            expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
+            await expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
+            await expect(successPicker.locator('.value-display input')).toHaveValue(SUCCESS_PAGE.name);
+            await expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
         });
 
         await test.step('Validate success page save', async () => {
             // Save and validate the request
-            let saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
+            const saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
             await editorAction(page, 'save');
-            let saveRes = await saveReq;
-            let saveData: FormSaveRequest = await saveRes.request().postDataJSON();
+            const saveRes = await saveReq;
+            const saveData: FormSaveRequest = await saveRes.request().postDataJSON();
 
             expect(saveData.successPageId).toEqual(SUCCESS_PAGE.id);
             expect(saveData.successNodeId).toEqual(SUCCESS_PAGE.masterNodeId);
@@ -284,8 +283,8 @@ test.describe('Form Management', () => {
             await pageLoadReq;
 
             // Validate that the picker has the correct values loaded again
-            expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
-            expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
+            await expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
+            await expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
         });
 
         await test.step('Set external success url', async () => {
@@ -314,13 +313,13 @@ test.describe('Form Management', () => {
             type: 'ticket',
             description: 'SUP-18802',
         }],
-    }, async ({page}) => {
+    }, async ({ page }) => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -328,7 +327,7 @@ test.describe('Form Management', () => {
                     { type: GcmsPermission.UPDATE_FORM, value: true },
                     { type: GcmsPermission.PUBLISH_FORM, value: true },
                 ],
-            }
+            },
         ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -373,14 +372,14 @@ test.describe('Form Management', () => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
         // Block requests to the config
-        await page.route(url => matchesUrl(url, '/ui-conf/form-editor.json'), route => {
+        await page.route((url) => matchesUrl(url, '/ui-conf/form-editor.json'), (route) => {
             return route.abort('failed');
         });
 
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -388,7 +387,7 @@ test.describe('Form Management', () => {
                     { type: GcmsPermission.CREATE_FORM, value: true },
                     { type: GcmsPermission.UPDATE_FORM, value: true },
                 ],
-            }
+            },
         ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -400,7 +399,7 @@ test.describe('Form Management', () => {
             const modal = page.locator('create-form-modal');
             const form = modal.locator('gtx-form-properties');
 
-            await expect(form.locator('form')).not.toBeVisible();
+            await expect(form.locator('form')).toBeHidden();
             await expect(form.locator('.form-editor-error')).toBeVisible();
 
             await modal.locator('.modal-footer [data-action="cancel"] button').click();
@@ -418,7 +417,7 @@ test.describe('Form Management', () => {
         await test.step('Display in Form Properties', async () => {
             await itemAction(item, 'properties');
 
-            await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor form')).not.toBeVisible();
+            await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor form')).toBeHidden();
             await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor .form-editor-error')).toBeVisible();
         });
     });
@@ -436,14 +435,14 @@ test.describe('Form Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.VIEW_FORM, value: true },
                     { type: GcmsPermission.UPDATE_FORM, value: true },
                 ],
-            }
+            },
         ]);
 
         await test.step('Open Editor', async () => {
@@ -475,7 +474,7 @@ test.describe('Form Management', () => {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19335',
-        }]
+        }],
     }, async ({ page }) => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
         const KEY_TEXT = ' \n Hello World \t ';
@@ -484,7 +483,7 @@ test.describe('Form Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },

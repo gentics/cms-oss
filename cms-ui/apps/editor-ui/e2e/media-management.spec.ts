@@ -36,6 +36,7 @@ import {
     selectNode,
     uploadFiles,
 } from './helpers';
+import { Test } from 'mocha';
 
 test.describe('Media Management', () => {
     const IMPORTER = new EntityImporter();
@@ -91,6 +92,7 @@ test.describe('Media Management', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupTest(TestSize.MINIMAL);
+            await IMPORTER.syncPackages(TestSize.MINIMAL);
         });
     });
 
@@ -108,7 +110,7 @@ test.describe('Media Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
         });
     }
 
@@ -126,16 +128,16 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                 ],
-            }
+            },
         ]);
 
-        const fileEntity = IMPORTER.get(FILE_ONE)!;
+        const fileEntity = IMPORTER.get(FILE_ONE);
         const list = findList(page, ITEM_TYPE_FILE);
         const item = findItem(list, fileEntity.id);
 
@@ -161,16 +163,16 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                 ],
-            }
+            },
         ]);
 
-        const imgEntity = IMPORTER.get(IMAGE_ONE)!;
+        const imgEntity = IMPORTER.get(IMAGE_ONE);
         const list = findList(page, ITEM_TYPE_IMAGE);
         const item = await findImage(list, imgEntity.id);
 
@@ -186,7 +188,7 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -234,7 +236,7 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -282,7 +284,7 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -327,9 +329,9 @@ test.describe('Media Management', () => {
         await openObjectPropertyEditor(page, TEST_CATEGORY_ID, OBJECT_PROPERTY_COLOR);
 
         // Verify the value is still selected
-        const selectedValue = await colorSelect.locator('.view-value')
-            .getAttribute('data-value');
-        expect(selectedValue).toBe(String(COLOR_ID));
+        const selectedValue = colorSelect.locator('.view-value')
+            ;
+        await expect(selectedValue).toHaveAttribute('data-value', String(COLOR_ID));
     });
 
     test('should be able to replace an existing image', {
@@ -341,7 +343,7 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -357,8 +359,8 @@ test.describe('Media Management', () => {
         const IMAGE = uploadedFiles[FIXTURE_IMAGE_JPEG1.fixturePath];
 
         // Open properties
-        let list = findList(page, ITEM_TYPE_IMAGE);
-        let item = await findImage(list, IMAGE.id);
+        const list = findList(page, ITEM_TYPE_IMAGE);
+        const item = await findImage(list, IMAGE.id);
         await itemAction(item, 'properties');
 
         // Verify current state and upload a replacement image

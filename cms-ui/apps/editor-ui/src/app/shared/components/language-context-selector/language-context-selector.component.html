@@ -14,7 +14,7 @@
         @for (language of availableLanguages; track language.code) {
             <gtx-dropdown-item
                 data-action="select-language-context"
-                [attr.data-lang-code]="language.code"
+                [attr.data-id]="language.code"
                 (click)="languageChangeHandler(language)"
             >{{ language?.name }}</gtx-dropdown-item>
         }

@@ -58,7 +58,6 @@ test.describe('Dev-Tool Packages Module', () => {
 
             await input.fill(TEST_PACKAGE_NAME);
 
-            // TODO: Fails on jenkins - Check CMS logs once available
             const createReq = page.waitForResponse(matchRequest('PUT', `/rest/devtools/packages/${encodeURIComponent(TEST_PACKAGE_NAME)}`));
             const listReq = page.waitForResponse(matchRequest('GET', '/rest/devtools/packages'));
 
@@ -77,7 +76,7 @@ test.describe('Dev-Tool Packages Module', () => {
             const tabContents = packageEditor.locator('.is-active');
 
             const packagePropertiesTable = tabContents.locator('gtx-object-property-table');
-            await packagePropertiesTable.locator('.entity-table-actions-bar [data-action="assign"] button').click();
+            await packagePropertiesTable.locator('.entity-table-actions-bar [data-action="assign-to-package"] button').click();
 
             const assignModal = page.locator('gtx-assign-entity-to-package-modal');
             const objectPropertyRow = findTableRowById(assignModal, objectProperty.id);

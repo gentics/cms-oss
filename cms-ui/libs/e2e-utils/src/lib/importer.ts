@@ -39,6 +39,7 @@ import {
     CONSTRUCT_CATEGORY_TESTS,
     ConstructCategoryImportData,
     CORE_CONSTRUCTS,
+    CORE_OBJECT_PROPERTIES,
     EntityMap,
     ENV_E2E_CMS_URL,
     FileImportData,
@@ -1034,9 +1035,21 @@ export class EntityImporter {
         await this.cleanupSchedules();
         await this.cleanupContentRepositories();
         await this.cleanupConstructCategories();
+        await this.cleanupObjectProperties();
         await this.cleanupPackages();
         await this.cleanupUsers();
         await this.cleanupGroups();
+    }
+
+     private async cleanupObjectProperties(): Promise<void> {
+        const objectProperties = (await this.client.objectProperty.list().send()).items || [];
+        for (const op of objectProperties) {
+            if (CORE_OBJECT_PROPERTIES.includes(op.globalId)) {
+                continue;
+            }
+
+            await this.client.objectProperty.delete(op.id).send();
+        }
     }
 
     private async cleanupScheduleTasks(): Promise<void> {

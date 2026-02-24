@@ -19,7 +19,7 @@ import { EditableImageProps } from './image';
 import { ItemType } from './item';
 import { Language } from './language';
 import { Node } from './node';
-import { ObjectProperty } from './object-property';
+import { EditableObjectProperty, ObjectProperty } from './object-property';
 import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
 import { DependencyType } from './package-check';
@@ -2076,14 +2076,12 @@ export interface ObjectPropertyListOptions extends BaseListOptionsWithPaging<Obj
     type?: number[];
 }
 
-type WriteableObjectProperty = Omit<ObjectProperty<Raw>, 'id' | 'globalId' | 'name' | 'construct' | 'category'>;
-
 /**
  * Request used for saving a `ObjectProperty`.
  */
-export type ObjectPropertyCreateRequest = WriteableObjectProperty;
+export type ObjectPropertyCreateRequest = EditableObjectProperty;
 
-export type ObjectPropertyUpdateRequest = Partial<Omit<WriteableObjectProperty, 'keyword'>>;
+export type ObjectPropertyUpdateRequest = Partial<Omit<EditableObjectProperty, 'keyword'>>;
 
 // OBJECTPROPERTYCATEGORIES //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

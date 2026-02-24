@@ -10,23 +10,19 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
+    EditableObjectProperty,
     Feature,
     Language,
-    ModelType,
-    Normalized,
     ObjectPropertiesObjectType,
-    ObjectPropertyBO,
     ObjectPropertyCategory,
     Raw,
     TagType,
-    TagTypeBO,
 } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
-import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { combineLatest } from 'rxjs';
 
 export enum ObjectpropertyPropertiesMode {
     CREATE = 'create',
@@ -48,10 +44,10 @@ export enum ObjectpropertyPropertiesMode {
         generateFormProvider(ObjectpropertyPropertiesComponent),
         generateValidatorProvider(ObjectpropertyPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class ObjectpropertyPropertiesComponent
-    extends BasePropertiesComponent<ObjectPropertyBO<Normalized>> implements OnInit {
+    extends BasePropertiesComponent<EditableObjectProperty> implements OnInit {
 
     @Input()
     public mode: ObjectpropertyPropertiesMode;
@@ -59,14 +55,11 @@ export class ObjectpropertyPropertiesComponent
     @Output()
     public isValidChange = new EventEmitter<boolean>();
 
-    public constructs$: Observable<TagType<Raw>[]>;
-    public languages$: Observable<Language[]>;
-    public objectPropertyCategories$: Observable<ObjectPropertyCategory<Raw>[]>;
-
     public multiChannelingEnabled = false;
     public objTagSyncEnabled = false;
 
-    public localConstructs: TagTypeBO[] = [];
+    public objectPropertyCategories: ObjectPropertyCategory<Raw>[];
+    public constructs: TagType<Raw>[];
     public languages: Language[];
     public activeTabI18nLanguage: Language;
     public invalidLanguages: string[] = [];
@@ -108,21 +101,23 @@ export class ObjectpropertyPropertiesComponent
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.constructs$ = this.constructHandler.listMapped().pipe(
-            map(res => res.items),
-        );
-        this.objectPropertyCategories$ = this.categoryHandler.listMapped().pipe(
-            map(res => res.items),
-        );
-        this.languages$ = this.languageHandler.getSupportedLanguages();
+        this.subscriptions.push(this.constructHandler.listMapped().subscribe(res => {
+            this.constructs = res.items;
+            this.changeDetector.markForCheck();
+        }));
+        this.subscriptions.push(this.categoryHandler.listMapped().subscribe(res => {
+            this.objectPropertyCategories = res.items;
+            this.changeDetector.markForCheck();
+        }));
 
-        this.subscriptions.push(this.languages$.subscribe(languages => {
+        this.subscriptions.push(this.languageHandler.getSupportedLanguages().subscribe(languages => {
             this.languages = languages;
+
             if (this.form) {
-                this.form.get('nameI18n').setValidators(this.createNameValidator());
+                this.form.controls.nameI18n.setValidators(this.createNameValidator());
 
                 const defaultDesc = {};
-                const descCtl = this.form.get('descriptionI18n');
+                const descCtl = this.form.controls.descriptionI18n;
 
                 (languages || []).forEach(l => {
                     defaultDesc[l.code] = '';
@@ -156,94 +151,51 @@ export class ObjectpropertyPropertiesComponent
         }));
     }
 
-    protected createForm(): UntypedFormGroup {
+    protected createForm(): FormGroup<FormProperties<EditableObjectProperty>> {
         const defaultDesc = {};
         (this.languages || []).forEach(l => {
             defaultDesc[l.code] = '';
         });
 
-        return new UntypedFormGroup({
-            nameI18n: new UntypedFormControl(this.safeValue('nameI18n'), this.createNameValidator()),
-            descriptionI18n: new UntypedFormControl({
+        return new FormGroup<FormProperties<EditableObjectProperty>>({
+            nameI18n: new FormControl(this.safeValue('nameI18n'), this.createNameValidator()),
+            descriptionI18n: new FormControl({
                 ...defaultDesc,
                 ...this.safeValue('descriptionI18n') || {},
             }),
             /* eslint-disable @typescript-eslint/unbound-method */
-            keyword: new UntypedFormControl(this.safeValue('keyword'), Validators.required),
-            type: new UntypedFormControl(this.safeValue('type'), Validators.required),
-            constructId: new UntypedFormControl(this.safeValue('constructId'), Validators.required),
-            categoryId: new UntypedFormControl(this.safeValue('categoryId')),
-            required: new UntypedFormControl(this.safeValue('required')),
-            inheritable: new UntypedFormControl(this.safeValue('inheritable')),
-            syncContentset: new UntypedFormControl(this.safeValue('syncContentset')),
-            syncChannelset: new UntypedFormControl(this.safeValue('syncChannelset')),
-            syncVariants: new UntypedFormControl(this.safeValue('syncVariants')),
-            restricted: new UntypedFormControl(this.safeValue('restricted')),
+            keyword: new FormControl(this.safeValue('keyword'), Validators.required),
+            type: new FormControl(this.safeValue('type'), Validators.required),
+            constructId: new FormControl(this.safeValue('constructId'), Validators.required),
+            categoryId: new FormControl(this.safeValue('categoryId')),
+            required: new FormControl(this.safeValue('required')),
+            inheritable: new FormControl(this.safeValue('inheritable')),
+            syncContentset: new FormControl(this.safeValue('syncContentset')),
+            syncChannelset: new FormControl(this.safeValue('syncChannelset')),
+            syncVariants: new FormControl(this.safeValue('syncVariants')),
+            restricted: new FormControl(this.safeValue('restricted')),
             /* eslint-disable @typescript-eslint/unbound-method */
         }, { updateOn: 'change' });
     }
 
-    protected configureForm(value: ObjectPropertyBO<ModelType.Normalized>, loud: boolean = false): void {
+    protected configureForm(value: EditableObjectProperty, loud: boolean = false): void {
         const options = { emitEvent: !!loud };
         if (this.mode === ObjectpropertyPropertiesMode.UPDATE) {
-            this.form.get('keyword').disable(options);
+            this.form.controls.keyword.disable(options);
         }
 
-        const inheritCtl = this.form.get('inheritable');
-        const syncContentCtl = this.form.get('syncContentset');
-        const syncChannelCtl = this.form.get('syncChannelset');
-        const syncVariantsCtl = this.form.get('syncVariants');
-
-        switch (value?.type) {
-            case ObjectPropertiesObjectType.FOLDER:
-                inheritCtl.enable(options);
-                syncContentCtl.disable(options);
-                syncVariantsCtl.disable(options);
-                break;
-
-            case ObjectPropertiesObjectType.PAGE:
-                inheritCtl.disable(options);
-                if (this.objTagSyncEnabled) {
-                    syncContentCtl.enable(options);
-                    syncVariantsCtl.enable(options);
-                } else {
-                    syncContentCtl.disable(options);
-                    syncVariantsCtl.disable(options);
-                }
-                break;
-
-            case ObjectPropertiesObjectType.IMAGE:
-            case ObjectPropertiesObjectType.FILE:
-            case ObjectPropertiesObjectType.TEMPLATE:
-            default:
-                inheritCtl.disable(options);
-                syncContentCtl.disable(options);
-                syncVariantsCtl.disable(options);
-                break;
-        }
-
-        if (this.objTagSyncEnabled && this.multiChannelingEnabled) {
-            syncChannelCtl.enable(options);
-        } else {
-            syncChannelCtl.disable(options);
-        }
+        setControlsEnabled(this.form, ['inheritable'], value?.type === ObjectPropertiesObjectType.FOLDER, options);
+        setControlsEnabled(
+            this.form,
+            ['syncContentset', 'syncVariants'],
+            value?.type === ObjectPropertiesObjectType.PAGE && this.objTagSyncEnabled,
+            options,
+        );
+        setControlsEnabled(this.form, ['syncChannelset'], this.objTagSyncEnabled && this.multiChannelingEnabled, options);
     }
 
-    protected assembleValue(formData: ObjectPropertyBO<Normalized>): ObjectPropertyBO<Normalized> {
-        if (this.mode === ObjectpropertyPropertiesMode.UPDATE) {
-            return {
-                ...formData,
-                constructId: formData.constructId,
-                globalId: this.value?.globalId,
-                id: this.value?.id,
-                keyword: this.value?.keyword,
-            };
-        } else {
-            return {
-                ...formData,
-                constructId: Number(formData.constructId),
-            };
-        }
+    protected assembleValue(formData: EditableObjectProperty): EditableObjectProperty {
+        return formData;
     }
 
     protected createNameValidator(): ValidatorFn {

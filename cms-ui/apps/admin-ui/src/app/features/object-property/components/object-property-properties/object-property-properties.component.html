@@ -26,7 +26,7 @@
             [clearable]="true"
             formControlName="categoryId"
         >
-            <gtx-option *ngFor="let item of (objectPropertyCategories$ | async)" [value]="item.id">{{ item.name }}</gtx-option>
+            <gtx-option *ngFor="let item of objectPropertyCategories" [value]="item.id">{{ item.name }}</gtx-option>
         </gtx-select>
 
         <gtx-select
@@ -34,7 +34,7 @@
             [clearable]="false"
             formControlName="constructId"
         >
-            <gtx-option *ngFor="let item of (constructs$ | async)" [value]="item.id">{{ item.name }}</gtx-option>
+            <gtx-option *ngFor="let item of constructs" [value]="item.id">{{ item.name }}</gtx-option>
         </gtx-select>
 
         <gtx-checkbox
@@ -76,9 +76,9 @@
     <div class="input-container small-12 medium-8 columns">
 
         <gtx-i18n-panel-group
-            *ngIf="languages$ | async as languagesAsync"
+            *ngIf="languages"
             [label]="'shared.i18n_properties_label' | i18n"
-            [languages]="languagesAsync"
+            [languages]="languages"
             [invalidLanguages]="invalidLanguages"
             [(activeLanguage)]="activeTabI18nLanguage"
         >

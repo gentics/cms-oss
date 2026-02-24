@@ -85,7 +85,9 @@ export interface BufferedFixtureFile extends FixtureFile {
 }
 
 export const LANGUAGE_EN = 'en';
+export const LANGUAGE_ID_EN = 2;
 export const LANGUAGE_DE = 'de';
+export const LANGUAGE_ID_DE = 1;
 
 export const ITEM_TYPE_FOLDER = 'folder';
 export const ITEM_TYPE_PAGE = 'page';
@@ -218,6 +220,21 @@ export const CORE_CONSTRUCTS = [
 
 export const OBJECT_PROPERTY_PAGE_COLOR = '994d.ff379678-37b9-11ef-a38e-0242ac110002';
 export const OBJECT_PROPERTY_FOLDER_COLOR = 'a986.40be20e1-4318-11ef-bf28-0242ac110002';
+
+export const OBJECT_PROPERTY_HIDE_IN_NAV = 'A547.75740';
+export const OBJECT_PROPERTY_NAV_SORTING = 'A547.69486';
+export const OBJECT_PROPERTY_STARTPAGE = 'A547.69535';
+export const OBJECT_PROPERTY_COPYRIGHT = 'A547.74284';
+
+export const OBJECT_PROPERTY_CATEGORY_CORE = '3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5';
+export const OBJECT_PROPERTY_CATEGORY_TESTS = '994d.e54046e7-37b9-11ef-a38e-0242ac110002';
+
+export const CORE_OBJECT_PROPERTIES = [
+    OBJECT_PROPERTY_HIDE_IN_NAV,
+    OBJECT_PROPERTY_NAV_SORTING,
+    OBJECT_PROPERTY_STARTPAGE,
+    OBJECT_PROPERTY_COPYRIGHT,
+];
 
 // "Gentics CMP Default" category
 export const CONSTRUCT_CATEGORY_CORE = '3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5';

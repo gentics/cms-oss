@@ -1,4 +1,4 @@
-import { AccessControlledType, GcmsPermission, ObjectPropertiesObjectType, ObjectPropertyUpdateRequest } from "@gentics/cms-models";
+import { AccessControlledType, GcmsPermission, ObjectPropertiesObjectType, ObjectPropertyUpdateRequest } from '@gentics/cms-models';
 import {
     clickModalAction,
     clickTableRow,
@@ -23,11 +23,11 @@ import {
     setI18nGroupLanguage,
     TestSize,
     UserImportData,
-    waitForResponseFrom
-} from "@gentics/e2e-utils";
-import { cloneWithSymbols } from "@gentics/ui-core/utils/clone-with-symbols";
-import { expect, Locator, Page, Response, test } from "@playwright/test";
-import { navigateToModule } from "./helpers";
+    waitForResponseFrom,
+} from '@gentics/e2e-utils';
+import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { expect, Locator, Page, Response, test } from '@playwright/test';
+import { navigateToModule } from './helpers';
 
 test.describe('Object Properties Module', () => {
 
@@ -233,7 +233,7 @@ test.describe('Object Properties Module', () => {
 
         const master = module.locator('gtx-object-property-master');
         const table = master.locator('gtx-object-property-table');
-        const row = findTableRowById(table, TEST_OBJ_PROP.id);
+        const row = await findTableRowById(table, TEST_OBJ_PROP.id);
 
         let listReq: Promise<Response>;
 

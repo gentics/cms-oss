@@ -24,6 +24,7 @@ import {
     NodeImportData,
     selectTab,
     TestSize,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -217,7 +218,12 @@ test.describe('Constructs Module', () => {
             const REORDER_DOWN_TO_INDEX = 15;
             const REORDER_TOP_INDEX = 19;
 
-            const categoryLoad = page.waitForResponse(matchRequest('GET', '/rest/construct/category'));
+            // We want to wait for the modal load, not the general table load
+            const categoryLoad = waitForResponseFrom(page, 'GET', '/rest/construct/category', {
+                params: {
+                    pageSize: '-1',
+                },
+            });
             const master = page.locator('gtx-construct-category-master');
             const masterTable = master.locator('gtx-construct-category-table');
             await masterTable.locator('.entity-table-actions-bar [data-action="reorder"] button').click();

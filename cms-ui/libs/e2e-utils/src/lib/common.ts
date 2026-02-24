@@ -90,7 +90,9 @@ export interface ContentFile {
 }
 
 export const LANGUAGE_EN = 'en';
+export const LANGUAGE_ID_EN = 2;
 export const LANGUAGE_DE = 'de';
+export const LANGUAGE_ID_DE = 1;
 
 export const ITEM_TYPE_FOLDER = 'folder';
 export const ITEM_TYPE_PAGE = 'page';

@@ -490,3 +490,14 @@ export function copyText(page: Page, text: string): Promise<void> {
         return null;
     }, text);
 }
+
+export async function setI18nGroupLanguage(group: Locator, language: number): Promise<void> {
+    const tabs = group.locator('.properties-tabs');
+    const langTab = tabs.locator(`.tab-link[data-id="${language}"]`);
+    const isActive = await langTab.evaluate(el => el.classList.contains('is-active'));
+    if (isActive) {
+        return;
+    }
+
+    await langTab.click();
+}

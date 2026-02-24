@@ -51,11 +51,6 @@ export class ObjectPropertyEditorComponent extends BaseEntityEditorComponent<Edi
         }
     }
 
-    override finalizeEntityToUpdate(value: ObjectProperty): EntityUpdateRequestModel<EditableEntity.OBJECT_PROPERTY> {
-        const { id, globalId, keyword, construct, category, ...remainder } = value;
-        return remainder;
-    }
-
     override onEntityUpdate(): void {
         this.tableLoader.reload();
     }

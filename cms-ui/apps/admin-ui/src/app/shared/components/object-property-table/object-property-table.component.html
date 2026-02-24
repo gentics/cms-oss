@@ -16,6 +16,7 @@
         flat
         size="small"
         type="primary"
+        data-action="create"
         [disabled]="disabled"
         [gtxActionAllowed]="'object_property.createObjectproperty'"
         (click)="handleCreateButton()"
@@ -30,6 +31,7 @@
         flat
         size="small"
         type="primary"
+        data-action="assign-to-package"
         [disabled]="disabled"
         [gtxActionAllowed]="'contentadmin.updateContent'"
         (click)="handleAssignToPackageButton()"
@@ -43,6 +45,7 @@
         flat
         size="small"
         type="primary"
+        data-action="reload"
         [disabled]="disabled || loading"
         (click)="reload()"
         >

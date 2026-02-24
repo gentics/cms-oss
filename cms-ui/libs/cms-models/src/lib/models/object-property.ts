@@ -55,6 +55,8 @@ export interface ObjectProperty<T extends ModelType = DefaultModelType> extends 
     id: number;
 }
 
+export type EditableObjectProperty = Omit<ObjectProperty, 'id' | 'globalId' | 'name' | 'construct'| 'category'>;
+
 /**
  * Data model as defined by frontend.
  * @deprecated Create your own application specific type/business object instead.

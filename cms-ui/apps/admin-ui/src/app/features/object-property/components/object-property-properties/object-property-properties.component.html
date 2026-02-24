@@ -25,7 +25,7 @@
         [clearable]="true"
         formControlName="categoryId"
         >
-        @for (item of (objectPropertyCategories$ | async); track item.id) {
+        @for (item of objectPropertyCategories; track item.id) {
           <gtx-option [value]="item.id">{{ item.name }}</gtx-option>
         }
       </gtx-select>
@@ -34,7 +34,7 @@
         [clearable]="false"
         formControlName="constructId"
         >
-        @for (item of (constructs$ | async); track item.id) {
+        @for (item of constructs; track item.id) {
           <gtx-option [value]="item.id">{{ item.name }}</gtx-option>
         }
       </gtx-select>
@@ -72,10 +72,10 @@
       }
     </div>
     <div class="input-container small-12 medium-8 columns">
-      @if (languages$ | async; as languagesAsync) {
+      @if (languages) {
         <gtx-i18n-panel-group
           [label]="'shared.i18n_properties_label' | gtxI18n"
-          [languages]="languagesAsync"
+          [languages]="languages"
           [invalidLanguages]="invalidLanguages"
           [(activeLanguage)]="activeTabI18nLanguage"
           >

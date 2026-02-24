@@ -39,7 +39,7 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     ngOnInit(): void {
         this.subscriptions.push(this.appState.select((state) => state.auth).pipe(
             distinctUntilChanged<AuthStateModel>(isEqual),
-            filter((state) => state.keycloakAvailable != null),
+            filter(auth => auth.keycloakAvailable != null),
             first(),
         ).subscribe((state) => {
             this.available = state.keycloakAvailable;

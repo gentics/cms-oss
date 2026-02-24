@@ -220,7 +220,7 @@ export class KeycloakService {
         this.state = KeycloakConnectionState.AVAILABLE;
 
         try {
-            keycloak = new Keycloak('/rest/auth');
+            keycloak = new Keycloak('/rest/keycloak');
             await initKeycloak(keycloak, this.config.showSSOButton ? 'check-sso' : 'login-required');
             this.state = KeycloakConnectionState.CONNECTED;
             this.store.dispatch(new KeycloakLoadSuccess(true, this.state, this.config.showSSOButton));

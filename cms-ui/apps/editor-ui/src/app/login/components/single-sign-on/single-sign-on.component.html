@@ -14,7 +14,8 @@
     @if (showButton && !showLogin) {
         <gtx-button
             size="large"
+            data-action="sso-login"
             (click)="login()"
-        >{{ 'common.login_sso_button_label' | gtxI18n }}</gtx-button>
+        >{{ 'editor.login_sso_button_label' | gtxI18n }}</gtx-button>
     }
 </div>

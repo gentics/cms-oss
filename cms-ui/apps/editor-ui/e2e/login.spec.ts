@@ -164,6 +164,33 @@ test.describe('Login', () => {
             await expect(page.locator('project-editor')).toBeVisible();
         });
 
+        test('login with button', async ({ page }) => {
+            // Edit the config response to use the sso-button
+            await page.route((url) => matchesUrl(url, '/rest/keycloak'), async (route, req) => {
+                if (req.method() !== 'GET') {
+                    return route.continue();
+                }
+
+                const original = await route.fetch();
+                const data = await original.json() as KeycloakConfiguration;
+                data.showSSOButton = true;
+
+                return route.fulfill({
+                    json: data,
+                    status: 200,
+                });
+            });
+
+            await navigateToApp(page, '', true);
+
+            const ssoButton = page.locator('gtx-single-sign-on [data-action="sso-login"]');
+            await expect(ssoButton).toBeVisible();
+            await ssoButton.click();
+
+            await loginWithForm(page, KEYCLOAK_LOGIN);
+            await expect(page.locator('project-editor')).toBeVisible();
+        });
+
         test('should handle keycloak config load error correctly', async ({ page }) => {
             await page.route((url) => matchesUrl(url, '/rest/keycloak'), (route, req) => {
                 if (req.method() !== 'GET') {

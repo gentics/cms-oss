@@ -52,6 +52,8 @@ export class KeycloakService {
      */
     checkKeycloakAuth(): Promise<boolean> {
         if (checkParameter(SKIP_KEYCLOAK_PARAMETER_NAME)) {
+            // eslint-disable-next-line no-console
+            console.info(`Keycloak will be skipped since the parameter "${SKIP_KEYCLOAK_PARAMETER_NAME}" was found.`);
             this.store.dispatch(new SingleSignOnSkipped(true));
             // same value provided as via .catch when config was not found
             return Promise.resolve(false);
@@ -59,11 +61,6 @@ export class KeycloakService {
 
         this.store.dispatch(new SingleSignOnSkipped(false));
         return this.checkKeycloakAuthOnLoad();
-    }
-
-    get showSSOButton(): boolean {
-        return this.state === KeycloakConnectionState.CONNECTED
-          && this.config.showSSOButton;
     }
 
     /**
@@ -141,7 +138,7 @@ export class KeycloakService {
 
         try {
             this.config = await this.client.keycloak.configuration().toPromise();
-            this.config.showSSOButton = this.config.showSSOButton || false;
+            this.config.showSSOButton = (this.config.showSSOButton || false) && !checkParameter(RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME);
 
             // eslint-disable-next-line no-console
             console.info('Keycloak config found');
@@ -267,14 +264,7 @@ function checkParameter(parameterToCheck: string): boolean {
 
     try {
         const parameters = new URLSearchParams(location.search);
-        const found = parameters.has(parameterToCheck);
-
-        if (found) {
-            // eslint-disable-next-line no-console
-            console.info(`Keycloak will be skipped since the parameter "${parameterToCheck}" was found.`);
-        }
-
-        return found;
+        return parameters.has(parameterToCheck);
     } catch (error) {
         // If parsing fails, then we ignore it
         return false;

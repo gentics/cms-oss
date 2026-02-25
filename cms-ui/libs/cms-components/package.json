@@ -1,6 +1,6 @@
 {
   "name": "@gentics/cms-components",
-  "version": "6.3.12",
+  "version": "6.3.13",
   "license": "Apache-2.0",
   "peerDependencies": {
     "@angular/common": ">=19.0.0",
@@ -16,9 +16,9 @@
   "devDependencies": {
     "@angular/common": ">=19.0.0",
     "@angular/core": ">=19.0.0",
-    "@gentics/cms-models": "^6.3.12",
-    "@gentics/cms-integration-api-models": "^6.3.12",
-    "@gentics/ui-core": "^6.3.12",
+    "@gentics/cms-models": "^6.3.13",
+    "@gentics/cms-integration-api-models": "^6.3.13",
+    "@gentics/ui-core": "^6.3.13",
     "@ngx-translate/core": "^14.0.0",
     "@ngx-translate/http-loader": "^7.0.0",
     "lodash-es": "^4.17.15",

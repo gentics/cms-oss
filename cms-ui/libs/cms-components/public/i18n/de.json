@@ -9,6 +9,7 @@
         "create_button": "Erstellen",
         "upload_button": "Hochladen",
         "delete_button": "Löschen",
+        "login_sso_button_label": "Single Sign On",
 
         "yes": "Ja",
         "no": "Nein",

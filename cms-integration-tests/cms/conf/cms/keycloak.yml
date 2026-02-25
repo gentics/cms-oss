@@ -5,5 +5,6 @@ keycloak:
   resource: "cms"
   public-client: true
   confidential-port: 0
+  show_sso_button: false
   init_groups:
     roles.realm.default-roles-cms-ui: group_auth_sso

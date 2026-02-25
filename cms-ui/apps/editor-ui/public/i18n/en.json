@@ -237,7 +237,6 @@
         "edit_in_parent_label": "Edit in {{master}}",
         "localized_tooltip": "Localized from {{master}}",
         "locked_by_label": "Locked {{timeAgo}} by {{name}}",
-        "login_sso_button_label": "Single Sign On",
         "messages_read_count_label": "{{count}} archived messages",
         "messages_read_count_one_label": "1 archived message",
         "messages_title": "Messages",

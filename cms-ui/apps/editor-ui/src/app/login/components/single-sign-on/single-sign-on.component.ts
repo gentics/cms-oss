@@ -70,7 +70,7 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     attemptSsoWithKeycloak(): void {
         this.subscriptions.push(this.keycloakService.attemptCmsLogin().subscribe((result: string) => {
             this.handleSsoResponse(result);
-            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/no-nodes';
             const onLogin$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
                 filter(isLoggedIn => !!isLoggedIn),
             );

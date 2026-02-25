@@ -14,6 +14,7 @@
     <gtx-button
         *ngIf="showButton && !showLogin"
         size="large"
+        data-action="sso-login"
         (click)="login()"
-    >{{ 'common.login_sso_button_label' | i18n }}</gtx-button>
+    >{{ 'editor.login_sso_button_label' | i18n }}</gtx-button>
 </div>

@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
@@ -44,7 +43,6 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.AutoCommit;
-import com.gentics.contentnode.factory.ChannelTreeSegment;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.Transaction;
@@ -53,7 +51,6 @@ import com.gentics.contentnode.factory.TransactionLockManager;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
-import com.gentics.contentnode.factory.object.DisinheritUtils;
 import com.gentics.contentnode.factory.object.FileFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.msg.NodeMessage;
@@ -93,6 +90,7 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.MultiFileLoadResponse;
+import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
 import com.gentics.contentnode.rest.model.response.PrivilegesResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -538,14 +536,14 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					FileUploadResponse response = (FileUploadResponse) executeLocked(fileNameLock, sanitizedFilename, () -> {
 						if (finalFileId == null) {
 							// Create a new file
-							return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
+							return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap(), false);
 						} else {
 							// Save data to an existing file
 							File file = MiscUtils.load(File.class, Integer.toString(finalFileId));
 							if (file != null) {
-								return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, file.getNiceUrl(), file.getAlternateUrls(), null, file.getObjectTags());
+								return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, file.getNiceUrl(), file.getAlternateUrls(), null, file.getObjectTags(), false);
 							} else {
-								return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
+								return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap(), false);
 							}
 						}
 					});
@@ -679,6 +677,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			boolean overwriteExisting = metaData.getOverwrite();
+			boolean failOnDuplicate = metaData.isFailOnDuplicate();
 
 			try (ChannelTrx trx = new ChannelTrx(nodeId)) {
 				Folder folder = null;
@@ -726,11 +725,11 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 					if (fileId == 0) {
 						// Create a new file
-						response = createFile(in, folder.getId(), nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
+						response = createFile(in, folder.getId(), nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap(), failOnDuplicate);
 					} else {
 						// Save data to an existing file
 						File file = MiscUtils.load(File.class, Integer.toString(fileId));
-						response = saveFile(in, fileId, filename, mediaType.get(), description, file.getNiceUrl(), file.getAlternateUrls(), null, file.getObjectTags());
+						response = saveFile(in, fileId, filename, mediaType.get(), description, file.getNiceUrl(), file.getAlternateUrls(), null, file.getObjectTags(), failOnDuplicate);
 					}
 
 					if (conversionFailed) {
@@ -898,10 +897,10 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						if (fileId == 0) {
 							// Create a new file
 							response = createFile(fileDataInputStream, request.getFolderId(), request.getNodeId(), request.getName(),
-								mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap());
+								mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap(), false);
 						} else {
 							// Save data to an existing file
-							response = saveFile(fileDataInputStream, fileId, request.getName(), mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap());
+							response = saveFile(fileDataInputStream, fileId, request.getName(), mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap(), false);
 						}
 
 						if (conversionFailed) {
@@ -1088,12 +1087,13 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @param alternateUrls The files alternate URLs.
 	 * @param properties Additional properties to be saved to the files object properties.
 	 * @param objectTags object tags to copy into the new file
+	 * @param failOnDuplicate true to fail on duplicate filenames
 	 * @return
 	 * @throws NodeException
 	 */
 	private FileUploadResponse createFile(InputStream input, int folderId, int nodeId, String fileName,
 			String mediaType, String description, String niceUrl, Set<String> alternateUrls,
-			Map<String, String> properties, Map<String, ObjectTag> objectTags) throws NodeException {
+			Map<String, String> properties, Map<String, ObjectTag> objectTags, boolean failOnDuplicate) throws NodeException {
 
 		Transaction t = getTransaction();
 		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
@@ -1133,7 +1133,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		file.setFiletype(mediaType);
 		file.setFolderId(folderId);
 
-		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties, objectTags);
+		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties, objectTags, failOnDuplicate);
 	}
 
 	/**
@@ -1148,10 +1148,11 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @param alternateUrls The files alternate URLs.
 	 * @param properties Additional values to save to the files object properties.
 	 * @param tags 
+	 * @param failOnDuplicate true to fail on duplicate file names
 	 * @return A {@code FileUploadResponse} corresponding to the saved file.
 	 * @throws NodeException
 	 */
-	private FileUploadResponse saveFile(InputStream input, int fileId, String fileName, String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties, Map<String, ObjectTag> tags) throws NodeException {
+	private FileUploadResponse saveFile(InputStream input, int fileId, String fileName, String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties, Map<String, ObjectTag> tags, boolean failOnDuplicate) throws NodeException {
 		Transaction t = getTransaction();
 
 		File file = (ContentFile) t.getObject(File.class, fileId, true);
@@ -1177,7 +1178,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			throw new NodeException(msg, new Exception(i18nMessage.toString()));
 		}
 
-		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties, tags);
+		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties, tags, failOnDuplicate);
 	}
 
 	/**
@@ -1189,12 +1190,13 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @param mediaType The files media type.
 	 * @param description The files description.
 	 * @param properties Additional values to save to the files object properties.
+	 * @param failOnDuplicate true to fail on duplicate file names
 	 * @return A {@code FileUploadResponse} corresponding to the saved file.
 	 * @throws NodeException
 	 */
 	private FileUploadResponse saveFileData(File file, InputStream input, String fileName, String mediaType, String description, 
 			String niceUrl, Set<String> alternateUrls, 
-			Map<String, String> properties, Map<String, ObjectTag> objectTags) throws NodeException {
+			Map<String, String> properties, Map<String, ObjectTag> objectTags, boolean failOnDuplicate) throws NodeException {
 		Transaction t = getTransaction();
 		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 
@@ -1222,6 +1224,19 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		file.setDescription(description);
 		file.setAlternateUrls(alternateUrls);
 		file.setNiceUrl(niceUrl);
+
+		if (failOnDuplicate) {
+			NodeObject conflictingObject = FileFactory.getFilenameObstructor(file);
+			if (conflictingObject != null) {
+				String message = I18NHelper.get(
+						"error.filename.exists.%s".formatted(MiscUtils.getTypeDescriptor(conflictingObject)),
+						file.getName(), I18NHelper.getPath(conflictingObject));
+
+				return new FileUploadResponse(new Message(Message.Type.CRITICAL, message),
+						new ResponseInfo(ResponseCode.INVALIDDATA,
+								"Error while creating file: " + message, "fileName"), false, null);
+			}
+		}
 
 		Message message = FileUploadManipulatorFileSave.handleFileUploadManipulator(t, prefs, file, input);
 
@@ -1406,7 +1421,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				null,
 				Collections.emptySet(),
 				Collections.emptyMap(),
-				file.getObjectTags());
+				file.getObjectTags(), false);
 		}
 
 		File newFile;
@@ -1591,16 +1606,14 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 			if (ObjectTransformer.getBoolean(request.getFailOnDuplicate(), false) && !ObjectTransformer.isEmpty(request.getFile().getName())) {
 				// check whether the name shall be changed
-				File origFile = t.getObject(File.class, restFile.getId());
+				NodeObject conflictingObject = FileFactory.getFilenameObstructor(file);
+				if (conflictingObject != null) {
+					String message = I18NHelper.get(
+							"error.filename.exists.%s".formatted(MiscUtils.getTypeDescriptor(conflictingObject)),
+							file.getFilename(), I18NHelper.getPath(conflictingObject));
 
-				if (!Objects.equals(origFile.getName(), file.getName())) {
-					ChannelTreeSegment targetSegment = new ChannelTreeSegment(file, false);
-					Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(file.getFolder(), targetSegment);
-					if (!DisinheritUtils.isFilenameAvailable(file, pcf)) {
-						I18nString message = new CNI18nString("a_file_with_this_name");
-						return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.INVALIDDATA,
-								"Error while saving file " + id + ": " + message.toString(), "name"));
-					}
+					return new GenericResponse(new Message(Message.Type.CRITICAL, message), new ResponseInfo(
+							ResponseCode.INVALIDDATA, "Error while saving file %d: %s".formatted(id, message), "fileName"));
 				}
 			}
 

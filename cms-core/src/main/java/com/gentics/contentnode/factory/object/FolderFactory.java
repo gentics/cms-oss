@@ -3389,8 +3389,12 @@ public class FolderFactory extends AbstractFactory {
 						if (folder.getMother() != null) {
 							t.getAttributes().put(OMIT_PUB_DIR_SEGMENT_VERIFY, true);
 							try {
-								folder.setPublishDir(UniquifyHelper.makeUnique(folder, folder.pubDir, PUB_DIR_FUNCTION,
-										objectIds, SeparatorType.underscore, Folder.MAX_PUB_DIR_LENGTH));
+								Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(folder.getMother(),
+										channelTreeSegment);
+								Set<String> obstructors = DisinheritUtils.getUsedFilenames(folder,
+										UniquifyHelper.SEGMENT_SEARCH_PATTERN.apply(folder.getPublishDir()), pcf,
+										channelTreeSegment).keySet();
+								folder.setPublishDir(UniquifyHelper.makePathSegmentUnique(folder.getPublishDir(), obstructors));
 
 								// make the translated publish directories unique among each other
 								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder.getOwningNode().getLanguages(), folder.publishDirI18n,
@@ -3398,11 +3402,15 @@ public class FolderFactory extends AbstractFactory {
 										Folder.MAX_PUB_DIR_LENGTH));
 
 								// and then make them unique with all other
-								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder, folder.publishDirI18n,
-										PUB_DIR_FUNCTION, objectIds, SeparatorType.underscore, Folder.MAX_PUB_DIR_LENGTH));
+								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder.publishDirI18n, value -> {
+									Set<String> tmpObstructors = DisinheritUtils.getUsedFilenames(folder,
+											UniquifyHelper.SEGMENT_SEARCH_PATTERN.apply(value), pcf,
+											channelTreeSegment).keySet();
+									return UniquifyHelper.makePathSegmentUnique(value, tmpObstructors);
+								}));
 							} finally {
 								t.getAttributes().remove(OMIT_PUB_DIR_SEGMENT_VERIFY);
-						}
+							}
 						}
 					} else {
 						folder.pubDir = FileUtil.sanitizeFolderPath(folder.pubDir, sanitizeCharacters, replacementChararacter, preservedCharacters);
@@ -7552,32 +7560,27 @@ public class FolderFactory extends AbstractFactory {
 	/**
 	 * Check whether the folder's proposed pub_dirs are available
 	 * @param folder folder with proposed pub_dirs
+	 * @param checkPagesAndFiles true to check also pages and files in the folder
 	 * @return pair of the used pub_dir and the other object using the pub_dir or null if the pub_dirs are available
 	 * @throws NodeException
 	 */
-	public static Pair<String, NodeObject> isPubDirAvailable(Folder folder) throws NodeException {
+	public static Pair<String, NodeObject> isPubDirAvailable(Folder folder, boolean checkPagesAndFiles) throws NodeException {
 		if (folder == null) {
 			throw new NodeException("Cannot check pub_dir availability without folder");
 		}
 		if (!folder.getNode().isPubDirSegment()) {
 			return null;
 		}
+		Transaction t = TransactionManager.getCurrentTransaction();
 		ChannelTreeSegment objectSegment = new ChannelTreeSegment(folder, false);
 
 		Map<Node, MultiChannellingFallbackList> siblingsFallback = DisinheritUtils.getSiblings(folder, objectSegment);
 		Set<Integer> objectIds = siblingsFallback.values().stream().flatMap(fb -> fb.getObjectIds().stream()).collect(Collectors.toSet());
 
-		Folder conflictingObject = null;
-		conflictingObject = UniquifyHelper.getObjectUsingProperty(Folder.class, folder.getPublishDir(), PUB_DIR_FUNCTION, objectIds);
-		if (conflictingObject != null) {
-			return Pair.of(folder.getPublishDir(), conflictingObject);
-		}
-
-		for (String i18nPubDir : folder.getPublishDirI18n().values()) {
-			conflictingObject = UniquifyHelper.getObjectUsingProperty(Folder.class, i18nPubDir, PUB_DIR_FUNCTION, objectIds);
-			if (conflictingObject != null) {
-				return Pair.of(i18nPubDir, conflictingObject);
-			}
+		Pair<String, NodeObject> conflict = checkPubDirConflict(folder, i18nPubDir -> UniquifyHelper
+				.getObjectUsingProperty(Folder.class, i18nPubDir, PUB_DIR_FUNCTION, objectIds));
+		if (conflict != null) {
+			return conflict;
 		}
 
 		// finally check for uniqueness of the (translated) pubdirs of the folder itself
@@ -7590,6 +7593,49 @@ public class FolderFactory extends AbstractFactory {
 					return Pair.of(i18nPubDir, folder);
 				}
 				checked.add(i18nPubDir);
+			}
+		}
+
+		// check for pages/files having the filename
+		if (folder.getMother() != null) {
+			Function<String, NodeObject> checkPages = pubDir -> {
+				Page dummyPage = t.createObject(Page.class);
+				dummyPage.setFolder(folder.getOwningNode(), folder.getMother());
+				dummyPage.setFilename(pubDir);
+				return DisinheritUtils.getObjectUsingProperty(dummyPage, p -> p.getFilename(), "filename", objectSegment);
+			};
+
+			conflict = checkPubDirConflict(folder, checkPages);
+			if (conflict != null) {
+				return conflict;
+			}
+
+			// check for files having the filename
+			Function<String, NodeObject> checkFiles = pubDir -> {
+				File dummyFile = t.createObject(File.class);
+				dummyFile.setFolder(folder.getOwningNode(), folder.getMother());
+				dummyFile.setName(pubDir);
+				return DisinheritUtils.getObjectUsingProperty(dummyFile, f -> f.getFilename(), "name", objectSegment);
+			};
+
+			conflict = checkPubDirConflict(folder, checkFiles);
+			if (conflict != null) {
+				return conflict;
+			}
+		}
+
+		return null;
+	}
+
+	protected static Pair<String, NodeObject> checkPubDirConflict(Folder folder, Function<String, NodeObject> checker) throws NodeException {
+		List<String> toCheck = new ArrayList<>();
+		toCheck.add(folder.getPublishDir());
+		toCheck.addAll(folder.getPublishDirI18n().values());
+
+		for (String pubDir : toCheck) {
+			NodeObject conflictingObject = checker.apply(pubDir);
+			if (conflictingObject != null) {
+				return Pair.of(pubDir, conflictingObject);
 			}
 		}
 

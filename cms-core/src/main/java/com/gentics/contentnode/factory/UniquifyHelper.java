@@ -13,25 +13,145 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Supplier;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.I18nMap;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
 
 /**
  * Uniquify Helper
  */
 public class UniquifyHelper {
+	/**
+	 * Pattern for filenames with trailing numbers (separated by underscore)
+	 */
+	public final static Pattern FILENAME_PATTERN = Pattern.compile("^(.*)_([0-9]{1,3})$");
+
+	/**
+	 * Function to create the search pattern for obstructors for the given filename
+	 * when trying to make it unique
+	 */
+	public final static Function<String, String> FILENAME_SEARCH_PATTERN = filename -> {
+		String baseName = FilenameUtils.getBaseName(filename);
+		String extension = FilenameUtils.getExtension(filename);
+
+		Matcher matcher = FILENAME_PATTERN.matcher(baseName);
+		if (matcher.matches()) {
+			baseName = matcher.group(1);
+		}
+
+		String searchFilenamePattern = CNStringUtils.escapeRegex(baseName) + "(_([0-9]+))?";
+		if (!StringUtils.isEmpty(extension)) {
+			searchFilenamePattern += "\\." + CNStringUtils.escapeRegex(extension);
+		}
+
+		return searchFilenamePattern;
+	};
+
+	/**
+	 * Function to compose the filename for the given pair of base name and extension and a number
+	 */
+	public final static BiFunction<Pair<String, String>, Integer, String> FILENAME_COMPOSER = (pair, number) -> {
+		if (StringUtils.isEmpty(pair.getRight())) {
+			return "%s_%d".formatted(pair.getLeft(), number);
+		} else {
+			return "%s_%d.%s".formatted(pair.getLeft(), number, pair.getRight());
+		}
+	};
+
+	/**
+	 * Function to parse the given filename into a pair of basename and extension and a number if the basename has trailing _ with a number
+	 */
+	public final static Function<String, Pair<Pair<String, String>, Integer>> FILENAME_PARSER = value -> {
+		String baseName = FilenameUtils.getBaseName(value);
+		String extension = FilenameUtils.getExtension(value);
+		int number = 0;
+
+		Matcher matcher = FILENAME_PATTERN.matcher(baseName);
+		if (matcher.matches()) {
+			baseName = matcher.group(1);
+			number = ObjectTransformer.getInt(matcher.group(2), 0);
+		}
+
+		return Pair.of(Pair.of(baseName, extension), number);
+	};
+
+	/**
+	 * Function to create the search pattern for obstructors for the given segment
+	 * when trying to make it unique
+	 */
+	public final static Function<String, String> SEGMENT_SEARCH_PATTERN = segment -> {
+		Matcher matcher = FILENAME_PATTERN.matcher(segment);
+		if (matcher.matches()) {
+			segment = matcher.group(1);
+		}
+		String searchSegmentPattern = CNStringUtils.escapeRegex(segment) + "(_([0-9]+))?";
+		return searchSegmentPattern;
+	};
+
+	/**
+	 * Function to compose the segment for the given base and the number
+	 */
+	public final static BiFunction<String, Integer, String> SEGMENT_COMPOSER = (value, number) -> {
+		return "%s_%d".formatted(value, number);
+	};
+
+	/**
+	 * Function to parse the given segment into a base segment and the number (of the segment already has trailing _ with number)
+	 */
+	public final static Function<String, Pair<String, Integer>> SEGMENT_PARSER = value -> {
+		int number = 0;
+
+		Matcher matcher = FILENAME_PATTERN.matcher(value);
+		if (matcher.matches()) {
+			value = matcher.group(1);
+			number = ObjectTransformer.getInt(matcher.group(2), 0);
+		}
+
+		return Pair.of(value, number);
+	};
+
+	/**
+	 * Pattern for names with trailing numbers (separated by space)
+	 */
+	public final static Pattern NAME_PATTERN = Pattern.compile("^(.*) ([0-9]{1,3})$");
+
+	/**
+	 * Function to compose the name from the given base and number
+	 */
+	public final static BiFunction<String, Integer, String> NAME_COMPOSER = (value, number) -> {
+		return "%s %d".formatted(value, number);
+	};
+
+	/**
+	 * Function to parse the given name into the base and number
+	 */
+	public final static Function<String, Pair<String, Integer>> NAME_PARSER = value -> {
+		int number = 0;
+
+		Matcher matcher = NAME_PATTERN.matcher(value);
+		if (matcher.matches()) {
+			value = matcher.group(1);
+			number = ObjectTransformer.getInt(matcher.group(2), 0);
+		}
+
+		return Pair.of(value, number);
+	};
 
 	/**
 	 * Protected Uniquify Helper
@@ -122,23 +242,31 @@ public class UniquifyHelper {
 	 * @return unique value
 	 * @throws NodeException
 	 */
-	public static String makeUnique(Supplier<String> start, Function<String, Boolean> checker, BiFunction<String, Integer, String> generator,
-			Function<String, Pair<String, Integer>> initial) throws NodeException {
+	public static String makeUnique(Supplier<String> start, Function<String, Boolean> checker, BiFunction<String, Integer, String> generator) throws NodeException {
+		return makeUnique(start, checker, generator, v -> Pair.of(v, 0));
+	}
+
+	/**
+	 * Make the given value unique
+	 * @param start supplier that supplies the start value
+	 * @param checker function that checks a value for uniqueness and returns true, when the value is unique
+	 * @param generator function that generates a new value out of the base value and the number
+	 * @param initial function that generates the base value and starting number from the value
+	 * @return unique value
+	 * @throws NodeException
+	 */
+	public static <T> String makeUnique(Supplier<String> start, Function<String, Boolean> checker, BiFunction<T, Integer, String> generator,
+			Function<String, Pair<T, Integer>> initial) throws NodeException {
 		String value = start.supply();
 		if (checker.apply(value)) {
 			return value;
 		}
 
+		Pair<T, Integer> initialPair = initial.apply(value);
+		T base = initialPair.getLeft();
+		int number = initialPair.getRight();
+
 		// now add numbers to the given value and try again
-		String base = value;
-		int number = 0;
-
-		if (initial != null) {
-			Pair<String, Integer> initialPair = initial.apply(value);
-			base = initialPair.getLeft();
-			number = initialPair.getRight();
-		}
-
 		while (true) {
 			// try the next number
 			++number;
@@ -148,6 +276,58 @@ public class UniquifyHelper {
 				return value;
 			}
 		}
+	}
+
+	/**
+	 * Make the given filename unique (so that it does not match any of the given obstructors)
+	 * @param fileName filename to make unique
+	 * @param obstructors obstructors
+	 * @return unique filename
+	 * @throws NodeException
+	 */
+	public static String makeFilenameUnique(String fileName, Set<String> obstructors) throws NodeException {
+		Set<String> lowerCaseObstructors = obstructors.stream().map(StringUtils::toRootLowerCase).collect(Collectors.toSet());
+		return makeUnique(() -> fileName, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), FILENAME_COMPOSER, FILENAME_PARSER);
+	}
+
+	/**
+	 * Make the given path segment unique (so that is does not match any of the given obstructors)
+	 * @param pathSegment path segment to make unique
+	 * @param obstructors obstructors
+	 * @return unique path segment
+	 * @throws NodeException
+	 */
+	public static String makePathSegmentUnique(String pathSegment, Set<String> obstructors) throws NodeException {
+		Set<String> lowerCaseObstructors = obstructors.stream().map(StringUtils::toRootLowerCase).collect(Collectors.toSet());
+		return makeUnique(() -> pathSegment, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), SEGMENT_COMPOSER, SEGMENT_PARSER);
+	}
+
+	/**
+	 * Make the given name unique (so that it does not match any of the given obstructors)
+	 * @param name name to make unique
+	 * @param obstructors obstructors
+	 * @return unique name
+	 * @throws NodeException
+	 */
+	public static String makeNameUnique(String name, Set<String> obstructors) throws NodeException {
+		Set<String> lowerCaseObstructors = obstructors.stream().map(StringUtils::toRootLowerCase).collect(Collectors.toSet());
+		return makeUnique(() -> name, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), NAME_COMPOSER, NAME_PARSER);
+	}
+
+	/**
+	 * Make a unique "Copy of ..." of the the given original name
+	 * @param original original name
+	 * @param obstructors obstructors
+	 * @return unique "Copy of ..."
+	 * @throws NodeException
+	 */
+	public static String makeCopyOfNameUnique(String original, Set<String> obstructors) throws NodeException {
+		Set<String> lowerCaseObstructors = obstructors.stream().map(StringUtils::toRootLowerCase).collect(Collectors.toSet());
+
+		return makeUnique(() -> I18NHelper.get("copy_of", "", original),
+				name -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(name)), (name, number) -> {
+					return I18NHelper.get("copy_of", " " + Integer.toString(number), original);
+				}, value -> Pair.of(value, 0));
 	}
 
 	/**
@@ -325,6 +505,26 @@ public class UniquifyHelper {
 
 		return makeUnique(referenceValue, type, maxLength,
 				value -> isPropertyAvailable(clazz, value, propertyFunction, objectIds));
+	}
+
+	/**
+	 * Make all the values of the given I18nMap unique
+	 * @param referenceI18nMap map
+	 * @param makeUnique function to make a single value unique
+	 * @return map containing unique values
+	 * @throws NodeException
+	 */
+	public static I18nMap makeUnique(I18nMap referenceI18nMap, Function<String, String> makeUnique) throws NodeException {
+		I18nMap uniqueI18nMap = new I18nMap();
+		uniqueI18nMap.putAll(referenceI18nMap);
+
+		for (Map.Entry<Integer, String> entry : uniqueI18nMap.entrySet()) {
+			String referenceValue = entry.getValue();
+			String modifiedValue = makeUnique.apply(referenceValue);
+			entry.setValue(modifiedValue);
+		}
+
+		return uniqueI18nMap;
 	}
 
 	/**

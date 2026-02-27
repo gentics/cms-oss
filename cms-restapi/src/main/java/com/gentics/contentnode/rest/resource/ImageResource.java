@@ -1,16 +1,6 @@
 package com.gentics.contentnode.rest.resource;
 
-import java.io.InputStream;
 import java.util.List;
-
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Response;
 
 import com.gentics.contentnode.rest.model.request.IdSetRequest;
 import com.gentics.contentnode.rest.model.request.ImageCreateRequest;
@@ -39,6 +29,14 @@ import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
 
 /**
  * Resource for loading and manipulating Images in GCN
@@ -142,16 +140,6 @@ public interface ImageResource extends AuthenticatedResource {
 	ImageLoadResponse rotate(ImageRotateRequest request);
 
 	/**
-	 * Get the content of the image with given id
-	 * @param id image id to get
-	 * @return binary content of the image
-	 */
-	// @GET
-	// @Path("/content/load/{id}")
-	// @Produces("image/*")
-	Response loadContent(@PathParam("id") Integer id);
-
-	/**
 	 * Create a new image
 	 * @param request request with data for the image to be created
 	 * @return response containing the image meta data
@@ -162,7 +150,7 @@ public interface ImageResource extends AuthenticatedResource {
 
 
 	/**
-	 * Mpve the given file to another folder
+	 * Move the given file to another folder
 	 * @param id file id
 	 * @param request request
 	 * @return generic response
@@ -188,16 +176,6 @@ public interface ImageResource extends AuthenticatedResource {
 	@POST
 	@Path("/save/{id}")
 	GenericResponse save(@PathParam("id") Integer id, ImageSaveRequest request);
-
-	/**
-	 * Save the posted content into the given image
-	 * @param fileContent image content
-	 * @return generic response
-	 */
-	// @POST
-	// @Path("/content/save/{id}")
-	// @Consumes("image/*")
-	GenericResponse saveContent(InputStream fileContent);
 
 	/**
 	 * Delete the image denoted by id

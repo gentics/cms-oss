@@ -132,7 +132,7 @@
 						<configuration>
 							<maxmemory>200M</maxmemory>
 							<!-- exclude all but com.gentics.api packages -->
-							<excludePackageNames>com.gentics.contentnode,com.gentics.lib,com.gentics.portalnode</excludePackageNames>
+							<excludePackageNames>com.gentics.contentnode,com.gentics.lib,com.gentics.portalnode,org.openapitools.client</excludePackageNames>
 							<additionalparam>-Xdoclint:none</additionalparam>
 						</configuration>
 					</execution>
@@ -338,6 +338,54 @@
 					<overWriteReleases>false</overWriteReleases>
 					<overWriteSnapshots>true</overWriteSnapshots>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>7.19.0</version>
+				<executions>
+					<execution>
+						<id>generate-client</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>process-test-resources</phase>
+						<configuration>
+							<inputSpec>${basedir}/../cms-oss-server/src/main/resources/webroot/openapi/openapi.json</inputSpec>
+							<output>${project.build.directory}/generated-test-sources/openapi</output>
+							<generatorName>java</generatorName>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<generateModelTests>false</generateModelTests>
+							<configOptions>
+								<sourceFolder>/</sourceFolder>
+								<useJakartaEe>true</useJakartaEe>
+								<openApiNullable>false</openApiNullable>
+								<useOptional>true</useOptional>
+							</configOptions>
+							<library>jersey3</library>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+					<id>add-test-sources</id>
+					<phase>generate-test-sources</phase>
+					<goals>
+						<goal>add-test-source</goal>
+					</goals>
+					<configuration>
+						<sources>
+							<source>${project.build.directory}/generated-test-sources/openapi</source>
+						</sources>
+					</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -646,6 +694,37 @@
 		<dependency>
 			<groupId>com.nimbusds</groupId>
 			<artifactId>nimbus-jose-jwt</artifactId>
+		</dependency>
+				
+		<!-- Swagger / OpenAPI -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-models</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+		    <groupId>jakarta.validation</groupId>
+		    <artifactId>jakarta.validation-api</artifactId>
+		    <scope>test</scope>
 		</dependency>
 	</dependencies>
 

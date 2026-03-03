@@ -43,7 +43,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -131,9 +130,11 @@ import com.gentics.contentnode.rest.resource.impl.internal.JobStatus;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.Operator.LockType;
+import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.contentnode.rest.util.StagingModelBuilder;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.staging.StageableObjectType;
@@ -241,14 +242,6 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 		Path path = checkFeatureGetPath();
 
 		try (Trx trx = ContentNodeHelper.trx()) {
-			ContentPackageListResponse response = new ContentPackageListResponse();
-
-			// Filter
-			Predicate<StagedContentPackage> filterPredicate = pkg -> true;
-			if (filterParams != null && StringUtils.isNotBlank(filterParams.query)) {
-				filterPredicate = pkg -> StringUtils.contains(pkg.getName(), filterParams.query) || StringUtils.contains(pkg.getDescription(), filterParams.query);
-			}
-
 			// Sort
 			Comparator<StagedContentPackage> sortComparator = (a, b) -> 0;
 			if (sortingParams != null && StringUtils.isNotBlank(sortingParams.sort)) {
@@ -317,17 +310,12 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						} catch (NodeException e) {
 							throw new IllegalStateException(e);
 						}
-					})
-					.filter(filterPredicate)
-					.sorted(sortComparator)
-					.collect(Collectors.toList());
+					}).collect(Collectors.toList());
 
-			// Page
-			if (pagingParams != null && pagingParams.pageSize > 0 && pagingParams.page > 0) {
-				packages = packages.stream().skip(pagingParams.pageSize * (pagingParams.page - 1)).limit(pagingParams.pageSize).collect(Collectors.toList());
-			}
-			response.setItems(packages);
-			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, ""));
+			ContentPackageListResponse response = ListBuilder.from(packages, unchanged -> unchanged)
+					.filter(ResolvableFilter.get(filterParams, "name", "description", "files", "folders", "pages", "images", "nodes"))
+					.sort(sortComparator).page(pagingParams)
+					.to(new ContentPackageListResponse());
 			trx.success();
 			return response;
 		} catch (IOException | IllegalStateException e) {

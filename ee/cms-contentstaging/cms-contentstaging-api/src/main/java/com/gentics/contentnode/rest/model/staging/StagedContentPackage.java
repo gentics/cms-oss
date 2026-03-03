@@ -1,17 +1,18 @@
 package com.gentics.contentnode.rest.model.staging;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.gentics.api.lib.resolving.Resolvable;
+import com.gentics.contentnode.rest.resource.impl.internal.JobStatus;
+
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.gentics.contentnode.rest.resource.impl.internal.JobStatus;
 
 /**
  * Content staging package entity.
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class StagedContentPackage extends ContentPackageBase {
+public class StagedContentPackage extends ContentPackageBase implements Resolvable {
 
 	private static final long serialVersionUID = 8051924103845219672L;
 
@@ -157,5 +158,38 @@ public class StagedContentPackage extends ContentPackageBase {
 	 */
 	public void setImport(JobStatus import_) {
 		this.import_ = import_;
+	}
+
+	@Override
+	public Object getProperty(String key) {
+		return get(key);
+	}
+
+	@Override
+	public Object get(String key) {
+		switch (key) {
+		case "name":
+			return getName();
+		case "description":
+			return getDescription();
+		case "timestamp":
+			return getTimestamp();
+		case "nodes":
+			return getNodes();
+		case "folders":
+			return getFolders();
+		case "pages":
+			return getPages();
+		case "files":
+			return getFiles();
+		case "images":
+			return getImages();
+		}
+		return null;
+	}
+
+	@Override
+	public boolean canResolve() {
+		return true;
 	}
 }

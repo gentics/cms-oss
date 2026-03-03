@@ -5161,9 +5161,9 @@ public class PageFactory extends AbstractFactory {
 			ChannelTreeSegment segment = new ChannelTreeSegment(page, false);
 			Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(pageFolder, segment);
 			Set<String> obstructors = DisinheritUtils.getUsedFilenames(page,
-					UniquifyHelper.FILENAME_SEARCH_PATTERN.apply(page.getFilename()), pcf, segment).keySet();
+					UniquifyHelper.PAGE_FILENAME_SEARCH_PATTERN.apply(page.getFilename()), pcf, segment).keySet();
 
-			page.setFilename(UniquifyHelper.makeFilenameUnique(page.getFilename(), obstructors));
+			page.setFilename(UniquifyHelper.makePageFilenameUnique(page.getFilename(), obstructors));
 
 		} catch (NodeException e) {
 			throw new NodeException("Error while fixing filename for {" + page + "}", e);

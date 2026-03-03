@@ -1,5 +1,6 @@
 package com.gentics.contentnode.factory;
 
+import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -66,7 +68,7 @@ public class UniquifyHelper {
 	/**
 	 * Function to compose the filename for the given pair of base name and extension and a number
 	 */
-	public final static BiFunction<Pair<String, String>, Integer, String> FILENAME_COMPOSER = (pair, number) -> {
+	public final static BiFunction<Pair<String, String>, BigInteger, String> FILENAME_COMPOSER = (pair, number) -> {
 		if (StringUtils.isEmpty(pair.getRight())) {
 			return "%s_%d".formatted(pair.getLeft(), number);
 		} else {
@@ -77,18 +79,113 @@ public class UniquifyHelper {
 	/**
 	 * Function to parse the given filename into a pair of basename and extension and a number if the basename has trailing _ with a number
 	 */
-	public final static Function<String, Pair<Pair<String, String>, Integer>> FILENAME_PARSER = value -> {
+	public final static Function<String, Pair<Pair<String, String>, BigInteger>> FILENAME_PARSER = value -> {
 		String baseName = FilenameUtils.getBaseName(value);
 		String extension = FilenameUtils.getExtension(value);
-		int number = 0;
+		BigInteger number = BigInteger.ZERO;
 
 		Matcher matcher = FILENAME_PATTERN.matcher(baseName);
 		if (matcher.matches()) {
 			baseName = matcher.group(1);
-			number = ObjectTransformer.getInt(matcher.group(2), 0);
+			number = ObjectTransformer.getBigInteger(matcher.group(2), BigInteger.ZERO);
 		}
 
 		return Pair.of(Pair.of(baseName, extension), number);
+	};
+
+	/**
+	 * Pattern for filenames with trailing numbers
+	 */
+	public final static Pattern PAGE_FILENAME_PATTERN = Pattern.compile("([^.]*?)(0*?)((?:[1-9][0-9]*)?)(?:\\.(.+))?");
+
+	/**
+	 * Function to create the search pattern for obstructors for the given filename
+	 * when trying to make it unique
+	 */
+	public final static Function<String, String> PAGE_FILENAME_SEARCH_PATTERN = filename -> {
+		Matcher fileNameMatcher = PAGE_FILENAME_PATTERN.matcher(filename);
+
+		if (fileNameMatcher.matches()) {
+			String baseFileName = fileNameMatcher.group(1);
+			String extension = fileNameMatcher.group(4);
+
+			String searchFilenamePattern = CNStringUtils.escapeRegex(baseFileName) + "([0-9]*)";
+			if (!StringUtils.isEmpty(extension)) {
+				searchFilenamePattern += "\\." + CNStringUtils.escapeRegex(extension);
+			}
+
+			return searchFilenamePattern;
+		} else {
+			throw new NodeException("Error while making proposed filename {" + filename
+					+ "} unique. Filename does not match the expected pattern.");
+		}
+	};
+
+	/**
+	 * Function to compose the filename for the given pair of base name and extension and a number
+	 */
+	public final static BiFunction<Triple<String, String, String>, BigInteger, String> PAGE_FILENAME_COMPOSER = (triple, number) -> {
+		String base = triple.getLeft();
+		String leadingZeros = triple.getMiddle();
+		String extension = triple.getRight();
+
+		BigInteger numberBefore = number.subtract(BigInteger.ONE);
+
+		if (!StringUtils.isEmpty(leadingZeros)
+				&& (number.equals(BigInteger.ONE) || number.toString().length() != numberBefore.toString().length())) {
+			leadingZeros = leadingZeros.substring(1);
+		}
+
+		if (StringUtils.isEmpty(extension)) {
+			String fileName = "%s%s%d".formatted(base, leadingZeros, number);
+
+			while (fileName.length() > 64) {
+				if (base.length() > 0) {
+					base = base.substring(0, base.length() - 1);
+					fileName = "%s%s%d".formatted(base, leadingZeros, number);
+					continue;
+				}
+				throw new NodeException("Error while making proposed filename {" + fileName + "} unique. Cannot shorten filename.");
+			}
+
+			return fileName;
+		} else {
+			String fileName = "%s%s%d.%s".formatted(base, leadingZeros, number, extension);
+
+			while (fileName.length() > 64) {
+				if (base.length() > 0) {
+					base = base.substring(0, base.length() - 1);
+					fileName = "%s%s%d.%s".formatted(base, leadingZeros, number, extension);
+					continue;
+				}
+
+				if (extension.length() > 1) {
+					extension = extension.substring(0, extension.length() - 1);
+					fileName = "%s%s%d.%s".formatted(base, leadingZeros, number, extension);
+					continue;
+				}
+				throw new NodeException("Error while making proposed filename {" + fileName + "} unique. Cannot shorten filename.");
+			}
+
+			return fileName;
+		}
+	};
+
+	/**
+	 * Function to parse the given filename into a pair of basename and extension and a number if the basename has trailing _ with a number
+	 */
+	public final static Function<String, Pair<Triple<String, String, String>, BigInteger>> PAGE_FILENAME_PARSER = value -> {
+		Matcher fileNameMatcher = PAGE_FILENAME_PATTERN.matcher(value);
+		if (fileNameMatcher.matches()) {
+			String baseFileName = fileNameMatcher.group(1);
+			String leadingZeros = fileNameMatcher.group(2);
+			BigInteger number = ObjectTransformer.getBigInteger(fileNameMatcher.group(3), BigInteger.ZERO);
+			String extension = fileNameMatcher.group(4);
+
+			return Pair.of(Triple.of(baseFileName, leadingZeros, extension), number);
+		} else {
+			return Pair.of(Triple.of(value, "", ""), BigInteger.ZERO);
+		}
 	};
 
 	/**
@@ -107,20 +204,20 @@ public class UniquifyHelper {
 	/**
 	 * Function to compose the segment for the given base and the number
 	 */
-	public final static BiFunction<String, Integer, String> SEGMENT_COMPOSER = (value, number) -> {
+	public final static BiFunction<String, BigInteger, String> SEGMENT_COMPOSER = (value, number) -> {
 		return "%s_%d".formatted(value, number);
 	};
 
 	/**
 	 * Function to parse the given segment into a base segment and the number (of the segment already has trailing _ with number)
 	 */
-	public final static Function<String, Pair<String, Integer>> SEGMENT_PARSER = value -> {
-		int number = 0;
+	public final static Function<String, Pair<String, BigInteger>> SEGMENT_PARSER = value -> {
+		BigInteger number = BigInteger.ZERO;
 
 		Matcher matcher = FILENAME_PATTERN.matcher(value);
 		if (matcher.matches()) {
 			value = matcher.group(1);
-			number = ObjectTransformer.getInt(matcher.group(2), 0);
+			number = ObjectTransformer.getBigInteger(matcher.group(2), BigInteger.ZERO);
 		}
 
 		return Pair.of(value, number);
@@ -134,20 +231,20 @@ public class UniquifyHelper {
 	/**
 	 * Function to compose the name from the given base and number
 	 */
-	public final static BiFunction<String, Integer, String> NAME_COMPOSER = (value, number) -> {
+	public final static BiFunction<String, BigInteger, String> NAME_COMPOSER = (value, number) -> {
 		return "%s %d".formatted(value, number);
 	};
 
 	/**
 	 * Function to parse the given name into the base and number
 	 */
-	public final static Function<String, Pair<String, Integer>> NAME_PARSER = value -> {
-		int number = 0;
+	public final static Function<String, Pair<String, BigInteger>> NAME_PARSER = value -> {
+		BigInteger number = BigInteger.ZERO;
 
 		Matcher matcher = NAME_PATTERN.matcher(value);
 		if (matcher.matches()) {
 			value = matcher.group(1);
-			number = ObjectTransformer.getInt(matcher.group(2), 0);
+			number = ObjectTransformer.getBigInteger(matcher.group(2), BigInteger.ZERO);
 		}
 
 		return Pair.of(value, number);
@@ -242,8 +339,8 @@ public class UniquifyHelper {
 	 * @return unique value
 	 * @throws NodeException
 	 */
-	public static String makeUnique(Supplier<String> start, Function<String, Boolean> checker, BiFunction<String, Integer, String> generator) throws NodeException {
-		return makeUnique(start, checker, generator, v -> Pair.of(v, 0));
+	public static String makeUnique(Supplier<String> start, Function<String, Boolean> checker, BiFunction<String, BigInteger, String> generator) throws NodeException {
+		return makeUnique(start, checker, generator, v -> Pair.of(v, BigInteger.ZERO));
 	}
 
 	/**
@@ -255,21 +352,21 @@ public class UniquifyHelper {
 	 * @return unique value
 	 * @throws NodeException
 	 */
-	public static <T> String makeUnique(Supplier<String> start, Function<String, Boolean> checker, BiFunction<T, Integer, String> generator,
-			Function<String, Pair<T, Integer>> initial) throws NodeException {
+	public static <T> String makeUnique(Supplier<String> start, Function<String, Boolean> checker, BiFunction<T, BigInteger, String> generator,
+			Function<String, Pair<T, BigInteger>> initial) throws NodeException {
 		String value = start.supply();
 		if (checker.apply(value)) {
 			return value;
 		}
 
-		Pair<T, Integer> initialPair = initial.apply(value);
+		Pair<T, BigInteger> initialPair = initial.apply(value);
 		T base = initialPair.getLeft();
-		int number = initialPair.getRight();
+		BigInteger number = initialPair.getRight();
 
 		// now add numbers to the given value and try again
 		while (true) {
 			// try the next number
-			++number;
+			number = number.add(BigInteger.ONE);
 			value = generator.apply(base, number);
 
 			if (checker.apply(value)) {
@@ -288,6 +385,18 @@ public class UniquifyHelper {
 	public static String makeFilenameUnique(String fileName, Set<String> obstructors) throws NodeException {
 		Set<String> lowerCaseObstructors = obstructors.stream().map(StringUtils::toRootLowerCase).collect(Collectors.toSet());
 		return makeUnique(() -> fileName, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), FILENAME_COMPOSER, FILENAME_PARSER);
+	}
+
+	/**
+	 * Make the given filename unique (so that it does not match any of the given obstructors)
+	 * @param fileName filename to make unique
+	 * @param obstructors obstructors
+	 * @return unique filename
+	 * @throws NodeException
+	 */
+	public static String makePageFilenameUnique(String fileName, Set<String> obstructors) throws NodeException {
+		Set<String> lowerCaseObstructors = obstructors.stream().map(StringUtils::toRootLowerCase).collect(Collectors.toSet());
+		return makeUnique(() -> fileName, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), PAGE_FILENAME_COMPOSER, PAGE_FILENAME_PARSER);
 	}
 
 	/**
@@ -326,8 +435,8 @@ public class UniquifyHelper {
 
 		return makeUnique(() -> I18NHelper.get("copy_of", "", original),
 				name -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(name)), (name, number) -> {
-					return I18NHelper.get("copy_of", " " + Integer.toString(number), original);
-				}, value -> Pair.of(value, 0));
+					return I18NHelper.get("copy_of", " %d".formatted(number), original);
+				}, value -> Pair.of(value, BigInteger.ZERO));
 	}
 
 	/**

@@ -5,11 +5,13 @@ import {
     ElementRef,
     EventEmitter,
     Input,
+    OnChanges,
+    OnDestroy,
     OnInit,
     Output,
     ViewChild,
 } from '@angular/core';
-import { ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
+import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, LanguageState, UIMode } from '@editor-ui/app/common/models';
 import {
     ApplicationStateService,
     ChangeListSelectionAction,
@@ -30,9 +32,9 @@ import {
     Normalized,
     Page,
     Raw,
-    StagedItemsMap,
+    StagedItemsMap
 } from '@gentics/cms-models';
-import { ModalService } from '@gentics/ui-core';
+import { BaseComponent, ChangesOf, ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -57,9 +59,10 @@ type AllowedItemType =
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class ItemListRowComponent implements OnInit {
+export class ItemListRowComponent extends BaseComponent implements OnInit, OnChanges {
 
-    readonly UIMode = UIMode;
+    public readonly UIMode = UIMode;
+    public readonly ItemListRowMode = ItemListRowMode;
 
     @Input()
     public item: AllowedItemType;
@@ -78,6 +81,9 @@ export class ItemListRowComponent implements OnInit {
 
     @Input()
     public itemType: FolderItemType;
+
+    @Input()
+    public permissions: FolderPermissionData;
 
     @Input()
     public startPageId: number;
@@ -104,7 +110,13 @@ export class ItemListRowComponent implements OnInit {
     public showDeleted: boolean;
 
     @Input()
+    public showStatusIcons: boolean;
+
+    @Input()
     public canBeSelected = true;
+
+    @Input()
+    public activeLanguage: Language;
 
     /**
      * Determine whether this component is in DEFAULT mode (behavior in `item-list`) or
@@ -138,24 +150,14 @@ export class ItemListRowComponent implements OnInit {
     @Output()
     public formLanguageIconClick = new EventEmitter<{ form: Form<Raw>; language: Language; }>();
 
-    /**
-     * @returns TRUE if selected node provides more than one language. If there is only one node language
-     * the indicator-current is not a language code but a cloud icon instead including status icons, will be hidden by default
-     * and display on ```state.folder.displayStatusIcons = true```.
-     */
-    get singleLanguageIndicatorCurrentIsVisible$(): Observable<boolean> {
-        return this.appState.select(state => {
-            return this.nodeLanguages && this.nodeLanguages.length > 1 || state.folder.displayStatusIcons === true;
-        });
-    }
+    @Input()
+    public searching: boolean;
 
-    searchTerm$: Observable<string>;
-    elasticSearchQueryActive$: Observable<boolean>;
-
-    @ViewChild('itemPrimary', { read: ElementRef, static: true })
-    itemPrimary: ElementRef;
+    public languageState: LanguageState;
+    public itemIdDeleted = false;
 
     constructor(
+        changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private modalService: ModalService,
         private errorHandler: ErrorHandler,
@@ -164,12 +166,66 @@ export class ItemListRowComponent implements OnInit {
         private decisionModals: DecisionModalsService,
         private folderActions: FolderActionsService,
         private wastebinActions: WastebinActionsService,
-        private changeDetectorRef: ChangeDetectorRef,
-    ) { }
+    ) {
+        super(changeDetector);
+    }
 
     ngOnInit(): void {
-        this.searchTerm$ = this.appState.select(state => state.folder.searchTerm);
-        this.elasticSearchQueryActive$ = this.appState.select(state => state.folder.searchFiltersVisible);
+
+    }
+
+    ngOnChanges(changes: ChangesOf<this>): void {
+        if (changes.item || changes.nodeLanguages) {
+            this.updateLanguageState();
+        }
+    }
+
+    updateLanguageState(): void {
+        let itemLang: Language;
+        let available: boolean;
+
+        if (this.item.type === 'page') {
+            itemLang = this.nodeLanguages.find(lang => lang.code === (this.item as Page).language);
+            available = !!itemLang;
+        } else if (this.item.type === 'form') {
+            itemLang = this.nodeLanguages.find(lang => lang.id === this.appState.now.folder.activeFormLanguage);
+            available = !!itemLang;
+            if (!itemLang) {
+                itemLang = this.nodeLanguages.find(lang => (this.item as Form).languages.includes(lang.code));
+            }
+        } else {
+            this.languageState = null;
+            return;
+        }
+
+        this.itemIdDeleted = this.item != null &&
+                PublishableStateUtil.stateDeleted(this.item);
+
+        this.languageState = {
+            ...itemLang,
+            available,
+            deleted: this.itemIdDeleted,
+            inherited:
+                this.item != null &&
+                PublishableStateUtil.stateInherited(this.item),
+            localized:
+                this.item != null &&
+                PublishableStateUtil.stateLocalized(this.item),
+            modified:
+                this.item != null &&
+                PublishableStateUtil.stateModified(this.item),
+            planned:
+                this.item != null &&
+                PublishableStateUtil.statePlanned(this.item),
+            published:
+                this.item != null &&
+                PublishableStateUtil.statePublished(this.item),
+            queued:
+                this.item != null &&
+                PublishableStateUtil.stateInQueue(this.item),
+            staged: this.item != null &&
+                this.stagingMap?.[this.item.globalId]?.included,
+        }
     }
 
     toggleSelect(): void {
@@ -193,7 +249,7 @@ export class ItemListRowComponent implements OnInit {
 
         this.itemClick.emit(item);
         // do nothing if in SELECT mode or if in STAGING mode
-        if (this.isModeSelect() || this.isModeStaging()) {
+        if (this.mode === ItemListRowMode.SELECT || this.uiMode === UIMode.STAGING) {
             return;
         }
 
@@ -227,13 +283,13 @@ export class ItemListRowComponent implements OnInit {
         if (restore) {
             const entityToBeRestoredId = languageVariantId;
             this.wastebinActions.restoreItemsFromWastebin('page', [entityToBeRestoredId])
-                .then(() => this.changeDetectorRef.markForCheck());
+                .then(() => this.changeDetector.markForCheck());
             return;
         }
 
         const isDeleted = this.isDeleted(pageTranslation);
 
-        if (-1 < pageLanguageIds.indexOf(language.id) && pageTranslation && !isDeleted) {
+        if (pageLanguageIds.includes(language.id) && pageTranslation && !isDeleted) {
             if (compare) {
                 // compare two language versions
                 this.editPageCompareWithLanguage(item, item.languageVariants[language.id]);
@@ -292,7 +348,7 @@ export class ItemListRowComponent implements OnInit {
         if (restore) {
             const entityToBeRestoredId = item.id;
             await this.wastebinActions.restoreItemsFromWastebin('form', [entityToBeRestoredId]);
-            this.changeDetectorRef.markForCheck();
+            this.changeDetector.markForCheck();
             return;
         }
 
@@ -311,14 +367,6 @@ export class ItemListRowComponent implements OnInit {
         await this.folderActions.setActiveFormLanguage(language.id);
         await this.folderActions.refreshList('form');
         this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, EditMode.EDIT).navigate();
-    }
-
-    isModeSelect(): boolean {
-        return this.mode === ItemListRowMode.SELECT;
-    }
-
-    isModeStaging(): boolean {
-        return this.uiMode === UIMode.STAGING;
     }
 
     getItemDetailsDisplayFields(): string[] {

@@ -10,7 +10,7 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { EditorPermissions, ItemsInfo, UIMode, getNoPermissions } from '@editor-ui/app/common/models';
+import { FolderPermissionData, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
 import {
     FolderItemType,
     FolderItemTypePlural,
@@ -23,11 +23,10 @@ import {
 import { isEqual } from 'lodash-es';
 import { PaginationInstance, PaginationService } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, startWith } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
 import { areItemsLoading } from '../../../common/utils/are-items-loading';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { UploadProgressReporter } from '../../../core/providers/api';
-import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { ApplicationStateService, FolderActionsService, UsageActionsService } from '../../../state';
 
@@ -61,6 +60,9 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     public activeNode: NodeModel;
 
     @Input()
+    public nodeLanguages: Language[] = [];
+
+    @Input()
     public currentFolderId: number;
 
     @Input()
@@ -76,7 +78,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     public uploadProgress: UploadProgressReporter;
 
     @Input()
-    public folderPermissions: EditorPermissions = getNoPermissions();
+    public folderPermissions: FolderPermissionData;
 
     @Input()
     public linkPaths = false;
@@ -101,10 +103,13 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     icon = '';
     showGrid = true;
 
-    languages$: Observable<Language[]>;
+    public displayStatusInfo: boolean;
+    public displayDeleted: boolean;
+    public searchTerm: string;
+    public elasticSearchQueryActive: boolean;
+    public activeLanguage: Language | null;
+
     showAllLanguages$: Observable<boolean>;
-    showStatusIcons$: Observable<boolean>;
-    showDeleted$: Observable<boolean>;
     showImagesGridView$: Observable<boolean>;
     private subscriptions: Subscription[] = [];
     paginationConfig: PaginationInstance = {
@@ -113,7 +118,6 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     };
 
     selectedItems$: Observable<Item[]>;
-
     areItemsLoading$: Observable<boolean>;
 
     private itemType$ = new BehaviorSubject<FolderItemType>(null);
@@ -123,19 +127,42 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         private changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private usageActions: UsageActionsService,
-        private entityResolver: EntityResolver,
         private folderActions: FolderActionsService,
         private userSettings: UserSettingsService,
     ) { }
 
     ngOnInit(): void {
-        this.languages$ = this.appState.select(state => state.folder.activeNodeLanguages.list).pipe(
-            map(list => list.map(id => this.entityResolver.getLanguage(id))),
-        );
         this.showAllLanguages$ = this.appState.select(state => state.folder.displayAllLanguages);
-        this.showStatusIcons$ = this.appState.select(state => state.folder.displayStatusIcons);
-        this.showDeleted$ = this.appState.select(state => state.folder.displayDeleted);
         this.showImagesGridView$ = this.appState.select(state => state.folder.displayImagesGridView);
+
+        if (this.itemType === 'page') {
+            this.subscriptions.push(this.appState.select((state) => state.folder.activeLanguage).pipe(
+                switchMap(langId => this.appState.select((state) => state.entities.language[langId])),
+            ).subscribe(lang => {
+                this.activeLanguage = lang;
+                this.changeDetector.markForCheck();
+            }));
+        } else if (this.itemType === 'form') {
+            this.subscriptions.push(this.appState.select((state) => state.folder.activeFormLanguage).pipe(
+                switchMap(langId => this.appState.select((state) => state.entities.language[langId])),
+            ).subscribe(lang => {
+                this.activeLanguage = lang;
+                this.changeDetector.markForCheck();
+            }));
+        }
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.displayStatusIcons).subscribe((enabled) => {
+            this.displayStatusInfo = enabled;
+            this.changeDetector.markForCheck();
+        }));
+        this.subscriptions.push(
+            this.appState
+                .select((state) => state.folder.displayDeleted)
+                .subscribe((show) => {
+                    this.displayDeleted = show;
+                    this.changeDetector.markForCheck();
+                }),
+        );
 
         // When the current folder changes, reset the pagination to page 1
         const resetPaginationSub = this.appState.select(state => state.folder.activeFolder)
@@ -211,6 +238,15 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             map(areItemsLoading),
             distinctUntilChanged(isEqual),
         );
+
+        this.subscriptions.push(this.appState.select(state => state.folder.searchTerm).subscribe((term) => {
+            this.searchTerm = term;
+            this.changeDetector.markForCheck();
+        }));
+        this.subscriptions.push(this.appState.select(state => state.folder.searchFiltersVisible).subscribe((active) => {
+            this.elasticSearchQueryActive = active;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngOnChanges(changes: { [K in keyof ItemListComponent]?: SimpleChange }): void {
@@ -305,19 +341,19 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     /**
      * Tracking function for ngFor for better performance.
      */
-    identify(index: number, item: Item): number {
-        return item?.id ?? index;
+    identify(index: number, item: Item): string | number {
+        return item?.globalId ?? item?.id ?? index;
     }
 
     /**
      * Returns true is the item is in the selectedItems array.
      */
-    isSelected(item: Item): boolean {
-        if (item == null) {
-            return false;
-        }
+    // isSelected(item: Item): boolean {
+    //     if (item == null) {
+    //         return false;
+    //     }
 
-        return this.itemsInfo.selected.indexOf(item.id) >= 0;
-    }
+    //     return this.itemsInfo.selected.indexOf(item.id) >= 0;
+    // }
 
 }

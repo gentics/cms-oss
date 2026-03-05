@@ -752,13 +752,13 @@ export class PermissionService {
      * Creates a consumable HashMap from the raw permission data returned by the server.
      * When a language is passed, the group permissions of that language are merged in.
      */
-    protected mapToPermissions(
+    public mapToPermissions(
         priv: PrivilegeMap,
         map: PermissionsMapCollection,
         languageId: number | string | null,
     ): EditorPermissions {
-        let perm;
-        let role;
+        let perm: Partial<Record<GcmsPermission, boolean>>;
+        let role: GcmsRolePrivilegeMapCollection;
 
         if (map) {
             perm = map.permissions;

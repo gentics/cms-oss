@@ -846,6 +846,9 @@ export class FolderActionsService {
     getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<void>;
     getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options?: FolderListOptions): Promise<void>;
     async getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options: any = {}): Promise<void> {
+        if (type === 'page') {
+            console.time('load-pages');
+        }
         // assign query params from state
         const nodeId = options && options.nodeId || this.getCurrentNodeId();
         const itemInfo: ItemsInfo = this.appState.now.folder[`${type}s` as FolderItemTypePlural];
@@ -940,7 +943,17 @@ export class FolderActionsService {
         try {
             const res = await apiMethod.pipe(
                 first(),
+                tap(() => {
+                    if (type === 'page') {
+                        console.time('process-pages');
+                    }
+                }),
                 this.postProcessItemListResponse(type, nodeId),
+                tap(() => {
+                    if (type === 'page') {
+                        console.timeEnd('process-pages');
+                    }
+                }),
             ).toPromise();
 
             const collectionKey = type === 'image' ? 'files' : `${type}s`;
@@ -961,7 +974,13 @@ export class FolderActionsService {
                 const loadedFolders = this.appState.now.entities.folder;
 
                 for (const item of collection) {
-                    if (loadedFolders[item.folderId] == null || loadedFolders[item.folderId].permissionsMap == null) {
+                    if (
+                        (loadedFolders[item.folderId] == null
+                            || loadedFolders[item.folderId].permissionsMap == null
+                        )
+                        // Dont add the same load multiple times
+                        && !foldersToLoad.some(toLoad => toLoad.id === item.folderId && toLoad.nodeId === item.masterNodeId)
+                    ) {
                         foldersToLoad.push({ id: item.folderId, nodeId: item.masterNodeId });
                     }
                 }
@@ -973,7 +992,15 @@ export class FolderActionsService {
                     }
 
                     return forkJoin([
-                        this.client.folder.get(folderRef.id, options),
+                        of(null).pipe(
+                            switchMap(() => {
+                                console.time(`load-folder-${folderRef.id}`);
+                                return this.client.folder.get(folderRef.id, options);
+                            }),
+                            tap(() => {
+                                console.timeEnd(`load-folder-${folderRef.id}`);
+                            }),
+                        ),
                         this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, { ...options, map: true })
                     ])
                     .pipe(
@@ -986,6 +1013,9 @@ export class FolderActionsService {
             }
 
             await this.appState.dispatch(new AddContentStagingMapAction(res.stagingStatus)).toPromise();
+            if (type === 'page') {
+                console.timeEnd('load-pages');
+            }
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction(type, error.message)).toPromise();
             this.errorHandler.catch(error);

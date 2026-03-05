@@ -2326,7 +2326,7 @@ public class FileFactory extends AbstractFactory {
 			throw new NodeException("Filename must not be null. Can't check for duplicate files and suggest a new filename");
 		}
 
-		Set<String> obstructors = DisinheritUtils.getUsedFilenames(file, CNStringUtils.escapeRegex(file.getFilename()), pcf, null).keySet();
+		Set<String> obstructors = DisinheritUtils.getUsedFilenames(file, UniquifyHelper.FILENAME_SEARCH_PATTERN.apply(file.getFilename()), pcf, null).keySet();
 		String uniqueFilename = UniquifyHelper.makeFilenameUnique(file.getName(), obstructors);
 		file.setName(uniqueFilename);
 		return uniqueFilename;

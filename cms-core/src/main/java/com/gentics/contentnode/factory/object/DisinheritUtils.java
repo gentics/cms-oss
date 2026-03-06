@@ -1290,9 +1290,9 @@ public class DisinheritUtils {
 				filenameSet.put(StringUtils.toRootLowerCase(folder.getPublishDir()), folder);
 			}
 
-			String folderI18nPubDirSQL = "SELECT fi.folder_id FROM folder_i18n fi LEFT JOIN folder f ON fi.folder_id = f.id WHERE fi.pub_dir REGEXP ? AND f.deleted = 0 AND channelset_id != ?";
-			DBUtils.select(folderI18nPubDirSQL, ps -> {
-				ps.setString(1, folderI18nPubDirSQL);
+			String folderI18nPubDirSQL = "SELECT fi.folder_id id FROM folder_i18n fi LEFT JOIN folder f ON fi.folder_id = f.id WHERE fi.pub_dir REGEXP ? AND f.deleted = 0 AND channelset_id != ?";
+			folderIds = DBUtils.select(folderI18nPubDirSQL, ps -> {
+				ps.setString(1, filenamePatternStr);
 				ps.setInt(2, checkObject.getChannelSetId());
 			}, DBUtils.IDS);
 			folders = t.getObjects(Folder.class, folderIds);

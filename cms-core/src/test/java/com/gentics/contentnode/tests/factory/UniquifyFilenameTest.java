@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,6 +26,8 @@ import com.gentics.contentnode.factory.UniquifyHelper;
  */
 @RunWith(value = Parameterized.class)
 public class UniquifyFilenameTest {
+	public final static int REPEAT = 101;
+
 	@Parameters(name = "{index}: start {0}, expected {1}, obstructors {2}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
@@ -38,6 +42,7 @@ public class UniquifyFilenameTest {
 		data.add(new Object[] {"image_1", "image_2", hashSet("image", "image_1")});
 		data.add(new Object[] {"IMAGE_1", "IMAGE_2", hashSet("image", "image_1")});
 		data.add(new Object[] {"image_1", "image_3", hashSet("image", "image_1", "image_2", "image_4")});
+		data.add(new Object[] {"abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz.txt", "abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz_abcdef.txt", hashSet()});
 		return data;
 	}
 
@@ -57,5 +62,19 @@ public class UniquifyFilenameTest {
 
 		String result = makeFilenameUnique(start, filteredObstructors);
 		assertThat(result).as("Unique value").isEqualTo(expected);
+	}
+
+	@Test
+	public void testMakeUniqueRepeatedly() throws NodeException {
+		Set<String> obstructors = new HashSet<>();
+		List<String> uniqueValues = new ArrayList<>();
+
+		for (int i = 0; i < REPEAT; i++) {
+			String unique = makeFilenameUnique(start, obstructors);
+			uniqueValues.add(unique);
+			obstructors.add(unique);
+		}
+
+		assertThat(uniqueValues).as("Unique values").doesNotHaveDuplicates().allMatch(s -> s.length() <= UniquifyHelper.MAX_FILENAME_LENGTH);
 	}
 }

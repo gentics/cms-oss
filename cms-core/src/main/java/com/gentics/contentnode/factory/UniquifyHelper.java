@@ -45,21 +45,110 @@ public class UniquifyHelper {
 	public final static Pattern FILENAME_PATTERN = Pattern.compile("^(.*)_([0-9]{1,3})$");
 
 	/**
+	 * Maximum allowed length for filenames
+	 */
+	public final static int MAX_FILENAME_LENGTH = 64;
+
+	/**
+	 * Make the given filename shorter, if it is longer than the given maximum length
+	 * When the filename has an extension, first the base will be shortened (to a minimum of 1 character), then the extension will be shortened
+	 * @param fileName filename to shorten
+	 * @param maxLength maximum allowed length
+	 * @return shortened filename
+	 * @throws NodeException
+	 */
+	public final static String makeShortenedFilename(String fileName, int maxLength) throws NodeException {
+		String baseName = FilenameUtils.getBaseName(fileName);
+		String extension = FilenameUtils.getExtension(fileName);
+
+		if (StringUtils.isEmpty(extension)) {
+			return makeShortenedFilename(baseName, maxLength, b -> b);
+		} else {
+			return makeShortenedFilename(baseName, extension, maxLength, (b, e) -> "%s.%s".formatted(b, e));
+		}
+	}
+
+	/**
+	 * Compose the filename and make sure that it is no longer than the given maximum number of characters
+	 * @param base filename base (which may be made shorter)
+	 * @param maxLength maximum allowed length
+	 * @param composer function to compose the filename
+	 * @return filename
+	 * @throws NodeException
+	 */
+	public final static String makeShortenedFilename(String base, int maxLength, Function<String, String> composer)
+			throws NodeException {
+		String fileName = composer.apply(base);
+		while (fileName.length() > maxLength) {
+			if (base.length() > 0) {
+				base = base.substring(0, base.length() - 1);
+				fileName = composer.apply(base);
+				continue;
+			}
+			throw new NodeException(
+					"Error while making proposed filename {" + fileName + "} unique. Cannot shorten filename.");
+		}
+
+		return fileName;
+	}
+
+	/**
+	 * Compose the filename and make sure that it is no longer than the given maximum number of characters
+	 * @param base filename base (which may be made shorter)
+	 * @param extension extension (which may be made shorter)
+	 * @param maxLength maximum allowed length
+	 * @param composer function to compose the filename
+	 * @return filename
+	 * @throws NodeException
+	 */
+	public final static String makeShortenedFilename(String base, String extension, int maxLength,
+			BiFunction<String, String, String> composer) throws NodeException {
+		String fileName = composer.apply(base, extension);
+
+		while (fileName.length() > maxLength) {
+			if (base.length() > 0) {
+				base = base.substring(0, base.length() - 1);
+				fileName = composer.apply(base, extension);
+				continue;
+			}
+
+			if (extension.length() > 1) {
+				extension = extension.substring(0, extension.length() - 1);
+				fileName = composer.apply(base, extension);
+				continue;
+			}
+			throw new NodeException(
+					"Error while making proposed filename {" + fileName + "} unique. Cannot shorten filename.");
+		}
+
+		return fileName;
+	}
+
+	/**
 	 * Function to create the search pattern for obstructors for the given filename
 	 * when trying to make it unique
 	 */
-	public final static Function<String, String> FILENAME_SEARCH_PATTERN = filename -> {
-		String baseName = FilenameUtils.getBaseName(filename);
-		String extension = FilenameUtils.getExtension(filename);
+	public final static Function<String, String> FILENAME_SEARCH_PATTERN = fileName -> {
+		String baseName = FilenameUtils.getBaseName(fileName);
+		String extension = FilenameUtils.getExtension(fileName);
 
 		Matcher matcher = FILENAME_PATTERN.matcher(baseName);
 		if (matcher.matches()) {
 			baseName = matcher.group(1);
 		}
 
-		String searchFilenamePattern = CNStringUtils.escapeRegex(baseName) + "(_([0-9]+))?";
+		// make basename and extension shorter, if necessary
+		if (StringUtils.isEmpty(extension)) {
+			baseName = makeShortenedFilename(baseName, 59, b -> b);
+		} else {
+			fileName = makeShortenedFilename(baseName, extension, 59, (b, e) -> "%s.%s".formatted(b, e));
+			baseName = FilenameUtils.getBaseName(fileName);
+			extension = FilenameUtils.getExtension(fileName);
+		}
+
+		String searchFilenamePattern = CNStringUtils.escapeRegex(baseName) + ".*(_([0-9]+))?";
 		if (!StringUtils.isEmpty(extension)) {
-			searchFilenamePattern += "\\." + CNStringUtils.escapeRegex(extension);
+			searchFilenamePattern += "\\." + CNStringUtils.escapeRegex(extension) + ".*";
 		}
 
 		return searchFilenamePattern;
@@ -70,9 +159,14 @@ public class UniquifyHelper {
 	 */
 	public final static BiFunction<Pair<String, String>, BigInteger, String> FILENAME_COMPOSER = (pair, number) -> {
 		if (StringUtils.isEmpty(pair.getRight())) {
-			return "%s_%d".formatted(pair.getLeft(), number);
+			String base = pair.getLeft();
+
+			return makeShortenedFilename(base, MAX_FILENAME_LENGTH, b -> "%s_%d".formatted(b, number));
 		} else {
-			return "%s_%d.%s".formatted(pair.getLeft(), number, pair.getRight());
+			String base = pair.getLeft();
+			String extension = pair.getRight();
+
+			return makeShortenedFilename(base, extension, MAX_FILENAME_LENGTH, (b, e) -> "%s_%d.%s".formatted(b, number, e));
 		}
 	};
 
@@ -102,21 +196,30 @@ public class UniquifyHelper {
 	 * Function to create the search pattern for obstructors for the given filename
 	 * when trying to make it unique
 	 */
-	public final static Function<String, String> PAGE_FILENAME_SEARCH_PATTERN = filename -> {
-		Matcher fileNameMatcher = PAGE_FILENAME_PATTERN.matcher(filename);
+	public final static Function<String, String> PAGE_FILENAME_SEARCH_PATTERN = fileName -> {
+		Matcher fileNameMatcher = PAGE_FILENAME_PATTERN.matcher(fileName);
 
 		if (fileNameMatcher.matches()) {
 			String baseFileName = fileNameMatcher.group(1);
 			String extension = fileNameMatcher.group(4);
 
-			String searchFilenamePattern = CNStringUtils.escapeRegex(baseFileName) + "([0-9]*)";
+			// make basename and extension shorter, if necessary
+			if (StringUtils.isEmpty(extension)) {
+				baseFileName = makeShortenedFilename(baseFileName, 59, b -> b);
+			} else {
+				fileName = makeShortenedFilename(baseFileName, extension, 59, (b, e) -> "%s.%s".formatted(b, e));
+				baseFileName = FilenameUtils.getBaseName(fileName);
+				extension = FilenameUtils.getExtension(fileName);
+			}
+
+			String searchFilenamePattern = CNStringUtils.escapeRegex(baseFileName) + ".*([0-9]*)";
 			if (!StringUtils.isEmpty(extension)) {
-				searchFilenamePattern += "\\." + CNStringUtils.escapeRegex(extension);
+				searchFilenamePattern += "\\." + CNStringUtils.escapeRegex(extension) + ".*";
 			}
 
 			return searchFilenamePattern;
 		} else {
-			throw new NodeException("Error while making proposed filename {" + filename
+			throw new NodeException("Error while making proposed filename {" + fileName
 					+ "} unique. Filename does not match the expected pattern.");
 		}
 	};
@@ -136,38 +239,11 @@ public class UniquifyHelper {
 			leadingZeros = leadingZeros.substring(1);
 		}
 
+		final String finalLeadingZeros = leadingZeros;
 		if (StringUtils.isEmpty(extension)) {
-			String fileName = "%s%s%d".formatted(base, leadingZeros, number);
-
-			while (fileName.length() > 64) {
-				if (base.length() > 0) {
-					base = base.substring(0, base.length() - 1);
-					fileName = "%s%s%d".formatted(base, leadingZeros, number);
-					continue;
-				}
-				throw new NodeException("Error while making proposed filename {" + fileName + "} unique. Cannot shorten filename.");
-			}
-
-			return fileName;
+			return makeShortenedFilename(base, MAX_FILENAME_LENGTH, b -> "%s%s%d".formatted(b, finalLeadingZeros, number));
 		} else {
-			String fileName = "%s%s%d.%s".formatted(base, leadingZeros, number, extension);
-
-			while (fileName.length() > 64) {
-				if (base.length() > 0) {
-					base = base.substring(0, base.length() - 1);
-					fileName = "%s%s%d.%s".formatted(base, leadingZeros, number, extension);
-					continue;
-				}
-
-				if (extension.length() > 1) {
-					extension = extension.substring(0, extension.length() - 1);
-					fileName = "%s%s%d.%s".formatted(base, leadingZeros, number, extension);
-					continue;
-				}
-				throw new NodeException("Error while making proposed filename {" + fileName + "} unique. Cannot shorten filename.");
-			}
-
-			return fileName;
+			return makeShortenedFilename(base, extension, MAX_FILENAME_LENGTH, (b, e) -> "%s%s%d.%s".formatted(b, finalLeadingZeros, number, e));
 		}
 	};
 
@@ -384,7 +460,11 @@ public class UniquifyHelper {
 	 */
 	public static String makeFilenameUnique(String fileName, Set<String> obstructors) throws NodeException {
 		Set<String> lowerCaseObstructors = obstructors.stream().map(StringUtils::toRootLowerCase).collect(Collectors.toSet());
-		return makeUnique(() -> fileName, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), FILENAME_COMPOSER, FILENAME_PARSER);
+
+		// make the original filename shorter, if it is too long
+		String shortenedfileName = makeShortenedFilename(fileName, MAX_FILENAME_LENGTH);
+
+		return makeUnique(() -> shortenedfileName, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), FILENAME_COMPOSER, FILENAME_PARSER);
 	}
 
 	/**
@@ -396,7 +476,11 @@ public class UniquifyHelper {
 	 */
 	public static String makePageFilenameUnique(String fileName, Set<String> obstructors) throws NodeException {
 		Set<String> lowerCaseObstructors = obstructors.stream().map(StringUtils::toRootLowerCase).collect(Collectors.toSet());
-		return makeUnique(() -> fileName, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), PAGE_FILENAME_COMPOSER, PAGE_FILENAME_PARSER);
+
+		// make the original filename shorter, if it is too long
+		String shortenedfileName = makeShortenedFilename(fileName, MAX_FILENAME_LENGTH);
+
+		return makeUnique(() -> shortenedfileName, value -> !lowerCaseObstructors.contains(StringUtils.toRootLowerCase(value)), PAGE_FILENAME_COMPOSER, PAGE_FILENAME_PARSER);
 	}
 
 	/**

@@ -208,8 +208,11 @@ public class UniquifyHelper {
 				baseFileName = makeShortenedFilename(baseFileName, 59, b -> b);
 			} else {
 				fileName = makeShortenedFilename(baseFileName, extension, 59, (b, e) -> "%s.%s".formatted(b, e));
-				baseFileName = FilenameUtils.getBaseName(fileName);
-				extension = FilenameUtils.getExtension(fileName);
+				fileNameMatcher = PAGE_FILENAME_PATTERN.matcher(fileName);
+				if (fileNameMatcher.matches()) {
+					baseFileName = fileNameMatcher.group(1);
+					extension = fileNameMatcher.group(4);
+				}
 			}
 
 			String searchFilenamePattern = CNStringUtils.escapeRegex(baseFileName) + ".*([0-9]*)";

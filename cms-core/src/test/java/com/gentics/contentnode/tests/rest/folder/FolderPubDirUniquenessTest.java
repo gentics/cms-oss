@@ -95,7 +95,6 @@ public class FolderPubDirUniquenessTest {
 				}
 			}
 		}
-//		data.add(new Object[] { true, "de", TestType.create, false });
 		return data;
 	}
 

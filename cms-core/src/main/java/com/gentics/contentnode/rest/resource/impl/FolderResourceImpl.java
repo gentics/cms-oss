@@ -3329,7 +3329,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			folder.setPublishDirI18n(I18nMap.TRANSFORM2NODE.apply(pubDirI18n));
 		}
 		if (checkDuplicatePubDir) {
-			Pair<String, NodeObject> conflictingObject = FolderFactory.isPubDirAvailable(folder, true);
+			Pair<String, NodeObject> conflictingObject = FolderFactory.isPubDirAvailable(folder);
 			if (conflictingObject != null) {
 				conflictingObject.getRight().getTType();
 

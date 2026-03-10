@@ -2260,6 +2260,11 @@ public class MiscUtils {
 		}
 	}
 
+	/**
+	 * Get the type descriptor for the given object (works for pages, files, images and folders)
+	 * @param object object in question
+	 * @return type description (null if object null or not supported)
+	 */
 	public static String getTypeDescriptor(NodeObject object) {
 		if (object == null) {
 			return null;

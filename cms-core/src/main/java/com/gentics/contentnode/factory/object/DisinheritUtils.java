@@ -1085,7 +1085,7 @@ public class DisinheritUtils {
 	 * @param overrideRestrictions
 	 *            if not null, these multichannelling restrictions are used
 	 *            instead of checkObject's
-	 * @return set of filenames (empty if no conflicts are found) all made lowercase
+	 * @return map of filenames to objects (empty if no conflicts are found) all filenames made lowercase
 	 * @throws NodeException
 	 */
 	public static Map<String, NodeObject> getUsedFilenames(Disinheritable<?> checkObject, String filenamePatternStr, Set<Folder> potentialConflictingFolders,
@@ -1280,20 +1280,22 @@ public class DisinheritUtils {
 		int folderId = Optional.ofNullable(checkObject.getParentObject()).map(NodeObject::getId).orElse(0);
 		if (pubDirSegment && folderId > 0) {
 			// when pub dir segments is activated, we also need to add the sibling folders with their pub dirs
-			String folderPubDirSQL = "SELECT id FROM folder WHERE pub_dir REGEXP ? AND deleted = 0 AND channelset_id != ?";
+			String folderPubDirSQL = "SELECT id FROM folder WHERE pub_dir REGEXP ? AND deleted = 0 AND channelset_id != ? AND mother = ?";
 			Set<Integer> folderIds = DBUtils.select(folderPubDirSQL, ps -> {
 				ps.setString(1, filenamePatternStr);
 				ps.setInt(2, checkObject.getChannelSetId());
+				ps.setInt(3, folderId);
 			}, DBUtils.IDS);
 			List<Folder> folders = t.getObjects(Folder.class, folderIds);
 			for (Folder folder : folders) {
 				filenameSet.put(StringUtils.toRootLowerCase(folder.getPublishDir()), folder);
 			}
 
-			String folderI18nPubDirSQL = "SELECT fi.folder_id id FROM folder_i18n fi LEFT JOIN folder f ON fi.folder_id = f.id WHERE fi.pub_dir REGEXP ? AND f.deleted = 0 AND channelset_id != ?";
+			String folderI18nPubDirSQL = "SELECT fi.folder_id id FROM folder_i18n fi LEFT JOIN folder f ON fi.folder_id = f.id WHERE fi.pub_dir REGEXP ? AND f.deleted = 0 AND channelset_id != ? AND f.mother = ?";
 			folderIds = DBUtils.select(folderI18nPubDirSQL, ps -> {
 				ps.setString(1, filenamePatternStr);
 				ps.setInt(2, checkObject.getChannelSetId());
+				ps.setInt(3, folderId);
 			}, DBUtils.IDS);
 			folders = t.getObjects(Folder.class, folderIds);
 

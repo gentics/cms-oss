@@ -7560,11 +7560,10 @@ public class FolderFactory extends AbstractFactory {
 	/**
 	 * Check whether the folder's proposed pub_dirs are available
 	 * @param folder folder with proposed pub_dirs
-	 * @param checkPagesAndFiles true to check also pages and files in the folder
 	 * @return pair of the used pub_dir and the other object using the pub_dir or null if the pub_dirs are available
 	 * @throws NodeException
 	 */
-	public static Pair<String, NodeObject> isPubDirAvailable(Folder folder, boolean checkPagesAndFiles) throws NodeException {
+	public static Pair<String, NodeObject> isPubDirAvailable(Folder folder) throws NodeException {
 		if (folder == null) {
 			throw new NodeException("Cannot check pub_dir availability without folder");
 		}

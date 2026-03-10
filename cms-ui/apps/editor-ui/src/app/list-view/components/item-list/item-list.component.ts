@@ -188,7 +188,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
 
         this.selectedItems$ = combineLatest([selected$, this.itemHash$]).pipe(
             map(([selectedIds, itemHash]) => {
-                return selectedIds
+                return (selectedIds || [])
                     .map(id => itemHash[id])
                     .filter(item => !!item);
             }),

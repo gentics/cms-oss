@@ -16,6 +16,7 @@ import {
     QueryAssemblerElasticSearchService,
     QueryAssemblerGCMSSearchService,
 } from '@editor-ui/app/shared/providers/query-assembler';
+import { responseMessageToNotification } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
@@ -40,6 +41,7 @@ import {
     FileListResponse,
     FileOrImage,
     FileReplaceOptions,
+    FileRequestOptions,
     FileUploadResponse,
     Folder,
     FolderCreateRequest,
@@ -52,6 +54,7 @@ import {
     FolderListOptions,
     FolderListResponse,
     FolderRequestOptions,
+    FolderResponse,
     Form,
     FormCreateRequest,
     FormListOptions,
@@ -77,6 +80,7 @@ import {
     Node,
     NodeFeature,
     NodeFeatures,
+    NodeListResponse,
     NodeResponse,
     Normalized,
     Page,
@@ -91,6 +95,7 @@ import {
     PageVersion,
     PagedTemplateListResponse,
     PagingSortOrder,
+    PermissionResponse,
     PushToMasterRequest,
     QueuedActionRequestClear,
     Raw,
@@ -110,9 +115,9 @@ import {
     TimeManagement,
     TranslationRequestOptions,
     TypedItemListResponse,
-    folderItemTypePlurals, GcmsPermission, GcmsRolePrivilege, FolderResponse, PermissionResponse,
-    FileRequestOptions,
+    folderItemTypePlurals
 } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { normalize, schema } from 'normalizr';
@@ -194,9 +199,6 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
-import { responseMessageToNotification } from '@gentics/cms-components';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
-import {TakePagesOfflineModal} from "@editor-ui/app/shared/components";
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -263,26 +265,19 @@ export class FolderActionsService {
             forkJoin([
                 this.appState.dispatch(new StartListFetchingAction('nodes', undefined, true)),
                 this.client.folder.folders(0),
+                this.client.node.list(),
             ]).pipe(
-                switchMap(([, folderRes]) => {
-                    if (folderRes.folders?.length === 0) {
-                        return of([folderRes, []]);
-                    }
-
-                    return forkJoin(folderRes.folders.map(folder => this.client.node.get(folder.nodeId ?? folder.id))).pipe(
-                        map(responses => [folderRes, responses.map(res => res.node)]),
-                    );
-                }),
-                switchMap(([folderRes, nodes]: [FolderListResponse, Node[]]) => {
+                switchMap(([, folderRes, nodesRes]: [any, FolderListResponse, NodeListResponse]) => {
+                    const nodes = nodesRes.items;
                     return this.appState.dispatch(new NodeFetchingSuccessAction(folderRes.folders, nodes)).pipe(
-                        map(() => [folderRes, nodes]),
+                        map(() => nodes),
                     );
                 }),
-            ).subscribe(([, nodes]) => {
+            ).subscribe((nodes) => {
                 if (nodes.length > 0) {
                     this.getActiveNodeLanguages()
                         .then(languages => this.setActiveLanguageFromAvailable(languages));
-                    resolve(nodes as any);
+                    resolve(nodes);
                 }
             }, error => {
                 this.appState.dispatch(new ListFetchingErrorAction('nodes', error.message));
@@ -846,9 +841,6 @@ export class FolderActionsService {
     getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<void>;
     getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options?: FolderListOptions): Promise<void>;
     async getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options: any = {}): Promise<void> {
-        if (type === 'page') {
-            console.time('load-pages');
-        }
         // assign query params from state
         const nodeId = options && options.nodeId || this.getCurrentNodeId();
         const itemInfo: ItemsInfo = this.appState.now.folder[`${type}s` as FolderItemTypePlural];
@@ -943,17 +935,7 @@ export class FolderActionsService {
         try {
             const res = await apiMethod.pipe(
                 first(),
-                tap(() => {
-                    if (type === 'page') {
-                        console.time('process-pages');
-                    }
-                }),
                 this.postProcessItemListResponse(type, nodeId),
-                tap(() => {
-                    if (type === 'page') {
-                        console.timeEnd('process-pages');
-                    }
-                }),
             ).toPromise();
 
             const collectionKey = type === 'image' ? 'files' : `${type}s`;
@@ -969,7 +951,7 @@ export class FolderActionsService {
                 schema: getNormalizrSchema(type),
             })).toPromise();
 
-            if (type !== 'folder') {
+            if (type !== 'folder' && (elasticSearchMode || !!options.search)) {
                 const foldersToLoad: { id: number, nodeId?: number }[] = [];
                 const loadedFolders = this.appState.now.entities.folder;
 
@@ -992,15 +974,7 @@ export class FolderActionsService {
                     }
 
                     return forkJoin([
-                        of(null).pipe(
-                            switchMap(() => {
-                                console.time(`load-folder-${folderRef.id}`);
-                                return this.client.folder.get(folderRef.id, options);
-                            }),
-                            tap(() => {
-                                console.timeEnd(`load-folder-${folderRef.id}`);
-                            }),
-                        ),
+                        this.client.folder.get(folderRef.id, options),
                         this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, { ...options, map: true })
                     ])
                     .pipe(
@@ -1013,9 +987,6 @@ export class FolderActionsService {
             }
 
             await this.appState.dispatch(new AddContentStagingMapAction(res.stagingStatus)).toPromise();
-            if (type === 'page') {
-                console.timeEnd('load-pages');
-            }
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction(type, error.message)).toPromise();
             this.errorHandler.catch(error);

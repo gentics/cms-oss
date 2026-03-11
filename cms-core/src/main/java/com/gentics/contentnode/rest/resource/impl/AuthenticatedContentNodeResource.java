@@ -1019,11 +1019,12 @@ public abstract class AuthenticatedContentNodeResource extends AbstractContentNo
 @SuppressWarnings("serial")
 class FileUploadMetaData extends Properties {
 
-	public static final String META_DATA_FOLDERID_KEY    = "folderId";
-	public static final String META_DATA_DESCRIPTION_KEY = "description";
-	public static final String META_DATA_FILE_NAME_KEY   = "fileName";
-	public static final String META_DATA_NODE_ID_KEY     = "nodeId";
-	public static final String META_DATA_OVERWRITE_KEY   = "overwrite";
+	public static final String META_DATA_FOLDERID_KEY          = "folderId";
+	public static final String META_DATA_DESCRIPTION_KEY       = "description";
+	public static final String META_DATA_FILE_NAME_KEY         = "fileName";
+	public static final String META_DATA_NODE_ID_KEY           = "nodeId";
+	public static final String META_DATA_OVERWRITE_KEY         = "overwrite";
+	public static final String META_DATA_FAIL_ON_DUPLICATE_KEY = "failOnDuplicate";
 
 
 
@@ -1135,5 +1136,13 @@ class FileUploadMetaData extends Properties {
 	 */
 	public void setOverwrite(String value) {
 		this.setProperty(META_DATA_OVERWRITE_KEY, value);
+	}
+
+	/**
+	 * Return whether the request should fail on duplicate filenames
+	 * @return flag value
+	 */
+	public boolean isFailOnDuplicate() {
+		return ObjectTransformer.getBoolean(getProperty(META_DATA_FAIL_ON_DUPLICATE_KEY), false);
 	}
 }

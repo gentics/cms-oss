@@ -65,6 +65,7 @@ import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagContainer;
 import com.gentics.contentnode.object.Page;
@@ -2260,6 +2261,29 @@ public class MiscUtils {
 	}
 
 	/**
+	 * Get the type descriptor for the given object (works for pages, files, images and folders)
+	 * @param object object in question
+	 * @return type description (null if object null or not supported)
+	 */
+	public static String getTypeDescriptor(NodeObject object) {
+		if (object == null) {
+			return null;
+		}
+		switch (object.getTType()) {
+		case Page.TYPE_PAGE:
+			return "page";
+		case ImageFile.TYPE_IMAGE:
+			return "image";
+		case File.TYPE_FILE:
+			return "file";
+		case Folder.TYPE_FOLDER:
+			return "folder";
+		default:
+			return null;
+		}
+	}
+
+	/**
 	 * Get the i18n message for duplicate URL
 	 * @param url conflicting URL
 	 * @param conflictingObject conflicting object
@@ -2555,5 +2579,14 @@ public class MiscUtils {
 					"%s is locked for %s since %s".formatted(page, content.getLockedBy(), content.getLockedSince()),
 					"page.readonly.locked", I18NHelper.getName(page));
 		}
+	}
+
+	/**
+	 * Check whether the given string is either a global or local id
+	 * @param id id to check
+	 * @return true for global or local id
+	 */
+	public static boolean isGlobalOrLocalId(String id) {
+		return GlobalId.isGlobalId(id) || ObjectTransformer.getInt(id, -1) > 0;
 	}
 }

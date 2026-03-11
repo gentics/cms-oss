@@ -113,7 +113,7 @@ public class PageSEOFilenameTest {
 				page.setChannelInfo(channel.getId(), null);
 			}
 
-			return PageFactory.isFilenameAvailable(page) == null;
+			return PageFactory.getFilenameObstructor(page) == null;
 		});
 	}
 

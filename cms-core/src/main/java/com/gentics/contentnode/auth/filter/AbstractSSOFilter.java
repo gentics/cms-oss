@@ -105,10 +105,15 @@ public abstract class AbstractSSOFilter implements Filter {
 	@Override
 	public void init(FilterConfig config) throws ServletException {
 		var initGroupsPath = ObjectTransformer.getString(config.getInitParameter(INIT_GROUPS_PARAM), "");
+
+		if (initGroupsPath.isEmpty()) {
+			throw new ServletException("The initial group configuration is missing.");
+		}
+
 		var initGroupsDef = NodeConfigRuntimeConfiguration.getPreferences().getPropertyMap(initGroupsPath);
 
 		if (MapUtils.isEmpty(initGroupsDef)) {
-			throw new ServletException("The initial group configuration under \"%s\" is missing or empty.".formatted(initGroupsPath));
+			throw new ServletException("The initial group configuration under \"%s\" is empty.".formatted(initGroupsPath));
 		}
 
 		try (Trx trx = new Trx()) {

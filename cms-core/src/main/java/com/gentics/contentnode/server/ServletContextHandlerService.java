@@ -44,6 +44,7 @@ public interface ServletContextHandlerService {
 	 */
 	default void addFilter(ServletHandler servletHandler, String name, Class<? extends Filter> filterClass, String pathSpec, EnumSet<DispatcherType> dispatches, Consumer<FilterHolder> init) throws NodeException {
 		// get existing filter holder
+		boolean filterHolderPresent;
 		FilterHolder filterHolder = servletHandler.getFilter(name);
 
 		// if the filter holder is not found, create a new one
@@ -51,6 +52,9 @@ public interface ServletContextHandlerService {
 			filterHolder = servletHandler.newFilterHolder(Source.EMBEDDED);
 			filterHolder.setName(name);
 			filterHolder.setHeldClass(filterClass);
+			filterHolderPresent = false;
+		} else {
+			filterHolderPresent = true;
 		}
 
 		// optional intialization
@@ -61,8 +65,8 @@ public interface ServletContextHandlerService {
 		// add the filter holder
 		servletHandler.addFilter(filterHolder);
 		try {
-			// if the filter was already started, we restart and initialize it
-			if (filterHolder.isStarted()) {
+			// If the filter holder already existed, stop, start and initialize it again (for example, to apply new configuration).
+			if (filterHolderPresent) {
 				filterHolder.stop();
 				filterHolder.start();
 				filterHolder.initialize();

@@ -27,7 +27,6 @@ import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.lib.i18n.CNI18nString;
 
 /**
  * Test cases for filename uniqueness of pages
@@ -181,9 +180,7 @@ public class FilenameUniquenessTest {
 		}, page1);
 
 		final String message = Trx.execute(p -> {
-			CNI18nString msg = new CNI18nString("a page with this filename already exists");
-			msg.addParameter(I18NHelper.getPath(p));
-			return msg.toString();
+			return I18NHelper.get("error.filename.exists.page", "page_a.html", I18NHelper.getPath(p));
 		}, page1);
 
 		Trx.consume(p -> {

@@ -88,8 +88,11 @@ public class PubDirSanitizingTest {
 	public static void setupOnce() throws NodeException {
 		nodeWithFeature = Trx.supply(() -> update(createNode(), n -> {
 			n.setPubDirSegment(true);
+			n.getFolder().setPublishDir("feature");
 		}));
-		nodeWithoutFeature = Trx.supply(() -> createNode());
+		nodeWithoutFeature = Trx.supply(() -> update(createNode(), n -> {
+			n.getFolder().setPublishDir("nofeature");
+		}));
 	}
 
 	@Parameters(name = "{index}: feature {0}, pub_dir \"{1}\"")

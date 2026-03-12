@@ -120,10 +120,9 @@
           @case ('usage') {
             <detail-chip (click)="usageClicked($event, item)" class="usage">
               <span>{{ 'common.usage_label' | gtxI18n }}:</span>
-              @if (item?.usage?.total !== undefined) {
-                <span class="usage-count">{{ totalUsage(item) }}</span>
-              }
-              @if (item?.usage?.total === undefined) {
+              @if (item?.usage?.total != null) {
+                <span class="usage-count">{{ item.usage.total }}</span>
+              } @else {
                 <i class="usage-spinner material-icons usage-count" [attr.translate]="'no'">hourglass_empty</i>
               }
             </detail-chip>
@@ -142,7 +141,7 @@
             @let inheritance = item | getInheritance;
             @if (inheritance != null) {
             <detail-chip>
-                <icon class="inheritance-icon-{{ inheritance }}"></icon> {{ ('common.inheritance_label_' + inheritance) | gtxI18n }}
+                <icon [ngClass]="'inheritance-icon-' + inheritance"></icon> {{ ('common.inheritance_label_' + inheritance) | gtxI18n }}
             </detail-chip>
             }
           }

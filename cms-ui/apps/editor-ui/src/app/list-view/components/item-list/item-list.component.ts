@@ -22,12 +22,11 @@ import {
 import { isEqual } from 'lodash-es';
 import { PaginationInstance, PaginationService } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, startWith } from 'rxjs/operators';
-import { EditorPermissions, ItemsInfo, UIMode, getNoPermissions } from '../../../common/models';
+import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
+import { FolderPermissionData, ItemsInfo, UIMode } from '../../../common/models';
 import { areItemsLoading } from '../../../common/utils/are-items-loading';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { UploadProgressReporter } from '../../../core/providers/api';
-import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { ApplicationStateService, FolderActionsService, UsageActionsService } from '../../../state';
 
@@ -41,7 +40,7 @@ interface ItemsHashMap {
     styleUrls: ['./item-list.component.scss'],
     providers: [PaginationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -61,6 +60,9 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     public activeNode: NodeModel;
 
     @Input()
+    public nodeLanguages: Language[] = [];
+
+    @Input()
     public currentFolderId: number;
 
     @Input()
@@ -76,7 +78,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     public uploadProgress: UploadProgressReporter;
 
     @Input()
-    public folderPermissions: EditorPermissions = getNoPermissions();
+    public folderPermissions: FolderPermissionData;
 
     @Input()
     public linkPaths = false;
@@ -101,10 +103,13 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     icon = '';
     showGrid = true;
 
-    languages$: Observable<Language[]>;
-    showAllLanguages$: Observable<boolean>;
-    showStatusIcons$: Observable<boolean>;
-    showDeleted$: Observable<boolean>;
+    public displayStatusInfo: boolean;
+    public displayDeleted: boolean;
+    public displayAllLanguages: boolean;
+    public searchTerm: string;
+    public elasticSearchQueryActive: boolean;
+    public activeLanguage: Language | null;
+
     showImagesGridView$: Observable<boolean>;
     private subscriptions: Subscription[] = [];
     paginationConfig: PaginationInstance = {
@@ -113,7 +118,6 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     };
 
     selectedItems$: Observable<Item[]>;
-
     areItemsLoading$: Observable<boolean>;
 
     private itemType$ = new BehaviorSubject<FolderItemType>(null);
@@ -123,22 +127,46 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         private changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private usageActions: UsageActionsService,
-        private entityResolver: EntityResolver,
         private folderActions: FolderActionsService,
         private userSettings: UserSettingsService,
     ) { }
 
     ngOnInit(): void {
-        this.languages$ = this.appState.select(state => state.folder.activeNodeLanguages.list).pipe(
-            map(list => list.map(id => this.entityResolver.getLanguage(id))),
-        );
-        this.showAllLanguages$ = this.appState.select(state => state.folder.displayAllLanguages);
-        this.showStatusIcons$ = this.appState.select(state => state.folder.displayStatusIcons);
-        this.showDeleted$ = this.appState.select(state => state.folder.displayDeleted);
-        this.showImagesGridView$ = this.appState.select(state => state.folder.displayImagesGridView);
+        this.showImagesGridView$ = this.appState.select((state) => state.folder.displayImagesGridView);
+
+        if (this.itemType === 'page') {
+            this.subscriptions.push(this.appState.select((state) => state.folder.activeLanguage).pipe(
+                switchMap((langId) => this.appState.select((state) => state.entities.language[langId])),
+            ).subscribe((lang) => {
+                this.activeLanguage = lang;
+                this.changeDetector.markForCheck();
+            }));
+        } else if (this.itemType === 'form') {
+            this.subscriptions.push(this.appState.select((state) => state.folder.activeFormLanguage).pipe(
+                switchMap((langId) => this.appState.select((state) => state.entities.language[langId])),
+            ).subscribe((lang) => {
+                this.activeLanguage = lang;
+                this.changeDetector.markForCheck();
+            }));
+        }
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.displayStatusIcons).subscribe((show) => {
+            this.displayStatusInfo = show;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.displayDeleted).subscribe((show) => {
+            this.displayDeleted = show;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.displayAllLanguages).subscribe((show) => {
+            this.displayAllLanguages = show;
+            this.changeDetector.markForCheck();
+        }));
 
         // When the current folder changes, reset the pagination to page 1
-        const resetPaginationSub = this.appState.select(state => state.folder.activeFolder)
+        const resetPaginationSub = this.appState.select((state) => state.folder.activeFolder)
             .subscribe(() => this.paginationConfig.currentPage = 1);
         this.subscriptions.push(resetPaginationSub);
 
@@ -147,23 +175,23 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         );
 
         const itemsInfo$ = combineLatest([
-            this.appState.select(state => state.folder),
+            this.appState.select((state) => state.folder),
             itemType$,
         ]).pipe(
             map(([folderState, itemType]) => folderState[`${itemType}s` as FolderItemTypePlural]),
         );
 
         const selected$: Observable<number[]> = itemsInfo$.pipe(
-            filter(itemsInfo => !!itemsInfo),
-            map(itemsInfo => itemsInfo.selected),
+            filter((itemsInfo) => !!itemsInfo),
+            map((itemsInfo) => itemsInfo.selected),
             distinctUntilChanged(isEqual),
         );
 
         this.selectedItems$ = combineLatest([selected$, this.itemHash$]).pipe(
             map(([selectedIds, itemHash]) => {
-                return selectedIds
-                    .map(id => itemHash[id])
-                    .filter(item => !!item);
+                return (selectedIds || [])
+                    .map((id) => itemHash[id])
+                    .filter((item) => !!item);
             }),
         );
 
@@ -171,22 +199,22 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         // so that the user is not required to refresh the list manually.
 
         const itemsInfoPipe$ = itemsInfo$.pipe(
-            map(itemsInfo => itemsInfo && itemsInfo.displayFields),
-            filter(val => !!val),
+            map((itemsInfo) => itemsInfo && itemsInfo.displayFields),
+            filter((val) => !!val),
             map((fields: string[]) => fields.indexOf('usage') >= 0),
             debounceTime(200),
             distinctUntilChanged(isEqual),
         );
         this.subscriptions.push(combineLatest([
             itemsInfoPipe$,
-            this.appState.select(state => state.editor.saving).pipe(startWith(false)),
+            this.appState.select((state) => state.editor.saving).pipe(startWith(false)),
         ]).subscribe(([displayUsage, saving]) => {
             if (displayUsage && !saving) {
                 this.getTotalUsage();
             }
         }));
 
-        this.subscriptions.push(itemType$.subscribe(itemType => {
+        this.subscriptions.push(itemType$.subscribe((itemType) => {
             this.icon = iconForItemType(itemType);
             this.changeDetector.markForCheck();
         }));
@@ -207,18 +235,26 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             this.userSettings.setItemsPerPage(itemType, pageSize);
         }));
 
-        this.areItemsLoading$ = this.appState.select(state => state.folder).pipe(
+        this.areItemsLoading$ = this.appState.select((state) => state.folder).pipe(
             map(areItemsLoading),
             distinctUntilChanged(isEqual),
         );
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.searchTerm).subscribe((term) => {
+            this.searchTerm = term;
+            this.changeDetector.markForCheck();
+        }));
+        this.subscriptions.push(this.appState.select((state) => state.folder.searchFiltersVisible).subscribe((active) => {
+            this.elasticSearchQueryActive = active;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngOnChanges(changes: { [K in keyof ItemListComponent]?: SimpleChange }): void {
         const itemsInfoChanges = changes.itemsInfo;
         let listChanged = itemsInfoChanges
-            && itemsInfoChanges.previousValue
-            && !this.listsAreEqual(itemsInfoChanges.previousValue.list, itemsInfoChanges.currentValue.list);
-
+          && itemsInfoChanges.previousValue
+          && !this.listsAreEqual(itemsInfoChanges.previousValue.list, itemsInfoChanges.currentValue.list);
 
         if (changes.itemType) {
             this.itemType$.next(this.itemType);
@@ -230,7 +266,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             if (!Array.isArray(this.items)) {
                 this.items = [];
             } else {
-                this.items = this.items.filter(item => item != null);
+                this.items = this.items.filter((item) => item != null);
             }
         }
 
@@ -240,11 +276,11 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             && this.items?.length > 0
             && (this.items[0]?.type === 'image' || this.items[0]?.type === 'page')
         ) {
-            (this.items || []).forEach(item => {
+            (this.items || []).forEach((item) => {
                 if (!item.usage) {
                     listChanged = true;
                 }
-            })
+            });
         }
 
         if (itemsInfoChanges) {
@@ -293,7 +329,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => subscription.unsubscribe());
     }
 
     getTotalUsage(): void {
@@ -305,19 +341,19 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     /**
      * Tracking function for ngFor for better performance.
      */
-    identify(index: number, item: Item): number | string {
+    identify(index: number, item: Item): string | number {
         return item?.globalId ?? item?.id ?? index;
     }
 
     /**
      * Returns true is the item is in the selectedItems array.
      */
-    isSelected(item: Item): boolean {
-        if (item == null) {
-            return false;
-        }
+    // isSelected(item: Item): boolean {
+    //     if (item == null) {
+    //         return false;
+    //     }
 
-        return this.itemsInfo.selected.indexOf(item.id) >= 0;
-    }
+    //     return this.itemsInfo.selected.indexOf(item.id) >= 0;
+    // }
 
 }

@@ -24,6 +24,7 @@ import {
     pickSelectValue,
     TestSize,
     UserImportData,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Page, test } from '@playwright/test';
@@ -269,7 +270,7 @@ test.describe('Form Management', () => {
 
         await test.step('Validate loading of set page', async () => {
             // Open the properties again and validate that the item has properly loaded the page
-            const pageLoadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${SUCCESS_PAGE.id}`));
+            const pageLoadReq = waitForResponseFrom(page, 'GET', `/rest/page/load/${SUCCESS_PAGE.id}`);
             await page.waitForTimeout(2_000);
             await editorAction(page, 'close');
 
@@ -346,11 +347,11 @@ test.describe('Form Management', () => {
         });
 
         await test.step('Publish with notification action', async () => {
-            const publishReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}/online`, {
+            const publishReq = waitForResponseFrom(page, 'PUT', `/rest/form/${EDITING_FORM.id}/online`, {
                 params: {
                     at: '0',
                 },
-            }));
+            });
 
             // toast with success notification should have the "publish" action
             const publishToast = findNotification(page, `form-save-success-with-publish:${EDITING_FORM.id}`);

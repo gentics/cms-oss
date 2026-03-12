@@ -104,23 +104,25 @@ public abstract class AbstractSSOFilter implements Filter {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void init(FilterConfig config) throws ServletException {
-		var initGroupsPath = ObjectTransformer.getString(config.getInitParameter(INIT_GROUPS_PARAM), "");
+		var initGroupsPath = ObjectTransformer.getString(config.getInitParameter(INIT_GROUPS_PARAM), getDefaultInitGroupExpression());
 
-		if (initGroupsPath.isEmpty()) {
+		if (StringUtils.isEmpty(initGroupsPath)) {
 			throw new ServletException("The initial group configuration is missing.");
 		}
 
-		var initGroupsDef = NodeConfigRuntimeConfiguration.getPreferences().getPropertyMap(initGroupsPath);
+		if (readInitGroupsFromConfiguration()) {
+			var initGroupsDef = NodeConfigRuntimeConfiguration.getPreferences().getPropertyMap(initGroupsPath);
 
-		if (MapUtils.isEmpty(initGroupsDef)) {
-			throw new ServletException("The initial group configuration under \"%s\" is empty.".formatted(initGroupsPath));
-		}
+			if (MapUtils.isEmpty(initGroupsDef)) {
+				throw new ServletException("The initial group configuration under \"%s\" is empty.".formatted(initGroupsPath));
+			}
 
-		try (Trx trx = new Trx()) {
-			prepareInitGroupsMapping(initGroupsDef);
-			trx.success();
-		} catch (NodeException e) {
-			throw new ServletException("Could not create init groups mapping: %s".formatted(e.getMessage()), e);
+			try (Trx trx = new Trx()) {
+				prepareInitGroupsMapping(initGroupsDef);
+				trx.success();
+			} catch (NodeException e) {
+				throw new ServletException("Could not create init groups mapping: %s".formatted(e.getMessage()), e);
+			}
 		}
 
 		syncGroups = ObjectTransformer.getBoolean(config.getInitParameter(INIT_GROUPS_SYNC), false);
@@ -350,6 +352,14 @@ public abstract class AbstractSSOFilter implements Filter {
 	 */
 	protected String getDefaultInitGroupExpression() {
 		return null;
+	}
+
+	/**
+	 * Should the init groups be read from the configuration (default is true).
+	 * @return true to read the init groups from the configuration
+	 */
+	protected boolean readInitGroupsFromConfiguration() {
+		return true;
 	}
 
 	/**

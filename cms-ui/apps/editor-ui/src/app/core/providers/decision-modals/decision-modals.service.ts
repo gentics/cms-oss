@@ -184,7 +184,7 @@ export class DecisionModalsService {
      *
      * Returns a promise which resolves to a list of page ids.
      */
-    async selectPagesToPublish(pages: Page[], publishLanguageVariants: boolean = false): Promise<Page[]> {
+    selectPagesToPublish(pages: Page[], publishLanguageVariants: boolean = false): Promise<Page[]> {
         const langId = this.appState.now.folder.activeLanguage;
         const currentLang = this.appState.now.entities.language[langId];
 
@@ -195,7 +195,7 @@ export class DecisionModalsService {
 
         // If the user has no permission to publish any page to begin with
         if (data.pages.length === 0) {
-            return [];
+            return Promise.resolve([]);
         }
 
         const pageLanguages = new Set<string>(data.pages.map((page) => page.language));

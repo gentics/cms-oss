@@ -37,6 +37,7 @@ import {
     Language,
     LocalizationType,
     Node,
+    ObjectProperty,
     ObjectTag,
     Page,
     Tag,
@@ -882,6 +883,14 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             tagType: objProp.construct,
         }));
         return of(editableTags);
+    }
+
+    trackCategory(index: number, category: ObjectPropertiesCategory): string {
+        return category.id;
+    }
+
+    trackObjectProperty(index: number, objProp: ObjectProperty): string {
+        return objProp.name;
     }
 
     public saveItemProperties(

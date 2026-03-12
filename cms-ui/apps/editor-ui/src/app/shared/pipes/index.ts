@@ -10,6 +10,7 @@ export * from './is-start-page/is-start-page.pipe';
 export * from './item-is-local/item-is-local.pipe';
 export * from './item-is-localized/item-is-localized.pipe';
 export * from './item-path/item-path.pipe';
+export * from './map-permissions/map-permissions.pipe';
 export * from './node-name-of-item/node-name-of-item.pipe';
 export * from './page-is-locked/page-is-locked.pipe';
 export * from './permission/permission.pipe';
@@ -18,3 +19,4 @@ export * from './truncate-number/truncate-number.pipe';
 export * from './truncate-path/truncate-path.pipe';
 export * from './type-icon/type-icon.pipe';
 export * from './user-full-name/user-full-name.pipe';
+

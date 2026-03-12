@@ -1,12 +1,12 @@
 import { animate, animateChild, query, style, transition, trigger } from '@angular/animations';
-import { Component, OnInit } from '@angular/core';
-import { Form, Language, Normalized, Raw } from '@gentics/cms-models';
-import { Observable } from 'rxjs';
-import { map, withLatestFrom } from 'rxjs/operators';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { Form, Language, StagedItemsMap } from '@gentics/cms-models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
-import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { PublishableStateUtil } from '../../util/entity-states';
-import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-language-indicator.component';
+import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, LanguageState, UIMode } from '../../../common/models';
+import { BaseComponent, ChangesOf } from '@gentics/ui-core';
+
+interface VariantState extends Language, LanguageState {}
 
 /**
  * A component which displays the available languages for a form and (optionally) a form's status icons.
@@ -62,111 +62,177 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
             ]),
         ]),
     ],
-    standalone: false
+    standalone: false,
 })
 export class FormLanguageIndicatorComponent
-    extends BaseLanguageIndicatorComponent<Form<Normalized>>
-    implements OnInit {
+    extends BaseComponent
+    implements OnChanges {
 
-    /** CONSTRUCTOR */
+    public readonly ItemListRowMode = ItemListRowMode;
+    public readonly UIMode = UIMode;
+
+    @Input({ required: true })
+    public languages: Language[];
+
+    @Input()
+    public activeLanguage: Language;
+
+    @Input({ required: true })
+    public form: Form;
+
+    @Input({ required: true })
+    public permissions: FolderPermissionData;
+
+    @Input()
+    public mode: ItemListRowMode;
+
+    @Input({ required: true })
+    public uiMode: UIMode;
+
+    @Input()
+    public stagingMap: StagedItemsMap;
+
+    @Input()
+    public displayStatusInfo: boolean;
+
+    @Input()
+    public displayDeleted: boolean;
+
+    @Input()
+    public expandByDefault: boolean;
+
+    /** Emits if an action from a langauge icon has been clicked */
+    @Output()
+    public languageClick = new EventEmitter<ItemLanguageClickEvent<Form>>();
+
+    /** Emits if an lang icon is clicked */
+    @Output()
+    public languageIconClick = new EventEmitter<{
+        item: Form;
+        language: Language;
+    }>();
+
+    public hasUntranslated: boolean;
+    public expanded = false;
+
+    public inCurrentLanguage: boolean;
+    public variants: VariantState[] = [];
+
     constructor(
-        appState: ApplicationStateService,
-        folderActions: FolderActionsService,
-        protected contextMenuOperations: ContextMenuOperationsService,
+        changeDetector: ChangeDetectorRef,
+        private contextMenu: ContextMenuOperationsService,
     ) {
-        super('form', appState, folderActions)
+        super(changeDetector);
     }
 
-    /** On component initialization */
-    ngOnInit(): void {
-        super.ngOnInit();
-
-        // get all translations available
-        this.currentLanguage$ = this.item$.pipe(
-            withLatestFrom(this.activeFolderLanguage$),
-            map(([item, activeFolderLanguage]) => item && item.languages.includes(activeFolderLanguage.code) && activeFolderLanguage),
-        );
-
-        // get existing form translations
-        this.itemLanguages$ = this.item$.pipe(
-            map(item => this.nodeLanguages.filter(nodeLanguage => this.isFormLanguage(nodeLanguage, item))),
-        );
-
-        super.afterLanguageInit();
-    }
-
-    /**
-     * Predicate function that returns true if the given language is one of the forms language variants.
-     */
-    isFormLanguage(language: Language, form: Form<Raw> | Form<Normalized>): boolean {
-        return form.languages.some((l: string) => l === language.code);
-    }
-
-    /**
-     * @param langCode of the form to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this form has been deleted
-     * and UI shall display deleted objects
-     */
-    stateDeleted$(langCode: string): Observable<boolean> {
-        return this.item$.pipe(
-            map(item => PublishableStateUtil.stateDeleted(item)),
-        );
-    }
-
-    /**
-     * @param langCode of the form to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this form is online
-     */
-    statePublished$(langCode: string): Observable<boolean> {
-        return this.item$.pipe(
-            map(item => PublishableStateUtil.statePublished(item)),
-        );
-    }
-
-    /**
-     * @param langCode of the form to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this form has been edited by a user
-     */
-    stateModified$(langCode: string): Observable<boolean> {
-        return this.item$.pipe(
-            map(form => PublishableStateUtil.stateModified(form)),
-        );
-    }
-
-    /**
-     * @param langCode of the form to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this form has been requested for release
-     */
-    stateInQueue$(langCode: string): Observable<boolean> {
-        return this.item$.pipe(
-            map(form => PublishableStateUtil.stateInQueue(form)),
-        );
-    }
-
-    /**
-     * @param langCode of the form to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this form is scheduled for an automated action
-     */
-    statePlanned$(langCode: string): Observable<boolean> {
-        return this.item$.pipe(
-            map(form => PublishableStateUtil.statePlanned(form)),
-        );
-    }
-
-    /**
-     * Returns true if the form is available in the given language.
-     */
-    isAvailable$(language: Language): Observable<boolean> {
-        return this.itemLanguages$.pipe(
-            map(formLanguages => formLanguages.includes(language)),
-        );
-    }
-
-    onStageLanguageClick(language: Language): void {
-        if (this.stagingMap?.[this.item.globalId]?.included) {
-            this.contextMenuOperations.unstageItemFromCurrentPackage(this.item);
-        } else {
-            this.contextMenuOperations.stageItemToCurrentPackage(this.item, false);
+    ngOnChanges(changes: ChangesOf<this>): void {
+        if (changes.expandByDefault) {
+            this.expanded = this.expandByDefault;
         }
+
+        if (changes.activeLanguage || changes.form) {
+            this.inCurrentLanguage = this.form != null
+              && this.activeLanguage != null
+              && this.form.languages.includes(this.activeLanguage.code);
+        }
+
+        if (changes.expandByDefault || changes.form || changes.languages || changes.stagingMap) {
+            this.updateVariants();
+        }
+    }
+
+    identifyVariant(index: number, variant: VariantState): string {
+        return variant.code;
+    }
+
+    languageClicked(
+        variant: VariantState,
+        compare: boolean = false,
+        source: boolean = true,
+        restore: boolean = false,
+    ): void {
+        this.languageClick.emit({
+            item: this.form,
+            language: {
+                id: variant.id,
+                code: variant.code,
+                name: variant.name,
+            },
+            compare,
+            source,
+            restore,
+        });
+    }
+
+    /**
+     * The "show more" ellipses or "show less" arrow was clicked.
+     */
+    toggleExpand(): void {
+        this.expanded = !this.expanded;
+        this.updateVariants();
+    }
+
+    onIconClicked(variant: VariantState): void {
+        this.languageIconClick.emit({
+            item: this.form,
+            language: {
+                id: variant.id,
+                code: variant.code,
+                name: variant.name,
+            },
+        });
+    }
+
+    onStageLanguageClick(): void {
+        if (this.stagingMap?.[this.form.globalId]?.included) {
+            this.contextMenu.unstageItemFromCurrentPackage(this.form);
+        } else {
+            this.contextMenu.stageItemToCurrentPackage(this.form);
+        }
+    }
+
+    updateVariants(): void {
+        this.hasUntranslated = false;
+        this.variants = this.languages.flatMap((lang) => {
+            const available = this.form.languages.includes(lang.code);
+
+            if (!available) {
+                this.hasUntranslated = true;
+                if (!this.expanded) {
+                    return [];
+                }
+            }
+
+            return [{
+                code: lang.code,
+                id: lang.id,
+                name: lang.name,
+
+                available: available,
+                deleted:
+                    this.form != null
+                    && PublishableStateUtil.stateDeleted(this.form),
+                inherited:
+                    this.form != null
+                    && PublishableStateUtil.stateInherited(this.form),
+                localized:
+                    this.form != null
+                    && PublishableStateUtil.stateLocalized(this.form),
+                modified:
+                    this.form != null
+                    && PublishableStateUtil.stateModified(this.form),
+                planned:
+                    this.form != null
+                    && PublishableStateUtil.statePlanned(this.form),
+                published:
+                    this.form != null
+                    && PublishableStateUtil.statePublished(this.form),
+                queued:
+                    this.form != null
+                    && PublishableStateUtil.stateInQueue(this.form),
+                staged: this.form != null
+                  && this.stagingMap?.[this.form.globalId]?.included,
+            }];
+        });
     }
 }

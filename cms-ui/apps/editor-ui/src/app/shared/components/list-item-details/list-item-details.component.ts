@@ -154,17 +154,6 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
         this.changeDetector.markForCheck();
     }
 
-    /**
-     * Displays the total usage of an item if it is available.
-     */
-    totalUsage(item: Item): string {
-        if (item.usage) {
-            return item.usage.total.toString(10);
-        } else {
-            return '-';
-        }
-    }
-
     usageClicked(e: Event, item: Item): void {
         e.preventDefault();
         e.stopPropagation();

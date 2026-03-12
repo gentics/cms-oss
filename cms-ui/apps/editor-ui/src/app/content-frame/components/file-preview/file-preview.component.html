@@ -25,7 +25,7 @@
         >
             <picture class="previewed-image">
                 <source
-                    *ngFor="let variant of imageVariants"
+                    *ngFor="let variant of imageVariants; trackBy: trackVariant"
                     [srcset]="variant.url"
                     [media]="variant.mediaQuery"
                     [type]="file.fileType"

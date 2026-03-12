@@ -1,5 +1,6 @@
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     ElementRef,
     OnDestroy,
@@ -11,12 +12,11 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import {
     AppState,
-    EditorPermissions,
+    FolderPermissionData,
     GtxChipSearchPropertyNumber,
     GtxChipSearchSearchFilterMap,
     ItemsInfo,
-    UIMode,
-    getNoPermissions,
+    UIMode
 } from '@editor-ui/app/common/models';
 import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
 import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
@@ -24,7 +24,6 @@ import { UploadProgressReporter } from '@editor-ui/app/core/providers/api';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
 import { UploadConflictService } from '@editor-ui/app/core/providers/upload-conflict/upload-conflict.service';
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ListService } from '@editor-ui/app/list-view/providers/list/list.service';
@@ -40,15 +39,19 @@ import {
     SetUIModeAction,
 } from '@editor-ui/app/state';
 import {
+    AccessControlledType,
     Folder,
     FolderItemType,
     FolderItemTypePlural,
     Item,
     ItemType,
+    Language,
     Node,
     NodeFeature,
-    StagedItemsMap,
+    PrivilegeMap,
+    StagedItemsMap
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { IBreadcrumbRouterLink, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import {
@@ -60,7 +63,6 @@ import {
 } from 'rxjs';
 import {
     debounceTime,
-    defaultIfEmpty,
     distinctUntilChanged,
     filter,
     first,
@@ -72,8 +74,7 @@ import {
     startWith,
     switchMap,
     take,
-    tap,
-    withLatestFrom,
+    withLatestFrom
 } from 'rxjs/operators';
 import { ItemListComponent } from '../item-list/item-list.component';
 
@@ -125,6 +126,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     currentFolderDisplayName$: Observable<string>;
 
     activeNodeId: number;
+    activeNodeLanguages: Language[] = [];
     currentFolder$: Observable<Folder>;
     breadcrumbs$: Observable<IBreadcrumbRouterLink[]>;
     /** Rendered current search path breadcrumb string to display the path where Elastic Search queries recursively from. */
@@ -144,7 +146,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     searchTerm$: Observable<string>;
     startPageId$: Observable<number>;
     itemInEditor$: Observable<Item>;
-    permissions$: Observable<EditorPermissions>;
+    permissions: FolderPermissionData;
     currentFolderId: number;
     currentFolderPath = '';
     currentFolder: Folder;
@@ -160,15 +162,13 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     @ViewChildren(ItemListComponent, { read: ElementRef })
     itemLists: QueryList<ElementRef<HTMLElement>>;
 
-    private currentItemTypes: FolderItemType[] = [];
-
     constructor(
+        private changeDetector: ChangeDetectorRef,
         public listService: ListService,
         private breadcrumbsService: BreadcrumbsService,
         private appState: ApplicationStateService,
         private navigationService: NavigationService,
         private route: ActivatedRoute,
-        private permissions: PermissionService,
         private entityResolver: EntityResolver,
         private folderActions: FolderActionsService,
         private uploadConflictService: UploadConflictService,
@@ -176,7 +176,14 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         private userSettings: UserSettingsService,
         private modalService: ModalService,
         private i18n: I18nService,
-    ) {
+        private client: GCMSRestClientService,
+    ) {}
+
+    get isModalOpen(): boolean {
+        return this.modalService.openModals.length === 0;
+    }
+
+    ngOnInit(): void {
         this.currentFolder$ = combineLatest([
             this.appState.select(state => state.folder.activeFolder),
             this.appState.select(state => state.entities.folder),
@@ -188,11 +195,16 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             refCount(),
         );
 
+        this.subscriptions.push(this.appState.select(state => state.folder.activeNodeLanguages.list).subscribe(languageIds => {
+            this.activeNodeLanguages = languageIds.map(id => this.entityResolver.getLanguage(id));
+            this.changeDetector.markForCheck();
+        }));
+
         // Get multiline state
-        this.multilineExpanded$ = appState.select(state => state.ui.itemListBreadcrumbsExpanded);
+        this.multilineExpanded$ = this.appState.select(state => state.ui.itemListBreadcrumbsExpanded);
 
         // Only recreate breadcrumbs when the dependent state changes
-        this.breadcrumbs$ = appState.select(state => state).pipe(
+        this.breadcrumbs$ = this.appState.select(state => state).pipe(
             distinctUntilChanged((a, b) => {
                 if (a.folder.activeNode !== b.folder.activeNode) {
                     return false;
@@ -227,8 +239,8 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         );
 
         this.nodes$ = combineLatest([
-            appState.select(state => state.folder.nodes.list),
-            appState.select(state => state.entities.node),
+            this.appState.select(state => state.folder.nodes.list),
+            this.appState.select(state => state.entities.node),
         ]).pipe(
             map(([nodeIds, loadedNodes]) => nodeIds
                 .map(id => loadedNodes[id])
@@ -240,18 +252,12 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             ),
         );
 
-        this.uiMode$ = appState.select(state => state.ui.mode);
+        this.uiMode$ = this.appState.select(state => state.ui.mode);
         this.inStagingMode$ = this.uiMode$.pipe(
             map(mode => mode === UIMode.STAGING),
         );
-        this.stagingMap$ = appState.select(state => state.contentStaging.stagingMap);
-    }
+        this.stagingMap$ = this.appState.select(state => state.contentStaging.stagingMap);
 
-    get isModalOpen(): boolean {
-        return this.modalService.openModals.length === 0;
-    }
-
-    ngOnInit(): void {
         this.itemTypes$ = combineLatest([
             this.appState.select(state => state.folder.activeNode),
             this.appState.select(state => state.features.nodeFeatures),
@@ -265,7 +271,6 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
                 }
                 return itemTypes;
             }),
-            tap(types => this.currentItemTypes = types),
         );
 
         this.initFolderContents();
@@ -484,10 +489,27 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             }),
         );
 
-        this.permissions$ = this.permissions.all$.pipe(
-            startWith(getNoPermissions()),
-            defaultIfEmpty(getNoPermissions()),
-        )
+        this.subscriptions.push(combineLatest([
+            this.appState.select(state => state.folder.activeFolder),
+            this.appState.select(state => state.folder.activeNode),
+        ]).pipe(
+            distinctUntilChanged(isEqual),
+            debounceTime(50),
+            mergeMap(([folderId, nodeId]) => this.client.permission.getInstance(AccessControlledType.FOLDER, folderId, { map: true, nodeId: nodeId })),
+        ).subscribe(res => {
+            const normalizedPrivileges: PrivilegeMap = {
+                privileges: res.privilegeMap.privileges,
+                languages: (res.privilegeMap.languages || []).reduce((acc, data) => {
+                    acc[data.language.id] = data.privileges;
+                    return acc;
+                }, {}),
+            };
+            this.permissions = {
+                privileges: normalizedPrivileges,
+                permissions: res.permissionsMap,
+            };
+            this.changeDetector.markForCheck();
+        }));
 
         const notFound$: Observable<[boolean, boolean, boolean]> = combineLatest([
             this.nodeNotFound$,
@@ -639,8 +661,8 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         }
     }
 
-    async leaveStagingMode(): Promise<void> {
-        const dialog = await this.modalService.dialog({
+    leaveStagingMode(): Promise<void> {
+        return this.modalService.dialog({
             title: this.i18n.translate('modal.leave_content_staging_mode_title'),
             body: this.i18n.translate('modal.leave_content_staging_mode_body'),
             buttons: [
@@ -655,13 +677,14 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
                     returnValue: true,
                 },
             ],
+        })
+        .then((dialog) => dialog.open())
+        .then((doLeave) => {
+            if (doLeave) {
+                this.appState.dispatch(new SetActiveContentPackageAction(null));
+                this.appState.dispatch(new SetUIModeAction(UIMode.EDIT));
+            }
         });
-        const doLeave = await dialog.open();
-
-        if (doLeave) {
-            this.appState.dispatch(new SetActiveContentPackageAction(null));
-            this.appState.dispatch(new SetUIModeAction(UIMode.EDIT));
-        }
     }
 
     private sortOrderEqual(a: ItemsInfo, b: ItemsInfo): boolean {

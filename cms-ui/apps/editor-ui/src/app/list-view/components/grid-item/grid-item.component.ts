@@ -2,11 +2,10 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ApplicationStateService, ChangeListSelectionAction, FocusEditorAction } from '@editor-ui/app/state';
 import { FolderItemType, Image, Item, Node as NodeModel, StagedItemsMap } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { ItemsInfo, UIMode } from '../../../common/models';
+import { EditorPermissions, ItemsInfo, UIMode } from '../../../common/models';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { UsageModalComponent } from '../../../shared/components/usage-modal/usage-modal.component';
 import { EntityStateUtil } from '../../../shared/util/entity-states';
-import { } from '../../../state';
 
 @Component({
     selector: 'grid-item',
@@ -24,6 +23,9 @@ export class GridItemComponent {
 
     @Input()
     public nodeId: number;
+
+    @Input()
+    public permissions: EditorPermissions;
 
     @Input()
     public selected: boolean;

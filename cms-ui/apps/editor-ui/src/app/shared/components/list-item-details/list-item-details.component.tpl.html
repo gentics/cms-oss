@@ -81,8 +81,8 @@
             </detail-chip>
             <detail-chip *ngSwitchCase="'usage'" (click)="usageClicked($event, item)" class="usage">
                 <span>{{ 'common.usage_label' | i18n }}:</span>
-                <span *ngIf="item?.usage?.total !== undefined" class="usage-count">{{ totalUsage(item) }}</span>
-                <i *ngIf="item?.usage?.total === undefined"
+                <span *ngIf="item?.usage?.total != null" class="usage-count">{{ item.usage.total }}</span>
+                <i *ngIf="item?.usage?.total == null"
                    class="usage-spinner material-icons usage-count" [attr.translate]="'no'">hourglass_empty</i>
             </detail-chip>
             <detail-chip *ngSwitchDefault>

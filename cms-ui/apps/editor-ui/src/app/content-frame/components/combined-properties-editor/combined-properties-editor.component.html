@@ -34,14 +34,14 @@
 
         <ng-container *ngIf="item.type !== 'node' && item.type !== 'channel'">
             <gtx-tab-group
-                *ngFor="let category of objectPropertiesGrouped"
+                *ngFor="let category of objectPropertiesGrouped; trackBy: trackCategory"
                 [label]="category.name | i18n"
                 [id]="category.id"
                 [expanded]="expandedObjectPropertyCategories | gtxIncludes:category.id"
                 (tabGroupToggle)="tabGroupToggled($event, category.id)"
             >
                 <gtx-tab-pane
-                    *ngFor="let objProp of category.objProperties"
+                    *ngFor="let objProp of category.objProperties; trackBy: trackObjectProperty"
                     [id]="objProp.name"
                     [readonly]="objProp.readOnly"
                     [inactive]="!objProp.active"

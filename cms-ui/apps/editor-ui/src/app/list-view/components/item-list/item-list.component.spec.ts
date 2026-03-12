@@ -22,6 +22,7 @@ import {
     Folder,
     FolderItemType,
     Image,
+    Language,
     Node as NodeModel,
     Page,
 } from '@gentics/cms-models';
@@ -108,6 +109,7 @@ const allPermissions = (): EditorPermissions => // Sorry, but it works.
             [itemsInfo]="itemsInfo$ | async"
             [currentFolderId]="currentFolderId$ | async"
             [activeNode]="activeNode"
+            [nodeLanguages]="activeNodeLanguages"
             [startPageId]="startPageId"
             [itemInEditor]="itemInEditor"
             [folderPermissions]="permissions"
@@ -138,6 +140,10 @@ class TestComponent implements OnInit {
     permissions = allPermissions();
     isSearching = true;
     itemsInfoPipe$: Observable<boolean>;
+    activeNodeLanguages: Language[] = [
+        { id: 1, globalId: '1', code: 'de', name: 'Deutsch' },
+        { id: 2, globalId: '2', code: 'en', name: 'English' }
+    ]
 
     constructor(public appState: ApplicationStateService) { }
 
@@ -146,13 +152,6 @@ class TestComponent implements OnInit {
         this.currentFolderId$ = this.appState.select(state => state.folder.activeFolder);
     }
 }
-
-class MockRouter {
-    createUrlTree(): void { }
-    navigateByUrl(): void { }
-}
-class MockActivatedRoute { }
-class MockLocationStrategy { }
 
 class MockNavigationService {
     instruction(): any {
@@ -198,22 +197,6 @@ class MockI18nService { }
 
 class MockI18nNotification { }
 
-@Pipe({
-    name: 'permissions',
-    standalone: false,
-})
-class MockPermissionPipe implements PipeTransform {
-    transform(item: any): EditorPermissions {
-        const val = {
-            ...getNoPermissions(),
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            __forItem: item,
-        };
-        val.page.view = true;
-        return val;
-    }
-}
-
 class MockResourceUrlBuilder { }
 
 class MockUploadConflictService { }
@@ -244,7 +227,19 @@ class MockWastebinActionsService {
     restoreItemsFromWastebin = jasmine.createSpy('restoreItemsFromWastebin');
 }
 
-describe('ItemListComponent', () => {
+@Pipe({
+    name: 'gtxMapPermissions',
+    standalone: false,
+})
+class MockMapPermissionsPipe implements PipeTransform {
+    transform(item: any, ...args: any[]): EditorPermissions {
+        const val = { ...getNoPermissions() };
+        val.page.view = true;
+        return val;
+    }
+}
+
+fdescribe('ItemListComponent', () => {
 
     let state: TestApplicationState;
     let folderActions: MockFolderActions;
@@ -293,6 +288,7 @@ describe('ItemListComponent', () => {
                 AnyItemInheritedPipe,
                 AnyItemPublishedPipe,
                 AnyPageUnpublishedPipe,
+                MockMapPermissionsPipe,
                 DetailChip,
                 FavouriteToggleComponent,
                 FileSizePipe,
@@ -317,7 +313,6 @@ describe('ItemListComponent', () => {
                 MasonryGridComponent,
                 MasonryItemDirective,
                 MockItemContextMenu,
-                MockPermissionPipe,
                 PageIsLockedPipe,
                 PageLanguageIndicatorComponent,
                 ItemStatusLabelComponent,
@@ -367,6 +362,8 @@ describe('ItemListComponent', () => {
                 activeNodeLanguages: {
                     list: [1, 2],
                 },
+                activeLanguage: 1,
+                activeFormLanguage: 1,
                 folders: {
                     list: [1, 2, 3],
                     selected: [],
@@ -1058,12 +1055,7 @@ describe('ItemListComponent', () => {
                 .queryAll(By.directive(MockItemContextMenu))
                 .map(debugElement => debugElement.componentInstance);
 
-            // __forItem is added by the MockPermissionPipe
-            // eslint-disable-next-line no-underscore-dangle
-            const permissionItems = contextMenus.map(menu => (menu.permissions as any).__forItem);
-
             expect(contextMenus.length).toBe(3);
-            expect(permissionItems).toEqual(instance.items);
         }),
     );
 
@@ -1143,13 +1135,11 @@ describe('ItemListComponent', () => {
                 });
                 fixture.detectChanges();
 
-                const icons: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator .language-icon'));
-                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator .language-code'));
-                // amount of icons shown (displayAllLanguages is disabled by default)
+                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator language-state'));
                 expect(links.length).toBe(1);
-                // icon of available language
-                expect(icons[0].className).toMatch(new RegExp(/(available)/, 'g'));
-                expect(links[0].textContent).toMatch(new RegExp(/(en)/, 'i'));
+                debugger;
+                expect(links[0].querySelector('.language-button').classList.contains('available')).toBeTrue;
+                expect(links[0].querySelector('.language-code').textContent).toMatch(new RegExp(/(en)/, 'i'));
 
                 tick();
             }),

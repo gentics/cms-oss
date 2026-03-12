@@ -90,6 +90,10 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         }
     }
 
+    trackVariant(index: number, variant: ImageVariant): string {
+        return variant.url;
+    }
+
     private handleFileUpdate(): void {
         this.loadPermissions();
 

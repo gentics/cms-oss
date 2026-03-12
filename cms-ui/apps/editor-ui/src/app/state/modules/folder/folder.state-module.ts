@@ -287,80 +287,50 @@ export class FolderStateModule {
         }
 
         const { fetchAll, folderId, hasMore, items, nodeId, schema, total } = action.result;
-        let batch = 0;
 
         const state = ctx.getState();
-        let hasMoreBatches = true;
-        let hasFinished = false;
 
-        while (hasMoreBatches) {
-            const itemsWithThisBatch = action.skipBatching ? total : Math.min(total, (batch + 1) * LIST_BATCH_SIZE);
-            const slice = items.slice(batch * LIST_BATCH_SIZE, itemsWithThisBatch);
+        // Entities can always be applied to the entity state.
+        const normalized = normalize(items, new schemaNamespace.Array(schema));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
-            // Update looped variables
-            batch++;
-            hasMoreBatches = itemsWithThisBatch < items.length;
+        let idsToSaveToFolderState = items.map(item => item.id);
 
-            // Entities can always be applied to the entity state.
-            const normalized = normalize(slice, new schemaNamespace.Array(schema));
-            await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
+        // Apply the items to the list state if the user did not change folder / node.
+        if (state.activeFolder === folderId && state.activeNode === nodeId) {
+            // calculate correct page to display after items reload
+            // to prevent current page to be higher than max pages returned and thus display an empty page
+            const totalpages = Math.ceil(total / state[type].itemsPerPage);
+            const currentPage: number = state[type].currentPage;
+            const newCurrentPage = currentPage + 1 > totalpages ? totalpages : currentPage;
 
-            let idsToSaveToFolderState: number[];
-            if (hasMoreBatches) {
-                // A list of IDs that is pre-filled with the ID of item 1
-                // and part by part filled with the real ids.
-                idsToSaveToFolderState = [
-                    ...items.slice(0, itemsWithThisBatch).map(item => item.id),
-                    ...new Array(Math.max(0, total - itemsWithThisBatch)).fill(items[0].id),
-                ];
-            } else {
-                // All pages are finished
-                idsToSaveToFolderState = items.map(item => item.id);
-            }
-
-            // Apply the batch to the list state if the user did not change folder / node.
-            if (state.activeFolder === folderId && state.activeNode === nodeId) {
-                // calculate correct page to display after items reload
-                // to prevent current page to be higher than max pages returned and thus display an empty page
-                const totalpages = Math.ceil(total / state[type].itemsPerPage);
-                const currentPage: number = state[type].currentPage;
-                const newCurrentPage = currentPage + 1 > totalpages ? totalpages : currentPage;
-
-                // If there's no more batches to process, then we finalize the fetching as well
-                const finishNow = !hasMoreBatches;
-                if (finishNow) {
-                    hasFinished = true;
-                }
-
-                ctx.setState(patch<FolderState>({
-                    [type]: patch<ItemsInfo>({
-                        fetchAll: fetchAll,
-                        hasMore: hasMore,
-                        list: idsToSaveToFolderState,
-                        total: total,
-                        currentPage: newCurrentPage,
-                        fetching: iif(finishNow, false),
-                    }),
-                }));
-            }
-
-            // Always apply to the folder cache when loading folders/pages/files/images.
-            if (cacheTypesPlural.indexOf(type) >= 0) {
-                this.folderCache = updateCache(this.folderCache, folderId, type, {
-                    fetchAll,
-                    hasMore,
-                    list: idsToSaveToFolderState,
-                    total,
-                });
-            }
-        }
-
-        if (!hasFinished) {
             ctx.setState(patch<FolderState>({
                 [type]: patch<ItemsInfo>({
-                    fetching: false,
+                    fetchAll: fetchAll,
+                    hasMore: hasMore,
+                    list: idsToSaveToFolderState,
+                    total: total,
+                    currentPage: newCurrentPage,
+                    fetching: false
                 }),
             }));
+        } else {
+            // Mark the list as finished loading
+            ctx.setState(patch<FolderState>({
+                [type]: patch<ItemsInfo>({
+                    fetching: false
+                }),
+            }));
+        }
+
+        // Always apply to the folder cache when loading folders/pages/files/images.
+        if (cacheTypesPlural.indexOf(type) >= 0) {
+            this.folderCache = updateCache(this.folderCache, folderId, type, {
+                fetchAll,
+                hasMore,
+                list: idsToSaveToFolderState,
+                total,
+            });
         }
     }
 

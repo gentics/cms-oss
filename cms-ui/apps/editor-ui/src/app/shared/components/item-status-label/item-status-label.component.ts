@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { UIMode } from '@editor-ui/app/common/models';
+import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
+import { ItemState, UIMode } from '@editor-ui/app/common/models';
 import { Form, Language, Page, StagedItemsMap } from '@gentics/cms-models';
+import { ChangesOf } from '@gentics/ui-core';
 import { PublishableStateUtil } from '../../util/entity-states';
 
 enum DisplayLabel {
@@ -44,64 +45,46 @@ export class ItemStatusLabelComponent implements OnChanges {
     @Input()
     public iconOnly = false;
 
-    public inQueue = false;
-    public planned = false;
-    public plannedOnline = false;
-    public plannedOffline = false;
-    public modified = false;
-    public published = false;
-    public offline = false;
-    public locked = false;
-    public deleted = false;
-    public inherited = false;
-    public localized = false;
-
+    public state: ItemState;
     public labelToDisplay: DisplayLabel;
 
-    public ngOnChanges(changes: SimpleChanges): void {
-        if (!this.item) {
-            this.inQueue = false;
-            this.planned = false;
-            this.plannedOnline = false;
-            this.plannedOffline = false;
-            this.modified = false;
-            this.published = false;
-            this.offline = false;
-            this.locked = false;
-            this.deleted = false;
-            this.inherited = false;
-            this.localized = false;
+    public ngOnChanges(changes: ChangesOf<this>): void {
+        if (changes.item) {
+            this.updateState();
+            this.labelToDisplay = this.determineLabelToDisplay();
         }
+    }
 
-        this.inQueue = !!this.item.timeManagement?.queuedPublish;
-        this.planned = PublishableStateUtil.statePlanned(this.item);
-        this.plannedOnline = PublishableStateUtil.statePlannedOnline(this.item);
-        this.plannedOffline = PublishableStateUtil.statePlannedOffline(this.item);
-        this.modified = PublishableStateUtil.stateModified(this.item);
-        this.published = PublishableStateUtil.statePublished(this.item);
-        this.offline = PublishableStateUtil.stateOffline(this.item);
-        this.locked = PublishableStateUtil.stateLocked(this.item);
-        this.deleted = PublishableStateUtil.stateDeleted(this.item);
-        this.inherited = PublishableStateUtil.stateInherited(this.item);
-        this.localized = PublishableStateUtil.stateLocalized(this.item);
-
-        this.labelToDisplay = this.determineLabelToDisplay();
+    private updateState(): void {
+        this.state = {
+            inQueue: !!(this.item?.timeManagement?.queuedPublish ?? null),
+            planned: this.item != null && PublishableStateUtil.statePlanned(this.item),
+            plannedOnline: this.item != null && PublishableStateUtil.statePlannedOnline(this.item),
+            plannedOffline: this.item != null && PublishableStateUtil.statePlannedOffline(this.item),
+            modified: this.item != null && PublishableStateUtil.stateModified(this.item),
+            published: this.item != null && PublishableStateUtil.statePublished(this.item),
+            offline: this.item != null && PublishableStateUtil.stateOffline(this.item),
+            locked: this.item != null && PublishableStateUtil.stateLocked(this.item),
+            deleted: this.item != null && PublishableStateUtil.stateDeleted(this.item),
+            inherited: this.item != null && PublishableStateUtil.stateInherited(this.item),
+            localized: this.item != null && PublishableStateUtil.stateLocalized(this.item),
+        }
     }
 
     private determineLabelToDisplay(): DisplayLabel {
-        if (this.deleted) {
+        if (this.state.deleted) {
             return DisplayLabel.DELETED;
-        } else if (this.inQueue) {
+        } else if (this.state.inQueue) {
             return DisplayLabel.IN_QUEUE;
-        } else if (this.planned) {
-            return this.plannedOnline ? DisplayLabel.PLANNED_ONLINE : DisplayLabel.PLANNED_OFFLINE;
-        } else if (this.modified) {
+        } else if (this.state.planned) {
+            return this.state.plannedOnline ? DisplayLabel.PLANNED_ONLINE : DisplayLabel.PLANNED_OFFLINE;
+        } else if (this.state.modified) {
             return DisplayLabel.MODIFIED;
-        } else if (this.published) {
+        } else if (this.state.published) {
             return DisplayLabel.PUBLISHED;
-        } else if (this.offline) {
+        } else if (this.state.offline) {
             return DisplayLabel.OFFLINE;
-        } else if (this.locked) {
+        } else if (this.state.locked) {
             return DisplayLabel.LOCKED;
         }
     }

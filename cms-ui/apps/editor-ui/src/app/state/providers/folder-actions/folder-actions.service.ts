@@ -16,6 +16,7 @@ import {
     QueryAssemblerElasticSearchService,
     QueryAssemblerGCMSSearchService,
 } from '@editor-ui/app/shared/providers/query-assembler';
+import { responseMessageToNotification } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
@@ -40,6 +41,7 @@ import {
     FileListResponse,
     FileOrImage,
     FileReplaceOptions,
+    FileRequestOptions,
     FileUploadResponse,
     Folder,
     FolderCreateRequest,
@@ -52,6 +54,7 @@ import {
     FolderListOptions,
     FolderListResponse,
     FolderRequestOptions,
+    FolderResponse,
     Form,
     FormCreateRequest,
     FormListOptions,
@@ -77,6 +80,7 @@ import {
     Node,
     NodeFeature,
     NodeFeatures,
+    NodeListResponse,
     NodeResponse,
     Normalized,
     Page,
@@ -91,6 +95,7 @@ import {
     PageVersion,
     PagedTemplateListResponse,
     PagingSortOrder,
+    PermissionResponse,
     PushToMasterRequest,
     QueuedActionRequestClear,
     Raw,
@@ -110,9 +115,9 @@ import {
     TimeManagement,
     TranslationRequestOptions,
     TypedItemListResponse,
-    folderItemTypePlurals, GcmsPermission, GcmsRolePrivilege, FolderResponse, PermissionResponse,
-    FileRequestOptions,
+    folderItemTypePlurals
 } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { normalize, schema } from 'normalizr';
@@ -194,9 +199,6 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
-import { responseMessageToNotification } from '@gentics/cms-components';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
-import {TakePagesOfflineModal} from "@editor-ui/app/shared/components";
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -263,26 +265,19 @@ export class FolderActionsService {
             forkJoin([
                 this.appState.dispatch(new StartListFetchingAction('nodes', undefined, true)),
                 this.client.folder.folders(0),
+                this.client.node.list(),
             ]).pipe(
-                switchMap(([, folderRes]) => {
-                    if (folderRes.folders?.length === 0) {
-                        return of([folderRes, []]);
-                    }
-
-                    return forkJoin(folderRes.folders.map(folder => this.client.node.get(folder.nodeId ?? folder.id))).pipe(
-                        map(responses => [folderRes, responses.map(res => res.node)]),
-                    );
-                }),
-                switchMap(([folderRes, nodes]: [FolderListResponse, Node[]]) => {
+                switchMap(([, folderRes, nodesRes]: [any, FolderListResponse, NodeListResponse]) => {
+                    const nodes = nodesRes.items;
                     return this.appState.dispatch(new NodeFetchingSuccessAction(folderRes.folders, nodes)).pipe(
-                        map(() => [folderRes, nodes]),
+                        map(() => nodes),
                     );
                 }),
-            ).subscribe(([, nodes]) => {
+            ).subscribe((nodes) => {
                 if (nodes.length > 0) {
                     this.getActiveNodeLanguages()
                         .then(languages => this.setActiveLanguageFromAvailable(languages));
-                    resolve(nodes as any);
+                    resolve(nodes);
                 }
             }, error => {
                 this.appState.dispatch(new ListFetchingErrorAction('nodes', error.message));
@@ -956,12 +951,18 @@ export class FolderActionsService {
                 schema: getNormalizrSchema(type),
             })).toPromise();
 
-            if (type !== 'folder') {
+            if (type !== 'folder' && (elasticSearchMode || !!options.search)) {
                 const foldersToLoad: { id: number, nodeId?: number }[] = [];
                 const loadedFolders = this.appState.now.entities.folder;
 
                 for (const item of collection) {
-                    if (loadedFolders[item.folderId] == null || loadedFolders[item.folderId].permissionsMap == null) {
+                    if (
+                        (loadedFolders[item.folderId] == null
+                            || loadedFolders[item.folderId].permissionsMap == null
+                        )
+                        // Dont add the same load multiple times
+                        && !foldersToLoad.some(toLoad => toLoad.id === item.folderId && toLoad.nodeId === item.masterNodeId)
+                    ) {
                         foldersToLoad.push({ id: item.folderId, nodeId: item.masterNodeId });
                     }
                 }

@@ -5,6 +5,8 @@ import {
     ImagePermissions,
     ItemPermissions,
     PagePermissions,
+    PermissionsMapCollection,
+    PrivilegeMap,
     TagTypePermissions,
     TemplatePermissions,
 } from '@gentics/cms-models';
@@ -12,6 +14,16 @@ import {
 /*
  * This file contains Models for permissions as handled in our app.
  */
+
+/**
+ * Neccessary evil - Interface for "raw" permissions from the response, normalized,
+ * so we can use it in the permission service.
+ * This type is intended to be passed through components and only being read from.
+ */
+export interface FolderPermissionData {
+    privileges: PrivilegeMap;
+    permissions: PermissionsMapCollection;
+}
 
 /**
  * Permissions used in the Editor UI, abstracted from the server logic.

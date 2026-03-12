@@ -32,7 +32,7 @@ export class I18nRelativeDatePipe implements PipeTransform, OnDestroy {
     }
 
     transform(date: Date | string | number): string {
-        if (typeof date === 'string') {
+        if (typeof date === 'string' || typeof date === 'number') {
             date = new Date(date);
         }
 

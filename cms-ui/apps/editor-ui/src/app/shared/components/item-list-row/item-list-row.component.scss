@@ -71,9 +71,21 @@ gtx-contents-list-item {
 
         .item-name {
             display: inline-flex;
-            align-items: baseline;
+            align-items: center;
             overflow: hidden;
             max-width: 100%;
+            gap: 0.25rem;
+
+            .localized-icon,
+            .inherited-icon {
+                font-size: 1rem;
+            }
+            .localized-icon {
+                color: $gcms-color-icon-localized;
+            }
+            .inherited-icon {
+                color: $gcms-color-icon-inheritance;
+            }
 
             > .item-name-only {
                 text-overflow: ellipsis;

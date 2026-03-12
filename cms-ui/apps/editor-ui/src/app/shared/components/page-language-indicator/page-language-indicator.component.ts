@@ -1,19 +1,38 @@
-import { animate, animateChild, query, style, transition, trigger } from '@angular/animations';
+import {
+    animate,
+    animateChild,
+    query,
+    style,
+    transition,
+    trigger,
+} from '@angular/animations';
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
+    EventEmitter,
+    Input,
     OnChanges,
-    OnDestroy,
-    OnInit,
-    SimpleChange,
+    Output,
 } from '@angular/core';
-import { IndexById, Language, Normalized, Page, Raw } from '@gentics/cms-models';
-import { combineLatest, Observable } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { Language, Page, StagedItemsMap } from '@gentics/cms-models';
+import { BaseComponent, ChangesOf } from '@gentics/ui-core';
+import {
+    FolderPermissionData,
+    ItemLanguageClickEvent,
+    ItemListRowMode,
+    LanguageState,
+    StageableItem,
+    UIMode,
+} from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
-import { ApplicationStateService, FolderActionsService } from '../../../state';
+import { ApplicationStateService } from '../../../state';
 import { PublishableStateUtil } from '../../util/entity-states';
-import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-language-indicator.component';
+
+interface VariantState extends Language, LanguageState {
+    pageId: number;
+    globalId: string;
+}
 
 /**
  * A component which displays the available languages for a page and (optionally) a page's status icons.
@@ -32,243 +51,242 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
         trigger('animNgForChild', [
             transition('void => *', [
                 style({
-                    opacity: 0,
-                    width: '0',
+                    "opacity": 0,
+                    "width": '0',
                     'padding-left': '*',
                     'padding-right': '*',
                     'margin-left': '*',
                     'margin-right': '*',
                 }),
-                animate('0.2s ease-in-out', style({
-                    opacity: 1,
-                    width: '*',
-                    'padding-left': '*',
-                    'padding-right': '*',
-                    'margin-left': '*',
-                    'margin-right': '*',
-                })),
+                animate(
+                    '0.2s ease-in-out',
+                    style({
+                        "opacity": 1,
+                        "width": '*',
+                        'padding-left': '*',
+                        'padding-right': '*',
+                        'margin-left': '*',
+                        'margin-right': '*',
+                    }),
+                ),
             ]),
             transition('* => void', [
                 style({
-                    opacity: 1,
-                    width: '*',
+                    "opacity": 1,
+                    "width": '*',
                     'padding-left': '*',
                     'padding-right': '*',
                     'margin-left': '*',
                     'margin-right': '*',
                 }),
-                animate('0.2s ease-in-out', style({
-                    opacity: 0,
-                    width: '0',
-                    'padding-left': '*',
-                    'padding-right': '*',
-                    'margin-left': '*',
-                    'margin-right': '*',
-                })),
+                animate(
+                    '0.2s ease-in-out',
+                    style({
+                        "opacity": 0,
+                        "width": '0',
+                        'padding-left': '*',
+                        'padding-right': '*',
+                        'margin-left': '*',
+                        'margin-right': '*',
+                    }),
+                ),
             ]),
         ]),
     ],
-    standalone: false
+    standalone: false,
 })
 export class PageLanguageIndicatorComponent
-    extends BaseLanguageIndicatorComponent<Page<Normalized>>
-    implements OnInit, OnChanges, OnDestroy {
+    extends BaseComponent
+    implements OnChanges {
+    public readonly ItemListRowMode = ItemListRowMode;
+    public readonly UIMode = UIMode;
 
-    /** CONSTRUCTOR */
+    @Input({ required: true })
+    public languages: Language[];
+
+    @Input()
+    public activeLanguage: Language;
+
+    @Input({ required: true })
+    public page: Page;
+
+    @Input({ required: true })
+    public permissions: FolderPermissionData;
+
+    @Input()
+    public mode: ItemListRowMode;
+
+    @Input({ required: true })
+    public uiMode: UIMode;
+
+    @Input()
+    public stagingMap: StagedItemsMap;
+
+    @Input()
+    public displayStatusInfo: boolean;
+
+    @Input()
+    public displayDeleted: boolean;
+
+    @Input()
+    public expandByDefault: boolean;
+
+    /** Emits if an action from a langauge icon has been clicked */
+    @Output()
+    public languageClick = new EventEmitter<ItemLanguageClickEvent<Page>>();
+
+    /** Emits if an lang icon is clicked */
+    @Output()
+    public languageIconClick = new EventEmitter<{
+        item: Page;
+        language: Language;
+    }>();
+
+    public hasUntranslated: boolean;
+    public expanded = false;
+
+    public inCurrentLanguage: boolean;
+    public variants: VariantState[] = [];
+
     constructor(
-        appState: ApplicationStateService,
-        folderActions: FolderActionsService,
-        protected contextMenuOperations: ContextMenuOperationsService,
+        changeDetector: ChangeDetectorRef,
+        private appState: ApplicationStateService,
+        private contextMenu: ContextMenuOperationsService,
     ) {
-        super('page', appState, folderActions)
+        super(changeDetector);
     }
 
-    /** On component initialization */
-    ngOnInit(): void {
-        super.ngOnInit();
-
-        // get all translations available
-        this.currentLanguage$ = this.item$.pipe(
-            map(page => this.nodeLanguages.filter(l => page && l.id === page.contentGroupId)[0]),
-        );
-
-        // get existing page translations
-        this.itemLanguages$ = this.item$.pipe(
-            map(page => this.nodeLanguages.filter(nodeLanguage => this.isPageLanguage(nodeLanguage, page))),
-        );
-
-        super.afterLanguageInit();
-    }
-
-    ngOnChanges(changes: { [K in keyof this]?: SimpleChange }): void {
-        if (changes.item) {
-            this.item$.next(this.item);
+    ngOnChanges(changes: ChangesOf<this>): void {
+        if (changes.expandByDefault) {
+            this.expanded = this.expandByDefault;
         }
 
-        // check for multiple languages available for current node
-        if (changes.nodeLanguages && changes.nodeLanguages.currentValue) {
-            this.isMultiLanguage$.next(1 < this.nodeLanguages.length);
+        if (changes.activeLanguage || changes.page) {
+            this.inCurrentLanguage = this.page != null
+              && this.activeLanguage != null
+              && this.activeLanguage.code === this.page.language;
+        }
+
+        if (changes.expandByDefault || changes.page || changes.languages || changes.stagingMap) {
+            this.updateVariants();
         }
     }
 
-    /**
-     * On component destruction
-     */
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
+    identifyVariant(index: number, variant: VariantState): string {
+        return variant.code;
+    }
+
+    languageClicked(
+        variant: VariantState,
+        compare: boolean = false,
+        source: boolean = true,
+        restore: boolean = false,
+    ): void {
+        this.languageClick.emit({
+            item: this.page,
+            language: {
+                id: variant.id,
+                code: variant.code,
+                name: variant.name,
+            },
+            compare,
+            source,
+            restore,
+        });
     }
 
     /**
-     * Predicate function that returns true if the given language is one of the pages language variants.
+     * The "show more" ellipses or "show less" arrow was clicked.
      */
-    isPageLanguage(language: Language, page: Page<Raw> | Page<Normalized>): boolean {
-        if (page && page.languageVariants) {
-            const pageLanguageIds = Object.keys(page.languageVariants).map(id => Number(id));
-            // get IDs of page translations
-            this.languageVariantsIds$.next(
-                Object.keys(page.languageVariants)
-                    .map(id => {
-                        // if is RAW
-                        if ((page.languageVariants as IndexById<Page<Raw>>)[id] instanceof Object) {
-                            return (page.languageVariants as IndexById<Page<Raw>>)[id].id;
-                            // else if is NORMALIZED
-                        } else {
-                            return Number((page.languageVariants as IndexById<number>)[id]);
-                        }
-                    }),
-            );
-            return -1 < pageLanguageIds.indexOf(language.id);
-        } else if (page && page.language) {
-            return page.language === language.code;
+    toggleExpand(): void {
+        this.expanded = !this.expanded;
+        this.updateVariants();
+    }
+
+    onIconClicked(variant: VariantState): void {
+        this.languageIconClick.emit({
+            item: this.page,
+            language: {
+                id: variant.id,
+                code: variant.code,
+                name: variant.name,
+            },
+        });
+    }
+
+    onStageLanguageClick(variant: VariantState): void {
+        const item = {
+            type: 'page',
+            id: variant.pageId,
+            globalId: variant.globalId,
+            language: variant.code,
+        } as StageableItem;
+
+        if (this.stagingMap?.[item.globalId]?.included) {
+            this.contextMenu.unstageItemFromCurrentPackage(item);
         } else {
-            return false;
+            this.contextMenu.stageItemToCurrentPackage(item);
         }
     }
 
-    /**
-     * @param langCode of the page translations to be returned, e. g. 'en' or 'de'
-     * @returns data object of page in defined language
-     */
-    getPageLanguageVariantOfLanguage$(langCode: string): Observable<Page> {
-        return combineLatest([this.languageVariants$, this.item$]).pipe(
-            map(([languageVariants, page]) => {
-                // if there are existing translations this.languageVariants will contain them
-                if (Object.getOwnPropertyNames(languageVariants).length > 0) {
-                    const languageVariantKey = Object.keys(languageVariants)
-                        .find(key => languageVariants[key].language === langCode);
-                    return languageVariants[languageVariantKey];
+    updateVariants(): void {
+        this.hasUntranslated = false;
+        this.variants = this.languages.flatMap((lang) => {
+            let variantPage: Page | null = null;
+
+            if (this.page.languageVariants) {
+                if (Array.isArray(this.page.languageVariants)) {
+                    variantPage = (this.page.languageVariants as number[])
+                        .map((variantId) => this.appState.now.entities.page[variantId])
+                        .find((variant) => variant != null && variant.language === lang.code);
                 } else {
-                    // just return the only translation existing which is the page itself
-                    return page;
+                    const tmpVal = this.page.languageVariants[lang.id];
+                    if (typeof tmpVal === 'number') {
+                        variantPage = this.appState.now.entities.page[tmpVal];
+                    }
                 }
-            }),
-            filter(page => !!page),
-        );
-    }
+            }
 
-    /**
-     * @param langCode of the page to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this page has been deleted
-     * and UI shall display deleted objects
-     */
-    stateDeleted$(langCode: string): Observable<boolean> {
-        return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
-            map(languageVariantOfLanguage => {
-                return PublishableStateUtil.stateDeleted(languageVariantOfLanguage);
-            }),
-        );
-    }
-
-    /**
-     * @param langCode of the page to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this page is online
-     */
-    statePublished$(langCode: string): Observable<boolean> {
-        return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
-            map(languageVariantOfLanguage => {
-                return PublishableStateUtil.statePublished(languageVariantOfLanguage);
-            }),
-        );
-    }
-
-    /**
-     * @param langCode of the page to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this page has been edited by a user
-     */
-    stateModified$(langCode: string): Observable<boolean> {
-        return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
-            map(languageVariantOfLanguage => {
-                return PublishableStateUtil.stateModified(languageVariantOfLanguage);
-            }),
-        );
-    }
-
-    /**
-     * @param langCode of the page to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this page has been requested for release
-     */
-    stateInQueue$(langCode: string): Observable<boolean> {
-        return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
-            map(languageVariantOfLanguage => {
-                return PublishableStateUtil.stateInQueue(languageVariantOfLanguage);
-            }),
-        );
-    }
-
-    /**
-     * @param langCode of the page to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this page is scheduled for an automated action
-     */
-    statePlanned$(langCode: string): Observable<boolean> {
-        return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
-            map(languageVariantOfLanguage => {
-                return PublishableStateUtil.statePlanned(languageVariantOfLanguage);
-            }),
-        );
-    }
-
-    /**
-     * @param langCode of the page to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this page is inherited from a master node page language variant
-     */
-    stateInherited$(langCode: string): Observable<boolean> {
-        return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
-            map(languageVariantOfLanguage => {
-                return PublishableStateUtil.stateInherited(languageVariantOfLanguage);
-            }),
-        );
-    }
-
-    /**
-     * @param langCode of the page to be checked, e. g. 'en' or 'de'
-     * @returns TRUE if the language variant of this page is inherited but has autonomous content
-     */
-    stateLocalized$(langCode: string): Observable<boolean> {
-        return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
-            map(languageVariantOfLanguage => {
-                if (!languageVariantOfLanguage || languageVariantOfLanguage.inherited) {
-                    return false;
+            if (variantPage == null) {
+                this.hasUntranslated = true;
+                if (!this.expanded) {
+                    return [];
                 }
-                return PublishableStateUtil.stateLocalized(languageVariantOfLanguage);
-            }),
-        );
-    }
+            }
 
-    /**
-     * Returns true if the page is available in the given language.
-     */
-    isAvailable$(language: Language): Observable<boolean> {
-        return this.itemLanguages$.pipe(
-            map(pageLanguages => -1 < pageLanguages.indexOf(language)),
-        );
-    }
+            return [{
+                code: lang.code,
+                id: lang.id,
+                name: lang.name,
 
-    onStageLanguageClick(language: Language, page: Page): void {
-        if (this.stagingMap?.[page.globalId]?.included) {
-            this.contextMenuOperations.unstageItemFromCurrentPackage(page);
-        } else {
-            this.contextMenuOperations.stageItemToCurrentPackage(page);
-        }
+                pageId: variantPage?.id,
+                globalId: variantPage?.globalId,
+
+                available: variantPage != null,
+                deleted:
+                    variantPage != null
+                    && PublishableStateUtil.stateDeleted(variantPage),
+                inherited:
+                    variantPage != null
+                    && PublishableStateUtil.stateInherited(variantPage),
+                localized:
+                    variantPage != null
+                    && PublishableStateUtil.stateLocalized(variantPage),
+                modified:
+                    variantPage != null
+                    && PublishableStateUtil.stateModified(variantPage),
+                planned:
+                    variantPage != null
+                    && PublishableStateUtil.statePlanned(variantPage),
+                published:
+                    variantPage != null
+                    && PublishableStateUtil.statePublished(variantPage),
+                queued:
+                    variantPage != null
+                    && PublishableStateUtil.stateInQueue(variantPage),
+                staged: variantPage != null
+                  && this.stagingMap?.[variantPage.globalId]?.included,
+            }];
+        });
     }
 }

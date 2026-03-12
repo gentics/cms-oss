@@ -3,35 +3,36 @@
     <gtx-dropdown-trigger>
       <div
         class="status-label"
-        [class.published]="published"
+        [class.published]="state.published"
+        [class.offline]="state.offline"
         [class.icon-only]="iconOnly"
-        [class.modified]="modified"
+        [class.modified]="state.modified"
         >
-        @if (!deleted && published) {
+        @if (!state.deleted && state.published) {
           <icon class="main-icon success">cloud_upload</icon>
         }
-        @if (!deleted && offline) {
+        @if (!state.deleted && state.offline) {
           <icon class="main-icon alert">cloud_off</icon>
         }
-        @if (deleted) {
+        @if (state.deleted) {
           <icon class="main-icon alert">delete</icon>
         }
-        @if (locked) {
+        @if (state.locked) {
           <div class="corner-icon icon-bottom-left">
             <icon class="secondary-icon">lock</icon>
           </div>
         }
-        @if (modified) {
+        @if (state.modified) {
           <div class="corner-icon icon-bottom-right">
             <span class="icon-modified secondary-icon">*</span>
           </div>
         }
-        @if (inherited || localized) {
+        @if (state.inherited || state.localized) {
           <div class="corner-icon icon-top-left">
-            <icon class="secondary-icon">{{ inherited ? 'input' : 'file_copy' }}</icon>
+            <icon class="secondary-icon">{{ state.inherited ? 'input' : 'file_copy' }}</icon>
           </div>
         }
-        @if (planned && (plannedOnline || plannedOffline)) {
+        @if (state.planned && (state.plannedOnline || state.plannedOffline)) {
           <div class="corner-icon icon-top-right">
             <icon class="secondary-icon">schedule</icon>
           </div>
@@ -79,7 +80,7 @@
             </div>
           }
         }
-        @if (locked) {
+        @if (state.locked) {
           <div class="label-wrapper">
             <icon class="info">lock</icon>
           </div>
@@ -87,12 +88,12 @@
       </div>
     </gtx-dropdown-trigger>
     <gtx-dropdown-content>
-      <item-state-contextmenu
-        [nodeLanguages]="nodeLanguages"
-        [item]="item"
-        [activeNodeId]="activeNodeId"
-        [uiMode]="uiMode"
-      ></item-state-contextmenu>
+        <item-state-contextmenu
+            [nodeLanguages]="nodeLanguages"
+            [item]="item"
+            [activeNodeId]="activeNodeId"
+            [state]="state"
+        ></item-state-contextmenu>
     </gtx-dropdown-content>
   </gtx-dropdown-list>
 }

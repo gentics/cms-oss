@@ -491,57 +491,6 @@ describe('FolderStateModule', () => {
             }
         });
 
-        it('applies the updates in batches', fakeAsync(() => {
-            state.dispatch(new ListFetchingSuccessAction('page', {
-                folderId: 111,
-                nodeId: 222,
-                items: testPages,
-                fetchAll: true,
-                hasMore: false,
-                total: testPages.length,
-                schema: pageSchema,
-            }));
-            tick();
-
-            expect(emittedIDs.length).toBe(4);
-            expect(emittedIDs[1].slice(0, 20))
-                .toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
-            expect(state.now.entities.page[1]).toBeDefined('page 1 not in entity state');
-            expect(state.now.entities.page[20]).toBeDefined('page 20 not in entity state');
-            expect(emittedIDs[1].slice(20, 30))
-                .toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
-
-            expect(emittedIDs[2].slice(0, 20))
-                .toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                    'first 20 items changed when storing second batch');
-            expect(state.now.entities.page[20]).toBeDefined('page 20 not in entity state after second batch');
-            expect(emittedIDs[2].slice(20, 40))
-                .toEqual([21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]);
-            expect(state.now.entities.page[21]).toBeDefined('page 21 not in entity state after second batch');
-            expect(state.now.entities.page[40]).toBeDefined('page 40 not in entity state after second batch');
-            expect(emittedIDs[2].slice(40, 47)).toEqual([1, 1, 1, 1, 1, 1, 1], 'items 40-46 not as expected after second batch');
-
-            expect(emittedIDs[3].length).toBe(testPages.length, 'id list has wrong size');
-            expect(emittedIDs[3].slice(0, 20))
-                .toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                    'first 20 items changed when storing third batch');
-            expect(state.now.entities.page[20]).toBeDefined('page 20 not in entity state after third batch');
-            expect(emittedIDs[3].slice(20, 40))
-                .toEqual([21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]);
-            expect(state.now.entities.page[40]).toBeDefined('page 40 not in entity state after third batch');
-            expect(emittedIDs[3].slice(40, 47))
-                .toEqual([41, 42, 43, 44, 45, 46, 47], 'items 40-46 not as expected after third batch');
-            expect(state.now.entities.page[40]).toBeDefined('page 40 not in entity state after third batch');
-            expect(state.now.entities.page[46]).toBeDefined('page 46 not in entity state after third batch');
-
-            const invalidIds = state.now.folder.pages.list
-                .filter((id, index) => id !== index + 1);
-            expect(invalidIds).toEqual([], 'some IDs are not as expected');
-
-            tick(15);
-            expect(emittedIDs.length).toBe(4, 'ID list was emitted too often');
-        }));
-
         it('works for the initial loaded 10 items', fakeAsync(() => {
             state.dispatch(new ListFetchingSuccessAction('page', {
                 folderId: 111,

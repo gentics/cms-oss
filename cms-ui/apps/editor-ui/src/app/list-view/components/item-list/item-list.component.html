@@ -1,103 +1,109 @@
 @if (activeNode) {
-  <div
-    class="content-list"
-    [class.empty]="items?.length === 0"
-    [ngClass]="itemType || ''"
-    [class.not-loading]="!(areItemsLoading$ | async)"
-    [attr.data-item-type]="itemType"
-    [attr.data-ui-mode]="uiMode"
+    <div
+        class="content-list"
+        [class.empty]="items?.length === 0"
+        [ngClass]="itemType || ''"
+        [class.not-loading]="!(areItemsLoading$ | async)"
+        [attr.data-item-type]="itemType"
+        [attr.data-ui-mode]="uiMode"
     >
-    <item-list-header
-      #header
-      class="list-header icon-checkbox-trigger"
-      [itemsInfo]="itemsInfo"
-      [selectedItems]="selectedItems$ | async"
-      [items]="items"
-      [icon]="icon"
-      [filterTerm]="filterTerm"
-      [nodeLanguages]="languages$ | async"
-      [itemType]="itemType"
-      [acceptUploads]="acceptUploads"
-      [folderPermissions]="folderPermissions"
-      [canCreateItem]="canCreateItem"
-      [activeNode]="activeNode"
-      [currentFolderId]="currentFolderId"
-      [showAllLanguages]="showAllLanguages$ | async"
-      [showStatusIcons]="showStatusIcons$ | async"
-      [showDeleted]="showDeleted$ | async"
-      [showImagesGridView]="showImagesGridView$ | async"
-      [paginationConfig]="paginationConfig"
-      [uiMode]="uiMode"
-    ></item-list-header>
-    <gtx-progress-bar [active]="itemsInfo.fetching" />
-    <div class="list-body" [class.collapsed]="header.isCollapsed" [hidden]="itemsInfo.fetching">
-      @if (itemType !== 'image' || !(showImagesGridView$ | async)) {
-        <div>
-          @for (item of items | paginate: paginationConfig; track identify($index, item)) {
-            <div>
-              <item-list-row
-                [activeNode]="activeNode"
-                [item]="item"
-                [nodeId]="appState?.now?.folder?.activeNode"
-                [itemInEditor]="itemInEditor"
-                [icon]="icon"
-                [filterTerm]="filterTerm"
-                [selected]="isSelected(item)"
-                [itemType]="itemType"
-                [startPageId]="startPageId"
-                [linkPaths]="linkPaths"
-                [expandByDefault]="showAllLanguages$ | async"
-                [nodeLanguages]="languages$ | async"
-                [itemsInfo]="itemsInfo"
-                [showDeleted]="showDeleted$ | async"
-                [uiMode]="uiMode"
-                [stagingMap]="stagingMap"
-              ></item-list-row>
+        <item-list-header
+            #header
+            class="list-header icon-checkbox-trigger"
+            [itemsInfo]="itemsInfo"
+            [selectedItems]="selectedItems$ | async"
+            [items]="items"
+            [icon]="icon"
+            [filterTerm]="filterTerm"
+            [nodeLanguages]="nodeLanguages"
+            [itemType]="itemType"
+            [acceptUploads]="acceptUploads"
+            [folderPermissions]="folderPermissions | gtxMapPermissions"
+            [canCreateItem]="canCreateItem"
+            [activeNode]="activeNode"
+            [currentFolderId]="currentFolderId"
+            [showAllLanguages]="displayAllLanguages"
+            [showStatusIcons]="displayStatusInfo"
+            [showDeleted]="displayDeleted"
+            [showImagesGridView]="showImagesGridView$ | async"
+            [paginationConfig]="paginationConfig"
+            [uiMode]="uiMode"
+        ></item-list-header>
+
+        <gtx-progress-bar [active]="itemsInfo.fetching" />
+
+        <div class="list-body" [class.collapsed]="header.isCollapsed" [hidden]="itemsInfo.fetching">
+            @if (itemType !== 'image' || !(showImagesGridView$ | async)) {
+                @for (item of items | paginate: paginationConfig; track identify($index, item)) {
+                    <item-list-row
+                        [activeNode]="activeNode"
+                        [item]="item"
+                        [nodeId]="activeNode?.id"
+                        [itemInEditor]="itemInEditor"
+                        [icon]="icon"
+                        [filterTerm]="filterTerm"
+                        [searching]="searchTerm || elasticSearchQueryActive"
+                        [selected]="itemsInfo.selected | gtxIncludes:item.id"
+                        [itemType]="itemType"
+                        [permissions]="folderPermissions"
+                        [startPageId]="startPageId"
+                        [linkPaths]="linkPaths"
+                        [expandByDefault]="displayAllLanguages"
+                        [nodeLanguages]="nodeLanguages"
+                        [activeLanguage]="activeLanguage"
+                        [itemsInfo]="itemsInfo"
+                        [showStatusIcons]="displayStatusInfo"
+                        [showDeleted]="displayDeleted"
+                        [expandByDefault]="displayAllLanguages"
+                        [uiMode]="uiMode"
+                        [stagingMap]="stagingMap"
+                    ></item-list-row>
+                }
+            } @else {
+                <masonry-grid
+                    [gutter]="10"
+                    [columnWidth]="280"
+                    [attr.data-item-type]="itemType"
+                    [attr.data-ui-mode]="uiMode"
+                >
+                    @for (item of items | paginate: paginationConfig; track identify($index, item)) {
+                        <masonry-item
+                            class="icon-checkbox-trigger"
+                            [class.item-in-editor]="item === itemInEditor"
+                            [attr.data-item-type]="itemType"
+                            [attr.data-id]="item.id"
+                            [attr.data-global-id]="item.globalId"
+                        >
+                            <!-- since item list is only used in folder content context, we can simply fetch the respective active node from state -->
+                            <grid-item
+                                [item]="item"
+                                [nodeId]="activeNode?.id"
+                                [permissions]="folderPermissions | gtxMapPermissions"
+                                [selected]="itemsInfo.selected | gtxIncludes:item.id"
+                                [itemsInfo]="itemsInfo"
+                                [linkPaths]="linkPaths"
+                                [itemType]="itemType"
+                                [activeNode]="activeNode"
+                                [icon]="icon"
+                                [filterTerm]="filterTerm"
+                                [uiMode]="uiMode"
+                                [stagingMap]="stagingMap"
+                            ></grid-item>
+                        </masonry-item>
+                    }
+                </masonry-grid>
+            }
+
+            <div class="paginate-wrapper">
+                <paging-controls (pageChange)="pageChange.emit($event)"></paging-controls>
+
+                @if (itemsInfo?.total > 10) {
+                    <gtx-page-size-selector
+                        [size]="itemsInfo.itemsPerPage"
+                        (sizeChange)="itemsPerPageChange.emit($event)"
+                    ></gtx-page-size-selector>
+                }
             </div>
-          }
         </div>
-      } @else {
-        <masonry-grid
-          [gutter]="10"
-          [columnWidth]="280"
-          [attr.data-item-type]="itemType"
-          [attr.data-ui-mode]="uiMode"
-          >
-          @for (item of items | paginate: paginationConfig; track identify($index, item)) {
-            <masonry-item
-              class="icon-checkbox-trigger"
-              [class.item-in-editor]="item === itemInEditor"
-              [attr.data-item-type]="itemType"
-              [attr.data-id]="item.id"
-              [attr.data-global-id]="item.globalId"
-              >
-              <!-- since item list is only used in folder content context, we can simply fetch the respective active node from state -->
-              <grid-item
-                [item]="item"
-                [nodeId]="appState?.now?.folder?.activeNode"
-                [selected]="isSelected(item)"
-                [itemsInfo]="itemsInfo"
-                [linkPaths]="linkPaths"
-                [itemType]="itemType"
-                [activeNode]="activeNode"
-                [icon]="icon"
-                [filterTerm]="filterTerm"
-                [uiMode]="uiMode"
-                [stagingMap]="stagingMap"
-              ></grid-item>
-            </masonry-item>
-          }
-        </masonry-grid>
-      }
-      <div class="paginate-wrapper">
-        <paging-controls (pageChange)="pageChange.emit($event)"></paging-controls>
-        @if (itemsInfo?.total > 10) {
-          <gtx-page-size-selector
-            [size]="itemsInfo.itemsPerPage"
-            (sizeChange)="itemsPerPageChange.emit($event)"
-          ></gtx-page-size-selector>
-        }
-      </div>
     </div>
-  </div>
 }

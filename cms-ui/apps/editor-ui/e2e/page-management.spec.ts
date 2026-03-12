@@ -857,7 +857,7 @@ test.describe('Page Management', () => {
         const pageItem = findItem(list, pageId);
 
         await expect(pageItem).toBeVisible();
-        await expect(pageItem.locator('.status-label i.material-icons')).toHaveText('cloud_off');
+        await expectItemOffline(pageItem);
 
         // Close the edit-mode, as creating a new page will always open it
         await editorAction(page, 'close');
@@ -869,6 +869,5 @@ test.describe('Page Management', () => {
         });
 
         await expectItemPublished(pageItem);
-        await expect(pageItem.locator('.status-label i.material-icons')).toHaveText('cloud_upload');
     });
 });

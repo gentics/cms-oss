@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subscription } from 'rxjs';
 import { distinctUntilChanged, filter, map, switchMapTo } from 'rxjs/operators';
 import { I18nService } from '../i18n/i18n.service';
 import { InitializableServiceBase } from '../initializable-service-base/initializable-service.base';
@@ -59,6 +59,15 @@ export class I18nRelativeDateService extends InitializableServiceBase {
             this.init();
         }
 
+        if (typeof date === 'number' && Number.isInteger(date)) {
+            date = new Date(date);
+        }
+
+        if (date == null || !(date instanceof Date)) {
+            console.warn('received invalid date', date);
+            return of('');
+        }
+
         const millisecondDiff = Math.abs(date.getTime() - this.currentTime.value.getTime());
         let time$: Observable<any> = this.currentTime;
 
@@ -86,6 +95,11 @@ export class I18nRelativeDateService extends InitializableServiceBase {
      * Can be used for distinctUntilChanged or to cache results.
      */
     getTranslationParams(date: Date, direction?: 'future' | 'past', secondsPrecision: number = 1): RelativeTimeTranslation {
+        if (date == null || !(date instanceof Date)) {
+            console.warn('received invalid date', date);
+            return { key: '', count: 0 };
+        }
+
         const now = this.currentTime.value;
         if ((direction === 'future' && date < now) || (direction === 'past' && date > now)) {
             date = now;

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Injectable } from '@angular/core';
-import { I18nNotificationService, responseMessageToNotification } from '@gentics/cms-components';
+import { I18nNotificationService, responseMessageToNotification, I18nService } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
@@ -25,6 +25,7 @@ import {
     FileListResponse,
     FileOrImage,
     FileReplaceOptions,
+    FileRequestOptions,
     FileUploadResponse,
     Folder,
     FolderCreateRequest,
@@ -37,6 +38,7 @@ import {
     FolderListOptions,
     FolderListResponse,
     FolderRequestOptions,
+    FolderResponse,
     Form,
     FormCreateRequest,
     FormListOptions,
@@ -63,6 +65,7 @@ import {
     Node,
     NodeFeature,
     NodeFeatures,
+    NodeListResponse,
     NodeResponse,
     Normalized,
     Page,
@@ -77,6 +80,7 @@ import {
     PageVersion,
     PagedTemplateListResponse,
     PagingSortOrder,
+    PermissionResponse,
     PushToMasterRequest,
     QueuedActionRequestClear,
     Raw,
@@ -96,12 +100,11 @@ import {
     TimeManagement,
     TranslationRequestOptions,
     TypedItemListResponse,
-    folderItemTypePlurals, GcmsPermission, GcmsRolePrivilege, FolderResponse, PermissionResponse,
-    FileRequestOptions,
+    folderItemTypePlurals,
 } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { normalize, schema } from 'normalizr';
 import {
     Observable,
@@ -132,7 +135,7 @@ import {
     SETTING_LAST_NODE_ID,
     UIMode,
     UploadResponse, folderSchema, pageSchema,
-    plural
+    plural,
 } from '../../../common/models';
 import { getDefaultNode } from '../../../common/utils/get-default-node';
 import { ImagePropertiesModalComponent } from '../../../content-frame/components/image-properties-modal/image-properties-modal.component';
@@ -197,7 +200,6 @@ import {
 } from '../../modules/folder/folder.actions';
 import { getNormalizrSchema } from '../../state-utils';
 import { ApplicationStateService } from '../application-state/application-state.service';
-import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 
 /** Parameters for the `updateItem()` and `updateItems()` methods. */
 export interface PostUpdateBehavior {
@@ -216,8 +218,6 @@ export interface PostUpdateBehavior {
 
     /**
      * If true, the saved item will be fetched with `construct=true` after saving.
-     * If false, the saved item will still be fetched after saving, but not with the `construct=true` parameter.
-     * Default: false
      */
     fetchForConstruct?: boolean;
 }
@@ -262,22 +262,15 @@ export class FolderActionsService {
             forkJoin([
                 this.appState.dispatch(new StartListFetchingAction('nodes', undefined, true)),
                 this.client.folder.folders(0),
+                this.client.node.list(),
             ]).pipe(
-                switchMap(([, folderRes]) => {
-                    if (folderRes.folders?.length === 0) {
-                        return of([folderRes, []]);
-                    }
-
-                    return forkJoin(folderRes.folders.map((folder) => this.client.node.get(folder.nodeId ?? folder.id))).pipe(
-                        map((responses) => [folderRes, responses.map((res) => res.node)]),
-                    );
-                }),
-                switchMap(([folderRes, nodes]: [FolderListResponse, Node[]]) => {
+                switchMap(([, folderRes, nodesRes]: [any, FolderListResponse, NodeListResponse]) => {
+                    const nodes = nodesRes.items;
                     return this.appState.dispatch(new NodeFetchingSuccessAction(folderRes.folders, nodes)).pipe(
-                        map(() => [folderRes, nodes]),
+                        map(() => nodes),
                     );
                 }),
-            ).subscribe(([, nodes]) => {
+            ).subscribe((nodes) => {
                 if (nodes.length > 0) {
                     this.getActiveNodeLanguages()
                         .then((languages) => this.setActiveLanguageFromAvailable(languages));
@@ -846,7 +839,7 @@ export class FolderActionsService {
     getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options?: FolderListOptions): Promise<void>;
     async getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options: any = {}): Promise<void> {
         // assign query params from state
-        const nodeId = options && options.nodeId || this.getCurrentNodeId();
+        const nodeId = options?.nodeId ?? this.getCurrentNodeId();
         const itemInfo: ItemsInfo = this.appState.now.folder[`${type}s` as FolderItemTypePlural];
         const searchFiltersVisible = this.appState.now.folder.searchFiltersVisible;
         const searchFiltersValid = this.appState.now.folder.searchFiltersValid;
@@ -955,17 +948,23 @@ export class FolderActionsService {
                 schema: getNormalizrSchema(type),
             })).toPromise();
 
-            if (type !== 'folder') {
-                const foldersToLoad: { id: number, nodeId?: number }[] = [];
+            if (type !== 'folder' && isSearchActive) {
+                const foldersToLoad: { id: number; nodeId?: number }[] = [];
                 const loadedFolders = this.appState.now.entities.folder;
 
                 for (const item of collection) {
-                    if (loadedFolders[item.folderId] == null || loadedFolders[item.folderId].permissionsMap == null) {
+                    if (
+                        (loadedFolders[item.folderId] == null
+                          || loadedFolders[item.folderId].permissionsMap == null
+                        )
+                        // Dont add the same load multiple times
+                        && !foldersToLoad.some((toLoad) => toLoad.id === item.folderId && toLoad.nodeId === item.masterNodeId)
+                    ) {
                         foldersToLoad.push({ id: item.folderId, nodeId: item.masterNodeId });
                     }
                 }
 
-                await forkJoin(foldersToLoad.map(folderRef => {
+                await forkJoin(foldersToLoad.map((folderRef) => {
                     const options: any = {};
                     if (folderRef.nodeId) {
                         options.nodeId = folderRef.nodeId;
@@ -973,14 +972,14 @@ export class FolderActionsService {
 
                     return forkJoin([
                         this.client.folder.get(folderRef.id, options),
-                        this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, { ...options, map: true })
+                        this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, { ...options, map: true }),
                     ])
-                    .pipe(
-                        switchMap(([folder, perms]: [FolderResponse, PermissionResponse]) => {
-                            folder.folder.permissionsMap = perms.permissionsMap;
-                            return this.appState.dispatch(new ItemFetchingSuccessAction('folder', folder.folder));
-                        })
-                    );
+                        .pipe(
+                            switchMap(([folder, perms]: [FolderResponse, PermissionResponse]) => {
+                                folder.folder.permissionsMap = perms.permissionsMap;
+                                return this.appState.dispatch(new ItemFetchingSuccessAction('folder', folder.folder));
+                            }),
+                        );
                 })).toPromise();
             }
 
@@ -1228,7 +1227,7 @@ export class FolderActionsService {
         // Create a copy to not modify the original argument/object
         options = Object.assign({}, options, { construct: true });
 
-        const nodeId = options && options.nodeId || this.getCurrentNodeId();
+        const nodeId = options?.nodeId ?? this.getCurrentNodeId();
         if (nodeId != null) {
             options.nodeId = nodeId;
         }
@@ -1458,10 +1457,10 @@ export class FolderActionsService {
     /**
      * Fetches the breadcrumbs for a given folder
      */
-    getBreadcrumbs(parentId: number): void {
+    getBreadcrumbs(parentId: number): Promise<void> {
         const nodeId = this.getCurrentNodeId();
 
-        forkJoin([
+        return forkJoin([
             this.appState.dispatch(new StartListFetchingAction('breadcrumbs', false)),
             this.client.folder.breadcrumbs(parentId, { nodeId }),
         ]).pipe(
@@ -1471,7 +1470,7 @@ export class FolderActionsService {
                 this.errorHandler.catch(error);
                 return tmp;
             }),
-        ).subscribe();
+        ).toPromise();
     }
 
     /**
@@ -1548,7 +1547,7 @@ export class FolderActionsService {
                 });
 
                 return this.appState.dispatch(new ListSavingErrorAction('image', error.message)).pipe(
-                    () => throwError(() => error)
+                    () => throwError(() => error),
                 );
             }),
         );
@@ -2522,7 +2521,9 @@ export class FolderActionsService {
      * Copy forms to a folder in the same or a different node.
      */
     copyFormsToFolder(ids: number[], sourceNodeId: number, targetFolderId: number): Promise<boolean> {
-        if (!ids.length) { return; }
+        if (!ids.length) {
+            return Promise.resolve(false);
+        }
 
         this.appState.dispatch(new StartListSavingAction('form'));
 
@@ -3207,7 +3208,7 @@ export class FolderActionsService {
                 });
 
                 const loaders: Promise<any>[] = [];
-                const succeeded = []
+                const succeeded = [];
                 const failed = [];
                 let errorResponse: Response['responseInfo'] | null = null;
                 const messages = [];
@@ -3247,7 +3248,7 @@ export class FolderActionsService {
                     }
                     // Update the entities, then mark the list as finished saving
                     loaders.push(this.appState.dispatch(new UpdateEntitiesAction({ page: pageUpdates })).toPromise()
-                        .then(() => this.appState.dispatch(new ListSavingSuccessAction('page')).toPromise())
+                        .then(() => this.appState.dispatch(new ListSavingSuccessAction('page')).toPromise()),
                     );
 
                     // assign to arrays depending on page permissions
@@ -3372,7 +3373,7 @@ export class FolderActionsService {
             }),
             first(),
             catchError((error) => {
-                const errorMsg = error && error.message || `Error on publishing page for date with id ${pageId}.`;
+                const errorMsg = error?.message || `Error on publishing page for date with id ${pageId}.`;
                 this.appState.dispatch(new ListSavingErrorAction('page', errorMsg));
                 this.errorHandler.catch(error, { notification: true });
                 return of(error);
@@ -3670,7 +3671,7 @@ export class FolderActionsService {
         const requests = formIds.map((id) =>
             this.client.form.unpublish(id).pipe(
                 catchError((error: ApiError) => {
-                    const errorMsg = error && error.message || `Error on taking form offline with id ${id}.`;
+                    const errorMsg = error?.message || `Error on taking form offline with id ${id}.`;
                     this.appState.dispatch(new ListSavingErrorAction('form', errorMsg));
                     this.errorHandler.catch(error);
                     return of(error.response);

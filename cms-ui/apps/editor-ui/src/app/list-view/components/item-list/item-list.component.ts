@@ -105,6 +105,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
 
     public displayStatusInfo: boolean;
     public displayDeleted: boolean;
+    public displayAllLanguages: boolean;
     public searchTerm: string;
     public elasticSearchQueryActive: boolean;
     public activeLanguage: Language | null;
@@ -151,18 +152,20 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             }));
         }
 
-        this.subscriptions.push(this.appState.select((state) => state.folder.displayStatusIcons).subscribe((enabled) => {
-            this.displayStatusInfo = enabled;
+        this.subscriptions.push(this.appState.select((state) => state.folder.displayStatusIcons).subscribe((show) => {
+            this.displayStatusInfo = show;
             this.changeDetector.markForCheck();
         }));
-        this.subscriptions.push(
-            this.appState
-                .select((state) => state.folder.displayDeleted)
-                .subscribe((show) => {
-                    this.displayDeleted = show;
-                    this.changeDetector.markForCheck();
-                }),
-        );
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.displayDeleted).subscribe((show) => {
+            this.displayDeleted = show;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.folder.displayAllLanguages).subscribe((show) => {
+            this.displayAllLanguages = show;
+            this.changeDetector.markForCheck();
+        }));
 
         // When the current folder changes, reset the pagination to page 1
         const resetPaginationSub = this.appState.select(state => state.folder.activeFolder)

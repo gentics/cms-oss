@@ -127,6 +127,9 @@ export class PageLanguageIndicatorComponent
     @Input()
     public displayDeleted: boolean;
 
+    @Input()
+    public expandByDefault: boolean;
+
     /** Emits if an action from a langauge icon has been clicked */
     @Output()
     public languageClick = new EventEmitter<ItemLanguageClickEvent<Page>>();
@@ -154,22 +157,22 @@ export class PageLanguageIndicatorComponent
     }
 
     ngOnInit(): void {
-        this.subscriptions.push(
-            this.appState
-                .select((state) => state.folder.activeLanguage)
-                .subscribe((langId) => {
-                    this.currentLanguage =
-                        this.appState.now.entities.language[langId];
-                    this.inCurrentLanguage =
-                        this.page != null &&
-                        this.currentLanguage.code === this.page.language;
-                    this.changeDetector.markForCheck();
-                }),
-        );
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeLanguage).subscribe((langId) => {
+            this.currentLanguage = this.appState.now.entities.language[langId];
+            this.inCurrentLanguage = this.page != null
+                && this.currentLanguage != null
+                && this.currentLanguage.code === this.page.language;
+
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngOnChanges(changes: ChangesOf<this>): void {
-        if (changes.page || changes.languages || changes.stagingMap) {
+        if (changes.expandByDefault) {
+            this.expanded = this.expandByDefault;
+        }
+
+        if (changes.expandByDefault || changes.page || changes.languages || changes.stagingMap) {
             this.updateVariants();
         }
     }
@@ -235,9 +238,12 @@ export class PageLanguageIndicatorComponent
         this.hasUntranslated = false;
         this.variants = this.languages.flatMap((lang) => {
             let variantPage: Page | null = null;
-            const tmpVal = this.page.languageVariants[lang.id];
-            if (typeof tmpVal === 'number') {
-                variantPage = this.appState.now.entities.page[tmpVal];
+
+            if (this.page.languageVariants) {
+                const tmpVal = this.page.languageVariants[lang.id];
+                if (typeof tmpVal === 'number') {
+                    variantPage = this.appState.now.entities.page[tmpVal];
+                }
             }
 
             if (variantPage == null) {

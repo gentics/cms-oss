@@ -97,6 +97,9 @@ export class FormLanguageIndicatorComponent
     @Input()
     public displayDeleted: boolean;
 
+    @Input()
+    public expandByDefault: boolean;
+
     /** Emits if an action from a langauge icon has been clicked */
     @Output()
     public languageClick = new EventEmitter<ItemLanguageClickEvent<Form>>();
@@ -124,22 +127,20 @@ export class FormLanguageIndicatorComponent
     }
 
     ngOnInit(): void {
-        this.subscriptions.push(
-            this.appState
-                .select((state) => state.folder.activeLanguage)
-                .subscribe((langId) => {
-                    this.currentLanguage =
-                        this.appState.now.entities.language[langId];
-                    this.inCurrentLanguage =
-                        this.form != null &&
-                        this.form.languages.includes(this.currentLanguage.code);
-                    this.changeDetector.markForCheck();
-                }),
-        );
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeLanguage).subscribe((langId) => {
+            this.currentLanguage = this.appState.now.entities.language[langId];
+            this.inCurrentLanguage = this.form != null
+                && this.form.languages.includes(this.currentLanguage.code);
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngOnChanges(changes: ChangesOf<this>): void {
-        if (changes.form || changes.languages || changes.stagingMap) {
+        if (changes.expandByDefault) {
+            this.expanded = this.expandByDefault;
+        }
+
+        if (changes.expandByDefault || changes.form || changes.languages || changes.stagingMap) {
             this.updateVariants();
         }
     }
@@ -197,12 +198,21 @@ export class FormLanguageIndicatorComponent
     updateVariants(): void {
         this.hasUntranslated = false;
         this.variants = this.languages.flatMap((lang) => {
+            const available = this.form.languages.includes(lang.code);
+
+            if (!available) {
+                this.hasUntranslated = true;
+                if (!this.expanded) {
+                    return [];
+                }
+            }
+
             return [{
                 code: lang.code,
                 id: lang.id,
                 name: lang.name,
 
-                available: this.form != null && this.form.languages.includes(lang.code),
+                available: available,
                 deleted:
                     this.form != null &&
                     PublishableStateUtil.stateDeleted(this.form),

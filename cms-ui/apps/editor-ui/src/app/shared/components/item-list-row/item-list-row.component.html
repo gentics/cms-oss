@@ -150,6 +150,7 @@
                 [stagingMap]="stagingMap"
                 [displayStatusInfo]="showStatusIcons || uiMode === UIMode.STAGING"
                 [displayDeleted]="showDeleted"
+                [expandByDefault]="expandByDefault"
                 (languageClick)="pageLanguageClicked($event)"
                 (languageIconClick)="onPageLanguageIconClicked($event)"
             ></page-language-indicator>
@@ -164,6 +165,7 @@
                 [stagingMap]="stagingMap"
                 [displayStatusInfo]="showStatusIcons || uiMode === UIMode.STAGING"
                 [displayDeleted]="showDeleted"
+                [expandByDefault]="expandByDefault"
                 (languageClick)="formLanguageClicked($event)"
                 (languageIconClick)="onFormLanguageIconClicked($event)"
             ></form-language-indicator>

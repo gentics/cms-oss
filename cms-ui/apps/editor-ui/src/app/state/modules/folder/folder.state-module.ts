@@ -291,7 +291,7 @@ export class FolderStateModule {
         const state = ctx.getState();
 
         // Entities can always be applied to the entity state.
-        const normalized = normalize(total, new schemaNamespace.Array(schema));
+        const normalized = normalize(items, new schemaNamespace.Array(schema));
         await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         let idsToSaveToFolderState = items.map(item => item.id);
@@ -311,6 +311,13 @@ export class FolderStateModule {
                     list: idsToSaveToFolderState,
                     total: total,
                     currentPage: newCurrentPage,
+                    fetching: false
+                }),
+            }));
+        } else {
+            // Mark the list as finished loading
+            ctx.setState(patch<FolderState>({
+                [type]: patch<ItemsInfo>({
                     fetching: false
                 }),
             }));

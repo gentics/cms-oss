@@ -498,7 +498,7 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
 }
 
 export async function expectItemOffline(item: Locator): Promise<void> {
-    await expect(item.locator('item-status-label .status-label')).not.toContainClass('published');
+    await expect(item.locator('item-status-label .status-label')).toContainClass('offline');
 }
 
 export async function expectItemPublished(item: Locator): Promise<void> {

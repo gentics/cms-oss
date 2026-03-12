@@ -67,7 +67,7 @@ interface VariantState extends Language, LanguageState {}
 })
 export class FormLanguageIndicatorComponent
     extends BaseComponent
-    implements OnInit, OnChanges
+    implements OnChanges
 {
 
     public readonly ItemListRowMode = ItemListRowMode;
@@ -75,6 +75,9 @@ export class FormLanguageIndicatorComponent
 
     @Input({ required: true })
     public languages: Language[];
+
+    @Input()
+    public activeLanguage: Language;
 
     @Input({ required: true })
     public form: Form;
@@ -114,30 +117,25 @@ export class FormLanguageIndicatorComponent
     public hasUntranslated: boolean;
     public expanded = false;
 
-    public currentLanguage: Language;
     public inCurrentLanguage: boolean;
     public variants: VariantState[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private appState: ApplicationStateService,
         private contextMenu: ContextMenuOperationsService,
     ) {
         super(changeDetector);
     }
 
-    ngOnInit(): void {
-        this.subscriptions.push(this.appState.select((state) => state.folder.activeLanguage).subscribe((langId) => {
-            this.currentLanguage = this.appState.now.entities.language[langId];
-            this.inCurrentLanguage = this.form != null
-                && this.form.languages.includes(this.currentLanguage.code);
-            this.changeDetector.markForCheck();
-        }));
-    }
-
     ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.expandByDefault) {
             this.expanded = this.expandByDefault;
+        }
+
+        if (changes.activeLanguage || changes.form) {
+            this.inCurrentLanguage = this.form != null
+                && this.activeLanguage != null
+                && this.form.languages.includes(this.activeLanguage.code);
         }
 
         if (changes.expandByDefault || changes.form || changes.languages || changes.stagingMap) {

@@ -44,6 +44,7 @@ import {
     InheritedLocalizedIcon,
     ItemBreadcrumbsComponent,
     ItemStatusLabelComponent,
+    LanguageStateComponent,
     ListItemDetails,
     PageLanguageIndicatorComponent,
     StartPageIcon,
@@ -84,7 +85,9 @@ const getItemName = (listItem: Element): string => (listItem.querySelector('.ite
             [startPageId]="startPageId"
             [linkPaths]="isSearching"
             [nodeLanguages]="nodeLanguages"
+            [activeLanguage]="activeLanguage"
             [itemsInfo]="itemsInfo"
+            [expandByDefault]="expandByDefault"
         ></item-list-row>`,
     standalone: false,
 })
@@ -124,6 +127,8 @@ class TestComponent {
         { id: 2, code: 'de', name: 'Deutsch (German)' },
         { id: 3, code: 'fr', name: 'Français (French)' },
     ];
+    activeLanguage = this.nodeLanguages[0];
+    expandByDefault = false;
 
     @ViewChild(ItemListRowComponent, { static: true }) itemListRow: ItemListRowComponent;
 }
@@ -159,6 +164,20 @@ class MockPermissionPipe implements PipeTransform {
             ...getNoPermissions(),
             // eslint-disable-next-line @typescript-eslint/naming-convention
             __forItem: item,
+        };
+        val.page.view = true;
+        return val;
+    }
+}
+
+@Pipe({
+    name: 'gtxMapPermissions',
+    standalone: false,
+})
+class MockMapPermissionsPipe implements PipeTransform {
+    transform(): EditorPermissions {
+        const val = {
+            ...getNoPermissions(),
         };
         val.page.view = true;
         return val;
@@ -203,12 +222,6 @@ class MockFolderActions {
 class MockWastebinActionsService {
     restoreItemsFromWastebin = jasmine.createSpy('restoreItemsFromWastebin');
 }
-
-// Helper
-const elementStateIsActive = (
-    debugElement: DebugElement,
-    cssClass: '.stateUntranslated' | '.stateModified' | '.stateInQueue' | '.statePlanned' | '.stateInherited' | '.stateLocalized',
-): boolean => !(debugElement.query(By.css(cssClass))?.nativeElement?.hasAttribute?.('hidden') ?? true);
 
 function getExampleFolderWithPermissions(
     { id, userId, publishDir }: { id: number, userId?: number, publishDir?: string } = { id: 115, userId: 3, publishDir: '/' },
@@ -274,9 +287,11 @@ describe('ItemListRow', () => {
                 ItemIsLocalizedPipe,
                 ItemListRowComponent,
                 ItemPathPipe,
+                LanguageStateComponent,
                 ListItemDetails,
                 GetInheritancePipe,
                 MockPermissionPipe,
+                MockMapPermissionsPipe,
                 PageIsLockedPipe,
                 PageLanguageIndicatorComponent,
                 ItemStatusLabelComponent,
@@ -299,7 +314,7 @@ describe('ItemListRow', () => {
                     [TEST_FOLDER_ID]: {
                         permissionsMap: getDefaultTestPermissions(),
                     },
-                },
+                }
             },
         });
     });
@@ -379,6 +394,13 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
+                state.mockState({
+                    entities: {
+                        page: {
+                            [instance.item.id]: instance.item as any,
+                        },
+                    }
+                });
 
                 fixture.detectChanges();
 
@@ -387,10 +409,9 @@ describe('ItemListRow', () => {
 
                 tick();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
-                // If present the css-class 'statePublished' indicates published state.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statePublished')).toBe(true);
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(false);
+                const langStateBtn = fixture.nativeElement.querySelector('page-language-indicator gtx-language-state .language-button');
+                expect(langStateBtn).toBeTruthy();
+                expect(langStateBtn.classList.contains('published')).toBe(true);
             }),
         );
 
@@ -410,6 +431,13 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
+                state.mockState({
+                    entities: {
+                        page: {
+                            [instance.item.id]: instance.item as any,
+                        },
+                    }
+                });
 
                 state.dispatch(new SetDisplayStatusIconsAction(false));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -417,11 +445,9 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
-                // If present the css-class 'statePublished' indicates published state.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statePublished')).toBe(false);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(false);
+                const langStateBtn = fixture.nativeElement.querySelector('page-language-indicator gtx-language-state .language-button');
+                expect(langStateBtn).toBeTruthy();
+                expect(langStateBtn.classList.contains('published')).toBe(false);
             }),
         );
 
@@ -441,6 +467,13 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
+                state.mockState({
+                    entities: {
+                        page: {
+                            [instance.item.id]: instance.item as any,
+                        },
+                    }
+                });
 
                 state.dispatch(new SetDisplayStatusIconsAction(false));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -448,11 +481,9 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
-                // If present the css-class 'statePublished' indicates published state.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(false);
+                const langStateBtn = fixture.nativeElement.querySelector('page-language-indicator gtx-language-state .language-button');
+                expect(langStateBtn).toBeTruthy();
+                expect(langStateBtn.classList.contains('published')).toBe(true);
             }),
         );
 
@@ -472,6 +503,13 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
+                state.mockState({
+                    entities: {
+                        page: {
+                            [instance.item.id]: instance.item as any,
+                        },
+                    }
+                });
 
                 state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -479,17 +517,14 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
-                // If present the css-class 'statePublished' indicates published state.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                // additional status icons should not be visible
-                expect(elementStateIsActive(fixture.debugElement, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateModified')).toBe(true);
-                expect(elementStateIsActive(fixture.debugElement, '.statePlanned')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateInherited')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateLocalized')).toBe(false);
+                const langStateBtn: HTMLButtonElement = fixture.nativeElement.querySelector('page-language-indicator gtx-language-state .language-button');
+                expect(langStateBtn).toBeTruthy();
+                expect(langStateBtn.classList.contains('published')).toBe(true);
+                expect(langStateBtn.querySelector('.indicator-in-queue')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-modified')).not.toBeNull();
+                expect(langStateBtn.querySelector('.indicator-planned')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-inherited')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-localized')).toBeNull();
             }),
         );
 
@@ -509,6 +544,13 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
+                state.mockState({
+                    entities: {
+                        page: {
+                            [instance.item.id]: instance.item as any,
+                        },
+                    }
+                });
 
                 state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -516,17 +558,14 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
-                // If present the css-class 'statePublished' indicates published state.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                // additional status icons should not be visible
-                expect(elementStateIsActive(fixture.debugElement, '.stateInQueue')).toBe(true);
-                expect(elementStateIsActive(fixture.debugElement, '.stateModified')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.statePlanned')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateInherited')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateLocalized')).toBe(false);
+                const langStateBtn: HTMLButtonElement = fixture.nativeElement.querySelector('page-language-indicator gtx-language-state .language-button');
+                expect(langStateBtn).toBeTruthy();
+                expect(langStateBtn.classList.contains('published')).toBe(true);
+                expect(langStateBtn.querySelector('.indicator-in-queue')).not.toBeNull();
+                expect(langStateBtn.querySelector('.indicator-modified')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-planned')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-inherited')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-localized')).toBeNull();
             }),
         );
 
@@ -546,6 +585,13 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
+                state.mockState({
+                    entities: {
+                        page: {
+                            [instance.item.id]: instance.item as any,
+                        },
+                    }
+                });
 
                 state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -553,17 +599,14 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
-                // If present the css-class 'statePublished' indicates published state.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                // additional status icons should not be visible
-                expect(elementStateIsActive(fixture.debugElement, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateModified')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.statePlanned')).toBe(true);
-                expect(elementStateIsActive(fixture.debugElement, '.stateInherited')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateLocalized')).toBe(false);
+                const langStateBtn: HTMLButtonElement = fixture.nativeElement.querySelector('page-language-indicator gtx-language-state .language-button');
+                expect(langStateBtn).toBeTruthy();
+                expect(langStateBtn.classList.contains('published')).toBe(true);
+                expect(langStateBtn.querySelector('.indicator-in-queue')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-modified')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-planned')).not.toBeNull();
+                expect(langStateBtn.querySelector('.indicator-inherited')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-localized')).toBeNull();
             }),
         );
 
@@ -583,6 +626,13 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
+                state.mockState({
+                    entities: {
+                        page: {
+                            [instance.item.id]: instance.item as any,
+                        },
+                    }
+                });
 
                 state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -590,17 +640,14 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
-                // If present the css-class 'statePublished' indicates published state.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                // additional status icons should not be visible
-                expect(elementStateIsActive(fixture.debugElement, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateModified')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.statePlanned')).toBe(false);
-                expect(elementStateIsActive(fixture.debugElement, '.stateInherited')).toBe(true);
-                expect(elementStateIsActive(fixture.debugElement, '.stateLocalized')).toBe(false);
+                const langStateBtn: HTMLButtonElement = fixture.nativeElement.querySelector('page-language-indicator gtx-language-state .language-button');
+                expect(langStateBtn).toBeTruthy();
+                expect(langStateBtn.classList.contains('published')).toBe(true);
+                expect(langStateBtn.querySelector('.indicator-in-queue')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-modified')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-planned')).toBeNull();
+                expect(langStateBtn.querySelector('.indicator-inherited')).not.toBeNull();
+                expect(langStateBtn.querySelector('.indicator-localized')).toBeNull();
             }),
         );
 
@@ -628,6 +675,12 @@ describe('ItemListRow', () => {
                 };
                 instance.itemType = 'page';
                 instance.item = pageEN;
+                instance.nodeLanguages = [
+                    { id: 1, code: 'en', name: 'English' },
+                    { id: 2, code: 'de', name: 'Deutsch (German)' },
+                    { id: 3, code: 'fr', name: 'Français (French)' },
+                ];
+                instance.expandByDefault = true;
 
                 state.mockState({
                     entities: {
@@ -661,29 +714,17 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                const pageLanguageIndicatorLanguageIcons = fixture.debugElement.queryAll(By.css('page-language-indicator .language-icon'));
+                const langStateButtons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state .language-button'));
+                const enButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'en');
+                const deButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'de');
+                const frButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'fr');
 
-                const pageLanguageIndicatorLanguageIconEN = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN' );
-                const pageLanguageIndicatorLanguageIconDE = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE' );
-                const pageLanguageIndicatorLanguageIconFR = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR' );
+                expect(enButton.classList.contains('published')).toBe(true);
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(false);
+                expect(deButton.classList.contains('published')).toBe(false);
 
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconEN.nativeElement.classList.contains('statePublished')).toBe(true);
-
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconDE.nativeElement.classList.contains('statePublished')).toBe(false);
-                // expect(pageLanguageIndicatorLanguageIconDE.query(By.css('.stateUntranslated')).nativeElement.hasAttribute('hidden')).toBe(true);
-
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconFR.nativeElement.classList.contains('statePublished')).toBe(false);
-                expect(pageLanguageIndicatorLanguageIconFR.query(By.css('.stateUntranslated')).nativeElement.hasAttribute('hidden')).toBe(false);
+                expect(frButton.classList.contains('published')).toBe(false);
+                expect(frButton.querySelector('.indicator-untranslated')).not.toBeNull();
             }),
         );
 
@@ -718,6 +759,12 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = pageEN;
                 instance.itemsInfo.total = 1;
+                instance.nodeLanguages = [
+                    { id: 1, code: 'en', name: 'English' },
+                    { id: 2, code: 'de', name: 'Deutsch (German)' },
+                    { id: 3, code: 'fr', name: 'Français (French)' },
+                ];
+                instance.expandByDefault = true;
 
                 state.mockState({
                     entities: {
@@ -739,42 +786,32 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                const pageLanguageIndicatorLanguageIcons = fixture.debugElement.queryAll(By.css('page-language-indicator .language-icon'));
+                const langStateButtons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state .language-button'));
+                const enButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'en');
+                const deButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'de');
+                const frButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'fr');
 
-                const pageLanguageIndicatorLanguageIconEN = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN' );
-                const pageLanguageIndicatorLanguageIconDE = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE' );
-                const pageLanguageIndicatorLanguageIconFR = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR' );
+                expect(enButton.classList.contains('published')).toBe(true);
+                expect(enButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(enButton.querySelector('.indicator-modified')).not.toBeNull();
+                expect(enButton.querySelector('.indicator-planned')).toBeNull();
+                expect(enButton.querySelector('.indicator-inherited')).toBeNull();
+                expect(enButton.querySelector('.indicator-localized')).toBeNull();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
+                expect(deButton.classList.contains('published')).toBe(true);
+                expect(deButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(deButton.querySelector('.indicator-modified')).toBeNull();
+                expect(deButton.querySelector('.indicator-planned')).toBeNull();
+                expect(deButton.querySelector('.indicator-inherited')).toBeNull();
+                expect(deButton.querySelector('.indicator-localized')).toBeNull();
 
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconEN.nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateModified')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.statePlanned')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateInherited')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateLocalized')).toBe(false);
-
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconDE.nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateModified')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.statePlanned')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateInherited')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateLocalized')).toBe(false);
-
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconFR.nativeElement.classList.contains('statePublished')).toBe(false);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(pageLanguageIndicatorLanguageIconFR.query(By.css('.stateUntranslated')).nativeElement.hasAttribute('hidden')).toBe(false);
+                expect(frButton.classList.contains('published')).toBe(false);
+                expect(frButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(frButton.querySelector('.indicator-modified')).toBeNull();
+                expect(frButton.querySelector('.indicator-planned')).toBeNull();
+                expect(frButton.querySelector('.indicator-inherited')).toBeNull();
+                expect(frButton.querySelector('.indicator-localized')).toBeNull();
+                expect(frButton.querySelector('.indicator-untranslated')).not.toBeNull();
             }),
         );
 
@@ -809,6 +846,12 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = pageEN;
                 instance.itemsInfo.total = 1;
+                instance.nodeLanguages = [
+                    { id: 1, code: 'en', name: 'English' },
+                    { id: 2, code: 'de', name: 'Deutsch (German)' },
+                    { id: 3, code: 'fr', name: 'Français (French)' },
+                ];
+                instance.expandByDefault = true;
 
                 state.mockState({
                     entities: {
@@ -830,42 +873,32 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                const pageLanguageIndicatorLanguageIcons = fixture.debugElement.queryAll(By.css('page-language-indicator .language-icon'));
+                const langStateButtons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state .language-button'));
+                const enButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'en');
+                const deButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'de');
+                const frButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'fr');
 
-                const pageLanguageIndicatorLanguageIconEN = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN' );
-                const pageLanguageIndicatorLanguageIconDE = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE' );
-                const pageLanguageIndicatorLanguageIconFR = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR' );
+                expect(enButton.classList.contains('published')).toBe(true);
+                expect(enButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(enButton.querySelector('.indicator-modified')).toBeNull();
+                expect(enButton.querySelector('.indicator-planned')).not.toBeNull();
+                expect(enButton.querySelector('.indicator-inherited')).toBeNull();
+                expect(enButton.querySelector('.indicator-localized')).toBeNull();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
+                expect(deButton.classList.contains('published')).toBe(true);
+                expect(deButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(deButton.querySelector('.indicator-modified')).toBeNull();
+                expect(deButton.querySelector('.indicator-planned')).toBeNull();
+                expect(deButton.querySelector('.indicator-inherited')).toBeNull();
+                expect(deButton.querySelector('.indicator-localized')).toBeNull();
 
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconEN.nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateModified')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.statePlanned')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateInherited')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateLocalized')).toBe(false);
-
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconDE.nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateModified')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.statePlanned')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateInherited')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateLocalized')).toBe(false);
-
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconFR.nativeElement.classList.contains('statePublished')).toBe(false);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(pageLanguageIndicatorLanguageIconFR.query(By.css('.stateUntranslated')).nativeElement.hasAttribute('hidden')).toBe(false);
+                expect(frButton.classList.contains('published')).toBe(false);
+                expect(frButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(frButton.querySelector('.indicator-modified')).toBeNull();
+                expect(frButton.querySelector('.indicator-planned')).toBeNull();
+                expect(frButton.querySelector('.indicator-inherited')).toBeNull();
+                expect(frButton.querySelector('.indicator-localized')).toBeNull();
+                expect(frButton.querySelector('.indicator-untranslated')).not.toBeNull();
             }),
         );
 
@@ -900,6 +933,12 @@ describe('ItemListRow', () => {
                 instance.itemType = 'page';
                 instance.item = pageEN;
                 instance.itemsInfo.total = 1;
+                instance.nodeLanguages = [
+                    { id: 1, code: 'en', name: 'English' },
+                    { id: 2, code: 'de', name: 'Deutsch (German)' },
+                    { id: 3, code: 'fr', name: 'Français (French)' },
+                ];
+                instance.expandByDefault = true;
 
                 state.mockState({
                     entities: {
@@ -921,42 +960,32 @@ describe('ItemListRow', () => {
                 fixture.detectChanges();
                 tick();
 
-                const pageLanguageIndicatorLanguageIcons = fixture.debugElement.queryAll(By.css('page-language-indicator .language-icon'));
+                const langStateButtons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state .language-button'));
+                const enButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'en');
+                const deButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'de');
+                const frButton = langStateButtons.find(btn => btn.querySelector('.language-code').textContent === 'fr');
 
-                const pageLanguageIndicatorLanguageIconEN = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'EN' );
-                const pageLanguageIndicatorLanguageIconDE = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'DE' );
-                const pageLanguageIndicatorLanguageIconFR = pageLanguageIndicatorLanguageIcons
-                    .find(languageIcon => languageIcon.query(By.css('.language-code')).nativeElement.innerText === 'FR' );
+                expect(enButton.classList.contains('published')).toBe(true);
+                expect(enButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(enButton.querySelector('.indicator-modified')).toBeNull();
+                expect(enButton.querySelector('.indicator-planned')).toBeNull();
+                expect(enButton.querySelector('.indicator-inherited')).not.toBeNull();
+                expect(enButton.querySelector('.indicator-localized')).toBeNull();
 
-                expect(fixture.nativeElement.querySelector('page-language-indicator')).toBeTruthy();
+                expect(deButton.classList.contains('published')).toBe(true);
+                expect(deButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(deButton.querySelector('.indicator-modified')).toBeNull();
+                expect(deButton.querySelector('.indicator-planned')).toBeNull();
+                expect(deButton.querySelector('.indicator-inherited')).toBeNull();
+                expect(deButton.querySelector('.indicator-localized')).toBeNull();
 
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconEN.nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateModified')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.statePlanned')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateInherited')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconEN, '.stateLocalized')).toBe(false);
-
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconDE.nativeElement.classList.contains('statePublished')).toBe(true);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateModified')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.statePlanned')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateInherited')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateInQueue')).toBe(false);
-                expect(elementStateIsActive(pageLanguageIndicatorLanguageIconDE, '.stateLocalized')).toBe(false);
-
-                // If present the css-class 'statePublished' indicates published state.
-                expect(pageLanguageIndicatorLanguageIconFR.nativeElement.classList.contains('statePublished')).toBe(false);
-                // While DOM elements indicating states might be present, they won't be visible without the css class 'statusInfos'.
-                expect(fixture.debugElement.query(By.css('.language-icon')).nativeElement.classList.contains('statusInfos')).toBe(true);
-                expect(pageLanguageIndicatorLanguageIconFR.query(By.css('.stateUntranslated')).nativeElement.hasAttribute('hidden')).toBe(false);
+                expect(frButton.classList.contains('published')).toBe(false);
+                expect(frButton.querySelector('.indicator-in-queue')).toBeNull();
+                expect(frButton.querySelector('.indicator-modified')).toBeNull();
+                expect(frButton.querySelector('.indicator-planned')).toBeNull();
+                expect(frButton.querySelector('.indicator-inherited')).toBeNull();
+                expect(frButton.querySelector('.indicator-localized')).toBeNull();
+                expect(frButton.querySelector('.indicator-untranslated')).not.toBeNull();
             }),
         );
 

@@ -110,7 +110,6 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     public elasticSearchQueryActive: boolean;
     public activeLanguage: Language | null;
 
-    showAllLanguages$: Observable<boolean>;
     showImagesGridView$: Observable<boolean>;
     private subscriptions: Subscription[] = [];
     paginationConfig: PaginationInstance = {
@@ -133,7 +132,6 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     ) { }
 
     ngOnInit(): void {
-        this.showAllLanguages$ = this.appState.select(state => state.folder.displayAllLanguages);
         this.showImagesGridView$ = this.appState.select(state => state.folder.displayImagesGridView);
 
         if (this.itemType === 'page') {

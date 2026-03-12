@@ -30,7 +30,7 @@ export class GtxI18nRelativeDatePipe implements PipeTransform, OnDestroy {
             return this.lastOutput;
         }
 
-        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
         const format$ = this.relativeDateService.observableFormat(dateObj, direction, secondsPrecision);
         this.subscription.unsubscribe();
         this.lastOutput = '';

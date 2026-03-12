@@ -67,7 +67,7 @@ import {
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
-import { AccessControlledType, ResponseCode } from '@gentics/cms-models';
+import { AccessControlledType, PermissionResponse, ResponseCode } from '@gentics/cms-models';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
@@ -225,6 +225,18 @@ class MockPermissionPipe implements PipeTransform {
     }
 }
 
+@Pipe({
+    name: 'gtxMapPermissions',
+    standalone: false,
+})
+class MockMapPermissionsPipe implements PipeTransform {
+    transform(): EditorPermissions {
+        return {
+            ...getNoPermissions(),
+        } as any;
+    }
+}
+
 class MockResourceUrlBuilder { }
 
 class MockUploadConflictService { }
@@ -239,7 +251,7 @@ class MockContextMenuOperationsService {
     copyItems(): void { }
 }
 
-class MockPermissionService {
+class MockPermissionService implements Partial<PermissionService> {
     forFolder(): Observable<EditorPermissions> {
         return of(PERMISSIONS);
     }
@@ -358,6 +370,18 @@ class MockClient {
                 responseMessage: 'Successfully loaded breadcrumb',
             },
         }),
+    };
+
+    permission = {
+        getInstance: () => of({
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+                responseMessage: 'Successfully loaded breadcrumb',
+            },
+            messages: [],
+            privilegeMap: {},
+            permissionsMap: {},
+        } as PermissionResponse)
     };
 }
 
@@ -500,6 +524,7 @@ describe('FolderContentsComponent', () => {
                 MasonryItemDirective,
                 MockItemContextMenu,
                 MockPermissionPipe,
+                MockMapPermissionsPipe,
                 PageIsLockedPipe,
                 PageLanguageIndicatorComponent,
                 PagingControls,

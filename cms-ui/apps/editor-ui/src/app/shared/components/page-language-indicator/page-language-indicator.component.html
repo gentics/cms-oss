@@ -19,7 +19,7 @@
                     data-context-trigger
                     class="selectable"
                     [language]="variant"
-                    [activeLanguage]="currentLanguage"
+                    [activeLanguage]="activeLanguage"
                     [state]="variant"
                     [mode]="uiMode"
                     [showIndicators]="displayStatusInfo"
@@ -31,7 +31,7 @@
             <gtx-dropdown-content data-context-id="page-language" class="page-language-context">
                 <ng-container *ngIf="uiMode === UIMode.EDIT">
                     <gtx-dropdown-item
-                        *ngIf="!variant.available && !currentLanguage"
+                        *ngIf="!variant.available && !activeLanguage"
                         data-action="set-source-language"
                         (click)="languageClicked(variant, false, true)"
                     >
@@ -54,14 +54,14 @@
                         (click)="languageClicked(variant, true)"
                     >
                         {{ 'editor.compare_languages_label' | i18n:{
-                            language1: currentLanguage?.name,
+                            language1: activeLanguage?.name,
                             language2: variant?.name
                         } }}
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item
                         *ngIf="(!variant.available || variant.deleted)
-                            && currentLanguage
+                            && activeLanguage
                             && (permissions | gtxMapPermissions:variant.code)?.page?.edit"
                         data-action="translate"
                         (click)="languageClicked(variant)"

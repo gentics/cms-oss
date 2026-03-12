@@ -951,7 +951,7 @@ export class FolderActionsService {
                 schema: getNormalizrSchema(type),
             })).toPromise();
 
-            if (type !== 'folder' && (elasticSearchMode || !!options.search)) {
+            if (type !== 'folder' && isSearchActive) {
                 const foldersToLoad: { id: number, nodeId?: number }[] = [];
                 const loadedFolders = this.appState.now.entities.folder;
 

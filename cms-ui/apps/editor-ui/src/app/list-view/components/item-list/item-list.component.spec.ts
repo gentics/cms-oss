@@ -42,7 +42,7 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
-import { MasonryGridComponent } from '../../../shared/components';
+import { LanguageStateComponent, MasonryGridComponent } from '../../../shared/components';
 import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.component';
 import { FavouriteToggleComponent } from '../../../shared/components/favourite-toggle/favourite-toggle.component';
 import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
@@ -141,8 +141,8 @@ class TestComponent implements OnInit {
     isSearching = true;
     itemsInfoPipe$: Observable<boolean>;
     activeNodeLanguages: Language[] = [
-        { id: 1, globalId: '1', code: 'de', name: 'Deutsch' },
-        { id: 2, globalId: '2', code: 'en', name: 'English' }
+        { id: 1, code: 'en', name: 'English' },
+        { id: 2, code: 'de', name: 'Deutsch (German)' },
     ]
 
     constructor(public appState: ApplicationStateService) { }
@@ -239,7 +239,7 @@ class MockMapPermissionsPipe implements PipeTransform {
     }
 }
 
-fdescribe('ItemListComponent', () => {
+describe('ItemListComponent', () => {
 
     let state: TestApplicationState;
     let folderActions: MockFolderActions;
@@ -309,6 +309,7 @@ fdescribe('ItemListComponent', () => {
                 ItemListRowComponent,
                 ItemPathPipe,
                 LanguageContextSelectorComponent,
+                LanguageStateComponent,
                 ListItemDetails,
                 MasonryGridComponent,
                 MasonryItemDirective,
@@ -326,9 +327,10 @@ fdescribe('ItemListComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         });
 
-        state = TestBed.get(ApplicationStateService);
-        folderActions = TestBed.get(FolderActionsService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        folderActions = TestBed.inject(FolderActionsService) as any;
         expect(state instanceof ApplicationStateService).toBeTruthy();
+
         state.mockState({
             auth: {
                 user: {
@@ -1127,7 +1129,7 @@ fdescribe('ItemListComponent', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 instance.itemType = 'page';
                 instance.items = [
-                    { ...getExamplePageData({ id: 1 }), languageVariants: [1, 2], deleted: { at: 0, by: null } },
+                    { ...getExamplePageData({ id: 1 }), languageVariants: [1, 324423 /* Page ID which doesn't exist */], deleted: { at: 0, by: null } },
                 ];
                 updateItemsInfoState({
                     list: [66],
@@ -1135,9 +1137,8 @@ fdescribe('ItemListComponent', () => {
                 });
                 fixture.detectChanges();
 
-                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator language-state'));
+                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state'));
                 expect(links.length).toBe(1);
-                debugger;
                 expect(links[0].querySelector('.language-button').classList.contains('available')).toBeTrue;
                 expect(links[0].querySelector('.language-code').textContent).toMatch(new RegExp(/(en)/, 'i'));
 
@@ -1159,16 +1160,14 @@ fdescribe('ItemListComponent', () => {
                 state.now.folder.displayAllLanguages = true;
                 fixture.detectChanges();
 
-                const icons: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator .language-icon'));
-                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator .language-code'));
-                // amount of icons shown
+                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state'));
                 expect(links.length).toBe(2);
-                // icon of available language
-                expect(links[0].textContent).toMatch(new RegExp(/(en)/, 'i'));
-                expect(icons[0].className).toMatch(new RegExp(/(available)/, 'g'));
-                // icon of unavailable language
-                expect(links[1].textContent).toMatch(new RegExp(/(de)/, 'i'));
-                expect(icons[1].className).not.toMatch(new RegExp(/(available)/, 'g'));
+
+                expect(links[0].querySelector('.language-button').classList.contains('available')).toBeTrue;
+                expect(links[0].querySelector('.language-code').textContent).toMatch(new RegExp(/(en)/, 'i'));
+
+                expect(links[1].querySelector('.language-button').classList.contains('available')).toBeTrue;
+                expect(links[1].querySelector('.language-code').textContent).toMatch(new RegExp(/(de)/, 'i'));
 
                 tick();
             }),

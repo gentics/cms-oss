@@ -2,14 +2,11 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    ElementRef,
     EventEmitter,
     Input,
     OnChanges,
-    OnDestroy,
     OnInit,
-    Output,
-    ViewChild,
+    Output
 } from '@angular/core';
 import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, LanguageState, UIMode } from '@editor-ui/app/common/models';
 import {
@@ -35,7 +32,6 @@ import {
     StagedItemsMap
 } from '@gentics/cms-models';
 import { BaseComponent, ChangesOf, ModalService } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -92,10 +88,13 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
     public linkPaths: string;
 
     @Input()
-    public expandByDefault: string;
+    public expandByDefault: boolean;
 
     @Input()
     public nodeLanguages: Language[];
+
+    @Input()
+    public activeLanguage: Language | null = null;
 
     @Input()
     public itemsInfo: ItemsInfo;
@@ -116,7 +115,7 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
     public canBeSelected = true;
 
     @Input()
-    public activeLanguage: Language;
+    public searching: boolean;
 
     /**
      * Determine whether this component is in DEFAULT mode (behavior in `item-list`) or
@@ -149,9 +148,6 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
     /** Emits if a form language icon is clicked */
     @Output()
     public formLanguageIconClick = new EventEmitter<{ form: Form<Raw>; language: Language; }>();
-
-    @Input()
-    public searching: boolean;
 
     public languageState: LanguageState;
     public itemIdDeleted = false;
@@ -263,7 +259,7 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.appState.now.folder.activeLanguage;
+        const currentLanguageId = this.activeLanguage.id;
         this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
             .then(modal => modal.open())
             .catch(this.errorHandler.catch);

@@ -19,7 +19,7 @@ export class LanguageStateComponent {
     @Input({ required: true })
     public activeLanguage: Language;
 
-    @Input()
+    @Input({ required: true })
     public state: LanguageState;
 
     @Input()

@@ -121,7 +121,7 @@
             </image-thumbnail-tooltip>
         </ng-container>
 
-        <ng-container *ngIf="searchTerm || elasticSearchQueryActive">
+        <ng-container *ngIf="searching">
             <item-breadcrumbs
                 [item]="item"
                 [linkPaths]="mode !== ItemListRowMode.SELECT"
@@ -137,12 +137,16 @@
         </ng-container>
 
         <div
-            *ngIf="item && (item.type === 'page' || item.type === 'form') && nodeLanguages && nodeLanguages.length > 1"
+            *ngIf="item != null
+                && (item.type === 'page' || item.type === 'form')
+                && nodeLanguages?.length > 1
+                && activeLanguage != null"
             class="language-indicator"
         >
             <page-language-indicator
                 *ngIf="item.type === 'page'"
                 [languages]="nodeLanguages"
+                [activeLanguage]="activeLanguage"
                 [page]="item"
                 [permissions]="permissions"
                 [mode]="mode"
@@ -158,6 +162,7 @@
             <form-language-indicator
                 *ngIf="item.type === 'form'"
                 [languages]="nodeLanguages"
+                [activeLanguage]="activeLanguage"
                 [form]="item"
                 [permissions]="permissions"
                 [mode]="mode"

@@ -98,13 +98,16 @@ interface VariantState extends Language, LanguageState {
 })
 export class PageLanguageIndicatorComponent
     extends BaseComponent
-    implements OnInit, OnChanges
+    implements OnChanges
 {
     public readonly ItemListRowMode = ItemListRowMode;
     public readonly UIMode = UIMode;
 
     @Input({ required: true })
     public languages: Language[];
+
+    @Input()
+    public activeLanguage: Language;
 
     @Input({ required: true })
     public page: Page;
@@ -144,7 +147,6 @@ export class PageLanguageIndicatorComponent
     public hasUntranslated: boolean;
     public expanded = false;
 
-    public currentLanguage: Language;
     public inCurrentLanguage: boolean;
     public variants: VariantState[] = [];
 
@@ -156,20 +158,15 @@ export class PageLanguageIndicatorComponent
         super(changeDetector);
     }
 
-    ngOnInit(): void {
-        this.subscriptions.push(this.appState.select((state) => state.folder.activeLanguage).subscribe((langId) => {
-            this.currentLanguage = this.appState.now.entities.language[langId];
-            this.inCurrentLanguage = this.page != null
-                && this.currentLanguage != null
-                && this.currentLanguage.code === this.page.language;
-
-            this.changeDetector.markForCheck();
-        }));
-    }
-
     ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.expandByDefault) {
             this.expanded = this.expandByDefault;
+        }
+
+        if (changes.activeLanguage || changes.page) {
+            this.inCurrentLanguage = this.page != null
+                && this.activeLanguage != null
+                && this.activeLanguage.code === this.page.language;
         }
 
         if (changes.expandByDefault || changes.page || changes.languages || changes.stagingMap) {
@@ -240,9 +237,15 @@ export class PageLanguageIndicatorComponent
             let variantPage: Page | null = null;
 
             if (this.page.languageVariants) {
-                const tmpVal = this.page.languageVariants[lang.id];
-                if (typeof tmpVal === 'number') {
-                    variantPage = this.appState.now.entities.page[tmpVal];
+                if (Array.isArray(this.page.languageVariants)) {
+                    variantPage = (this.page.languageVariants as number[])
+                        .map(variantId => this.appState.now.entities.page[variantId])
+                        .find(variant => variant != null && variant.language === lang.code);
+                } else {
+                    const tmpVal = this.page.languageVariants[lang.id];
+                    if (typeof tmpVal === 'number') {
+                        variantPage = this.appState.now.entities.page[tmpVal];
+                    }
                 }
             }
 

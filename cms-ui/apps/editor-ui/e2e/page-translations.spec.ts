@@ -8,6 +8,7 @@ import {
     NODE_MINIMAL,
     navigateToApp,
     PAGE_ONE,
+    openContext,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -64,15 +65,13 @@ test.describe('Page Translation', () => {
 
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, pageData.id);
-            const languageIcon = item.locator(`.language-icon[data-id="${NEW_LANG}"] gtx-dropdown-trigger a`);
-            const iconVisible = await languageIcon.isVisible();
+            const languageState = item.locator(`.language-icons [data-context-id="page-language"][data-id="${NEW_LANG}"]`);
+            const iconVisible = await languageState.isVisible();
             if (!iconVisible) {
                 await item.locator('page-language-indicator .expand-toggle button').click();
-                await page.waitForTimeout(2000);
             }
-            await languageIcon.click({ force: true });
-
-            await page.click('.page-language-context [data-action="translate"]');
+            const languageContext = await openContext(languageState);
+            await languageContext.locator('[data-action="translate"]').click();
 
             const modal = page.locator('translate-page-modal');
             await modal.waitFor();

@@ -57,6 +57,11 @@ public class HttpAuthFilter extends AbstractSSOFilter {
 	}
 
 	@Override
+	protected boolean readInitGroupsFromConfiguration() {
+		return false;
+	}
+
+	@Override
 	public void init(FilterConfig config) throws ServletException {
 		super.init(config);
 

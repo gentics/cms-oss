@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1139,10 +1140,14 @@ public class DisinheritUtils {
 		for (Node node : objectSegment.getAllNodes()) {
 			try (ChannelTrx cTrx = new ChannelTrx(node); HandleDependenciesTrx hTrx = new HandleDependenciesTrx(false)) {
 				String publishPath;
-				if (checkObject.getParentObject() instanceof Disinheritable<?> parent) {
-					publishPath = parent.getFullPublishPath(true);
+				if (checkObject instanceof Folder checkFolder) {
+					if (checkFolder.isRoot()) {
+						publishPath = "/";
+					} else {
+						publishPath = checkFolder.getMother().getFullPublishPath(true);
+					}
 				} else {
-					publishPath = "/";
+					publishPath = checkObject.getFullPublishPath(true);
 				}
 
 				Pattern urlPattern = Pattern.compile(String.format("%s%s", CNStringUtils.escapeRegex(publishPath), filenamePatternStr), Pattern.CASE_INSENSITIVE);
@@ -1249,7 +1254,7 @@ public class DisinheritUtils {
 
 				// prepare the SQL statement by filling in the bind parameters
 				PrepareStatement prep = ps -> {
-					ps.setString(1, niceUrlPattern);
+					ps.setString(1, "^" + niceUrlPattern + "$");
 					ps.setInt(2, checkObject.getChannelSetId());
 				};
 
@@ -1265,7 +1270,7 @@ public class DisinheritUtils {
 
 				// prepare the SQL statement by filling in the bind parameters
 				PrepareStatement prep = ps -> {
-					ps.setString(1, niceUrlPattern);
+					ps.setString(1, "^" + niceUrlPattern + "$");
 					ps.setInt(2, checkObject.getChannelSetId());
 				};
 
@@ -1277,14 +1282,17 @@ public class DisinheritUtils {
 
 		boolean pubDirSegment = Optional.ofNullable(checkObject.getOwningNode()).map(Node::isPubDirSegment)
 				.orElse(false);
-		int folderId = Optional.ofNullable(checkObject.getParentObject()).map(NodeObject::getId).orElse(0);
-		if (pubDirSegment && folderId > 0) {
+		AtomicInteger folderId = new AtomicInteger();
+		try (ChannelTrx cTrx = new ChannelTrx(objectSegment.getStartChannel())) {
+			folderId.set(Optional.ofNullable(checkObject.getParentObject()).map(NodeObject::getId).orElse(0));
+		}
+		if (pubDirSegment && folderId.get() > 0) {
 			// when pub dir segments is activated, we also need to add the sibling folders with their pub dirs
 			String folderPubDirSQL = "SELECT id FROM folder WHERE pub_dir REGEXP ? AND deleted = 0 AND channelset_id != ? AND mother = ?";
 			Set<Integer> folderIds = DBUtils.select(folderPubDirSQL, ps -> {
 				ps.setString(1, filenamePatternStr);
 				ps.setInt(2, checkObject.getChannelSetId());
-				ps.setInt(3, folderId);
+				ps.setInt(3, folderId.get());
 			}, DBUtils.IDS);
 			List<Folder> folders = t.getObjects(Folder.class, folderIds);
 			for (Folder folder : folders) {
@@ -1295,7 +1303,7 @@ public class DisinheritUtils {
 			folderIds = DBUtils.select(folderI18nPubDirSQL, ps -> {
 				ps.setString(1, filenamePatternStr);
 				ps.setInt(2, checkObject.getChannelSetId());
-				ps.setInt(3, folderId);
+				ps.setInt(3, folderId.get());
 			}, DBUtils.IDS);
 			folders = t.getObjects(Folder.class, folderIds);
 
@@ -1318,7 +1326,7 @@ public class DisinheritUtils {
 	 * @param urlMap map of object IDs to sets of URLs
 	 * @param nodes set of nodes to check visibility
 	 * @param clazz object class
-	 * @return set of filenames
+	 * @return map of filenames to objects. filenames are all made lowercase
 	 * @throws NodeException
 	 */
 	protected static Map<String, NodeObject> getFilenamesOfVisibleObjects(Map<Integer, Set<String>> urlMap, Set<Node> nodes,
@@ -1331,7 +1339,7 @@ public class DisinheritUtils {
 				for (Node n : nodes) {
 					if (MultichannellingFactory.isVisibleInNode(n, p)) {
 						for (String url : urlMap.get(p.getId())) {
-							filenameSet.put(NodeObjectWithAlternateUrls.NAME.apply(url), p);
+							filenameSet.put(StringUtils.toRootLowerCase(NodeObjectWithAlternateUrls.NAME.apply(url)), p);
 						}
 					}
 				}
@@ -1708,7 +1716,7 @@ public class DisinheritUtils {
 					try (ChannelTrx cTrx = new ChannelTrx(n)) {
 						String fileUrl = String.format("%s%s", f.getFullPublishPath(true), filename);
 						if (urlPattern.matcher(fileUrl).matches()) {
-							filenames.put(filename.toLowerCase(), f);
+							filenames.put(StringUtils.toRootLowerCase(filename), f);
 						}
 					}
 				}

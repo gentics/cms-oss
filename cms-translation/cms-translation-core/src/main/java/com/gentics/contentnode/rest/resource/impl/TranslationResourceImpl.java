@@ -9,11 +9,13 @@ import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.TranslationServiceLoaderUtil;
+import com.gentics.contentnode.etc.TranslationStats;
 import com.gentics.contentnode.exception.InvalidRequestException;
 import com.gentics.contentnode.exception.MissingFieldException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.filters.Authenticated;
@@ -75,13 +77,18 @@ public class TranslationResourceImpl implements TranslationResource {
 					.setStatus(Status.BAD_REQUEST);
 		}
 		try {
-			translationService = getTranslationService();
+			var stats = new TranslationStats();
+			var translationService = getTranslationService();
 			var translatedText = translationService.translate(request.getText(),
 					request.getSourceLanguage(),
 					request.getTargetLanguage());
+
+			stats.addRequest(request.getText().length(), translatedText.length());
+
 			var response = new TranslationResponse();
 			response.setText(translatedText);
 
+			logger.debug("Translated custom text. %s".formatted(stats));
 			return response;
 		} catch (Exception e) {
 			throw new NodeException(e);
@@ -122,16 +129,20 @@ public class TranslationResourceImpl implements TranslationResource {
 				try {
 					var contentTags = this.getContentTags(pageToTranslate);
 					final var tagResolveService = new TagResolveService(loadedPage.getOwningNode());
+					var stats = new TranslationStats();
 
 					var translationService = getTranslationService();
 					tagResolveService.resolveAndTranslateContentTags(contentTags, translationService, sourceLanguageCode,
-							targetLanguageCode);
+							targetLanguageCode, stats);
 
 					final var sourceName = pageToTranslate.getName();
 					final var translatedName = translationService.translate(sourceName,
 							sourceLanguageCode,
 							targetLanguageCode);
+					stats.addRequest(sourceName.length(), translatedName.length());
 					pageToTranslate.setName(translatedName);
+
+					logger.debug("Translated page %s. %s".formatted(I18NHelper.getName(loadedPage), stats));
 				} catch (TranslationException e) {
 					this.deletePage(translatedNodePage);
 					throw e;

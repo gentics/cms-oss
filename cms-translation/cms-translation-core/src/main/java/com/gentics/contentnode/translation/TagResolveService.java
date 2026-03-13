@@ -2,16 +2,6 @@ package com.gentics.contentnode.translation;
 
 import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.TranslationException;
-import com.gentics.contentnode.aloha.AlohaRenderer;
-import com.gentics.contentnode.api.translation.TranslationService;
-import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.rest.model.Property;
-import com.gentics.contentnode.rest.model.Tag;
-import com.gentics.lib.i18n.CNI18nString;
-import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,8 +9,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.TranslationException;
+import com.gentics.contentnode.aloha.AlohaRenderer;
+import com.gentics.contentnode.api.translation.TranslationService;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.TranslationStats;
+import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.rest.model.Tag;
+import com.gentics.lib.log.NodeLogger;
 
 /**
  * Service to combine all tags into a combined/resolved string.
@@ -59,13 +62,14 @@ public class TagResolveService {
 	 * @param translationService The translation service to use for translating the resolved text.
 	 * @param sourceLanguageCode The source language code for translation.
 	 * @param targetLanguageCode The target language code for translation.
+	 * @param stats              Statistics
 	 * @throws Exception If an error occurs during the process.
 	 */
 	public void resolveAndTranslateContentTags(
 			List<Tag> contentTags,
 			TranslationService translationService,
 			String sourceLanguageCode,
-			String targetLanguageCode
+			String targetLanguageCode, TranslationStats stats
 	) throws Exception {
 		final var tagsToResolve = contentTags.stream()
 				.filter(tag -> tag.getConstructId() != this.linkConstructId)
@@ -79,7 +83,7 @@ public class TagResolveService {
 				var isMarkupCorrupt = false;
 				if (!VALIDATOR.test(resolvableText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), ""))) {
 					isMarkupCorrupt = true;
-					logger.warn(new CNI18nString("feature.translation.error.markup_invalid").toString());
+					logger.warn(I18NHelper.get("feature.translation.error.markup_invalid"));
 				}
 
 				final var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
@@ -91,15 +95,22 @@ public class TagResolveService {
 						sourceLanguageCode,
 						targetLanguageCode);
 
+				stats.addRequest(resolvedText.length(), resolvedAndTranslatedText.length());
+
 				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap,
 						resolvedAndTranslatedText);
 
 				final var cleanHtml = unresolvedAndTranslatedText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), "");
 				if (!isMarkupCorrupt && !VALIDATOR.test(cleanHtml)) {
-					CNI18nString errorMessage = new CNI18nString("feature.translation.error");
-					CNI18nString errorReason = new CNI18nString("feature.translation.error.reason.markup_invalid");
-					errorMessage.addParameter(errorReason.toString());
-					throw new TranslationException(errorMessage.toString());
+					// if debug logging is enabled, we also log what has been sent to the translation service
+					// and what has been received
+					// but we log this as error (since the result was invalid markup)
+					if (logger.isDebugEnabled()) {
+						logger.error("Translated from %s into %s resulted in invalid markup:\n%stranslation:\n%s".formatted(sourceLanguageCode,
+								targetLanguageCode, resolvedText, resolvedAndTranslatedText));
+					}
+					throw new TranslationException(I18NHelper.get("feature.translation.error",
+							I18NHelper.get("feature.translation.error.reason.markup_invalid")));
 				}
 				textProperty.setStringValue(unresolvedAndTranslatedText);
 			}

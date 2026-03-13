@@ -1283,8 +1283,19 @@ public class DisinheritUtils {
 		boolean pubDirSegment = Optional.ofNullable(checkObject.getOwningNode()).map(Node::isPubDirSegment)
 				.orElse(false);
 		AtomicInteger folderId = new AtomicInteger();
+		// get the Id of the master object of the parent (which might be a channel local object)
 		try (ChannelTrx cTrx = new ChannelTrx(objectSegment.getStartChannel())) {
-			folderId.set(Optional.ofNullable(checkObject.getParentObject()).map(NodeObject::getId).orElse(0));
+			folderId.set(Optional.ofNullable(checkObject.getParentObject()).map(p -> {
+				if (p instanceof Disinheritable<?> disP) {
+					try {
+						return disP.getMaster();
+					} catch (NodeException e) {
+						return p;
+					}
+				} else {
+					return p;
+				}
+			}).map(NodeObject::getId).orElse(0));
 		}
 		if (pubDirSegment && folderId.get() > 0) {
 			// when pub dir segments is activated, we also need to add the sibling folders with their pub dirs

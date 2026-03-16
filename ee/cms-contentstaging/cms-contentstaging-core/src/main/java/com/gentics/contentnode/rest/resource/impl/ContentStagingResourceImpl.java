@@ -487,11 +487,11 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@PUT
-	@jakarta.ws.rs.Path("/package/{name}/{type}/{uuid}")
+	@jakarta.ws.rs.Path("/package/{name}/{objectType}/{uuid}")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
 	public ContentPackageLoadResponse add(
 			@PathParam("name") String name, 
-			@PathParam("type") String objectTypeId, 
+			@PathParam("objectType") String objectTypeId, 
 			@PathParam("uuid") String objectUuid, 
 			@QueryParam("recursive") @DefaultValue("false") boolean recursive
 	) throws NodeException {
@@ -573,9 +573,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@DELETE
-	@jakarta.ws.rs.Path("/package/{name}/{type}/{uuid}")
+	@jakarta.ws.rs.Path("/package/{name}/{objectType}/{uuid}")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
-	public ContentPackageLoadResponse remove(@PathParam("name") String name, @PathParam("type") String objectTypeId, @PathParam("uuid") String objectUuid) throws NodeException {
+	public ContentPackageLoadResponse remove(@PathParam("name") String name, @PathParam("objectType") String objectTypeId, @PathParam("uuid") String objectUuid) throws NodeException {
 		Path path = checkFeatureGetPath();
 		ContentPackageLoadResponse response = new ContentPackageLoadResponse();
 		try (Trx trx = ContentNodeHelper.trx()) {

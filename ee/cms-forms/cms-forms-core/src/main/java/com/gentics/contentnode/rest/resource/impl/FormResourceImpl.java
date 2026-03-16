@@ -585,8 +585,8 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 	@Override
 	@PUT
-	@Path("{id}/folder/{folderId}")
-	public FormResponse move(@PathParam("id") String formId, @PathParam("folderId") String folderId)
+	@Path("{id}/folder/{pathFolderId}")
+	public FormResponse move(@PathParam("id") String formId, @PathParam("pathFolderId") String folderId)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();

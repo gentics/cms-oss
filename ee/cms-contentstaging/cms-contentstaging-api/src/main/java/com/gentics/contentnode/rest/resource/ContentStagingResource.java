@@ -122,8 +122,8 @@ public interface ContentStagingResource {
 	 * @throws Exception
 	 */
 	@PUT
-	@Path("/package/{name}/{type}/{uuid}")
-	ContentPackageLoadResponse add(@PathParam("name") String name, @PathParam("type") String objectType, @PathParam("uuid") String objectUuid, @QueryParam("recursive") @DefaultValue("false") boolean recursive) throws Exception;
+	@Path("/package/{name}/{objectType}/{uuid}")
+	ContentPackageLoadResponse add(@PathParam("name") String name, @PathParam("objectType") String objectType, @PathParam("uuid") String objectUuid, @QueryParam("recursive") @DefaultValue("false") boolean recursive) throws Exception;
 
 	/**
 	 * Remove an entity from the package of a given name.
@@ -135,8 +135,8 @@ public interface ContentStagingResource {
 	 * @throws Exception
 	 */
 	@DELETE
-	@Path("/package/{name}/{type}/{uuid}")
-	ContentPackageLoadResponse remove(@PathParam("name") String name, @PathParam("type") String objectType, @PathParam("uuid") String objectUuid) throws Exception;
+	@Path("/package/{name}/{objectType}/{uuid}")
+	ContentPackageLoadResponse remove(@PathParam("name") String name, @PathParam("objectType") String objectType, @PathParam("uuid") String objectUuid) throws Exception;
 
 	/**
 	 * Download the package of the given name as ZIP archive.

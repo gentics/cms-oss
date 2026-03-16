@@ -88,8 +88,8 @@ public class SearchResourceImpl extends AbstractContentNodeResource implements S
 
 	@Override
 	@POST
-	@Path("/{type}/_search")
-	public Response searchType(@PathParam("type") String type, @BeanParam SearchParameterBean search, String body) throws NodeException {
+	@Path("/{searchType}/_search")
+	public Response searchType(@PathParam("searchType") String type, @BeanParam SearchParameterBean search, String body) throws NodeException {
 		try {
 			IndexType indexType = IndexType.valueOf(type);
 			return doSearch("_search", search, body, Arrays.asList(indexType));

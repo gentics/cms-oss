@@ -266,8 +266,8 @@ public interface FormResource {
 	 * @throws Exception
 	 */
 	@PUT
-	@Path("{id}/folder/{folderId}")
-	FormResponse move(@PathParam("id") String formId, @PathParam("folderId") String folderId) throws Exception;
+	@Path("{id}/folder/{pathFolderId}")
+	FormResponse move(@PathParam("id") String formId, @PathParam("pathFolderId") String folderId) throws Exception;
 
 	/**
 	 * Render a preview of the form in the given language

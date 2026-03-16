@@ -62,7 +62,7 @@ export function formatRelativeI18nDate(value: Date | number, lang: string): stri
         const time = toRelativeTime(value);
         return formatter.format(time.value, time.unit);
     };
-    cached[lang] = formatFunction;
+    RELATIVE_FORMAT_CACHE[lang] = formatFunction;
 
     return formatFunction(value);
 }

@@ -1066,9 +1066,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 	@Override
 	@GET
-	@Path("/getFiles/{folderId}")
+	@Path("/getFiles/{pathFolderId}")
 	public LegacyFileListResponse getFiles(
-			@PathParam("folderId") String folderId,
+			@PathParam("pathFolderId") String folderId,
 			@BeanParam InFolderParameterBean inFolder,
 			@BeanParam FileListParameterBean fileListParams,
 			@BeanParam LegacyFilterParameterBean filterParams,
@@ -1081,9 +1081,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 	@Override
 	@GET
-	@Path("/getImages/{folderId}")
+	@Path("/getImages/{pathFolderId}")
 	public LegacyFileListResponse getImages(
-			@PathParam("folderId") String folderId,
+			@PathParam("pathFolderId") String folderId,
 			@BeanParam InFolderParameterBean inFolder,
 			@BeanParam FileListParameterBean fileListParams,
 			@BeanParam LegacyFilterParameterBean filterParams,
@@ -1804,9 +1804,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 * @see com.gentics.contentnode.rest.api.FolderResource#getTemplates(java.lang.String, java.lang.Integer, java.lang.String, boolean, boolean, java.lang.String, java.lang.String, java.lang.String, java.lang.String, int, int, boolean, java.lang.Boolean)
 	 */
 	@GET
-	@Path("/getTemplates/{folderId}")
+	@Path("/getTemplates/{pathFolderId}")
 	public TemplateListResponse getTemplates(
-			@PathParam("folderId") String folderId,
+			@PathParam("pathFolderId") String folderId,
 			@BeanParam InFolderParameterBean inFolder,
 			@BeanParam TemplateListParameterBean templateListParams,
 			@BeanParam LegacyFilterParameterBean filterParams,
@@ -1900,9 +1900,9 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 */
 	@Override
 	@GET
-	@Path("/getItems/{folderId}")
+	@Path("/getItems/{pathFolderId}")
 	public ItemListResponse getItems(
-			@PathParam("folderId") String folderId,
+			@PathParam("pathFolderId") String folderId,
 			@QueryParam("type") List<ItemType> types,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("template") @DefaultValue("false") boolean template,

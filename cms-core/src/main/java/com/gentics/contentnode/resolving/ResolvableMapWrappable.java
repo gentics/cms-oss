@@ -1,4 +1,4 @@
-package com.gentics.lib.resolving;
+package com.gentics.contentnode.resolving;
 
 import java.util.Set;
 

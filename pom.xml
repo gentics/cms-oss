@@ -5,7 +5,7 @@
 
 	<groupId>com.gentics</groupId>
 	<artifactId>cms</artifactId>
-	<version>6.4.4-SNAPSHOT</version>
+	<version>6.4.4</version>
 	<name>Gentics CMS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>

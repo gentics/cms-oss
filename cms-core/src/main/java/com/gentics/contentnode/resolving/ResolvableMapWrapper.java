@@ -49,9 +49,9 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 	protected final ResolvableMapWrappable wrapped;
 
 	/**
-	 * object that defines the scope in which this object is rendered
+	 * object that defines the contexxt in which this object is rendered
 	 */
-	private NodeObject scope;
+	private NodeObject context;
 
 	/**
 	 * List of objects to be put upon the render stack while getting a property from the object
@@ -60,15 +60,15 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 	/**
 	 * Wrap the value into instance(s) of {@link ResolvableMapWrapper}.
-	 * This will handle sindle instances, instances in lists and maps
+	 * This will handle single instances, instances in lists and maps
 	 * @param value value to wrap
-	 * @param scope
-	 * @param mother
+	 * @param context optional context
+	 * @param mother optional mother
 	 * @return optionally wrapped value
 	 */
-	protected static Object wrap(Object value, NodeObject scope, ResolvableMapWrapper mother) {
+	protected static Object wrap(Object value, NodeObject context, ResolvableMapWrapper mother) {
 		if (value instanceof ResolvableMapWrappable resolvableMapWrappable) {
-			return new ResolvableMapWrapper(resolvableMapWrappable, scope, mother);
+			return new ResolvableMapWrapper(resolvableMapWrappable, context, mother);
 		} else if (value instanceof List<?> listValue) {
 
 			return new AbstractList<Object>() {
@@ -79,7 +79,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 				@Override
 				public Object get(int index) {
-					return wrap(listValue.get(index), scope, mother);
+					return wrap(listValue.get(index), context, mother);
 				}
 			};
 		} else if (value instanceof Map<?, ?> mapValue) {
@@ -87,7 +87,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 			Map<Object, Object> wrappedMap = value instanceof SortedMap<?, ?> ? new LinkedHashMap<>(mapValue.size())
 					: new HashMap<>();
 			mapValue.forEach((k, v) -> {
-				wrappedMap.put(k, wrap(v, scope, mother));
+				wrappedMap.put(k, wrap(v, context, mother));
 			});
 
 			return wrappedMap;
@@ -107,12 +107,12 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 	/**
 	 * Create wrapper instance
 	 * @param wrapped wrapped instance
-	 * @param scope
-	 * @param mother
+	 * @param context optional context
+	 * @param mother optional mother
 	 */
-	public ResolvableMapWrapper(ResolvableMapWrappable wrapped, NodeObject scope, ResolvableMapWrapper mother) {
+	public ResolvableMapWrapper(ResolvableMapWrappable wrapped, NodeObject context, ResolvableMapWrapper mother) {
 		this.wrapped = wrapped;
-		this.scope = scope;
+		this.context = context;
 		// sort the keys
 		List<String> keys = new ArrayList<>(wrapped.getResolvableKeys());
 		Collections.sort(keys);
@@ -142,7 +142,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 	@Override
 	public Object get(String key) {
-		return wrap(wrapped.get(key), getSubScope(), this);
+		return wrap(wrapped.get(key), getSubContext(), this);
 	}
 
 	@Override
@@ -165,7 +165,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 	@Override
 	public String render() throws NodeException {
-		try (Scope scope = new Scope()) {
+		try (RenderContext renderContext = new RenderContext()) {
 			if (wrapped instanceof Renderable renderable) {
 				return renderable.render();
 			} else if (wrapped != null) {
@@ -177,20 +177,20 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 	}
 
 	/**
-	 * Get the AutoCloseable scope of this renderable resolvable
-	 * @return Scope as AutoCloseable
+	 * Get the AutoCloseable RenderContext of this renderable resolvable
+	 * @return RenderContext as AutoCloseable
 	 * @throws NodeException
 	 */
-	public Scope scope() throws NodeException {
-		return new Scope();
+	public RenderContext withContext() throws NodeException {
+		return new RenderContext();
 	}
 
 	/**
-	 * Get the scope for resolved objects
-	 * @return scope for resolved objects
+	 * Get the context for resolved objects
+	 * @return context for resolved objects
 	 */
-	protected NodeObject getSubScope() {
-		// when resolving from a folder, file or page, we switch the scope
+	protected NodeObject getSubContext() {
+		// when resolving from a folder, file or page, we switch the context
 		if (wrapped instanceof Folder folder) {
 			return folder;
 		} else if (wrapped instanceof ContentFile contentFile) {
@@ -200,7 +200,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 		} else if (wrapped instanceof Tag tag) {
 			return tag;
 		} else if (wrapped instanceof Value value) {
-			// when resolving from a value of a URLPartType, we switch the scope
+			// when resolving from a value of a URLPartType, we switch the context
 			// to the target object (if any set)
 			try {
 				PartType partType = value.getPartType();
@@ -214,7 +214,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 				}
 			} catch (NodeException e) {}
 		}
-		return scope;
+		return context;
 	}
 
 	/**
@@ -241,7 +241,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 		@Override
 		public Object getValue() {
-			return wrap(wrapped.get(key), getSubScope(), ResolvableMapWrapper.this);
+			return wrap(wrapped.get(key), getSubContext(), ResolvableMapWrapper.this);
 		}
 
 		@Override
@@ -251,10 +251,10 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 	}
 
 	/**
-	 * AutoCloseable implementation that pushes the scope onto the render stack in the constructor
+	 * AutoCloseable implementation that pushes the context onto the render stack in the constructor
 	 * and removes them (in reverse order) in {@link #close()}
 	 */
-	public class Scope implements AutoCloseable {
+	public class RenderContext implements AutoCloseable {
 		/**
 		 * List of pushed items
 		 */
@@ -266,15 +266,15 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 		protected RenderType renderType;
 
 		/**
-		 * Create an instance which will push the scope onto the render stack
+		 * Create an instance which will push the context onto the render stack
 		 * @throws NodeException
 		 */
-		public Scope() throws NodeException {
+		public RenderContext() throws NodeException {
 			if (logger.isDebugEnabled()) {
-				if (scope != null) {
-					logger.debug("Rendering {" + wrapped + "} in scope {" + scope + "}");
+				if (context != null) {
+					logger.debug("Rendering {" + wrapped + "} in context {" + context + "}");
 				} else {
-					logger.debug("Rendering {" + wrapped + "} with default scope");
+					logger.debug("Rendering {" + wrapped + "} with default context");
 				}
 			}
 			Transaction t = TransactionManager.getCurrentTransaction();

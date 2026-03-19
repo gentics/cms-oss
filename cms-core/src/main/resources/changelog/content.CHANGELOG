@@ -815,3 +815,4 @@
 2024-11-20  CH-1730 NOP SQL UPDATE objprop SET restricted = 1 WHERE id IN (SELECT objprop_id FROM objprop_node); ## Make object property definitions restricted, which are assigned to nodes
 2025-02-18  CH-1731 NOP SQL ALTER TABLE dependencymap2 MODIFY COLUMN dep_prop TEXT;
 2025-10-03  CH-1733 PK  SQL ALTER TABLE content ADD COLUMN partially_localized BOOLEAN NOT NULL DEFAULT 0 AFTER udate;
+2026-03-19	CH-1735	NOP	SQL	CREATE TABLE node_formtype (id INTEGER NOT NULL AUTO_INCREMENT, node_id INTEGER NOT NULL, formtype VARCHAR(255) NOT NULL, PRIMARY KEY (id), FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE, UNIQUE KEY (node_id, formtype)); ## add table for assigning form types to nodes

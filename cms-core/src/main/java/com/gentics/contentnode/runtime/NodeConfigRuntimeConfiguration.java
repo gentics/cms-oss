@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.Velocity;
@@ -23,7 +24,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ConfigurationService;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FeatureService;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.PropertyNodeConfig;
@@ -65,6 +68,11 @@ public class NodeConfigRuntimeConfiguration {
 	 * Loader for the {@link ServletContextHandlerService}s
 	 */
 	protected static ServiceLoaderUtil<ServletContextHandlerService> servletContextHandlerServiceLoader;
+
+	/**
+	 * Service loader for implementations of {@link ConfigurationService}
+	 */
+	protected final static ServiceLoaderUtil<ConfigurationService> configurationServiceLoader = ServiceLoaderUtil.load(ConfigurationService.class);
 
 	/**
 	 * Configuration instance
@@ -118,6 +126,9 @@ public class NodeConfigRuntimeConfiguration {
 				nodeConfig.setProperties(data);
 			}
 			NodePreferences nodePreferences = nodeConfig.getDefaultPreferences();
+
+			// call all ConfigurationServices
+			configurationServiceLoader.forEach(configurationService -> configurationService.init(nodePreferences));
 
 			// check features
 			for (Feature feature : Feature.values()) {

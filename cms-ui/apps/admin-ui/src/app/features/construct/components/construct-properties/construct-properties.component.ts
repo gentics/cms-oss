@@ -1,6 +1,3 @@
-import { createI18nRequiredValidator } from '@admin-ui/common';
-import { ConstructCategoryHandlerService, PermissionsService } from '@admin-ui/core';
-import { NodeDataService } from '@admin-ui/shared';
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
@@ -15,11 +12,11 @@ import { FormControl, FormGroup, UntypedFormControl, ValidatorFn, Validators } f
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
     AccessControlledType,
-    CmsI18nValue,
     ConstructCategory,
     EditorControlStyle,
     GcmsPermission,
     GtxI18nProperty,
+    I18nString,
     Language,
     Node,
     Normalized,
@@ -30,13 +27,16 @@ import {
 import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { createI18nRequiredValidator } from '../../../../common';
+import { ConstructCategoryHandlerService, PermissionsService } from '../../../../core';
+import { NodeDataService } from '../../../../shared';
 
 export type ConstructPropertiesFormData = Omit<
-TagTypeBase<Raw>,
+    TagTypeBase<Raw>,
 'name' | 'description' | 'globalId' | 'parts' | 'creator' | 'cdate' | 'editor' | 'edata'
 > & {
     nodeIds?: number[];
-}
+};
 
 export enum ConstructPropertiesMode {
     CREATE = 'create',
@@ -59,7 +59,7 @@ export enum ConstructPropertiesMode {
         generateFormProvider(ConstructPropertiesComponent),
         generateValidatorProvider(ConstructPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class ConstructPropertiesComponent
     extends BasePropertiesComponent<ConstructPropertiesFormData>
@@ -93,18 +93,18 @@ export class ConstructPropertiesComponent
         super.ngOnInit();
 
         // load required dependencies into state
-        this.constructCategories$ = this.categoryHandler.listMapped().pipe(map(res => res.items));
+        this.constructCategories$ = this.categoryHandler.listMapped().pipe(map((res) => res.items));
 
         // Load the nodes and filter out all which do not have the required 'update' permission
         this.nodes$ = this.nodeData.watchAllEntities({ perms: true }).pipe(
-            switchMap(nodes => {
-                return combineLatest(nodes.map(node => {
+            switchMap((nodes) => {
+                return combineLatest(nodes.map((node) => {
                     return this.permissions.getInstancePermissions(AccessControlledType.NODE, node.id).pipe(
-                        map(perms => perms.hasPermission(GcmsPermission.UPDATE_CONSTRUCTS) ? node : null),
-                    )
+                        map((perms) => perms.hasPermission(GcmsPermission.UPDATE_CONSTRUCTS) ? node : null),
+                    );
                 }));
             }),
-            map(nodes => nodes.filter(node => node != null)),
+            map((nodes) => nodes.filter((node) => node != null)),
         );
     }
 
@@ -133,8 +133,8 @@ export class ConstructPropertiesComponent
     protected createForm(): FormGroup {
         return new FormGroup<FormProperties<ConstructPropertiesFormData>>({
             keyword: new FormControl<string>(null, Validators.required),
-            nameI18n: new FormControl<CmsI18nValue>({}, this.createNameValidator()),
-            descriptionI18n: new FormControl<CmsI18nValue>({}),
+            nameI18n: new FormControl<I18nString>({}, this.createNameValidator()),
+            descriptionI18n: new FormControl<I18nString>({}),
             nodeIds: new FormControl<number[]>([], Validators.required),
             externalEditorUrl: new FormControl<string>(''),
             mayBeSubtag: new FormControl<boolean>(false),
@@ -170,7 +170,7 @@ export class ConstructPropertiesComponent
     }
 
     createNameValidator(): ValidatorFn {
-        const validator = createI18nRequiredValidator((this.supportedLanguages || []).map(l => l.code), langs => {
+        const validator = createI18nRequiredValidator((this.supportedLanguages || []).map((l) => l.code), (langs) => {
             this.invalidLanguages = langs;
             this.changeDetector.markForCheck();
         });
@@ -216,13 +216,13 @@ export class ConstructPropertiesComponent
     }
 
     setActiveI18nTab(languageId: number): void {
-        this.activeTabI18nLanguage = this.supportedLanguages.find(l => l.id === languageId);
+        this.activeTabI18nLanguage = this.supportedLanguages.find((l) => l.id === languageId);
     }
 
     activeI18nTabValueExists(languageCode: string): boolean {
         return [
             this.form.get('nameI18n')?.value as GtxI18nProperty,
             this.form.get('descriptionI18n')?.value as GtxI18nProperty,
-        ].some(data => !!data?.[languageCode]);
+        ].some((data) => !!data?.[languageCode]);
     }
 }

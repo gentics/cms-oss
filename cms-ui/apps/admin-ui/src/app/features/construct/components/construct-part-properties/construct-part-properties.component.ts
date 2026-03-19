@@ -1,8 +1,4 @@
 import {
-    createBlacklistValidator,
-    createI18nRequiredValidator,
-} from '@admin-ui/common';
-import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -13,10 +9,10 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
+import { BasePropertiesComponent, I18nService } from '@gentics/cms-components';
 import {
-    CmsI18nValue,
     DataSource,
+    I18nString,
     Language,
     MarkupLanguage,
     OverviewSetting,
@@ -31,7 +27,10 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
+import {
+    createBlacklistValidator,
+    createI18nRequiredValidator,
+} from '../../../../common';
 
 export interface TagPartPropertiesFormData {
     globalId?: string;
@@ -42,7 +41,7 @@ export interface TagPartPropertiesFormData {
     /** Part keyword */
     keyword: string;
     /** Name in the current language */
-    nameI18n?: CmsI18nValue;
+    nameI18n?: I18nString;
 
     /** Order index of part (legacy/ portentially to be deprecated) */
     partOrder: number;

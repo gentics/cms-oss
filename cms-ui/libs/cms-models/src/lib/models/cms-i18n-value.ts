@@ -1,6 +1,6 @@
+import { I18nString } from './common';
+
 /**
- * This format is designed to store string-values subject to translation.
+ * @deprecated Use the name `I18nString` instead
  */
-export interface CmsI18nValue {
-    [key: string]: string;
-}
+export type CmsI18nValue = I18nString;

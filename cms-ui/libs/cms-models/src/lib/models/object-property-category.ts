@@ -1,4 +1,4 @@
-import { CmsI18nValue } from './cms-i18n-value';
+import { I18nString } from './common';
 import { DefaultModelType, ModelType } from './type-util';
 
 /**
@@ -11,7 +11,7 @@ export interface ObjectPropertyCategoryBase<T extends ModelType> {
     /** Name in the current language */
     name?: string;
     /** Name in all languages */
-    nameI18n?: CmsI18nValue;
+    nameI18n?: I18nString;
 }
 
 /** Data model as defined by backend. */

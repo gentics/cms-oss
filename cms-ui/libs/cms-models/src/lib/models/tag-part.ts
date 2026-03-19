@@ -1,29 +1,30 @@
-import { CmsI18nValue } from './cms-i18n-value';
+import { I18nString } from './common';
 import { RegexValidationInfo } from './tag';
 import { OverviewSetting, SelectSetting, TagPartType, TagPropertyType } from './tag-part-types';
 import { Overview, SelectOption } from './tag-property-values';
 import { DefaultModelType, ModelType } from './type-util';
 
-/** Possible Tagpart types
+/**
+ * Possible Tagpart types
  * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Property.html
  */
-export type TagPartProperty =
-    | StringTagPartProperty
-    | BooleanTagPartProperty
-    | FileTagPartProperty
-    | FolderTagPartProperty
-    | FormTagPartProperty
-    | CmsFormTagPartProperty
-    | ImageTagPartProperty
-    | PageTagPartProperty
-    | ListTagPartProperty
-    | OrderedUnorderedListTagPartProperty
-    | NodeTagPartProperty
-    | PageTagTagPartProperty
-    | TemplateTagTagPartProperty
-    | SelectTagPartProperty
-    | OverviewTagPartProperty
-    | DataSourceTagPartProperty
+export type TagPartProperty
+    = | StringTagPartProperty
+      | BooleanTagPartProperty
+      | FileTagPartProperty
+      | FolderTagPartProperty
+      | FormTagPartProperty
+      | CmsFormTagPartProperty
+      | ImageTagPartProperty
+      | PageTagPartProperty
+      | ListTagPartProperty
+      | OrderedUnorderedListTagPartProperty
+      | NodeTagPartProperty
+      | PageTagTagPartProperty
+      | TemplateTagTagPartProperty
+      | SelectTagPartProperty
+      | OverviewTagPartProperty
+      | DataSourceTagPartProperty
     ;
 
 export interface BaseTagPartProperty {
@@ -209,7 +210,7 @@ export interface TagPart<T extends ModelType = DefaultModelType> {
     /** Name in the current language */
     name?: string;
     /** Name of the part in ever language */
-    nameI18n: CmsI18nValue;
+    nameI18n: I18nString;
     /** Part keyword */
     keyword: string;
     /** Markup languag edientifier */
@@ -238,7 +239,7 @@ export interface TagPart<T extends ModelType = DefaultModelType> {
     hideInEditor: boolean;
     /** External editor URL */
     externalEditorUrl?: string;
-    /** of SelectOption	Possible options */
+    /** of SelectOption Possible options */
     options?: SelectOption[];
     /** Overview settings (if type is OVERVIEW) */
     overviewSettings?: OverviewSetting;

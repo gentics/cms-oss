@@ -2,6 +2,27 @@ package com.gentics.contentnode.rest.resource;
 
 import java.util.List;
 
+import com.gentics.contentnode.rest.model.form.FormListResponse;
+import com.gentics.contentnode.rest.model.form.FormModel;
+import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
+import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
+import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
+import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -14,24 +35,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import com.gentics.contentnode.rest.model.form.FormListResponse;
-import com.gentics.contentnode.rest.model.form.FormModel;
-import com.gentics.contentnode.rest.model.form.FormResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
-import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
-import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
-import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
-import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 
 /**
  * Resource for forms
@@ -546,4 +549,58 @@ public interface FormResource {
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> formId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws Exception;
+
+	/**
+	 * List the form type configurations
+	 * @param filter filter parameters
+	 * @param sorting sorting parameters
+	 * @param paging paging parameters
+	 * @return response containing a list of form type configurations
+	 * @HTTP 200 The list of form type configurations is returned.
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/types")
+	FormTypeConfigurationListResponse listFormTypeConfigurations(
+			@BeanParam FilterFormTypeConfigurationsParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws Exception;
+
+	/**
+	 * Get the form type configuration for the given type
+	 * @param type type
+	 * @return form type configuration
+	 * @HTTP 200 The form type configuration is returned.
+	 * @HTTP 404 The form type configuration is not found.
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/types/{type}")
+	FormTypeConfigurationResponse getFormTypeconfiguration(@PathParam("type") String type) throws Exception;
+
+	/**
+	 * Remove the form type configuration from the node.
+	 * @param nodeId node ID (either global or local)
+	 * @param type form type key
+	 * @return generic response
+	 * @HTTP 204 Form type configuration was removed from the node
+	 * @HTTP 404 Either the node or the form type configuration was not found.
+	 * @throws Exception
+	 */
+	@DELETE
+	@Path("/nodes/{nodeId}/types/{type}")
+	Response removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws Exception;
+
+	/**
+	 * Add the form tyoe configuration to the node.
+	 * @param nodeId node ID (either global or local)
+	 * @param type form type key
+	 * @return generic response
+	 * @HTTP 201 Form type configuration was added to the node
+	 * @HTTP 404 Either the node or the form type configuration was not found.
+	 * @throws Exception
+	 */
+	@PUT
+	@Path("/nodes/{nodeId}/types/{type}")
+	Response addFormTypeConfigurationsToNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws Exception;
+
 }

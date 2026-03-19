@@ -8,6 +8,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.require;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -19,12 +20,14 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.TriFunction;
 import com.gentics.contentnode.events.Events;
@@ -58,6 +61,9 @@ import com.gentics.contentnode.rest.model.FormTimeManagement;
 import com.gentics.contentnode.rest.model.form.FormListResponse;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.WastebinSearch;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -71,6 +77,7 @@ import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
 import com.gentics.contentnode.rest.resource.FormResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticatedContentNodeResource.PageUsage;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
@@ -921,6 +928,88 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		}
 	}
 
+	@Override
+	@GET
+	@Path("/types")
+	public FormTypeConfigurationListResponse listFormTypeConfigurations(
+			@BeanParam FilterFormTypeConfigurationsParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws NodeException {
+
+		try (Trx trx = ContentNodeHelper.trx()) {
+			ListBuilder<Entry<String, FormTypeConfiguration>, FormTypeConfigurationModel> listBuilder = ListBuilder
+					.from(FormConfigProvider.getConfig().entrySet(), FormConfigProvider.TRANSFORM2REST);
+
+			// Add optional nodeId filter
+			if (filter != null) {
+				if (!StringUtils.isBlank(filter.nodeId)) {
+					Node node = MiscUtils.load(Node.class, filter.nodeId);
+					List<String> formTypesForNode = DBUtils.select("SELECT formtype FROM node_formtype WHERE node_id = ?", pst -> {
+						pst.setInt(1, node.getId());
+					}, DBUtils.allString("formtype"));
+					listBuilder.filter(entry -> formTypesForNode.contains(entry.getKey()));
+				}
+
+				// Add optional external flag filter
+				if (filter.external != null) {
+					listBuilder.filter(entry -> entry.getValue().external == filter.external);
+				}
+
+				// Add optional submitOnce flag filter
+				if (filter.submitOnce != null) {
+					listBuilder.filter(entry -> entry.getValue().submitOnce == filter.submitOnce);
+				}
+
+				listBuilder.filter(MiscUtils.filter(filter, FormConfigProvider.RESOLVER, "type", "name", "description"));
+			}
+
+			listBuilder.sort(MiscUtils.comparator(sorting, FormConfigProvider.RESOLVER, "type", "name", "description", "external", "submitOnce"));
+			listBuilder.page(paging);
+
+			return listBuilder.to(new FormTypeConfigurationListResponse());
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types/{type}")
+	public FormTypeConfigurationResponse getFormTypeconfiguration(@PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			FormTypeConfiguration config = getFormTypeConfiguration(type);
+
+			return new FormTypeConfigurationResponse(FormConfigProvider.TRANSFORM2REST.apply(Map.entry(type, config)),
+					ResponseInfo.ok("Successfully loaded form type configuration"));
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("/nodes/{nodeId}/types/{type}")
+	public Response removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
+			getFormTypeConfiguration(type);
+
+			DBUtils.deleteWithPK("node_formtype", "id", "node_id = ? AND formtype = ?", new Object[] {node.getId(), type});
+
+			trx.success();
+			return Response.noContent().build();
+		}
+	}
+
+	@Override
+	@PUT
+	@Path("/nodes/{nodeId}/types/{type}")
+	public Response addFormTypeConfigurationsToNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
+			getFormTypeConfiguration(type);
+
+			DBUtils.update("INSERT IGNORE INTO node_formtype (node_id, formtype) VALUES (?, ?)", node.getId(), type);
+			trx.success();
+			return Response.created(null).build();
+		}
+	}
+
 	/**
 	 * Check whether the requested languages exist and are assigned to the node
 	 *
@@ -1081,5 +1170,21 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				return request.apply(mp, projectName, uuid);
 			}
 		}
+	}
+
+	/**
+	 * Get the form type configuration with given type or throw an {@link EntityNotFoundException} if is does not exist
+	 * @param type type
+	 * @return configuration
+	 * @throws EntityNotFoundException
+	 */
+	protected FormTypeConfiguration getFormTypeConfiguration(String type) throws EntityNotFoundException {
+		FormTypeConfiguration config = FormConfigProvider.getConfig().get(type);
+
+		if (config == null) {
+			throw new EntityNotFoundException(I18NHelper.get("form_type_configuration.notfound", type));
+		}
+
+		return config;
 	}
 }

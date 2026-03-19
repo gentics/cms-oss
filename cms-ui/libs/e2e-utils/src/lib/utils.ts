@@ -10,6 +10,7 @@ import {
     FORMATTING_NODES,
     LoginInformation,
 } from './common';
+import { RGBAColor, RGBColor } from '@gentics/aloha-models';
 
 export function wait(millisecs: number): Promise<void> {
     return new Promise((resolve) => {
@@ -473,4 +474,28 @@ export function getDefaultSystemLogin(): LoginInformation {
         username: process.env[ENV_E2E_CMS_IMPORTER_USERNAME] || 'node',
         password: process.env[ENV_E2E_CMS_IMPORTER_PASSWORD] || 'node',
     };
+}
+
+export function hexToRGB(hex: string): null | RGBColor | RGBAColor {
+    if (hex.startsWith('#')) {
+        hex = hex.substring(1);
+    }
+    let parts: string[];
+
+    switch (hex.length) {
+        case 3:
+        case 4:
+            parts = hex.split('');
+            break;
+        case 6:
+            parts = [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6)];
+            break;
+        case 8:
+            parts = [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6), hex.slice(6, 8)];
+            break;
+        default:
+            return null;
+    }
+
+    return parts.map((val) => parseInt(val, 16)) as any;
 }

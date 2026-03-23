@@ -4,6 +4,7 @@ import {
     EntityImporter,
     findNotification,
     FORM_ONE,
+    FORM_TWO,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -28,7 +29,7 @@ import {
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Page, test } from '@playwright/test';
-import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
+import { editorAction, expectItemLanguageCode, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
 
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -547,6 +548,142 @@ test.describe('Form Management', () => {
             expect(options).toHaveLength(1);
             expect(options[0].key).toEqual(KEY_TEXT.trim());
             expect(options[0].value_i18n[EDITING_FORM.languages[0]]).toEqual(VALUE_TEXT.trim());
+        });
+    });
+
+    test('should be possible to change active form language', {
+         annotation: [{
+            type: 'ticket',
+            description: 'SUP-19642',
+        }]
+    }, async ({ page }) => {
+        // import the language in two languages
+        await IMPORTER.importData([FORM_TWO]);
+
+        const EN_FORM = IMPORTER.get(FORM_ONE);
+        const DE_EN_FORM = IMPORTER.get(FORM_TWO);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            }
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const listOptions = list.locator('[data-action="open-list-context"]');
+
+        await test.step('Change Status Icon Settings', async () => {
+            const dropdown = await openContext(listOptions);
+            await dropdown.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
+        });
+
+        await test.step('Activate english', async () => {
+            // select english
+            const langSelector = list.locator('language-context-selector');
+            const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+            await dropdown.locator(`gtx-dropdown-item[data-id="${LANGUAGE_EN}"]`).click();
+            await expect(langSelector.locator('gtx-button')).toHaveAttribute('data-id', LANGUAGE_EN);
+
+            const enFormItem = findItem(list, EN_FORM.id);
+            await expectItemLanguageCode(enFormItem, LANGUAGE_EN);
+            const deEnFormItem = findItem(list, DE_EN_FORM.id);
+            await expectItemLanguageCode(deEnFormItem, LANGUAGE_EN);
+        });
+
+        await test.step('Activate german', async () => {
+            // select english
+            const langSelector = list.locator('language-context-selector');
+            const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+            await dropdown.locator(`gtx-dropdown-item[data-id="${LANGUAGE_DE}"]`).click();
+            await expect(langSelector.locator('gtx-button')).toHaveAttribute('data-id', LANGUAGE_DE);
+
+            const enFormItem = findItem(list, EN_FORM.id);
+            await expectItemLanguageCode(enFormItem, LANGUAGE_EN);
+            const deEnFormItem = findItem(list, DE_EN_FORM.id);
+            await expectItemLanguageCode(deEnFormItem, LANGUAGE_DE);
+        });
+    });
+
+    test('should show be possible to delete a language variant of a form', {
+         annotation: [{
+            type: 'ticket',
+            description: 'SUP-19642',
+        }]
+    }, async ({ page }) => {
+        // import the language in two languages
+        await IMPORTER.importData([FORM_TWO]);
+
+        const DE_EN_FORM = IMPORTER.get(FORM_TWO);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                    { type: GcmsPermission.DELETE_FORM, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            }
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        const listOptions = list.locator('[data-action="open-list-context"]');
+
+        await test.step('Change Status Icon Settings', async () => {
+            const dropdown = await openContext(listOptions);
+            await dropdown.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
+        });
+
+        await test.step('Activate english', async () => {
+            // select english
+            const langSelector = list.locator('language-context-selector');
+            const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+            await dropdown.locator(`gtx-dropdown-item[data-id="${LANGUAGE_EN}"]`).click();
+            await expect(langSelector.locator('gtx-button')).toHaveAttribute('data-id', LANGUAGE_EN);
+
+            const deEnFormItem = findItem(list, DE_EN_FORM.id);
+            await expectItemLanguageCode(deEnFormItem, LANGUAGE_EN);
+        });
+
+        await test.step('Delete english variant', async () => {
+            const deEnFormItem = findItem(list, DE_EN_FORM.id);
+            await itemAction(deEnFormItem, 'delete');
+
+            // delete modal should be opened
+            const modal = page.locator('multi-delete-modal-modal');
+            await modal.waitFor();
+
+            // click the language selector
+            await pickSelectValue(modal.locator('gtx-form-language-selector gtx-select'), ["de"]);
+
+            // prepare the expected requests
+            const saveRequest = waitForResponseFrom(page, 'PUT', `/rest/form/${DE_EN_FORM.id}`);
+            const loadListRequest = waitForResponseFrom(page, 'GET', `/rest/form`);
+
+            // click "delete"
+            await modal.locator('gtx-button.confirm-button').click();
+
+            // modal should be closed
+            await expect(modal).toBeHidden();
+
+            // wait for the form to be saved and the list to be reloaded
+            await saveRequest;
+            await loadListRequest;
+
+            // english should be deleted now
+            await expectItemLanguageCode(deEnFormItem, LANGUAGE_DE);
         });
     });
 });

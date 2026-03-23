@@ -2,17 +2,15 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, O
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { File, ItemInNode, Node, Page } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { map, switchMap } from 'rxjs/operators';
 import { LINK_DEFAULT_DISPLAY_VALUE, RichContentLink, RichContentLinkType, RichContentType } from '../../../common/models';
 import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices } from '../../providers/gcms-ui-services/gcms-ui-services';
-import { BasePropertiesComponent } from '../base-properties/base-properties.component';
 
 function getItemType(linkType: RichContentLinkType): 'page' | 'file' {
     return linkType === RichContentLinkType.PAGE ? 'page' : 'file';
 }
 
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 function getLinkType(itemType: string): RichContentLinkType.PAGE | RichContentLinkType.FILE {
     return itemType === 'page' ? RichContentLinkType.PAGE : RichContentLinkType.FILE;
 }
@@ -26,9 +24,9 @@ function getLinkType(itemType: string): RichContentLinkType.PAGE | RichContentLi
         generateFormProvider(RichContentLinkPropertiesComponent),
         generateValidatorProvider(RichContentLinkPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<RichContentLink> implements OnInit {
+export class RichContentLinkPropertiesComponent extends BaseFormPropertiesComponent<RichContentLink> implements OnInit {
 
     public readonly RichContentLinkType = RichContentLinkType;
     public readonly AVAILABLE_TARGETS = [
@@ -68,7 +66,7 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
      */
     protected loadedItem: File | Page;
     protected loadedNode: Node;
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+
     protected loadedItemType: RichContentLinkType.FILE | RichContentLinkType.PAGE;
 
     constructor(
@@ -143,19 +141,19 @@ export class RichContentLinkPropertiesComponent extends BasePropertiesComponent<
         this.changeDetector.markForCheck();
 
         this.subscriptions.push(this.client.node.get(this.value.nodeId).pipe(
-            switchMap(nodeRes => {
+            switchMap((nodeRes) => {
                 if (this.value.linkType === RichContentLinkType.PAGE) {
                     return this.client.page.get(this.value.itemId, {
                         nodeId: nodeRes.node.id,
                         langvars: true,
                     }).pipe(
-                        map(res => [nodeRes.node, res.page]),
+                        map((res) => [nodeRes.node, res.page]),
                     );
                 } else {
                     return this.client.file.get(this.value.itemId, {
                         nodeId: nodeRes.node.id,
                     }).pipe(
-                        map(res => [nodeRes.node, res.file]),
+                        map((res) => [nodeRes.node, res.file]),
                     );
                 }
             }),

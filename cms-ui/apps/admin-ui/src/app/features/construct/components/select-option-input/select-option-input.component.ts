@@ -1,9 +1,8 @@
-import { createBlacklistValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { SelectOption } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider } from '@gentics/ui-core';
+import { createBlacklistValidator } from '../../../../common';
 
 @Component({
     selector: 'gtx-select-option-input',
@@ -13,7 +12,7 @@ import { FormProperties, generateFormProvider } from '@gentics/ui-core';
     providers: [generateFormProvider(SelectOptionInputComponent)],
     standalone: false
 })
-export class SelectOptionInputComponent extends BasePropertiesComponent<SelectOption> implements OnChanges {
+export class SelectOptionInputComponent extends BaseFormPropertiesComponent<SelectOption> implements OnChanges {
 
     @Input()
     public keyBlacklist: string[] = [];

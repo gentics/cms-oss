@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -8,7 +7,6 @@ import {
     OnInit,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     ContentRepository,
     ContentRepositoryType,
@@ -19,6 +17,7 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
+    BaseFormPropertiesComponent,
     createPropertyPatternValidator,
     FormProperties,
     generateFormProvider,
@@ -47,7 +46,7 @@ const PUBLISH_MAP_CONTROLS: (keyof EditableNodeProps)[] = [
 
 export enum NodePropertiesMode {
     CREATE = 'create',
-    EDIT = 'edit'
+    EDIT = 'edit',
 }
 
 /**
@@ -62,10 +61,10 @@ export enum NodePropertiesMode {
         generateFormProvider(NodePropertiesComponent),
         generateValidatorProvider(NodePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class NodePropertiesComponent
-    extends BasePropertiesComponent<EditableNodeProps>
+    extends BaseFormPropertiesComponent<EditableNodeProps>
     implements OnInit, OnDestroy {
 
     public readonly NodePropertiesMode = NodePropertiesMode;
@@ -73,7 +72,7 @@ export class NodePropertiesComponent
     public readonly NodeUrlMode = NodeUrlMode;
 
     /** selectable options for node input hostnameType */
-    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string; }[] = [
+    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string }[] = [
         {
             id: NodeHostnameType.VALUE,
             label: 'editor.node_hostname_type_value',
@@ -113,7 +112,7 @@ export class NodePropertiesComponent
             this.initLinkedDir();
         }
 
-        this.subscriptions.push(this.client.contentRepository.list().subscribe(res => {
+        this.subscriptions.push(this.client.contentRepository.list().subscribe((res) => {
             this.contentRepositories = res.items;
             if (this.form) {
                 this.configureForm(this.form.value as any, false);
@@ -123,7 +122,7 @@ export class NodePropertiesComponent
     }
 
     public ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     protected createForm(): FormGroup {
@@ -147,11 +146,11 @@ export class NodePropertiesComponent
             publishFs: new FormControl(this.safeValue('publishFs') ?? false),
             publishFsPages: new FormControl(this.safeValue('publishFsPages') ?? false),
             publishFsFiles: new FormControl(this.safeValue('publishFsFiles') ?? false),
-            publishDir: new FormControl(this.safeValue('publishDir') || '',  [
+            publishDir: new FormControl(this.safeValue('publishDir') || '', [
                 Validators.maxLength(255),
                 // createRegexValidator(NODE_PATH_REGEXP),
             ]),
-            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir') || '',  [
+            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir') || '', [
                 Validators.maxLength(255),
                 // createRegexValidator(NODE_PATH_REGEXP),
             ]),
@@ -175,7 +174,7 @@ export class NodePropertiesComponent
 
         let cr: ContentRepository | null = null;
         if (this.form.value.contentRepositoryId > 0) {
-            cr = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
+            cr = this.contentRepositories.find((cr) => cr.id === this.form.value.contentRepositoryId);
         }
         const isMeshCr = cr?.crType === ContentRepositoryType.MESH;
         const isProjectPerNode = cr?.projectPerNode;
@@ -194,10 +193,10 @@ export class NodePropertiesComponent
         // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
         // If so, then set these to `true`, to enable them by default.
         if (tmpValue?.publishContentMap
-            && !this.previousPublishCr
-            && !tmpValue?.publishContentMapFiles
-            && !tmpValue?.publishContentMapFolders
-            && !tmpValue?.publishContentMapPages
+          && !this.previousPublishCr
+          && !tmpValue?.publishContentMapFiles
+          && !tmpValue?.publishContentMapFolders
+          && !tmpValue?.publishContentMapPages
         ) {
             this.form.patchValue({
                 publishContentMapFiles: true,

@@ -1,10 +1,4 @@
 import {
-    MESH_TAGMAP_ENTRY_ATTRIBUTES,
-    SQL_TAGMAP_ENTRY_ATTRIBUTES,
-    TAGMAP_ENTRY_ATTRIBUTES,
-} from '@admin-ui/common';
-import { TagmapEntryDisplayFields } from '@admin-ui/shared/components/create-update-tagmapentry-modal';
-import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -14,7 +8,6 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
 import {
     EditableTagmapEntry,
     MeshTagmapEntryAttributeTypes,
@@ -22,8 +15,21 @@ import {
     TagmapEntryAttributeTypes,
     TagmapEntryPropertiesObjectType,
 } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
-import { environment } from 'apps/admin-ui/src/environments/environment';
+import {
+    BaseFormPropertiesComponent,
+    FormProperties,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+    VALIDATOR_JSON_ERROR_PROPERTY,
+} from '@gentics/ui-core';
+import { environment } from '../../../../environments/environment';
+import {
+    MESH_TAGMAP_ENTRY_ATTRIBUTES,
+    SQL_TAGMAP_ENTRY_ATTRIBUTES,
+    TAGMAP_ENTRY_ATTRIBUTES,
+} from '../../../common';
+import { TagmapEntryDisplayFields } from '../create-update-tagmapentry-modal/create-update-tagmapentry-modal.component';
 
 export enum TagmapEntryPropertiesMode {
     CREATE = 'create',
@@ -54,9 +60,11 @@ const RESERVED_LOCKED_PROPERTIES: (keyof EditableTagmapEntry)[] = [
         generateFormProvider(TagMapEntryPropertiesComponent),
         generateValidatorProvider(TagMapEntryPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<EditableTagmapEntry> implements OnInit, OnChanges {
+export class TagMapEntryPropertiesComponent extends BaseFormPropertiesComponent<EditableTagmapEntry> implements OnInit, OnChanges {
+
+    public readonly VALIDATOR_JSON_ERROR_PROPERTY = VALIDATOR_JSON_ERROR_PROPERTY;
 
     @Input()
     public mode: TagmapEntryPropertiesMode;
@@ -67,10 +75,10 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Edit
     @Input()
     public reserved = false;
 
-    attributes: { id: TagmapEntryAttributeTypes; label: string; }[] = [];
+    attributes: { id: TagmapEntryAttributeTypes; label: string }[] = [];
 
     /** selectable options for contentRepository input objecttype */
-    readonly OBJECT_TYPES: readonly { id: TagmapEntryPropertiesObjectType; label: string; }[] = [
+    readonly OBJECT_TYPES: readonly { id: TagmapEntryPropertiesObjectType; label: string }[] = [
         {
             id: TagmapEntryPropertiesObjectType.FOLDER,
             label: 'tagmap_entry.objecttype_folder',
@@ -139,7 +147,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Edit
             // Mesh CR
             urlfield: new FormControl(this.safeValue('urlfield') ?? false),
             noIndex: new FormControl(this.safeValue('noIndex') ?? false),
-            elasticsearch: new FormControl(this.safeValue('elasticsearch') ?? null, GtxJsonValidator),
+            elasticsearch: new FormControl(this.safeValue('elasticsearch') ?? null),
             micronodeFilter: new FormControl(this.safeValue('micronodeFilter')),
             // SQL CR
             filesystem: new FormControl(this.safeValue('filesystem') ?? false),
@@ -261,7 +269,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Edit
     protected override onValueChange(): void {
         if (this.form && this.value) {
             const tmpObj: Partial<EditableTagmapEntry> = {};
-            Object.keys(this.form.controls).forEach(controlName => {
+            Object.keys(this.form.controls).forEach((controlName) => {
                 if (this.value?.hasOwnProperty?.(controlName)) {
                     tmpObj[controlName] = this.value?.[controlName];
                 }

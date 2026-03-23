@@ -1,146 +1,164 @@
 @if (form) {
-  <form
-    [formGroup]="form"
-    class="gtx-form row"
-    >
-    <div class="input-container small-12 medium-6 columns">
-      <div class="gtx-form-section-title">{{ 'shared.title_general' | gtxI18n }}</div>
-      <gtx-input
-        formControlName="mapname"
-        type="text"
-        maxlength="255"
-        [label]="('tagmap_entry.mapname' | gtxI18n) + ' *'"
-      ></gtx-input>
-      <gtx-input
-        formControlName="tagname"
-        type="text"
-        maxlength="255"
-        [label]="('tagmap_entry.tagname' | gtxI18n) + ' *'"
-      ></gtx-input>
-      <gtx-select
-        formControlName="objType"
-        [label]="('tagmap_entry.objType' | gtxI18n) + ' *'"
-        [clearable]="false"
-        >
-        @for (objectType of OBJECT_TYPES; track objectType.id) {
-          <gtx-option [value]="objectType.id">{{ objectType.label | gtxI18n }}</gtx-option>
-        }
-      </gtx-select>
-      <gtx-select
-        formControlName="attributeType"
-        [label]="('tagmap_entry.attributeType' | gtxI18n) + ' *'"
-        [clearable]="false"
-        >
-        @for (attributeType of attributes; track attributeType.id) {
-          <gtx-option [value]="attributeType.id">{{ attributeType.label | gtxI18n }}</gtx-option>
-        }
-      </gtx-select>
-      <gtx-checkbox
-        formControlName="multivalue"
-        [label]="'tagmap_entry.multivalue' | gtxI18n"
-      ></gtx-checkbox>
-      @if (form.get('optimized').enabled) {
-        <gtx-checkbox
-          formControlName="optimized"
-          [label]="'tagmap_entry.optimized' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.get('filesystem').enabled) {
-        <gtx-checkbox
-          formControlName="filesystem"
-          [label]="'tagmap_entry.filesystem' | gtxI18n"
-        ></gtx-checkbox>
-      }
-    </div>
-    <div class="input-container small-12 medium-6 columns">
-      @if (form.controls.targetType.enabled || form.controls.foreignlinkAttribute.enabled || form.controls.foreignlinkAttributeRule.enabled) {
-        <div class="gtx-form-section-title">{{ 'tagmap_entry.title_reference_settings' | gtxI18n }}</div>
-        @if (form.controls.targetType.enabled) {
-          <gtx-select
-            formControlName="targetType"
-            [label]="('tagmap_entry.targettype' | gtxI18n) + ' *'"
-            [clearable]="false"
+    <form [formGroup]="form" class="gtx-form row">
+        <div class="input-container small-12 medium-6 columns">
+            <div class="gtx-form-section-title">{{ 'shared.title_general' | gtxI18n }}</div>
+
+            <gtx-input
+                formControlName="mapname"
+                type="text"
+                maxlength="255"
+                [label]="('tagmap_entry.mapname' | gtxI18n) + ' *'"
+            ></gtx-input>
+
+            <gtx-input
+                formControlName="tagname"
+                type="text"
+                maxlength="255"
+                [label]="('tagmap_entry.tagname' | gtxI18n) + ' *'"
+            ></gtx-input>
+
+            <gtx-select
+                formControlName="objType"
+                [label]="('tagmap_entry.objType' | gtxI18n) + ' *'"
+                [clearable]="false"
             >
-            @for (objectType of OBJECT_TYPES; track objectType.id) {
-              <gtx-option [value]="objectType.id">{{ objectType.label | gtxI18n }}</gtx-option>
+                @for (objectType of OBJECT_TYPES; track objectType.id) {
+                    <gtx-option [value]="objectType.id">{{ objectType.label | gtxI18n }}</gtx-option>
+                }
+            </gtx-select>
+
+            <gtx-select
+                formControlName="attributeType"
+                [label]="('tagmap_entry.attributeType' | gtxI18n) + ' *'"
+                [clearable]="false"
+            >
+                @for (attributeType of attributes; track attributeType.id) {
+                    <gtx-option [value]="attributeType.id">{{ attributeType.label | gtxI18n }}</gtx-option>
+                }
+            </gtx-select>
+
+            <gtx-checkbox
+                formControlName="multivalue"
+                [label]="'tagmap_entry.multivalue' | gtxI18n"
+            ></gtx-checkbox>
+
+            @if (form.controls.optimized.enabled) {
+                <gtx-checkbox
+                    formControlName="optimized"
+                    [label]="'tagmap_entry.optimized' | gtxI18n"
+                ></gtx-checkbox>
             }
-          </gtx-select>
-        }
-        @if (form.controls.foreignlinkAttribute.enabled) {
-          <gtx-input
-            formControlName="foreignlinkAttribute"
-            type="text"
-            maxlength="255"
-            [label]="('tagmap_entry.foreignlinkattribute' | gtxI18n) + ' *'"
-          ></gtx-input>
-        }
-        @if (form.controls.foreignlinkAttributeRule.enabled) {
-          <gtx-textarea
-            formControlName="foreignlinkAttributeRule"
-            maxlength="200"
-            [label]="'tagmap_entry.foreignlinkattributerule' | gtxI18n"
-          ></gtx-textarea>
-        }
-      }
-      @if (form.controls.elasticsearch.enabled || form.controls.noIndex.enabled) {
-        <div class="gtx-form-section-title">{{ 'tagmap_entry.title_elasticsearch_settings' | gtxI18n }}</div>
-        @if (form.controls.elasticsearch.enabled) {
-          <gtx-textarea
-            formControlName="elasticsearch"
-            [label]="'tagmap_entry.elasticsearch' | gtxI18n"
-          ></gtx-textarea>
-        }
-        @if (form.controls.elasticsearch.hasError('errorIsInvalidJson')) {
-          <span
-            class="container-validator-errors"
-            >
-            {{ 'shared.error_is_invalid_json' | gtxI18n }}
-          </span>
-        }
-        @if (form.controls.noIndex.enabled) {
-          <gtx-checkbox
-            formControlName="noIndex"
-            [label]="'tagmap_entry.noIndex' | gtxI18n"
-          ></gtx-checkbox>
-        }
-      }
-      @if (form.controls.micronodeFilter.enabled
-        || form.controls.urlfield.enabled
-        || form.controls.segmentfield.enabled
-        || form.controls.displayfield.enabled) {
-        <div class="gtx-form-section-title">{{ 'tagmap_entry.title_misc_settings' | gtxI18n }}</div>
-        <!-- <gtx-input
-        formControlName="category"
-        type="text"
-        maxlength="150"
-        [label]="'tagmap_entry.category' | gtxI18n"
-      ></gtx-input> -->
-      @if (form.controls.micronodeFilter.enabled) {
-        <gtx-textarea
-          formControlName="micronodeFilter"
-          maxlength="200"
-          [label]="'tagmap_entry.micronodefilter' | gtxI18n"
-        ></gtx-textarea>
-      }
-      @if (form.controls.urlfield.enabled) {
-        <gtx-checkbox
-          formControlName="urlfield"
-          [label]="'tagmap_entry.urlfield' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.controls.segmentfield.enabled) {
-        <gtx-checkbox
-          formControlName="segmentfield"
-          [label]="'tagmap_entry.segmentfield' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.controls.displayfield.enabled) {
-        <gtx-checkbox
-          formControlName="displayfield"
-          [label]="'tagmap_entry.displayfield' | gtxI18n"
-        ></gtx-checkbox>
-      }
-    }
-  </div>
-</form>
+
+            @if (form.controls.filesystem.enabled) {
+                <gtx-checkbox
+                    formControlName="filesystem"
+                    [label]="'tagmap_entry.filesystem' | gtxI18n"
+                ></gtx-checkbox>
+            }
+        </div>
+
+        <div class="input-container small-12 medium-6 columns">
+            @if (form.controls.targetType.enabled || form.controls.foreignlinkAttribute.enabled || form.controls.foreignlinkAttributeRule.enabled) {
+                <div class="gtx-form-section-title">{{ 'tagmap_entry.title_reference_settings' | gtxI18n }}</div>
+
+                @if (form.controls.targetType.enabled) {
+                    <gtx-select
+                        formControlName="targetType"
+                        [label]="('tagmap_entry.targettype' | gtxI18n) + ' *'"
+                        [clearable]="false"
+                    >
+                        @for (objectType of OBJECT_TYPES; track objectType.id) {
+                            <gtx-option [value]="objectType.id">{{ objectType.label | gtxI18n }}</gtx-option>
+                        }
+                    </gtx-select>
+                }
+
+                @if (form.controls.foreignlinkAttribute.enabled) {
+                    <gtx-input
+                        formControlName="foreignlinkAttribute"
+                        type="text"
+                        maxlength="255"
+                        [label]="('tagmap_entry.foreignlinkattribute' | gtxI18n) + ' *'"
+                    ></gtx-input>
+                }
+
+                @if (form.controls.foreignlinkAttributeRule.enabled) {
+                    <gtx-textarea
+                        formControlName="foreignlinkAttributeRule"
+                        maxlength="200"
+                        [label]="'tagmap_entry.foreignlinkattributerule' | gtxI18n"
+                    ></gtx-textarea>
+                }
+            }
+
+            @if (form.controls.elasticsearch.enabled || form.controls.noIndex.enabled) {
+                <div class="gtx-form-section-title">{{ 'tagmap_entry.title_elasticsearch_settings' | gtxI18n }}</div>
+
+                @if (form.controls.elasticsearch.enabled) {
+                    <gtx-json-input
+                        formControlName="elasticsearch"
+                        [rawValue]="true"
+                        [label]="'tagmap_entry.elasticsearch' | gtxI18n"
+                    ></gtx-json-input>
+
+                    @if (form.controls.elasticsearch.hasError(VALIDATOR_JSON_ERROR_PROPERTY)) {
+                        <span class="container-validator-errors">
+                            {{ 'shared.error_is_invalid_json' | gtxI18n }}
+                        </span>
+                    }
+                }
+
+                @if (form.controls.noIndex.enabled) {
+                    <gtx-checkbox
+                        formControlName="noIndex"
+                        [label]="'tagmap_entry.noIndex' | gtxI18n"
+                    ></gtx-checkbox>
+                }
+            }
+
+            @if (
+                form.controls.micronodeFilter.enabled
+                || form.controls.urlfield.enabled
+                || form.controls.segmentfield.enabled
+                || form.controls.displayfield.enabled
+            ) {
+                <div class="gtx-form-section-title">{{ 'tagmap_entry.title_misc_settings' | gtxI18n }}</div>
+                <!-- <gtx-input
+                    formControlName="category"
+                    type="text"
+                    maxlength="150"
+                    [label]="'tagmap_entry.category' | gtxI18n"
+                ></gtx-input> -->
+
+                @if (form.controls.micronodeFilter.enabled) {
+                    <gtx-textarea
+                        formControlName="micronodeFilter"
+                        maxlength="200"
+                        [label]="'tagmap_entry.micronodefilter' | gtxI18n"
+                    ></gtx-textarea>
+                }
+
+                @if (form.controls.urlfield.enabled) {
+                    <gtx-checkbox
+                        formControlName="urlfield"
+                        [label]="'tagmap_entry.urlfield' | gtxI18n"
+                    ></gtx-checkbox>
+                }
+
+                @if (form.controls.segmentfield.enabled) {
+                    <gtx-checkbox
+                        formControlName="segmentfield"
+                        [label]="'tagmap_entry.segmentfield' | gtxI18n"
+                    ></gtx-checkbox>
+                }
+
+                @if (form.controls.displayfield.enabled) {
+                    <gtx-checkbox
+                        formControlName="displayfield"
+                        [label]="'tagmap_entry.displayfield' | gtxI18n"
+                    ></gtx-checkbox>
+                }
+            }
+        </div>
+    </form>
 }

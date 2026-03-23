@@ -5,7 +5,6 @@ import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
 import {
     AppVersionLabelComponent,
-    BasePropertiesComponent,
     BrowseBoxComponent,
     FormBrowseBoxComponent,
     I18nCheckboxComponent,
@@ -47,7 +46,6 @@ import {
 } from './providers';
 
 const COMPONENTS: any[] = [
-    BasePropertiesComponent,
     AppVersionLabelComponent,
     LinkToManualComponent,
     StringListComponent,

@@ -1,7 +1,6 @@
-import { AppStateService } from '@admin-ui/state';
+import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     Feature,
     NODE_HOSTNAME_PROPERTY_PREFIX,
@@ -13,6 +12,7 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
+    BaseFormPropertiesComponent,
     FormProperties,
     VALIDATOR_REGEX_ERROR_PROPERTY,
     createPropertyPatternValidator,
@@ -21,13 +21,13 @@ import {
     setControlsEnabled,
 } from '@gentics/ui-core';
 
-export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'host' | 'hostProperty' |
-'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId' |
-'pubDirSegment' | 'publishImageVariants'> & {
-    description?: string;
-    previewType: NodePreviewurlType;
-    hostType: NodeHostnameType;
-};
+export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'host' | 'hostProperty'
+  | 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId'
+  | 'pubDirSegment' | 'publishImageVariants'> & {
+      description?: string;
+      previewType: NodePreviewurlType;
+      hostType: NodeHostnameType;
+  };
 
 export enum NodePropertiesMode {
     CREATE = 'create',
@@ -43,15 +43,15 @@ export enum NodePropertiesMode {
         generateFormProvider(NodePropertiesComponent),
         generateValidatorProvider(NodePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class NodePropertiesComponent extends BasePropertiesComponent<NodePropertiesFormData> implements OnInit, OnChanges {
+export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePropertiesFormData> implements OnInit, OnChanges {
 
     public readonly NodePropertiesMode = NodePropertiesMode;
     public readonly VALIDATOR_REGEX_ERROR_PROPERTY = VALIDATOR_REGEX_ERROR_PROPERTY;
 
     /** selectable options for node input hostnameType */
-    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string; }[] = [
+    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string }[] = [
         {
             id: NodeHostnameType.VALUE,
             label: 'node.hostnameType_value',
@@ -63,7 +63,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     ];
 
     /** selectable options for node input meshPreviewUrlType */
-    public readonly MESH_PREVIEWURL_TYPES: { id: NodePreviewurlType; label: string; }[] = [
+    public readonly MESH_PREVIEWURL_TYPES: { id: NodePreviewurlType; label: string }[] = [
         {
             id: NodePreviewurlType.VALUE,
             label: 'node.mesh_preview_url_type_value',
@@ -89,7 +89,6 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
 
     /**
      * If global feature "pub_dir_segment" is activated, node will have this property.
-     *
      * @see https://www.gentics.com/Content.Node/cmp8/guides/feature_pub_dir_segment.html
      */
     public pubDirSegmentActivated: boolean;
@@ -107,17 +106,17 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.PUB_DIR_SEGMENT]).subscribe(featureEnabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features.global[Feature.PUB_DIR_SEGMENT]).subscribe((featureEnabled) => {
             this.pubDirSegmentActivated = featureEnabled;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MULTICHANNELLING]).subscribe(featureEnabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features.global[Feature.MULTICHANNELLING]).subscribe((featureEnabled) => {
             this.multiChannelingEnabled = featureEnabled;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MESH_CR]).subscribe(featureEnabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features.global[Feature.MESH_CR]).subscribe((featureEnabled) => {
             this.meshCrEnabled = featureEnabled;
             this.changeDetector.markForCheck();
         }));
@@ -137,7 +136,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
         }
 
         this.nodesLoading = true;
-        this.subscriptions.push(this.client.node.list().subscribe(nodes => {
+        this.subscriptions.push(this.client.node.list().subscribe((nodes) => {
             this.nodes = nodes.items;
             this.nodesLoading = false;
             this.nodesLoaded = true;
@@ -205,7 +204,7 @@ export class NodePropertiesComponent extends BasePropertiesComponent<NodePropert
                 emitEvent: loud,
             });
         } else {
-            setControlsEnabled(this.form, ['pubDirSegment'], !this.isChannel , {
+            setControlsEnabled(this.form, ['pubDirSegment'], !this.isChannel, {
                 emitEvent: loud,
             });
         }

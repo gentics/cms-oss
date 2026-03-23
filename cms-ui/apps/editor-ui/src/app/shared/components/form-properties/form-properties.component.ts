@@ -8,7 +8,6 @@ import {
     OnInit,
 } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     CmsFormData,
     CmsFormElementI18nValue,
@@ -28,10 +27,17 @@ import {
     FormEditorService,
     FormElementPropertyOptionConfiguration,
 } from '@gentics/form-generator';
-import { ChangesOf, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import {
+    BaseFormPropertiesComponent,
+    ChangesOf,
+    FormProperties,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+} from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { merge, of } from 'rxjs';
-import { distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { distinctUntilChanged, filter, map, switchMap, tap } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
 
@@ -49,10 +55,10 @@ export enum FormPropertiesMode {
         generateFormProvider(FormPropertiesComponent),
         generateValidatorProvider(FormPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class FormPropertiesComponent
-    extends BasePropertiesComponent<EditableFormProps>
+    extends BaseFormPropertiesComponent<EditableFormProps>
     implements OnInit, OnChanges {
 
     public readonly CMS_FORM_TYPES: CmsFormType[] = Object.values(CmsFormType);
@@ -116,9 +122,9 @@ export class FormPropertiesComponent
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.appState.select(state => state.folder.activeFormLanguage).pipe(
-            map(activeLanguageId => this.appState.now.entities.language[activeLanguageId]?.code),
-        ).subscribe(activeLanguageCode => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeFormLanguage).pipe(
+            map((activeLanguageId) => this.appState.now.entities.language[activeLanguageId]?.code),
+        ).subscribe((activeLanguageCode) => {
             /**
              * We need to set the language manually in the form editor service.
              * (This is normally done in the form editor component. However, it is not used here).
@@ -129,7 +135,7 @@ export class FormPropertiesComponent
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.ui.language).subscribe(language => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.language).subscribe((language) => {
             /**
              * We need to set the language manually in the form editor service.
              * (This is normally done in the form editor component. However, it is not used here).
@@ -152,23 +158,23 @@ export class FormPropertiesComponent
             of(this.value?.data?.type ?? CmsFormType.GENERIC),
             this.dataGroup.controls.type.valueChanges,
         ]).pipe(
-            switchMap(type => type),
-            filter(type => type != null),
+            switchMap((type) => type),
+            filter((type) => type != null),
             distinctUntilChanged(isEqual),
-            filter(type => type !== this.previousFormType),
-            tap(type => {
+            filter((type) => type !== this.previousFormType),
+            tap((type) => {
                 this.previousFormType = type;
             }),
-            switchMap(type => this.formEditorConfigurationService.getConfiguration$(type)),
-            filter(config => config != null),
+            switchMap((type) => this.formEditorConfigurationService.getConfiguration$(type)),
+            filter((config) => config != null),
         ).subscribe({
-            next: config => {
+            next: (config) => {
                 this.formConfig = config;
                 this.formConfigLoaded = true;
                 this.updateTemplateContextValidator(config?.form_properties?.template_context_options);
                 this.changeDetector.markForCheck();
             },
-            error: err => {
+            error: (err) => {
                 console.error('Error while loading form configuration', err);
                 this.formConfig = null;
                 this.formConfigLoaded = true;
@@ -178,7 +184,7 @@ export class FormPropertiesComponent
         }));
 
         if (typeof this.value?.successPageId === 'number' && this.value?.successPageId !== 0) {
-            this.subscriptions.push(this.client.page.get(this.value?.successPageId, { nodeId: this.value?.successNodeId }).subscribe(res => {
+            this.subscriptions.push(this.client.page.get(this.value?.successPageId, { nodeId: this.value?.successNodeId }).subscribe((res) => {
                 this.loadedSuccessPage = res.page;
                 this.successPageBreadcrumbs = this.generateBreadcrumbsPath(res.page as any);
                 this.changeDetector.markForCheck();
@@ -186,7 +192,7 @@ export class FormPropertiesComponent
         }
 
         if (typeof this.value?.data?.mailsource_pageid === 'number' && this.value?.data?.mailsource_pageid !== 0) {
-            this.subscriptions.push(this.client.page.get(this.value.data.mailsource_pageid, { nodeId: this.value.data.mailsource_nodeid }).subscribe(res => {
+            this.subscriptions.push(this.client.page.get(this.value.data.mailsource_pageid, { nodeId: this.value.data.mailsource_nodeid }).subscribe((res) => {
                 this.loadedMailTemplate = res.page;
                 this.mailTemplateBreadcrubs = this.generateBreadcrumbsPath(res.page as any);
                 this.changeDetector.markForCheck();
@@ -210,7 +216,7 @@ export class FormPropertiesComponent
         const migratedSuccessUrl = this.migrateSuccessUrl(
             this.value?.data?.successurl,
             this.value?.data?.successurl_i18n,
-            (this.languages || []).map(lang => lang.code),
+            (this.languages || []).map((lang) => lang.code),
         ).successurl_i18n;
 
         // set up form controls
@@ -356,7 +362,7 @@ export class FormPropertiesComponent
         successurl: string,
         successurl_i18n: CmsFormElementI18nValue<string>,
         languages: string[],
-    ): { successurl: string, successurl_i18n: CmsFormElementI18nValue<string> } {
+    ): { successurl: string; successurl_i18n: CmsFormElementI18nValue<string> } {
         if (
             successurl && (
                 typeof successurl_i18n !== 'object'
@@ -366,7 +372,7 @@ export class FormPropertiesComponent
         ) {
             successurl_i18n = {};
             if (languages) {
-                languages.forEach(languageCode => {
+                languages.forEach((languageCode) => {
                     successurl_i18n[languageCode] = successurl;
                 });
             }
@@ -392,7 +398,6 @@ export class FormPropertiesComponent
      * to the newest allowed options.
      *
      * (i18n-select does this check automatically, thus, we do not have to take care of it.)
-     *
      * @param templateContextOptions the values allowed for selection
      */
     private updateTemplateContextValidator(templateContextOptions: FormElementPropertyOptionConfiguration[] | null): void {
@@ -410,7 +415,7 @@ export class FormPropertiesComponent
             (templateContextOption: FormElementPropertyOptionConfiguration) => templateContextOption.key,
         );
         templateContextFormControl.setValidators((control: AbstractControl): ValidationErrors | null => {
-            return allowed.includes(control.value) ? null : { invalidSelection: { value: control.value } } ;
+            return allowed.includes(control.value) ? null : { invalidSelection: { value: control.value } };
         });
         templateContextFormControl.updateValueAndValidity();
     }

@@ -1,17 +1,18 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, Validator } from '@angular/forms';
-import { BaseFormElementComponent, FormProperties } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
+import { FormProperties } from '../../common';
+import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 const INITIAL_UNSET_VALUE = Symbol('initial-unset-value');
 
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
-export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, Validator {
+export abstract class BaseFormPropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, Validator {
 
     /**
      * Flag which indicates that the provided value is a new initial value.
@@ -158,7 +159,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
-                tap(value => this.configureForm(value)),
+                tap((value) => this.configureForm(value)),
                 map(() => this.form.value),
             ),
             this.form.statusChanges,
@@ -169,7 +170,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value]) => this.assembleValue(value as any)),
             distinctUntilChanged(isEqual),
-        ).subscribe(value => {
+        ).subscribe((value) => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.
             if (!this.form.pristine && !isEqual(value, this.value)) {
@@ -199,7 +200,6 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
     /**
      * Hook for whenever the form value changes, to configure the form controls.
-     *
      * @param value The current form value.
      * @param loud If the dis-/enabling of the controls should be with an event (Trigger a value change). (Defaults to `false`)
      */
@@ -208,7 +208,6 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     /**
      * Function which is getting called whenever a pushable form value change occurred.
      * This function must convert the value from the form to a value for publishing.
-     *
      * @param value The current form value.
      */
     protected abstract assembleValue(value: T): T;
@@ -249,7 +248,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     protected safeValue<
         K1 extends keyof T,
         K2 extends keyof T[K1],
-        K3 extends keyof T[K1][K2]
+        K3 extends keyof T[K1][K2],
     >(propertyPath: [K1, K2, K3]): T[K1][K2][K3] | null;
     protected safeValue(paths: string | string[]): any {
         if (this.value === INITIAL_UNSET_VALUE || typeof this.value === 'symbol') {
@@ -278,7 +277,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
         if (this.form) {
             const tmpObj = {};
-            Object.keys(this.form.controls).forEach(controlName => {
+            Object.keys(this.form.controls).forEach((controlName) => {
                 if (
                     this.value != null
                     && typeof this.value !== 'symbol'
@@ -310,12 +309,12 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
         if (this.disabled) {
             this.form.disable({ emitEvent: false });
-            Object.values(this.form.controls).forEach(ctrl => {
+            Object.values(this.form.controls).forEach((ctrl) => {
                 ctrl.disable({ emitEvent: false });
             });
         } else {
             this.form.enable({ emitEvent: false });
-            Object.values(this.form.controls).forEach(ctrl => {
+            Object.values(this.form.controls).forEach((ctrl) => {
                 ctrl.enable({ emitEvent: false });
             });
         }

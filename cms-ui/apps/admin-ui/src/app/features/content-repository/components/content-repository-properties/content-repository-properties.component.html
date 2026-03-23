@@ -1,287 +1,304 @@
 @if (form) {
-  <form
-    [formGroup]="form"
-    class="gtx-form row small-12 medium-12"
-    >
-    <div class="input-container small-12 medium-6 columns">
-      <gtx-select
-        [label]="('content_repository.crType' | gtxI18n) + ' *'"
-        formControlName="crType"
-        [clearable]="mode !== ContentRepositoryPropertiesMode.UPDATE"
-        [required]="true"
-        >
-        @for (crType of crTypes; track crType.id) {
-          <gtx-option [value]="crType.id">{{ crType.label | gtxI18n }}</gtx-option>
-        }
-      </gtx-select>
-      <gtx-input
-        type="text"
-        maxlength="255"
-        [label]="('content_repository.name' | gtxI18n) + ' *'"
-        formControlName="name"
-      ></gtx-input>
-      @if (form.get('dbType').enabled) {
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="('content_repository.dbType' | gtxI18n) + ' *'"
-          formControlName="dbType"
-        ></gtx-input>
-      }
-      <div class="gtx-form-section-title">{{ 'content_repository.url' | gtxI18n }}</div>
-      <gtx-select
-        [label]="('content_repository.urlType' | gtxI18n) + ' *'"
-        [value]="urlType"
-        [clearable]="false"
-        formControlName="urlType"
-        >
-        @for (type of URL_TYPES; track type.id) {
-          <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
-        }
-      </gtx-select>
-      <gtx-input
-        type="text"
-        maxlength="255"
-        [label]="('content_repository.url' | gtxI18n) + ' *'"
-        formControlName="url"
-      ></gtx-input>
-      @if (form.get('urlProperty').enabled) {
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="('content_repository.urlProperty' | gtxI18n) + ' *'"
-          formControlName="urlProperty"
-        ></gtx-input>
-      }
-      @if (form.get('urlProperty')?.hasError('pattern')) {
-        <span
-          class="container-validator-errors"
-          >
-          {{ 'content_repository.urlProperty_pattern' | gtxI18n }}
-        </span>
-      }
-      @if (form.get('http2').enabled) {
-        <gtx-checkbox
-          formControlName="http2"
-          [label]="'content_repository.http2' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      <div class="gtx-form-section-title">{{ 'shared.user_name' | gtxI18n }}</div>
-      <gtx-select
-        [label]="('content_repository.usernameType' | gtxI18n) + ' *'"
-        [value]="usernameType"
-        [clearable]="false"
-        formControlName="usernameType"
-        >
-        @for (type of USERNAME_TYPES; track type.id) {
-          <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
-        }
-      </gtx-select>
-      <gtx-input
-        type="text"
-        maxlength="255"
-        [label]="('shared.user_name' | gtxI18n)"
-        formControlName="username"
-      ></gtx-input>
-      @if (form.get('usernameProperty').enabled) {
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="('content_repository.usernameProperty' | gtxI18n) + ' *'"
-          formControlName="usernameProperty"
-        ></gtx-input>
-      }
-      @if (form.get('usernameProperty')?.hasError('pattern')) {
-        <span
-          class="container-validator-errors"
-          >
-          {{ 'content_repository.usernameProperty_pattern' | gtxI18n }}
-        </span>
-      }
-      <div class="gtx-form-section-title">{{ 'content_repository.password' | gtxI18n }}</div>
-      @if (form.get('passwordType').enabled) {
-        <gtx-select
-          [label]="('content_repository.passwordType' | gtxI18n) + ' *'"
-          [clearable]="false"
-          formControlName="passwordType"
-          >
-          @for (type of PASSWORD_TYPES; track type.id) {
-            <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
-          }
-        </gtx-select>
-      }
-      <!-- passwordProperty -->
-      @if (form.get('passwordProperty').enabled) {
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="'content_repository.passwordProperty' | gtxI18n"
-          formControlName="passwordProperty"
-        ></gtx-input>
-      }
-      @if (form.get('passwordProperty')?.hasError('pattern')) {
-        <span
-          class="container-validator-errors"
-          >
-          {{ 'content_repository.passwordProperty_pattern' | gtxI18n }}
-        </span>
-      }
-      @if (form.get('password').enabled) {
-        <div
-          class="gtx-password-box"
-          >
-          <gtx-input
-            type="password"
-            maxlength="255"
-            [label]="'content_repository.password' | gtxI18n"
-            formControlName="password"
-          ></gtx-input>
-          <gtx-input
-            type="password"
-            maxlength="255"
-            [label]="'content_repository.repeatPassword' | gtxI18n"
-            [value]="passwordRepeat"
-            (valueChange)="updatePasswordRepeat($event)"
-          ></gtx-input>
-          @if (form.get('password')?.hasError('passwordsDontMatch')) {
-            <span
-              class="container-validator-errors"
-              >
-              {{ 'shared.passwords_dont_match_error' | gtxI18n }}
-            </span>
-          }
+    <form [formGroup]="form" class="gtx-form row small-12 medium-12">
+        <div class="input-container small-12 medium-6 columns">
+            <gtx-select
+                [label]="('content_repository.crType' | gtxI18n) + ' *'"
+                formControlName="crType"
+                [clearable]="mode !== ContentRepositoryPropertiesMode.UPDATE"
+                [required]="true"
+            >
+                @for (crType of crTypes; track crType.id) {
+                    <gtx-option [value]="crType.id">{{ crType.label | gtxI18n }}</gtx-option>
+                }
+            </gtx-select>
+
+            <gtx-input
+                type="text"
+                maxlength="255"
+                [label]="('content_repository.name' | gtxI18n) + ' *'"
+                formControlName="name"
+            ></gtx-input>
+
+            @if (form.get('dbType').enabled) {
+                <gtx-input
+                type="text"
+                maxlength="255"
+                [label]="('content_repository.dbType' | gtxI18n) + ' *'"
+                formControlName="dbType"
+                ></gtx-input>
+            }
+
+            <div class="gtx-form-section-title">{{ 'content_repository.url' | gtxI18n }}</div>
+
+            <gtx-select
+                [label]="('content_repository.urlType' | gtxI18n) + ' *'"
+                [value]="urlType"
+                [clearable]="false"
+                formControlName="urlType"
+            >
+                @for (type of URL_TYPES; track type.id) {
+                    <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+                }
+            </gtx-select>
+
+            <gtx-input
+                type="text"
+                maxlength="255"
+                [label]="('content_repository.url' | gtxI18n) + ' *'"
+                formControlName="url"
+            ></gtx-input>
+
+            @if (form.controls.urlProperty.enabled) {
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="('content_repository.urlProperty' | gtxI18n) + ' *'"
+                    formControlName="urlProperty"
+                ></gtx-input>
+
+                @if (form.urlProperty.hasError('pattern')) {
+                    <span class="container-validator-errors">
+                        {{ 'content_repository.urlProperty_pattern' | gtxI18n }}
+                    </span>
+                }
+            }
+
+            @if (form.controls.http2.enabled) {
+                <gtx-checkbox
+                    formControlName="http2"
+                    [label]="'content_repository.http2' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            <div class="gtx-form-section-title">{{ 'shared.user_name' | gtxI18n }}</div>
+
+            <gtx-select
+                [label]="('content_repository.usernameType' | gtxI18n) + ' *'"
+                [value]="usernameType"
+                [clearable]="false"
+                formControlName="usernameType"
+            >
+                @for (type of USERNAME_TYPES; track type.id) {
+                    <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+                }
+            </gtx-select>
+
+            <gtx-input
+                type="text"
+                maxlength="255"
+                [label]="('shared.user_name' | gtxI18n)"
+                formControlName="username"
+            ></gtx-input>
+
+            @if (form.controls.usernameProperty.enabled) {
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="('content_repository.usernameProperty' | gtxI18n) + ' *'"
+                    formControlName="usernameProperty"
+                ></gtx-input>
+
+                @if (form.controls.usernameProperty.hasError('pattern')) {
+                    <span class="container-validator-errors">
+                        {{ 'content_repository.usernameProperty_pattern' | gtxI18n }}
+                    </span>
+                }
+            }
+
+            <div class="gtx-form-section-title">{{ 'content_repository.password' | gtxI18n }}</div>
+
+            @if (form.controls.passwordType.enabled) {
+                <gtx-select
+                    [label]="('content_repository.passwordType' | gtxI18n) + ' *'"
+                    [clearable]="false"
+                    formControlName="passwordType"
+                >
+                    @for (type of PASSWORD_TYPES; track type.id) {
+                        <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+                    }
+                </gtx-select>
+            }
+
+            @if (form.controls.passwordProperty.enabled) {
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="'content_repository.passwordProperty' | gtxI18n"
+                    formControlName="passwordProperty"
+                ></gtx-input>
+
+                @if (form.controls.passwordProperty.hasError('pattern')) {
+                    <span class="container-validator-errors">
+                        {{ 'content_repository.passwordProperty_pattern' | gtxI18n }}
+                    </span>
+                }
+            }
+
+            @if (form.controls.password.enabled) {
+                <div class="gtx-password-box">
+                    <gtx-input
+                        type="password"
+                        maxlength="255"
+                        [label]="'content_repository.password' | gtxI18n"
+                        formControlName="password"
+                    ></gtx-input>
+                    <gtx-input
+                        type="password"
+                        maxlength="255"
+                        [label]="'content_repository.repeatPassword' | gtxI18n"
+                        [value]="passwordRepeat"
+                        (valueChange)="updatePasswordRepeat($event)"
+                    ></gtx-input>
+
+                    @if (form.controls.password.hasError('passwordsDontMatch')) {
+                        <span class="container-validator-errors">
+                            {{ 'shared.passwords_dont_match_error' | gtxI18n }}
+                        </span>
+                    }
+                </div>
+            }
+
+            @if (form.controls.noFoldersIndex.enabled) {
+                <gtx-checkbox
+                    formControlName="noFoldersIndex"
+                    [label]="'content_repository.noFoldersIndex' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            @if (form.controls.noFilesIndex.enabled) {
+                <gtx-checkbox
+                    formControlName="noFilesIndex"
+                    [label]="'content_repository.noFilesIndex' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            @if (form.controls.noPagesIndex.enabled) {
+                <gtx-checkbox
+                    formControlName="noPagesIndex"
+                    [label]="'content_repository.noPagesIndex' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            @if (form.controls.noFormsIndex.enabled) {
+                <gtx-checkbox
+                    formControlName="noFormsIndex"
+                    [label]="'content_repository.noFormsIndex' | gtxI18n"
+                ></gtx-checkbox>
+            }
         </div>
-      }
-      @if (form.get('noFoldersIndex').enabled) {
-        <gtx-checkbox
-          formControlName="noFoldersIndex"
-          [label]="'content_repository.noFoldersIndex' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.get('noFilesIndex').enabled) {
-        <gtx-checkbox
-          formControlName="noFilesIndex"
-          [label]="'content_repository.noFilesIndex' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.get('noPagesIndex').enabled) {
-        <gtx-checkbox
-          formControlName="noPagesIndex"
-          [label]="'content_repository.noPagesIndex' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.get('noFormsIndex').enabled) {
-        <gtx-checkbox
-          formControlName="noFormsIndex"
-          [label]="'content_repository.noFormsIndex' | gtxI18n"
-        ></gtx-checkbox>
-      }
-    </div>
-    <div class="input-container small-12 medium-6 columns">
-      @if (showBasePath) {
-        <gtx-select
-          [label]="('content_repository.basepathType' | gtxI18n) + ' *'"
-          [value]="basepathType"
-          [clearable]="false"
-          formControlName="basepathType"
-          >
-          @for (type of BASEPATH_TYPES; track type.id) {
-            <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
-          }
-        </gtx-select>
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="'content_repository.basepath' | gtxI18n"
-          formControlName="basepath"
-        ></gtx-input>
-        @if (form.get('basepathProperty').enabled) {
-          <gtx-input
-            type="text"
-            maxlength="255"
-            [label]="('content_repository.basepathProperty' | gtxI18n) + ' *'"
-            formControlName="basepathProperty"
-          ></gtx-input>
-        }
-      }
-      @if (form.get('basepathProperty')?.hasError('pattern')) {
-        <span
-          class="container-validator-errors"
-          >
-          {{ 'content_repository.basepathProperty_pattern' | gtxI18n }}
-        </span>
-      }
-      @if (form.get('instantPublishing').enabled) {
-        <gtx-checkbox
-          formControlName="instantPublishing"
-          [label]="'content_repository.instantPublishing' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.get('diffDelete').enabled) {
-        <gtx-checkbox
-          formControlName="diffDelete"
-          [label]="'content_repository.diffDelete' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.get('languageInformation').enabled) {
-        <gtx-checkbox
-          formControlName="languageInformation"
-          [label]="'content_repository.languageInformation' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.get('permissionInformation').enabled) {
-        <gtx-checkbox
-          formControlName="permissionInformation"
-          [label]="'content_repository.permissionInformation' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (form.get('permissionProperty').enabled) {
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="'content_repository.permissionProperty' | gtxI18n"
-          formControlName="permissionProperty"
-        ></gtx-input>
-      }
-      <!-- defaultPermission -->
-      @if (form.get('defaultPermission').enabled) {
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="'content_repository.defaultPermission' | gtxI18n"
-          formControlName="defaultPermission"
-        ></gtx-input>
-      }
-      <!-- projectPerNode -->
-      @if (form.get('projectPerNode').enabled) {
-        <gtx-checkbox
-          formControlName="projectPerNode"
-          [label]="'content_repository.projectPerNode' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      <!-- defaultPermission -->
-      @if (form.get('version').enabled) {
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="'content_repository.version' | gtxI18n"
-          formControlName="version"
-        ></gtx-input>
-      }
-      <!-- elasticsearch -->
-      @if (form.get('elasticsearch').enabled) {
-        <gtx-textarea
-          [label]="'content_repository.elasticsearch' | gtxI18n"
-          formControlName="elasticsearch"
-        ></gtx-textarea>
-      }
-      @if (form.get('elasticsearch')?.hasError('errorIsInvalidJson')) {
-        <span
-          class="container-validator-errors"
-          >
-          {{ 'shared.error_is_invalid_json' | gtxI18n }}
-        </span>
-      }
-    </div>
-  </form>
+
+        <div class="input-container small-12 medium-6 columns">
+            @if (showBasePath) {
+                <gtx-select
+                    [label]="('content_repository.basepathType' | gtxI18n) + ' *'"
+                    [value]="basepathType"
+                    [clearable]="false"
+                    formControlName="basepathType"
+                >
+                    @for (type of BASEPATH_TYPES; track type.id) {
+                        <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+                    }
+                </gtx-select>
+
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="'content_repository.basepath' | gtxI18n"
+                    formControlName="basepath"
+                ></gtx-input>
+
+                @if (form.controls.basepathProperty.enabled) {
+                    <gtx-input
+                        type="text"
+                        maxlength="255"
+                        [label]="('content_repository.basepathProperty' | gtxI18n) + ' *'"
+                        formControlName="basepathProperty"
+                    ></gtx-input>
+
+                    @if (form.controls.basepathProperty.hasError('pattern')) {
+                        <span class="container-validator-errors">
+                            {{ 'content_repository.basepathProperty_pattern' | gtxI18n }}
+                        </span>
+                    }
+                }
+            }
+
+            @if (form.controls.instantPublishing.enabled) {
+                <gtx-checkbox
+                    formControlName="instantPublishing"
+                    [label]="'content_repository.instantPublishing' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            @if (form.controls.diffDelete.enabled) {
+                <gtx-checkbox
+                    formControlName="diffDelete"
+                    [label]="'content_repository.diffDelete' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            @if (form.controls.languageInformation.enabled) {
+                <gtx-checkbox
+                    formControlName="languageInformation"
+                    [label]="'content_repository.languageInformation' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            @if (form.controls.permissionInformation.enabled) {
+                <gtx-checkbox
+                    formControlName="permissionInformation"
+                    [label]="'content_repository.permissionInformation' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            @if (form.controls.permissionProperty.enabled) {
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="'content_repository.permissionProperty' | gtxI18n"
+                    formControlName="permissionProperty"
+                ></gtx-input>
+            }
+
+
+            @if (form.controls.defaultPermission.enabled) {
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="'content_repository.defaultPermission' | gtxI18n"
+                    formControlName="defaultPermission"
+                ></gtx-input>
+            }
+
+            @if (form.controls.projectPerNode.enabled) {
+                <gtx-checkbox
+                formControlName="projectPerNode"
+                [label]="'content_repository.projectPerNode' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            @if (form.controls.version.enabled) {
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="'content_repository.version' | gtxI18n"
+                    formControlName="version"
+                ></gtx-input>
+            }
+
+            @if (form.controls.elasticsearch.enabled) {
+                <gtx-json-input
+                    [label]="'content_repository.elasticsearch' | gtxI18n"
+                    [rawValue]="true"
+                    formControlName="elasticsearch"
+                ></gtx-json-input>
+
+                @if (form.controls.elasticsearch.hasError(VALIDATOR_JSON_ERROR_PROPERTY)) {
+                    <span class="container-validator-errors">
+                        {{ 'shared.error_is_invalid_json' | gtxI18n }}
+                    </span>
+                }
+            }
+        </div>
+    </form>
 }

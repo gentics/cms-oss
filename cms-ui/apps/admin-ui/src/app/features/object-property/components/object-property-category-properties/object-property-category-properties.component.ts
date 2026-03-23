@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     I18nString,
     Language,
@@ -8,7 +7,7 @@ import {
     Normalized,
     ObjectPropertyCategoryBO,
 } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { createI18nRequiredValidator } from '../../../../common';
 import { LanguageHandlerService } from '../../../../core';
@@ -40,7 +39,7 @@ export enum ObjectPropertyCategoryPropertiesMode {
     standalone: false,
 })
 export class ObjectPropertyCategoryPropertiesComponent
-    extends BasePropertiesComponent<ObjectPropertyCategoryBO<Normalized>>
+    extends BaseFormPropertiesComponent<ObjectPropertyCategoryBO<Normalized>>
     implements OnInit {
 
     @Input()

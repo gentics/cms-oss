@@ -1,10 +1,9 @@
 import { ScheduleDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { FollowUpScheduleData, ScheduleBO } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
@@ -17,10 +16,10 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
         generateFormProvider(FollowUpScheduleDataPropertiesComponent),
         generateValidatorProvider(FollowUpScheduleDataPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class FollowUpScheduleDataPropertiesComponent
-    extends BasePropertiesComponent<FollowUpScheduleData>
+    extends BaseFormPropertiesComponent<FollowUpScheduleData>
     implements OnInit, OnChanges {
 
     public schedules$: Observable<ScheduleBO[]>;
@@ -42,8 +41,8 @@ export class FollowUpScheduleDataPropertiesComponent
 
         if (changes.scheduleBlacklist) {
             this.blacklist$.next((this.scheduleBlacklist || [])
-                .map(val => Number(val))
-                .filter(num => Number.isInteger(num)),
+                .map((val) => Number(val))
+                .filter((num) => Number.isInteger(num)),
             );
         }
     }
@@ -53,7 +52,7 @@ export class FollowUpScheduleDataPropertiesComponent
 
         this.schedules$ = combineLatest([
             this.scheduleData.watchAllEntities().pipe(
-                map(schedules => schedules.map(singleSchedule => ({
+                map((schedules) => schedules.map((singleSchedule) => ({
                     ...singleSchedule,
                     id: Number(singleSchedule.id),
                 }))),
@@ -62,7 +61,7 @@ export class FollowUpScheduleDataPropertiesComponent
                 distinctUntilChanged(isEqual),
             ),
         ]).pipe(
-            map(([schedules, blacklist]: [any[], number[]]) => schedules.filter(singleSchedule => !blacklist.includes(singleSchedule.id))),
+            map(([schedules, blacklist]: [any[], number[]]) => schedules.filter((singleSchedule) => !blacklist.includes(singleSchedule.id))),
         ) as any;
     }
 

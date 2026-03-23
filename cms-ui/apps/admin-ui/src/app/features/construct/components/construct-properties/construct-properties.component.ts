@@ -9,7 +9,7 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { FormControl, FormGroup, UntypedFormControl, ValidatorFn, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
     AccessControlledType,
     ConstructCategory,
@@ -24,7 +24,7 @@ import {
     TagTypeBO,
     TagTypeBase,
 } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { createI18nRequiredValidator } from '../../../../common';
@@ -62,7 +62,7 @@ export enum ConstructPropertiesMode {
     standalone: false,
 })
 export class ConstructPropertiesComponent
-    extends BasePropertiesComponent<ConstructPropertiesFormData>
+    extends BaseFormPropertiesComponent<ConstructPropertiesFormData>
     implements AfterViewInit, OnChanges, OnInit {
 
     public readonly ConstructPropertiesMode = ConstructPropertiesMode;

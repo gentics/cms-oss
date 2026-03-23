@@ -1,6 +1,4 @@
 export * from './app-version-label/app-version-label.component';
-export * from './base-properties-list/base-properties-list.component';
-export * from './base-properties/base-properties.component';
 export * from './browse-box/browse-box.component';
 export * from './form-browse-box/form-browse-box.component';
 export * from './i18n-checkbox/i18n-checkbox.component';

@@ -9,7 +9,7 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, I18nService } from '@gentics/cms-components';
+import { I18nService } from '@gentics/cms-components';
 import {
     DataSource,
     I18nString,
@@ -26,7 +26,7 @@ import {
     TagPartValidatorId,
     TagPropertyType,
 } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import {
     createBlacklistValidator,
     createI18nRequiredValidator,
@@ -138,7 +138,7 @@ const TRANSLATED_NAME_PROP = Symbol('translated-name');
     standalone: false,
 })
 export class ConstructPartPropertiesComponent
-    extends BasePropertiesComponent<TagPartPropertiesFormData>
+    extends BaseFormPropertiesComponent<TagPartPropertiesFormData>
     implements OnChanges {
 
     public readonly VIABLE_CONSTRUCT_PART_TYPES = VIABLE_CONSTRUCT_PART_TYPES;

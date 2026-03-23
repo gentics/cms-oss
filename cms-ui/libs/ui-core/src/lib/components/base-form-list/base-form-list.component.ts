@@ -1,17 +1,17 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, ValidationErrors, Validator } from '@angular/forms';
-import { BaseFormElementComponent } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
+import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 const INITIAL_UNSET_VALUE = Symbol('initial-unset-value');
 
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
-export abstract class BasePropertiesListComponent<T> extends BaseFormElementComponent<T[]> implements OnInit, OnChanges, OnDestroy, Validator {
+export abstract class BaseFormListComponent<T> extends BaseFormElementComponent<T[]> implements OnInit, OnChanges, OnDestroy, Validator {
 
     /**
      * Flag which indicates that the provided value is a new initial value.
@@ -123,7 +123,7 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
-                tap(value => this.configureForm(value)),
+                tap((value) => this.configureForm(value)),
                 map(() => this.form.value),
             ),
             this.form.statusChanges,
@@ -134,7 +134,7 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value]) => this.assembleValue(value)),
             distinctUntilChanged(isEqual),
-        ).subscribe(value => {
+        ).subscribe((value) => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.
             if (!this.initialValue && !isEqual(value, this.value)) {
@@ -157,7 +157,6 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
 
     /**
      * Hook for whenever the form value changes, to configure the form controls.
-     *
      * @param value The current form value.
      * @param loud If the dis-/enabling of the controls should be with an event (Trigger a value change). (Defaults to `false`)
      */
@@ -166,7 +165,6 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
     /**
      * Function which is getting called whenever a pushable form value change occurred.
      * This function must convert the value from the form to a value for publishing.
-     *
      * @param value The current form value.
      */
     protected abstract assembleValue(value: T[]): T[];
@@ -202,7 +200,7 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
      */
     protected createForm(): FormArray<FormControl<T>> {
         const arr = Array.isArray(this.value) ? this.value : [];
-        return new FormArray(arr.map(entry => {
+        return new FormArray(arr.map((entry) => {
             return this.createControl(entry);
         }));
     }
@@ -225,7 +223,7 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
             } else {
                 // If there's another amount of elements now, we have to re-create the form
                 this.form.clear({ emitEvent: false });
-                (this.value || []).forEach(entry => {
+                (this.value || []).forEach((entry) => {
                     this.form.push(this.createControl(entry), { emitEvent: false });
                 });
                 this.form.updateValueAndValidity();

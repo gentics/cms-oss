@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { DataSource, DataSourceEntry, IndexById, Raw, SelectOption, SelectSetting } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -15,9 +14,9 @@ import { Subscription } from 'rxjs';
         generateFormProvider(SelectPartSettingsComponent),
         generateValidatorProvider(SelectPartSettingsComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectSetting> implements OnChanges, OnDestroy {
+export class SelectPartSettingsComponent extends BaseFormPropertiesComponent<SelectSetting> implements OnChanges, OnDestroy {
 
     @Input()
     public dataSources: DataSource<Raw>[] = [];
@@ -37,7 +36,7 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.dataSources) {
             this.dataSourceMap = {};
-            (this.dataSources || []).forEach(ds => {
+            (this.dataSources || []).forEach((ds) => {
                 this.dataSourceMap[ds.id] = ds;
             });
         }
@@ -51,7 +50,7 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
 
     protected createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            // eslint-disable-next-line @typescript-eslint/unbound-method
+
             datasourceId: new UntypedFormControl(null, Validators.required),
             template: new UntypedFormControl(''),
             options: new UntypedFormControl([]),
@@ -105,18 +104,18 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
          * TODO: Move this to the `DataSourceEntriesOpertations`-Service?
          * Potentially abstract the APi again as EntityOperations should be for BOs only?
          */
-        this.entriesSubscription = this.api.dataSource.getEntries(dsId).subscribe(res => {
+        this.entriesSubscription = this.api.dataSource.getEntries(dsId).subscribe((res) => {
             this.entryMap = {};
             const options: SelectOption[] = [];
 
-            res.items.forEach(entry => {
+            res.items.forEach((entry) => {
                 this.entryMap[entry.dsId] = entry;
                 options.push({
                     // "id" in the response context is the ID in the global CMS, while dsId is the one inside the Datasource
                     id: entry.dsId,
                     key: entry.key,
                     value: entry.value,
-                })
+                });
             });
 
             this.form.patchValue({

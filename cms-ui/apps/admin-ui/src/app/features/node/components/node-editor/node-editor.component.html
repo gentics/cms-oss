@@ -86,6 +86,25 @@
       </div>
     </gtx-tab>
 
+    @if (isFormsEnabled) {
+      <gtx-tab
+        id="forms" 
+        gtxDetailTabLink title="Forms"
+        >
+        <div class="detail-tab-wrapper">
+          <gtx-entity-detail-header 
+            title="Forms Configuration" 
+            (cancelClick)="detailsClose()"></gtx-entity-detail-header
+          ></gtx-entity-detail-header>
+
+          <div class="gtx-entity-details-tab-content-body">
+            <!-- Dein Forms-spezifischer Inhalt kommt hier rein! -->
+          </div>
+        </div>
+      </gtx-tab>
+    }
+
+
     <gtx-tab
       [id]="Tabs.LANGUAGES"
       [class.disabledArea]="isChildNode"

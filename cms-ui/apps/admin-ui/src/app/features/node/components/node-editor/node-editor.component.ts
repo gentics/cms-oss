@@ -17,7 +17,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
-import { Feature, Folder, Language, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
+import { Feature, Folder, Language, NodeFeature, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService, TableRow } from '@gentics/ui-core';
 import { finalize } from 'rxjs/operators';
@@ -99,6 +99,10 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
 
     override onEntityUpdate(): void {
         this.tableLoader.reload();
+    }
+
+    get isFormsEnabled(): boolean {
+        return this.currentFeatures?.[NodeFeature.FORMS] ?? false;
     }
 
     protected initializeTabHandles(): void {

@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.gentics.monitoring.liveness.DefaultLivenessManager;
+import com.gentics.monitoring.liveness.LivenessManagerOptions;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -78,6 +80,8 @@ public class OSSRunner {
 	 * Loader for implementations of {@link ServletContextHandlerService}
 	 */
 	protected static ServiceLoaderUtil<ServletContextHandlerService> servletContextHandlerServiceLoader;
+
+	protected static DefaultLivenessManager livenessManager;
 
 	/**
 	 * Main method
@@ -148,6 +152,10 @@ public class OSSRunner {
 	protected static void start() {
 		Initializer.get().init();
 		log = NodeLogger.getNodeLogger(OSSRunner.class);
+
+		LivenessManagerOptions livenessManagerOptions = new LivenessManagerOptions("cms.live");
+		livenessManager = new DefaultLivenessManager(livenessManagerOptions);
+
 		servletContextHandlerServiceLoader = ServiceLoaderUtil.load(ServletContextHandlerService.class);
 		// set the loader also to the NodeConfigRuntimeConfiguration, so that the services can be called when the configuration is reloaded
 		NodeConfigRuntimeConfiguration.setServletContextHandlerServiceLoader(servletContextHandlerServiceLoader);
@@ -256,6 +264,8 @@ public class OSSRunner {
 
 			NodeConfigRuntimeConfiguration.runtimeLog.info("Server started successfully");
 			Thread.currentThread().join();
+
+			Runtime.getRuntime().addShutdownHook(new Thread(livenessManager::shutdown));
 		} catch (Exception e) {
 			NodeConfigRuntimeConfiguration.runtimeLog.error("Server startup failed", e);
 			try {

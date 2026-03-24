@@ -41,6 +41,7 @@ RUN adduser -D -u 1000 -G root -h /cms node && \
 
 ADD --chown=1000:0 ./target/cms-oss-server*jar /cms/cms-oss-server.jar
 ADD --chown=1000:0 entrypoint.sh /cms/
+ADD --chown=1000:0 ./live.sh /mesh/live.sh
 
 RUN chmod 700 /cms/entrypoint.sh
 
@@ -57,3 +58,4 @@ VOLUME /cms/scheduler-commands
 VOLUME /cms/libs
 
 ENTRYPOINT ["./entrypoint.sh"]
+HEALTHCHECK --start-period=60s --interval=10s --retries=2 CMD ["sh", "live.sh"]

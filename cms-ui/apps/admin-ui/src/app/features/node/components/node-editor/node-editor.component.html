@@ -94,10 +94,14 @@
         <div class="detail-tab-wrapper">
           <gtx-entity-detail-header 
             title="Forms Configuration" 
+            saveActionAllowedId="node.updateNodeInstance"
+            [saveActionAllowedInstanceId]="entity?.folderId"
+            [saveDisabled]="!formsAssignment.isDirty"
+            (saveClick)="formsAssignment.saveForms()"
             (cancelClick)="detailsClose()"></gtx-entity-detail-header>
 
-          <div class="gtx-entity-details-tab-content-body">
-            <!-- Dein Forms-spezifischer Inhalt kommt hier rein! -->
+          <div class="gtx-entity-details-tab-content-body" style="padding: 0.9375rem;">
+            <gtx-node-forms-assignment #formsAssignment></gtx-node-forms-assignment>
           </div>
         </div>
       </gtx-tab>

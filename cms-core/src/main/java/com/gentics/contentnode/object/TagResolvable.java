@@ -16,8 +16,8 @@ import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.lib.log.NodeLogger;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * This is a helper class to resolve tags by name using a {@link TagContainer}.

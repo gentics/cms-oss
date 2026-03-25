@@ -41,7 +41,6 @@ import com.gentics.contentnode.parser.ContentRenderer;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.parser.tag.struct.ParseStructRenderer;
 import com.gentics.contentnode.render.FormRendering;
-import com.gentics.contentnode.render.GCNRenderable;
 import com.gentics.contentnode.render.GisRendering;
 import com.gentics.contentnode.render.GisRendering.CropInfo;
 import com.gentics.contentnode.render.GisRendering.ResizeInfo;
@@ -51,8 +50,10 @@ import com.gentics.contentnode.render.RenderUtils;
 import com.gentics.contentnode.render.RenderableResolvable;
 import com.gentics.contentnode.render.RenderableResolvable.Scope;
 import com.gentics.contentnode.render.RendererFactory;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
+import com.gentics.contentnode.resolving.ResolvableMapWrapper;
+import com.gentics.contentnode.resolving.ResolvableMapWrapper.RenderContext;
 import com.gentics.lib.render.Renderable;
-import com.gentics.lib.resolving.ResolvableMapWrapper;
 import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.TagType;
 
@@ -70,22 +71,33 @@ public class HelperSource {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
 		RenderResult renderResult = t.getRenderResult();
-		if (value instanceof ResolvableMapWrapper) {
-			value = ((ResolvableMapWrapper)value).getWrapped();
+
+		if (value instanceof ResolvableMapWrapper mapWrapper) {
+			ResolvableMapWrappable wrapped = mapWrapper.getWrapped();
+			try (RenderContext renderContext = mapWrapper.withContext()) {
+				if (wrapped instanceof Tag tag) {
+					return renderTag(tag, renderType, renderResult);
+				} else if (wrapped instanceof Renderable renderable) {
+					return renderable.render();
+				} else if (wrapped != null) {
+					return wrapped.toString();
+				} else {
+					return null;
+				}
+			}
 		}
-		if (value instanceof RenderableResolvable) {
-			RenderableResolvable renderable = (RenderableResolvable)value;
-			if (renderable.getWrappedObject() instanceof Tag) {
+		if (value instanceof RenderableResolvable renderable) {
+			if (renderable.getWrappedObject() instanceof Tag tag) {
 				try (Scope scope = renderable.scope()) {
-					return renderTag((Tag)renderable.getWrappedObject(), renderType, renderResult);
+					return renderTag(tag, renderType, renderResult);
 				}
 			} else {
 				return renderable.toString();
 			}
-		} else if (value instanceof Tag) {
-			return renderTag((Tag)value, renderType, renderResult);
-		} else if (value instanceof Renderable) {
-			return ((Renderable) value).render();
+		} else if (value instanceof Tag tag) {
+			return renderTag(tag, renderType, renderResult);
+		} else if (value instanceof Renderable renderable) {
+			return (renderable.render());
 		} else if (value != null) {
 			return value.toString();
 		}

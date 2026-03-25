@@ -17,7 +17,7 @@ import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.TemplateRenderer;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 
 /**
  * The PartType is a special templaterenderer, which can render a {@link Value}.

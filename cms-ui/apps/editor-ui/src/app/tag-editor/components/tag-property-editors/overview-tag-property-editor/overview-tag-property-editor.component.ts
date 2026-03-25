@@ -205,6 +205,11 @@ export class OverviewTagPropertyEditor implements TagPropertyEditor, OnInit, OnD
 
         this.repositoryBrowserClient.openRepositoryBrowser(options)
             .then((newItems: OverviewItem[]) => {
+                // If the user aborted, then the return value is null
+                if (!Array.isArray(newItems)) {
+                    return;
+                }
+
                 if (!this.isStickyChannelEnabled) {
                     newItems.forEach(newItem => newItem.nodeId = undefined);
                 }

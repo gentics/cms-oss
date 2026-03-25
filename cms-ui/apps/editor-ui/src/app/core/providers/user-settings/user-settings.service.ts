@@ -124,7 +124,7 @@ export class UserSettingsService {
             if ((!lastNodeIdFromLocalStorage || !allNodes[lastNodeIdFromLocalStorage]) && !allNodes[settings[SETTING_LAST_NODE_ID]]) {
                 // Clear the last node id in the local storage, to cause the correct fallback node to be selected
                 this.localStorage.setForUser(this.currentUserId, SETTING_LAST_NODE_ID, null);
-                this.navigateToFallbackNode();
+                // this.navigateToFallbackNode();
             }
 
             if (this.serverStorage.supported === false) {

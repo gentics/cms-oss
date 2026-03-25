@@ -232,21 +232,10 @@
 				<scope>import</scope>
 				<version>${project.version}</version>
 			</dependency>
-
-            <dependency>
-                <groupId>com.gentics</groupId>
-                <artifactId>cmp-liveness-core</artifactId>
-                <version>${liveness.version}</version>
-            </dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
-        <dependency>
-            <groupId>com.gentics</groupId>
-            <artifactId>cmp-liveness-core</artifactId>
-        </dependency>
-
 		<!-- External Dependencies -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
@@ -328,6 +317,10 @@
 			<artifactId>workspace-ui</artifactId>
 			<type>zip</type>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics</groupId>
+			<artifactId>cms-monitoring</artifactId>
 		</dependency>
 
 		<!-- Test Dependencies -->

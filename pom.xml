@@ -51,6 +51,7 @@
 		<module>ee/cms-keycloak</module>
 		<module>ee/formgen</module>
 		<module>cms-integration-tests</module>
+		<module>cms-monitoring</module>
 	</modules>
 
 	<properties>

@@ -17,7 +17,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.gentics.contentnode.monitoring.CmsLivenessManager;
 import com.gentics.monitoring.liveness.DefaultLivenessManager;
+import com.gentics.monitoring.liveness.LivenessManager;
 import com.gentics.monitoring.liveness.LivenessManagerOptions;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -78,8 +80,6 @@ public class OSSRunner {
 	 * Loader for implementations of {@link ServletContextHandlerService}
 	 */
 	protected static ServiceLoaderUtil<ServletContextHandlerService> servletContextHandlerServiceLoader;
-
-	protected static DefaultLivenessManager livenessManager;
 
 	/**
 	 * Main method
@@ -152,7 +152,6 @@ public class OSSRunner {
 		log = NodeLogger.getNodeLogger(OSSRunner.class);
 
 		LivenessManagerOptions livenessManagerOptions = new LivenessManagerOptions("cms.live");
-		livenessManager = new DefaultLivenessManager(livenessManagerOptions);
 
 		servletContextHandlerServiceLoader = ServiceLoaderUtil.load(ServletContextHandlerService.class);
 		// set the loader also to the NodeConfigRuntimeConfiguration, so that the services can be called when the configuration is reloaded
@@ -248,6 +247,8 @@ public class OSSRunner {
 		Slf4jRequestLogWriter logWriter = new Slf4jRequestLogWriter();
 		logWriter.setLoggerName("access_log");
 		server.setRequestLog(new CustomRequestLog(logWriter, ConfigurationValue.ACCESS_LOG.get()));
+
+		LivenessManager livenessManager = CmsLivenessManager.getInstance();
 
 		try {
 			NodeConfigRuntimeConfiguration.runtimeLog.info(String.format("Starting server at port %d", port));

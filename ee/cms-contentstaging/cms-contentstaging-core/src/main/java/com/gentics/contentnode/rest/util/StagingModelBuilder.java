@@ -1280,6 +1280,9 @@ public class StagingModelBuilder {
 		if (!org.apache.commons.lang3.StringUtils.isBlank(restModel.getName())) {
 			form.setName(restModel.getName());
 		}
+		if (!org.apache.commons.lang3.StringUtils.isBlank(restModel.getFormType())) {
+			form.setFormType(restModel.getFormType());
+		}
 		if (!org.apache.commons.lang3.StringUtils.isBlank(restModel.getDescription())) {
 			form.setDescription(restModel.getDescription());
 		}
@@ -1322,6 +1325,7 @@ public class StagingModelBuilder {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		model.setId(form.getGlobalId().toString());
+		model.setFormType(form.getFormType());
 		model.setName(form.getName());
 		model.setDescription(form.getDescription());
 

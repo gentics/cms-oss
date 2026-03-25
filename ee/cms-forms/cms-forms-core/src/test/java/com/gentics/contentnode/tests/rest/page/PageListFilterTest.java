@@ -37,6 +37,8 @@ import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -44,6 +46,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
  * Test cases for filtering page lists
  */
 @GCNFeature(set = { Feature.FORMS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 @RunWith(Parameterized.class)
 public class PageListFilterTest {
 	@ClassRule

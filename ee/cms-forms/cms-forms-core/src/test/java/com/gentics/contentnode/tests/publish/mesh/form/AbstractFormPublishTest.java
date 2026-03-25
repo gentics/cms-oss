@@ -51,22 +51,25 @@ import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.VelocityPartType;
 import com.gentics.contentnode.tests.category.MeshTest;
-import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 
 import okhttp3.FormBody;
+import okhttp3.FormBody.Builder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.FormBody.Builder;
 
 /**
  * Abstract base class for form publish tests
  */
 @Category(MeshTest.class)
+@ConfigBy(FormTypeConfigurationModifier.class)
 public abstract class AbstractFormPublishTest {
 	/**
 	 * Name of the mesh project

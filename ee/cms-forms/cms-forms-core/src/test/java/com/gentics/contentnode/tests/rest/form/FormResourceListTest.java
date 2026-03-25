@@ -20,6 +20,7 @@ import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.response.AbstractListResponse;
 import com.gentics.contentnode.rest.resource.FormResource;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
@@ -28,12 +29,15 @@ import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.tests.rest.AbstractListSortAndFilterTest;
 import com.gentics.contentnode.tests.utils.Builder;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.ConfigBy;
 
 /**
  * Sorting and filtering tests for {@link FormResource#list(InFolderParameterBean, FilterParameterBean, SortParameterBean, PagingParameterBean, WastebinParameterBean, PublishableParameterBean)}
  */
 @GCNFeature(set = { Feature.FORMS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormResourceListTest extends AbstractListSortAndFilterTest<FormModel> {
 	private static Node node;
 
@@ -62,6 +66,7 @@ public class FormResourceListTest extends AbstractListSortAndFilterTest<FormMode
 	@Override
 	protected FormModel createItem() throws NodeException {
 		return supply(() -> FormResourceImpl.TRANSFORM2REST.apply(Builder.create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setFolderId(node.getFolder().getId());
 			f.setName(randomStringGenerator.generate(5, 10));
 			f.setDescription(randomStringGenerator.generate(10, 20));
@@ -71,8 +76,10 @@ public class FormResourceListTest extends AbstractListSortAndFilterTest<FormMode
 	@Override
 	protected AbstractListResponse<FormModel> getResult(SortParameterBean sort, FilterParameterBean filter, PagingParameterBean paging)
 			throws NodeException {
+		FilterFormParameterBean formFilter = new FilterFormParameterBean();
+		formFilter.query = filter.query;
 		return new FormResourceImpl().list(
-				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())), filter, sort,
+				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())), formFilter, sort,
 				paging, new WastebinParameterBean(), new PublishableParameterBean());
 	}
 }

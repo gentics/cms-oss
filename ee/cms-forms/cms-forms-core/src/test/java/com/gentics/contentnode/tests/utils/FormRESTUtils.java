@@ -7,6 +7,7 @@ import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
  * Static helper class for use in Form tests
  */
 public class FormRESTUtils {
+
 	/**
 	 * Get a form resource
 	 * @return form resource

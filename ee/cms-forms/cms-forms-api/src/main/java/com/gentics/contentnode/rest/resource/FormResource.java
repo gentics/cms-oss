@@ -13,6 +13,7 @@ import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
 import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
@@ -69,7 +70,7 @@ public interface FormResource {
 	 * @throws Exception
 	 */
 	@GET
-	FormListResponse list(@BeanParam InFolderParameterBean inFolder, @BeanParam FilterParameterBean filter,
+	FormListResponse list(@BeanParam InFolderParameterBean inFolder, @BeanParam FilterFormParameterBean filter,
 			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging,
 			@BeanParam WastebinParameterBean wastebin, @BeanParam PublishableParameterBean publishable) throws Exception;
 

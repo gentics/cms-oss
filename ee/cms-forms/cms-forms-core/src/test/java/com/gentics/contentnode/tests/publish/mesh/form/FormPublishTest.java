@@ -20,6 +20,24 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.FormRESTUtils.getFormResource;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.assertj.core.api.Assertions;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -30,6 +48,7 @@ import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
@@ -57,24 +76,9 @@ import com.gentics.contentnode.tests.rest.ImageResourceTest;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.Expected;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.GCNFeature;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Test cases for publishing forms into Mesh.
@@ -100,6 +104,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		}));
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -131,6 +136,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -163,6 +169,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -235,6 +242,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		ImageFile image1 = (ImageFile) supply(() -> createImage(node.getFolder(), IMAGE_NAME, out.toByteArray()));
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -295,6 +303,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		}));
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -363,6 +372,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		ImageFile image1 = (ImageFile) supply(() -> createImage(node.getFolder(), IMAGE_NAME, out.toByteArray()));
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -423,6 +433,10 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			return node;
 		});
 
+		Trx.consume(n -> {
+			FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, n.getId());
+		}, otherNode1);
+
 		try {
 			Node otherNode = update(otherNode1, n -> {
 				n.setContentrepositoryId(crId);
@@ -436,6 +450,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			});
 
 			Form form = supply(() -> create(Form.class, f -> {
+				f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 				f.setName("Test Form");
 				f.setLanguages(Arrays.asList("de", "en"));
 				f.setFolderId(node.getFolder().getId());
@@ -494,6 +509,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	@Test
 	public void testPublish() throws Exception {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -584,6 +600,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 
 	private Form publishForm() throws Exception {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -614,6 +631,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	@Test
 	public void testCreateChannel() throws Exception {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -666,6 +684,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	public void testPublishModified() throws Exception {
 		Form form = supply(t -> create(Form.class, f -> {
 			t.setTimestamp(1000L);
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -718,6 +737,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		// create form with timestamp 1
 		Form form = supply(t -> create(Form.class, f -> {
 			t.setTimestamp(1000L);
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -777,6 +797,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	@Test
 	public void testTakeOffline() throws Exception {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -824,6 +845,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		// create form with timestamp 1
 		Form form = supply(t -> create(Form.class, f -> {
 			t.setTimestamp(1000L);
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -899,6 +921,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	@Test
 	public void testDeleteIntoWastebin() throws Exception {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -938,6 +961,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	@Test
 	public void testDelete() throws Exception {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -977,6 +1001,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	@Test
 	public void testDeleteWithData() throws Exception {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1026,6 +1051,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		try (Trx trx = new Trx()) {
 			trx.at(1);
 			form = create(Form.class, f -> {
+				f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 				f.setName("Test Form");
 				f.setLanguages(Arrays.asList("de", "en"));
 				f.setFolderId(node.getFolder().getId());
@@ -1079,6 +1105,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		try (Trx trx = new Trx()) {
 			trx.at(1);
 			form = create(Form.class, f -> {
+				f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 				f.setName("Test Form");
 				f.setLanguages(Arrays.asList("de", "en"));
 				f.setFolderId(node.getFolder().getId());
@@ -1133,6 +1160,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1166,6 +1194,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1203,6 +1232,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		});
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1232,6 +1262,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		});
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1264,6 +1295,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		});
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1293,6 +1325,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		});
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1323,6 +1356,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 
 		// create form, but do not publish
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(folder.getId());
@@ -1396,6 +1430,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 
 		// create and publish form
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(folder.getId());
@@ -1479,6 +1514,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 
 		// create and publish form
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(folder.getId());
@@ -1521,6 +1557,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		prepareForInstantPublishing();
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1566,6 +1603,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		prepareForInstantPublishing();
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1608,6 +1646,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		operate(() -> node.activateFeature(Feature.DISABLE_INSTANT_DELETE));
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1648,6 +1687,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		prepareForInstantPublishing();
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1678,6 +1718,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		operate(() -> node.activateFeature(Feature.DISABLE_INSTANT_DELETE));
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1707,6 +1748,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		prepareForInstantPublishing();
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -1737,6 +1779,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		operate(() -> node.activateFeature(Feature.DISABLE_INSTANT_DELETE));
 
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());

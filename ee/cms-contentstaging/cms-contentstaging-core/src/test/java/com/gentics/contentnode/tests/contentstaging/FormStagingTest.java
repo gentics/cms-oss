@@ -33,19 +33,22 @@ import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.rest.model.response.StagingResponse;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.tests.publish.mesh.form.FormPublishTest;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Test cases for staging forms
  */
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.FORMS, Feature.MULTICHANNELLING, Feature.NICE_URLS, Feature.WASTEBIN })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> {
 	protected ObjectNode originalData;
 
@@ -102,6 +105,7 @@ public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> {
 		ObjectNode originalReferencingData = mapper.createObjectNode();
 		originalReferencingData.put("reference_pageid", oldPageId);
 		Form form = create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setFolderId(baseFolderId);
 			f.setName("Staged form");
 			f.setLanguages(Arrays.asList("en"));
@@ -143,6 +147,7 @@ public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> {
 	@Override
 	protected Form createObject(Folder folder, int timestamp) throws NodeException {
 		return create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setFolderId(folder.getId());
 			f.setName("Staged form");
 			f.setDescription("This is the staged form");
@@ -229,7 +234,7 @@ public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> {
 				new InFolderParameterBean()
 					.setFolderId(execute(Folder::getGlobalId, folder).toString())
 					.setStagingPackageName(packageName),
-				new FilterParameterBean(),
+				new FilterFormParameterBean(),
 				new SortParameterBean(),
 				new PagingParameterBean(),
 				new WastebinParameterBean(),

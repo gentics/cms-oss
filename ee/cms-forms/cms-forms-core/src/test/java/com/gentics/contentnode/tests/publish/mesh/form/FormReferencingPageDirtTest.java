@@ -25,6 +25,8 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.tests.category.MeshTest;
+import com.gentics.contentnode.tests.utils.FormRESTUtils;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
@@ -93,6 +95,7 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 		}).at(1).publish().build();
 
 		formDe = create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de"));
 			f.setFolderId(node.getFolder().getId());

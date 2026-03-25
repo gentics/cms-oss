@@ -55,6 +55,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
@@ -72,7 +73,9 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.tests.utils.RestExceptionChecker;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
@@ -84,6 +87,7 @@ import com.gentics.contentnode.testutils.RESTAppContext.Type;
  */
 @RunWith(value = Parameterized.class)
 @GCNFeature(set = { Feature.MULTICHANNELLING, Feature.WASTEBIN })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormResourceTest {
 	private static DBTestContext testContext = new DBTestContext();
 
@@ -135,6 +139,7 @@ public class FormResourceTest {
 	public static void setupOnce() throws NodeException {
 		testContext.getContext().getTransaction().commit();
 		node = supply(() -> createNode("Master", "Master", PublishTarget.NONE, getLanguage("de"), getLanguage("en")));
+		consume(n -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, n.getId()), node);
 		channel = supply(() -> createChannel(node, "Channel", "channel", "/"));
 
 		testFolder = supply(() -> createFolder(node.getFolder(), "Folder"));
@@ -146,6 +151,7 @@ public class FormResourceTest {
 		noLangTestFolder = supply(() -> createFolder(noLangNode.getFolder(), "Folder"));
 
 		otherNode = supply(() -> createNode("Other", "Other", PublishTarget.NONE, getLanguage("de")));
+		consume(n -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, n.getId()), otherNode);
 		otherNodeTestFolder = supply(() -> createFolder(otherNode.getFolder(), "Folder"));
 
 		testGroup = supply(() -> createUserGroup("Testgroup", NODE_GROUP_ID));
@@ -198,6 +204,7 @@ public class FormResourceTest {
 	@Test
 	public void testList() throws NodeException, RestException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -230,6 +237,7 @@ public class FormResourceTest {
 	@Test
 	public void testLoad() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -247,6 +255,7 @@ public class FormResourceTest {
 	@Test
 	public void testLoadLocked() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -275,6 +284,7 @@ public class FormResourceTest {
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
@@ -326,6 +336,7 @@ public class FormResourceTest {
 		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("bla"));
@@ -343,6 +354,7 @@ public class FormResourceTest {
 		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("fr"));
@@ -372,6 +384,7 @@ public class FormResourceTest {
 
 		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
 			FormModel request = new FormModel();
+			request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			request.setName("Test Form");
 			request.setFolderId(4711);
 			request.setLanguages(Arrays.asList("de"));
@@ -384,6 +397,7 @@ public class FormResourceTest {
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(localizedFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
@@ -401,6 +415,7 @@ public class FormResourceTest {
 
 		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
 			FormModel request = new FormModel();
+			request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			request.setName("Test Form");
 			request.setFolderId(localFolder.getId());
 			request.setLanguages(Arrays.asList("de"));
@@ -418,6 +433,7 @@ public class FormResourceTest {
 		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(noLangTestFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
@@ -429,6 +445,7 @@ public class FormResourceTest {
 	@Test
 	public void testUpdate() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 			f.setLanguages(Arrays.asList("de"));
@@ -451,6 +468,7 @@ public class FormResourceTest {
 	@Test
 	public void testUpdateLocked() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -471,6 +489,7 @@ public class FormResourceTest {
 	@Test
 	public void testUpdateInvalidLanguage() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 			f.setLanguages(Arrays.asList("de"));
@@ -495,6 +514,7 @@ public class FormResourceTest {
 	@Test
 	public void testUpdateLanguageNotAssigned() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 			f.setLanguages(Arrays.asList("de"));
@@ -519,6 +539,7 @@ public class FormResourceTest {
 	@Test
 	public void testLock() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -536,6 +557,7 @@ public class FormResourceTest {
 	@Test
 	public void testLockLocked() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -555,6 +577,7 @@ public class FormResourceTest {
 	@Test
 	public void testUnlock() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -570,6 +593,7 @@ public class FormResourceTest {
 	@Test
 	public void testUnlockLocked() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -589,6 +613,7 @@ public class FormResourceTest {
 	@Test
 	public void testDelete() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -611,6 +636,7 @@ public class FormResourceTest {
 	@Test
 	public void testDeleteLocked() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -630,6 +656,7 @@ public class FormResourceTest {
 	@Test
 	public void testRemoveFromWastebin() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -654,6 +681,7 @@ public class FormResourceTest {
 	@Test
 	public void testRestoreFromWastebin() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -695,6 +723,7 @@ public class FormResourceTest {
 	@Test
 	public void testPublish() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -712,6 +741,7 @@ public class FormResourceTest {
 	@Test
 	public void testPublishAtPast() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -732,6 +762,7 @@ public class FormResourceTest {
 	@Test
 	public void testPublishAtFuture() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -750,6 +781,7 @@ public class FormResourceTest {
 	@Test
 	public void testRepeatPublishAt() throws NodeException {
 		Form form = supply(testUser, t -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -787,6 +819,7 @@ public class FormResourceTest {
 	@Test
 	public void testChangePublishAt() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -824,6 +857,7 @@ public class FormResourceTest {
 	@Test
 	public void testClearPublishAt() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -850,6 +884,7 @@ public class FormResourceTest {
 	@Test
 	public void testPublishLocked() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -869,6 +904,7 @@ public class FormResourceTest {
 	@Test
 	public void testModifyPublished() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -892,6 +928,7 @@ public class FormResourceTest {
 	@Test
 	public void testTakeOffline() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -910,6 +947,7 @@ public class FormResourceTest {
 	@Test
 	public void testTakeOfflinePast() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -930,6 +968,7 @@ public class FormResourceTest {
 	@Test
 	public void testTakeOfflineFuture() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -950,6 +989,7 @@ public class FormResourceTest {
 	@Test
 	public void testClearTakeOfflineAt() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -978,6 +1018,7 @@ public class FormResourceTest {
 	@Test
 	public void testTakeOfflineLocked() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setFolderId(testFolder.getId());
 		}));
@@ -1116,6 +1157,7 @@ public class FormResourceTest {
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(subFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
@@ -1144,6 +1186,7 @@ public class FormResourceTest {
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(subFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
@@ -1173,6 +1216,7 @@ public class FormResourceTest {
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(subFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
@@ -1304,6 +1348,7 @@ public class FormResourceTest {
 		Form form = supply(t -> {
 			t.setTimestamp(1000);
 			return create(Form.class, f -> {
+				f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 				f.setName("Test Form");
 				f.setFolderId(folder.getId());
 			});
@@ -1327,6 +1372,7 @@ public class FormResourceTest {
 		Form form = supply(t -> {
 			t.setTimestamp(1000);
 			return create(Form.class, f -> {
+				f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 				f.setName("Test Form");
 				f.setFolderId(testFolder.getId());
 			});

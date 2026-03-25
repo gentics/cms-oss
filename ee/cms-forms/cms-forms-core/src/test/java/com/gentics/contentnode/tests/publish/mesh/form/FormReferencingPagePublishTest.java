@@ -46,6 +46,7 @@ import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
@@ -125,6 +126,7 @@ public class FormReferencingPagePublishTest extends AbstractFormPublishTest {
 	@Test
 	public void testPublish() throws Exception {
 		Form form = create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
@@ -196,6 +198,7 @@ public class FormReferencingPagePublishTest extends AbstractFormPublishTest {
 		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
 
 		Form form = create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());

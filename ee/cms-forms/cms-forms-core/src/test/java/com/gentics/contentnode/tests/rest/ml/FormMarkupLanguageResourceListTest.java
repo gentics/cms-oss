@@ -11,12 +11,15 @@ import com.gentics.contentnode.rest.resource.MarkupLanguageResource;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Sorting and filtering tests for {@link MarkupLanguageResource#list(SortParameterBean, FilterParameterBean, PagingParameterBean)}
  */
 @GCNFeature(set = {Feature.FORMS})
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormMarkupLanguageResourceListTest extends MarkupLanguageResourceListTest {
 	@Override
 	protected void fillItemsList(List<? super Object> items) throws NodeException {

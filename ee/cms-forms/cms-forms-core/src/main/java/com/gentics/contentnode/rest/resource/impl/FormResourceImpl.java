@@ -41,6 +41,7 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
@@ -77,8 +78,8 @@ import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
 import com.gentics.contentnode.rest.resource.FormResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticatedContentNodeResource.PageUsage;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
@@ -127,6 +128,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		model.setGlobalId(form.getGlobalId().toString());
 		model.setName(form.getName());
 		model.setDescription(form.getDescription());
+		model.setFormType(form.getFormType());
 
 		model.setFolderId(form.getFolderId());
 		model.setSuccessPageId(form.getSuccessPageId());
@@ -215,13 +217,16 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		if (restModel.getData() != null) {
 			form.setData(restModel.getData());
 		}
+		if (restModel.getFormType() != null) {
+			form.setFormType(restModel.getFormType());
+		}
 
 		return form;
 	};
 
 	@Override
 	@GET
-	public FormListResponse list(@BeanParam InFolderParameterBean inFolder, @BeanParam FilterParameterBean filter,
+	public FormListResponse list(@BeanParam InFolderParameterBean inFolder, @BeanParam FilterFormParameterBean filter,
 			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging,
 			@BeanParam WastebinParameterBean wastebin, @BeanParam PublishableParameterBean publishable)
 			throws NodeException {
@@ -244,7 +249,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			// switch to the master folder
 			folder = folder.getMaster();
 
-			FormSearch search = FormSearch.create().setRecursive(inFolder.recursive).setSearchString(filter.query)
+			FormSearch search = FormSearch.create().setRecursive(inFolder.recursive).setFormType(filter.formType).setSearchString(filter.query)
 					.set(publishable);
 
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.WASTEBIN)
@@ -272,7 +277,8 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			checkBodyWithFunction(form, NEW_FIELD_CHECKER, fm -> Pair.of(I18NHelper.get("name"), fm.getName()),
 					fm -> Pair.of(I18NHelper.get("folder"), fm.getFolderId()),
-					fm -> Pair.of(I18NHelper.get("language"), fm.getLanguages()));
+					fm -> Pair.of(I18NHelper.get("language"), fm.getLanguages()),
+					fm -> Pair.of(I18NHelper.get("formType"), fm.getFormType()));
 
 			Folder folder = load(Folder.class, Integer.toString(form.getFolderId())).getMaster();
 			Node node = folder.getOwningNode();
@@ -295,6 +301,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 						I18NHelper.get("form.create.nolanguages", I18NHelper.getName(node.getFolder())))
 								.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 			}
+
+			// check whether the requested formtype is assigned to the node
+			checkFormType(node, form.getFormType());
 
 			// check whether the languages are all activated for the node
 			checkLanguages(node, form.getLanguages());
@@ -342,6 +351,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				checkLanguages(node, form.getLanguages());
 			}
 
+			form.setFormType(null);
 			update = REST2NODE.apply(form, t.getObject(update, true));
 			update.save();
 
@@ -618,7 +628,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 								.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 			}
 
-			// check whether the targetNode has the required languages
+			// check whether the targetNode has the required languages and formtype
 			if (!Objects.equals(sourceNode, targetNode)) {
 				if (targetNode.getLanguages().isEmpty()) {
 					throw new RestMappedException(I18NHelper.get("form.move.nolanguages", I18NHelper.getName(form),
@@ -628,6 +638,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				// check whether the languages are all activated for the node
 				checkLanguages(targetNode, form.getLanguages());
+
+				// check whether the form type is activated for the node
+				checkFormType(targetNode, form.getFormType());
 			}
 
 			// check for uniqueness of form names in the target folder
@@ -684,6 +697,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			Form copy = (Form) form.copy();
 			copy.setGlobalId(form.getGlobalId());
+			formModel.setFormType(null);
 			copy = REST2NODE.apply(formModel, copy);
 
 			try (MeshPublisher mp = new MeshPublisher(cr)) {
@@ -943,9 +957,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			if (filter != null) {
 				if (!StringUtils.isBlank(filter.nodeId)) {
 					Node node = MiscUtils.load(Node.class, filter.nodeId);
-					List<String> formTypesForNode = DBUtils.select("SELECT formtype FROM node_formtype WHERE node_id = ?", pst -> {
-						pst.setInt(1, node.getId());
-					}, DBUtils.allString("formtype"));
+					Set<String> formTypesForNode = FormFactory.getFormTypeAssignment(node.getId());
 					listBuilder.filter(entry -> formTypesForNode.contains(entry.getKey()));
 				}
 
@@ -989,7 +1001,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
 			getFormTypeConfiguration(type);
 
-			DBUtils.deleteWithPK("node_formtype", "id", "node_id = ? AND formtype = ?", new Object[] {node.getId(), type});
+			if (FormFactory.getFormTypeUsage(node.getId()).contains(type)) {
+				throw new RestMappedException(I18NHelper.get("form.form_type_configuration.used", type))
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+			}
+
+			FormFactory.removeFormTypeFromNode(type, node.getId());
 
 			trx.success();
 			return Response.noContent().build();
@@ -1004,9 +1021,26 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
 			getFormTypeConfiguration(type);
 
-			DBUtils.update("INSERT IGNORE INTO node_formtype (node_id, formtype) VALUES (?, ?)", node.getId(), type);
+			FormFactory.addFormTypeToNode(type, node.getId());
 			trx.success();
 			return Response.created(null).build();
+		}
+	}
+
+	/**
+	 * Check whether the requested form type exists and is assigned to the node
+	 * @param node node
+	 * @param formType form type
+	 * @throws NodeException
+	 */
+	protected void checkFormType(Node node, String formType) throws NodeException {
+		if (!FormConfigProvider.getConfig().containsKey(formType)) {
+			throw new RestMappedException(I18NHelper.get("form.form_type_configuration.notfound", formType))
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+		}
+		if (!FormFactory.getFormTypeAssignment(node.getId()).contains(formType)) {
+			throw new RestMappedException(I18NHelper.get("form.form_type_configuration.notactive", formType, I18NHelper.getName(node)))
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
 		}
 	}
 

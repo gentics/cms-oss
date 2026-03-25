@@ -1,13 +1,24 @@
 package com.gentics.contentnode.etc;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.collections.MapUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.log.NodeLogger;
@@ -21,7 +32,7 @@ public final class FormConfigProvider implements ConfigurationService {
 	/**
 	 * Configuration path to the type configurations
 	 */
-	private static final String TYPES_CONFIG_PATH = "forms.types";
+	public static final String TYPES_CONFIG_PATH = "forms.types";
 
 	/**
 	 * Form type configuration map
@@ -79,7 +90,7 @@ public final class FormConfigProvider implements ConfigurationService {
 		if (!MapUtils.isEmpty(configurationMap)) {
 			return true;
 		} else {
-			logger.error("No valid form type configuration for internal forms found");
+			logger.error("No valid form type configuration for forms found");
 			return false;
 		}
 	}
@@ -91,6 +102,11 @@ public final class FormConfigProvider implements ConfigurationService {
 			configurationMap = mapper.convertValue(
 					NodeConfigRuntimeConfiguration.getPreferences().getPropertyObject(TYPES_CONFIG_PATH),
 					FormTypeConfigurationMap.class);
+
+			if (configurationMap == null) {
+				configurationMap = new FormTypeConfigurationMap();
+			}
+
 			// warn about empty configurations
 			configurationMap.entrySet().stream().filter(entry -> entry.getValue() == null).forEach(entry -> {
 				logger.warn("Ignoring empty form type configuration for '%s'".formatted(entry.getKey()));
@@ -100,6 +116,63 @@ public final class FormConfigProvider implements ConfigurationService {
 		} catch (IllegalArgumentException e) {
 			logger.error("Error while reading form type configuration", e.getCause());
 			configurationMap = null;
+		}
+	}
+
+	/**
+	 * Check whether the formtypes are consistent.
+	 * This will log errors, when
+	 * <ul>
+	 * <li>Forms exist that use unknown formtypes</li>
+	 * <li>Forms exist in nodes that do not have the formtype assigned</li>
+	 * </ul>
+	 */
+	public void check() {
+		try {
+			// first check whether the migration has been done
+			boolean migrationDone = Trx.supply(() -> {
+				return DBUtils.tableExists("node_formtype") && DBUtils.columnExists("form", "formtype");
+			});
+
+			if (migrationDone) {
+				AtomicBoolean consistent = new AtomicBoolean(true);
+				Map<Integer, Set<String>> assignedFormTypes = Trx.supply(() -> FormFactory.getFormTypeAssignment());
+				Map<Integer, Set<String>> usedFormTypes = Trx.supply(() -> FormFactory.getFormTypeUsage());
+
+				Map<Integer, String> nodeNames = new HashMap<>();
+				Trx.consume(nodeIds -> {
+					List<Node> nodes = TransactionManager.getCurrentTransaction().getObjects(Node.class, nodeIds);
+					for (Node node : nodes) {
+						nodeNames.put(node.getId(), I18NHelper.getName(node));
+					}
+				}, usedFormTypes.keySet());
+
+				usedFormTypes.entrySet().stream().forEach(entry -> {
+					int nodeId = entry.getKey();
+					String nodeName = nodeNames.getOrDefault(nodeId, "<Unknown Node>");
+
+					entry.getValue().stream().forEach(formType -> {
+						if (!configurationMap.containsKey(formType)) {
+							logger.error("Node '%s' contains forms of unknown formtype '%s'".formatted(nodeName, formType));
+							consistent.set(false);
+						} else if (!assignedFormTypes.getOrDefault(nodeId, Collections.emptySet()).contains(formType)) {
+							logger.error("Node '%s' contains forms of formtype '%s', which is not assigned to the node"
+									.formatted(nodeName, formType));
+							consistent.set(false);
+						}
+					});
+				});
+
+				if (consistent.get()) {
+					logger.info("Formtype configuration is consistent");
+				} else {
+					logger.error("Formtype configuration is not consistent (see previous errors)");
+				}
+			} else {
+				logger.info("Formtype consistency not checked, since migration is not done");
+			}
+		} catch (NodeException e) {
+			logger.error("Error while checking formtype consistency", e);
 		}
 	}
 }

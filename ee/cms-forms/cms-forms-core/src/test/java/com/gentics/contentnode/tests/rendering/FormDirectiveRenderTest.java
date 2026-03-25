@@ -32,7 +32,10 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.configuration.FormTypeConfiguration;
+import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.object.Construct;
@@ -51,12 +54,16 @@ import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.FormRESTUtils;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.ConfigBy;
 
 /**
  * Test cases for the FormDirective
  */
 @RunWith(value = Parameterized.class)
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormDirectiveRenderTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -248,6 +255,7 @@ public class FormDirectiveRenderTest {
 		}));
 
 		form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());

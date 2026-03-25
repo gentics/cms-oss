@@ -23,6 +23,11 @@ public class FormModel extends PublishableContentItem {
 	private static final long serialVersionUID = 3991275403246334702L;
 
 	/**
+	 * Form type
+	 */
+	private String formType;
+
+	/**
 	 * Description of the form
 	 */
 	private String description;
@@ -103,6 +108,22 @@ public class FormModel extends PublishableContentItem {
 	 */
 	public FormModel() {
 		super(ItemType.form);
+	}
+
+	/**
+	 * Form type
+	 * @return form type
+	 */
+	public String getFormType() {
+		return formType;
+	}
+
+	/**
+	 * Set the form type
+	 * @param formType form type
+	 */
+	public void setFormType(String formType) {
+		this.formType = formType;
 	}
 
 	/**

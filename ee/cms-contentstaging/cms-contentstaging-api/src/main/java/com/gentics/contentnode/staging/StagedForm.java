@@ -25,6 +25,11 @@ public class StagedForm extends StagingBase {
 	private static final long serialVersionUID = 9012361259459603486L;
 
 	/**
+	 * Form type
+	 */
+	private String formType;
+
+	/**
 	 * Description of the form
 	 */
 	private String description;
@@ -53,6 +58,22 @@ public class StagedForm extends StagingBase {
 	 * Version data
 	 */
 	private StagedObjectVersion version = new StagedObjectVersion();
+
+	/**
+	 * Form type
+	 * @return form type
+	 */
+	public String getFormType() {
+		return formType;
+	}
+
+	/**
+	 * Set the form type
+	 * @param formType form type
+	 */
+	public void setFormType(String formType) {
+		this.formType = formType;
+	}
 
 	/**
 	 * Form description

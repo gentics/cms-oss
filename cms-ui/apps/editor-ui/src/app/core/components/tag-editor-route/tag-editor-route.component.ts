@@ -31,6 +31,7 @@ import {
     Raw,
     Tag,
     Template,
+    TemplateLoadOptions,
 } from '@gentics/cms-models';
 import { coerceToBoolean } from '@gentics/ui-core';
 import { cloneDeep, isEqual } from 'lodash-es';
@@ -74,7 +75,7 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
         return this.hasUpdatePermission !== false;
     }
 
-    private subscription = new Subscription();
+    private subscriptions: Subscription[] = [];
     private hasUpdatePermission = false;
     private currentEntityType: EntityType;
     private currentEntityId: string | number;
@@ -170,7 +171,7 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
 
                     case 'template':
                         schema = templateSchema;
-                        options = { nodeId, construct: true, update: true };
+                        options = { nodeId, construct: true, update: true } as TemplateLoadOptions;
                         break;
 
                     default:
@@ -207,7 +208,7 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
             refCount(),
         );
 
-        this.subscription.add(combineLatest([
+        this.subscriptions.push(combineLatest([
             this.item$,
             this.nodeId$,
         ]).subscribe(([item, nodeId]) => {
@@ -220,7 +221,7 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
             map(params => coerceToBoolean(params.get('title'))),
         );
 
-        this.subscription.add(this.route.queryParamMap.pipe(
+        this.subscriptions.push(this.route.queryParamMap.pipe(
             map(params => coerceToBoolean(params.get('transparent'))),
             distinctUntilChanged(isEqual),
         ).subscribe(transparentBg => {
@@ -237,21 +238,23 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
         const tagEditorHost$ = combineLatest([
             this.tagEditorHost.changes.pipe(
                 map(hosts => hosts.first),
-                startWith(null),
+                filter(host => host != null)
             ),
         ]).pipe(
             map(([editor]) => editor),
             distinctUntilChanged(isEqual),
         );
 
-        this.subscription.add(combineLatest([
+        this.subscriptions.push(combineLatest([
             tagEditorHost$,
             this.tagToEdit$,
             this.nodeId$,
             combineLatest([this.item$, this.nodeId$]).pipe(
                 switchMap(([item, nodeId]) => this.loadItemPermissions(item, nodeId)),
             ),
-        ]).subscribe(([host, itemAndTag, nodeId, permissions]) => {
+        ]).pipe(
+            filter(([host]) => host != null),
+        ).subscribe(([host, itemAndTag, nodeId, permissions]) => {
             // Update item permissions
             this.itemPermissions = permissions;
 
@@ -266,7 +269,7 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     ngOnDestroy(): void {
-        this.subscription.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     private loadFolderWithTags(item: EditableEntity): Observable<EditableEntity> {

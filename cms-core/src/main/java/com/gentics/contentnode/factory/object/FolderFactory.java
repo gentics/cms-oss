@@ -2418,8 +2418,12 @@ public class FolderFactory extends AbstractFactory {
 			sql.append(StringUtils.repeat("?", folderIds.size(), ","));
 			sql.append(")");
 
+			if (!StringUtils.isEmpty(fSearch.getFormType())) {
+				sql.append(" AND formtype = ?");
+			}
+
 			if (!StringUtils.isEmpty(fSearch.getSearchString())) {
-				sql.append("AND (id = ? OR LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
+				sql.append(" AND (id = ? OR LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
 			}
 
 			if (search.isCreator()) {
@@ -2495,6 +2499,10 @@ public class FolderFactory extends AbstractFactory {
 				int pCounter = 1;
 				for (Integer fId : folderIds) {
 					st.setObject(pCounter++, fId);
+				}
+
+				if (!StringUtils.isEmpty(fSearch.getFormType())) {
+					st.setString(pCounter++, fSearch.getFormType());
 				}
 
 				if (!StringUtils.isEmpty(fSearch.getSearchString())) {

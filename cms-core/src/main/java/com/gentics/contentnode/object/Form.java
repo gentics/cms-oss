@@ -67,6 +67,23 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	}
 
 	/**
+	 * Get the form type
+	 * @return form type
+	 */
+	@FieldGetter("formtype")
+	String getFormType();
+
+	/**
+	 * Set the form type
+	 * @param formType form type
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("formtype")
+	default void setFormType(String formType) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
+
+	/**
 	 * Get the description
 	 * @return description
 	 */

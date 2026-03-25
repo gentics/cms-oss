@@ -249,6 +249,11 @@
 				<type>zip</type>
 			</dependency>
 			<dependency>
+				<groupId>com.gentics</groupId>
+				<artifactId>cms-monitoring</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.gentics.mesh</groupId>
 				<artifactId>mesh-rest-client</artifactId>
 				<version>${mesh.version}</version>

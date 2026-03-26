@@ -21,10 +21,10 @@ public class FormTypeConfigurationModel implements Serializable {
 	public String type;
 
 	/**
-	 * Human readable label/name for the configuration
+	 * Human readable name for the configuration
 	 */
 	@JsonProperty
-	public Map<String, String> labelI18n;
+	public Map<String, String> nameI18n;
 
 	/**
 	 * Human readable description for the configuration

@@ -782,6 +782,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 	 */
 	protected Form createForm(Folder folder) throws NodeException {
 		return create(Form.class, form -> {
+			form.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			form.setFolderId(folder.getId());
 			form.setName("Tested");
 			form.setDescription("Test Form");

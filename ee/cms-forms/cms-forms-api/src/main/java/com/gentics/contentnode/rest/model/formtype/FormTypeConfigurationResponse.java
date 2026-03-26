@@ -10,6 +10,13 @@ public class FormTypeConfigurationResponse extends AbstractItemResponse<FormType
 	private static final long serialVersionUID = 5765236127074118506L;
 
 	/**
+	 * Create empty response
+	 */
+	public FormTypeConfigurationResponse() {
+		super();
+	}
+
+	/**
 	 * Creator
 	 * @param item item
 	 * @param responseInfo response info

@@ -2,6 +2,9 @@ package com.gentics.contentnode.tests.utils;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
@@ -20,8 +23,17 @@ public class FormTypeConfigurationModifier implements ConfigModifier {
 
 	@Override
 	public void accept(MapPreferences prefs) throws NodeException {
+		ObjectMapper mapper = new ObjectMapper();
+
 		FormTypeConfigurationMap formTypeConfiguration = new FormTypeConfigurationMap();
-		formTypeConfiguration.put(GENERIC_TYPE, new FormTypeConfiguration(Map.of("de", "CMS Formulare", "en", "CMS Forms"), "forms"));
+		FormTypeConfiguration config = new FormTypeConfiguration(Map.of("de", "CMS Formulare", "en", "CMS Forms"),
+				"forms");
+		try {
+			config.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);
+		} catch (JsonProcessingException e) {
+			throw new NodeException(e);
+		}
+		formTypeConfiguration.put(GENERIC_TYPE, config);
 		prefs.set(FormConfigProvider.TYPES_CONFIG_PATH, formTypeConfiguration);
 	}
 }

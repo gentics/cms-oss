@@ -996,34 +996,34 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@DELETE
 	@Path("/nodes/{nodeId}/types/{type}")
-	public Response removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
+	public GenericResponse removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
 			getFormTypeConfiguration(type);
 
 			if (FormFactory.getFormTypeUsage(node.getId()).contains(type)) {
-				throw new RestMappedException(I18NHelper.get("form.form_type_configuration.used", type))
+				throw new RestMappedException(I18NHelper.get("form.form_type_configuration.used", type, I18NHelper.getName(node)))
 					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
 			}
 
 			FormFactory.removeFormTypeFromNode(type, node.getId());
 
 			trx.success();
-			return Response.noContent().build();
+			return new GenericResponse(null, ResponseInfo.ok("Successfully removed form type from node"));
 		}
 	}
 
 	@Override
 	@PUT
 	@Path("/nodes/{nodeId}/types/{type}")
-	public Response addFormTypeConfigurationsToNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
+	public GenericResponse addFormTypeConfigurationsToNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
 			getFormTypeConfiguration(type);
 
 			FormFactory.addFormTypeToNode(type, node.getId());
 			trx.success();
-			return Response.created(null).build();
+			return new GenericResponse(null, ResponseInfo.ok("Successfully added form type to node"));
 		}
 	}
 

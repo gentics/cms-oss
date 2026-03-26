@@ -54,7 +54,7 @@ public class NodeResourceAvailableFeaturesTest extends AbstractListSortAndFilter
 	}
 
 	@Override
-	protected void fillItemsList(List<? super Object> items) throws NodeException {
+	protected void fillItemsList(List<? super NodeFeatureModel> items) throws NodeException {
 		operate(() -> {
 			for (Feature feature : Feature.values()) {
 				if (feature.isPerNode()) {

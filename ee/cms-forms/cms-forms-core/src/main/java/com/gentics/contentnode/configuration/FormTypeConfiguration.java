@@ -23,13 +23,13 @@ public class FormTypeConfiguration extends FormTypeConfigurationModel {
 
 	/**
 	 * Creator
-	 * @param labelI18n label
+	 * @param nameI18n label
 	 * @param pluginName plugin name
 	 */
 	@JsonCreator
-	public FormTypeConfiguration(@JsonProperty(value = "labelI18n", required = true) Map<String, String> labelI18n,
+	public FormTypeConfiguration(@JsonProperty(value = "nameI18n", required = true) Map<String, String> nameI18n,
 			@JsonProperty(value = "pluginName", required = true) String pluginName) {
-		this.labelI18n = labelI18n;
+		this.nameI18n = nameI18n;
 		this.pluginName = pluginName;
 	}
 }

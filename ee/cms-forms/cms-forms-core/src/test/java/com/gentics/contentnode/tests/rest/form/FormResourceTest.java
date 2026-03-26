@@ -7,6 +7,7 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.perm.PermHandler.setPermissions;
 import static com.gentics.contentnode.tests.assertj.FormAssertions.assertThat;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
@@ -28,12 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-
-import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.ClientErrorException;
-import jakarta.ws.rs.NotAllowedException;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.client.Entity;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.After;
@@ -81,6 +76,12 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.contentnode.testutils.RESTAppContext.LoggedInClient;
 import com.gentics.contentnode.testutils.RESTAppContext.Type;
+
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.NotAllowedException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.client.Entity;
 
 /**
  * Test cases for forms
@@ -139,7 +140,6 @@ public class FormResourceTest {
 	public static void setupOnce() throws NodeException {
 		testContext.getContext().getTransaction().commit();
 		node = supply(() -> createNode("Master", "Master", PublishTarget.NONE, getLanguage("de"), getLanguage("en")));
-		consume(n -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, n.getId()), node);
 		channel = supply(() -> createChannel(node, "Channel", "channel", "/"));
 
 		testFolder = supply(() -> createFolder(node.getFolder(), "Folder"));
@@ -174,6 +174,7 @@ public class FormResourceTest {
 			}
 		});
 		NodeConfigRuntimeConfiguration.getPreferences().setFeature(Feature.FORMS, feature);
+		consume(n -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, n.getId()), node);
 
 		if (!feature || !nodeFeature) {
 			exceptionChecker.expect(NotAllowedException.class, "Das erforderliche Feature forms ist nicht aktiviert.");
@@ -303,6 +304,7 @@ public class FormResourceTest {
 
 		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
 			FormModel request = new FormModel();
+			request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			request.setFolderId(testFolder.getId());
 			request.setLanguages(Arrays.asList("de"));
 			return target.path("form").request().post(Entity.json(request), FormResponse.class);
@@ -318,6 +320,7 @@ public class FormResourceTest {
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 					request.setName("Test Form");
 					request.setFolderId(testFolder.getId());
 					return target.path("form").request().post(Entity.json(request), FormResponse.class);
@@ -361,6 +364,67 @@ public class FormResourceTest {
 					return target.path("form").request().post(Entity.json(request), FormResponse.class);
 				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
 				perm(testFolder, PermType.createform));
+	}
+
+	@Test
+	public void testCreateNoFormType() throws NodeException {
+		if (feature) {
+			exceptionChecker.expect(BadRequestException.class, "Das Feld 'Formulartyp' darf nicht leer sein.");
+		}
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setName("Test Form");
+					request.setFolderId(testFolder.getId());
+					request.setLanguages(Arrays.asList("de"));
+					return target.path("form").request().post(Entity.json(request), FormResponse.class);
+				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.createform));
+		assertThat(response.getItem()).as("Created form").isNotNull().hasName("Test Form").hasVersion("0.1")
+				.isNotModified().isOffline().isNotDeleted().isLocked();
+	}
+
+	@Test
+	public void testCreateInvalidFormType() throws NodeException {
+		if (feature && nodeFeature) {
+			exceptionChecker.expect(ClientErrorException.class, "Unbekannter Formulartyp bla.");
+		}
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setFormType("bla");
+					request.setName("Test Form");
+					request.setFolderId(testFolder.getId());
+					request.setLanguages(Arrays.asList("de"));
+					return target.path("form").request().post(Entity.json(request), FormResponse.class);
+				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.createform));
+		assertThat(response.getItem()).as("Created form").isNotNull().hasName("Test Form").hasVersion("0.1")
+				.isNotModified().isOffline().isNotDeleted().isLocked();
+	}
+
+	@Test
+	public void testCreateFormTypeNotAssigned() throws NodeException {
+		if (feature && nodeFeature) {
+			exceptionChecker.expect(ClientErrorException.class, "Formulartyp %s ist im Node %s nicht aktiviert.".formatted(FormTypeConfigurationModifier.GENERIC_TYPE, "Master"));
+		}
+
+		consume(n -> FormFactory.removeFormTypeFromNode(FormTypeConfigurationModifier.GENERIC_TYPE, n.getId()), node);
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+					request.setName("Test Form");
+					request.setFolderId(testFolder.getId());
+					request.setLanguages(Arrays.asList("de"));
+					return target.path("form").request().post(Entity.json(request), FormResponse.class);
+				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.createform));
+		assertThat(response.getItem()).as("Created form").isNotNull().hasName("Test Form").hasVersion("0.1")
+				.isNotModified().isOffline().isNotDeleted().isLocked();
 	}
 
 	@Test

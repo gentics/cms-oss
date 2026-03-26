@@ -61,8 +61,8 @@ public final class FormConfigProvider implements ConfigurationService {
 		switch (key) {
 		case "type":
 			return type;
-		case "label":
-			return I18NHelper.get(config.labelI18n);
+		case "name":
+			return I18NHelper.get(config.nameI18n);
 		case "description":
 			return I18NHelper.get(config.descriptionI18n);
 		case "external":

@@ -15,7 +15,6 @@ import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
@@ -589,7 +588,7 @@ public interface FormResource {
 	 */
 	@DELETE
 	@Path("/nodes/{nodeId}/types/{type}")
-	Response removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws Exception;
+	GenericResponse removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws Exception;
 
 	/**
 	 * Add the form tyoe configuration to the node.
@@ -602,6 +601,6 @@ public interface FormResource {
 	 */
 	@PUT
 	@Path("/nodes/{nodeId}/types/{type}")
-	Response addFormTypeConfigurationsToNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws Exception;
+	GenericResponse addFormTypeConfigurationsToNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws Exception;
 
 }

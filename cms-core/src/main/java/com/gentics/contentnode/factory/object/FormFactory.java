@@ -1746,7 +1746,7 @@ public class FormFactory extends AbstractFactory {
 	 */
 	public static Set<String> getFormTypeUsage(int nodeId) throws NodeException {
 		return DBUtils.select(
-				"SELECT DISTINCT form.formtype FROM form LEFT JOIN folder ON form.folder.id = folder.id WHERE form.deleted = ? AND form.formtype != ? AND folder.node_id = ?",
+				"SELECT DISTINCT form.formtype FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.deleted = ? AND form.formtype != ? AND folder.node_id = ?",
 				pst -> {
 					pst.setInt(1, 0);
 					pst.setString(2, UNMIGRATED_FORMS);

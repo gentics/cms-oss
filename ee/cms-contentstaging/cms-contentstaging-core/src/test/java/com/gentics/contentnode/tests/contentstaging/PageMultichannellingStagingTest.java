@@ -22,12 +22,15 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Multichannelling test for staging of pages
  */
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.FORMS, Feature.MULTICHANNELLING, Feature.NICE_URLS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class PageMultichannellingStagingTest extends AbstractMultichannellingContentStagingTest<Page> {
 	/**
 	 * Create test instance

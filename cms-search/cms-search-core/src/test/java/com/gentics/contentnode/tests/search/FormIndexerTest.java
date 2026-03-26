@@ -59,8 +59,10 @@ import com.gentics.contentnode.rest.model.request.SetPermsRequest;
 import com.gentics.contentnode.rest.util.PermPattern;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.tests.utils.MCTestedType;
 import com.gentics.contentnode.tests.utils.TestedType;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -68,6 +70,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
  * Test cases for indexing of forms
  */
 @GCNFeature(set = { Feature.MULTICHANNELLING, Feature.ELASTICSEARCH, Feature.WASTEBIN, Feature.FORMS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormIndexerTest extends AbstractIndexerTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext().config(map -> {

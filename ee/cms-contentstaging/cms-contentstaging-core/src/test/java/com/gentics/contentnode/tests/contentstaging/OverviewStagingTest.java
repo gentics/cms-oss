@@ -43,7 +43,9 @@ import com.gentics.contentnode.rest.model.Overview.ListType;
 import com.gentics.contentnode.rest.model.Overview.OrderBy;
 import com.gentics.contentnode.rest.model.Overview.OrderDirection;
 import com.gentics.contentnode.rest.model.Overview.SelectType;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.GenericTestUtils;
 
@@ -51,6 +53,7 @@ import com.gentics.testutils.GenericTestUtils;
  * Test cases for content staging of overviews
  */
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.FORMS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 @RunWith(value = Parameterized.class)
 public class OverviewStagingTest extends AbstractContentStagingTest<Page> {
 	private final static String packageName = "TestPackage";

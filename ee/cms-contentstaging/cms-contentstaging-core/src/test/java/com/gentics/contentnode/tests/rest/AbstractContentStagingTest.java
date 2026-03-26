@@ -65,11 +65,14 @@ import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.publish.mesh.form.FormPublishTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.tests.utils.OverviewHelper;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.contentnode.testutils.RESTAppContext.Type;
 
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class AbstractContentStagingTest {
 
 	protected static final String PACKAGE_SUBROOT = "package";
@@ -222,6 +225,7 @@ public class AbstractContentStagingTest {
 		image1 = (ImageFile) supply(() -> createImage(node1.getFolder(), IMAGE_NAME, out.toByteArray()));
 		file1 = supply(() -> ContentNodeTestDataUtils.createFile(folder1, "blubb.txt", "Original content".getBytes(), node1));
 		form1 = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node1.getFolder().getId());

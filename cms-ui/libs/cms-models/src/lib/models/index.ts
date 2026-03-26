@@ -16,6 +16,8 @@ export * from './favourite';
 export * from './feature';
 export * from './file';
 export * from './folder';
+export * from './form-config';
+export * from './form-conditions';
 export * from './gcms-normalizer/gcms-normalizer';
 export * from './gcms-normalizer/gcms-normalizer-types';
 export * from './group';

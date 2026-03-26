@@ -714,6 +714,18 @@ export interface FormDataListOptions {
     q?: string;
 }
 
+export interface FormTypeConfigirationListOptions extends BaseListOptionsWithPaging<{
+    type: string;
+    name: string;
+    description: string;
+    external: boolean;
+    submitOnce: boolean;
+}> {
+    nodeId?: number;
+    external?: boolean;
+    submitOnce?: boolean;
+}
+
 export interface LinkCheckerOptions extends BaseListOptionsWithPaging<Page> {
     editable?: boolean;
     iscreator?: boolean;
@@ -1323,14 +1335,14 @@ export interface MultiUnlocalizeRequest extends UnlocalizeRequest {
 /**
  * Image formats which can be modified in/with the CMS via the `resize` and `rotate` endpoints.
  */
-export type ModifiableImageFormats =
- 'png'
-| 'jpg'
-| 'bmp'
-| 'gif'
-| 'tiff'
-| 'wbmp'
-| 'webp';
+export type ModifiableImageFormats
+    = 'png'
+    | 'jpg'
+    | 'bmp'
+    | 'gif'
+    | 'tiff'
+    | 'wbmp'
+    | 'webp';
 
 /**
  * This object is derived from the gcnImagePlugin when using the crop and resize. It is used in making a request to the

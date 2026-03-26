@@ -523,6 +523,11 @@ export class GCMSRestClient implements GCMSRootAPI {
         removeScheduledPublish: (id) => this.executeMappedJsonRequest(DELETE, `/form/${id}/online`),
         removeScheduledUnpublish: (id) => this.executeMappedJsonRequest(DELETE, `/form/${id}/offline`),
 
+        listConfigurations: (options) => this.executeMappedJsonRequest(GET, '/form/types', null, options),
+        getConfiguration: (type) => this.executeMappedJsonRequest(GET, `/form/types/${type}`),
+        assignConfiguration: (type, nodeId) => this.executeMappedJsonRequest(PUT, `/form/nodes/${nodeId}/types/${type}`),
+        unassignConfiguration: (type, nodeId) => this.executeMappedJsonRequest(DELETE, `/form/nodes/${nodeId}/types/${type}`),
+
         exportStatus: (id) => this.executeMappedJsonRequest(GET, `/form/${id}/export/status`),
         createExport: (id) => this.executeMappedJsonRequest(POST, `/form/${id}/export`),
         binariesStatus: (id) => this.executeMappedJsonRequest(GET, `/form/${id}/binaries/status`),

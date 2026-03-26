@@ -523,7 +523,7 @@ export interface FormCreateResponse extends GenericItemResponse<Form> {}
 /**
  * Response from `GET /form/:id`
  */
-export interface FormResponse extends GenericItemResponse<Form>, StagableItemResponse {}
+export interface FormResponse extends GenericItemResponse<Form<Raw>>, StagableItemResponse {}
 
 /**
  * Response from `GET|POST /form/:id/(binaries|export)`

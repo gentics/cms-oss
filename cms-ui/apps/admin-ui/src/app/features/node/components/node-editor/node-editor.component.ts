@@ -19,7 +19,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { Feature, Folder, Language, NodeFeature, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ModalService, TableRow } from '@gentics/ui-core';
+import { ModalService, PickListItem, TableRow } from '@gentics/ui-core';
 import { finalize } from 'rxjs/operators';
 import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/assign-languages-to-node-modal.component';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
@@ -80,7 +80,23 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         )
     }
 
+    allForms = [
+        { id: 1, label: 'Contact Form', description: 'Standard contact form' },
+        { id: 2, label: 'Newsletter Form', description: 'Signup form' },
+        { id: 3, label: 'Survey Form', description: 'Feedback collection' },
+    ];
+
+    selectedForms = new FormControl<PickListItem[]>([
+        { id: 2, label: 'Newsletter Form', description: 'Signup form' },
+        { id: 3, label: 'Survey Form', description: 'Feedback collection' },
+    ]);
+
     override ngOnInit(): void {
+        this.subcriptions.push(
+            this.selectedForms.valueChanges.subscribe((value) => {
+                console.log('picklist changed', value);
+            }),
+        );
         this.isChildNode = this.entity?.type === 'channel';
 
         this.subcriptions.push(this.appState.select(state => state.features.global[Feature.DEVTOOLS]).subscribe(enabled => {

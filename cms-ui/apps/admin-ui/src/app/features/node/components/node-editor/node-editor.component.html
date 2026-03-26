@@ -86,27 +86,28 @@
       </div>
     </gtx-tab>
 
-    @if (isFormsEnabled) {
-      <gtx-tab
-        id="forms" 
-        gtxDetailTabLink title="Forms"
-        >
-        <div class="detail-tab-wrapper">
-          <gtx-entity-detail-header 
-            title="Forms Configuration" 
-            saveActionAllowedId="node.updateNodeInstance"
-            [saveActionAllowedInstanceId]="entity?.folderId"
-            [saveDisabled]="!formsAssignment.isDirty"
-            (saveClick)="formsAssignment.saveForms()"
-            (cancelClick)="detailsClose()"></gtx-entity-detail-header>
+    <gtx-tab
+      id="forms" 
+      gtxDetailTabLink 
+      title="Forms"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header 
+          title="Forms Configuration" 
+          saveActionAllowedId="node.updateNodeInstance"
+          (cancelClick)="detailsClose()"></gtx-entity-detail-header>
 
-          <div class="gtx-entity-details-tab-content-body" style="padding: 0.9375rem;">
-            <gtx-node-forms-assignment #formsAssignment></gtx-node-forms-assignment>
-          </div>
+        <div class="gtx-entity-details-tab-content-body">
+          <gtx-pick-list
+            leftListLabel="Available forms"
+            rightListLabel="Assigned forms"
+            [showCount]="true"
+            [items]="allForms"
+            [formControl]="selectedForms"
+          ></gtx-pick-list>
         </div>
-      </gtx-tab>
-    }
-
+      </div>
+    </gtx-tab>
 
     <gtx-tab
       [id]="Tabs.LANGUAGES"

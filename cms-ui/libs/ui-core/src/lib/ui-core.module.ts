@@ -30,6 +30,7 @@ import {
     ModalDialogComponent,
     OverlayHostComponent,
     PaginationComponent,
+    PickListComponent,
     ProgressBarComponent,
     RadioButtonComponent,
     RangeComponent,
@@ -142,6 +143,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     TooltipContentWrapperComponent,
     TopBarComponent,
     TrableComponent,
+    PickListComponent,
 ];
 
 export const UI_CORE_DIRECTIVES: Type<any>[] = [

@@ -505,6 +505,10 @@ export async function expectItemPublished(item: Locator): Promise<void> {
     await expect(item.locator('item-status-label .status-label')).toContainClass('published');
 }
 
+export async function expectItemLanguageCode(item: Locator, languageCode: string): Promise<void> {
+    await expect(item.locator('>gtx-language-state .language-code')).toHaveText(languageCode);
+}
+
 export async function openToolOrAction(page: Page, id: string): Promise<void> {
     const context = await openContext(page.locator('gtx-top-bar gtx-actions-selector gtx-dropdown-list'));
     const btn = context.locator(`.action-button[data-tool-id="${id}"], .action-button[data-action-id="${id}"]`);

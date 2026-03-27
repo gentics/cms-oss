@@ -11,22 +11,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HEAD;
-import jakarta.ws.rs.OPTIONS;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.ResponseBuilder;
-import jakarta.ws.rs.core.Response.Status;
-import jakarta.ws.rs.core.UriInfo;
-
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
@@ -55,8 +39,23 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
-
 import io.reactivex.Flowable;
+import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HEAD;
+import jakarta.ws.rs.OPTIONS;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.ResponseBuilder;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.UriInfo;
 
 /**
  * Resource implementation for custom proxy
@@ -106,6 +105,7 @@ public class ProxyResource {
 	 */
 	@DELETE
 	@Path("/{key}")
+	@Hidden
 	public Response deleteNoPath() throws NodeException, HttpException, IOException {
 		return delete();
 	}
@@ -119,6 +119,7 @@ public class ProxyResource {
 	 */
 	@GET
 	@Path("/{key}")
+	@Hidden
 	public Response getNoPath() throws NodeException, HttpException, IOException {
 		return get();
 	}
@@ -132,6 +133,7 @@ public class ProxyResource {
 	 */
 	@HEAD
 	@Path("/{key}")
+	@Hidden
 	public Response headNoPath() throws NodeException, HttpException, IOException {
 		return head();
 	}
@@ -145,6 +147,7 @@ public class ProxyResource {
 	 */
 	@OPTIONS
 	@Path("/{key}")
+	@Hidden
 	public Response optionsNoPath() throws NodeException, HttpException, IOException {
 		return options();
 	}
@@ -159,6 +162,7 @@ public class ProxyResource {
 	 */
 	@POST
 	@Path("/{key}")
+	@Hidden
 	public Response postNoPath(InputStream requestBody) throws NodeException, HttpException, IOException {
 		return post(requestBody);
 	}
@@ -173,6 +177,7 @@ public class ProxyResource {
 	 */
 	@PUT
 	@Path("/{key}")
+	@Hidden
 	public Response putNoPath(InputStream requestBody) throws NodeException, HttpException, IOException {
 		return put(requestBody);
 	}

@@ -6,11 +6,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
-import jakarta.ws.rs.ForbiddenException;
-import jakarta.ws.rs.NotAuthorizedException;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.client.Entity;
-
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -23,6 +18,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.client.RestClient;
+import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -30,6 +26,10 @@ import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.contentnode.testutils.RESTAppContext.LoggedInClient;
 
 import fi.iki.santtu.md5.MD5;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.client.Entity;
 
 /**
  * Test cases for custom proxy
@@ -115,7 +115,7 @@ public class CustomProxyTest {
 	 */
 	@Test(expected = NotAuthorizedException.class)
 	public void testNoLogin() throws RestException {
-		RestClient client = new RestClient(restContext.getBaseUri());
+		RestClient client = new JerseyRestClientImpl(restContext.getBaseUri());
 		// set invalid sid, so that the RestClient allows to make the request
 		client.setSid("bla");
 		client.base().path("proxy").path(RESOURCE_KEY).path("hello").request().get(String.class);

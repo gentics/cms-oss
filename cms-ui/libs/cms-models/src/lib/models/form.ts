@@ -422,7 +422,7 @@ export interface FormPage {
     /**
      * The elements which are to be displayed in order.
      */
-    elements: Element[];
+    elements: FormElement[];
 }
 
 export interface FormElement {

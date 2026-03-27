@@ -698,43 +698,11 @@ span.diff-html-added {
         if (!this.currentItem) {
             return null;
         }
-        if (this.currentItem.type === 'page') {
-            return this.entityResolver.getLanguage((this.currentItem as Page).contentGroupId);
+        if (this.currentItem.type !== 'page') {
+            return null;
         }
 
-        if (this.currentItem.type !== 'form') {
-            return;
-        }
-
-        const form = this.currentItem;
-        const { activeFormLanguage: currentLanguageId, activeNodeLanguages } = this.appState.now.folder;
-        const nodeLanguages = activeNodeLanguages.list.map((nlid) => {
-            return this.entityResolver.getLanguage(nlid);
-        });
-        const currentLanguage = this.entityResolver.getLanguage(currentLanguageId);
-        if (currentLanguage && form.languages.includes(currentLanguage.code)) {
-            return currentLanguage;
-        }
-
-        const fallbackLanguageCodes = Array.isArray(form.languages) && form.languages.length > 0 && form.languages;
-        if (!fallbackLanguageCodes) {
-            throw new Error(`Form with ID ${form.id} has no translation defined in form.languages.`);
-        }
-
-        const fallbackLanguages = form.languages
-            .filter((l) => nodeLanguages.map((nl) => nl.code).includes(l))
-            .map((formlanguageInNodeCode) => {
-                return Object.values(this.appState.now.entities.language)
-                    .find((stateLanguage) => stateLanguage.code === formlanguageInNodeCode);
-            });
-
-        if (!Array.isArray(fallbackLanguages) || fallbackLanguages.length === 0) {
-            throw new Error(
-                `Form with ID ${form.id} has no translation in a language which is configured for Node with ID ${this.currentNode.id}.`,
-            );
-        }
-
-        return fallbackLanguages[0];
+        return this.entityResolver.getLanguage((this.currentItem as Page).contentGroupId);
     }
 
     /**

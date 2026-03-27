@@ -62,12 +62,12 @@
         </div>
     }
 
-    @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form') {
+    @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form' && currentFormConfig) {
         <div class="form-editor">
             <gtx-form-grid
                 [config]="currentFormConfig"
-                [language]="activeUiLanguageCode$ | async"
                 [restricted]="!!currentFormConfig?.external"
+                [languages]="currentItem.languages"
 
                 [schema]="null"
                 [uiSchema]="null"

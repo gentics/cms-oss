@@ -17,7 +17,7 @@ import {
 import { Subscription } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { columnOptions } from '../../constants/column-options';
-import { lineOptions } from '../../constants/line-options';
+import { LINE_OPTIONS } from '../../constants/line-options';
 import { FormElementModalComponent } from '../form-element-modal/form-element-modal.component';
 import { FormGridElementModalComponent } from '../formgrid-element-modal/formgrid-element-modal.component';
 
@@ -48,7 +48,7 @@ interface DropRow {
 })
 export class EditformComponent implements OnInit, OnDestroy {
     options = columnOptions;
-    lines = lineOptions;
+    lines = LINE_OPTIONS;
     items: Partial<Element>[] = [];
 
     public isLoading = true;

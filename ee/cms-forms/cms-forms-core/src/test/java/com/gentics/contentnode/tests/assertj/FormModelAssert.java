@@ -98,6 +98,16 @@ public class FormModelAssert extends AbstractAssert<FormModelAssert, FormModel> 
 		return this;
 	}
 
+	public FormModelAssert hasId(int id) {
+		assertThat(actual.getId()).as(descriptionText() + " ID").isEqualTo(id);
+		return this;
+	}
+
+	public FormModelAssert hasFormType(String formType) {
+		assertThat(actual.getFormType()).as(descriptionText() + " form type").isEqualTo(formType);
+		return this;
+	}
+
 	public FormModelAssert hasName(String name) {
 		assertThat(actual.getName()).as(descriptionText() + " name").isEqualTo(name);
 		return this;
@@ -110,6 +120,11 @@ public class FormModelAssert extends AbstractAssert<FormModelAssert, FormModel> 
 
 	public FormModelAssert hasFolder(int folderId) {
 		assertThat(actual.getFolderId()).as(descriptionText() + " folder ID").isEqualTo(folderId);
+		return this;
+	}
+
+	public FormModelAssert hasExternalId(String externalId) {
+		assertThat(actual.getExternalId()).as(descriptionText() + " external ID").isEqualTo(externalId);
 		return this;
 	}
 }

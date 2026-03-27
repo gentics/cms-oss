@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource.impl;
 import static com.gentics.contentnode.rest.util.MiscUtils.NEW_FIELD_CHECKER;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkBodyWithFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.load;
+import static com.gentics.contentnode.rest.util.MiscUtils.loadForm;
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
 
 import java.util.Arrays;
@@ -49,6 +50,7 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Folder.FormSearch;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
@@ -126,6 +128,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	public static final BiFunction<Form, FormModel, FormModel> NODE2REST = (form, model) -> {
 		model.setId(form.getId());
 		model.setGlobalId(form.getGlobalId().toString());
+		model.setExternalId(form.getExternalId());
 		model.setName(form.getName());
 		model.setDescription(form.getDescription());
 		model.setFormType(form.getFormType());
@@ -196,6 +199,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	 * Function that transforms the rest model into the given node model
 	 */
 	public final static BiFunction<FormModel, Form, Form> REST2NODE = (restModel, form) -> {
+		if (StringUtils.isNotBlank(restModel.getExternalId())) {
+			form.setExternalId(restModel.getExternalId());
+		}
 		if (!StringUtils.isBlank(restModel.getName())) {
 			form.setName(restModel.getName());
 		}
@@ -271,61 +277,103 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 	@Override
 	@POST
-	public FormResponse create(FormModel form) throws NodeException {
+	public FormResponse create(FormModel form, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
 
 			checkBodyWithFunction(form, NEW_FIELD_CHECKER, fm -> Pair.of(I18NHelper.get("name"), fm.getName()),
-					fm -> Pair.of(I18NHelper.get("folder"), fm.getFolderId()),
 					fm -> Pair.of(I18NHelper.get("language"), fm.getLanguages()),
 					fm -> Pair.of(I18NHelper.get("formType"), fm.getFormType()));
 
-			Folder folder = load(Folder.class, Integer.toString(form.getFolderId())).getMaster();
+			Folder folder = null;
+			Folder defaultFormFolder = null;
+			if (!StringUtils.isBlank(nodeId)) {
+				Node node = load(Node.class, nodeId);
+				defaultFormFolder = node.getDefaultFormFolder();
+			}
+
+			// when there is no default form folder in the node (or no nodeId was given), we require the folder field in the form
+			if (defaultFormFolder == null) {
+				checkBodyWithFunction(form, NEW_FIELD_CHECKER, fm -> Pair.of(I18NHelper.get("folder"), fm.getFolderId()));
+				folder = load(Folder.class, Integer.toString(form.getFolderId())).getMaster();
+			} else if (ObjectTransformer.getInt(form.getFolderId(), 0) > 0) {
+				folder = load(Folder.class, Integer.toString(form.getFolderId())).getMaster();
+			} else {
+				folder = defaultFormFolder.getMaster();
+			}
+
 			Node node = folder.getOwningNode();
 			require(Feature.FORMS, node);
 
-			if (!t.getPermHandler().canCreate(folder, Form.class, null)) {
-				throw new InsufficientPrivilegesException(I18NHelper.get("form.nopermission"), null, null,
-						Form.TYPE_FORM, 0, PermType.create);
+			// when an external ID is give, we will try to find the form with the external ID
+			Form toUpdate = null;
+			if (StringUtils.isNotBlank(form.getExternalId())) {
+				toUpdate = MiscUtils.loadFormWithoutPermissionCheck(form.getExternalId(), nodeId, false);
 			}
 
-			// check whether the folder belongs to a channel
-			if (folder.getChannel() != null) {
-				throw new RestMappedException(I18NHelper.get("form.create.channel", I18NHelper.getPath(folder)))
-						.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+			if (toUpdate != null) {
+				// when we found the form with external ID, we do an update instead of create
+				Form update = load(Form.class, Integer.toString(toUpdate.getId()), ObjectPermission.edit);
+
+				if (form.getLanguages() != null) {
+					// check whether the languages are all activated for the node
+					checkLanguages(node, form.getLanguages());
+				}
+
+				form.setFormType(null);
+				update = REST2NODE.apply(form, t.getObject(update, true));
+				update.save();
+
+				FormResponse response = new FormResponse(TRANSFORM2REST.apply(update.reload()),
+						ResponseInfo.ok("Successfully updated form"));
+
+				trx.success();
+				return response;
+			} else {
+				// try to create the form
+				if (!t.getPermHandler().canCreate(folder, Form.class, null)) {
+					throw new InsufficientPrivilegesException(I18NHelper.get("form.nopermission"), null, null,
+							Form.TYPE_FORM, 0, PermType.create);
+				}
+
+				// check whether the folder belongs to a channel
+				if (folder.getChannel() != null) {
+					throw new RestMappedException(I18NHelper.get("form.create.channel", I18NHelper.getPath(folder)))
+							.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+				}
+
+				// check whether the node has languages
+				if (node.getLanguages().isEmpty()) {
+					throw new RestMappedException(
+							I18NHelper.get("form.create.nolanguages", I18NHelper.getName(node.getFolder())))
+									.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+				}
+
+				// check whether the requested formtype is assigned to the node
+				checkFormType(node, form.getFormType());
+
+				// check whether the languages are all activated for the node
+				checkLanguages(node, form.getLanguages());
+
+				Form nodeForm = REST2NODE.apply(form, t.createObject(Form.class));
+				nodeForm.setFolderId(folder.getId());
+				nodeForm.save();
+
+				FormResponse response = new FormResponse(TRANSFORM2REST.apply(nodeForm.reload()),
+						ResponseInfo.ok("Successfully created form"));
+
+				trx.success();
+				return response;
 			}
-
-			// check whether the node has languages
-			if (node.getLanguages().isEmpty()) {
-				throw new RestMappedException(
-						I18NHelper.get("form.create.nolanguages", I18NHelper.getName(node.getFolder())))
-								.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
-			}
-
-			// check whether the requested formtype is assigned to the node
-			checkFormType(node, form.getFormType());
-
-			// check whether the languages are all activated for the node
-			checkLanguages(node, form.getLanguages());
-
-			Form nodeForm = REST2NODE.apply(form, t.createObject(Form.class));
-			nodeForm.setFolderId(folder.getId());
-			nodeForm.save();
-
-			FormResponse response = new FormResponse(TRANSFORM2REST.apply(nodeForm.reload()),
-					ResponseInfo.ok("Successfully created form"));
-
-			trx.success();
-			return response;
 		}
 	}
 
 	@Override
 	@GET
 	@Path("{id}")
-	public FormResponse get(@PathParam("id") String formId, @QueryParam("package") String stagingPackageName) throws NodeException {
+	public FormResponse get(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("package") String stagingPackageName) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form form = load(Form.class, formId);
+			Form form = loadForm(formId, nodeId);
 			require(Feature.FORMS, form.getFolder().getOwningNode());
 
 			FormResponse response = new FormResponse(TRANSFORM2REST.apply(form),
@@ -339,10 +387,10 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@PUT
 	@Path("{id}")
-	public FormResponse update(@PathParam("id") String formId, FormModel form) throws NodeException {
+	public FormResponse update(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, FormModel form) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
-			Form update = load(Form.class, formId, ObjectPermission.edit);
+			Form update = loadForm(formId, nodeId, ObjectPermission.edit);
 			Node node = update.getFolder().getOwningNode();
 			require(Feature.FORMS, node);
 
@@ -366,11 +414,11 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@DELETE
 	@Path("{id}")
-	public GenericResponse delete(@PathParam("id") String formId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) throws NodeException {
+	public GenericResponse delete(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) throws NodeException {
 		boolean syncCr = Optional.ofNullable(disableInstantDelete).map(BooleanUtils::negate).orElse(true);
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx(); InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			Transaction t = trx.getTransaction();
-			Form toDelete = load(Form.class, formId, ObjectPermission.delete);
+			Form toDelete = loadForm(formId, nodeId, ObjectPermission.delete);
 			require(Feature.FORMS, toDelete.getFolder().getOwningNode());
 
 			t.getObject(toDelete, true).delete();
@@ -383,11 +431,11 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@PUT
 	@Path("{id}/online")
-	public FormResponse publish(@PathParam("id") String formId, @QueryParam("at") @DefaultValue("0") int at,
-			@QueryParam("keepVersion") @DefaultValue("false") boolean keepVersion) throws NodeException {
+	public FormResponse publish(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId,
+			@QueryParam("at") @DefaultValue("0") int at, @QueryParam("keepVersion") @DefaultValue("false") boolean keepVersion) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
-			Form toPublish = load(Form.class, formId, ObjectPermission.publish);
+			Form toPublish = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toPublish.getFolder().getOwningNode());
 
 			t.getObject(toPublish, true).publish(at, keepVersion);
@@ -403,11 +451,11 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@DELETE
 	@Path("{id}/online")
-	public FormResponse takeOffline(@PathParam("id") String formId, @QueryParam("at") @DefaultValue("0") int at)
+	public FormResponse takeOffline(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("at") @DefaultValue("0") int at)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
-			Form toTakeOffline = load(Form.class, formId, ObjectPermission.publish);
+			Form toTakeOffline = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toTakeOffline.getFolder().getOwningNode());
 
 			t.getObject(toTakeOffline, true).takeOffline(at);
@@ -423,9 +471,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@DELETE
 	@Path("{id}/publish/at")
-	public FormResponse removePublishAt(@PathParam("id") String formId) throws NodeException {
+	public FormResponse removePublishAt(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form toChangeTimemanagement = load(Form.class, formId, ObjectPermission.publish);
+			Form toChangeTimemanagement = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toChangeTimemanagement.getFolder().getOwningNode());
 
 			toChangeTimemanagement.clearTimePub();
@@ -441,9 +489,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@DELETE
 	@Path("{id}/offline/at")
-	public FormResponse removeOfflineAt(@PathParam("id") String formId) throws NodeException {
+	public FormResponse removeOfflineAt(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form toChangeTimemanagement = load(Form.class, formId, ObjectPermission.publish);
+			Form toChangeTimemanagement = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toChangeTimemanagement.getFolder().getOwningNode());
 
 			toChangeTimemanagement.clearTimeOff();
@@ -459,10 +507,10 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@PUT
 	@Path("{id}/lock")
-	public FormResponse lock(@PathParam("id") String formId) throws NodeException {
+	public FormResponse lock(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
-			Form toLock = load(Form.class, formId, ObjectPermission.edit);
+			Form toLock = loadForm(formId, nodeId, ObjectPermission.edit);
 			require(Feature.FORMS, toLock.getFolder().getOwningNode());
 
 			// get an editable copy, which will lock the form (if possible)
@@ -479,9 +527,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@DELETE
 	@Path("{id}/lock")
-	public FormResponse unlock(@PathParam("id") String formId) throws NodeException {
+	public FormResponse unlock(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form toUnlock = load(Form.class, formId, ObjectPermission.edit);
+			Form toUnlock = loadForm(formId, nodeId, ObjectPermission.edit);
 			require(Feature.FORMS, toUnlock.getFolder().getOwningNode());
 
 			toUnlock.unlock();
@@ -497,9 +545,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@GET
 	@Path("{id}/version")
-	public ItemVersionListResponse listVersions(@PathParam("id") String formId) throws NodeException {
+	public ItemVersionListResponse listVersions(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form form = load(Form.class, formId);
+			Form form = loadForm(formId, nodeId);
 			require(Feature.FORMS, form.getFolder().getOwningNode());
 
 			ItemVersionListResponse response = ListBuilder
@@ -514,10 +562,10 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@GET
 	@Path("{id}/version/{version}")
-	public FormResponse getVersion(@PathParam("id") String formId, @PathParam("version") String version)
+	public FormResponse getVersion(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @PathParam("version") String version)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form form = load(Form.class, formId);
+			Form form = loadForm(formId, nodeId);
 			require(Feature.FORMS, form.getFolder().getOwningNode());
 
 			NodeObjectVersion requestedVersion = form.getVersion(version);
@@ -538,11 +586,11 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@POST
 	@Path("{id}/version/{version}/restore")
-	public FormResponse restoreVersion(@PathParam("id") String formId, @PathParam("version") String version)
+	public FormResponse restoreVersion(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @PathParam("version") String version)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
-			Form form = load(Form.class, formId, ObjectPermission.edit);
+			Form form = loadForm(formId, nodeId, ObjectPermission.edit);
 			require(Feature.FORMS, form.getFolder().getOwningNode());
 
 			NodeObjectVersion requestedVersion = form.getVersion(version);
@@ -564,9 +612,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@DELETE
 	@Path("wastebin/{id}")
-	public GenericResponse removeFromWastebin(@PathParam("id") String formId) throws NodeException {
+	public GenericResponse removeFromWastebin(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx(); WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			Form form = load(Form.class, formId, ObjectPermission.wastebin);
+			Form form = loadForm(formId, nodeId, ObjectPermission.wastebin);
 			require(Feature.FORMS, form.getFolder().getOwningNode());
 
 			if (!form.isDeleted()) {
@@ -583,9 +631,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@POST
 	@Path("wastebin/{id}/restore")
-	public FormResponse restoreFromWastebin(@PathParam("id") String formId) throws NodeException {
+	public FormResponse restoreFromWastebin(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx(); WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			Form form = load(Form.class, formId, ObjectPermission.wastebin);
+			Form form = loadForm(formId, nodeId, ObjectPermission.wastebin);
 			require(Feature.FORMS, form.getFolder().getOwningNode());
 
 			if (!form.isDeleted()) {
@@ -603,11 +651,11 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@Override
 	@PUT
 	@Path("{id}/folder/{folderId}")
-	public FormResponse move(@PathParam("id") String formId, @PathParam("folderId") String folderId)
+	public FormResponse move(@PathParam("id") String formId, @PathParam("folderId") String folderId, @QueryParam("nodeId") String nodeId)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
-			Form form = load(Form.class, formId,
+			Form form = loadForm(formId, nodeId,
 					NodeConfigRuntimeConfiguration.isFeature(Feature.MOVE_PERM_WITH_EDIT) ? ObjectPermission.edit
 							: ObjectPermission.delete);
 			Node sourceNode = form.getFolder().getOwningNode();
@@ -674,9 +722,9 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@GET
 	@Path("{id}/preview/{language}")
 	@Produces({ MediaType.TEXT_HTML })
-	public String preview(@PathParam("id") String formId, @PathParam("language") String language) throws NodeException {
+	public String preview(@PathParam("id") String formId, @PathParam("language") String language, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form form = load(Form.class, formId);
+			Form form = loadForm(formId, nodeId);
 			ContentRepository cr = getMeshCrForPreview(form);
 
 			try (MeshPublisher mp = new MeshPublisher(cr)) {
@@ -689,10 +737,10 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@POST
 	@Path("{id}/preview/{language}")
 	@Produces({ MediaType.TEXT_HTML })
-	public String preview(@PathParam("id") String formId, @PathParam("language") String language, FormModel formModel)
+	public String preview(@PathParam("id") String formId, @PathParam("language") String language, @QueryParam("nodeId") String nodeId, FormModel formModel)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form form = load(Form.class, formId);
+			Form form = loadForm(formId, nodeId);
 			ContentRepository cr = getMeshCrForPreview(form);
 
 			Form copy = (Form) form.copy();
@@ -874,19 +922,26 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	@GET
 	@Path("/usage/total")
 	public TotalUsageResponse getTotalUsage(@QueryParam("id") List<Integer> formId,
-			@QueryParam("nodeId") Integer nodeId) throws NodeException {
+			@QueryParam("nodeId") String nodeId) throws NodeException {
 		if (ObjectTransformer.isEmpty(formId)) {
 			return new TotalUsageResponse(null,
 					new ResponseInfo(ResponseCode.OK, "Successfully fetched total usage information using 0 forms"));
 		}
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			TotalUsageResponse response = new TotalUsageResponse();
+
+			int iNodeId = 0;
+			if (!StringUtils.isBlank(nodeId)) {
+				Node node = load(Node.class, nodeId);
+				iNodeId = node.getId();
+			}
+
 			for (Integer id : formId) {
 				TotalUsageInfo info = new TotalUsageInfo();
 				Set<Integer> referencingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(id), Form.TYPE_FORM,
-						PageUsage.GENERAL, nodeId);
+						PageUsage.GENERAL, iNodeId);
 				Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(id), Form.TYPE_FORM,
-						nodeId);
+						iNodeId);
 				info.setTotal(referencingPageIds.size() + usingTemplateIds.size());
 				info.setPages(referencingPageIds.size());
 				info.setTemplates(usingTemplateIds.size());
@@ -905,7 +960,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> formId,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("pages") @DefaultValue("true") boolean returnPages,
+			@QueryParam("nodeId") String nodeId, @QueryParam("pages") @DefaultValue("true") boolean returnPages,
 			@BeanParam PageModelParameterBean pageModel) throws NodeException {
 		if (ObjectTransformer.isEmpty(formId)) {
 			return new PageUsageListResponse(null,
@@ -913,8 +968,14 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		}
 
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			int iNodeId = 0;
+			if (!StringUtils.isBlank(nodeId)) {
+				Node node = load(Node.class, nodeId);
+				iNodeId = node.getId();
+			}
+
 			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder,
-					Form.TYPE_FORM, formId, PageUsage.GENERAL, nodeId, returnPages, pageModel);
+					Form.TYPE_FORM, formId, PageUsage.GENERAL, iNodeId, returnPages, pageModel);
 			trx.success();
 			return response;
 		}
@@ -927,7 +988,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> formId,
-			@QueryParam("nodeId") Integer nodeId,
+			@QueryParam("nodeId") String nodeId,
 			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws NodeException {
 		if (ObjectTransformer.isEmpty(formId)) {
 			return new TemplateUsageListResponse(null,
@@ -935,8 +996,14 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		}
 
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			int iNodeId = 0;
+			if (!StringUtils.isBlank(nodeId)) {
+				Node node = load(Node.class, nodeId);
+				iNodeId = node.getId();
+			}
+
 			TemplateUsageListResponse response = MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder,
-					Form.TYPE_FORM, formId, nodeId, returnTemplates);
+					Form.TYPE_FORM, formId, iNodeId, returnTemplates);
 			trx.success();
 			return response;
 		}

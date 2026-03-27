@@ -42,6 +42,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
@@ -95,10 +96,12 @@ public class FormIndexerTest extends AbstractIndexerTest {
 
 		node = supply(() -> createNode("master", "Master", PublishTarget.NONE, german));
 		operate(() -> node.activateFeature(Feature.FORMS));
+		operate(() -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, node.getId()));
 		channel = supply(() -> createChannel(node, "Channel", "channel", "/"));
 
 		otherNode = supply(() -> createNode("other", "Other", PublishTarget.NONE, german));
 		operate(() -> otherNode.activateFeature(Feature.FORMS));
+		operate(() -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, otherNode.getId()));
 
 		user = supply(t -> t.getObject(SystemUser.class, 1));
 
@@ -109,8 +112,6 @@ public class FormIndexerTest extends AbstractIndexerTest {
 	public void setup() throws NodeException {
 		String esUrl = String.format("http://%s:%d/", elasticsearch.getHost(), elasticsearch.getMappedPort(9200));
 		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, esUrl);
-
-		System.out.printf("Elasticsearch URL: %s\n", esUrl);
 
 		Trx.operate(() -> {
 			try (WastebinFilter wbf = Wastebin.INCLUDE.set()) {
@@ -361,7 +362,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 		// move form
 		indexTest(() -> {
 			FormResponse response = supply(() -> getFormResource().move(Integer.toString(pair.getRight().getId()),
-					Integer.toString(otherNode.getFolder().getId())));
+					Integer.toString(otherNode.getFolder().getId()), null));
 			assertResponseOK(response);
 
 			return pair.getRight();

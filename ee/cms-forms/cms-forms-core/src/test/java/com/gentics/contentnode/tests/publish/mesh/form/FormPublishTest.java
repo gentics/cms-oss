@@ -203,7 +203,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		});
 
 		for (String language : Arrays.asList("de", "en")) {
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, previewModel));
+			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
 			String expected = String.format(writer.toString(), 
@@ -276,7 +276,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		});
 
 		for (String language : Arrays.asList("de", "en")) {
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, previewModel));
+			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
 			String expected = String.format(writer.toString(), 
@@ -337,7 +337,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		});
 
 		for (String language : Arrays.asList("de", "en")) {
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, previewModel));
+			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
 			String expected = String.format(writer.toString(), meshUuid, "", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;|&quot;&#x27;AGB herunterladen&#x27;&quot;|&lt;/a&gt;", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;|&quot;&#x27;AGB herunterladen&#x27;&quot;|&lt;/a&gt;");
@@ -479,7 +479,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 
 			// move form to other node
 			Form sameFormOtherNode = supply(trx -> {
-				FormResponse result = getFormResource().move(form.getGlobalId().toString(), otherNode.getFolder().getGlobalId().toString());
+				FormResponse result = getFormResource().move(form.getGlobalId().toString(), otherNode.getFolder().getGlobalId().toString(), null);
 				assertThat(result.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
 				return trx.getObject(Form.class, form.getId());
 			});
@@ -713,7 +713,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			trx.success();
 		}
 
-		FormModel formModel = execute(id -> getFormResource().get(id, null), Integer.toString(form.getId())).getItem();
+		FormModel formModel = execute(id -> getFormResource().get(id, null, null), Integer.toString(form.getId())).getItem();
 		assertThat(formModel).as("Form").isOnline().isModified().hasVersion("1.1");
 
 		for (String language : Arrays.asList("de", "en")) {
@@ -767,7 +767,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 					false));
 		}
 
-		FormModel formModel = execute(id -> getFormResource().get(id, null), Integer.toString(form.getId())).getItem();
+		FormModel formModel = execute(id -> getFormResource().get(id, null, null), Integer.toString(form.getId())).getItem();
 		assertThat(formModel).as("Form").isOffline().isPlannedOnline(4, "1.0");
 
 		// run publish process with timestamp 5
@@ -874,7 +874,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			f.takeOffline(6);
 		}, form);
 
-		FormModel formModel = execute(id -> getFormResource().get(id, null), Integer.toString(form.getId())).getItem();
+		FormModel formModel = execute(id -> getFormResource().get(id, null, null), Integer.toString(form.getId())).getItem();
 		assertThat(formModel).as("Form").isOnline().isPlannedOffline(6);
 
 		// run publish process at timestamp 5
@@ -1178,7 +1178,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_rendered_%s.html", language)), writer);
 			String expected = String.format(writer.toString(), meshUuid, "");
-			String renderedForm = supply(() -> getFormResource().preview(formId, language));
+			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, null));
 			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
 		}
 	}
@@ -1215,7 +1215,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_preview_%s.html", language)), writer);
 			String expected = String.format(writer.toString(), meshUuid, "");
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, previewModel));
+			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
 			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
 		}
 	}
@@ -1246,7 +1246,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		String formId = Integer.toString(form.getId());
 
 		for (String language : Arrays.asList("de", "en")) {
-			supply(() -> getFormResource().preview(formId, language));
+			supply(() -> getFormResource().preview(formId, language, null, null));
 		}
 	}
 
@@ -1279,7 +1279,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		previewModel.setData(mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class));
 
 		for (String language : Arrays.asList("de", "en")) {
-			supply(() -> getFormResource().preview(formId, language, previewModel));
+			supply(() -> getFormResource().preview(formId, language, null, previewModel));
 		}
 	}
 
@@ -1309,7 +1309,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		String formId = Integer.toString(form.getId());
 
 		for (String language : Arrays.asList("de", "en")) {
-			supply(() -> getFormResource().preview(formId, language));
+			supply(() -> getFormResource().preview(formId, language, null, null));
 		}
 	}
 
@@ -1342,7 +1342,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		previewModel.setData(mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class));
 
 		for (String language : Arrays.asList("de", "en")) {
-			supply(() -> getFormResource().preview(formId, language, previewModel));
+			supply(() -> getFormResource().preview(formId, language, null, previewModel));
 		}
 	}
 

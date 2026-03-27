@@ -116,7 +116,7 @@ public class ContentStagingDataRemovalTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
 
 		// Delete form
-		assertResponseOK(supply(() -> new FormResourceImpl().delete(form1Id, null)));
+		assertResponseOK(supply(() -> new FormResourceImpl().delete(form1Id, null, null)));
 		assertResponseOK(new ContentStagingResourceImpl().exportFromCms(packageName, 0));
 		response = supply(() -> {
 			return new ContentStagingResourceImpl().read(packageName);

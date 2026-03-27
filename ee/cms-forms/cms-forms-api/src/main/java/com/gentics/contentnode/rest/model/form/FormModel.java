@@ -23,6 +23,11 @@ public class FormModel extends PublishableContentItem {
 	private static final long serialVersionUID = 3991275403246334702L;
 
 	/**
+	 * Optional external ID
+	 */
+	private String externalId;
+
+	/**
 	 * Form type
 	 */
 	private String formType;
@@ -108,6 +113,22 @@ public class FormModel extends PublishableContentItem {
 	 */
 	public FormModel() {
 		super(ItemType.form);
+	}
+
+	/**
+	 * Optional external ID
+	 * @return external ID
+	 */
+	public String getExternalId() {
+		return externalId;
+	}
+
+	/**
+	 * Set the external ID
+	 * @param externalId external ID
+	 */
+	public void setExternalId(String externalId) {
+		this.externalId = externalId;
 	}
 
 	/**

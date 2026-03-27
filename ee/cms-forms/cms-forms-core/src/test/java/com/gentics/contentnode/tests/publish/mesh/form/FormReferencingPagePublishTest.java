@@ -224,7 +224,7 @@ public class FormReferencingPagePublishTest extends AbstractFormPublishTest {
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_preview_%s.html", language)), writer);
 			String expectedMailsource = getExpectedMailsource(language);
 			String expected = String.format(writer.toString(), meshUuid, expectedMailsource);
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, previewModel));
+			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
 			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
 		}
 	}

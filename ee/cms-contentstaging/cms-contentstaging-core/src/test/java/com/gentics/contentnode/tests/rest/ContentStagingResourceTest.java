@@ -699,7 +699,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		// Staging status
 		{
 			FormResponse pageLoad = supply(() -> {
-				return new FormResourceImpl().get(form1Id, packageName);
+				return new FormResourceImpl().get(form1Id, null, packageName);
 			});
 			assertResponseOK(pageLoad);
 			assertThat(pageLoad.getStagingStatus()).isNotNull();
@@ -729,7 +729,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		// Staging status again
 		{
 			FormResponse pageLoad = supply(() -> {
-				return new FormResourceImpl().get(form1Id, packageName);
+				return new FormResourceImpl().get(form1Id, null, packageName);
 			});
 			assertResponseOK(pageLoad);
 			assertThat(pageLoad.getStagingStatus()).isNotNull();

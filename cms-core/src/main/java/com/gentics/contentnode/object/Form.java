@@ -50,6 +50,23 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	}
 
 	/**
+	 * Get the external ID (may be null)
+	 * @return external ID
+	 */
+	@FieldGetter("external_id")
+	String getExternalId();
+
+	/**
+	 * Set the external ID
+	 * @param externalId external ID
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("external_id")
+	default void setExternalId(String externalId) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
+
+	/**
 	 * Get the name
 	 * @return name
 	 */

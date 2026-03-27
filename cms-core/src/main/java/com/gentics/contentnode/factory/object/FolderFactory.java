@@ -4865,6 +4865,10 @@ public class FolderFactory extends AbstractFactory {
 		@Updateable
 		protected Integer defaultImageFolderId;
 
+		@DataField("default_form_folder_id")
+		@Updateable
+		protected Integer defaultFormFolderId;
+
 		@DataField("urlrenderway_pages")
 		@Updateable
 		protected int urlRenderWayPages;
@@ -5784,6 +5788,11 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public Folder getDefaultFormFolder() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(Folder.class, defaultFormFolderId);
+		}
+
+		@Override
 		public List<Feature> getFeatures() throws NodeException {
 			final Set<Feature> features = new HashSet<Feature>();
 
@@ -6431,6 +6440,20 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setDefaultFormFolder(Folder folder) throws ReadOnlyException, NodeException {
+			Integer folderId = null;
+
+			if (folder != null) {
+				folderId = folder.getMaster().getId();
+			}
+
+			if (ObjectTransformer.getInt(defaultFormFolderId, -1) != ObjectTransformer.getInt(folderId, -1)) {
+				defaultFormFolderId = folderId;
+				modified = true;
+			}
+		}
+
+		@Override
 		public void setUrlRenderWayPages(int way) throws ReadOnlyException {
 			if (this.urlRenderWayPages != way) {
 				this.urlRenderWayPages = way;
@@ -6577,6 +6600,7 @@ public class FolderFactory extends AbstractFactory {
 				// make sure default folder id's are not null
 				defaultFileFolderId = ObjectTransformer.getInteger(defaultFileFolderId, 0);
 				defaultImageFolderId = ObjectTransformer.getInteger(defaultImageFolderId, 0);
+				defaultFormFolderId = ObjectTransformer.getInteger(defaultFormFolderId, 0);
 
 				meshPreviewUrl = ObjectTransformer.getString(meshPreviewUrl, "");
 				meshPreviewUrlProperty = ObjectTransformer.getString(meshPreviewUrlProperty, "");

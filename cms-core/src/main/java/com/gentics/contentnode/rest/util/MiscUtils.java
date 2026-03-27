@@ -347,6 +347,120 @@ public class MiscUtils {
 	}
 
 	/**
+	 * Load a form with internal or external id and check the view permission (and other optional permissions)
+	 * When the object is not found, an {@link EntityNotFoundException} is thrown.
+	 * When the transaction does not provide sufficient permissions an {@link InsufficientPrivilegesException} is thrown.
+	 * <br/>
+	 * The exceptions will contain translated messages where the keys are [tablename].notfound or [tablename].nopermission,
+	 * where [tablename] is the name of the DB table where instances of clazz are stored. The translations are expected to contain
+	 * a single variable, which will be filled with the given ID.
+	 * @param id object id (internal or external)
+	 * @param nodeId optional node ID to identify external forms
+	 * @param perms optional permissions to check
+	 * @return returned object
+	 * @throws NodeException
+	 */
+	public static Form loadForm(String id, String nodeId, ObjectPermission...perms) throws NodeException {
+		return loadForm(id, nodeId, true, perms);
+	}
+
+	/**
+	 * Load a form with internal or external id and don't check the permission
+	 * When the object is not found, an {@link EntityNotFoundException} is thrown (if flag expectExistence is true), or null will be returned.
+	 * When the transaction does not provide sufficient permissions an {@link InsufficientPrivilegesException} is thrown.
+	 * <br/>
+	 * The exceptions will contain translated messages where the keys are [tablename].notfound or [tablename].nopermission,
+	 * where [tablename] is the name of the DB table where instances of clazz are stored. The translations are expected to contain
+	 * a single variable, which will be filled with the given ID.
+	 * @param id object id (internal or external)
+	 * @param nodeId optional node ID to identify external forms
+	 * @param expectExistence flag to influence behaviour, when the object is not found: true will throw an EntityNotFoundException, false will return null
+	 * @return returned object
+	 * @throws NodeException
+	 */
+	public static Form loadFormWithoutPermissionCheck(String id, String nodeId, boolean expectExistence) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		// first try loading the form with the id
+		Form obj = t.getObject(Form.class, id);
+
+		if (obj == null) {
+			// also try loading the node
+			Node node = t.getObject(Node.class, nodeId);
+
+			List<Pair<Integer, Integer>> formIdNodeId = DBUtils.select("SELECT form.id, folder.node_id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.external_id = ?", pst -> {
+				pst.setString(1, id);
+			}, rs -> {
+				List<Pair<Integer, Integer>> tmpSet = new ArrayList<>();
+				while (rs.next()) {
+					int formId = rs.getInt("id");
+					int formNodeId = rs.getInt("node_id");
+					tmpSet.add(Pair.of(formId, formNodeId));
+				}
+				return tmpSet;
+			});
+
+			if (formIdNodeId.size() == 1) {
+				obj = t.getObject(Form.class, formIdNodeId.get(0).getLeft());
+			} else if (formIdNodeId.size() > 1 && node != null) {
+				// we found multiple forms with the external ID, so match with the node (there should only be one in each node)
+				int formId = formIdNodeId.stream().filter(pair -> pair.getRight() == node.getId()).map(Pair::getRight).findFirst()
+						.orElse(0);
+				if (formId > 0) {
+					obj = t.getObject(Form.class, formId);
+				}
+			}
+		}
+
+		if (obj == null) {
+			if (expectExistence) {
+				throw new EntityNotFoundException(
+						I18NHelper.get("form.notfound", id));
+			} else {
+				return null;
+			}
+		}
+		return obj;
+	}
+
+	/**
+	 * Load a form with internal or external id and check the view permission (and other optional permissions)
+	 * When the object is not found, an {@link EntityNotFoundException} is thrown (if flag expectExistence is true), or null will be returned.
+	 * When the transaction does not provide sufficient permissions an {@link InsufficientPrivilegesException} is thrown.
+	 * <br/>
+	 * The exceptions will contain translated messages where the keys are [tablename].notfound or [tablename].nopermission,
+	 * where [tablename] is the name of the DB table where instances of clazz are stored. The translations are expected to contain
+	 * a single variable, which will be filled with the given ID.
+	 * @param id object id (internal or external)
+	 * @param nodeId optional node ID to identify external forms
+	 * @param expectExistence flag to influence behaviour, when the object is not found: true will throw an EntityNotFoundException, false will return null
+	 * @param perms optional permissions to check
+	 * @return returned object
+	 * @throws NodeException
+	 */
+	public static Form loadForm(String id, String nodeId, boolean expectExistence, ObjectPermission...perms) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Form obj = loadFormWithoutPermissionCheck(id, nodeId, expectExistence);
+		if (obj == null) {
+			return null;
+		}
+
+		if (!t.getPermHandler().canView(obj)) {
+			throw new InsufficientPrivilegesException(I18NHelper.get("form.nopermission", id), obj, PermType.read);
+		}
+
+		for (ObjectPermission perm : perms) {
+			if (!perm.checkObject(obj)) {
+				throw new InsufficientPrivilegesException(
+						I18NHelper.get("form.nopermission",
+								String.format("%s (%d)", I18NHelper.getName(obj), obj.getId())),
+						obj, perm.getPermType());
+			}
+		}
+
+		return obj;
+	}
+
+	/**
 	 * Check the object against permission checkers and throw an {@link InsufficientPrivilegesException} for the first checker that fails
 	 * @param nodeObject object to check
 	 * @param permType perm type to use in the exception

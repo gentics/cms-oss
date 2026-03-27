@@ -134,6 +134,10 @@ public class FormFactory extends AbstractFactory {
 		 */
 		private static final long serialVersionUID = 8321562011986964532L;
 
+		@DataField("external_id")
+		@Unversioned
+		protected String externalId;
+
 		@DataField("name")
 		@Updateable
 		protected String name;
@@ -745,6 +749,11 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public String getExternalId() {
+			return externalId;
+		}
+
+		@Override
 		public String getName() {
 			return name;
 		}
@@ -1333,6 +1342,16 @@ public class FormFactory extends AbstractFactory {
 			super(asNew ? null : form.getId(), info, getDataMap(form), asNew ? -1 : form.getUdate(), asNew ? null : form.getGlobalId());
 			if (asNew) {
 				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setExternalId(String externalId) throws ReadOnlyException {
+			if (isNew()) {
+				if (!StringUtils.isEqual(this.externalId, externalId)) {
+					this.externalId = externalId;
+					this.modified = true;
+				}
 			}
 		}
 

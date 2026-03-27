@@ -1,17 +1,25 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewEncapsulation } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    Input,
+    OnChanges,
+    OnDestroy,
+    OnInit,
+    SimpleChanges,
+    ViewEncapsulation,
+} from '@angular/core';
 import {
     AbstractControl,
     ControlValueAccessor,
     UntypedFormArray,
     UntypedFormBuilder,
     UntypedFormGroup,
-    NG_VALIDATORS,
-    NG_VALUE_ACCESSOR,
     ValidationErrors,
     Validator,
 } from '@angular/forms';
-import { CmsFormElementI18nValue, CmsFormElementKeyI18nValuePair } from '@gentics/cms-models';
-import { ISortableEvent } from '@gentics/ui-core';
+import { FormSelectOption } from '@gentics/cms-models';
+import { generateFormProvider, generateValidatorProvider, ISortableEvent } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Subscription } from 'rxjs';
 
@@ -19,18 +27,13 @@ import { Subscription } from 'rxjs';
     selector: 'gtx-key-i18n-value-list-input',
     templateUrl: './key-i18n-value-list-input.component.html',
     styleUrls: ['./key-i18n-value-list-input.component.scss'],
-    providers: [{
-            provide: NG_VALUE_ACCESSOR, // Is an InjectionToken required by the ControlValueAccessor interface to provide a form value
-            useExisting: forwardRef(() => KeyI18nValueListInputComponent), // tells Angular to use the existing instance
-            multi: true,
-        }, {
-            provide: NG_VALIDATORS, // Is an InjectionToken required by this class to be able to be used as an Validator
-            useExisting: forwardRef(() => KeyI18nValueListInputComponent), // for now validation will be put into the component, but can be separated
-            multi: true,
-        }],
+    providers: [
+        generateFormProvider(KeyI18nValueListInputComponent),
+        generateValidatorProvider(KeyI18nValueListInputComponent),
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
-    standalone: false
+    standalone: false,
 })
 export class KeyI18nValueListInputComponent implements ControlValueAccessor, Validator, OnInit, OnChanges, OnDestroy {
 
@@ -91,7 +94,7 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
         }
     }
 
-    writeValue(i18nData: CmsFormElementKeyI18nValuePair[]): void {
+    writeValue(i18nData: FormSelectOption[]): void {
         if (!Array.isArray(i18nData)) {
             return;
         }
@@ -105,14 +108,14 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
         }
 
         this.i18nArray.clear();
-        data.map((keyI18nValuePair: CmsFormElementKeyI18nValuePair) => {
+        data.map((keyI18nValuePair: FormSelectOption) => {
             return this.formBuilder.group({
                 key: [keyI18nValuePair.key],
                 value_i18n: [keyI18nValuePair.value_i18n],
             });
         }).forEach((formGroup: UntypedFormGroup) => {
             this.i18nArray.push(formGroup);
-        })
+        });
     }
 
     registerOnChange(fn: (_: any) => void): void {
@@ -174,7 +177,7 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
          * With that, everything is correct again in the DOM and in the data model.
          */
         this.i18nArray.clear();
-        newValue.map((keyI18nValuePair: CmsFormElementKeyI18nValuePair) => {
+        newValue.map((keyI18nValuePair: FormSelectOption) => {
             return this.formBuilder.group({
                 key: [keyI18nValuePair.key],
                 value_i18n: [keyI18nValuePair.value_i18n],
@@ -238,7 +241,7 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     }
 
     private validateTranslated(control: AbstractControl): ValidationErrors {
-        const value: CmsFormElementKeyI18nValuePair[] = this.i18nArray.value;
+        const value: FormSelectOption[] = this.i18nArray.value;
 
         // relying on errors on children is not possible, since error state will not sync up
         for (const keyI18nValuePair of value) {
@@ -252,7 +255,7 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
         return null;
     }
 
-    private i18nValueIsUntranslated(i18nValue: CmsFormElementI18nValue<string>): boolean {
+    private i18nValueIsUntranslated(i18nValue: FormSelectOption): boolean {
 
         /**
          * if there is no i18n value, then there cannot be a translation error
@@ -285,8 +288,8 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
         /**
          * if any other language has this value set (and the current one does not), then there is translation error
          */
-        const notCurrentLanguages = this.availableLanguages.filter(language => language !== this.language);
-        const languagesOfAvailableTranslations = notCurrentLanguages.filter(language => this.valuePresent(i18nValue, language));
+        const notCurrentLanguages = this.availableLanguages.filter((language) => language !== this.language);
+        const languagesOfAvailableTranslations = notCurrentLanguages.filter((language) => this.valuePresent(i18nValue, language));
         if (languagesOfAvailableTranslations.length > 0) {
             return true;
         }

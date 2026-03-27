@@ -84,7 +84,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     public linkPaths = false;
 
     @Input()
-    public itemInEditor: Item = undefined;
+    public activeItemId: number;
 
     @Input()
     public uiMode: UIMode = UIMode.EDIT;

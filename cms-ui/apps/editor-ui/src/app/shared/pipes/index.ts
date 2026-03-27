@@ -1,7 +1,12 @@
 export * from './all-items-selected/all-items-selected.pipe';
+export * from './any-item-deleted/any-item-deleted.pipe';
+export * from './any-item-inherited/any-item-inherited.pipe';
+export * from './any-item-published/any-item-published.pipe';
+export * from './any-page-unpublished/any-page-unpublished.pipe';
 export * from './capitalize/capitalize.pipe';
 export * from './dependencies-count/dependencies-count.pipe';
 export * from './file-size/file-size.pipe';
+export * from './filter-items/filter-items.pipe';
 export * from './get-inheritance/get-inheritance.pipe';
 export * from './highlight/highlight.pipe';
 export * from './image-dimensions/image-dimensions.pipe';
@@ -14,9 +19,9 @@ export * from './map-permissions/map-permissions.pipe';
 export * from './node-name-of-item/node-name-of-item.pipe';
 export * from './page-is-locked/page-is-locked.pipe';
 export * from './permission/permission.pipe';
+export * from './replace-escaped-characters/replace-escaped-characters.pipe';
 export * from './router-commands-for-item/router-commands-for-item.pipe';
 export * from './truncate-number/truncate-number.pipe';
 export * from './truncate-path/truncate-path.pipe';
 export * from './type-icon/type-icon.pipe';
 export * from './user-full-name/user-full-name.pipe';
-

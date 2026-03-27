@@ -3,16 +3,17 @@ import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CmsComponentsModule, WindowRef } from '@gentics/cms-components';
-import { FormGeneratorModule } from '@gentics/form-generator';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { FolderContextMenuComponent } from '../core/components/folder-context-menu/folder-context-menu.component';
 import { WastebinList } from '../core/components/wastebin-list/wastebin-list.component';
-import { ReplaceEscapedCharactersPipe } from '../list-view/pipes/replace-escaped-characters/replace-escaped-characters.pipe';
 import {
     ChannelDependenciesModal,
     ChipSearchBarComponent,
+    CreateFolderModalComponent,
+    CreateFormModalComponent,
+    CreatePageModalComponent,
     DetailChip,
     DisplayFieldSelectorModal,
     ExternalAssetsModalComponent,
@@ -23,6 +24,7 @@ import {
     FolderPropertiesComponent,
     FormLanguageIndicatorComponent,
     FormLanguageSelectorComponent,
+    FormListComponent,
     FormPropertiesComponent,
     IconCheckbox,
     ImageThumbnailComponent,
@@ -32,6 +34,7 @@ import {
     InputSelectComponent,
     ItemBreadcrumbsComponent,
     ItemContextMenuComponent,
+    ItemListHeaderComponent,
     ItemListRowComponent,
     ItemStateContextMenuComponent,
     ItemStatusLabelComponent,
@@ -85,9 +88,14 @@ import {
 } from './directives';
 import {
     AllItemsSelectedPipe,
+    AnyItemDeletedPipe,
+    AnyItemInheritedPipe,
+    AnyItemPublishedPipe,
+    AnyPageUnpublishedPipe,
     CapitalizePipe,
     DependenciesCountPipe,
     FileSizePipe,
+    FilterItemsPipe,
     GetInheritancePipe,
     HighlightPipe,
     ImageDimensionsPipe,
@@ -100,11 +108,12 @@ import {
     NodeNameOfItemPipe,
     PageIsLockedPipe,
     PermissionsPipe,
+    ReplaceEscapedCharactersPipe,
     RouterCommandsForItemPipe,
     TruncateNumberPipe,
     TruncatePathPipe,
     TypeIconPipe,
-    UserFullNamePipe
+    UserFullNamePipe,
 } from './pipes';
 import {
     BreadcrumbsService,
@@ -122,6 +131,9 @@ import {
 
 const COMPONENTS = [
     ChipSearchBarComponent,
+    CreateFolderModalComponent,
+    CreateFormModalComponent,
+    CreatePageModalComponent,
     DetailChip,
     DynamicDisableDirective,
     FavouriteToggleComponent,
@@ -133,6 +145,7 @@ const COMPONENTS = [
     FormLanguageIndicatorComponent,
     FormLanguageIndicatorComponent,
     FormLanguageSelectorComponent,
+    FormListComponent,
     FormPropertiesComponent,
     IconCheckbox,
     ImageThumbnailComponent,
@@ -141,6 +154,7 @@ const COMPONENTS = [
     InputSelectComponent,
     ItemBreadcrumbsComponent,
     ItemContextMenuComponent,
+    ItemListHeaderComponent,
     ItemListRowComponent,
     ItemStateContextMenuComponent,
     ItemStatusLabelComponent,
@@ -200,9 +214,14 @@ const ENTRY_COMPONENTS = [
 
 const PIPES = [
     AllItemsSelectedPipe,
+    AnyItemDeletedPipe,
+    AnyItemInheritedPipe,
+    AnyItemPublishedPipe,
+    AnyPageUnpublishedPipe,
     CapitalizePipe,
     DependenciesCountPipe,
     FileSizePipe,
+    FilterItemsPipe,
     GetInheritancePipe,
     HighlightPipe,
     ImageDimensionsPipe,
@@ -232,7 +251,6 @@ const IMPORTS: any[] = [
     NgxPaginationModule,
     ReactiveFormsModule,
     RouterModule,
-    FormGeneratorModule.forRoot(),
 ];
 
 const DECLARATIONS = [...COMPONENTS, ...ENTRY_COMPONENTS, ...PIPES];

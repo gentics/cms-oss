@@ -44,13 +44,12 @@ import { RepositoryBrowserDataService } from '../../providers';
     styleUrls: ['./repository-browser.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [RepositoryBrowserDataService],
-    standalone: false
+    standalone: false,
 })
 export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
 
     /**
      * A configuration object that defines all options that are available on the repo browser.
-     *
      * @example
      * {
      *     allowedTypes: ['file', 'image'],
@@ -151,8 +150,8 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
 
     isSelected(item: RepoItem): Observable<boolean> {
         return this.selected$.pipe(
-            map(selectedItems => {
-                return (selectedItems || []).some(sel => sel.id === item.id && sel.type === item.type);
+            map((selectedItems) => {
+                return (selectedItems || []).some((sel) => sel.id === item.id && sel.type === item.type);
             }),
         );
     }
@@ -211,7 +210,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
         this.cancelFn = cancel;
     }
 
-    onPageLanguageIconClicked(data: { page: Page<Raw>; language: Language; }): void {
+    onPageLanguageIconClicked(data: { page: Page<Raw>; language: Language }): void {
         if (!this.hasPermissions) {
             return;
         }
@@ -223,7 +222,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
         this.submitClicked();
     }
 
-    onFormLanguageIconClicked(data: { form: Form<Raw>; language: Language; }): void {
+    onFormLanguageIconClicked(data: { form: Form; language: Language }): void {
         if (!this.hasPermissions) {
             return;
         }
@@ -258,8 +257,8 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
     private setupObservables(): void {
 
         this.isActiveNodeFeatureForms$ = combineLatest([
-            this.appState.select(state => state.folder.activeNode),
-            this.appState.select(state => state.features.nodeFeatures),
+            this.appState.select((state) => state.folder.activeNode),
+            this.appState.select((state) => state.features.nodeFeatures),
         ]).pipe(
             map(([activeNodeId, nodeFeatures]) => {
                 const activeNodeFeatures = nodeFeatures[activeNodeId];
@@ -286,7 +285,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
         this.showFavourites$ = dataService.showFavourites$;
         this.sortOrder$ = dataService.sortOrder$;
         this.startPageId$ = dataService.startPageId$;
-        this.pageShowPath$ = this.appState.select(state => state.folder.pages.showPath);
+        this.pageShowPath$ = this.appState.select((state) => state.folder.pages.showPath);
 
         this.observableForType = {
             folder: dataService.folders$,
@@ -299,28 +298,28 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
             templatetag: dataService.tags$,
         };
 
-        const allItemTypes$ = Object.keys(this.observableForType).map(k => this.observableForType[k]);
+        const allItemTypes$ = Object.keys(this.observableForType).map((k) => this.observableForType[k]);
         this.noItemsOfAnyType$ = combineLatest([
             combineLatest(allItemTypes$),
             this.isActiveNodeFeatureForms$,
         ]).pipe(
             map(([itemArrays, isActiveNodeFeatureForms]) => {
-                return isActiveNodeFeatureForms ? itemArrays : itemArrays.filter(t => t.some(i => i.type !== 'form'));
+                return isActiveNodeFeatureForms ? itemArrays : itemArrays.filter((t) => t.some((i) => i.type !== 'form'));
             }),
-            map(([itemArrays]) => Array.isArray(itemArrays) && itemArrays.every(array => !Array.isArray(array))),
+            map(([itemArrays]) => Array.isArray(itemArrays) && itemArrays.every((array) => !Array.isArray(array))),
         );
 
         this.displayFieldsForType = {
-            folder: this.appState.select(state => state.folder.folders.displayFields),
-            form: this.appState.select(state => state.folder.forms.displayFields),
-            page: this.appState.select(state => state.folder.pages.displayFields),
-            file: this.appState.select(state => state.folder.files.displayFields),
-            image: this.appState.select(state => state.folder.images.displayFields),
+            folder: this.appState.select((state) => state.folder.folders.displayFields),
+            form: this.appState.select((state) => state.folder.forms.displayFields),
+            page: this.appState.select((state) => state.folder.pages.displayFields),
+            file: this.appState.select((state) => state.folder.files.displayFields),
+            image: this.appState.select((state) => state.folder.images.displayFields),
         };
 
         this.hasPermissions$.pipe(
             takeUntil(this.destroy),
-        ).subscribe(hasPermissions => this.hasPermissions = hasPermissions);
+        ).subscribe((hasPermissions) => this.hasPermissions = hasPermissions);
     }
 
     private createTitle(): void {
@@ -331,15 +330,15 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
 
         const selectMultiple = this.options.selectMultiple;
         const types: string[] = Object.keys(this.allowed)
-            .filter(type => (<any> this.allowed)[type])
-            .filter(part => !!part)
+            .filter((type) => (<any> this.allowed)[type])
+            .filter((part) => !!part)
             .sort();
         const typeList = types.join(',');
 
         if (types.length === 1) {
-            this.titleKey = selectMultiple ?
-                'modal.repository_browser_title_multiple' :
-                'modal.repository_browser_title_single';
+            this.titleKey = selectMultiple
+                ? 'modal.repository_browser_title_multiple'
+                : 'modal.repository_browser_title_single';
             this.titleParams = { _type: types[0], count: selectMultiple ? 2 : 1 };
         } else if (typeList === 'file,image,page') {
             this.titleKey = 'modal.repository_browser_title_file_image_page';
@@ -355,7 +354,7 @@ function normalizeAllowedSelectionType(allowedTypes: AllowedSelection | AllowedS
         return { [allowedTypes]: true };
     } else if (Array.isArray(allowedTypes)) {
         const allowed: AllowedSelection = {};
-        allowedTypes.forEach(t => allowed[t] = true);
+        allowedTypes.forEach((t) => allowed[t] = true);
         return allowed;
     } else if (typeof allowedTypes === 'object') {
         return Object.assign({}, allowedTypes);
@@ -371,4 +370,3 @@ function normalizeDataServiceOptions(repoOptions: RepositoryBrowserOptions): Rep
     };
     return result;
 }
-

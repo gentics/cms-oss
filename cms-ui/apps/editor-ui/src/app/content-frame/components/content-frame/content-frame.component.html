@@ -64,15 +64,14 @@
 
     @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form') {
         <div class="form-editor">
-            <gtx-form-editor
-                class="form-editor"
-                [form]="currentItem"
-                [activeUiLanguageCode]="activeUiLanguageCode$ | async"
-                [activeContentLanguageCode]="itemLanguage?.code"
-                [readonly]="editMode !== EditMode.EDIT"
-                (formModified)="formChange($event)"
-                (validityChange)="setItemValidity($event)"
-            ></gtx-form-editor>
+            <gtx-form-grid
+                [config]="currentFormConfig"
+                [language]="activeUiLanguageCode$ | async"
+                [restricted]="!!currentFormConfig?.external"
+
+                [schema]="null"
+                [uiSchema]="null"
+            ></gtx-form-grid>
         </div>
     }
 

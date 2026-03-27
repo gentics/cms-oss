@@ -10,15 +10,15 @@ import {
     ViewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { I18nNotificationService, I18nService, discard } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
-    CmsFormType,
     File as FileModel,
     Folder,
     FolderItemOrNodeType,
     FolderItemType,
     Form,
+    FormTypeConfiguration,
     Image,
     InheritableItem,
     ItemNormalized,
@@ -30,7 +30,6 @@ import {
     Normalized,
     Page,
     Raw,
-    Tags,
     User,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
@@ -125,7 +124,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     static _debounce = debounce;
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
-    public readonly CMS_FORM_TYPE = CmsFormType;
     public readonly EditMode = EditMode;
     public readonly LocalizationType = LocalizationType;
 
@@ -148,7 +146,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     imageResizedOrCropped = false;
     objectPropertyModified = false;
     modifiedObjectPropertyValid: boolean;
-    currentItem: ItemNormalized;
+    currentItem: ItemNormalized | Form;
     currentItemPath = '';
     currentItemClean = true;
 
@@ -158,6 +156,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     editMode: EditMode;
     // currently only used by form editor (not properties editing)
     itemValid = false;
+    currentFormConfig: FormTypeConfiguration;
 
     iframeUrl: string;
     /** Hacky subject to debounce too fast URL changes, which may mess up the edit mode. */
@@ -452,6 +451,18 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 && a.nodeId === b.nodeId,
             ),
             filter((state) => state.itemId != null && state.itemType != null),
+            switchMap((state) => {
+                if (state.itemType === 'form') {
+                    return this.client.form.getConfiguration((this.currentItem as Form).formType).pipe(
+                        map((res) => {
+                            this.currentFormConfig = res.item;
+                            this.changeDetector.markForCheck();
+                            return state;
+                        }),
+                    );
+                }
+                return of(state);
+            }),
             withLatestFrom(this.appState.select((state) => state.folder.activeNodeLanguages.list)),
             filter(([, langs]) => langs?.length > 0),
             switchMap(([state]) => {
@@ -486,7 +497,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         );
 
         this.subscriptions.push(this.frameUrlSub.pipe(
-            distinctUntilChanged(isEqual), // Ignore the URL if it's the same
+            distinctUntilChanged<string>(isEqual), // Ignore the URL if it's the same
             debounceTime(100), // Debounce it, as otherwise the iframe may load the wrong one (depends on browser)
         ).subscribe((newUrl) => {
             this.iframeUrl = newUrl.toString();
@@ -695,7 +706,7 @@ span.diff-html-added {
             return;
         }
 
-        const form = this.currentItem as Form;
+        const form = this.currentItem;
         const { activeFormLanguage: currentLanguageId, activeNodeLanguages } = this.appState.now.folder;
         const nodeLanguages = activeNodeLanguages.list.map((nlid) => {
             return this.entityResolver.getLanguage(nlid);
@@ -1395,14 +1406,14 @@ span.diff-html-added {
      */
     private saveForm(): Promise<any> {
         const id = this.currentItem.id;
-        const currentForm = this.currentItem as Form<Normalized>;
+        const currentForm = this.currentItem as Form;
+        // FIXME: Why remapping?
         const payload = {
             name: currentForm.name,
             description: currentForm.description,
             successPageId: currentForm.successPageId,
             successNodeId: currentForm.successNodeId,
             languages: currentForm.languages,
-            data: currentForm.data,
         };
         this.appState.dispatch(new StartSavingAction());
 
@@ -1559,7 +1570,7 @@ span.diff-html-added {
         this.frameUrlSub.next(new URL(this.urlBuilder.stateToUrl(state, this.currentItem), window.location as any).toString());
     }
 
-    private allTagsHaveConstructs(item: ItemWithObjectTags<Normalized> | Form<Normalized> | Node<Normalized>): boolean {
+    private allTagsHaveConstructs(item: ItemWithObjectTags<Normalized> | Form | Node<Normalized>): boolean {
         const constructs = [];
         if (item.type === 'node' || item.type === 'form') {
             return true;

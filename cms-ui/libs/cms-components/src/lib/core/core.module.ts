@@ -7,11 +7,9 @@ import {
     AppVersionLabelComponent,
     BrowseBoxComponent,
     FormBrowseBoxComponent,
-    I18nCheckboxComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
     I18nSelectComponent,
-    KeyI18nValueListInputComponent,
     LinkToManualComponent,
     PasswordConfirmInputComponent,
     RichContentEditorComponent,
@@ -31,6 +29,7 @@ import {
     I18nDatePipe,
     I18nDurationPipe,
     I18nNumberPipe,
+    I18nObjectPipe,
     I18nPipe,
     I18nRelativeDatePipe,
     SafePipe,
@@ -47,22 +46,20 @@ import {
 
 const COMPONENTS: any[] = [
     AppVersionLabelComponent,
+    BrowseBoxComponent,
+    FormBrowseBoxComponent,
+    I18nInputComponent,
+    I18nPanelGroupComponent,
+    I18nSelectComponent,
     LinkToManualComponent,
+    PasswordConfirmInputComponent,
+    RichContentEditorComponent,
+    RichContentLinkPropertiesComponent,
+    RichContentModal,
     StringListComponent,
     UserMenuComponent,
     UserMenuToggleComponent,
-    I18nCheckboxComponent,
-    I18nInputComponent,
-    I18nPanelGroupComponent,
-    FormBrowseBoxComponent,
-    I18nSelectComponent,
-    KeyI18nValueListInputComponent,
     VersionModalComponent,
-    BrowseBoxComponent,
-    PasswordConfirmInputComponent,
-    RichContentEditorComponent,
-    RichContentModal,
-    RichContentLinkPropertiesComponent,
 ];
 
 const DIRECTIVES: Type<any>[] = [
@@ -76,6 +73,7 @@ const PIPES: Type<PipeTransform>[] = [
     I18nDatePipe,
     I18nDurationPipe,
     I18nNumberPipe,
+    I18nObjectPipe,
     I18nRelativeDatePipe,
     StripRichContentPipe,
     SafePipe,
@@ -95,7 +93,6 @@ const PROVIDERS: Provider[] = [
     I18nService,
     WindowRef,
     ...PIPES,
-
 ];
 
 @NgModule({

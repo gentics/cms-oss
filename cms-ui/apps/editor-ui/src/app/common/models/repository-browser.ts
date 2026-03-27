@@ -34,7 +34,7 @@ export interface RepositoryBrowserDataServiceAPI {
     readonly files$: Observable<File<Raw>[]>;
     readonly filter$: Observable<string>;
     readonly folders$: Observable<Folder<Raw>[]>;
-    readonly forms$: Observable<Form<Raw>[]>;
+    readonly forms$: Observable<Form[]>;
     readonly hasPermissions$: Observable<boolean>;
     readonly images$: Observable<Image<Raw>[]>;
     readonly isDisplayingFavourites$: Observable<boolean>;

@@ -122,19 +122,19 @@ export class EntityStateModule {
 
         const parentFolder = state.folder[state[action.itemType][action.itemId].folderId];
         const userCanEditPage = !parentFolder
-            || (
-                parentFolder
-                && parentFolder.privilegeMap
-                && parentFolder.privilegeMap.privileges
-                && parentFolder.privilegeMap.privileges[privilegeKey]
-            )
-            || (
-                parentFolder
-                && parentFolder.privilegeMap
-                && parentFolder.privilegeMap.languages
-                && parentFolder.privilegeMap.languages[activeLanguage]
-                && parentFolder.privilegeMap.languages[activeLanguage].updatepage
-            );
+          || (
+              parentFolder
+              && parentFolder.privilegeMap
+              && parentFolder.privilegeMap.privileges
+              && parentFolder.privilegeMap.privileges[privilegeKey]
+          )
+          || (
+              parentFolder
+              && parentFolder.privilegeMap
+              && parentFolder.privilegeMap.languages
+              && parentFolder.privilegeMap.languages[activeLanguage]
+              && parentFolder.privilegeMap.languages[activeLanguage].updatepage
+          );
 
         // To make the UI more responsive, mark page as locked by the current user instead of
         // locking on the server, waiting for the response, and then fetching the item again.
@@ -159,7 +159,7 @@ export class EntityStateModule {
                     [action.itemId]: patch({
                         locked: true,
                         lockedSince: Math.round(Date.now() / 1000),
-                        lockedBy: currentUserId,
+                        lockedBy: currentUserId as any,
                     }),
                 }),
             }));
@@ -188,7 +188,7 @@ export function addNormalizedEntities(currentEntityState: EntityState, normalize
     let anyBranchChanged = false;
 
     const newEntityState: any = Object.assign({}, currentEntityState);
-    for (let branch of branches) {
+    for (const branch of branches) {
         if ((currentEntityState as any)[branch] === undefined || newEntityState[branch] === undefined) {
             throw new Error('addNormalizedEntities: key ' + branch + ' is undefined');
         }
@@ -197,22 +197,22 @@ export function addNormalizedEntities(currentEntityState: EntityState, normalize
         const changedBranch = Object.assign({}, newEntityState[branch]);
 
         // TODO: This workaround of state logic is very bad architecture and should be removed as soon a better REST API allows for it!
-        const protectedProperties: string[] = [ 'privilegeMap', 'permissionsMap' ];
+        const protectedProperties: string[] = ['privilegeMap', 'permissionsMap'];
         const savedProperties = {};
 
-        for (let id of Object.keys(normalized.entities[branch])) {
+        for (const id of Object.keys(normalized.entities[branch])) {
             const newEntity = normalized.entities[branch][id];
             const oldEntity = changedBranch[id];
 
             // retain protected data
-            protectedProperties.forEach(k => {
+            protectedProperties.forEach((k) => {
                 if (oldEntity && oldEntity[k] && !newEntity[k]) {
                     savedProperties[k] = oldEntity[k];
                 }
             });
 
-            let updatedEntity = {...oldEntity, ...newEntity};
-            let missingProperties = [];
+            const updatedEntity = { ...oldEntity, ...newEntity };
+            const missingProperties = [];
 
             if (!oldEntity) {
                 // Entity was not in entity state before
@@ -221,19 +221,19 @@ export function addNormalizedEntities(currentEntityState: EntityState, normalize
             } else {
                 // Entity was already in entity state. Only update values that changed
                 let entityChanged = false;
-                for (let prop of Object.keys(updatedEntity)) {
+                for (const prop of Object.keys(updatedEntity)) {
                     if (!newEntity.hasOwnProperty(prop) && !savedProperties[prop]) {
                         missingProperties.push(prop);
                     }
-                    if (newEntity[prop] !== oldEntity[prop] && (typeof newEntity[prop] !== 'object' ||
-                        newEntity[prop] === null || !deepEqual(oldEntity[prop], newEntity[prop]))) {
+                    if (newEntity[prop] !== oldEntity[prop] && (typeof newEntity[prop] !== 'object'
+                      || newEntity[prop] === null || !deepEqual(oldEntity[prop], newEntity[prop]))) {
                         // Always create a new entity reference if a property changed
                         if (!entityChanged) {
                             changedBranch[id] = Object.assign({}, oldEntity);
                             changed = entityChanged = true;
                         }
                         if (missingProperties.length > 0) {
-                            missingProperties.forEach(property => {
+                            missingProperties.forEach((property) => {
                                 delete changedBranch[id][property];
                             });
                         }
@@ -267,12 +267,12 @@ export function updateEntities(currentEntityState: EntityState, updates: Partial
     }
 
     // TODO: This workaround of state logic is very bad architecture and should be removed as soon a better REST API allows for it!
-    const protectedProperties: string[] = [ 'privilegeMap', 'permissionsMap' ];
+    const protectedProperties: string[] = ['privilegeMap', 'permissionsMap'];
     const savedProperties = {};
     let anyBranchChanged = false;
 
     const newEntityState: any = Object.assign({}, currentEntityState);
-    for (let branch of branches) {
+    for (const branch of branches) {
         if (currentEntityState[branch] === undefined || newEntityState[branch] === undefined) {
             throw new Error('addNormalizedEntities: key ' + branch + ' is undefined');
         }
@@ -280,7 +280,7 @@ export function updateEntities(currentEntityState: EntityState, updates: Partial
         let anyEntityChanged = false;
         const changedBranch = Object.assign({}, newEntityState[branch]);
 
-        for (let id of Object.keys(updates[branch]).map(key => Number(key))) {
+        for (const id of Object.keys(updates[branch]).map((key) => Number(key))) {
             if (!changedBranch[id]) {
                 // No entity to apply updates to. For example:
                 //     entities = { pages: {1: {...} } }
@@ -295,7 +295,7 @@ export function updateEntities(currentEntityState: EntityState, updates: Partial
             const propsToChange: any = updates[branch][id];
             let currentEntityChanged = false;
 
-            for (let key of Object.keys(propsToChange)) {
+            for (const key of Object.keys(propsToChange)) {
                 const oldValue = currentEntity[key];
                 const newValue = propsToChange[key];
 

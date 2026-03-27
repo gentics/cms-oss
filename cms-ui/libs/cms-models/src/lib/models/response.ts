@@ -1,4 +1,4 @@
-import { Form, FormDownloadInfo } from './cms-form';
+import { Form, FormDownloadInfo } from './form';
 import { ConstructCategory } from './construct-category';
 import {
     ContentPackage,
@@ -533,7 +533,7 @@ export interface FormDownloadInfoResponse extends FormDownloadInfo, Response {}
 /**
  * Response from `GET /form`
  */
-export interface FormListResponse extends StageableListResponse<Form<Raw>> {}
+export interface FormListResponse extends StageableListResponse<Form> {}
 
 /**
  * Response from `GET /form/{id}/data`

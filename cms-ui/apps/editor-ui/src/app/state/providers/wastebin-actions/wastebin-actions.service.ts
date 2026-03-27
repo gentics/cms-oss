@@ -11,9 +11,9 @@ import {
     Page,
     SortField,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { Api, ApiError } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import {
@@ -35,7 +35,7 @@ export class WastebinActionsService {
 
     constructor(
         private appState: ApplicationStateService,
-        private api: Api,
+        private client: GCMSRestClientService,
         private errorHandler: ErrorHandler,
         private entityResolver: EntityResolver,
         private folderActions: FolderActionsService,
@@ -103,54 +103,91 @@ export class WastebinActionsService {
         ids: number[],
         nodeId: number,
         disableInstantDelete?: boolean,
-    ): Promise<{ succeeded: number; failed: number; error: ApiError }> {
+    ): Promise<{ succeeded: number; failed: number; error: Error }> {
         if (!ids.length) {
             return;
         }
 
-        const requests = ids.map((id) =>
-            this.api.folders.deleteItem(type, id, nodeId, disableInstantDelete).pipe(
-                map((res) => Object.assign(res, { id, error: null })),
-                catchError((error) => of({ id, error })),
-            ),
-        );
+        let worker: Promise<{ id: number; error?: Error }[]>;
+        switch (type) {
+            case 'file':
+                worker = forkJoin(ids.map((id) => this.client.file.delete(id, {
+                    nodeId,
+                    disableInstantDelete,
+                }).pipe(
+                    map(() => ({ id, error: null })),
+                    catchError((error) => of({ id, error })),
+                ))).toPromise();
+                break;
+            case 'image':
+                worker = forkJoin(ids.map((id) => this.client.image.delete(id, {
+                    nodeId,
+                    disableInstantDelete,
+                }).pipe(
+                    map(() => ({ id, error: null })),
+                    catchError((error) => of({ id, error })),
+                ))).toPromise();
+                break;
+            case 'folder':
+                worker = forkJoin(ids.map((id) => this.client.folder.delete(id, {
+                    nodeId,
+                    disableInstantDelete,
+                }).pipe(
+                    map(() => ({ id, error: null })),
+                    catchError((error) => of({ id, error })),
+                ))).toPromise();
+                break;
+            case 'page':
+                worker = forkJoin(ids.map((id) => this.client.page.delete(id, {
+                    nodeId,
+                    disableInstantDelete,
+                }).pipe(
+                    map(() => ({ id, error: null })),
+                    catchError((error) => of({ id, error })),
+                ))).toPromise();
+                break;
+            case 'form':
+                worker = forkJoin(ids.map((id) => this.client.form.delete(id).pipe(
+                    map(() => ({ id, error: null })),
+                    catchError((error) => of({ id, error })),
+                ))).toPromise();
+                break;
+        }
 
         this.appState.dispatch(new StartWasteBinItemsDeletionAction(type, ids));
 
-        return forkJoin(requests)
-            .toPromise()
-            .then((results) => {
-                const succeeded = results
-                    .filter((res) => !res.error)
-                    .map((res) => res.id);
-                const badResponses = results.filter((res: any) => res.error);
-                const failed = badResponses.map((res) => res.id);
-                const error = badResponses.length && badResponses[0].error;
+        return worker.then((results) => {
+            const succeeded = results
+                .filter((res) => !res.error)
+                .map((res) => res.id);
+            const badResponses = results.filter((res: any) => res.error);
+            const failed = badResponses.map((res) => res.id);
+            const error = badResponses.length && badResponses[0].error;
 
-                if (failed.length) {
-                    this.appState.dispatch(new WasteBinItemsDeletionErrorAction(type, failed, error.message));
+            if (failed.length) {
+                this.appState.dispatch(new WasteBinItemsDeletionErrorAction(type, failed, error.message));
+            }
+
+            if (succeeded.length) {
+                this.appState.dispatch(new WasteBinItemsDeletionSuccessAction(type, succeeded));
+
+                // if the item that is currently being edited is deleted, close the editor
+                const { itemType, itemId } = this.appState.now.editor;
+                if (itemType === type && succeeded.indexOf(itemId) >= 0) {
+                    this.appState.dispatch(new CloseEditorAction());
                 }
+            }
 
-                if (succeeded.length) {
-                    this.appState.dispatch(new WasteBinItemsDeletionSuccessAction(type, succeeded));
-
-                    // if the item that is currently being edited is deleted, close the editor
-                    const { itemType, itemId } = this.appState.now.editor;
-                    if (itemType === type && succeeded.indexOf(itemId) >= 0) {
-                        this.appState.dispatch(new CloseEditorAction());
-                    }
-                }
-
-                return {
-                    succeeded: succeeded.length,
-                    failed: failed.length,
-                    error: error,
-                    ids: {
-                        succeeded: succeeded,
-                        failed: failed,
-                    },
-                };
-            });
+            return {
+                succeeded: succeeded.length,
+                failed: failed.length,
+                error: error,
+                ids: {
+                    succeeded: succeeded,
+                    failed: failed,
+                },
+            };
+        });
     }
 
     /**
@@ -163,7 +200,37 @@ export class WastebinActionsService {
         localizationIds: number[] = [],
     ): Promise<void> {
         const removedIds = [...ids, ...localizationIds];
-        return this.api.folders.restoreFromWastebin(type, removedIds).toPromise().then(() => {
+
+        let worker: Promise<any>;
+        switch (type) {
+            case 'file':
+                worker = this.client.file.restoreMultipleFromWastebin({
+                    ids: removedIds,
+                }).toPromise();
+                break;
+            case 'image':
+                worker = this.client.image.restoreMultipleFromWastebin({
+                    ids: removedIds,
+                }).toPromise();
+                break;
+            case 'folder':
+                worker = this.client.folder.restoreMultipleFromWastebin({
+                    ids: removedIds,
+                }).toPromise();
+                break;
+            case 'page':
+                worker = this.client.page.restoreMultipleFromWastebin({
+                    ids: removedIds,
+                }).toPromise();
+                break;
+            case 'form':
+                worker = this.client.form.restoreMultipleFromWastebin({
+                    ids: removedIds,
+                }).toPromise();
+                break;
+        }
+
+        return worker.then(() => {
             this.appState.dispatch(new RestoreWasteBinItemsAction(type, removedIds));
 
             this.notification.show({
@@ -218,8 +285,37 @@ export class WastebinActionsService {
     ): Promise<any> {
         this.appState.dispatch(new StartWasteBinItemsDeletionAction(type, ids));
 
+        let worker: Promise<any>;
+        switch (type) {
+            case 'file':
+                worker = this.client.file.deleteMultipleFromWastebin({
+                    ids,
+                }).toPromise();
+                break;
+            case 'image':
+                worker = this.client.image.deleteMultipleFromWastebin({
+                    ids,
+                }).toPromise();
+                break;
+            case 'folder':
+                worker = this.client.folder.deleteMultipleFromWastebin({
+                    ids,
+                }).toPromise();
+                break;
+            case 'page':
+                worker = this.client.page.deleteMultipleFromWastebin({
+                    ids,
+                }).toPromise();
+                break;
+            case 'form':
+                worker = this.client.form.deleteMultipleFromWastebin({
+                    ids,
+                }).toPromise();
+                break;
+        }
+
         return (
-            this.api.folders.deleteFromWastebin(type, ids).toPromise().then(() => {
+            worker.then(() => {
                 this.appState.dispatch(new WasteBinItemsDeletionSuccessAction(type, ids));
 
                 this.notification.show({
@@ -271,10 +367,10 @@ export class WastebinActionsService {
         const idsInActiveFolder = allIds
             .map((id) => {
                 const item = this.entityResolver.getEntity(type, id);
-                const parentFolderId =
-                    (item as Page | FileOrImage).folderId ||
-                    (item as Folder).motherId ||
-                    -1;
+                const parentFolderId
+                    = (item as Page | FileOrImage).folderId
+                      || (item as Folder).motherId
+                      || -1;
                 const isInActiveFolder = parentFolderId === activeFolderId;
                 return isInActiveFolder ? id : -1;
             })
@@ -290,13 +386,13 @@ export class WastebinActionsService {
     private getApiListMethod(
         type: ItemType,
     ): (
-            parentId: number,
-            options?: FolderListOptions
-        ) => Observable<BaseListResponse & { [type: string]: any }> {
+        parentId: number,
+        options?: FolderListOptions,
+    ) => Observable<BaseListResponse & { [type: string]: any }> {
         return (parentId: number, options?: GtxCmsQueryOptions) => {
             switch (type) {
                 case 'folder':
-                    return this.api.folders.getFolders(parentId, options);
+                    return this.client.folder.folders(parentId, options);
                 case 'page': {
                     const languageId = this.appState.now.folder.activeLanguage;
                     const language = this.entityResolver.getLanguage(languageId);
@@ -307,14 +403,17 @@ export class WastebinActionsService {
                             language: language.code,
                         });
                     }
-                    return this.api.folders.getPages(parentId, pageListOptions);
+                    return this.client.folder.pages(parentId, pageListOptions);
                 }
                 case 'file':
-                    return this.api.folders.getFiles(parentId, options);
+                    return this.client.folder.files(parentId, options);
                 case 'image':
-                    return this.api.folders.getImages(parentId, options);
+                    return this.client.folder.images(parentId, options);
                 case 'form':
-                    return this.api.folders.getForms(parentId, options);
+                    return this.client.form.list({
+                        folderId: parentId,
+                        ...options,
+                    });
                 default:
                     throw new Error(`The type "${type}" was not recognised`);
             }

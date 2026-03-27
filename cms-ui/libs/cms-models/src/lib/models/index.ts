@@ -1,6 +1,4 @@
 export * from './admin-info';
-export * from './cms-form';
-export * from './cms-i18n-value';
 export * from './common';
 export * from './construct-category';
 export * from './content-package';
@@ -16,8 +14,9 @@ export * from './favourite';
 export * from './feature';
 export * from './file';
 export * from './folder';
-export * from './form-config';
+export * from './form';
 export * from './form-conditions';
+export * from './form-config';
 export * from './gcms-normalizer/gcms-normalizer';
 export * from './gcms-normalizer/gcms-normalizer-types';
 export * from './group';
@@ -59,4 +58,3 @@ export * from './type-util';
 export * from './user';
 export * from './usersnap';
 export * from './version';
-

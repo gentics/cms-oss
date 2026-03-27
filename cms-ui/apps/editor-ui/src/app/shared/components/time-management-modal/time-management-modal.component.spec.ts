@@ -107,7 +107,7 @@ describe('TimeManagementModal', () => {
         componentTest(() => TestComponent, async (fixture, instance) => {
 
             // prepare test data
-            const formSample: Form<Normalized> = {
+            const formSample: Form = {
                 ...getExampleFormDataNormalized({ id: 1 }),
                 online: true,
                 modified: false,
@@ -296,7 +296,7 @@ describe('TimeManagementModal', () => {
         componentTest(() => TestComponent, async (fixture, instance) => {
 
             // prepare test data
-            const formSample: Form<Normalized> = {
+            const formSample: Form = {
                 ...getExampleFormDataNormalized({ id: 1 }),
                 online: true,
                 modified: false,

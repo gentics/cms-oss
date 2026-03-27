@@ -1,0 +1,71 @@
+<div
+    class="content-list form"
+    [class.empty]="items?.length === 0"
+    [attr.data-item-type]="'form'"
+    [attr.data-ui-mode]="uiMode"
+>
+    <item-list-header
+        #header
+        class="list-header icon-checkbox-trigger"
+        [currentFolderId]="folderId()"
+        [activeNode]="node()"
+        [nodeLanguages]="nodeLanguages()"
+
+        [selectedItems]="selection()"
+        [folderPermissions]="permissions() | gtxMapPermissions"
+
+        [itemsInfo]="itemsInfo"
+        [items]="items"
+
+        [icon]="'list_alt'"
+        [itemType]="'form'"
+
+        [showAllLanguages]="showAllLanguages"
+        [showStatusIcons]="showStatusIcons"
+        [showDeleted]="showDeleted"
+        [uiMode]="uiMode"
+    ></item-list-header>
+
+    <!--
+    [filterTerm]="filterTerm"
+    [acceptUploads]="acceptUploads"
+    [canCreateItem]="canCreateItem"
+    [paginationConfig]="paginationConfig"
+    [showImagesGridView]="showImagesGridView$ | async"
+    -->
+
+    <gtx-progress-bar [active]="loadingItems()" />
+
+    <div class="list-body" [class.collapsed]="header.isCollapsed" [hidden]="loadingItems()">
+        @for (singleItem of items; track singleItem.id) {
+            <item-list-row
+                [item]="singleItem"
+                [activeNode]="node()"
+                [nodeId]="node()?.id"
+                [selected]="selection() | gtxIncludes:singleItem.id"
+                [permissions]="permissions()"
+                [nodeLanguages]="nodeLanguages()"
+                [startPageId]="startPageId()"
+                [activeItemId]="activeItemId()"
+
+                [activeLanguage]="activeLanguage"
+                [itemsInfo]="itemsInfo"
+
+                [icon]="'list_alt'"
+                [itemType]="'form'"
+
+                [uiMode]="uiMode()"
+                [searching]="searchTerm || elasticSearchQueryActive"
+                [linkPaths]="!!searchTerm"
+                [expandByDefault]="showAllLanguages"
+                [showStatusIcons]="showStatusIcons"
+                [showDeleted]="showDeleted"
+
+                [stagingMap]="stagingMap"
+            ></item-list-row>
+            <!--
+                [filterTerm]="filterTerm"
+            -->
+        }
+    </div>
+</div>

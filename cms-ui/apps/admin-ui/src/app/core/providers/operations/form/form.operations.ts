@@ -1,5 +1,5 @@
 import { Injectable, Injector } from '@angular/core';
-import { Form, FormListOptions, Raw } from '@gentics/cms-models';
+import { Form, FormListOptions } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -15,13 +15,13 @@ export class FormOperations extends ExtendedEntityOperationsBase<'form'> {
         super(injector, 'form');
     }
 
-    getAll(options: FormListOptions, parentId: any): Observable<Form<Raw>[]> {
+    getAll(options: FormListOptions, parentId: any): Observable<Form[]> {
         return this.api.folders.getForms(parentId, options).pipe(
             map(res => res.items),
         );
     }
 
-    get(entityId: number, options?: any, parentId?: any): Observable<Form<Raw>> {
+    get(entityId: number, options?: any, parentId?: any): Observable<Form> {
         return this.api.forms.getForm(entityId).pipe(
             map(res => res.item),
         );

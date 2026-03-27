@@ -1,0 +1,7 @@
+{
+    "form_grid": {
+        "section_controls": "Eingabe Elemente",
+        "section_blocks": "Block Elemente",
+        "drag_element": "{{name}} ziehen"
+    }
+}

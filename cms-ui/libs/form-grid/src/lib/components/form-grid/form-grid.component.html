@@ -1,0 +1,99 @@
+@let confObj = config();
+@if (confObj != null) {
+    <div
+        class="editor-shell"
+        [class.palette-dragging]="isDragging"
+        [class.right-panel-wide]="!!activeElement"
+        [class.no-right-panel]="!activeElement"
+    >
+        <input
+            id="toggleLeftPanel"
+            class="panel-toggle panel-toggle--left"
+            type="checkbox"
+            checked
+        />
+        @if (!!activeElement) {
+            <input
+                id="toggleRightPanel"
+                class="panel-toggle panel-toggle--right"
+                type="checkbox"
+                checked
+            />
+        }
+
+        <div class="editor-body">
+            <aside class="editor-panel editor-panel--left" aria-label="Linkes Panel">
+
+                <div class="panel-header">
+                    <label
+                        class="panel-toggle-btn"
+                        for="toggleLeftPanel"
+                        title="Linkes Panel ein-/ausklappen"
+                        aria-label="Linkes Panel ein-/ausklappen"
+                    >
+                        <icon>chevron_left</icon>
+                    </label>
+                </div>
+
+                <div class="panel-content">
+
+                    @if (!restricted() && confObj.controls != null) {
+                        <div class="panel-section">
+                            <div class="panel-section-title">{{ 'form_grid.section_controls' | gtxI18n }}</div>
+
+                            <div class="palette" [attr.aria-label]="'form_grid.section_controls' | gtxI18n">
+                                @for (ctlEntry of (confObj.controls | gtxEntries); track ctlEntry.key) {
+                                    @let label = ctlEntry.value.labelI18n | gtxI18nObject;
+                                    @let description = ctlEntry.value.descriptionI18n | gtxI18nObject:null;
+
+                                    <button
+                                        type="button"
+                                        class="palette-item"
+                                        draggable="true"
+                                        [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
+                                        [attr.title]="label"
+                                        (dragend)="sidebarDragEnd()"
+                                        (dragstart)="sidebarDragStart($event, ctlEntry.key, ctlEntry.value)"
+                                    >
+                                        <span class="palette-item--label">{{ label }}</span>
+                                        @if (description) {
+                                            <div class="palette-item--description">{{ description }}</div>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (confObj.blocks != null) {
+                        <div class="panel-section">
+                            <div class="panel-section-title">{{ 'form_grid.section_blocks' | gtxI18n }}</div>
+
+                            <div class="palette" [attr.aria-label]="'form_grid.section_blocks' | gtxI18n">
+                                @for (blockEntry of (confObj.blocks | gtxEntries); track blockEntry.key) {
+                                    @let label = blockEntry.value.labelI18n | gtxI18nObject;
+                                    @let description = blockEntry.value.descriptionI18n | gtxI18nObject:null;
+
+                                    <button
+                                        type="button"
+                                        class="palette-item"
+                                        draggable="true"
+                                        [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
+                                        [attr.title]="label"
+                                        (dragend)="sidebarDragEnd()"
+                                        (dragstart)="sidebarDragStart($event, blockEntry.key, blockEntry.value)"
+                                    >
+                                        <span class="palette-item--label">{{ label }}</span>
+                                        @if (description) {
+                                            <div class="palette-item--description">{{ description }}</div>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </aside>
+        </div>
+    </div>
+}

@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import {
-    CmsFormData,
     EditableFileProps,
     EditableFolderProps,
-    EditableFormProps,
+    EditableFormProperties,
     EditablePageProps,
     FileOrImage,
     Folder,
@@ -40,30 +39,14 @@ export function getItemProperties(item: InheritableItem | Node): EditablePropert
         }
 
         case 'form':{
-            let dataProperties: Partial<CmsFormData> = {};
             const f = item as Form;
-            if (f.data) {
-                dataProperties = {
-                    email: f.data.email,
-                    successurl_i18n: f.data.successurl_i18n,
-                    successurl: f.data.successurl,
-                    mailsubject_i18n: f.data.mailsubject_i18n,
-                    mailtemp_i18n: f.data.mailtemp_i18n,
-                    mailsource_pageid: f.data.mailsource_pageid,
-                    mailsource_nodeid: f.data.mailsource_nodeid,
-                    templateContext: f.data.templateContext,
-                    type: f.data.type,
-                    elements: f.data.elements,
-                }
-            }
-
-            const props: EditableFormProps = {
+            // FIXME: Why remapping?!?
+            const props: Partial<EditableFormProperties> = {
                 name: f.name,
                 description: f.description,
                 languages: f.languages,
                 successPageId: f.successPageId,
                 successNodeId: f.successNodeId,
-                data: dataProperties,
             };
             return props;
         }

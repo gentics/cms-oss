@@ -1,0 +1,174 @@
+<div class="modal-title" *ngIf="isModalMode">
+  <h5>Formgrid Element {{ edit ? 'ändern' : 'hinzufügen' }}</h5>
+</div>
+
+<div class="panel-title" *ngIf="isPanelMode">
+  <h5>{{ panelTitle }}</h5>
+</div>
+
+<div class="modal-content">
+  <div>
+    <label>Typ:</label>
+    <select [(ngModel)]="element.formGridOptions.type" (ngModelChange)="onTypeChanged($event); onFormValueChanged()" class="fg-select">
+      <option *ngFor="let type of types" [value]="type.value">
+        {{ type.name }}
+      </option>
+    </select>
+  </div>
+
+  <div *ngIf="element.formGridOptions.type !== 'formgridSpacer'">
+    <gtx-input label="Name des Elements" [(ngModel)]="element.label[mesh.getPrimaryLocale()]" (ngModelChange)="onFormValueChanged()">
+    </gtx-input>
+  </div>
+  
+  <div class="flex">
+    <div>
+      <label>Breite:</label>
+      <select label="Breite:" [(ngModel)]="element.formGridOptions.numberOfColumns" (ngModelChange)="onFormValueChanged()" class="fg-select">
+        <option *ngFor="let option of options" [value]="option.value">
+          {{ option.value }}
+        </option>
+      </select>
+    </div>
+    <div *ngIf="element?.formGridOptions?.type && element?.formGridOptions?.type == 'formgridText'" class="ml">
+      <label>Verknüpft mit:</label>
+      <select [(ngModel)]="element.formGridOptions.dependsOn" (ngModelChange)="onFormValueChanged()" class="fg-select">
+        <option [ngValue]="''"></option>
+        <option *ngFor="let opt of dependsOnOptions" [ngValue]="opt.id">
+          {{ mesh.getLocalText(opt.label) }}
+        </option>
+      </select>
+    </div>
+    <div *ngIf="element.formGridOptions.type == 'formgridText'" class="ml">
+      <gtx-checkbox [(ngModel)]="element.formGridOptions.replacementText" (ngModelChange)="onFormValueChanged()" label="Ersatztext">
+      </gtx-checkbox>
+    </div>
+    
+  </div>
+
+  <div *ngIf="element.formGridOptions.type === 'formgridImage'" class="flex mt">
+    <gtx-checkbox [(ngModel)]="element.formGridOptions.inForm" (ngModelChange)="onFormValueChanged()" label="In Formular anzeigen"></gtx-checkbox>
+    <gtx-checkbox class="ml" [(ngModel)]="element.formGridOptions.inSummary" (ngModelChange)="onFormValueChanged()" label="In Zusammenfassung anzeigen"></gtx-checkbox>
+  </div>
+
+  <!-- Image  -->
+  <div *ngIf="element.formGridOptions.type === 'formgridImage'" class="mt">
+    <gtx-input label="Bild-URL (absolut oder relativ)" [(ngModel)]="fgImage.url" (ngModelChange)="onUrlChanged(); onFormValueChanged()">
+    </gtx-input>
+
+    <div *ngIf="fgImage.url" class="mt">
+      <small>Vorschau:</small>
+      <div *ngIf="!isRelativeImageUrl && !previewError" style="border: 1px solid #eee; padding: 6px; border-radius: 6px; background: #fafafa;">
+        <div [ngStyle]="{ display: 'flex', 'justify-content': fgImage.align === 'start' ? 'flex-start' : (fgImage.align === 'center' ? 'center' : (fgImage.align === 'end' ? 'flex-end' : 'stretch')) }">
+          <img [src]="previewUrl" alt=""
+            (load)="onPreviewLoad()"
+            (error)="onPreviewError()"
+            [style.object-fit]="fgImage.objectFit"
+            [style.max-width]="'100%'"
+            [style.display]="'block'"
+            [style.margin]="'4px auto'"
+            [style.width]="imgWidthStyle"
+            [style.height]="imgHeightStyle" />
+        </div>
+      </div>
+      <div *ngIf="isRelativeImageUrl" style="color:#555; font-size: 12px; margin-top: 4px;">
+        Bei relativen URLs kann keine Vorschau angezeigt werden.
+      </div>
+      <div *ngIf="!isRelativeImageUrl && previewError" style="color:#b71c1c; font-size: 12px; margin-top: 4px;">
+        Vorschau konnte nicht geladen werden. Bitte URL prüfen.
+      </div>
+    </div>
+
+    <div class="flex">
+      <gtx-input type="number" min="0" label="Breite (px, optional)" value="0" [(ngModel)]="imgWidth" (ngModelChange)="onFormValueChanged()">
+      </gtx-input>
+      <gtx-input type="number" min="0" label="Höhe (px, optional)" value="0" [(ngModel)]="imgHeight" (ngModelChange)="onFormValueChanged()" class="ml">
+      </gtx-input>
+
+      <select class="fg-select ml" [(ngModel)]="fgImage.objectFit" (ngModelChange)="onFormValueChanged()">
+        <option [ngValue]="'contain'">Contain</option>
+        <option [ngValue]="'cover'">Cover</option>
+        <option [ngValue]="'fill'">Fill</option>
+        <option [ngValue]="'none'">None</option>
+        <option [ngValue]="'scale-down'">Scale down</option>
+      </select>
+
+      <select class="fg-select ml" [(ngModel)]="fgImage.align" (ngModelChange)="onFormValueChanged()">
+        <option [ngValue]="'start'">Links</option>
+        <option [ngValue]="'center'">Zentriert</option>
+        <option [ngValue]="'end'">Rechts</option>
+        <option [ngValue]="'stretch'">Stretch</option>
+      </select>
+    </div>
+
+    <!-- ALT / Caption -->
+    <div class="localesContainer" *ngFor="let locale of mesh.getLocales()">
+      <gtx-input label="ALT-Text {{ locale }}" [(ngModel)]="fgImage.alt[locale]" (ngModelChange)="onFormValueChanged()">
+      </gtx-input>
+
+      <gtx-input label="Caption {{ locale }} (optional)" [(ngModel)]="fgImage.caption[locale]" (ngModelChange)="onFormValueChanged()">
+      </gtx-input>
+    </div>
+  </div>
+
+  <!-- Text-Felder nur beim Text-Typ -->
+  <div class="localesContainer" *ngFor="let locale of mesh.getLocales(); let i = index"
+    [hidden]="element.formGridOptions.type != 'formgridText'">
+
+    <label class="aloha-label">Text {{ locale }}</label>
+    <div class="localeRow">
+      <div class="aloha-editable" [id]="idPrefix + 'value-' + locale"></div>
+      <gtx-button *ngIf="automaticTranslationEnabled && i === 0" size="small" class="translate-button"
+        (click)="translateField('value', idPrefix + 'value-')" [disabled]="isLoadingField['value']">
+        Übersetzen
+      </gtx-button>
+    </div>
+
+    <div *ngIf="translationErrors[locale]" class="error-message-value">
+      <span>{{ translationErrors[locale] }}</span>
+    </div>
+
+    <label class="aloha-label">Zusammenfassung {{ locale }}</label>
+    <div class="localeRow">
+      <div class="aloha-editable" [id]="idPrefix + 'valueSummary-' + locale"></div>
+      <gtx-button *ngIf="automaticTranslationEnabled && i === 0" size="small" class="translate-button-summary"
+        (click)="translateField('valueSummary', idPrefix + 'valueSummary-')" [disabled]="isLoadingField['valueSummary']">
+        Übersetzen
+      </gtx-button>
+    </div>
+
+    <div *ngIf="translationErrorsSummary[locale]" class="error-message-summary">
+      <span>{{ translationErrorsSummary[locale] }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer action-footer" *ngIf="isModalMode">
+  <gtx-button class="action-btn action-btn-primary" type="primary" (click)="addOrEdit()" [disabled]="
+      !element.formGridOptions.numberOfColumns ||
+      (element.formGridOptions.type !== 'formgridSpacer' &&
+       element.formGridOptions.type !== 'formgridImage' &&
+       (!element.label || !element.label[mesh.getPrimaryLocale()])) ||
+      (element.formGridOptions.type === 'formgridImage' &&
+       !(element.formGridOptions.inForm || element.formGridOptions.inSummary))
+    ">
+    {{ edit ? 'Speichern' : 'Hinzufügen' }}
+  </gtx-button>
+
+  <gtx-button class="action-btn action-btn-secondary" type="secondary" (click)="cancel()">
+    Abbrechen
+  </gtx-button>
+</div>
+
+<div class="panel-footer action-footer action-footer-panel" *ngIf="isPanelMode">
+  <gtx-button class="action-btn" type="primary" (click)="addOrEdit()" [disabled]="
+      !element.formGridOptions.numberOfColumns ||
+      (element.formGridOptions.type !== 'formgridSpacer' &&
+       element.formGridOptions.type !== 'formgridImage' &&
+       (!element.label || !element.label[mesh.getPrimaryLocale()])) ||
+      (element.formGridOptions.type === 'formgridImage' &&
+       !(element.formGridOptions.inForm || element.formGridOptions.inSummary))
+    ">
+    Speichern
+  </gtx-button>
+</div>

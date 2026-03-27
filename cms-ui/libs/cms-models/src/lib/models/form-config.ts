@@ -120,9 +120,9 @@ export interface FormTypeConfiguration {
      */
     submitOnce?: boolean;
     /**
-     * If this configuration is to be used for internal forms
+     * If this configuration is to be used for external forms
      */
-    internal?: boolean;
+    external?: boolean;
     /**
      * The name of the mesh plugin which is to handle this form type
      */
@@ -155,6 +155,11 @@ export interface FormTypeConfiguration {
      * Options which determine which email templates are available, which will be sent to the admin emails, when a end-user submits a form
      */
     adminEmailTemplateOptions?: FormSelectOption[];
+    /**
+     * Which form flows this type can use.
+     * The first element in this array is will be used as default value.
+     */
+    flows?: FormFlow[];
 }
 
 /**
@@ -207,5 +212,42 @@ export interface FormBaseSetting {
 
 export interface FormSelectOption {
     value: string;
-    label: I18nString;
+    labelI18n: I18nString;
+}
+
+export interface FormFlow {
+    /** The ID of the flow */
+    id: string;
+    /** The translation key to use to get the name of this flow */
+    nameTranslationKey: string;
+    steps: FormFlowStep[];
+}
+
+export interface FormFlowStep {
+    /** The translation key for the name of this flow step */
+    nameTranslationKey: string;
+    /** The translation key for the button label which leads to this flow step */
+    buttonTextTranslationKey: string;
+    /** The translation key for the description of this flow step */
+    descriptionTranslationKey?: string;
+    /** The React Native component class which renders this step */
+    reactClass: string;
+    /** Additional buttons which are displayed in the footer */
+    buttons?: FormFlowButton[];
+    /** Variables which are passed to the screen component as props */
+    variables?: FormFlowVariable[];
+}
+
+export interface FormFlowVariable {
+    name: string;
+    value: any;
+}
+
+export interface FormFlowButton {
+    /** The React Native component class which renders this button */
+    reactClass: string;
+    /** The translation key for the label of this button */
+    labelTranslationKey: string;
+    /** Hides the button on mobile devices (if this button implementation has this feature) */
+    mobileDisabled?: boolean;
 }

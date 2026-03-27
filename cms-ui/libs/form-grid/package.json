@@ -1,0 +1,19 @@
+{
+  "name": "@gentics/form-grid",
+  "version": "6.4.4",
+  "peerDependencies": {
+    "@angular/common": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@gentics/cms-models": "^6.4.4",
+    "@gentics/cms-integration-api-models": "^6.4.4",
+    "@gentics/ui-core": "^6.4.4"
+  },
+  "devDependencies": {
+    "@angular/common": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@gentics/cms-models": "^6.4.4",
+    "@gentics/cms-integration-api-models": "^6.4.4",
+    "@gentics/ui-core": "^6.4.4"
+  },
+  "sideEffects": false
+}

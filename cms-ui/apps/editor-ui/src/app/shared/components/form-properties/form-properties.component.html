@@ -1,4 +1,4 @@
-@if ((form && formConfigLoaded && formConfig)) {
+@if (form) {
     <form [formGroup]="form">
         <gtx-input
             [label]="('editor.item_name_label' | gtxI18n) + '*'"
@@ -160,7 +160,7 @@
                             >
                                 @for (option of formConfig?.form_properties?.admin_mail_options; track option.key) {
                                     <gtx-option [value]="option.key">
-                                        {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
+                                        <!-- {{ option.value_i18n_ui | i18nfg$:'ui' | async }} -->
                                     </gtx-option>
                                 }
                             </gtx-i18n-select>

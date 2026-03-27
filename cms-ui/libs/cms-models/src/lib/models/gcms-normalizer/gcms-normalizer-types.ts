@@ -1,4 +1,4 @@
-import { Form } from '../cms-form';
+import { Form } from '../form';
 import { ConstructCategory, ConstructCategoryBO } from '../construct-category';
 import { ContentPackage, ContentPackageBO } from '../content-package';
 import { ContentRepository, ContentRepositoryBO } from '../content-repository';
@@ -41,7 +41,7 @@ export interface NormalizableEntityTypesMap<T extends ModelType = DefaultModelTy
     elasticSearchIndex: ElasticSearchIndex<T>;
     file: File<T>;
     folder: Folder<T>;
-    form: Form<T>;
+    form: Form;
     group: Group<T>;
     image: Image<T>;
     language: Language;
@@ -80,7 +80,7 @@ export interface NormalizableEntityTypesMapBO<T extends ModelType = DefaultModel
     elasticSearchIndex: ElasticSearchIndex<T>;
     file: File<T>;
     folder: Folder<T>;
-    form: Form<T>;
+    form: Form;
     group: Group<T>;
     image: Image<T>;
     language: Language;

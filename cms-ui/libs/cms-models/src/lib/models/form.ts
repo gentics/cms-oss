@@ -1,5 +1,7 @@
 import { I18nString } from './common';
-import { InheritableItem } from './item';
+import { InheritableItem, ItemVersion } from './item';
+import { Raw } from './type-util';
+import { User } from './user';
 
 /*
  * Temporary Compatibility types for renaming values
@@ -30,11 +32,21 @@ export interface IFoundElement {
     pageInUiSchema: number;
 }
 
-export interface EdtiableFormProperties {
+export interface EditableFormProperties {
+    /**
+     * The form-type of the form. Used to identify which form-configuration
+     * has has to be used for this form.
+     * May only be edited when creating a new form.
+     */
+    formType: string;
     /**
      * The name of the form
      */
     name: string;
+    /**
+     * Filename of the from for publishing
+     */
+    fileName: string;
     /**
      * Description of the form
      */
@@ -43,17 +55,6 @@ export interface EdtiableFormProperties {
      * The languages the form supports.
      */
     languages: string[];
-}
-
-interface FormBase extends InheritableItem, EdtiableFormProperties {
-    /**
-     * The folderId in which the form resides in
-     */
-    readonly folderId: number;
-    /**
-     * The translated label of `formType`
-     */
-    readonly formTypeLabel: string;
     /**
      * The schema definition of the form
      */
@@ -61,15 +62,11 @@ interface FormBase extends InheritableItem, EdtiableFormProperties {
     /**
      * The ui-schema definition of the form
      */
-    uiSchema: UiSchema;
-}
+    uiSchema: FormUISchema;
 
-export interface InternalForm extends FormBase {
-    /**
-     * The form-type of the form. Used to identify which form-configuration
-     * has has to be used for this form.
-     */
-    formType: string;
+    /* INTERNAL FORMS
+     * ===================================================================== */
+
     /**
      * The URLs mapped by the language, where to redirect to,
      * when a user has successfully submitted the form.
@@ -112,7 +109,71 @@ export interface InternalForm extends FormBase {
     adminEmailSubject: I18nString;
 }
 
-export interface ExternalForm extends FormBase {
+export interface Form extends InheritableItem, EditableFormProperties {
+    /**
+     * Which type of item this is.
+     */
+    readonly type: 'form';
+    /**
+     * The folderId in which the form resides in
+     */
+    readonly folderId: number;
+    /**
+     * The translated label of `formType`
+     */
+    readonly formTypeLabel: string;
+    /**
+     * Whether the form is modified (the last version of the form is not the currently published one)
+     */
+    readonly modified: boolean;
+    /**
+     * Whether the form has time management set or not.
+     */
+    readonly planned: boolean;
+    /**
+     * Whether the form is in queue for being published or taken offline
+     */
+    readonly queued: boolean;
+    /**
+     * Whether the form is currently online.
+     */
+    readonly online: boolean;
+    /**
+     * Whether this form is a master form.
+     */
+    readonly master: boolean;
+    /**
+     * True if the form is locked.
+     */
+    readonly locked: boolean;
+    /**
+     * The user who published the forms most recent version
+     */
+    readonly publisher?: User<Raw>;
+    /**
+     * Publish Date as a Unix timestamp.
+     */
+    readonly pdate?: number;
+    /**
+     * Unix timestamp, since when the form is locked, or -1 if it is not locked.
+     */
+    readonly lockedSince: number;
+    /**
+     * User, who locked the form.
+     */
+    readonly lockedBy?: User<Raw>;
+    /**
+     * The currently set time management for the form.
+     */
+    readonly timeManagement: FormTimeManagement;
+    /**
+     * Most recent version of the Form.
+     */
+    readonly version: ItemVersion;
+
+    /* EXTERNAL FORMS
+     * ===================================================================== */
+
     /**
      * The foreign/external ID of an external form.
      */
@@ -121,14 +182,107 @@ export interface ExternalForm extends FormBase {
      * The foreign/external Version of an external form.
      */
     readonly externalVersion?: string;
-    /**
-     * The form-type of the form. Used to identify which form-configuration
-     * has has to be used for this form.
-     */
-    readonly formType: string;
 }
 
-export type Form = InternalForm | ExternalForm;
+export type FormInNode = Form & { nodeId: number };
+
+export type FormStatus = 'published' | 'edited' | 'offline' | 'queue' | 'timeframe' | 'publishat';
+
+/** Time Management of forms */
+export interface FormTimeManagement {
+
+    /** Unix timestamp at which the form will be published */
+    at: number;
+
+    /** Unix timestamp at which the form will be taken offline  */
+    offlineAt: number;
+
+    /** Queued time management for publishing the form */
+    queuedPublish?: FormQueuedActionPublish;
+
+    /** Queued time management for taking the form offline */
+    queuedOffline?: FormQueuedActionTakeOffline;
+
+    /** Form Version that will be published at the timestamp */
+    version?: FormVersion;
+
+    /* The user that planned to publish */
+    futurePublisher?: User;
+
+    /* The user that planned to upublish */
+    futureUnpublisher?: User;
+}
+
+/** Superinterface for queued FormTimeManagement actions/ */
+export interface FormQueuedAction {
+
+    /** Unix timestamp at which the form shall be published/taken offline */
+    at: number;
+
+    /** User who put the form into the queue */
+    user: User<Raw>;
+
+}
+
+/** Queued time management for taking a form offline */
+export interface FormQueuedActionTakeOffline extends FormQueuedAction { }
+
+/** Queued time management for publishing a form */
+export interface FormQueuedActionPublish extends FormQueuedActionTakeOffline {
+
+    /** Form Version that will be published at the timestamp */
+    version: FormVersion;
+
+}
+
+export interface FormQueuedActionRequestPublishAt {
+    at: number;
+    alllang: boolean;
+    keepVersion: boolean;
+}
+
+export interface FormQueuedActionRequestTakeOfflineAt {
+    at: number;
+    alllang: boolean;
+}
+
+export interface FormQueuedActionRequestClear {
+    form: {
+        id: number;
+    };
+    unlock: boolean;
+    clearPublishAt?: boolean;
+    clearOfflineAt?: boolean;
+}
+
+/**
+ * Represents a form version in the CMS
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_FormVersion.html
+ */
+export interface FormVersion {
+    /** Version number */
+    // eslint-disable-next-line id-blacklist
+    number: string;
+
+    /** Version timestamp */
+    timestamp: number;
+
+    /** Editor of the version */
+    editor: User<Raw>;
+}
+
+export interface FormDownloadInfo {
+    /** If the download has been created/ready to download. */
+    downloadReady: boolean;
+    /** If the download is still being created. */
+    requestPending: boolean;
+    /** The UUID of the download when it's ready. */
+    downloadUuid?: string;
+    /** ISO Date string for when the download has been created. */
+    downloadTimestamp?: string;
+    /** Optional error */
+    error?: string;
+}
 
 export interface FormSchema {
     /**
@@ -413,29 +567,6 @@ export interface FormPropertyValidation {
         regex: string;
         errorMessage: I18nString;
     };
-}
-
-export interface FormFlow {
-    key: string;
-    name: string;
-
-    formFlowSteps: FormFlowStep[];
-}
-
-export interface FormFlowStep {
-    name: string;
-    description: string;
-
-    buttonText: string;
-    reactClass: string;
-    buttonDefinition: FormFlowButton[];
-    variables: any[];
-}
-
-export interface FormFlowButton {
-    btnComponent: string;
-    translateKey: string;
-    mobileDisabled?: boolean;
 }
 
 export interface FormgridType {

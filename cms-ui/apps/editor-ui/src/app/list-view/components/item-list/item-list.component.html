@@ -43,6 +43,7 @@
                         [icon]="icon"
                         [filterTerm]="filterTerm"
                         [searching]="searchTerm || elasticSearchQueryActive"
+                        [activeItemId]="activeItemId"
                         [selected]="itemsInfo.selected | gtxIncludes:item.id"
                         [itemType]="itemType"
                         [permissions]="folderPermissions"
@@ -54,7 +55,6 @@
                         [itemsInfo]="itemsInfo"
                         [showStatusIcons]="displayStatusInfo"
                         [showDeleted]="displayDeleted"
-                        [expandByDefault]="displayAllLanguages"
                         [uiMode]="uiMode"
                         [stagingMap]="stagingMap"
                     ></item-list-row>

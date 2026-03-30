@@ -87,23 +87,27 @@
     </gtx-tab>
 
     <gtx-tab
-      id="forms" 
+      [id]="Tabs.FORMS" 
       gtxDetailTabLink 
-      title="Forms"
+      [title]="'node.title_node_forms' | gtxI18n"
       >
       <div class="detail-tab-wrapper">
         <gtx-entity-detail-header 
-          title="Forms Configuration" 
+          [title]="'node.title_forms_of_entity' | gtxI18n: { entityName: entity?.name }"
           saveActionAllowedId="node.updateNodeInstance"
-          (cancelClick)="detailsClose()"></gtx-entity-detail-header>
+          [saveActionAllowedInstanceId]="entity?.folderId"
+          [saveDisabled]="selectedFormTypes?.pristine || selectedFormTypes?.invalid"
+          (saveClick)="tabHandles?.[Tabs.FORMS]?.save?.()"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
 
         <div class="gtx-entity-details-tab-content-body">
           <gtx-pick-list
-            leftListLabel="Available forms"
-            rightListLabel="Assigned forms"
+            [availableListLabel]="'node.title_available_forms_list' | gtxI18n"
+            [assignedListLabel]="'node.title_assigned_forms_list' | gtxI18n"
             [showCount]="true"
-            [items]="allForms"
-            [formControl]="selectedForms"
+            [items]="allFormTypes"
+            [formControl]="selectedFormTypes"
           ></gtx-pick-list>
         </div>
       </div>

@@ -17,7 +17,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
-import { Feature, Folder, Language, NodeFeature, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
+import { Feature, Folder, FormTypeConfiguration, Language, NodeFeature, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService, PickListItem, TableRow } from '@gentics/ui-core';
 import { finalize } from 'rxjs/operators';
@@ -25,6 +25,7 @@ import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/as
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
+import { forkJoin } from 'rxjs';
 
 @Component({
     selector: 'gtx-node-editor',
@@ -57,6 +58,12 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
 
     public devtoolsEnabled = false;
 
+    public allFormTypes: PickListItem[] = [];
+
+    public selectedFormTypes = new FormControl<PickListItem[]>([]);
+
+    public assignedConfigurations: PickListItem[] = [];
+
     constructor(
         changeDetector: ChangeDetectorRef,
         route: ActivatedRoute,
@@ -80,29 +87,33 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         )
     }
 
-    allForms = [
-        { id: 1, label: 'Contact Form', description: 'Standard contact form' },
-        { id: 2, label: 'Newsletter Form', description: 'Signup form' },
-        { id: 3, label: 'Survey Form', description: 'Feedback collection' },
-    ];
-
-    selectedForms = new FormControl<PickListItem[]>([
-        { id: 2, label: 'Newsletter Form', description: 'Signup form' },
-        { id: 3, label: 'Survey Form', description: 'Feedback collection' },
-    ]);
-
     override ngOnInit(): void {
-        this.subcriptions.push(
-            this.selectedForms.valueChanges.subscribe((value) => {
-                console.log('picklist changed', value);
-            }),
-        );
         this.isChildNode = this.entity?.type === 'channel';
 
         this.subcriptions.push(this.appState.select(state => state.features.global[Feature.DEVTOOLS]).subscribe(enabled => {
             this.devtoolsEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
+
+        this.subcriptions.push(
+            this.client.form
+                .listConfigurations({
+                    nodeId: this.entityId,
+                })
+                .subscribe((res) => {
+                    const mapped = res.items.map((item) => this.mapFormTypeToPickListItem(item));
+                    this.assignedConfigurations = mapped;
+                    this.selectedFormTypes.setValue(mapped);
+                    this.changeDetector.markForCheck();
+                }),
+        );
+
+        this.subcriptions.push(
+            this.client.form.listConfigurations().subscribe((res) => {
+                this.allFormTypes = res.items.map((item) => this.mapFormTypeToPickListItem(item));
+                this.changeDetector.markForCheck();
+            }),
+        );
 
         Promise.all([
             this.loadFeatureData(),
@@ -180,6 +191,36 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             },
         });
 
+        this.tabHandles[this.Tabs.FORMS] = new FormGroupTabHandle(
+            this.selectedFormTypes,
+            {
+                save: () => {
+                    this.selectedFormTypes.disable();
+
+                    const calls = this.selectedFormTypes.value.map((form) =>
+                        this.client.form.assignConfiguration(
+                            String(form.id),
+                            this.entityId,
+                        ),
+                    );
+
+                    return forkJoin(calls)
+                        .pipe(
+                            discard(() => {
+                                this.assignedConfigurations = this.selectedFormTypes.value;
+                                this.changeDetector.markForCheck();
+                            }),
+                            finalize(() => this.selectedFormTypes.enable()),
+                        )
+                        .toPromise();
+                },
+                reset: () => {
+                    this.selectedFormTypes.reset(this.assignedConfigurations);
+                    return Promise.resolve();
+                },
+            },
+        );
+
         this.tabHandles[this.Tabs.LANGUAGES] = {
             save: () => this.updateLanguages(),
             isDirty: () => this.isLanguagesChanged,
@@ -196,6 +237,14 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
 
     protected onEntityChange(): void {
         this.isChildNode = this.entity?.type === 'channel';
+
+        // Forms neu laden wenn Node wechselt
+        this.client.form.listConfigurations({ nodeId: this.entityId }).subscribe((res) => {
+            const mapped = res.items.map((item) => this.mapFormTypeToPickListItem(item));
+            this.assignedConfigurations = mapped;
+            this.selectedFormTypes.setValue(mapped);
+            this.changeDetector.markForCheck();
+        });
 
         Promise.all([
             this.loadFeatureData(),
@@ -341,5 +390,12 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             }
             this.errorHandler.catch(err);
         }
+    }
+
+    mapFormTypeToPickListItem(form: FormTypeConfiguration): PickListItem {
+        return {
+            id: form.type,
+            label: form.pluginName,
+        };
     }
 }

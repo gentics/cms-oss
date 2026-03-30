@@ -62,6 +62,7 @@ export enum NodeDetailTabs {
     PROPERTIES = 'properties',
     PUBLISHING = 'publishing',
     FEATURES = 'features',
+    FORMS = 'forms',
     LANGUAGES = 'languages',
     PACKAGES = 'packages',
 }

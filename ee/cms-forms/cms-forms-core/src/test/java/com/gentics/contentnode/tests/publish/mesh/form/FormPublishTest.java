@@ -1178,7 +1178,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			StringWriter writer = new StringWriter();
 			IOUtils.copy(getClass().getResourceAsStream(String.format("form_rendered_%s.html", language)), writer);
 			String expected = String.format(writer.toString(), meshUuid, "");
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, null));
+			String renderedForm = supply(() -> getFormResource().preview(formId, language, null));
 			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
 		}
 	}

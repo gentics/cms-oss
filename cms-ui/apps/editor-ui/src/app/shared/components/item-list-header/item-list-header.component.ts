@@ -112,6 +112,9 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
     @Output()
     public selectedItemsChange = new EventEmitter<Item[]>();
 
+    @Output()
+    public requestRefresh = new EventEmitter<void>();
+
     isCollapsed = false;
     wastebinEnabled = false;
     multiChannelingEnabled = false;
@@ -273,6 +276,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             .then((modal) => modal.open())
             .then((newItem: Page | Form) => {
                 this.folderActions.refreshList(this.itemType);
+                this.requestRefresh.emit();
                 if (isPage) {
                     this.navigationService.detailOrModal(activeNodeId, 'page', newItem.id, EditMode.EDIT).navigate();
                 }
@@ -444,7 +448,11 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             return;
         }
 
-        this.contextMenuOperations.deleteItems(type, itemsToBeDeleted, this.activeNode.id);
+        this.contextMenuOperations.deleteItems(type, itemsToBeDeleted, this.activeNode.id).then((ids) => {
+            if (ids?.length > 0) {
+                this.requestRefresh.emit();
+            }
+        });
     }
 
     /**

@@ -178,6 +178,7 @@
   overflow: auto;
   min-width: 0;
   min-height: 0;
+  user-select: none;
 }
 
 /* Forms inside side panels: stack labels over selects, avoid horizontal scrolling */
@@ -1142,6 +1143,8 @@ gtx-checkbox [type='checkbox'] + label:before {
 
 .editor-drop-container {
   position: relative;
+  display: flex;
+  width: 100%;
   border-radius: 22px;
   transition:
     background 180ms ease,

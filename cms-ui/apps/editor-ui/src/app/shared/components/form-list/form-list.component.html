@@ -11,8 +11,10 @@
         [activeNode]="node()"
         [nodeLanguages]="nodeLanguages()"
 
-        [selectedItems]="selection()"
+        [selectedItems]="selectedItems()"
         [folderPermissions]="permissions() | gtxMapPermissions"
+        [canCreateItem]="true"
+        [acceptUploads]="acceptUploads()"
 
         [itemsInfo]="itemsInfo"
         [items]="items"
@@ -23,13 +25,14 @@
         [showAllLanguages]="showAllLanguages"
         [showStatusIcons]="showStatusIcons"
         [showDeleted]="showDeleted"
-        [uiMode]="uiMode"
+        [uiMode]="uiMode()"
+
+        (requestRefresh)="reload()"
     ></item-list-header>
 
     <!--
     [filterTerm]="filterTerm"
     [acceptUploads]="acceptUploads"
-    [canCreateItem]="canCreateItem"
     [paginationConfig]="paginationConfig"
     [showImagesGridView]="showImagesGridView$ | async"
     -->

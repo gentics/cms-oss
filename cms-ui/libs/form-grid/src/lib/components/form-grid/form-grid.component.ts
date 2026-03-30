@@ -1,17 +1,30 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, input, model, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    computed,
+    input,
+    model,
+    NgZone,
+    OnChanges,
+    OnDestroy,
+    OnInit,
+    signal,
+    SimpleChanges,
+} from '@angular/core';
 import { FALLBACK_LANGUAGE, I18nService } from '@gentics/cms-components';
 import {
     FormControlConfiguration,
     FormElement,
     FormElementConfiguration,
-    FormPage,
     FormSchema,
     FormSchemaProperties,
     FormSchemaProperty,
     FormTypeConfiguration,
     FormUISchema,
+    I18nString,
 } from '@gentics/cms-models';
-import { BaseComponent, cancelEvent, ISortableEvent } from '@gentics/ui-core';
+import { BaseComponent, cancelEvent, ISortableEvent, ModalService } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
 import { LINE_OPTIONS } from '../../constants/line-options';
 
@@ -39,6 +52,22 @@ interface ElementLocation {
     element: FormElement;
 }
 
+enum EditTabs {
+    DEFINITION = 'definition',
+    SETTINGS = 'settings',
+    TRANSLATIONS = 'translations',
+}
+
+interface DisplayItem {
+    id: string;
+    label: I18nString;
+    element: FormElement;
+    isBlock: boolean;
+    isControl: boolean;
+    config: FormElementConfiguration;
+    schema?: FormSchemaProperty;
+}
+
 const PALETTE_MIME = 'application/x-andp-formgrid-palette';
 const DROP_ROW_TOLERANCE = 10;
 
@@ -55,24 +84,75 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
     public ctx: any = {};
 
     public readonly LINE_OPTIONS = LINE_OPTIONS;
+    public readonly EditTabs = EditTabs;
 
     /* INPUTS / OUTPUTS
      * ===================================================================== */
 
-    public config = input.required<FormTypeConfiguration>();
-    public restricted = input.required<boolean>();
-    public languages = input.required<string[]>();
+    public readonly config = input.required<FormTypeConfiguration>();
+    public readonly restricted = input.required<boolean>();
+    public readonly languages = input.required<string[]>();
 
-    public schema = model.required<FormSchema>();
-    public uiSchema = model.required<FormUISchema>();
+    public readonly schema = model.required<FormSchema>();
+    public readonly uiSchema = model.required<FormUISchema>();
 
     /* PAGE & VIEW
      * ===================================================================== */
 
     /** All currently visible items, i.E. all elements from the current form page */
-    public items: FormElement[] = [];
+    public readonly items = computed<FormElement[]>(() => {
+        return this.uiSchema()?.pages?.[this.pageIndex()]?.elements || [];
+    });
+
+    public readonly displayItems = computed<DisplayItem[]>(() => {
+        // Can't use computed items here, as it wouldn't update/call correctly.
+        return (this.uiSchema()?.pages?.[this.pageIndex()]?.elements || []).map((el) => {
+            const itemSchema = this.schema().properties[el.id];
+
+            if (itemSchema) {
+                const itemConfig = this.config().controls[itemSchema?.type];
+
+                if (!itemConfig) {
+                    return null;
+                }
+
+                return {
+                    id: el.id,
+                    label: itemConfig.labelI18n,
+                    element: el,
+                    isBlock: false,
+                    isControl: true,
+                    config: itemConfig,
+                    schema: itemSchema,
+                };
+            } else {
+                const type = el.formGridOptions?.type;
+
+                if (!type) {
+                    return null;
+                }
+
+                const itemConfig = (this.config().blocks || {})[type];
+
+                if (!itemConfig) {
+                    return null;
+                }
+
+                return {
+                    id: el.id,
+                    label: itemConfig.labelI18n,
+                    element: el,
+                    isControl: false,
+                    isBlock: true,
+                    config: itemConfig,
+                };
+            }
+        }).filter((item) => item != null);
+    });
+
     /** Index of the currently viewed form page */
-    public pageIndex = 0;
+
+    public readonly pageIndex = signal<number>(0);
     /** The ID of the currently active element */
     public selectedElementId: string | null = null;
     /** Location of the currently selected element */
@@ -112,6 +192,14 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
 
     public resizeOverlayActive = false;
     public resizeOverlaySpan = 12;
+    public resizeActive = false;
+    public resizePointerId: number | null = null;
+    public resizeStartX: number;
+    public resizeTarget: FormElement | null = null;
+    public resizeSurfaceEl: HTMLElement | null = null;
+    public resizeRowBaseCols: number;
+    public resizeRowMaxSpan: number;
+    public resizeStartSpan: number;
 
     /* MISC
      * ===================================================================== */
@@ -126,7 +214,9 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
 
     constructor(
         changeDetector: ChangeDetectorRef,
+        public zone: NgZone,
         public i18n: I18nService,
+        public modals: ModalService,
     ) {
         super(changeDetector);
     }
@@ -150,12 +240,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
 
     public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
-
-        if (changes['uiSchema']) {
-            const uiSchema: FormUISchema = this.uiSchema() || {} as any;
-            const currentPage: FormPage = (uiSchema.pages || [])[this.pageIndex] || {} as any;
-            this.items = currentPage?.elements || [];
-        }
     }
 
     public override ngOnDestroy(): void {
@@ -168,6 +252,27 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
 
     /* IMPLEMENTATION
      * ===================================================================== */
+
+    // TODO: Make static
+    public get isSelectedFormgridElement(): boolean {
+        return !!this.selectedElementDraft?.formGridOptions?.type;
+    }
+
+    // TODO: Make static
+    public get isSelectedNormalElement(): boolean {
+        return (
+            !!this.selectedElementDraft
+            && !this.selectedElementDraft?.formGridOptions?.type
+        );
+    }
+
+    public hideLeftSidebar(): void {
+
+    }
+
+    public hideRightSidebar(): void {
+
+    }
 
     public paletteDragStart(event: DragEvent, id: string, element: FormElementConfiguration): void {
         this.isPaletteDragging = true;
@@ -266,16 +371,19 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
                 elements,
             );
 
+            const rootElements = this.uiSchema()?.pages?.[this.pageIndex()]?.elements;
+
             if (
                 !this.paletteDropTarget
-                || this.paletteDropTarget.list !== this.items
+                // TODO: Find a better way to determine root levels
+                || this.paletteDropTarget.list !== rootElements
                 || this.paletteDropTarget.containerId !== containerId
                 || this.paletteDropTarget.index !== nextTarget.index
                 || this.paletteDropTarget.span !== nextTarget.span
             ) {
                 this.paletteDropTarget = {
                     containerId,
-                    list: this.items,
+                    list: rootElements,
                     index: nextTarget.index,
                     span: nextTarget.span,
                 };
@@ -348,6 +456,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
         const type = dt.getData(PALETTE_MIME) || dt.getData('text/plain');
         // TODO: Add type check?
         const safeIndex = Math.max(0, Math.min(insertIndex, elements.length));
+        const isControl = this.config().controls[type] != null;
 
         this.pendingPaletteDropSpan = (resolvedSpan ?? (this.paletteDropTarget?.list === elements)
             ? this.paletteDropTarget!.span
@@ -356,7 +465,20 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
         const created = this.createPaletteElement(type);
         elements.splice(safeIndex, 0, created);
 
-        this.updateUiSchema();
+        if (isControl) {
+            const typeConfig = this.config().controls[type];
+            const copy = structuredClone(this.schema());
+            copy.properties[created.id] = {
+                type: type,
+                name: typeConfig.labelI18n[this.uiLanguage] || type,
+                formPage: this.pageIndex(),
+                isList: typeConfig.aggregate,
+                validation: {},
+            };
+            this.schema.set(copy);
+        }
+
+        this.updatePageElements(elements);
 
         this.selectElementById(created.id);
 
@@ -368,7 +490,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
         this.isPaletteDragging = false;
     }
 
-    private updateUiSchema(): void {
+    private updatePageElements(elements: FormElement[]): void {
         // Keep backing data structures in sync for both root and nested drops.
         const copy = structuredClone(this.uiSchema()) || {
             formGrid: {},
@@ -386,10 +508,10 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
                 elements: [],
             });
         }
-        if (copy.pages[this.pageIndex] == null) {
-            this.pageIndex = 0;
+        if (copy.pages[this.pageIndex()] == null) {
+            this.pageIndex.set(0);
         }
-        copy.pages[this.pageIndex].elements = this.items;
+        copy.pages[this.pageIndex()].elements = elements;
         this.uiSchema.set(copy);
     }
 
@@ -412,14 +534,12 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
 
     sortList(event: ISortableEvent): void {
         // Sort the visible list
-        const sorted = event.sort(this.items);
-
-        // Assign a new array reference so change detection always sees the update
-        this.items = [...sorted];
+        const newElements = [...this.items()];
+        const sorted = event.sort(newElements);
 
         // Persist back into the current page (this.pages is usually a reference to uiSchema.pages,
         // but we also explicitly write to uiSchema to be safe)
-        this.updateUiSchema();
+        this.updatePageElements(sorted);
 
         // Keep preview in sync
         if (this.viewMode === 'preview') {
@@ -429,16 +549,166 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
     }
 
     onResizeStart(
-        ev: PointerEvent,
+        event: PointerEvent,
         index: number,
         items: any[],
         surfaceEl: HTMLElement,
     ): void {
-        // TODO: move me
+        cancelEvent(event);
+
+        if (this.resizeActive) {
+            return;
+        }
+
+        const handleEl = event.currentTarget as HTMLElement | null;
+        const hostEl = handleEl?.closest('gtx-sortable-item') as HTMLElement | null;
+        const parentEl = hostEl?.parentElement as HTMLElement | null;
+
+        let rowBase = 0;
+        let rowMax = 12;
+
+        if (hostEl && parentEl) {
+            const hostTop = hostEl.offsetTop;
+            const itemEls = Array.from(parentEl.children).filter(
+                (el) =>
+                    (el as HTMLElement).tagName?.toLowerCase() === 'gtx-sortable-item',
+            ) as HTMLElement[];
+
+            for (let i = 0; i < index; i++) {
+                const el = itemEls[i];
+                if (el && el.offsetTop === hostTop) {
+                    rowBase += this.getSpan(items[i]);
+                }
+            }
+
+            rowBase = Math.max(0, Math.min(11, rowBase));
+            rowMax = Math.max(1, 12 - rowBase);
+        }
+
+        this.resizeActive = true;
+        this.resizePointerId = event.pointerId;
+        this.resizeStartX = event.clientX;
+        this.resizeTarget = items[index];
+        this.resizeSurfaceEl = surfaceEl;
+        this.resizeRowBaseCols = rowBase;
+        this.resizeRowMaxSpan = rowMax;
+
+        const initialSpan = Math.min(
+            this.getSpan(this.resizeTarget),
+            this.resizeRowMaxSpan,
+        );
+        this.setSpan(this.resizeTarget, initialSpan);
+
+        this.resizeStartSpan = initialSpan;
+        this.resizeOverlayActive = true;
+        this.resizeOverlaySpan = Math.max(
+            1,
+            Math.min(12, this.resizeRowBaseCols + this.resizeStartSpan),
+        );
+
+        try {
+            (event.target as HTMLElement)?.setPointerCapture?.(event.pointerId);
+        } catch {}
+
+        this.zone.runOutsideAngular(() => {
+            const onMove = (e: PointerEvent) => {
+                if (!this.resizeActive || this.resizePointerId !== e.pointerId) {
+                    return;
+                }
+
+                const surface = this.resizeSurfaceEl;
+                if (!surface) {
+                    return;
+                }
+
+                const rect = surface.getBoundingClientRect();
+                const colW = rect.width / 12;
+                const dx = e.clientX - this.resizeStartX;
+                const deltaCols = Math.round(dx / colW);
+
+                const nextRaw = this.resizeStartSpan + deltaCols;
+                const nextSpan = Math.max(1, Math.min(this.resizeRowMaxSpan, nextRaw));
+
+                this.zone.run(() => {
+                    this.setSpan(this.resizeTarget, nextSpan);
+                    this.resizeOverlaySpan = Math.max(
+                        1,
+                        Math.min(12, this.resizeRowBaseCols + nextSpan),
+                    );
+                    this.changeDetector.markForCheck();
+                });
+            };
+
+            const onUp = (e: PointerEvent) => {
+                if (
+                    !this.resizeActive
+                    || (this.resizePointerId !== null
+                      && this.resizePointerId !== e.pointerId)
+                ) {
+                    return;
+                }
+
+                this.zone.run(() => {
+                    this.resizeActive = false;
+                    this.resizePointerId = null;
+                    this.resizeTarget = null;
+                    this.resizeSurfaceEl = null;
+                    this.resizeRowBaseCols = 0;
+                    this.resizeRowMaxSpan = 12;
+                    this.resizeOverlayActive = false;
+                });
+
+                window.removeEventListener('pointermove', onMove);
+                window.removeEventListener('pointerup', onUp);
+                window.removeEventListener('pointercancel', onUp);
+            };
+
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+            window.addEventListener('pointercancel', onUp);
+        });
     }
 
-    deleteElement(element: FormElement, index: number, items: FormElement[]): void {
-        // TODO: move me
+    private setSpan(el: any, span: number): void {
+        if (!el.formGridOptions) {
+            el.formGridOptions = {};
+        }
+        // TODO: Update uiSchema?
+        el.formGridOptions.numberOfColumns = Math.max(1, Math.min(12, span));
+    }
+
+    deleteElement(event: MouseEvent, element: FormElement, index: number, items: FormElement[]): void {
+        cancelEvent(event);
+
+        this.modals.dialog({
+            title: this.i18n.instant('form_grid.title_delete_element'),
+            body: this.i18n.instant('form_grid_confirm_element_delete', {
+                name: element.label[this.uiLanguage],
+            }),
+            buttons: [
+                {
+                    id: 'confirm',
+                    type: 'alert',
+                    label: this.i18n.instant('common.delete_button'),
+                    returnValue: true,
+                },
+                {
+                    id: 'cancel',
+                    type: 'secondary',
+                    label: this.i18n.instant('common.cancel_button'),
+                    returnValue: false,
+                },
+            ],
+        })
+            .then((dialog) => dialog.open())
+            .then((shouldDelete) => {
+                if (!shouldDelete) {
+                    return;
+                }
+                const newElements = items.slice();
+                newElements.splice(index, 1);
+                this.updatePageElements(newElements);
+            });
     }
 
     private createPaletteElement(type: string): FormElement {
@@ -462,7 +732,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
                     texts: { textPre: {}, textPost: {} },
                 },
             },
-            uiSchemaPage: this.pageIndex,
+            uiSchemaPage: this.pageIndex(),
         };
 
         // If it's an aggregate, then default an empty items array
@@ -564,7 +834,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
 
         this.selectedElementId = id;
         if (id) {
-            this.selectedElementLoc = this.locateElementById(id, this.items);
+            this.selectedElementLoc = this.locateElementById(id, this.items());
             this.selectedElementDraft = this.selectedElementLoc
                 ? structuredClone(this.selectedElementLoc.element)
                 : null;
@@ -638,7 +908,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnChange
         elements: FormElement[],
         type: string | null,
     ): number {
-        const isRootContainer = elements === this.items;
+        // TODO: Find a better way to check this, this isn't good
+        const isRootContainer = elements === this.items();
 
         // TODO: check how to size
         switch (type) {

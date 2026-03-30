@@ -69,8 +69,10 @@
                 [restricted]="!!currentFormConfig?.external"
                 [languages]="currentItem.languages"
 
-                [schema]="null"
-                [uiSchema]="null"
+                [schema]="currentItem.schema"
+                [uiSchema]="currentItem.uiSchema"
+                (schemaChange)="updateFormSchema($event)"
+                (uiSchemaChange)="updateFormUiSchema($event)"
             ></gtx-form-grid>
         </div>
     }

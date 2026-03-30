@@ -1,8 +1,8 @@
 <div
     class="editor-shell"
     [class.palette-dragging]="isPaletteDragging"
-    [class.right-panel-wide]="!!selectedElementId"
-    [class.no-right-panel]="!selectedElementId"
+    [class.right-panel-wide]="!!selectedElementId && (!!isSelectedFormgridElement || !!isSelectedNormalElement)"
+    [class.no-right-panel]="!selectedElementId || !selectedElementDraft"
 >
 
     <div class="editor-body">
@@ -13,6 +13,7 @@
                     class="panel-toggle-btn"
                     title="Linkes Panel ein-/ausklappen"
                     aria-label="Linkes Panel ein-/ausklappen"
+                    (click)="hideLeftSidebar()"
                 >
                     <icon>chevron_left</icon>
                 </button>
@@ -78,11 +79,10 @@
             </div>
         </aside>
 
-        <main class="editor-main">
+        <main class="editor-main" (click)="selectElementById(null)">
             <div
                 #gridSurface
                 class="list-container"
-                (click)="selectElementById(null)"
                 (dragover)="editorDragOver($event)"
             >
                 <div
@@ -97,7 +97,7 @@
                     </div>
 
                     <div class="resize-grid-overlay__ticks">
-                        @for (n of (12 | gtxRange); track n) {
+                        @for (n of (1 | gtxRange:13); track n) {
                             <div
                                 class="resize-grid-overlay__tick"
                                 [class.is-active]="n === resizeOverlaySpan"
@@ -109,15 +109,15 @@
                 </div>
 
                 <gtx-sortable-list
-                    class="row editor-drop-container editor-drop-container--root"
+                    class="editor-drop-container editor-drop-container--root"
                     data-drop-container-id="root"
-                    [class.is-palette-drop-target]="isPaletteDropContainer(items)"
-                    (dragenter)="onPaletteContainerDragOver($event, items, 'root')"
-                    (dragover)="onPaletteContainerDragOver($event, items, 'root')"
-                    (drop)="onPaletteContainerDrop($event, items, 'root')"
+                    [class.is-palette-drop-target]="isPaletteDropContainer(items())"
+                    (dragenter)="onPaletteContainerDragOver($event, items(), 'root')"
+                    (dragover)="onPaletteContainerDragOver($event, items(), 'root')"
+                    (drop)="onPaletteContainerDrop($event, items(), 'root')"
                     (dragEnd)="sortList($event)"
                 >
-                    @if (isPalettePlaceholderVisible(items, 0) && !items.length) {
+                    @if (isPalettePlaceholderVisible(items(), 0) && !items().length) {
                         <div
                             class="drop-placeholder form-item columns small-12 drop-placeholder--empty"
                             aria-hidden="true"
@@ -125,34 +125,29 @@
                             <div class="drop-placeholder__box">
                             <span class="drop-placeholder__line" aria-hidden="true"></span>
                             <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
-                                name: (paletteDragConfig.label | gtxI18nObject)
+                                name: (paletteDragConfig?.labelI18n | gtxI18nObject)
                             } }}</span>
-                            <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items) }}/12</span>
+                            <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items()) }}/12</span>
                             </div>
                         </div>
                     }
 
-                    @for (item of items; track item.id) {
-                        @let itemConfig = config().controls[item.id] || config().blocks[item.id];
+                    @for (displayItem of displayItems(); track displayItem.id) {
+                        @let item = displayItem.element;
 
-                        @if (itemConfig) {
-                            @let isControl = config().controls[item.id] != null;
-                            @let isBlock = config().blocks[item.id] != null;
-                            @let itemConfigLabel = itemConfig.label | gtxI18nObject;
-                            @let itemLabel = item.label | gtxI18nObject;
-
-                            @if (isPalettePlaceholderVisible(items, $index)) {
+                        @if (displayItem.config) {
+                            @if (isPalettePlaceholderVisible(items(), $index)) {
                                 <div
                                     class="drop-placeholder form-item columns"
-                                    [ngClass]="'small-' + getPalettePlaceholderSpan(items)"
+                                    [ngClass]="'small-' + getPalettePlaceholderSpan(items())"
                                     aria-hidden="true"
                                 >
                                     <div class="drop-placeholder__box">
                                         <span class="drop-placeholder__line" aria-hidden="true"></span>
                                         <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
-                                            name: (paletteDragConfig.label | gtxI18nObject)
+                                            name: (paletteDragConfig?.labelI18n | gtxI18nObject)
                                         } }}</span>
-                                        <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items) }}/12</span>
+                                        <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items()) }}/12</span>
                                     </div>
                                 </div>
                             }
@@ -160,12 +155,9 @@
                             @if (item.type == 'property') {
                                 <gtx-sortable-item
                                     [class.is-selected-card]="selectedElementId != null && item?.id === selectedElementId"
-                                    [ngClass]="
-                                        'form-item columns small-' +
-                                        item.formGridOptions?.numberOfColumns
-                                    "
+                                    [ngClass]="'form-item columns small-' + item.formGridOptions?.numberOfColumns"
                                     data-drop-item="true"
-                                    [attr.data-drop-index]="index"
+                                    [attr.data-drop-index]="$index"
                                 >
                                     <gtx-contents-list-item
                                         class="fg-box"
@@ -178,76 +170,89 @@
                                             class="grid-resize-handle"
                                             aria-label="Elementbreite ändern"
                                             title="Breite ändern"
-                                            (pointerdown)="onResizeStart($event, index, items, gridSurface)"
+                                            (pointerdown)="onResizeStart($event, $index, items(), gridSurface)"
                                         ></div>
 
                                         <div class="item-primary">
                                             <div class="actions-container">
-                                                @if (item.formGridOptions.type) {
+                                                <span class="tag tag-type">
+                                                    <span class="tag-text">{{ item.label | gtxI18nObject }}</span>
+                                                </span>
+
+                                                @if (!displayItem.isControl || !restricted()) {
                                                     <gtx-button
-                                                        icon
                                                         type="alert"
                                                         class="delete-button"
-                                                        (click)="deleteElement(item, index, items)"
+                                                        [icon]="true"
+                                                        (click)="deleteElement($event, item, $index, items())"
                                                     >
                                                         <icon>delete_outline</icon>
                                                     </gtx-button>
-                                                }
-
-                                                @if (itemConfigLabel) {
-                                                    <span class="tag tag-type">
-                                                        <span class="tag-text">{{ itemConfigLabel }}</span>
-                                                    </span>
                                                 }
                                             </div>
 
                                             <strong
                                                 class="formtitle"
                                                 [class.is-selected-title]="selectedElementId != null && item?.id === selectedElementId"
-                                            >{{ itemLabel || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
-
-                                            <div *ngIf="isControl" class="za">
-                                                <i>Zeilen:</i>
-                                                    <div class="width-100 padding-0 dependson">
-                                                    <select
-                                                        [(ngModel)]="item.formGridOptions.numberOfLines"
-                                                        class="fg-select"
-                                                    >
-                                                        <option [value]=""></option>
-                                                        @for (opt of LINE_OPTIONS; track opt) {
-                                                            <option [value]="option.value">
-                                                                {{ option.name }}
-                                                            </option>
-                                                        }
-                                                    </select>
-                                                </div>
-                                            </div>
+                                            >{{ (item.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
                                         </div>
                                     </gtx-contents-list-item>
                                 </gtx-sortable-item>
                             }
-                        } @else {
-                            Item with ID {{ item.id }} has no config type!
                         }
                     }
 
-                    @if (isPalettePlaceholderVisible(items, items.length) && items.length) {
+                    @if (isPalettePlaceholderVisible(items(), items().length) && items().length) {
                         <div
                             class="drop-placeholder form-item columns"
-                            [ngClass]="'small-' + getPalettePlaceholderSpan(items)"
+                            [ngClass]="'small-' + getPalettePlaceholderSpan(items())"
                             aria-hidden="true"
                         >
                             <div class="drop-placeholder__box">
-                            <span class="drop-placeholder__line" aria-hidden="true"></span>
-                            <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
-                                name: (paletteDragConfig.label | gtxI18nObject)
-                            } }}</span>
-                            <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items) }}/12</span>
+                                <span class="drop-placeholder__line" aria-hidden="true"></span>
+                                <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
+                                    name: (paletteDragConfig?.labelI18n | gtxI18nObject)
+                                } }}</span>
+                                <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items()) }}/12</span>
                             </div>
                         </div>
                     }
                 </gtx-sortable-list>
             </div>
         </main>
+
+        @if (selectedElementId && selectedElementDraft) {
+            <aside
+                class="editor-panel editor-panel--right"
+                aria-label="Rechtes Panel"
+            >
+                <div class="panel-header">
+                    <button
+                        class="panel-toggle-btn"
+                        title="Rechtes Panel ein-/ausklappen"
+                        aria-label="Rechtes Panel ein-/ausklappen"
+                        (click)="hideRightSidebar()"
+                    >
+                        <icon>chevron_right</icon>
+                    </button>
+                </div>
+
+                <div class="panel-content">
+                    <div class="panel-segment-title">Element bearbeiten</div>
+
+                    <gtx-tabs>
+                        <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
+                            Definitions!
+                        </gtx-tab>
+                        <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
+                            Settings!
+                        </gtx-tab>
+                        <gtx-tab [id]="EditTabs.TRANSLATIONS" [title]="'form_grid.edit_tab_translations' | gtxI18n">
+                            Translations!
+                        </gtx-tab>
+                    </gtx-tabs>
+                </div>
+            </aside>
+        }
     </div>
 </div>

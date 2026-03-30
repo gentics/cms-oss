@@ -18,7 +18,9 @@ import {
     FolderItemOrNodeType,
     FolderItemType,
     Form,
+    FormSchema,
     FormTypeConfiguration,
+    FormUISchema,
     Image,
     InheritableItem,
     ItemNormalized,
@@ -325,10 +327,41 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     options['construct'] = true;
                 }
 
-                const itemLoaded = (item: InheritableItem) => {
+                const itemLoaded = (item: InheritableItem | Form) => {
                     if (this.currentItem && this.currentItem?.id !== item?.id) {
                         this.cancelEditingDebounced(this.currentItem);
                     }
+                    if (item.type === 'form') {
+                        if ((item as Form).schema == null) {
+                            (item as Form).schema = {
+                                key: '',
+                                version: '',
+                                properties: {},
+                            };
+                        }
+                        if ((item as Form).uiSchema == null) {
+                            (item as Form).uiSchema = {
+                                key: '',
+                                version: '',
+                                formGrid: {
+                                    flow: '',
+                                    width: 12,
+                                    widthOptimized: false,
+                                },
+                                pages: [{
+                                    pagename: {
+                                        de: 'Standard Seite',
+                                        en: 'Default page',
+                                    },
+                                    elements: [],
+                                }],
+                            };
+                        };
+
+                        // Always valid
+                        this.setItemValidity(true);
+                    }
+
                     this.currentItem = item as any;
                     this.currentItemClean = true;
                     this.onItemUpdate();
@@ -873,6 +906,16 @@ span.diff-html-added {
             : (item.lockedBy as User)?.id !== currentUserId;
     }
 
+    public updateFormSchema(changes: FormSchema): void {
+        (this.currentItem as Form).schema = changes;
+        this.markContentAsModifiedInState(true);
+    }
+
+    public updateFormUiSchema(changes: FormUISchema): void {
+        (this.currentItem as Form).uiSchema = changes;
+        this.markContentAsModifiedInState(true);
+    }
+
     public handleItemSave(behaviour: SaveBehaviour): Promise<any> | undefined {
         switch (behaviour) {
             case SaveBehaviour.REGULAR:
@@ -1375,17 +1418,17 @@ span.diff-html-added {
     private saveForm(): Promise<any> {
         const id = this.currentItem.id;
         const currentForm = this.currentItem as Form;
-        // FIXME: Why remapping?
-        const payload = {
+        this.appState.dispatch(new StartSavingAction());
+
+        return this.client.form.update(id, {
             name: currentForm.name,
             description: currentForm.description,
             successPageId: currentForm.successPageId,
             successNodeId: currentForm.successNodeId,
             languages: currentForm.languages,
-        };
-        this.appState.dispatch(new StartSavingAction());
-
-        return this.client.form.update(id, payload).pipe(
+            schema: currentForm.schema,
+            uiSchema: currentForm.uiSchema,
+        }).pipe(
             tap(() => {
                 this.appState.dispatch(new SaveSuccessAction());
                 this.folderActions.refreshList('form');

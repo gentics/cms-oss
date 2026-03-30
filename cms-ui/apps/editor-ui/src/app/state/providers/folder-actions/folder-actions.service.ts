@@ -1237,7 +1237,7 @@ export class FolderActionsService {
     getItem(itemId: number, type: 'file', options?: FileRequestOptions, throwError?: boolean): Promise<CMSFile<Raw>>;
     getItem(itemId: number, type: 'form', options?: FormRequestOptions, throwError?: boolean): Promise<Form>;
     getItem(itemId: number | string, type: 'template', options?: TemplateRequestOptions, throwError?: boolean): Promise<Template<Raw>>;
-    getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>>;
+    getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Form | Template<Raw>>;
     async getItem(
         itemId: number | string,
         type: FolderItemOrTemplateType,

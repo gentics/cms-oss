@@ -85,7 +85,9 @@
                         flat
                         data-action="create-new-item"
                         [disabled]="!canCreateItem"
-                        [overrideSlot]="itemType === 'folder' ? 'newFolderButton' : 'newPageButton'"
+                        [overrideSlot]="itemType === 'folder'
+                            ? 'newFolderButton'
+                            : (itemType === 'page' ? 'newPageButton' : null)"
                         [overrideParams]="{ FOLDERID: currentFolderId, NODEID: activeNode.id }"
                         (click)="createClicked()"
                     >

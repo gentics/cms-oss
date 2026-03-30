@@ -3,7 +3,7 @@ import { inject, ModuleWithProviders, NgModule, provideAppInitializer } from '@a
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CmsComponentsModule } from '@gentics/cms-components';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import {
@@ -11,7 +11,7 @@ import {
 } from './components';
 
 const COMPONENTS = [
-    FormGridComponent
+    FormGridComponent,
 ];
 
 @NgModule({
@@ -24,6 +24,7 @@ const COMPONENTS = [
         ReactiveFormsModule,
         GenticsUICoreModule,
         CmsComponentsModule,
+        TranslateModule,
     ],
     exports: [
         ...COMPONENTS,

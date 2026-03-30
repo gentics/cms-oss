@@ -5,8 +5,9 @@ import { EditableFormProperties, Form, FormCreateRequest, IndexById, Language } 
 import { BaseModal, setEnabled } from '@gentics/ui-core';
 import { Subscription, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { FormPropertiesMode } from '../form-properties/form-properties.component';
+import { v4 as uuidV4 } from 'uuid';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
+import { FormPropertiesMode } from '../form-properties/form-properties.component';
 
 @Component({
     selector: 'create-form-modal',
@@ -82,11 +83,35 @@ export class CreateFormModalComponent
             return;
         }
 
+        const id = uuidV4();
+
         const form: FormCreateRequest = {
             ...this.control.value,
             nodeId: this.nodeId,
             folderId: this.folderId,
             languages: this.control.value.languages || [],
+            schema: {
+                key: id,
+                version: '1.0',
+                properties: {},
+            },
+            uiSchema: {
+                key: id,
+                version: '1.0',
+                formGrid: {
+                    // TODO: Define flows
+                    flow: '',
+                    width: 12,
+                    widthOptimized: false,
+                },
+                pages: [{
+                    pagename: {
+                        de: 'Standart Seite',
+                        en: 'Default Page',
+                    },
+                    elements: [],
+                }],
+            },
         };
 
         // Default to the active language if none was selected for some reason

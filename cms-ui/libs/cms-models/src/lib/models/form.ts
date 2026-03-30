@@ -85,6 +85,10 @@ export interface EditableFormProperties {
      */
     successNodeId: number;
     /**
+     * The email address which should receive the administrator emails.
+     */
+    adminEmailAddress: string;
+    /**
      * The email-template to use when sending an email to the administrator addresses,
      * configurable per language.
      * Emails to the administrator are sent whenever a user submits a form.
@@ -314,14 +318,6 @@ export interface FormUISchema {
      */
     version: string;
     /**
-     * @deprecated Use `form.name` instead?
-     */
-    formname: I18nString;
-    /**
-     * @deprecated Use `form.description` instead?
-     */
-    formdescription: I18nString;
-    /**
      * The pages of this form, which define the layout and the setting-values of the elements
      */
     pages: FormPage[];
@@ -333,13 +329,6 @@ export interface FormUISchema {
         widthOptimized: boolean;
         flow: string;
     };
-
-    /** @deprecated Use `formGrid.width` instead */
-    formwidth: number;
-    /** @deprecated Use `formGrid.widthOptimized` instead */
-    formwidthOptimized: boolean;
-    /** @deprecated Use `formGrid.flow` instead */
-    formFlowTemplateKey?: string;
 }
 
 export type FormSchemaProperties = Record<string, FormSchemaProperty>;

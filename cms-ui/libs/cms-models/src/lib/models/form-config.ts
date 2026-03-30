@@ -19,12 +19,16 @@ export type FormSettingConfiguration
 /**
  * Simple string that can be entered
  */
-export type FormStringSetting = FormBaseSetting;
+export type FormStringSetting = FormBaseSetting & {
+    richContent?: boolean;
+};
 
 /**
  * Text which may be entered on a per language basis
  */
-export type FormTranslationSetting = FormBaseSetting;
+export type FormTranslationSetting = FormBaseSetting & {
+    richContent?: boolean;
+};
 
 /**
  * Integer number that can be entered
@@ -44,27 +48,38 @@ export type FormBooleanSetting = FormBaseSetting;
 /**
  * Date that can be selected. Value will be a ISO-Date string
  */
-export type FormDateSetting = FormBaseSetting;
+export type FormDateSetting = FormBaseSetting & {
+    allowTime?: boolean;
+};
 
 /**
  * Select where one or more options can be selected
  */
-export type FormSelectSetting = FormBaseSetting;
+export type FormSelectSetting = FormBaseSetting & {
+    options: FormSelectOption[];
+    multiple?: boolean;
+};
 
 /**
  * Allow the editor to create options which the user can then use
  */
-export type FormOptionsSetting = FormBaseSetting;
+export type FormOptionsSetting = FormBaseSetting & {
+    multiple?: boolean;
+};
 
 /**
  * Select where one or more options from the user options can be selected
  */
-export type FormUserSetting = FormBaseSetting;
+export type FormUserSetting = FormBaseSetting & {
+    multiple?: boolean;
+};
 
 /**
  * Picker where a reference to one or more CMS Objects can be selected
  */
-export type FormReferenceSetting = FormBaseSetting;
+export type FormReferenceSetting = FormBaseSetting & {
+    referenceTypes: ('page' | 'file' | 'image')[];
+};
 
 export type FormControlConfiguration = FormElementConfiguration & FormControlAggregateSettings;
 

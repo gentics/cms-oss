@@ -120,6 +120,7 @@
                 [permissions]="permissions"
                 [activeItemId]="activeItemType === 'form' ? activeItemId : null"
                 [startPageId]="startPageId$ | async"
+                [acceptUploads]="allowedMimeTypes(type)"
                 [uiMode]="uiMode$ | async"
             ></gtx-form-list>
         } @else {

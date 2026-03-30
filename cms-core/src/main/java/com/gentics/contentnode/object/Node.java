@@ -756,6 +756,21 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	void setDefaultImageFolder(Folder folder) throws ReadOnlyException, NodeException;
 
 	/**
+	 * Get the default form folder
+	 * @return default form folder or null if non set
+	 * @throws NodeException
+	 */
+	Folder getDefaultFormFolder() throws NodeException;
+
+	/**
+	 * Set the default form folder (or null to unset)
+	 * @param folder default form folder or null
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	void setDefaultFormFolder(Folder folder) throws ReadOnlyException, NodeException;
+
+	/**
 	 * Get the RenderUrl link way for pages
 	 * @return RenderUrl constant
 	 */

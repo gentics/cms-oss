@@ -79,6 +79,11 @@ import io.reactivex.Flowable;
 @DBTables({ @DBTable(clazz = Form.class, name = "form") })
 public class FormFactory extends AbstractFactory {
 	/**
+	 * Form type for unmigrated forms
+	 */
+	public final static String UNMIGRATED_FORMS = "unmigrated";
+
+	/**
 	 * SQL Statement to select a single form
 	 */
 	protected final static String SELECT_FORM_SQL = createSelectStatement("form");
@@ -129,9 +134,17 @@ public class FormFactory extends AbstractFactory {
 		 */
 		private static final long serialVersionUID = 8321562011986964532L;
 
+		@DataField("external_id")
+		@Unversioned
+		protected String externalId;
+
 		@DataField("name")
 		@Updateable
 		protected String name;
+
+		@DataField("formtype")
+		@Unversioned
+		protected String formType;
 
 		@DataField("description")
 		@Updateable
@@ -736,8 +749,18 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public String getExternalId() {
+			return externalId;
+		}
+
+		@Override
 		public String getName() {
 			return name;
+		}
+
+		@Override
+		public String getFormType() {
+			return formType;
 		}
 
 		@Override
@@ -1323,10 +1346,30 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setExternalId(String externalId) throws ReadOnlyException {
+			if (isNew()) {
+				if (!StringUtils.isEqual(this.externalId, externalId)) {
+					this.externalId = externalId;
+					this.modified = true;
+				}
+			}
+		}
+
+		@Override
 		public void setName(String name) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.name, name)) {
 				this.modified = true;
 				this.name = name;
+			}
+		}
+
+		@Override
+		public void setFormType(String formType) throws ReadOnlyException {
+			if (isNew()) {
+				if (!StringUtils.isEqual(this.formType, formType)) {
+					this.formType = formType;
+					this.modified = true;
+				}
 			}
 		}
 
@@ -1637,12 +1680,111 @@ public class FormFactory extends AbstractFactory {
 	}
 
 	/**
+	 * Get the map of formtype assignments to nodes. Keys are the node IDs, values are sets of assigned formtypes
+	 * @return assignment map
+	 * @throws NodeException
+	 */
+	public static Map<Integer, Set<String>> getFormTypeAssignment() throws NodeException {
+		return DBUtils.select("select node_id, formtype from node_formtype", rs -> {
+			Map<Integer, Set<String>> tmpMap = new HashMap<>();
+			while (rs.next()) {
+				int nodeId = rs.getInt("node_id");
+				String formType = rs.getString("formtype");
+				tmpMap.computeIfAbsent(nodeId, key -> new HashSet<>()).add(formType);
+			}
+			return tmpMap;
+		});
+	}
+
+	/**
+	 * Get the formtypes assigned to a given node
+	 * @param nodeId node ID
+	 * @return set of assigned formtypes
+	 * @throws NodeException
+	 */
+	public static Set<String> getFormTypeAssignment(int nodeId) throws NodeException {
+		return DBUtils.select("SELECT formtype FROM node_formtype WHERE node_id = ?", pst -> {
+			pst.setInt(1, nodeId);
+		}, rs -> {
+			Set<String> tmpSet = new HashSet<>();
+			while (rs.next()) {
+				tmpSet.add(rs.getString("formtype"));
+			}
+			return tmpSet;
+		});
+	}
+
+	/**
+	 * Assign the given formtype to the node. This will not fail, if the formtype is already assigned.
+	 * @param formType formtype
+	 * @param nodeId node ID
+	 * @throws NodeException
+	 */
+	public static void addFormTypeToNode(String formType, int nodeId) throws NodeException {
+		DBUtils.update("INSERT IGNORE INTO node_formtype (node_id, formtype) VALUES (?, ?)", nodeId, formType);
+	}
+
+	/**
+	 * Remove the formtype from a node
+	 * @param formType formtype
+	 * @param nodeId node ID
+	 * @throws NodeException
+	 */
+	public static void removeFormTypeFromNode(String formType, int nodeId) throws NodeException {
+		DBUtils.deleteWithPK("node_formtype", "id", "node_id = ? AND formtype = ?", new Object[] {nodeId, formType});
+	}
+
+	/**
+	 * Get the map of actually used formtypes per node. Keys are the node IDs, values are the formtypes
+	 * @return map of used formtypes per node
+	 * @throws NodeException
+	 */
+	public static Map<Integer, Set<String>> getFormTypeUsage() throws NodeException {
+		return DBUtils.select(
+				"SELECT DISTINCT form.formtype, folder.node_id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.deleted = ? AND form.formtype != ?",
+				pst -> {
+					pst.setInt(1, 0);
+					pst.setString(2, UNMIGRATED_FORMS);
+				}, rs -> {
+					Map<Integer, Set<String>> tmpMap = new HashMap<>();
+					while (rs.next()) {
+						int nodeId = rs.getInt("node_id");
+						String formType = rs.getString("formtype");
+
+						tmpMap.computeIfAbsent(nodeId, key -> new HashSet<>()).add(formType);
+					}
+					return tmpMap;
+				});
+	}
+
+	/**
+	 * Get the actually used formtypes for the given node
+	 * @param nodeId node ID
+	 * @return set of used formtypes of the node
+	 * @throws NodeException
+	 */
+	public static Set<String> getFormTypeUsage(int nodeId) throws NodeException {
+		return DBUtils.select(
+				"SELECT DISTINCT form.formtype FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.deleted = ? AND form.formtype != ? AND folder.node_id = ?",
+				pst -> {
+					pst.setInt(1, 0);
+					pst.setString(2, UNMIGRATED_FORMS);
+					pst.setInt(3, nodeId);
+				}, rs -> {
+					Set<String> tmpSet = new HashSet<>();
+					while (rs.next()) {
+						tmpSet.add(rs.getString("formtype"));
+					}
+					return tmpSet;
+				});
+	}
+
+	/**
 	 * Get the table version object for forms
 	 * @return table version object for forms
 	 * @throws NodeException
 	 */
 	private static TableVersion getFormTableVersion() throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
 		TableVersion formVersion = new TableVersion();
 
 		formVersion.setAutoIncrement(true);

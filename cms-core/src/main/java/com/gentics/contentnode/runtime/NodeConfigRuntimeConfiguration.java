@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.Velocity;
@@ -26,7 +25,6 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ConfigurationService;
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.etc.FeatureService;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.PropertyNodeConfig;
@@ -141,6 +139,9 @@ public class NodeConfigRuntimeConfiguration {
 			}
 
 			nodeConfig.init();
+
+			// call all ConfigurationServices to check the configuration
+			configurationServiceLoader.forEach(configurationService -> configurationService.check());
 
 			// TODO move this to PopertyNodeConfig.init
 			// set configuration for the instant cr publishing disabler

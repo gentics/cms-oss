@@ -28,6 +28,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.msg.NodeMessage;
+import com.gentics.contentnode.object.Folder.FormSearch;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
@@ -2147,6 +2148,11 @@ public interface Folder
 		protected String searchString;
 
 		/**
+		 * Form type (may be null)
+		 */
+		protected String formType;
+
+		/**
 		 * When set true, only forms last edited by the current user are returned
 		 */
 		protected boolean editor = false;
@@ -2248,6 +2254,16 @@ public interface Folder
 		 * Create an empty form search (will find all forms)
 		 */
 		public FormSearch() {}
+
+		/**
+		 * Set the form type
+		 * @param formType form type
+		 * @return this object (for chaining)
+		 */
+		public FormSearch setFormType(String formType) {
+			this.formType = formType;
+			return this;
+		}
 
 		/**
 		 * Set the search string
@@ -2512,7 +2528,7 @@ public interface Folder
 		 * @return true when the search is empty, false if not
 		 */
 		public boolean isEmpty() {
-			return StringUtils.isEmpty(searchString) && !editor && !creator
+			return StringUtils.isEmpty(searchString) && StringUtils.isEmpty(formType) && !editor && !creator
 					&& !publisher && editors == null && creators == null && publishers == null
 					&& editedBefore == 0 && editedSince == 0 && createdBefore == 0 && createdSince == 0 && publishedBefore == 0 && publishedSince == 0
 					&& !recursive && online == null && modified == null && planned == null && wastebin == Wastebin.EXCLUDE;
@@ -2524,6 +2540,14 @@ public interface Folder
 		 */
 		public String getSearchString() {
 			return searchString;
+		}
+
+		/**
+		 * Get the form type
+		 * @return form type
+		 */
+		public String getFormType() {
+			return formType;
 		}
 
 		/**

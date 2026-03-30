@@ -155,7 +155,12 @@ public class InitializationJobs {
 		/**
 		 * Job that migrates the old scheduler to the new one
 		 */
-		MIGRATE_SCHEDULER("migratescheduler", MigrateScheduler.class, 10);
+		MIGRATE_SCHEDULER("migratescheduler", MigrateScheduler.class, 10),
+
+		/**
+		 * Job that migrates forms
+		 */
+		MIGRATE_FORMS("migrateforms", MigrateForms.class, 11);
 
 		/**
 		 * Get the nodesetup keys of all existing jobs

@@ -22,6 +22,7 @@ import { ExternalLink } from './external-link';
 import { Feature, NodeFeature, NodeFeatureModel, NodeFeatures } from './feature';
 import { File } from './file';
 import { Folder } from './folder';
+import { FormTypeConfiguration } from './form-config';
 import { Group } from './group';
 import { PermissionsAndRoles, PermissionsSet } from './group-permissions';
 import { I18nLanguage } from './i18n-language';
@@ -110,7 +111,7 @@ export interface BackgroundJobResponse extends Response {
 export interface NormalizedResponse extends Response {
     _normalized?: {
         result: number | number[];
-        entities: { [key: string]: any; };
+        entities: { [key: string]: any };
     };
     [key: string]: any;
 }
@@ -126,7 +127,6 @@ export interface BaseListResponse extends Response {
 
 /**
  * Generic list response.
- *
  * @note This cannot be used for all list endpoints, because some of them do not use the
  * `items` property to store the elements.
  */
@@ -137,7 +137,7 @@ export interface ListResponse<T> extends BaseListResponse {
 export interface PermissionListResponse<T> extends ListResponse<T> {
     perms?: {
         [itemId: number]: GcmsPermission[];
-    }
+    };
 }
 
 export interface StagableItemResponse {
@@ -518,17 +518,12 @@ export interface ImageResponse extends Response {
 /**
  * Response from `POST /form`
  */
-export interface FormCreateResponse extends Response {
-    item: Form<Raw>;
-    messages: ResponseMessage[];
-}
+export interface FormCreateResponse extends GenericItemResponse<Form> {}
 
 /**
  * Response from `GET /form/:id`
  */
-export interface FormResponse extends Response, StagableItemResponse {
-    item: Form<Raw>;
-}
+export interface FormResponse extends GenericItemResponse<Form<Raw>>, StagableItemResponse {}
 
 /**
  * Response from `GET|POST /form/:id/(binaries|export)`
@@ -538,20 +533,18 @@ export interface FormDownloadInfoResponse extends FormDownloadInfo, Response {}
 /**
  * Response from `GET /form`
  */
-export interface FormListResponse extends StageableListResponse<Form<Raw>> {
-
-}
+export interface FormListResponse extends StageableListResponse<Form<Raw>> {}
 
 /**
  * Response from `GET /form/{id}/data`
  */
 export interface FormDataListResponse {
-    totalCount: number,
-    currentPage: number,
-    pageCount: number,
-    perPage: number,
+    totalCount: number;
+    currentPage: number;
+    pageCount: number;
+    perPage: number;
     entries: FormDataListEntry[];
-    elements: FormDataListElement[]
+    elements: FormDataListElement[];
 }
 
 /**
@@ -573,6 +566,10 @@ export interface FormDataListElement {
     multivalue: boolean;
     type: string;
 }
+
+export interface FormTypeConfigurationListResponse extends ListResponse<FormTypeConfiguration> {}
+
+export interface FormTypeConfigurationResponse extends GenericItemResponse<FormTypeConfiguration> {}
 
 // LANGUAGE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -741,7 +738,6 @@ export type TagmapEntryUpdateResponse = TagmapEntryResponse;
  */
 export interface TagmapEntryCheckResponse extends ListResponse<TagmapEntryError> {}
 
-
 // QUEUE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -770,7 +766,7 @@ export interface VersionResponse extends Response {
     cmpVersion: string;
     version: string;
     variant: Variant;
-    nodeInfo: { [key: string]: NodeVersionInfo; };
+    nodeInfo: { [key: string]: NodeVersionInfo };
 }
 
 /**
@@ -885,7 +881,6 @@ export interface PermissionResponse extends Response {
 
     /**
      * Map representation of all privileges.
-     *
      * @deprecated Use `permissionsMap` instead.
      */
     privilegeMap?: PrivilegeMapFromServer;
@@ -930,7 +925,7 @@ export interface PolicyGroupResponse {
  */
 export interface TotalUsageResponse extends Response {
     infos: {
-        [itemId: number]: Usage,
+        [itemId: number]: Usage;
     };
 }
 
@@ -960,8 +955,8 @@ export interface ChannelLocalizationInfo extends ObjectLocalizationInfo {
 }
 
 export interface ObjectLocalizationInfo {
-    inherited: number,
-    localizaed: number,
+    inherited: number;
+    localizaed: number;
     local: number;
 }
 
@@ -1231,7 +1226,7 @@ export interface ElasticSearchQueryResponse<T extends InheritableItem<Raw>> {
                 templateId: number;
 
             };
-            _object: T
+            _object: T;
             _type: FolderItemType;
         }>;
         max_score: number;
@@ -1399,7 +1394,7 @@ export interface SchedulerStatusResponse extends Response {
     status: SchedulerStatus;
 
     /** Ids of Jobs that are allowed to run, although the scheduler is suspended. */
-    allowRun: number[]
+    allowRun: number[];
 }
 
 /**
@@ -1409,9 +1404,9 @@ export interface ScheduleTaskListResponse extends PermissionListResponse<Schedul
 
 /**
  * Response from:
- * * `POST /scheduler/task`
- * * `GET /scheduler/task/{id}`
- * * `PUT /scheduler/task/{id}`
+ * `POST /scheduler/task`
+ * `GET /scheduler/task/{id}`
+ * `PUT /scheduler/task/{id}`
  */
 export interface ScheduleTaskResponse extends GenericItemResponse<ScheduleTask> { }
 
@@ -1422,9 +1417,9 @@ export interface ScheduleListResponse extends PermissionListResponse<Schedule> {
 
 /**
  * Response from:
- * * `POST /scheduler/schedule`
- * * `GET /scheduler/schedule/{id}`
- * * `PUT /scheduler/schedule/{id}`
+ * `POST /scheduler/schedule`
+ * `GET /scheduler/schedule/{id}`
+ * `PUT /scheduler/schedule/{id}`
  */
 export interface ScheduleResponse extends GenericItemResponse<Schedule> { }
 
@@ -1521,7 +1516,6 @@ export interface FUMStatusResponse {
     msg: string;
 }
 
-
 export interface TranslationResponse {
     text: string;
 }
@@ -1540,7 +1534,7 @@ export type LicenseContentRepositoryInfoResponse = ListResponse<ContentRepositor
 
 export interface KeycloakConfiguration {
     'auth-server-url': string;
-    realm: string;
-    resource: string;
-    showSSOButton: boolean;
+    'realm': string;
+    'resource': string;
+    'showSSOButton': boolean;
 }

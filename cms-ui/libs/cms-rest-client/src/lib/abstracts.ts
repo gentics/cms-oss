@@ -117,6 +117,9 @@ import {
     FormPublishRequest,
     FormResponse,
     FormSaveRequest,
+    FormTypeConfigirationListOptions,
+    FormTypeConfigurationListResponse,
+    FormTypeConfigurationResponse,
     FormUnpublishRequest,
     GcmsPermission,
     GenericItemResponse,
@@ -686,6 +689,11 @@ export interface AbstractFormAPI extends BasicAPI {
     unpublish: (id: number | string, options?: FormUnpublishRequest) => FormResponse;
     removeScheduledPublish: (id: number | string) => FormResponse;
     removeScheduledUnpublish: (id: number | string) => FormResponse;
+
+    listConfigurations: (options?: FormTypeConfigirationListOptions) => FormTypeConfigurationListResponse;
+    getConfiguration: (type: string) => FormTypeConfigurationResponse;
+    assignConfiguration: (type: string, nodeId: number | string) => Response;
+    unassignConfiguration: (type: string, nodeId: number | string) => Response;
 
     exportStatus: (id: number | string) => FormDownloadInfoResponse;
     createExport: (id: number | string) => FormDownloadInfoResponse;

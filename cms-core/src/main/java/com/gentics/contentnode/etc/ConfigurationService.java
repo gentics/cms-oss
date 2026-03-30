@@ -10,4 +10,9 @@ public interface ConfigurationService {
 	 * @param preferences preferences
 	 */
 	void init(NodePreferences preferences);
+
+	/**
+	 * Check the configuration
+	 */
+	void check();
 }

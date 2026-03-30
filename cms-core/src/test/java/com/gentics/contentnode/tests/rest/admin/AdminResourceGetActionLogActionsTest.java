@@ -41,7 +41,7 @@ public class AdminResourceGetActionLogActionsTest extends AbstractListSortAndFil
 	}
 
 	@Override
-	protected void fillItemsList(List<? super Object> items) throws NodeException {
+	protected void fillItemsList(List<? super ActionModel> items) throws NodeException {
 		operate(() ->  items.addAll(Arrays.asList(Action.values()).stream().map(Action.TRANSFORM2REST).collect(Collectors.toList())));
 	}
 

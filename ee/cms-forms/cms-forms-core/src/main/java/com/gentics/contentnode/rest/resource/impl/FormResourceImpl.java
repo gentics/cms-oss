@@ -132,6 +132,10 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		model.setName(form.getName());
 		model.setDescription(form.getDescription());
 		model.setFormType(form.getFormType());
+		FormTypeConfiguration formTypeConfiguration = FormConfigProvider.getConfig().get(form.getFormType());
+		if (formTypeConfiguration != null) {
+			model.setFormTypeName(I18NHelper.get(formTypeConfiguration.nameI18n));
+		}
 
 		model.setFolderId(form.getFolderId());
 		model.setSuccessPageId(form.getSuccessPageId());

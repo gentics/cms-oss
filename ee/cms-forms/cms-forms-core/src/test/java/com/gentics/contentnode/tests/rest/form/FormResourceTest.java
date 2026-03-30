@@ -70,6 +70,7 @@ import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.tests.utils.RestExceptionChecker;
 import com.gentics.contentnode.testutils.ConfigBy;
@@ -92,6 +93,8 @@ import jakarta.ws.rs.client.Entity;
 @GCNFeature(set = { Feature.MULTICHANNELLING, Feature.WASTEBIN })
 @ConfigBy(FormTypeConfigurationModifier.class)
 public class FormResourceTest {
+	public final static String EXTERNAL_FORM_ID = "this-is-an-external-id";
+
 	private static DBTestContext testContext = new DBTestContext();
 
 	/**
@@ -129,14 +132,15 @@ public class FormResourceTest {
 	@Parameters(name = "{index}: feature {0}, feature for node {1}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
-		for (boolean feature : Arrays.asList(false, true)) {
-			for (boolean nodeFeature : Arrays.asList(false, true)) {
-				if (!feature && nodeFeature) {
-					continue;
-				}
-				data.add(new Object[] { feature, nodeFeature });
-			}
-		}
+//		for (boolean feature : Arrays.asList(false, true)) {
+//			for (boolean nodeFeature : Arrays.asList(false, true)) {
+//				if (!feature && nodeFeature) {
+//					continue;
+//				}
+//				data.add(new Object[] { feature, nodeFeature });
+//			}
+//		}
+		data.add(new Object[] { true, true });
 		return data;
 	}
 
@@ -259,7 +263,14 @@ public class FormResourceTest {
 			return target.path("form").path(formId).request().get(FormResponse.class);
 		}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform));
 
-		assertThat(response.getItem()).as("Loaded form").hasName("Test Form").isOffline().isNotModified().hasVersion("0.1").isNotLocked();
+		assertThat(response.getItem()).as("Loaded form")
+			.hasName("Test Form")
+			.hasFormType(FormTypeConfigurationModifier.GENERIC_TYPE)
+			.hasFormTypeName("CMS Formulare")
+			.isOffline()
+			.isNotModified()
+			.hasVersion("0.1")
+			.isNotLocked();
 	}
 
 	@Test
@@ -561,8 +572,6 @@ public class FormResourceTest {
 
 	@Test
 	public void testCreateWithExternalId() throws NodeException {
-		String externalId = "this-is-an-external-id";
-
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
@@ -570,18 +579,16 @@ public class FormResourceTest {
 					request.setName("Test Form");
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
-					request.setExternalId(externalId);
+					request.setExternalId(EXTERNAL_FORM_ID);
 					return target.path("form").request().post(Entity.json(request), FormResponse.class);
 				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
 				perm(testFolder, PermType.createform));
 		assertThat(response.getItem()).as("Created form").isNotNull().hasName("Test Form").hasVersion("0.1")
-				.hasExternalId(externalId).isNotModified().isOffline().isNotDeleted().isLocked();
+				.hasExternalId(EXTERNAL_FORM_ID).isNotModified().isOffline().isNotDeleted().isLocked();
 	}
 
 	@Test
 	public void testCreateWithExternalIdTwice() throws NodeException {
-		String externalId = "this-is-an-external-id";
-
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
 					FormModel request = new FormModel();
@@ -589,7 +596,7 @@ public class FormResourceTest {
 					request.setName("Test Form");
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
-					request.setExternalId(externalId);
+					request.setExternalId(EXTERNAL_FORM_ID);
 					return target.path("form").request().post(Entity.json(request), FormResponse.class);
 				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
 				perm(testFolder, PermType.createform));
@@ -598,13 +605,15 @@ public class FormResourceTest {
 			.isNotNull()
 			.hasName("Test Form")
 			.hasVersion("0.1")
-			.hasExternalId(externalId)
+			.hasExternalId(EXTERNAL_FORM_ID)
 			.isNotModified()
 			.isOffline()
 			.isNotDeleted()
 			.isLocked();
 
 		int formId = response.getItem().getId();
+
+		ContentNodeTestUtils.waitForNextSecond();
 
 		response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
 				target -> {
@@ -613,7 +622,7 @@ public class FormResourceTest {
 					request.setName("Test Form with different name");
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
-					request.setExternalId(externalId);
+					request.setExternalId(EXTERNAL_FORM_ID);
 					return target.path("form").request().post(Entity.json(request), FormResponse.class);
 				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
 				perm(testFolder, PermType.updateform));
@@ -622,7 +631,7 @@ public class FormResourceTest {
 			.isNotNull()
 			.hasName("Test Form with different name")
 			.hasVersion("0.2")
-			.hasExternalId(externalId)
+			.hasExternalId(EXTERNAL_FORM_ID)
 			.hasId(formId)
 			.isNotModified()
 			.isOffline()

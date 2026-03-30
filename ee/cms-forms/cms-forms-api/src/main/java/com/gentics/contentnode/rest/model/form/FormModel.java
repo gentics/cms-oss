@@ -33,6 +33,11 @@ public class FormModel extends PublishableContentItem {
 	private String formType;
 
 	/**
+	 * Form type name
+	 */
+	private String formTypeName;
+
+	/**
 	 * Description of the form
 	 */
 	private String description;
@@ -145,6 +150,22 @@ public class FormModel extends PublishableContentItem {
 	 */
 	public void setFormType(String formType) {
 		this.formType = formType;
+	}
+
+	/**
+	 * Form type name
+	 * @return form type name
+	 */
+	public String getFormTypeName() {
+		return formTypeName;
+	}
+
+	/**
+	 * Set the form type name
+	 * @param formTypeName name
+	 */
+	public void setFormTypeName(String formTypeName) {
+		this.formTypeName = formTypeName;
 	}
 
 	/**

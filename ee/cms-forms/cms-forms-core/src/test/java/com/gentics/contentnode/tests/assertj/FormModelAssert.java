@@ -108,6 +108,11 @@ public class FormModelAssert extends AbstractAssert<FormModelAssert, FormModel> 
 		return this;
 	}
 
+	public FormModelAssert hasFormTypeName(String formTypeName) {
+		assertThat(actual.getFormTypeName()).as(descriptionText() + " form type name").isEqualTo(formTypeName);
+		return this;
+	}
+
 	public FormModelAssert hasName(String name) {
 		assertThat(actual.getName()).as(descriptionText() + " name").isEqualTo(name);
 		return this;

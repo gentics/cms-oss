@@ -24,8 +24,8 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.updat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRequiredPermissions;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.perm;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.waitForNextSecond;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.attribute;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,6 +107,8 @@ public class FormResourceTest {
 
 	private static Node node;
 
+	private static Folder nodeRootFolder;
+
 	private static Node channel;
 
 	private static Folder testFolder;
@@ -121,26 +123,25 @@ public class FormResourceTest {
 
 	private static Node otherNode;
 
+	private static Folder otherNodeRootFolder;
+
 	private static Folder otherNodeTestFolder;
 
 	private static UserGroup testGroup;
 
 	private static SystemUser testUser;
 
-	private static Folder nodeRootFolder;
-
 	@Parameters(name = "{index}: feature {0}, feature for node {1}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
-//		for (boolean feature : Arrays.asList(false, true)) {
-//			for (boolean nodeFeature : Arrays.asList(false, true)) {
-//				if (!feature && nodeFeature) {
-//					continue;
-//				}
-//				data.add(new Object[] { feature, nodeFeature });
-//			}
-//		}
-		data.add(new Object[] { true, true });
+		for (boolean feature : Arrays.asList(false, true)) {
+			for (boolean nodeFeature : Arrays.asList(false, true)) {
+				if (!feature && nodeFeature) {
+					continue;
+				}
+				data.add(new Object[] { feature, nodeFeature });
+			}
+		}
 		return data;
 	}
 
@@ -160,6 +161,7 @@ public class FormResourceTest {
 		noLangTestFolder = supply(() -> createFolder(noLangNode.getFolder(), "Folder"));
 
 		otherNode = supply(() -> createNode("Other", "Other", PublishTarget.NONE, getLanguage("de")));
+		otherNodeRootFolder = execute(Node::getFolder, otherNode);
 		consume(n -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, n.getId()), otherNode);
 		otherNodeTestFolder = supply(() -> createFolder(otherNode.getFolder(), "Folder"));
 
@@ -580,8 +582,8 @@ public class FormResourceTest {
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
 					request.setExternalId(EXTERNAL_FORM_ID);
-					return target.path("form").request().post(Entity.json(request), FormResponse.class);
-				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+					return target.path("form").queryParam("nodeId", Integer.toString(node.getId())).request().post(Entity.json(request), FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
 				perm(testFolder, PermType.createform));
 		assertThat(response.getItem()).as("Created form").isNotNull().hasName("Test Form").hasVersion("0.1")
 				.hasExternalId(EXTERNAL_FORM_ID).isNotModified().isOffline().isNotDeleted().isLocked();
@@ -597,8 +599,8 @@ public class FormResourceTest {
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
 					request.setExternalId(EXTERNAL_FORM_ID);
-					return target.path("form").request().post(Entity.json(request), FormResponse.class);
-				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+					return target.path("form").queryParam("nodeId", Integer.toString(node.getId())).request().post(Entity.json(request), FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
 				perm(testFolder, PermType.createform));
 		assertThat(response.getItem())
 			.as("Created form")
@@ -623,8 +625,8 @@ public class FormResourceTest {
 					request.setFolderId(testFolder.getId());
 					request.setLanguages(Arrays.asList("de"));
 					request.setExternalId(EXTERNAL_FORM_ID);
-					return target.path("form").request().post(Entity.json(request), FormResponse.class);
-				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+					return target.path("form").queryParam("nodeId", Integer.toString(node.getId())).request().post(Entity.json(request), FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
 				perm(testFolder, PermType.updateform));
 		assertThat(response.getItem())
 			.as("Updated form")
@@ -637,6 +639,31 @@ public class FormResourceTest {
 			.isOffline()
 			.isNotDeleted()
 			.isLocked();
+	}
+
+	@Test
+	public void testCreateWithExternalIdOtherNode() throws NodeException {
+		Form otherForm = create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(otherNodeTestFolder.getId());
+			f.setLanguages(Arrays.asList("de"));
+		});
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+					request.setName("Test Form");
+					request.setFolderId(testFolder.getId());
+					request.setLanguages(Arrays.asList("de"));
+					request.setExternalId(EXTERNAL_FORM_ID);
+					return target.path("form").queryParam("nodeId", Integer.toString(node.getId())).request().post(Entity.json(request), FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.createform));
+		assertThat(response.getItem()).as("Created form").isNotNull().hasName("Test Form").hasVersion("0.1")
+				.hasExternalId(EXTERNAL_FORM_ID).doesNotHave(attribute("id", otherForm.getId())).isNotModified().isOffline().isNotDeleted().isLocked();
 	}
 
 	@Test
@@ -735,7 +762,26 @@ public class FormResourceTest {
 
 	@Test
 	public void testUpdateWithExternalId() throws NodeException {
-		fail("This needs to be implemented");
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+			f.setLanguages(Arrays.asList("de"));
+		}));
+
+		consume(Form::unlock, form);
+		form = execute(Form::reload, form);
+
+		waitForNextSecond();
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setName("Updated Name");
+					return target.path("form").path(EXTERNAL_FORM_ID).queryParam("nodeId", Integer.toString(node.getId())).request().put(Entity.json(request), FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+		assertThat(response.getItem()).as("Updated form").isNotNull().hasName("Updated Name").hasVersion("0.2");
 	}
 
 	@Test
@@ -777,6 +823,24 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testLockWithExternalId() throws NodeException {
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+		}));
+		consume(Form::unlock, form);
+		form = execute(Form::reload, form);
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path(EXTERNAL_FORM_ID).path("lock").queryParam("nodeId", Integer.toString(node.getId())).request().put(Entity.json(""), FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+		assertThat(response.getItem()).as("Updated form").isNotNull().isLocked();
+	}
+
+	@Test
 	public void testUnlock() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
 			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
@@ -810,6 +874,22 @@ public class FormResourceTest {
 				target -> {
 					return target.path("form").path(formId).path("lock").request().delete(FormResponse.class);
 				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+	}
+
+	@Test
+	public void testUnlockWithExternalId() throws NodeException {
+		supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+		}));
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path(EXTERNAL_FORM_ID).path("lock").queryParam("nodeId", Integer.toString(node.getId())).request().delete(FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+		assertThat(response.getItem()).as("Updated form").isNotNull().isNotLocked();
 	}
 
 	@Test
@@ -856,6 +936,30 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testDeleteWithExternalId() throws NodeException {
+		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+		}));
+		String formId = Integer.toString(form.getId());
+
+		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path(EXTERNAL_FORM_ID).queryParam("nodeId", Integer.toString(node.getId())).request().delete(GenericResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.deleteform));
+
+		form = execute(Form::reload, form);
+		assertThat(form).as("Deleted form").isNull();
+
+		try (Trx trx = new Trx(); WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
+			Form inWastebin = trx.getTransaction().getObject(Form.class, formId);
+			assertThat(inWastebin).as("Form in wastebin").isNotNull().isDeleted();
+		}
+	}
+
+	@Test
 	public void testRemoveFromWastebin() throws NodeException {
 		Form form = supply(testUser, () -> create(Form.class, f -> {
 			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
@@ -872,6 +976,33 @@ public class FormResourceTest {
 					return target.path("form").path("wastebin").path(formId).request().delete(GenericResponse.class);
 				},
 				Triple.of(Node.TYPE_NODE, rootFolderId, PermType.wastebin.getBit()),
+				perm(testFolder, PermType.read), perm(testFolder, PermType.viewform));
+
+		try (Trx trx = new Trx(); WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
+			Form deleted = trx.getTransaction().getObject(Form.class, formId);
+			assertThat(deleted).as("Deleted Form").isNull();
+		}
+	}
+
+	@Test
+	public void testRemoveFromWastebinWithExternalId() throws NodeException {
+		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+		}));
+		String formId = Integer.toString(form.getId());
+		consume(Form::delete, form);
+
+		Integer rootFolderId = supply(() -> node.getFolder().getId());
+
+		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path("wastebin").path(EXTERNAL_FORM_ID).queryParam("nodeId", Integer.toString(node.getId())).request().delete(GenericResponse.class);
+				},
+				Triple.of(Node.TYPE_NODE, rootFolderId, PermType.wastebin.getBit()),
+				perm(nodeRootFolder, PermType.read),
 				perm(testFolder, PermType.read), perm(testFolder, PermType.viewform));
 
 		try (Trx trx = new Trx(); WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
@@ -902,13 +1033,35 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testRestoreFromWastebinWithExternalId() throws NodeException {
+		Form form = supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+		}));
+		consume(Form::delete, form);
+
+		Integer rootFolderId = supply(() -> node.getFolder().getId());
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path("wastebin").path(EXTERNAL_FORM_ID).path("restore").queryParam("nodeId", Integer.toString(node.getId())).request().post(Entity.json(""), FormResponse.class);
+				},
+				Triple.of(Node.TYPE_NODE, rootFolderId, PermType.wastebin.getBit()),
+				perm(nodeRootFolder, PermType.read),
+				perm(testFolder, PermType.read), perm(testFolder, PermType.viewform));
+		assertThat(response.getItem()).as("Restored form").isNotDeleted();
+	}
+
+	@Test
 	public void testRestoreFromWastebinDuplicateName() throws NodeException {
-		Form form = createNoVersions(true);
+		Form form = createNoVersions(true, null);
 		String formId = Integer.toString(form.getId());
 		consume(Form::delete, form);
 
 		// create a duplicate
-		Form duplicate = createNoVersions(true);
+		Form duplicate = createNoVersions(true, null);
 		assertThat(duplicate).as("Duplicate").hasFieldOrPropertyWithValue("name", "Test Form");
 
 		Integer rootFolderId = supply(() -> node.getFolder().getId());
@@ -934,6 +1087,24 @@ public class FormResourceTest {
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
 			return target.path("form").path(formId).path("online").request().put(Entity.json(""), FormResponse.class);
 		}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.publishform));
+
+		assertThat(response.getItem()).as("Published form").isNotNull().isOnline().isNotPlanned().isNotModified()
+				.isNotLocked().hasVersion("1.0");
+	}
+
+	@Test
+	public void testPublishWithExternalId() throws NodeException {
+		supply(testUser, () -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+		}));
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
+			return target.path("form").path(EXTERNAL_FORM_ID).path("online").queryParam("nodeId", Integer.toString(node.getId())).request().put(Entity.json(""), FormResponse.class);
+		}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
 				perm(testFolder, PermType.publishform));
 
 		assertThat(response.getItem()).as("Published form").isNotNull().isOnline().isNotPlanned().isNotModified()
@@ -1147,6 +1318,25 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testTakeOfflineWithExternalId() throws NodeException {
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+		}));
+		consume(Form::publish, form);
+		form = execute(Form::reload, form);
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path(EXTERNAL_FORM_ID).path("online").queryParam("nodeId", Integer.toString(node.getId())).request().delete(FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.publishform));
+		assertThat(response.getItem()).as("Offline form").isNotNull().isOffline();
+	}
+
+	@Test
 	public void testTakeOfflinePast() throws NodeException {
 		Form form = supply(() -> create(Form.class, f -> {
 			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
@@ -1245,7 +1435,7 @@ public class FormResourceTest {
 
 	@Test
 	public void testListVersions() throws NodeException {
-		Form form = createWithVersions(false);
+		Form form = createWithVersions(false, null);
 		String formId = Integer.toString(form.getId());
 
 		ItemVersionListResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
@@ -1261,8 +1451,24 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testListVersionsWithExternalId() throws NodeException {
+		createWithVersions(false, EXTERNAL_FORM_ID);
+
+		ItemVersionListResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path(EXTERNAL_FORM_ID).path("version").queryParam("nodeId", Integer.toString(node.getId())).request()
+							.get(ItemVersionListResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform));
+		assertThat(response.getItems()).as("Versions").usingElementComparatorOnFields("timestamp", "number")
+				.containsExactly(new ItemVersion().setNumber("1.1").setTimestamp(4),
+						new ItemVersion().setNumber("1.0").setTimestamp(3),
+						new ItemVersion().setNumber("0.2").setTimestamp(2),
+						new ItemVersion().setNumber("0.1").setTimestamp(1));
+	}
+
+	@Test
 	public void testLoadVersion() throws NodeException {
-		Form form = createWithVersions(false);
+		Form form = createWithVersions(false, null);
 		String formId = Integer.toString(form.getId());
 
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
@@ -1272,8 +1478,18 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testLoadVersionWithExternalId() throws NodeException {
+		createWithVersions(false, EXTERNAL_FORM_ID);
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
+			return target.path("form").path(EXTERNAL_FORM_ID).path("version").path("0.2").queryParam("nodeId", Integer.toString(node.getId())).request().get(FormResponse.class);
+		}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform));
+		assertThat(response.getItem()).as("Form version").isNotNull().hasVersion("0.2").hasName("First Update");
+	}
+
+	@Test
 	public void testLoadInvalidVersion() throws NodeException {
-		Form form = createWithVersions(false);
+		Form form = createWithVersions(false, null);
 		String formId = Integer.toString(form.getId());
 
 		if (feature && nodeFeature) {
@@ -1298,7 +1514,7 @@ public class FormResourceTest {
 
 	@Test
 	public void testRestoreVersion() throws NodeException {
-		Form form = createWithVersions(true);
+		Form form = createWithVersions(true, null);
 		String formId = Integer.toString(form.getId());
 
 		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
@@ -1310,8 +1526,20 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testRestoreVersionWithExternalId() throws NodeException {
+		createWithVersions(true, EXTERNAL_FORM_ID);
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
+			return target.path("form").path(EXTERNAL_FORM_ID).path("version").path("1.0").path("restore").queryParam("nodeId", Integer.toString(node.getId())).request()
+					.post(Entity.json(""), FormResponse.class);
+		}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+
+		assertThat(response.getItem()).as("Restored form").hasName("Second Update").hasVersion("1.2").isModified().isOnline();
+	}
+
+	@Test
 	public void testRestoreInvalidVersion() throws NodeException {
-		Form form = createWithVersions(true);
+		Form form = createWithVersions(true, null);
 		String formId = Integer.toString(form.getId());
 
 		if (feature && nodeFeature) {
@@ -1338,7 +1566,7 @@ public class FormResourceTest {
 
 	@Test
 	public void testRestoreVersionLocked() throws NodeException {
-		Form form = createWithVersions(false);
+		Form form = createWithVersions(false, null);
 		String formId = Integer.toString(form.getId());
 
 		if (feature && nodeFeature) {
@@ -1441,7 +1669,7 @@ public class FormResourceTest {
 
 	@Test
 	public void testMoveForm() throws NodeException {
-		Form form = createNoVersions(true);
+		Form form = createNoVersions(true, null);
 		String formId = Integer.toString(form.getId());
 		Folder subFolder = supply(() -> createFolder(testFolder, "Subfolder"));
 		String folderId = Integer.toString(subFolder.getId());
@@ -1458,13 +1686,30 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testMoveFormWithExternalId() throws NodeException {
+		createNoVersions(true, EXTERNAL_FORM_ID);
+		Folder subFolder = supply(() -> createFolder(testFolder, "Subfolder"));
+		String folderId = Integer.toString(subFolder.getId());
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path(EXTERNAL_FORM_ID).path("folder").path(folderId).queryParam("nodeId", Integer.toString(node.getId())).request().put(Entity.json(""),
+							FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.deleteform), perm(subFolder, PermType.read),
+				perm(subFolder, PermType.viewform), perm(subFolder, PermType.createform));
+
+		assertThat(response.getItem()).as("Moved form").isNotNull().hasFolder(subFolder.getId());
+	}
+
+	@Test
 	public void testMoveFormOtherNode() throws NodeException {
 		if (feature) {
 			// activate the feature in the source node
 			operate(() -> node.activateFeature(Feature.FORMS));
 		}
 
-		Form form = createNoVersions(true);
+		Form form = createNoVersions(true, null);
 		String formId = Integer.toString(form.getId());
 		String folderId = Integer.toString(otherNodeTestFolder.getId());
 
@@ -1480,13 +1725,36 @@ public class FormResourceTest {
 	}
 
 	@Test
+	public void testMoveFormOtherNodeWithExternalId() throws NodeException {
+		if (feature) {
+			// activate the feature in the source node
+			operate(() -> node.activateFeature(Feature.FORMS));
+		}
+
+		createNoVersions(true, EXTERNAL_FORM_ID);
+		String folderId = Integer.toString(otherNodeTestFolder.getId());
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					return target.path("form").path(EXTERNAL_FORM_ID).path("folder").path(folderId)
+							.queryParam("nodeId", Integer.toString(node.getId())).request()
+							.put(Entity.json(""), FormResponse.class);
+				}, perm(nodeRootFolder, PermType.read), perm(otherNodeRootFolder, PermType.read),
+				perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.deleteform), perm(otherNodeTestFolder, PermType.read),
+				perm(otherNodeTestFolder, PermType.viewform), perm(otherNodeTestFolder, PermType.createform));
+
+		assertThat(response.getItem()).as("Moved form").isNotNull().hasFolder(otherNodeTestFolder.getId());
+	}
+
+	@Test
 	public void testMoveFormNoLanguage() throws NodeException {
 		if (feature) {
 			// activate the feature in the source node
 			operate(() -> node.activateFeature(Feature.FORMS));
 		}
 
-		Form form = createNoVersions(true);
+		Form form = createNoVersions(true, null);
 		String formId = Integer.toString(form.getId());
 		String folderId = Integer.toString(noLangTestFolder.getId());
 
@@ -1506,18 +1774,17 @@ public class FormResourceTest {
 
 	@Test
 	public void testMoveFormDuplicateName() throws NodeException {
-		Form form = createNoVersions(true);
+		Form form = createNoVersions(true, null);
 		String formId = Integer.toString(form.getId());
 		Folder subFolder = supply(() -> createFolder(testFolder, "Subfolder"));
 		String folderId = Integer.toString(subFolder.getId());
 
 		// create duplicate
-		createNoVersions(subFolder, true);
+		createNoVersions(subFolder, true, null);
 
 		if (feature && nodeFeature) {
-			exceptionChecker.expect(ClientErrorException.class, String.format(
-					"Das Formular Test Form kann nicht in den Ordner /Master/Folder/Subfolder verschoben werden, weil es darin bereits ein gleichnamiges Formular gibt.",
-					formId));
+			exceptionChecker.expect(ClientErrorException.class,
+					"Das Formular Test Form kann nicht in den Ordner /Master/Folder/Subfolder verschoben werden, weil es darin bereits ein gleichnamiges Formular gibt.");
 		}
 
 		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
@@ -1529,28 +1796,58 @@ public class FormResourceTest {
 				perm(subFolder, PermType.viewform), perm(subFolder, PermType.createform));
 	}
 
+	@Test
+	public void testMoveFormDuplicateExternalId() throws NodeException {
+		createNoVersions(true, EXTERNAL_FORM_ID);
+
+		create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Other Test Form");
+			f.setFolderId(otherNodeTestFolder.getId());
+			f.setLanguages(Arrays.asList("de"));
+		});
+
+		if (feature && nodeFeature) {
+			exceptionChecker.expect(ClientErrorException.class,
+					"Das Formular Test Form kann nicht in den Ordner /Other/Folder verschoben werden, weil es im Zielnode bereits ein Formular mit gleicher externer ID gibt.");
+		}
+
+		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
+			return target.path("form").path(EXTERNAL_FORM_ID).path("folder")
+					.path(Integer.toString(otherNodeTestFolder.getId()))
+					.queryParam("nodeId", Integer.toString(node.getId())).request()
+					.put(Entity.json(""), FormResponse.class);
+		}, perm(nodeRootFolder, PermType.read), perm(otherNodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform),
+				perm(testFolder, PermType.deleteform), perm(otherNodeTestFolder, PermType.read),
+				perm(otherNodeTestFolder, PermType.viewform), perm(otherNodeTestFolder, PermType.createform));
+	}
+
 	/**
 	 * Create a form in the {@link #testFolder}
 	 * @param unlock true to unlock the form
+	 * @param externalId optional external ID
 	 * @return form
 	 * @throws NodeException
 	 */
-	protected Form createNoVersions(boolean unlock) throws NodeException {
-		return createNoVersions(testFolder, unlock);
+	protected Form createNoVersions(boolean unlock, String externalId) throws NodeException {
+		return createNoVersions(testFolder, unlock, externalId);
 	}
 
 	/**
 	 * Create a form in the given folder
 	 * @param folder folder
 	 * @param unlock true to unlock the form
+	 * @param externalId optional external ID
 	 * @return form
 	 * @throws NodeException
 	 */
-	protected Form createNoVersions(Folder folder, boolean unlock) throws NodeException {
+	protected Form createNoVersions(Folder folder, boolean unlock, String externalId) throws NodeException {
 		Form form = supply(t -> {
 			t.setTimestamp(1000);
 			return create(Form.class, f -> {
 				f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+				f.setExternalId(externalId);
 				f.setName("Test Form");
 				f.setFolderId(folder.getId());
 			});
@@ -1567,14 +1864,16 @@ public class FormResourceTest {
 	/**
 	 * Create a form with a couple of versions
 	 * @param unlock true to unlock the form
+	 * @param externalId optional external ID
 	 * @return form
 	 * @throws NodeException
 	 */
-	protected Form createWithVersions(boolean unlock) throws NodeException {
+	protected Form createWithVersions(boolean unlock, String externalId) throws NodeException {
 		Form form = supply(t -> {
 			t.setTimestamp(1000);
 			return create(Form.class, f -> {
 				f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+				f.setExternalId(externalId);
 				f.setName("Test Form");
 				f.setFolderId(testFolder.getId());
 			});

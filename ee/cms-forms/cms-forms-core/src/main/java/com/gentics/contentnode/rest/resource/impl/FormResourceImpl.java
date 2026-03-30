@@ -4,6 +4,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.NEW_FIELD_CHECKER;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkBodyWithFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.load;
 import static com.gentics.contentnode.rest.util.MiscUtils.loadForm;
+import static com.gentics.contentnode.rest.util.MiscUtils.loadFormWithoutPermissionCheck;
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
 
 import java.util.Arrays;
@@ -693,6 +694,16 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				// check whether the form type is activated for the node
 				checkFormType(targetNode, form.getFormType());
+
+				// check whether the target node already contains a form with the same external ID
+				if (StringUtils.isNotBlank(form.getExternalId())) {
+					Form conflictingform = loadFormWithoutPermissionCheck(form.getExternalId(), Integer.toString(targetNode.getId()), false);
+					if (conflictingform != null) {
+						throw new RestMappedException(I18NHelper.get("form.move.externalId", I18NHelper.getName(form),
+								I18NHelper.getPath(targetFolder))).setResponseCode(ResponseCode.INVALIDDATA)
+								.setStatus(Status.CONFLICT);
+					}
+				}
 			}
 
 			// check for uniqueness of form names in the target folder

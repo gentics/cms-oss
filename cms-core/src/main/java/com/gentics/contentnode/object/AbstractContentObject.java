@@ -42,10 +42,10 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderableResolvable;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * The AbstractContentObject defines some generic methods and properties for all

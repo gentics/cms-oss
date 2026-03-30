@@ -30,10 +30,10 @@ import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.publish.CnMapPublisher;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderUrl;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * The object for a Node or Domain in content.node.

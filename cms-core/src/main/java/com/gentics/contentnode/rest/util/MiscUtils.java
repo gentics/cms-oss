@@ -385,28 +385,19 @@ public class MiscUtils {
 
 		if (obj == null) {
 			// also try loading the node
-			Node node = t.getObject(Node.class, nodeId);
+			Node node = load(Node.class, nodeId, false);
 
-			List<Pair<Integer, Integer>> formIdNodeId = DBUtils.select("SELECT form.id, folder.node_id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.external_id = ?", pst -> {
-				pst.setString(1, id);
-			}, rs -> {
-				List<Pair<Integer, Integer>> tmpSet = new ArrayList<>();
-				while (rs.next()) {
-					int formId = rs.getInt("id");
-					int formNodeId = rs.getInt("node_id");
-					tmpSet.add(Pair.of(formId, formNodeId));
-				}
-				return tmpSet;
-			});
+			if (node != null) {
+				// try loading the form with external ID in the given node
+				List<Integer> formIds = DBUtils.select(
+						"SELECT form.id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.external_id = ? AND folder.node_id = ?",
+						pst -> {
+							pst.setString(1, id);
+							pst.setInt(2, node.getId());
+						}, DBUtils.IDLIST);
 
-			if (formIdNodeId.size() == 1) {
-				obj = t.getObject(Form.class, formIdNodeId.get(0).getLeft());
-			} else if (formIdNodeId.size() > 1 && node != null) {
-				// we found multiple forms with the external ID, so match with the node (there should only be one in each node)
-				int formId = formIdNodeId.stream().filter(pair -> pair.getRight() == node.getId()).map(Pair::getRight).findFirst()
-						.orElse(0);
-				if (formId > 0) {
-					obj = t.getObject(Form.class, formId);
+				if (formIds.size() == 1) {
+					obj = t.getObject(Form.class, formIds.get(0));
 				}
 			}
 		}

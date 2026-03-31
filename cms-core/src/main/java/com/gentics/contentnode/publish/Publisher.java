@@ -503,7 +503,6 @@ public class Publisher implements Runnable {
 
 			long startPublish = System.currentTimeMillis();
 
-			@SuppressWarnings("serial")
 			Map<Integer, Integer> objectsToPublishCount = new HashMap<Integer, Integer>() {
 				{
 					put(Folder.TYPE_FOLDER_INTEGER, 0);

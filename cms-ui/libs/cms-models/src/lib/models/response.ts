@@ -523,7 +523,7 @@ export interface FormCreateResponse extends GenericItemResponse<Form> {}
 /**
  * Response from `GET /form/:id`
  */
-export interface FormResponse extends GenericItemResponse<Form<Raw>>, StagableItemResponse {}
+export interface FormResponse extends GenericItemResponse<Form>, StagableItemResponse {}
 
 /**
  * Response from `GET|POST /form/:id/(binaries|export)`
@@ -808,8 +808,6 @@ export interface ValidateSidResponse extends Response {
 export interface MaintenanceModeResponse extends Response {
     /** Whether or not the maintenance mode is active. */
     maintenance: boolean;
-
-    messages: ResponseMessage[];
     /** Whether to show a banner or not. */
     banner: boolean;
     /** The message to display to the user, set when enabling maintenance mode. */
@@ -1371,14 +1369,6 @@ export interface LinkResponse extends Response {
  */
 export interface UsersnapSettingsResponse extends Response {
     settings: UsersnapSettings;
-}
-
-// MAINTENANCE MODE /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export interface MaintenanceModeResponse extends Response {
-    maintenance: boolean;
-    banner: boolean;
-    message: string;
 }
 
 // SCHEDULER //////////////////////////////////////////////////////////////////////////////////////////////////////////////

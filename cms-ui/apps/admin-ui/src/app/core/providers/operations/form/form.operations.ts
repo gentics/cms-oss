@@ -1,6 +1,6 @@
 import { Injectable, Injector } from '@angular/core';
 import { Form, FormListOptions } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
@@ -10,20 +10,23 @@ export class FormOperations extends ExtendedEntityOperationsBase<'form'> {
 
     constructor(
         injector: Injector,
-        private api: GcmsApi,
+        private client: GCMSRestClientService,
     ) {
         super(injector, 'form');
     }
 
     getAll(options: FormListOptions, parentId: any): Observable<Form[]> {
-        return this.api.folders.getForms(parentId, options).pipe(
-            map(res => res.items),
+        return this.client.form.list({
+            ...options,
+            folderId: parentId,
+        }).pipe(
+            map((res) => res.items),
         );
     }
 
     get(entityId: number, options?: any, parentId?: any): Observable<Form> {
-        return this.api.forms.getForm(entityId).pipe(
-            map(res => res.item),
+        return this.client.form.get(entityId).pipe(
+            map((res) => res.item),
         );
     }
 }

@@ -2,7 +2,7 @@ import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/comm
 import { FeatureOperations, NodeHandlerService, NodeOperations } from '@admin-ui/core';
 import { LanguageTableComponent, Wizard, WizardComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { createNestedControlValidator } from '@gentics/cms-components';
 import { FormTypeConfiguration, Language, Node, NodeCreateRequest, NodeFeature, NodeFeatureModel, NodeUrlMode, Raw } from '@gentics/cms-models';
@@ -22,6 +22,7 @@ const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     selector: 'gtx-create-node-wizard',
     templateUrl: './create-node-wizard.component.html',
     styleUrls: ['./create-node-wizard.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
 export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
@@ -50,9 +51,11 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
     fgFormTypes = new FormControl<PickListItem[]>([]);
 
-    isFormsEnabled = true;
+    isFormsEnabled = false;
 
     public allFormTypes: FormTypeConfiguration[] = [];
+
+    public allFormTypesAsPickListItems: PickListItem[] = [];
 
     nodeFeatures$: Observable<NodeFeatureModel[]>;
 
@@ -72,6 +75,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     }
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
         private nodeOps: NodeOperations,
         private featureOps: FeatureOperations,
@@ -88,15 +92,14 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
         this.nodeHandler.listAllFormConfigurations().subscribe((items) => {
             this.allFormTypes = items;
+            this.allFormTypesAsPickListItems = items.map((item) => this.mapFormTypeToPickListItem(item));
+            this.changeDetector.markForCheck();
         });
 
         this.fgNodeFeatures.valueChanges.subscribe((value) => {
             this.isFormsEnabled = value?.[NodeFeature.FORMS] ?? false;
+            this.changeDetector.markForCheck();
         });
-    }
-
-    get allFormTypesAsPickListItems(): PickListItem[] {
-        return this.allFormTypes.map((item) => this.mapFormTypeToPickListItem(item));
     }
 
     mapFormTypeToPickListItem(form: FormTypeConfiguration): PickListItem {

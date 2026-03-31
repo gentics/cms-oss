@@ -3,7 +3,7 @@ import { ErrorHandler } from '@admin-ui/core';
 import { BaseEntityHandlerService } from '@admin-ui/core/providers/base-entity-handler/base-entity-handler';
 import { NodeFeaturesMap } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { discard, I18nNotificationService } from '@gentics/cms-components';
 import {
     FormTypeConfiguration,
     Language,
@@ -252,7 +252,7 @@ export class NodeHandlerService
         }
 
         return forkJoin(calls).pipe(
-            map(() => null),
+            discard(),
             tap(() => {
                 this.notification.show({
                     type: 'success',

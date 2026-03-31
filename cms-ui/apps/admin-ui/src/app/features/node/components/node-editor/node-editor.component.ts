@@ -59,6 +59,8 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
 
     public allFormTypes: FormTypeConfiguration[] = [];
 
+    public allFormTypesAsPickListItems: PickListItem[] = [];
+
     public selectedFormTypes = new FormControl<PickListItem[]>([]);
 
     public assignedConfigurations: FormTypeConfiguration[] = [];
@@ -111,6 +113,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                 .listAllFormConfigurations()
                 .subscribe((items) => {
                     this.allFormTypes = items;
+                    this.allFormTypesAsPickListItems = items.map((item) => this.mapFormTypeToPickListItem(item));
                     this.changeDetector.markForCheck();
                 }),
         );
@@ -137,11 +140,6 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         return this.fgNodeFeatures?.value?.[NodeFeature.FORMS]
           ?? this.currentFeatures?.[NodeFeature.FORMS]
           ?? false;
-    }
-
-    /** Computed getter for the picklist – converts allFormTypes to PickListItem[] for the template */
-    get allFormTypesAsPickListItems(): PickListItem[] {
-        return this.allFormTypes.map(item => this.mapFormTypeToPickListItem(item));
     }
 
     protected initializeTabHandles(): void {
@@ -211,7 +209,6 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                     .map((item) => this.allFormTypes.find((f) => f.type === String(item.id)))
                     .filter(Boolean);
 
-                console.log("Hallo? Editor");
                 return (this.handler as NodeHandlerService)
                     .updateFormConfigurations(this.entityId, updated, this.assignedConfigurations)
                     .pipe(

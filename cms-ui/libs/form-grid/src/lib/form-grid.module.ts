@@ -8,10 +8,12 @@ import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import {
     FormGridComponent,
+    FormGridElementsContainerComponent,
 } from './components';
 
 const COMPONENTS = [
     FormGridComponent,
+    FormGridElementsContainerComponent,
 ];
 
 @NgModule({

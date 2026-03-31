@@ -29,21 +29,6 @@ export class I18nObjectPipe implements PipeTransform, OnDestroy {
     }
 
     transform(obj: I18nString | null | undefined, fallbackLanguage: null | string = FALLBACK_LANGUAGE): string {
-        if (obj == null || typeof obj !== 'object') {
-            return null;
-        }
-
-        const language = this.i18n.getCurrentLanguage();
-        const value = obj[language];
-
-        if (value != null) {
-            return value;
-        }
-
-        if (fallbackLanguage != null && fallbackLanguage !== language && obj[fallbackLanguage] != null) {
-            return obj[fallbackLanguage];
-        }
-
-        return value;
+        return this.i18n.fromObject(obj, fallbackLanguage);
     }
 }

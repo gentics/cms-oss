@@ -2,7 +2,7 @@
     "form_grid": {
         "section_controls": "Eingabe Elemente",
         "section_blocks": "Block Elemente",
-        "drag_element": "{{name}} ziehen",
+        "drag_element": "{{label}} ziehen",
         "edit_tab_definition": "Defition",
         "edit_tab_settings": "Einstellungen",
         "edit_tab_translations": "Übersetzungen"

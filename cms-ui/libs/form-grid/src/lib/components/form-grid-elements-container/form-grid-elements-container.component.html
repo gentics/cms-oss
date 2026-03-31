@@ -1,0 +1,121 @@
+<ng-template
+    #dropzone
+    let-size="size"
+    let-classes="classes"
+    let-label="label"
+    let-itemColumns="itemColumns"
+>
+    <div
+        class="drop-placeholder form-item columns"
+        [ngClass]="['small-' + size, classes]"
+        aria-hidden="true"
+    >
+        <div class="drop-placeholder__box">
+            <span class="drop-placeholder__line" aria-hidden="true"></span>
+            <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
+                label: label
+            } }}</span>
+            <span class="drop-placeholder__cols">{{ itemColumns }}/12</span>
+        </div>
+    </div>
+</ng-template>
+
+<gtx-sortable-list
+    class="editor-drop-container"
+    [attr.data-drop-container-id]="id()"
+    [class.palette-dragging]="paletteDragging() && paletteDropTarget()?.elementContainerId === id()"
+    [class.is-palette-drop-target]="paletteDragging()"
+    [class.editor-drop-container--root]="id() === rootId()"
+    (dragenter)="onPaletteContainerDragOver($event)"
+    (dragover)="onPaletteContainerDragOver($event)"
+    (drop)="onPaletteContainerDrop($event)"
+    (dragEnd)="sortElements($event)"
+>
+    @if (!elements()?.length && paletteDragging() && paletteDropTarget()?.elementContainerId === id()) {
+        <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
+            size: 12,
+            classes: elements().length === 0 ? 'drop-placeholder--empty' : '',
+            label: paletteDragConfig()?.labelI18n | gtxI18nObject,
+            itemColumns: level() === 0 || $any(paletteDragConfig())?.container ? 12 : 6
+        }"></ng-container>
+    }
+
+    @for (displayItem of displayItems(); track displayItem.id) {
+        @let item = displayItem.element;
+
+        @if (
+            paletteDragging()
+            && paletteDropTarget()?.elementContainerId === id()
+            && paletteDropTarget()?.index === $index
+        ) {
+            <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
+                size: 12,
+                classes: '',
+                label: paletteDragConfig()?.labelI18n | gtxI18nObject,
+                itemColumns: level() === 0 || $any(paletteDragConfig())?.container ? 12 : 6
+            }"></ng-container>
+        }
+
+        @if (item.type == 'property') {
+            <gtx-sortable-item
+                [class.is-selected-card]="selectedElementId() != null && item?.id === selectedElementId()"
+                [ngClass]="'form-item columns small-' + item.formGridOptions?.numberOfColumns"
+                data-drop-item="true"
+                [attr.data-drop-index]="$index"
+            >
+                <gtx-contents-list-item
+                    class="fg-box"
+                    [class.empty]="!item.label"
+                    [attr.data-element-id]="item.id"
+                    [class.is-selected]="selectedElementId() != null && item?.id === selectedElementId()"
+                    (click)="selectElementById(item.id, $event)"
+                >
+                    <div
+                        class="grid-resize-handle"
+                        aria-label="Elementbreite ändern"
+                        title="Breite ändern"
+                        (pointerdown)="onResizeStart($event, $index)"
+                    ></div>
+
+                    <div class="item-primary">
+                        <div class="actions-container">
+                            <span class="tag tag-type">
+                                <span class="tag-text">{{ item.label | gtxI18nObject }}</span>
+                            </span>
+
+                            @if (!displayItem.isControl || !restricted()) {
+                                <gtx-button
+                                    type="alert"
+                                    class="delete-button"
+                                    [icon]="true"
+                                    (click)="deleteElement($event, item, $index)"
+                                >
+                                    <icon>delete_outline</icon>
+                                </gtx-button>
+                            }
+                        </div>
+
+                        <strong
+                            class="formtitle"
+                            [class.is-selected-title]="selectedElementId() != null && item?.id === selectedElementId()"
+                        >{{ (item.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
+                    </div>
+                </gtx-contents-list-item>
+            </gtx-sortable-item>
+        }
+    }
+
+    @if (
+        elements()?.length
+        && paletteDragging()
+        && paletteDropTarget()?.elementContainerId === id()
+        && paletteDropTarget()?.index === elements().length
+    ) {
+        <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
+            size: 12,
+            classes: '',
+            label: paletteDragConfig()?.labelI18n | gtxI18nObject,
+            itemColumns: level() === 0 || $any(paletteDragConfig())?.container ? 12 : 6
+        }"></ng-container>
+    }
+</gtx-sortable-list>

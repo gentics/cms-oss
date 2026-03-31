@@ -136,6 +136,14 @@ export class PickListComponent
 
     private draggedFrom: PickListSide | null = null;
 
+    public isDraggingOverAvailable = false;
+
+    public isDraggingOverAssigned = false;
+
+    private dragOverAvailableDepth = 0;
+
+    private dragOverAssignedDepth = 0;
+
     constructor(changeDetector: ChangeDetectorRef) {
         super(changeDetector);
         this.booleanInputs.push('showCount', 'enableDragAndDrop', 'allowMoveSelected', 'allowMoveAll');
@@ -314,7 +322,43 @@ export class PickListComponent
             this.moveSelectedToLeft();
         }
 
+        this.dragOverAvailableDepth = 0;
+        this.dragOverAssignedDepth = 0;
+        this.isDraggingOverAvailable = false;
+        this.isDraggingOverAssigned = false;
         this.clearDragState();
+    }
+
+    public onDragEnter(side: PickListSide): void {
+        if (this.disabled || !this.enableDragAndDrop) {
+            return;
+        }
+
+        if (side === 'available') {
+            this.dragOverAvailableDepth++;
+            this.isDraggingOverAvailable = true;
+        } else {
+            this.dragOverAssignedDepth++;
+            this.isDraggingOverAssigned = true;
+        }
+
+        this.changeDetector.markForCheck();
+    }
+
+    public onDragLeave(side: PickListSide): void {
+        if (this.disabled || !this.enableDragAndDrop) {
+            return;
+        }
+
+        if (side === 'available') {
+            this.dragOverAvailableDepth = Math.max(0, this.dragOverAvailableDepth - 1);
+            this.isDraggingOverAvailable = this.dragOverAvailableDepth > 0;
+        } else {
+            this.dragOverAssignedDepth = Math.max(0, this.dragOverAssignedDepth - 1);
+            this.isDraggingOverAssigned = this.dragOverAssignedDepth > 0;
+        }
+
+        this.changeDetector.markForCheck();
     }
 
     /**
@@ -427,6 +471,10 @@ export class PickListComponent
     private clearDragState(): void {
         this.draggedItem = null;
         this.draggedFrom = null;
+        this.dragOverAvailableDepth = 0;
+        this.dragOverAssignedDepth = 0;
+        this.isDraggingOverAvailable = false;
+        this.isDraggingOverAssigned = false;
         this.changeDetector.markForCheck();
     }
 }

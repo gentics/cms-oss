@@ -31,7 +31,7 @@
                 </div>
             }
             @if (availableItems.length === 0) {
-                <div class="empty-state">No items left available</div>
+                <div class="empty-state">{{ emptyAvailableItemsLabel }}</div>
             }
         </div>
     </div>
@@ -90,7 +90,7 @@
                 </div>
             }
             @if (assignedItems.length === 0) {
-                <div class="empty-state">No forms assigned yet</div>
+                <div class="empty-state">{{ emptyAssignedItemsLabel }}</div>
             }
         </div>
     </div>

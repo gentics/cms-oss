@@ -155,6 +155,8 @@
         "feature_active": "Active",
         "features_updated": "Node features has been updated successfully",
         "forms_updated": "Node forms have been updated successfully",
+        "forms_available_empty_list": "No further forms available",
+        "forms_assigned_empty_list": "No assigned forms",
         "hostnameType": "Define Hostname",
         "hostnameType_value": "Enter Hostname directly",
         "hostnameType_property": "Get Hostname from Property",

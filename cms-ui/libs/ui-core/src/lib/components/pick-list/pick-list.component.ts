@@ -89,6 +89,18 @@ export class PickListComponent
     public allowMoveAll = true;
 
     /**
+     * Text shown when there are no available items.
+     */
+    @Input()
+    public emptyAvailableItemsLabel = 'No items left available';
+
+    /**
+     * Text shown when there are no assigned items.
+     */
+    @Input()
+    public emptyAssignedItemsLabel = 'No items assigned yet';
+
+    /**
      * Blur event.
      */
     @Output()

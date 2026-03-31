@@ -9,8 +9,10 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -48,7 +50,12 @@ public class MigrateForms extends InitJob {
 						while (rs.next()) {
 							int formId = rs.getInt("id");
 							int nodeId = rs.getInt("node_id");
-							JsonNode data = mapper.convertValue(rs.getString("data"), JsonNode.class);
+							JsonNode data;
+							try {
+								data = mapper.readTree(rs.getString("data"));
+							} catch (JsonProcessingException e) {
+								data = mapper.createObjectNode();
+							}
 							result.put(formId, Pair.of(nodeId, data));
 						}
 						return result;

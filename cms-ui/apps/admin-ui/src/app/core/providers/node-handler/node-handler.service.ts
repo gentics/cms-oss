@@ -5,6 +5,7 @@ import { NodeFeaturesMap } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { I18nNotificationService } from '@gentics/cms-components';
 import {
+    FormTypeConfiguration,
     Language,
     ModelType,
     Node,
@@ -17,7 +18,7 @@ import {
     NodeSaveRequest,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 
 @Injectable()
@@ -217,6 +218,31 @@ export class NodeHandlerService
                 this.notification.show({
                     type: 'success',
                     message: 'node.languages_updated',
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    updateFormConfigurations(nodeId: number, updated: FormTypeConfiguration[], current: FormTypeConfiguration[]): Observable<void> {
+        const toAssign = updated.filter((u) => !current.some((c) => c.type === u.type));
+        const toRemove = current.filter((c) => !updated.some((u) => u.type === c.type));
+
+        const calls = [
+            ...toAssign.map((form) => this.client.form.assignConfiguration(form.type, nodeId)),
+            ...toRemove.map((form) => this.client.form.removeConfiguration(form.type, nodeId)),
+        ];
+
+        if (calls.length === 0) {
+            return of(void 0);
+        }
+
+        return forkJoin(calls).pipe(
+            map(() => void 0),
+            tap(() => {
+                this.notification.show({
+                    type: 'success',
+                    message: 'node.forms_updated',
                 });
             }),
             this.catchAndRethrowError(),

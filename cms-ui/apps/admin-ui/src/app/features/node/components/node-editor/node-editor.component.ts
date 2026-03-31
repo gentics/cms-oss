@@ -25,7 +25,6 @@ import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/as
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
-import { forkJoin } from 'rxjs';
 
 @Component({
     selector: 'gtx-node-editor',
@@ -58,11 +57,11 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
 
     public devtoolsEnabled = false;
 
-    public allFormTypes: PickListItem[] = [];
+    public allFormTypes: FormTypeConfiguration[] = [];
 
     public selectedFormTypes = new FormControl<PickListItem[]>([]);
 
-    public assignedConfigurations: PickListItem[] = [];
+    public assignedConfigurations: FormTypeConfiguration[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -95,22 +94,19 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             this.changeDetector.markForCheck();
         }));
 
+        // Load assigned form configurations for this node
         this.subcriptions.push(
-            this.client.form
-                .listConfigurations({
-                    nodeId: this.entityId,
-                })
-                .subscribe((res) => {
-                    const mapped = res.items.map((item) => this.mapFormTypeToPickListItem(item));
-                    this.assignedConfigurations = mapped;
-                    this.selectedFormTypes.setValue(mapped);
-                    this.changeDetector.markForCheck();
-                }),
+            this.client.form.listConfigurations({ nodeId: this.entityId }).subscribe((res) => {
+                this.assignedConfigurations = res.items;
+                this.selectedFormTypes.setValue(res.items.map(item => this.mapFormTypeToPickListItem(item)));
+                this.changeDetector.markForCheck();
+            }),
         );
 
+        // Load all available form types
         this.subcriptions.push(
             this.client.form.listConfigurations().subscribe((res) => {
-                this.allFormTypes = res.items.map((item) => this.mapFormTypeToPickListItem(item));
+                this.allFormTypes = res.items;
                 this.changeDetector.markForCheck();
             }),
         );
@@ -128,10 +124,20 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         this.tableLoader.reload();
     }
 
+    /**
+     * Returns true if the FORMS feature is enabled.
+     * Reads from the live form control value so the tab appears immediately
+     * when the checkbox is clicked, without needing to save first.
+     */
     get isFormsEnabled(): boolean {
         return this.fgNodeFeatures?.value?.[NodeFeature.FORMS]
           ?? this.currentFeatures?.[NodeFeature.FORMS]
           ?? false;
+    }
+
+    /** Computed getter for the picklist – converts allFormTypes to PickListItem[] for the template */
+    get allFormTypesAsPickListItems(): PickListItem[] {
+        return this.allFormTypes.map(item => this.mapFormTypeToPickListItem(item));
     }
 
     protected initializeTabHandles(): void {
@@ -193,35 +199,32 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             },
         });
 
-        this.tabHandles[this.Tabs.FORMS] = new FormGroupTabHandle(
-            this.selectedFormTypes,
-            {
-                save: () => {
-                    this.selectedFormTypes.disable();
+        this.tabHandles[this.Tabs.FORMS] = new FormGroupTabHandle(this.selectedFormTypes, {
+            save: () => {
+                this.selectedFormTypes.disable();
 
-                    const calls = this.selectedFormTypes.value.map((form) =>
-                        this.client.form.assignConfiguration(
-                            String(form.id),
-                            this.entityId,
-                        ),
-                    );
+                const updated = this.selectedFormTypes.value
+                    .map((item) => this.allFormTypes.find((f) => f.type === String(item.id)))
+                    .filter(Boolean);
 
-                    return forkJoin(calls)
-                        .pipe(
-                            discard(() => {
-                                this.assignedConfigurations = this.selectedFormTypes.value;
-                                this.changeDetector.markForCheck();
-                            }),
-                            finalize(() => this.selectedFormTypes.enable()),
-                        )
-                        .toPromise();
-                },
-                reset: () => {
-                    this.selectedFormTypes.reset(this.assignedConfigurations);
-                    return Promise.resolve();
-                },
+                return (this.handler as NodeHandlerService)
+                    .updateFormConfigurations(this.entityId, updated, this.assignedConfigurations)
+                    .pipe(
+                        discard(() => {
+                            this.assignedConfigurations = updated;
+                            this.changeDetector.markForCheck();
+                        }),
+                        finalize(() => this.selectedFormTypes.enable()),
+                    )
+                    .toPromise();
             },
-        );
+            reset: () => {
+                this.selectedFormTypes.reset(
+                    this.assignedConfigurations.map((item) => this.mapFormTypeToPickListItem(item)),
+                );
+                return Promise.resolve();
+            },
+        });
 
         this.tabHandles[this.Tabs.LANGUAGES] = {
             save: () => this.updateLanguages(),
@@ -240,13 +243,14 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
     protected onEntityChange(): void {
         this.isChildNode = this.entity?.type === 'channel';
 
-        // Forms neu laden wenn Node wechselt
-        this.client.form.listConfigurations({ nodeId: this.entityId }).subscribe((res) => {
-            const mapped = res.items.map((item) => this.mapFormTypeToPickListItem(item));
-            this.assignedConfigurations = mapped;
-            this.selectedFormTypes.setValue(mapped);
-            this.changeDetector.markForCheck();
-        });
+        // Reload form configurations when switching to a different node
+        this.subcriptions.push(
+            this.client.form.listConfigurations({ nodeId: this.entityId }).subscribe((res) => {
+                this.assignedConfigurations = res.items;
+                this.selectedFormTypes.setValue(res.items.map(item => this.mapFormTypeToPickListItem(item)));
+                this.changeDetector.markForCheck();
+            }),
+        );
 
         Promise.all([
             this.loadFeatureData(),

@@ -142,6 +142,7 @@
         "create_node_wizard_create_button": "Create",
         "create_node_wizard_step_languages": "Languages",
         "create_node_wizard_step_node_features": "Node Features",
+        "create_node_wizard_step_node_forms": "Node Forms",
         "create_node_wizard_step_properties": "Properties",
         "create_node_wizard_step_publishing": "Publishing",
         "create_node_wizard_title": "Create Node",

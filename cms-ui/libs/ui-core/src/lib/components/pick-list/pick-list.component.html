@@ -21,6 +21,7 @@
                     [attr.draggable]="!disabled && enableDragAndDrop"
                     (click)="toggleItemSelection('available', item)"
                     (dragstart)="onDragStart('available', item, $event)"
+                    (dragover)="onDragOver($event)"
                     (dragend)="onDragEnd()"
                 >
                     <div class="item-name">{{ getItemLabel(item) }}</div>
@@ -72,13 +73,14 @@
             (blur)="inputBlur($event)"
             (dragover)="onDragOver($event)"
             (drop)="onDrop('assigned', $event)">
-            @for (item of assignedItems; track item) {
+            @for (item of assignedItems; track item.id) {
                 <div class="list-item"
                     [class.selected]="isSelected('assigned', item)"
                     title=""
                     [attr.draggable]="!disabled && enableDragAndDrop"
                     (click)="toggleItemSelection('assigned', item)"
                     (dragstart)="onDragStart('assigned', item, $event)"
+                    (dragover)="onDragOver($event)"
                     (dragend)="onDragEnd()"
                 >
                     <div class="item-name">{{ getItemLabel(item) }}</div>

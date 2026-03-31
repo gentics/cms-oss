@@ -142,6 +142,7 @@
         "create_node_wizard_create_button": "Erstellen",
         "create_node_wizard_step_languages": "Sprachen",
         "create_node_wizard_step_node_features": "Node Features",
+        "create_node_wizard_step_node_forms": "Node Formulare",
         "create_node_wizard_step_properties": "Eigenschaften",
         "create_node_wizard_step_publishing": "Publizierung",
         "create_node_wizard_title": "Node erstellen",

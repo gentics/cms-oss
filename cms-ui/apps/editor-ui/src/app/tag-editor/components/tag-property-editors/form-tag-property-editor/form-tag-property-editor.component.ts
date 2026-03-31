@@ -1,18 +1,17 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     CmsFormTagPartProperty,
     EditableTag,
     Form,
-    ItemInNode,
-    Raw,
+    FormInNode,
     TagPart,
     TagPartProperty,
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { I18nService } from '@gentics/cms-components';
 import { Observable, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { RepositoryBrowserClient } from '../../../../shared/providers';
@@ -31,10 +30,10 @@ import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper
 export class FormTagPropertyEditorComponent implements TagPropertyEditor {
 
     /** Form this edited tag belongs to */
-    private form?: Form<Raw>;
+    private form?: Form;
 
     /** The helper for managing and loading the selected internal form. */
-    private selectedInternalForm: SelectedItemHelper<ItemInNode<Form<Raw>>>;
+    private selectedInternalForm: SelectedItemHelper<FormInNode>;
 
     /** The string that should be displayed in the input field for an internal form. */
     internalFormDisplayValue$: Observable<string>;
@@ -63,7 +62,7 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
 
         this.internalFormDisplayValue$ = merge(
             this.selectedInternalForm.selectedItem$.pipe(
-                map((selectedItem: Form<Raw>) => {
+                map((selectedItem: Form) => {
                     if (selectedItem) {
                         return selectedItem.name;
                     } else {
@@ -122,8 +121,8 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
      * to newSelectedForm. This method must only be called in response to
      * user input.
      */
-    changeSelectedForm(newSelectedForm: ItemInNode<Form<Raw>>): void {
-        let selectedInternalForm: ItemInNode<Form<Raw>>;
+    changeSelectedForm(newSelectedForm: FormInNode): void {
+        let selectedInternalForm: FormInNode;
 
         if (typeof newSelectedForm === 'string') {
             // Invalid, shouldn't happen

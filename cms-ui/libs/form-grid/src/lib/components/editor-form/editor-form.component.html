@@ -1,0 +1,703 @@
+<div
+    class="editor-shell"
+    [class.palette-dragging]="ctx?.isPaletteDragging"
+    [class.right-panel-wide]="hasActiveElement()"
+    [class.no-right-panel]="!hasActiveElement()"
+>
+    <input
+        id="toggleLeftPanel"
+        class="panel-toggle panel-toggle--left"
+        type="checkbox"
+        checked
+    />
+    @if (hasActiveElement()) {
+        <input
+            id="toggleRightPanel"
+            class="panel-toggle panel-toggle--right"
+            type="checkbox"
+            checked
+        />
+    }
+
+    <div class="editor-body">
+        <aside class="editor-panel editor-panel--left" aria-label="Linkes Panel">
+        <div class="panel-header">
+            <label
+                class="panel-toggle-btn"
+                for="toggleLeftPanel"
+                title="Linkes Panel ein-/ausklappen"
+                aria-label="Linkes Panel ein-/ausklappen"
+            >
+                <icon>chevron_left</icon>
+            </label>
+        </div>
+
+        <div class="panel-content">
+
+            @if (!restricted()) {
+                <div class="panel-section">
+                    <div class="panel-section-title">{{ 'form_grid.section_controls' | gtxI18n }}</div>
+
+                    <div class="palette" [attr.aria-label]="'form_grid.section_controls' | gtxI18n">
+                        @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
+                            @let label = ctlEntry.value.labelI18n | gtxI18nObject:language();
+                            @let description = ctlEntry.value.descriptionI18n | gtxI18nObject:language():null;
+
+                            <button
+                                type="button"
+                                class="palette-item"
+                                draggable="true"
+                                [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
+                                [attr.title]="label"
+                                (dragend)="sidebarDragEnd()"
+                                (dragstart)="sidebarDragStart($event, ctlEntry.key)"
+                            >
+                                <span class="palette-item--label">{{ label }}</span>
+                                @if (description) {
+                                    <div class="palette-item--description">{{ description }}</div>
+                                }
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="panel-section">
+                <div class="panel-section-title">{{ 'form_grid.section_blocks' | gtxI18n }}</div>
+
+                <div class="palette" [attr.aria-label]="'form_grid.section_blocks' | gtxI18n">
+                    @for (blockEntry of (config().blocks | gtxEntries); track blockEntry.key) {
+                        @let label = blockEntry.value.labelI18n | gtxI18nObject:language();
+                        @let description = blockEntry.value.descriptionI18n | gtxI18nObject:language():null;
+
+                        <button
+                            type="button"
+                            class="palette-item"
+                            draggable="true"
+                            [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
+                            [attr.title]="label"
+                            (dragend)="sidebarDragEnd()"
+                            (dragstart)="sidebarDragStart($event, blockEntry.key)"
+                        >
+                            <span class="palette-item--label">{{ label }}</span>
+                            @if (description) {
+                                <div class="palette-item--description">{{ description }}</div>
+                            }
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="panel-divider" role="separator" aria-hidden="true"></div>
+
+            <div class="panel-section">
+            <div class="panel-segment-title">Formular bearbeiten</div>
+
+            <div class="fg-form">
+                <div class="fg-field fg-field--stack">
+                    <label for="formWidth">Formular Breite:</label>
+
+                    <select
+                        id="formWidth"
+                        class="fg-select"
+                        [(ngModel)]="ctx.uiSchema.formwidth"
+                    >
+                        <option
+                            *ngFor="let option of ctx.options"
+                            [value]="option.value"
+                        >
+                        {{ option.value }}
+                        </option>
+                    </select>
+                </div>
+
+                <div
+                class="fg-field fg-field--stack"
+                *ngIf="ctx?.availableFormFlowTemplates?.length"
+                >
+                <label for="formTemplate">Formular Ablauf:</label>
+                <select
+                    id="formTemplate"
+                    class="fg-select"
+                    [(ngModel)]="ctx.formFlowTemplateKey"
+                >
+                    <option
+                    *ngFor="let tpl of ctx.availableFormFlowTemplates"
+                    [value]="tpl.key"
+                    >
+                    {{ tpl.name }}
+                    </option>
+                </select>
+                </div>
+
+                <div class="fg-field fg-field--checkrow" *ngIf="ctx?.isReport">
+                <label class="fg-checkbox">
+                    Suchresultate auf den Spalten-Header-Inhalt optimiert
+                </label>
+                <input
+                    type="checkbox"
+                    [(ngModel)]="ctx.uiSchema.formwidthOptimized"
+                />
+                </div>
+            </div>
+            </div>
+        </div>
+        </aside>
+
+        <main class="editor-main">
+        <div
+            class="list-container"
+            #gridSurface
+            (click)="ctx.selectElementById(null)"
+            (dragover)="ctx.onEditorDragOver($event)"
+        >
+            <div
+            class="resize-grid-overlay"
+            [class.active]="ctx.resizeOverlayActive"
+            [style.--active-cols]="ctx.resizeOverlaySpan"
+            aria-hidden="true"
+            >
+            <div class="resize-grid-overlay__rail">
+                <div class="resize-grid-overlay__fill"></div>
+                <div class="resize-grid-overlay__marker"></div>
+            </div>
+            <div class="resize-grid-overlay__ticks">
+                <div
+                class="resize-grid-overlay__tick"
+                *ngFor="let n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+                [class.is-active]="n === ctx.resizeOverlaySpan"
+                >
+                <span class="resize-grid-overlay__num">{{ n }}</span>
+                </div>
+            </div>
+            </div>
+
+            <gtx-sortable-list
+            (dragEnd)="ctx.sortList($event)"
+            class="row editor-drop-container editor-drop-container--root"
+            [class.is-palette-drop-target]="ctx.isPaletteDropContainer(ctx.items)"
+            data-drop-container-id="root"
+            (dragenter)="
+                ctx.onPaletteContainerDragOver($event, ctx.items, 'root')
+            "
+            (dragover)="ctx.onPaletteContainerDragOver($event, ctx.items, 'root')"
+            (drop)="ctx.onPaletteContainerDrop($event, ctx.items, 'root')"
+            >
+            <div
+                *ngIf="
+                ctx.isPalettePlaceholderVisible(ctx.items, 0) && !ctx.items.length
+                "
+                class="drop-placeholder form-item columns small-12 drop-placeholder--empty"
+                aria-hidden="true"
+            >
+                <div class="drop-placeholder__box">
+                <span class="drop-placeholder__line" aria-hidden="true"></span>
+                <span class="drop-placeholder__badge">{{
+                    ctx.getPalettePlaceholderLabel()
+                }}</span>
+                <span class="drop-placeholder__cols"
+                    >{{ ctx.getPalettePlaceholderSpan(ctx.items) }}/12</span
+                >
+                </div>
+            </div>
+
+            <ng-container
+                *ngFor="
+                let item of ctx.items;
+                let index = index;
+                trackBy: ctx.trackEditorItem
+                "
+            >
+                <div
+                *ngIf="ctx.isPalettePlaceholderVisible(ctx.items, index)"
+                class="drop-placeholder form-item columns"
+                [ngClass]="'small-' + ctx.getPalettePlaceholderSpan(ctx.items)"
+                aria-hidden="true"
+                >
+                <div class="drop-placeholder__box">
+                    <span class="drop-placeholder__line" aria-hidden="true"></span>
+                    <span class="drop-placeholder__badge">{{
+                    ctx.getPalettePlaceholderLabel()
+                    }}</span>
+                    <span class="drop-placeholder__cols"
+                    >{{ ctx.getPalettePlaceholderSpan(ctx.items) }}/12</span
+                    >
+                </div>
+                </div>
+
+                <gtx-sortable-item
+                *ngIf="item.type == 'aggregate'"
+                [ngClass]="'form-item fg-agg columns small-12'"
+                data-drop-item="true"
+                [attr.data-drop-index]="index"
+                >
+                <gtx-contents-list-item
+                    class="fg-box"
+                    [class.empty]="!item.label"
+                    [class.is-selected]="ctx.isSelected(item)"
+                    [class.has-active-child-drop]="
+                    ctx.isPaletteDropContainer(item.elements)
+                    "
+                    [attr.data-element-id]="item.id"
+                    (click)="ctx.selectElementById(item.id, $event)"
+                >
+                    <div
+                    class="grid-resize-handle"
+                    (pointerdown)="
+                        ctx.onResizeStart($event, index, ctx.items, gridSurface)
+                    "
+                    aria-label="Elementbreite ändern"
+                    title="Breite ändern"
+                    ></div>
+
+                    <div class="item-primary">
+                    <div class="actions-container">
+                        <gtx-button
+                        icon
+                        type="alert"
+                        class="delete-button"
+                        *ngIf="!item.id"
+                        (click)="
+                            $event.stopPropagation();
+                            ctx.deleteElement(item, index, ctx.items)
+                        "
+                        >
+                        <i class="material-icons">delete_outline</i>
+                        </gtx-button>
+                    </div>
+
+                    <strong
+                        class="formtitle"
+                        [class.is-selected-title]="ctx.isSelected(item)"
+                        *ngIf="item.label && ctx.mesh.getLocalText(item.label)"
+                        >{{ ctx.mesh.getLocalText(item.label) }}</strong
+                    >
+                    <span
+                        class="formtitle"
+                        [class.is-selected-title]="ctx.isSelected(item)"
+                        *ngIf="!item.label || !ctx.mesh.getLocalText(item.label)"
+                        >{{ ctx.mesh.getLocalText(item.label) }}</span
+                    >
+
+                    <p *ngIf="item.formGridOptions.value">
+                        {{ ctx.mesh.getLocalText(item.formGridOptions.value) }}
+                    </p>
+
+                    <gtx-checkbox
+                        [(ngModel)]="item.formGridOptions.showFilter"
+                        label="Filter anzeigen"
+                    ></gtx-checkbox>
+                    <gtx-checkbox
+                        [(ngModel)]="item.formGridOptions.showOnlyFirstLine"
+                        label="Nur erste Zeile Anzeigen"
+                    ></gtx-checkbox>
+
+                    <gtx-sortable-list
+                        (dragEnd)="ctx.sortSubList($event, index)"
+                        class="row editor-drop-container editor-drop-container--nested"
+                        [class.is-palette-drop-target]="
+                        ctx.isPaletteDropContainer(item.elements)
+                        "
+                        [attr.data-drop-container-id]="
+                        'aggregate-' + (item.id || index)
+                        "
+                        (dragenter)="
+                        ctx.onPaletteContainerDragOver(
+                            $event,
+                            item.elements,
+                            'aggregate-' + (item.id || index)
+                        )
+                        "
+                        (dragover)="
+                        ctx.onPaletteContainerDragOver(
+                            $event,
+                            item.elements,
+                            'aggregate-' + (item.id || index)
+                        )
+                        "
+                        (drop)="
+                        ctx.onPaletteContainerDrop(
+                            $event,
+                            item.elements,
+                            'aggregate-' + (item.id || index)
+                        )
+                        "
+                    >
+                        <div
+                        *ngIf="
+                            ctx.isPalettePlaceholderVisible(item.elements, 0) &&
+                            !item.elements.length
+                        "
+                        class="drop-placeholder form-item columns"
+                        [ngClass]="
+                            'small-' + ctx.getPalettePlaceholderSpan(item.elements)
+                        "
+                        aria-hidden="true"
+                        >
+                        <div class="drop-placeholder__box">
+                            <span
+                            class="drop-placeholder__line"
+                            aria-hidden="true"
+                            ></span>
+                            <span class="drop-placeholder__badge">{{
+                            ctx.getPalettePlaceholderLabel()
+                            }}</span>
+                            <span class="drop-placeholder__cols"
+                            >{{
+                                ctx.getPalettePlaceholderSpan(item.elements)
+                            }}/12</span
+                            >
+                        </div>
+                        </div>
+
+                        <ng-container
+                        *ngFor="
+                            let subItem of item.elements;
+                            let subIndex = index;
+                            trackBy: ctx.trackEditorItem
+                        "
+                        >
+                        <div
+                            *ngIf="
+                            ctx.isPalettePlaceholderVisible(
+                                item.elements,
+                                subIndex
+                            )
+                            "
+                            class="drop-placeholder form-item columns"
+                            [ngClass]="
+                            'small-' +
+                            ctx.getPalettePlaceholderSpan(item.elements)
+                            "
+                            aria-hidden="true"
+                        >
+                            <div class="drop-placeholder__box">
+                            <span
+                                class="drop-placeholder__line"
+                                aria-hidden="true"
+                            ></span>
+                            <span class="drop-placeholder__badge">{{
+                                ctx.getPalettePlaceholderLabel()
+                            }}</span>
+                            <span class="drop-placeholder__cols"
+                                >{{
+                                ctx.getPalettePlaceholderSpan(item.elements)
+                                }}/12</span
+                            >
+                            </div>
+                        </div>
+
+                        <gtx-sortable-item
+                            *ngIf="subItem.type == 'property'"
+                            [class.is-selected-card]="ctx.isSelected(subItem)"
+                            [ngClass]="
+                            'form-item columns small-' +
+                            subItem.formGridOptions?.numberOfColumns
+                            "
+                            data-drop-item="true"
+                            [attr.data-drop-index]="subIndex"
+                        >
+                            <gtx-contents-list-item
+                            class="fg-box"
+                            [class.empty]="!subItem.label"
+                            [class.is-selected]="ctx.isSelected(subItem)"
+                            [attr.data-element-id]="subItem.id"
+                            (click)="ctx.selectElementById(subItem.id, $event)"
+                            >
+                            <div
+                                class="grid-resize-handle"
+                                (pointerdown)="
+                                ctx.onResizeStart(
+                                    $event,
+                                    subIndex,
+                                    item.elements,
+                                    gridSurface
+                                )
+                                "
+                                aria-label="Elementbreite ändern"
+                                title="Breite ändern"
+                            ></div>
+                            <div class="item-primary">
+                                <div class="actions-container">
+                                <gtx-button
+                                    icon
+                                    type="alert"
+                                    class="edit-button"
+                                    *ngIf="subItem.formGridOptions.type"
+                                    (click)="
+                                    $event.stopPropagation();
+                                    ctx.editFormGridElement(
+                                        subItem,
+                                        subIndex,
+                                        item.elements
+                                    )
+                                    "
+                                >
+                                    <i class="material-icons">edit</i>
+                                </gtx-button>
+                                <gtx-button
+                                    icon
+                                    type="alert"
+                                    class="delete-button"
+                                    *ngIf="subItem.formGridOptions.type"
+                                    (click)="
+                                    $event.stopPropagation();
+                                    ctx.deleteElement(
+                                        subItem,
+                                        subIndex,
+                                        item.elements
+                                    )
+                                    "
+                                >
+                                    <i class="material-icons">delete_outline</i>
+                                </gtx-button>
+                                <span
+                                    *ngIf="ctx.getElementTypeTag(subItem)"
+                                    class="tag tag-type"
+                                >
+                                    <span class="tag-text">
+                                    {{ ctx.getElementTypeTag(subItem) }}
+                                    </span>
+                                </span>
+                                </div>
+
+                                <strong
+                                class="formtitle"
+                                [class.is-selected-title]="
+                                    ctx.isSelected(subItem)
+                                "
+                                *ngIf="
+                                    subItem.label &&
+                                    ctx.mesh.getLocalText(subItem.label)
+                                "
+                                >{{
+                                    ctx.mesh.getLocalText(subItem.label)
+                                }}</strong
+                                >
+                                <span
+                                class="formtitle"
+                                [class.is-selected-title]="
+                                    ctx.isSelected(subItem)
+                                "
+                                *ngIf="
+                                    !subItem.label ||
+                                    !ctx.mesh.getLocalText(subItem.label)
+                                "
+                                >[LEER]</span
+                                >
+
+                                <div *ngIf="ctx.checkAggItem(subItem)" class="za">
+                                <i>Zeilen:</i>
+                                <div class="width-100 padding-0 dependson">
+                                    <select
+                                    [(ngModel)]="
+                                        subItem?.formGridOptions.numberOfLines
+                                    "
+                                    class="fg-select"
+                                    >
+                                    <option
+                                        *ngFor="let option of ctx.lines"
+                                        [value]="option.value"
+                                    >
+                                        {{ option.value }}
+                                    </option>
+                                    </select>
+                                </div>
+                                </div>
+                            </div>
+                            <gtx-drag-handle></gtx-drag-handle>
+                            </gtx-contents-list-item>
+                        </gtx-sortable-item>
+                        </ng-container>
+
+                        <div
+                        *ngIf="
+                            ctx.isPalettePlaceholderVisible(
+                            item.elements,
+                            item.elements.length
+                            ) && item.elements.length
+                        "
+                        class="drop-placeholder form-item columns"
+                        [ngClass]="
+                            'small-' + ctx.getPalettePlaceholderSpan(item.elements)
+                        "
+                        aria-hidden="true"
+                        >
+                        <div class="drop-placeholder__box">
+                            <span
+                            class="drop-placeholder__line"
+                            aria-hidden="true"
+                            ></span>
+                            <span class="drop-placeholder__badge">{{
+                            ctx.getPalettePlaceholderLabel()
+                            }}</span>
+                            <span class="drop-placeholder__cols"
+                            >{{
+                                ctx.getPalettePlaceholderSpan(item.elements)
+                            }}/12</span
+                            >
+                        </div>
+                        </div>
+                    </gtx-sortable-list>
+                    </div>
+
+                    <gtx-drag-handle></gtx-drag-handle>
+                </gtx-contents-list-item>
+                </gtx-sortable-item>
+
+                <gtx-sortable-item
+                *ngIf="item.type == 'property'"
+                [class.is-selected-card]="ctx.isSelected(item)"
+                [ngClass]="
+                    'form-item columns small-' +
+                    item.formGridOptions?.numberOfColumns
+                "
+                data-drop-item="true"
+                [attr.data-drop-index]="index"
+                >
+                <gtx-contents-list-item
+                    class="fg-box"
+                    [class.empty]="!item.label"
+                    [attr.data-element-id]="item.id"
+                    [class.is-selected]="ctx.isSelected(item)"
+                    (click)="ctx.selectElementById(item.id, $event)"
+                >
+                    <div
+                    class="grid-resize-handle"
+                    (pointerdown)="
+                        ctx.onResizeStart($event, index, ctx.items, gridSurface)
+                    "
+                    aria-label="Elementbreite ändern"
+                    title="Breite ändern"
+                    ></div>
+
+                    <div class="item-primary">
+                    <div class="actions-container">
+                        <gtx-button
+                        icon
+                        type="alert"
+                        class="delete-button"
+                        *ngIf="item.formGridOptions.type"
+                        (click)="
+                            $event.stopPropagation();
+                            ctx.deleteElement(item, index, ctx.items)
+                        "
+                        >
+                        <i class="material-icons">delete_outline</i>
+                        </gtx-button>
+                        <span
+                        *ngIf="ctx.getElementTypeTag(item)"
+                        class="tag tag-type"
+                        >
+                        <span class="tag-text">
+                            {{ ctx.getElementTypeTag(item) }}
+                        </span>
+                        </span>
+                    </div>
+
+                    <strong
+                        class="formtitle"
+                        [class.is-selected-title]="ctx.isSelected(item)"
+                        *ngIf="item.label && ctx.mesh.getLocalText(item.label)"
+                        >{{ ctx.mesh.getLocalText(item.label) }}</strong
+                    >
+                    <span
+                        class="formtitle"
+                        [class.is-selected-title]="ctx.isSelected(item)"
+                        *ngIf="!item.label || !ctx.mesh.getLocalText(item.label)"
+                        >[LEER]</span
+                    >
+
+                    <div *ngIf="ctx.checkItem(item)" class="za">
+                        <i>Zeilen:</i>
+                        <div class="width-100 padding-0 dependson">
+                        <select
+                            [(ngModel)]="item.formGridOptions.numberOfLines"
+                            class="fg-select"
+                        >
+                            <option [value]=""></option>
+                            <option
+                            *ngFor="let option of ctx.lines"
+                            [value]="option.value"
+                            >
+                            {{ option.value }}
+                            </option>
+                        </select>
+                        </div>
+                    </div>
+                    </div>
+                </gtx-contents-list-item>
+                </gtx-sortable-item>
+            </ng-container>
+
+            <div
+                *ngIf="
+                ctx.isPalettePlaceholderVisible(ctx.items, ctx.items.length) &&
+                ctx.items.length
+                "
+                class="drop-placeholder form-item columns"
+                [ngClass]="'small-' + ctx.getPalettePlaceholderSpan(ctx.items)"
+                aria-hidden="true"
+            >
+                <div class="drop-placeholder__box">
+                <span class="drop-placeholder__line" aria-hidden="true"></span>
+                <span class="drop-placeholder__badge">{{
+                    ctx.getPalettePlaceholderLabel()
+                }}</span>
+                <span class="drop-placeholder__cols"
+                    >{{ ctx.getPalettePlaceholderSpan(ctx.items) }}/12</span
+                >
+                </div>
+            </div>
+            </gtx-sortable-list>
+        </div>
+        </main>
+
+        <aside
+        *ngIf="ctx?.selectedElementId && ctx?.selectedElementDraft"
+        class="editor-panel editor-panel--right"
+        aria-label="Rechtes Panel"
+        >
+        <div class="panel-header">
+            <label
+            class="panel-toggle-btn"
+            for="toggleRightPanel"
+            title="Rechtes Panel ein-/ausklappen"
+            aria-label="Rechtes Panel ein-/ausklappen"
+            >
+            <i class="material-icons">chevron_right</i>
+            </label>
+        </div>
+
+        <div class="panel-content">
+            <div class="panel-segment-title">Element bearbeiten</div>
+
+            <andp-formgrid-element-modal
+            *ngIf="ctx?.isSelectedFormgridElement && ctx?.selectedElementId"
+            [mode]="'panel'"
+            [saveLabel]="'Speichern'"
+            [idPrefix]="'rp-' + ctx.selectedElementId + '-'"
+            [element]="ctx.selectedElementDraft"
+            [edit]="true"
+            [dependsOnOptions]="
+                ctx.buildDependsOnOptions(ctx.items, ctx.selectedElementId)
+            "
+            (save)="ctx.applySelectedElementAndClose($event)"
+            (cancelEmbedded)="ctx.selectElementById(null)"
+            [showPanelActions]="false"
+            ></andp-formgrid-element-modal>
+
+            <andp-form-element-modal
+            *ngIf="ctx?.isSelectedNormalElement && ctx?.selectedElementId"
+            [embedded]="true"
+            [mode]="'panel'"
+            [saveLabel]="'Speichern'"
+            [element]="ctx.selectedElementDraft"
+            [schema]="ctx.selectedElementSchema"
+            (save)="ctx.applySelectedElement($event)"
+            (cancelEmbedded)="ctx.selectElementById(null)"
+            ></andp-form-element-modal>
+        </div>
+        </aside>
+    </div>
+</div>

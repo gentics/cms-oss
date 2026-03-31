@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
-    CmsFormType,
     File,
     Folder,
     Form,
@@ -72,7 +71,6 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public readonly SaveBehaviour = SaveBehaviour;
     public readonly EditMode = EditMode;
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
-    public readonly CmsFormType = CmsFormType;
 
     @Input()
     public nodeInherited: boolean;

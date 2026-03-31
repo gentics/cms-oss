@@ -6,7 +6,6 @@ import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { FormDownloadInfo } from '@gentics/cms-models';
 import { getExampleFormDataNormalized, getExampleReports } from '@gentics/cms-models/testing/test-data.mock';
-import { FormEditorService, FormReportService } from '@gentics/form-generator';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { of } from 'rxjs';
 import { FormReportsListComponent } from '../../../content-frame/components/form-reports-list/form-reports-list.component';
@@ -42,8 +41,6 @@ describe('FormReportListComponent', () => {
                 { provide: Api, useClass: MockApi },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: I18nNotificationService, useClass: MockI18nNotification },
-                { provide: FormEditorService, useClass: MockFormEditorService },
-                { provide: FormReportService, useClass: MockFormReportService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 provideTranslateService(),

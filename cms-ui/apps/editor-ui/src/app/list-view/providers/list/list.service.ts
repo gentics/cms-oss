@@ -42,9 +42,10 @@ export class ListService implements OnDestroy {
         image: Observable<ItemsInfo>;
         file: Observable<ItemsInfo>;
     };
+
     itemStreams: {
         folder: Observable<Folder<Normalized>[]>;
-        form: Observable<Form<Normalized>[]>;
+        form: Observable<Form[]>;
         page: Observable<Page<Normalized>[]>;
         image: Observable<Image<Normalized>[]>;
         file: Observable<FileModel<Normalized>[]>;
@@ -66,9 +67,9 @@ export class ListService implements OnDestroy {
      * Initializes all data streams.
      */
     init(route: ActivatedRoute): void {
-        const onLogin$ = this.state.select(state => state.auth).pipe(
-            distinctUntilChanged(isEqual, state => state.user?.id),
-            filter(state => state.isLoggedIn === true),
+        const onLogin$ = this.state.select((state) => state.auth).pipe(
+            distinctUntilChanged(isEqual, (state) => state.user?.id),
+            filter((state) => state.isLoggedIn === true),
         );
         const routeParams$ = onLogin$.pipe(
             switchMapTo(route.params as Observable<ListUrlParams>),
@@ -77,13 +78,13 @@ export class ListService implements OnDestroy {
         );
 
         const activeFolderId$ = onLogin$.pipe(
-            switchMapTo(this.state.select(state => state.folder.activeFolder)),
+            switchMapTo(this.state.select((state) => state.folder.activeFolder)),
         );
-        const searchTerm$ = this.state.select(state => state.folder.searchTerm);
+        const searchTerm$ = this.state.select((state) => state.folder.searchTerm);
 
         const filterTerm$ = combineLatest([
-            this.state.select(state => state.folder.filterTerm),
-            this.state.select(state => state.entities.node),
+            this.state.select((state) => state.folder.filterTerm),
+            this.state.select((state) => state.entities.node),
         ]).pipe(
             // we do not want to set the filter
             // term when user pastes a liveUrl
@@ -91,9 +92,9 @@ export class ListService implements OnDestroy {
             map(([term]) => term),
         );
 
-        const searchFiltersVisible$ = this.state.select(state => state.folder.searchFiltersVisible);
-        const searchFiltersChanged$ = this.state.select(state => state.folder.searchFiltersChanging);
-        const searchFiltersValid$ = this.state.select(state => state.folder.searchFiltersValid);
+        const searchFiltersVisible$ = this.state.select((state) => state.folder.searchFiltersVisible);
+        const searchFiltersChanged$ = this.state.select((state) => state.folder.searchFiltersChanging);
+        const searchFiltersValid$ = this.state.select((state) => state.folder.searchFiltersValid);
 
         this.initOutputStreams();
         this.initNavigationSubscriptions(routeParams$);
@@ -114,24 +115,24 @@ export class ListService implements OnDestroy {
      */
     private initOutputStreams(): void {
         const itemInfoStreams = this.itemInfoStreams = {
-            file: this.state.select(state => state.folder.files),
-            folder: this.state.select(state => state.folder.folders),
-            form: this.state.select(state => state.folder.forms),
-            image: this.state.select(state => state.folder.images),
-            page: this.state.select(state => state.folder.pages),
+            file: this.state.select((state) => state.folder.files),
+            folder: this.state.select((state) => state.folder.folders),
+            form: this.state.select((state) => state.folder.forms),
+            image: this.state.select((state) => state.folder.images),
+            page: this.state.select((state) => state.folder.pages),
         };
         this.itemStreams = {} as any;
         for (const key of Object.keys(itemInfoStreams) as Array<keyof typeof itemInfoStreams>) {
             this.itemStreams[key] = itemInfoStreams[key].pipe(
-                map(itemInfo => itemInfo.list),
+                map((itemInfo) => itemInfo.list),
                 distinctUntilChanged(isEqual),
                 switchMap((ids: number[]) =>
-                    this.state.select(state => state.entities).pipe(
-                        map(entities => entities[key]),
-                        distinctUntilChanged((a, b) => a === b || ids.every(id => a[id] === b[id])),
-                        map(entityHash => ids
-                            .map(id => entityHash[id] as any)
-                            .filter(entity => entity != null),
+                    this.state.select((state) => state.entities).pipe(
+                        map((entities) => entities[key]),
+                        distinctUntilChanged((a, b) => a === b || ids.every((id) => a[id] === b[id])),
+                        map((entityHash) => ids
+                            .map((id) => entityHash[id] as any)
+                            .filter((entity) => entity != null),
                         ),
                     ),
                 ),
@@ -171,13 +172,13 @@ export class ListService implements OnDestroy {
 
         // Build searchTerm from URL change
         const searchTermParam$ = routeParams$.pipe(
-            map(params => params.searchTerm || ''),
+            map((params) => params.searchTerm || ''),
             distinctUntilChanged(isEqual),
         );
 
         // Build searchFilters from URL change
         const searchFiltersParam$ = routeParams$.pipe(
-            map(params => {
+            map((params) => {
                 try {
                     return this.navigationService.deserializeOptions<any>(params.searchFilters);
                 } catch (e) {
@@ -192,8 +193,8 @@ export class ListService implements OnDestroy {
             searchTermParam$,
             searchFiltersParam$,
             // A change needs to be emitted when the state changes
-            this.state.select(state => state.folder.activeNode),
-            this.state.select(state => state.folder.activeFolder),
+            this.state.select((state) => state.folder.activeNode),
+            this.state.select((state) => state.folder.activeFolder),
         ]).pipe(
             map(([locationData, searchTerm, searchFilters, activeNode, activeFolder]) => ({
                 nodeId: Number.isInteger(locationData.nodeId) ? locationData.nodeId : activeNode,
@@ -204,7 +205,7 @@ export class ListService implements OnDestroy {
                 activeFolder,
             })),
             distinctUntilChanged(isEqual),
-            map(params => {
+            map((params) => {
                 this.updatingByUrlParams = true;
 
                 // Set search term if its changed in the url or it will be an empty string
@@ -234,7 +235,7 @@ export class ListService implements OnDestroy {
     private initLanguageChangeSubscriptions(onLogin$: Observable<any>): void {
         // Fetch the list of pages when the activeLanguage changes
         this.subscriptions.push(onLogin$.pipe(
-            switchMap(() => this.state.select(state => state.folder.activeLanguage)),
+            switchMap(() => this.state.select((state) => state.folder.activeLanguage)),
             debounceTime(50),
             distinctUntilChanged(isEqual),
             skip(1),
@@ -251,23 +252,23 @@ export class ListService implements OnDestroy {
      */
     private initSortSubscriptions(): void {
         // When the sort order is changed for an item type, re-fetch the items of that type.
-        const sortStream = (selector: (state: AppState) => ItemsInfo, handler: typeof FolderActionsService.prototype.getFolders) =>
+        const sortStream = (selector: (state: AppState) => ItemsInfo, handler: (...args: any) => Promise<any>) =>
             this.state.select(selector).pipe(
                 distinctUntilChanged(sortOrderEqual),
                 skip(1),
-                map(itemsInfo => ({
-                    handler: handler.bind(this.folderActions) as typeof FolderActionsService.prototype.getFolders,
+                map((itemsInfo) => ({
+                    handler: handler.bind(this.folderActions),
                     itemsInfo,
                 })),
             );
 
         /* eslint-disable @typescript-eslint/unbound-method */
         const sortingStreams$ = merge(
-            sortStream(state => state.folder.folders, this.folderActions.getFolders),
-            sortStream(state => state.folder.pages, this.folderActions.getPages),
-            sortStream(state => state.folder.files, this.folderActions.getFiles),
-            sortStream(state => state.folder.images, this.folderActions.getImages),
-            sortStream(state => state.folder.forms, this.folderActions.getForms),
+            sortStream((state) => state.folder.folders, this.folderActions.getFolders),
+            sortStream((state) => state.folder.pages, this.folderActions.getPages),
+            sortStream((state) => state.folder.files, this.folderActions.getFiles),
+            sortStream((state) => state.folder.images, this.folderActions.getImages),
+            sortStream((state) => state.folder.forms, this.folderActions.getForms),
         );
         /* eslint-enable @typescript-eslint/unbound-method */
 
@@ -301,7 +302,7 @@ export class ListService implements OnDestroy {
             debounceTime(50),
             withLatestFrom(
                 activeFolderId$.pipe(
-                    filter(activeFolderId => !!activeFolderId),
+                    filter((activeFolderId) => !!activeFolderId),
                 ),
             ),
             skip(1),
@@ -315,10 +316,10 @@ export class ListService implements OnDestroy {
         // emits when searchfilter change and writes it to URL params in state
         const urlChangeSub = combineLatest([
             searchTerm$,
-            this.state.select(state => state.folder.searchFilters),
+            this.state.select((state) => state.folder.searchFilters),
         ]).pipe(
             filter(() => !this.updatingByUrlParams),
-            withLatestFrom(this.state.select(state => state.features.elasticsearch)),
+            withLatestFrom(this.state.select((state) => state.features.elasticsearch)),
             // searchUrl for Advanced Search not yet implemented
             filter(([, elasticsearch]) => elasticsearch),
         ).subscribe(() => {
@@ -352,6 +353,7 @@ export class ListService implements OnDestroy {
             this.location.pushState(null, 'Gentics CMS', url, '');
         }
     }
+
     private getCurrentFilters(): any {
         const currentState = this.state.now;
         let currentFilters = {} as any;
@@ -367,21 +369,22 @@ export class ListService implements OnDestroy {
 
         return currentFilters;
     }
+
     /**
      * Sets up subscriptions which handle changes to the pagination (currentPage and itemsPerPage) of items.rId$
      */
     private initPaginationSubscriptions(searchTerm$: Observable<string>, filterTerm$: Observable<string>, activeFolderId$: Observable<number>): void {
         const setUpPaginationSub = (
             branch: 'folders' | 'pages' | 'files' | 'forms' | 'images',
-            handler: typeof FolderActionsService.prototype.getFolders,
+            handler: (...args: any) => Promise<any>,
         ): Subscription => {
             return combineLatest([
             // listen to pagination change current page
-                this.state.select(state => state.folder[branch].currentPage),
+                this.state.select((state) => state.folder[branch].currentPage),
                 // listen to pagination change current page size
-                this.state.select(state => state.folder[branch].itemsPerPage),
+                this.state.select((state) => state.folder[branch].itemsPerPage),
 
-                this.state.select(state => state.folder[branch].fetchAll).pipe(
+                this.state.select((state) => state.folder[branch].fetchAll).pipe(
                 // PROBLEM
                 // as soon as fetchAll is TRUE, state batch operations will trigger indefinite state updates
                 // thus, fetchall changes must be ignored after transgression from TRUE to FALSE
@@ -409,7 +412,7 @@ export class ListService implements OnDestroy {
                 skip(1),
             ).subscribe(([[currentPage, itemsPerPage, fetchAll], searchTerm, filterTerm, activeFolderId]) => {
                 if (!fetchAll) {
-                    const boundHandler: typeof FolderActionsService.prototype.getFolders = handler.bind(this.folderActions);
+                    const boundHandler = handler.bind(this.folderActions);
                     boundHandler(activeFolderId, fetchAll, searchTerm);
                 }
             });
@@ -425,7 +428,7 @@ export class ListService implements OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     /**
@@ -434,7 +437,7 @@ export class ListService implements OnDestroy {
      */
     private isDefaultFilterState(filters: GtxChipSearchSearchFilterMap, activeNodeId: number): boolean {
         const defaultFilter: any = {};
-        const nonNullMap: any = {...filters};
+        const nonNullMap: any = { ...filters };
 
         for (const key in nonNullMap) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call

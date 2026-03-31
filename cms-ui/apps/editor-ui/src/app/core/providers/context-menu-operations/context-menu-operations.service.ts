@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { I18nNotificationService, InitializableServiceBase, I18nService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService, InitializableServiceBase } from '@gentics/cms-components';
 import {
     EditMode,
     ModalCloseError,
@@ -10,8 +10,6 @@ import {
 } from '@gentics/cms-integration-api-models';
 import {
     ChannelSyncRequest,
-    CmsFormData,
-    CmsFormElement,
     DependencyItemTypePlural,
     Favourite,
     Feature,
@@ -27,7 +25,6 @@ import {
     ItemsGroupedByChannelId,
     Node,
     NodeFeature,
-    Normalized,
     Page,
     Raw,
     Template,
@@ -263,8 +260,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             return;
         }
 
-        let deleteResult: { succeeded: number; failed: number; error: ApiError } | null = null;
-        let updateResult: { succeeded: number; failed: number; error: ApiError } | null = null;
+        let deleteResult: { succeeded: number; failed: number; error: Error } | null = null;
+        let updateResult: { succeeded: number; failed: number; error: Error } | null = null;
 
         let deleteIds: number[] = [];
         let unlocalizeIds: number[] = [];
@@ -278,7 +275,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             Object.keys(selectResult.deleteForms).forEach((id) => {
                 const formId = parseInt(id, 10);
                 const languageCodesToDelete = selectResult.deleteForms[formId];
-                const form = items.find((i) => i.id === formId) as Form<Normalized>;
+                const form = items.find((i) => i.id === formId) as Form;
 
                 if (
                     !Array.isArray(languageCodesToDelete)
@@ -296,7 +293,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     itemId: formId,
                     payload: {
                         languages: form.languages.filter((l) => !languageCodesToDelete.includes(l)),
-                        data: this.removeLanguagesFromFormData(form.data, languageCodesToDelete),
+                        // FIXME: Remove language data from form
                     },
                 });
             });
@@ -314,7 +311,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             // filter only localizations that has been deleted and put them to array of IDs
             // forms cannot be localized
             if (type !== 'form') {
-                deleteIds.forEach((id) => { localizationIdsDeleted[id] = selectResult.localizations[id]; });
+                deleteIds.forEach((id) => {
+                    localizationIdsDeleted[id] = selectResult.localizations[id];
+                });
                 localizationIds = localizationIdsDeleted && this.flattenMap(localizationIdsDeleted);
             }
         }
@@ -460,19 +459,19 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     this.notification.show({
                         message,
                         translationParams: {
-                            count: deleteResult && deleteResult.succeeded || 0,
+                            count: deleteResult?.succeeded || 0,
                             unlocalizedCount: unlocalizeIds.length,
                             _type: type,
                         },
                         type: 'default',
                         delay: 5000,
-                        action: isUndoablePerFeature && undoAction || null,
+                        action: (isUndoablePerFeature && undoAction) || null,
                     });
                 }),
             );
     }
 
-    private showMultiDeleteErrorNotification(type: string, failed: number, error: ApiError): void {
+    private showMultiDeleteErrorNotification(type: string, failed: number, error: Error): void {
         this.notification.show({
             message: 'message.items_deleted_error',
             translationParams: {
@@ -579,7 +578,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             // Wait half a second to let the server unlock the pages
             await new Promise((resolve) => setTimeout(resolve, 500));
             await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
-            const languages = new Set([...response.queued, ...response.takenOffline].map(page => page.language));
+            const languages = new Set([...response.queued, ...response.takenOffline].map((page) => page.language));
             await this.folderActions.refreshList('page', Array.from(languages));
         } catch (error) {
             this.errorHandler.catch(error);
@@ -1049,27 +1048,6 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         if (item) {
             return EntityStateUtil.stateDeleted(item);
         }
-    }
-
-    private removeLanguagesFromFormData(formData: CmsFormData, languages: string[]): CmsFormData {
-        formData.elements.forEach((element: CmsFormElement) => {
-            this.removeLanguagesFromFormElement(element, languages);
-        });
-        if (formData.mailsubject_i18n) {
-            for (const language of languages) {
-                delete formData.mailsubject_i18n[language];
-            }
-        }
-        if (formData.mailtemp_i18n) {
-            for (const language of languages) {
-                delete formData.mailtemp_i18n[language];
-            }
-        }
-        return formData;
-    }
-
-    private removeLanguagesFromFormElement(element: CmsFormElement, languages: string[]): void {
-        this.removeLanguagesFromObject(element, languages);
     }
 
     private removeLanguagesFromObject(object: object, languages: string[]): void {

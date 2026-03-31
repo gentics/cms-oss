@@ -1,4 +1,4 @@
-export function cancelEvent(event: Event): void {
+export function cancelEvent(event?: Event): void {
     if (!event) {
         return;
     }

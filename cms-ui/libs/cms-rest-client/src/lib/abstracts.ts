@@ -702,7 +702,7 @@ export interface AbstractFormAPI extends BasicAPI {
     downloadData: (id: number | string, downloadUuid: string) => Blob;
 
     previewSaved: (id: number | string, language: string) => string;
-    previewModel: (id: number | string, language: string, body: Form<Raw>) => string;
+    previewModel: (id: number | string, language: string, body: Form) => string;
 
     listVersions: (id: number | string) => FormListResponse;
     getVersion: (id: number | string, version: string) => FormResponse;

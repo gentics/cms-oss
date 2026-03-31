@@ -111,27 +111,41 @@
 @if ((noErrors$ | async)) {
   <div class="list-wrapper">
     @for (type of (itemTypes$ | async); track type) {
-      <item-list
-        [class]="type || ''"
-        [itemType]="type"
-        [linkPaths]="!!(searchTerm$ | async)"
-        [startPageId]="startPageId$ | async"
-        [acceptUploads]="allowedMimeTypes(type)"
-        [uploadProgress]="getUploadProgress(type)"
-        [activeNode]="activeNode$ | async"
-        [nodeLanguages]="activeNodeLanguages"
-        [currentFolderId]="currentFolderId"
-        [filterTerm]="filterTerm$ | async"
-        [items]="listService.itemStreams[type] | async | filterItems:(filterTerm$ | async):(showPath$ | async)[type]"
-        [itemsInfo]="listService.itemInfoStreams[type] | async"
-        [itemInEditor]="itemInEditor$ | async"
-        [folderPermissions]="permissions"
-        [currentFolderId]="currentFolderId"
-        [uiMode]="uiMode$ | async"
-        [stagingMap]="stagingMap$ | async"
-        (pageChange)="pageChange(type, $event)"
-        (itemsPerPageChange)="itemsPerPageChange(type, $event)"
-      ></item-list>
+        @if (type === 'form') {
+            <gtx-form-list
+                [folderId]="currentFolderId"
+                [node]="activeNode$ | async"
+                [nodeLanguages]="activeNodeLanguages"
+
+                [permissions]="permissions"
+                [activeItemId]="activeItemType === 'form' ? activeItemId : null"
+                [startPageId]="startPageId$ | async"
+                [acceptUploads]="allowedMimeTypes(type)"
+                [uiMode]="uiMode$ | async"
+            ></gtx-form-list>
+        } @else {
+            <item-list
+              [class]="type || ''"
+              [itemType]="type"
+              [linkPaths]="!!(searchTerm$ | async)"
+              [startPageId]="startPageId$ | async"
+              [acceptUploads]="allowedMimeTypes(type)"
+              [uploadProgress]="getUploadProgress(type)"
+              [activeNode]="activeNode$ | async"
+              [nodeLanguages]="activeNodeLanguages"
+              [currentFolderId]="currentFolderId"
+              [filterTerm]="filterTerm$ | async"
+              [items]="listService.itemStreams[type] | async | filterItems:(filterTerm$ | async):(showPath$ | async)[type]"
+              [itemsInfo]="listService.itemInfoStreams[type] | async"
+              [activeItemId]="activeItemType === type ? activeItemId : null"
+              [folderPermissions]="permissions"
+              [currentFolderId]="currentFolderId"
+              [uiMode]="uiMode$ | async"
+              [stagingMap]="stagingMap$ | async"
+              (pageChange)="pageChange(type, $event)"
+              (itemsPerPageChange)="itemsPerPageChange(type, $event)"
+            ></item-list>
+        }
     }
   </div>
 } @else {

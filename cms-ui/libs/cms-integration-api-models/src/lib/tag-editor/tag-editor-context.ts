@@ -27,7 +27,7 @@ export interface TagEditorContext {
     folder?: Folder<Raw>;
 
     /** The form, to which the tag belongs (set when editing an object property of a form). */
-    form?: Form<Raw>;
+    form?: Form;
 
     /** The image, to which the tag belongs (set when editing an object property of an image). */
     image?: Image<Raw>;
@@ -101,11 +101,10 @@ export interface GcmsUiServices {
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: SerializableRepositoryBrowserOptions): Promise<R | R[]>;
 
     /** Method for opening the Image Editor. */
-    openImageEditor(options: { nodeId: number, imageId: number }): Promise<Image | void>;
+    openImageEditor(options: { nodeId: number; imageId: number }): Promise<Image | void>;
 
     /**
      * Opens an the upload modal to allow the user to upload files/images to a specified folder.
-     *
      * @param uploadType The type the user should be allowed to upload. Either 'image' or 'file'.
      * @param destinationFolder The folder to where the file/image should be uploaded to.
      * @param allowFolderSelection If the user should be allowed to change the destination folder.
@@ -147,7 +146,6 @@ export interface Translator {
     /**
      * Gets the translated value(s) of the specified i18n key(s) for the currently active UI language.
      * This method works like TranslateService.get() of ngx-translate (https://github.com/ngx-translate/core#methods ).
-     *
      * @returns An Observable with the translated value(s). This observable will emit whenever the
      * current languages changes.
      */

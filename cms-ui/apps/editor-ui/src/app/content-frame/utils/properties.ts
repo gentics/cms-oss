@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import {
-    CmsFormData,
     EditableFileProps,
     EditableFolderProps,
-    EditableFormProps,
+    EditableFormProperties,
     EditablePageProps,
     FileOrImage,
     Folder,
@@ -40,30 +39,23 @@ export function getItemProperties(item: InheritableItem | Node): EditablePropert
         }
 
         case 'form':{
-            let dataProperties: Partial<CmsFormData> = {};
             const f = item as Form;
-            if (f.data) {
-                dataProperties = {
-                    email: f.data.email,
-                    successurl_i18n: f.data.successurl_i18n,
-                    successurl: f.data.successurl,
-                    mailsubject_i18n: f.data.mailsubject_i18n,
-                    mailtemp_i18n: f.data.mailtemp_i18n,
-                    mailsource_pageid: f.data.mailsource_pageid,
-                    mailsource_nodeid: f.data.mailsource_nodeid,
-                    templateContext: f.data.templateContext,
-                    type: f.data.type,
-                    elements: f.data.elements,
-                }
-            }
-
-            const props: EditableFormProps = {
+            const props: Partial<EditableFormProperties> = {
+                formType: f.formType,
                 name: f.name,
+                fileName: f.fileName,
                 description: f.description,
                 languages: f.languages,
+                templateContext: f.templateContext,
+                flow: f.flow,
                 successPageId: f.successPageId,
                 successNodeId: f.successNodeId,
-                data: dataProperties,
+                successUrlI18n: f.successUrlI18n,
+                adminEmailAddress: f.adminEmailAddress,
+                adminEmailSubject: f.adminEmailSubject,
+                adminEmailPageId: f.adminEmailPageId,
+                adminEmailNodeId: f.adminEmailNodeId,
+                adminEmailTemplate: f.adminEmailTemplate,
             };
             return props;
         }

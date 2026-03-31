@@ -62,17 +62,18 @@
         </div>
     }
 
-    @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form') {
+    @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form' && currentFormConfig) {
         <div class="form-editor">
-            <gtx-form-editor
-                class="form-editor"
-                [form]="currentItem"
-                [activeUiLanguageCode]="activeUiLanguageCode$ | async"
-                [activeContentLanguageCode]="itemLanguage?.code"
-                [readonly]="editMode !== EditMode.EDIT"
-                (formModified)="formChange($event)"
-                (validityChange)="setItemValidity($event)"
-            ></gtx-form-editor>
+            <gtx-form-grid
+                [config]="currentFormConfig"
+                [restricted]="!!currentFormConfig?.external"
+                [languages]="currentItem.languages"
+
+                [schema]="currentItem.schema"
+                [uiSchema]="currentItem.uiSchema"
+                (schemaChange)="updateFormSchema($event)"
+                (uiSchemaChange)="updateFormUiSchema($event)"
+            ></gtx-form-grid>
         </div>
     }
 

@@ -1,0 +1,77 @@
+<div
+  class="preview-shell"
+  [class.preview-shell--with-panel]="!!selectedElementId"
+>
+  <div class="preview-main">
+    <div id="formId" class="react-preview-bootstrap">{{ formId }}</div>
+    <div id="formJson" class="react-preview-bootstrap">{{ formJson }}</div>
+    <div id="formFeatures" class="react-preview-bootstrap">{{ featuresJson }}</div>
+    <div id="formLanguage" class="react-preview-bootstrap">{{ language }}</div>
+    <div id="formCurrentPage" class="react-preview-bootstrap">{{ currentPage }}</div>
+    <div id="formSelectedElementId" class="react-preview-bootstrap">{{ selectedElementId }}</div>
+
+    <div
+      id="react-preview-root"
+      class="react-preview-root"
+      [attr.data-remount-token]="remountToken"
+    >
+      <!-- <div class="preview-interaction-blocker" aria-hidden="true"></div> -->
+      <div #formgridFormEl id="formgridForm"></div>
+      <div #reactRootEl id="root"></div>
+    </div>
+  </div>
+
+  <aside
+    *ngIf="selectedElementId"
+    class="editor-panel editor-panel--right"
+    aria-label="Rechtes Panel"
+  >
+    <div class="panel-header">
+      <button
+        type="button"
+        class="panel-toggle-btn"
+        title="Rechtes Panel schließen"
+        aria-label="Rechtes Panel schließen"
+        (click)="closeSelectedElement()"
+      >
+        <i class="material-icons">chevron_right</i>
+      </button>
+    </div>
+
+    <div class="panel-content">
+      <div class="panel-segment-title">Element bearbeiten</div>
+
+      <div
+        *ngIf="!selectedElementId || !selectedElementDraft"
+        class="panel-empty-state"
+      >
+        Wähle ein Element in der Vorschau aus, um seine Einstellungen hier zu sehen.
+      </div>
+
+      <andp-formgrid-element-modal
+        *ngIf="isSelectedFormgridElement && selectedElementId"
+        [mode]="'panel'"
+        [saveLabel]="'Übernehmen'"
+        [cancelLabel]="'Schließen'"
+        [idPrefix]="'preview-rp-' + selectedElementId + '-'"
+        [element]="selectedElementDraft"
+        [edit]="true"
+        [dependsOnOptions]="buildDependsOnOptions ? buildDependsOnOptions(items, selectedElementId) : []"
+        (save)="onApplySelectedElementAndClose($event)"
+        (cancelEmbedded)="closeSelectedElement()"
+        [showPanelActions]="false"
+      ></andp-formgrid-element-modal>
+
+      <andp-form-element-modal
+        *ngIf="isSelectedNormalElement && selectedElementId"
+        [embedded]="true"
+        [mode]="'panel'"
+        [saveLabel]="'Speichern'"
+        [element]="selectedElementDraft"
+        [schema]="selectedElementSchema"
+        (save)="onApplySelectedElementAndClose($event)"
+        (cancelEmbedded)="closeSelectedElement()"
+      ></andp-form-element-modal>
+    </div>
+  </aside>
+</div>

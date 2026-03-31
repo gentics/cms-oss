@@ -2,10 +2,11 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
     name: 'gtxValues',
-    standalone: false
+    standalone: false,
 })
 export class ValuesPipe implements PipeTransform {
-    transform(value: any): any {
+    transform<T>(value: Set<T> | Record<string | number | symbol, T> | T[]): T[];
+    transform(value: any): any[] {
         if (Array.isArray(value)) {
             return value;
         }

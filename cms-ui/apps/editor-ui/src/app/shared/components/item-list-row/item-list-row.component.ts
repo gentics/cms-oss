@@ -41,7 +41,7 @@ import { UsageModalComponent } from '../usage-modal/usage-modal.component';
 
 type AllowedItemType
     = | Folder<Raw | Normalized>
-      | Form<Raw | Normalized>
+      | Form
       | Page<Raw | Normalized>
       | File<Raw | Normalized>
       | Image<Raw | Normalized>
@@ -66,7 +66,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
     public nodeId: number;
 
     @Input()
-    public itemInEditor: any;
+    public activeItemId: number;
 
     @Input()
     public icon: string;
@@ -146,7 +146,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
     /** Emits if a form language icon is clicked */
     @Output()
-    public formLanguageIconClick = new EventEmitter<{ form: Form<Raw>; language: Language }>();
+    public formLanguageIconClick = new EventEmitter<{ form: Form; language: Language }>();
 
     public languageState: LanguageState;
     public itemIdDeleted = false;
@@ -373,7 +373,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         this.pageLanguageIconClick.emit({ page: pageRaw, language: data.language });
     }
 
-    onFormLanguageIconClicked(data: { item: Form<Raw> | Form<Normalized>; language: Language }): void {
+    onFormLanguageIconClicked(data: { item: Form; language: Language }): void {
         const formRaw = this.entityResolver.denormalizeEntity('form', data.item);
         this.formLanguageIconClick.emit({ form: formRaw, language: data.language });
     }

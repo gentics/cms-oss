@@ -30,7 +30,7 @@ import {
     Tag,
     Template,
     TemplateResponse,
-    TotalUsageResponse
+    TotalUsageResponse,
 } from '@gentics/cms-models';
 import { cloneWithSymbols } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
@@ -192,7 +192,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     startPageId$: Observable<number | undefined>;
 
     folders$: Observable<Folder<Raw>[]>;
-    forms$: Observable<Form<Raw>[]>;
+    forms$: Observable<Form[]>;
     pages$: Observable<Page<Raw>[]>;
     files$: Observable<File<Raw>[]>;
     images$: Observable<Image<Raw>[]>;
@@ -405,7 +405,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     getTotalUsageForCurrentItemsOfType(type: 'file' | 'form' | 'image' | 'page'): void {
         // emits current item of given type immediately due to publishReplay in filteredItems$.
         // typescript would trip over more specific union types at the filter function below, thus we use these super type
-        let itemsOfType$: Observable<InheritableItem<Raw>[]> | null = null;
+        let itemsOfType$: Observable<(InheritableItem<Raw> | Form)[]> | null = null;
         switch (type) {
             case 'file':
                 itemsOfType$ = this.files$;
@@ -563,7 +563,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         );
 
         this.folders$ = itemStream<Folder<Raw>>((item) => item.type === 'folder');
-        this.forms$ = itemStream<Form<Raw>>((item) => item.type === 'form');
+        this.forms$ = itemStream<Form>((item) => item.type === 'form');
         this.pages$ = itemStream<Page<Raw>>((item) => item.type === 'page');
         this.files$ = itemStream<File<Raw>>((item) => item.type === 'file');
         this.images$ = itemStream<Image<Raw>>((item) => item.type === 'image');
@@ -571,7 +571,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         this.tags$ = itemStream<Tag>((item) => item.type === 'TEMPLATETAG' || item.type === 'CONTENTTAG');
 
         this.startPageId$ = this.currentParent$.pipe(
-            map((parent) => parent && parent.type === 'folder' && parent.startPageId || undefined),
+            map((parent) => parent?.type === 'folder' ? parent.startPageId : undefined),
             distinctUntilChanged(isEqual),
         );
 
@@ -812,7 +812,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
             }
 
             case 'page': {
-                const requestTemplate = (itemType === 'page' && this.allowed.template || this.allowed.templatetag);
+                const requestTemplate = (itemType === 'page' && (this.allowed.template || this.allowed.templatetag));
                 let listOptions: PageListOptions = { ...listOptionsWithSorting };
 
                 if (requestTemplate) {

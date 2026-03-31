@@ -4,7 +4,6 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
-    forwardRef,
     Input,
     OnChanges,
     OnDestroy,
@@ -13,9 +12,9 @@ import {
     SimpleChanges,
     ViewEncapsulation,
 } from '@angular/core';
-import { AbstractControl, ControlValueAccessor, UntypedFormControl, NG_VALIDATORS, NG_VALUE_ACCESSOR, ValidationErrors, Validator } from '@angular/forms';
-import { CmsFormElementI18nValue } from '@gentics/cms-models';
-import { SelectOptionDirective } from '@gentics/ui-core';
+import { AbstractControl, ControlValueAccessor, UntypedFormControl, ValidationErrors, Validator } from '@angular/forms';
+import { I18nString } from '@gentics/cms-models';
+import { generateFormProvider, generateValidatorProvider, SelectOptionDirective } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Subscription } from 'rxjs';
 
@@ -23,18 +22,13 @@ import { Subscription } from 'rxjs';
     selector: 'gtx-i18n-select',
     templateUrl: './i18n-select.component.html',
     styleUrls: ['./i18n-select.component.scss'],
-    providers: [{
-            provide: NG_VALUE_ACCESSOR, // Is an InjectionToken required by the ControlValueAccessor interface to provide a form value
-            useExisting: forwardRef(() => I18nSelectComponent), // tells Angular to use the existing instance
-            multi: true,
-        }, {
-            provide: NG_VALIDATORS, // Is an InjectionToken required by this class to be able to be used as an Validator
-            useExisting: forwardRef(() => I18nSelectComponent), // for now validation will be put into the component, but can be separated
-            multi: true,
-        }],
+    providers: [
+        generateFormProvider(I18nSelectComponent),
+        generateValidatorProvider(I18nSelectComponent),
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
-    standalone: false
+    standalone: false,
 })
 export class I18nSelectComponent implements ControlValueAccessor, Validator, OnInit, AfterViewInit, OnChanges, OnDestroy {
 
@@ -68,11 +62,11 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
     cvaTouch: any;
     private validatorChange: () => void;
 
-    private i18nData: CmsFormElementI18nValue<string | null>;
+    private i18nData: I18nString;
     private valueChangesSubscription: Subscription;
 
     isTranslated = true;
-    translationSuggestions: { language: string, value: string | null }[] = [];
+    translationSuggestions: { language: string; value: string | null }[] = [];
 
     invalidSelection = false;
     private ngAfterViewInitWasCalled = false;
@@ -146,7 +140,7 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
         }
     }
 
-    writeValue(i18nData: CmsFormElementI18nValue<string | null>): void {
+    writeValue(i18nData: I18nString): void {
         this.i18nData = i18nData ? i18nData : {};
         this.i18nSelect.setValue(
             this.i18nData[this.language],
@@ -255,16 +249,16 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
          * if any other language has this value set (and the current one does not),
          * then there is translation error
          */
-        const notCurrentLanguages = this.availableLanguages.filter(language => language !== this.language);
-        const languagesOfAvailableTranslations = notCurrentLanguages.filter(language => this.valuePresent(language));
+        const notCurrentLanguages = this.availableLanguages.filter((language) => language !== this.language);
+        const languagesOfAvailableTranslations = notCurrentLanguages.filter((language) => this.valuePresent(language));
         if (languagesOfAvailableTranslations.length > 0) {
             this.isTranslated = false;
-            this.translationSuggestions = languagesOfAvailableTranslations.map(language => {
+            this.translationSuggestions = languagesOfAvailableTranslations.map((language) => {
                 let value = this.i18nData[language];
                 if (this.selectOptions) {
                     const viewValues = this.selectOptions
-                        .filter(option => option.value === value)
-                        .map(option => option.viewValue);
+                        .filter((option) => option.value === value)
+                        .map((option) => option.viewValue);
                     if (viewValues.length > 0) {
                         value = viewValues[0];
                     }
@@ -272,7 +266,7 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
                 return {
                     language: language,
                     value: value,
-                }
+                };
             });
             return { untranslated: true };
         }
@@ -302,17 +296,19 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
             return null;
         }
 
-        /** if there are selection options, then there is no invalid selection if the selection is found in the options
+        /**
+          if there are selection options, then there is no invalid selection if the selection is found in the options
          */
         if (this.selectOptions) {
             const value = this.i18nData[this.language];
-            if (this.selectOptions.filter(option => option.value === value).length > 0) {
+            if (this.selectOptions.filter((option) => option.value === value).length > 0) {
                 this.invalidSelection = false;
                 return null;
             }
         }
 
-        /** if there are no selection options, then all selections are invalid
+        /**
+          if there are no selection options, then all selections are invalid
          */
         this.invalidSelection = true;
         return { invalidSelection: true };
@@ -330,6 +326,5 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
         }
         return false;
     }
-
 
 }

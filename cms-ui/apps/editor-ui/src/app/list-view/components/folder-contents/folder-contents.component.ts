@@ -154,6 +154,9 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     fileUploadProgress: UploadProgressReporter;
     imageUploadProgress: UploadProgressReporter;
 
+    activeItemType: string;
+    activeItemId: number;
+
     @ViewChild('fileDropTextOverlay', { static: true })
     fileDropTextOverlay: ElementRef<HTMLElement>;
 
@@ -488,6 +491,15 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
                 );
             }),
         );
+
+        this.subscriptions.push(combineLatest([
+            this.appState.select((state) => state.editor.itemType),
+            this.appState.select((state) => state.editor.itemId),
+        ]).subscribe(([type, id]) => {
+            this.activeItemType = type;
+            this.activeItemId = id;
+            this.changeDetector.markForCheck();
+        }));
 
         this.subscriptions.push(combineLatest([
             this.appState.select((state) => state.folder.activeFolder),

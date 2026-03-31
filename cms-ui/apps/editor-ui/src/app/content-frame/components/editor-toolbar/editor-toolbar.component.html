@@ -65,7 +65,7 @@
                             </div>
                         }
 
-                        @if (currentItem?.type === 'form' || (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId)) {
+                        @if (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId) {
                             <div class="item-language">
                                 @if (itemLanguage) {
                                     <div>{{ itemLanguage?.code | gtxI18n }}</div>
@@ -81,7 +81,7 @@
 
                         @if (currentItem && currentItem?.type === 'form') {
                             <div class="form-type">
-                                {{ 'editor.item_type_label' | gtxI18n }}: {{ 'form_generator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | gtxI18n }}
+                                {{ 'editor.item_type_label' | gtxI18n }}: {{ currentItem?.formType }}
                             </div>
                         }
                     </div>

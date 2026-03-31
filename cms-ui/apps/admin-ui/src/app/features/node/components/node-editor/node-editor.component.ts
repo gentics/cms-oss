@@ -129,7 +129,9 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
     }
 
     get isFormsEnabled(): boolean {
-        return this.currentFeatures?.[NodeFeature.FORMS] ?? false;
+        return this.fgNodeFeatures?.value?.[NodeFeature.FORMS]
+          ?? this.currentFeatures?.[NodeFeature.FORMS]
+          ?? false;
     }
 
     protected initializeTabHandles(): void {

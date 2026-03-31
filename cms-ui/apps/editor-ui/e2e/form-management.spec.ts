@@ -612,7 +612,7 @@ test.describe('Form Management', () => {
         });
     });
 
-    test('should show be possible to delete a language variant of a form', {
+    test('should be possible to delete a language variant of a form', {
          annotation: [{
             type: 'ticket',
             description: 'SUP-19642',

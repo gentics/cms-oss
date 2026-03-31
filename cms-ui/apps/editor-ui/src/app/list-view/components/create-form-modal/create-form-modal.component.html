@@ -11,7 +11,7 @@
         [folderId]="folderId"
         [nodeId]="nodeId"
         [isMultiLang]="languages?.length > 0"
-        [showDetailProperties]="languages?.length == 1"
+        [showDetailProperties]="languages?.length === 1"
         [formControl]="control"
         (submit)="saveChanges()"
     ></gtx-form-properties>

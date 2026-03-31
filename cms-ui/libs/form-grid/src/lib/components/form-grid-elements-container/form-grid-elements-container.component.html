@@ -50,7 +50,7 @@
         ) {
             <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
                 size: 12,
-                classes: '',
+                classes: 'before-element',
                 label: paletteDragConfig()?.labelI18n | gtxI18nObject,
                 itemColumns: level() === 0 || $any(paletteDragConfig())?.container ? 12 : 6
             }"></ng-container>
@@ -113,7 +113,7 @@
     ) {
         <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
             size: 12,
-            classes: '',
+            classes: 'after-element',
             label: paletteDragConfig()?.labelI18n | gtxI18nObject,
             itemColumns: level() === 0 || $any(paletteDragConfig())?.container ? 12 : 6
         }"></ng-container>

@@ -327,7 +327,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
         this.modals.dialog({
             title: this.i18n.instant('form_grid.title_delete_element'),
-            body: this.i18n.instant('form_grid_confirm_element_delete', {
+            body: this.i18n.instant('form_grid.confirm_element_delete', {
                 name: this.i18n.fromObject(element.label),
             }),
             buttons: [
@@ -354,6 +354,9 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 newElements.splice(index, 1);
                 this.elements.set(newElements);
                 this.updateDisplayItems();
+            })
+            .catch(() => {
+                // Ignore errors
             });
     }
 

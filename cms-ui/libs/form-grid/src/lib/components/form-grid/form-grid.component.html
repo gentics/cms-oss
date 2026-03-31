@@ -163,7 +163,9 @@
                         <icon>chevron_left</icon>
                     </button>
 
-                    <div class="panel-header-title">{{ 'form_grid.edit_element_title' | gtxI18n }}</div>
+                    <div class="panel-header-title">{{ 'form_grid.edit_element_title' | gtxI18n:{
+                        label: selectedElementDraft?.label | gtxI18nObject
+                    } }}</div>
                 </div>
 
                 <div class="panel-content">

@@ -126,7 +126,7 @@ const MODULE_INITIALIZER = provideAppInitializer(() => {
         EditorOverlayModule,
         ColorSliderModule,
         ColorAlphaModule,
-        FormGridModule.forRoot(),
+        FormGridModule,
         RouterModule.forChild(CONTENT_FRAME_ROUTES),
         GenticsUICoreModule,
     ],

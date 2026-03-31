@@ -1,10 +1,15 @@
 {
     "form_grid": {
+        "new_element_title": "Insert new element",
+        "edit_element_title": "Edit element \"{{label}}\"",
+        "insert_element_placeholder": "Insert element \"{{label}}\"",
         "section_controls": "Control Elementes",
         "section_blocks": "Block Elementes",
         "drag_element": "Drag {{label}}",
         "edit_tab_definition": "Defition",
         "edit_tab_settings": "Settings",
-        "edit_tab_translations": "Translations"
+        "edit_tab_translations": "Translations",
+        "title_delete_element": "Remove element",
+        "confirm_element_delete": "Are you sure you want to remove this element?"
     }
 }

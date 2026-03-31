@@ -1,3 +1,4 @@
+/* eslint-disable jsdoc/no-undefined-types */
 import { I18nString } from './common';
 import { InheritableItem, ItemVersion } from './item';
 import { Raw } from './type-util';
@@ -55,6 +56,15 @@ export interface EditableFormProperties {
      * The languages the form supports.
      */
     languages: string[];
+    /**
+     * The flow of the form, which is defined in the configuration.
+     */
+    flow: string;
+    /**
+     * The template setting for this form. Usually used to create a different styling
+     * for the same configuration.
+     */
+    templateContext?: string;
     /**
      * The schema definition of the form
      */

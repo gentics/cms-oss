@@ -9,21 +9,27 @@
             display: flex;
         }
     }
+}
 
-    .noTemplates {
-        color: $gtx-color-alert;
-        margin-bottom: 1rem;
-        margin-top: 0;
+.flex-row {
+    display: flex;
+    gap: 0 0.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .columns {
+        padding-left: 0;
+        padding-right: 0;
     }
 
-    [formcontrolname=templateId] {
-        margin: 0;
-
-        & + a {
-            display: block;
-            margin-bottom: 1rem;
-        }
+    .gtx-form-section-title {
+        width: 100%;
     }
+}
+
+.form-section-container {
+    display: block;
+    width: 100%;
 }
 
 .custom-date-picker {
@@ -42,22 +48,6 @@
     color: $gtx-color-alert;
     margin-bottom: 13px;
     margin-top: -18px;
-}
-
-// Hide the button without using `display: none` or `visibility: hidden` otherwise IE does not
-// register the form submit event.
-.hidden-submit-button {
-    opacity: 0;
-    height: 0;
-    width: 0;
-    padding: 0;
-    border: 0;
-}
-
-// Hide input without using `display: none` or `visibility: hidden` otherwise IE does not
-// consider their values.
-.hidden-input {
-    display: none;
 }
 
 .localized-properties-header {

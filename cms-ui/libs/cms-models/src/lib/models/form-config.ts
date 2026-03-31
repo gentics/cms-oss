@@ -174,7 +174,7 @@ export interface FormTypeConfiguration {
      * Which form flows this type can use.
      * The first element in this array is will be used as default value.
      */
-    flows?: FormFlow[];
+    flows: FormFlow[];
 }
 
 /**
@@ -233,8 +233,17 @@ export interface FormSelectOption {
 export interface FormFlow {
     /** The ID of the flow */
     id: string;
-    /** The translation key to use to get the name of this flow */
+    /**
+     * The label/name of this flow which is displayed to the editor.
+     */
+    labelI18n: I18nString;
+    /**
+     * The translation key to use to get the name of this flow for form-gen, and is shown to the front-end user.
+     */
     nameTranslationKey: string;
+    /**
+     * The individual steps for the flow
+     */
     steps: FormFlowStep[];
 }
 

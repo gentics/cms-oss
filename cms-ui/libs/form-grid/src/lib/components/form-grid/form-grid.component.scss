@@ -284,8 +284,10 @@
 h1 {
   font-size: 30px;
 }
+
 .list-container {
   padding: 15px;
+
   .row {
     background: repeating-linear-gradient(
       45deg,
@@ -295,13 +297,13 @@ h1 {
       #eee 20px
     );
   }
+
   .columns {
     min-height: 50px;
     background: #fafafa;
     border: 1px solid #e5e5e5;
     div {
       font-size: 14px;
-      padding: 15px;
     }
   }
 }
@@ -351,7 +353,7 @@ gtx-contents-list-item {
   display: flex;
   align-items: stretch;
   border-bottom: none;
-  padding: 0 10px 10px 10px;
+  padding: 10px;
 
   &.empty {
     background: repeating-linear-gradient(
@@ -366,6 +368,13 @@ gtx-contents-list-item {
 
 .form-item {
   position: relative;
+
+  .item-primary {
+    gap: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
 }
 
 gtx-sortable-item.form-item {
@@ -420,9 +429,6 @@ gtx-checkbox [type='checkbox'] + label:before {
 }
 
 .small-1{
-  .form-item,.item-primary{
-    padding: 15px 0!important;
-  }
   .formtitle{
     font-size: 10px!important;
     margin-right: 0;
@@ -446,9 +452,6 @@ gtx-checkbox [type='checkbox'] + label:before {
   }
 }
 .small-2{
-  .form-item,.item-primary{
-    padding: 15px 0!important;
-  }
   .formtitle{
     font-size: 12px!important;
     margin-right: 0;
@@ -475,12 +478,13 @@ gtx-checkbox [type='checkbox'] + label:before {
 
 // tags for formgridOption.type
 .tag {
-  display: inline-block;
+  display: flex;
   padding: 2px 10px;
   border-radius: 3px;
   font-size: 12px;
   font-weight: 700;
   color: #fff;
+  align-items: center;
 }
 
 .tag-type {
@@ -489,10 +493,6 @@ gtx-checkbox [type='checkbox'] + label:before {
 
 .tag-text {
   vertical-align: middle;
-}
-
-.formtitle{
-  margin-top: 15px;
 }
 
 .fg-form   { max-width: 30rem; }
@@ -513,9 +513,11 @@ gtx-checkbox [type='checkbox'] + label:before {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
-  gap: 15px;
+  gap: inherit;
   padding: 0 !important;
   overflow: hidden;
+  width: 100%;
+  flex: 0 0 100%;
 }
 
 .palette-dropzone {

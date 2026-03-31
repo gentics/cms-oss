@@ -40,13 +40,22 @@ export function getItemProperties(item: InheritableItem | Node): EditablePropert
 
         case 'form':{
             const f = item as Form;
-            // FIXME: Why remapping?!?
             const props: Partial<EditableFormProperties> = {
+                formType: f.formType,
                 name: f.name,
+                fileName: f.fileName,
                 description: f.description,
                 languages: f.languages,
+                templateContext: f.templateContext,
+                flow: f.flow,
                 successPageId: f.successPageId,
                 successNodeId: f.successNodeId,
+                successUrlI18n: f.successUrlI18n,
+                adminEmailAddress: f.adminEmailAddress,
+                adminEmailSubject: f.adminEmailSubject,
+                adminEmailPageId: f.adminEmailPageId,
+                adminEmailNodeId: f.adminEmailNodeId,
+                adminEmailTemplate: f.adminEmailTemplate,
             };
             return props;
         }

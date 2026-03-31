@@ -25,6 +25,7 @@ import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/as
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
+import { I18nService } from '@gentics/cms-components';
 
 @Component({
     selector: 'gtx-node-editor',
@@ -71,6 +72,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         router: Router,
         appState: AppStateService,
         handler: NodeHandlerService,
+        protected i18n: I18nService,
         protected tableLoader: NodeTableLoaderService,
         protected client: GCMSRestClientService,
         protected modalService: ModalService,
@@ -405,7 +407,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
     mapFormTypeToPickListItem(form: FormTypeConfiguration): PickListItem {
         return {
             id: form.type,
-            label: form.pluginName,
+            label: form.nameI18n[this.i18n.getCurrentLanguage()],
         };
     }
 }

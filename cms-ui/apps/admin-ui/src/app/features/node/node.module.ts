@@ -11,6 +11,7 @@ import {
     NodeMasterComponent,
     NodePropertiesComponent,
     NodePublishingPropertiesComponent,
+    NodeFormsAssignmentComponent
 } from './components';
 import { NODE_ROUTES } from './node.routes';
 
@@ -32,6 +33,7 @@ import { NODE_ROUTES } from './node.routes';
     imports: [
         SharedModule,
         RouterModule.forChild(NODE_ROUTES),
+        NodeFormsAssignmentComponent,
     ],
 })
 export class NodeModule { }

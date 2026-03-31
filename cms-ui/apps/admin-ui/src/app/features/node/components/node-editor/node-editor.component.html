@@ -86,6 +86,37 @@
       </div>
     </gtx-tab>
 
+    @if (isFormsEnabled) {
+      <gtx-tab
+        [id]="Tabs.FORMS" 
+        gtxDetailTabLink 
+        [title]="'node.title_node_forms' | gtxI18n"
+        >
+        <div class="detail-tab-wrapper">
+          <gtx-entity-detail-header 
+            [title]="'node.title_forms_of_entity' | gtxI18n: { entityName: entity?.name }"
+            saveActionAllowedId="node.updateNodeInstance"
+            [saveActionAllowedInstanceId]="entity?.folderId"
+            [saveDisabled]="selectedFormTypes?.pristine || selectedFormTypes?.invalid"
+            (saveClick)="tabHandles?.[Tabs.FORMS]?.save?.()"
+            (cancelClick)="detailsClose()"
+          ></gtx-entity-detail-header>
+
+          <div class="gtx-entity-details-tab-content-body">
+            <gtx-pick-list
+              [availableListLabel]="'node.title_available_forms_list' | gtxI18n"
+              [assignedListLabel]="'node.title_assigned_forms_list' | gtxI18n"
+              [emptyAvailableItemsLabel]="'node.forms_available_empty_list' | gtxI18n"
+              [emptyAssignedItemsLabel]="'node.forms_assigned_empty_list' | gtxI18n"
+              [showCount]="true"
+              [items]="allFormTypesAsPickListItems"
+              [formControl]="selectedFormTypes"
+            ></gtx-pick-list>
+          </div>
+        </div>
+      </gtx-tab>
+    }
+
     <gtx-tab
       [id]="Tabs.LANGUAGES"
       [class.disabledArea]="isChildNode"

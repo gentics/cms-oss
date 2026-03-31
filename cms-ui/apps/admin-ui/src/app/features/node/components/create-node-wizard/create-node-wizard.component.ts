@@ -1,16 +1,17 @@
 import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
-import { FeatureOperations, NodeOperations } from '@admin-ui/core';
+import { FeatureOperations, NodeHandlerService, NodeOperations } from '@admin-ui/core';
 import { LanguageTableComponent, Wizard, WizardComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { createNestedControlValidator } from '@gentics/cms-components';
-import { Language, Node, NodeCreateRequest, NodeFeatureModel, NodeUrlMode, Raw } from '@gentics/cms-models';
+import { FormTypeConfiguration, Language, Node, NodeCreateRequest, NodeFeature, NodeFeatureModel, NodeUrlMode, Raw } from '@gentics/cms-models';
 import { Observable, of as observableOf, of } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesComponent, NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
+import { PickListItem } from '@gentics/ui-core';
 
 const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
@@ -21,6 +22,7 @@ const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     selector: 'gtx-create-node-wizard',
     templateUrl: './create-node-wizard.component.html',
     styleUrls: ['./create-node-wizard.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
 export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
@@ -47,6 +49,14 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     /** form of tab 'Node Features' */
     fgNodeFeatures: FormControl<NodeFeaturesFormData>;
 
+    fgFormTypes = new FormControl<PickListItem[]>([]);
+
+    isFormsEnabled = false;
+
+    public allFormTypes: FormTypeConfiguration[] = [];
+
+    public allFormTypesAsPickListItems: PickListItem[] = [];
+
     nodeFeatures$: Observable<NodeFeatureModel[]>;
 
     selectedLanguages: string[] = [];
@@ -65,9 +75,11 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     }
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
         private nodeOps: NodeOperations,
         private featureOps: FeatureOperations,
+        private nodeHandler: NodeHandlerService,
     ) { }
 
     ngOnInit(): void {
@@ -77,6 +89,24 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
             startWith(observableOf(true)),
             switchMap(() => this.nodeOps.getAvailableFeatures({ sort: [ { attribute: 'id' } ] })),
         );
+
+        this.nodeHandler.listAllFormConfigurations().subscribe((items) => {
+            this.allFormTypes = items;
+            this.allFormTypesAsPickListItems = items.map((item) => this.mapFormTypeToPickListItem(item));
+            this.changeDetector.markForCheck();
+        });
+
+        this.fgNodeFeatures.valueChanges.subscribe((value) => {
+            this.isFormsEnabled = value?.[NodeFeature.FORMS] ?? false;
+            this.changeDetector.markForCheck();
+        });
+    }
+
+    mapFormTypeToPickListItem(form: FormTypeConfiguration): PickListItem {
+        return {
+            id: form.type,
+            label: form.pluginName,
+        };
     }
 
     private setChildNode(): void {
@@ -112,6 +142,19 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
             await this.setNodeLanguages(created).toPromise();
         } catch (error) {
             // Same here
+        }
+        if (this.isFormsEnabled && this.fgFormTypes.value?.length > 0) {
+            try {
+                const formTypes = this.fgFormTypes.value
+                    .map((item) => this.allFormTypes.find((f) => f.type === String(item.id)))
+                    .filter(Boolean);
+
+                await this.nodeHandler
+                    .updateFormConfigurations(created.id, formTypes, [])
+                    .toPromise();
+            } catch (error) {
+                // Same here
+            }
         }
 
         return created;

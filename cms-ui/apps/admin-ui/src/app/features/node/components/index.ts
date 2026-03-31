@@ -7,3 +7,4 @@ export * from './node-master/node-master.component';
 export * from './node-properties/node-properties.component';
 export * from './node-publishing-properties/node-publishing-properties.component';
 export * from './node-editor/node-editor.component';
+export * from './node-forms-assignment/node-forms-assignment.component';

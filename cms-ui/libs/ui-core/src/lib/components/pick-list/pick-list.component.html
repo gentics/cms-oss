@@ -1,0 +1,103 @@
+<div class="gtx-pick-list-container">
+    <!-- Available Column -->
+    <div class="list-column">
+        <div class="column-header">
+            <h4>{{ availableListLabel }}</h4>
+            @if (showCount) {
+            <span class="count">{{availableItems.length}}</span>
+            }
+        </div>
+        <div class="list-box"
+            [attr.tabindex]="disabled ? null : 0"
+            [attr.aria-disabled]="disabled"
+            [class.drag-highlight]="isDraggingOverAvailable"
+            (focus)="inputFocus()"
+            (blur)="inputBlur($event)"
+            (dragenter)="onDragEnter('available')"
+            (dragleave)="onDragLeave('available')"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop('available', $event)">
+            @for (item of availableItems; track item.id) {
+                <div class="list-item"
+                    [class.selected]="isSelected('available', item)"
+                    title=""
+                    [attr.draggable]="!disabled && enableDragAndDrop"
+                    (click)="toggleItemSelection('available', item)"
+                    (dragstart)="onDragStart('available', item, $event)"
+                    (dragover)="onDragOver($event)"
+                    (dragend)="onDragEnd()"
+                >
+                    <div class="item-name">{{ getItemLabel(item) }}</div>
+                    @if (getItemDescription(item)) {
+                        <div class="item-desc">{{ getItemDescription(item) }}</div>
+                    }
+                </div>
+            }
+            @if (availableItems.length === 0) {
+                <div class="empty-state">{{ emptyAvailableItemsLabel }}</div>
+            }
+        </div>
+    </div>
+
+    <!-- Actions Actions Column -->
+    <div class="actions-column">
+        @if (allowMoveAll) {
+            <gtx-button type="primary" [disabled]="disabled || availableItems.length === 0" (click)="moveAllToRight()">
+                <icon>keyboard_double_arrow_right</icon>
+            </gtx-button>
+        }
+        @if (allowMoveSelected) {
+            <gtx-button type="secondary" [disabled]="disabled || selectedAvailableItems.length === 0" (click)="moveSelectedToRight()">
+                <icon>keyboard_arrow_right</icon>
+            </gtx-button>
+            <gtx-button type="secondary" [disabled]="disabled || selectedAssignedItems.length === 0" (click)="moveSelectedToLeft()">
+                <icon>keyboard_arrow_left</icon>
+            </gtx-button>
+        }
+        @if (allowMoveAll) {
+            <gtx-button type="primary" [disabled]="disabled || assignedItems.length === 0" (click)="moveAllToLeft()">
+                <icon>keyboard_double_arrow_left</icon>
+            </gtx-button>
+        }
+    </div>
+
+    <!-- Assigned Column -->
+    <div class="list-column">
+        <div class="column-header">
+            <h4>{{ assignedListLabel }}</h4>
+            @if (showCount) {
+            <span class="count">{{assignedItems.length}}</span>
+            }
+        </div>
+        <div class="list-box"
+            [attr.tabindex]="disabled ? null : 0"
+            [attr.aria-disabled]="disabled"
+            [class.drag-highlight]="isDraggingOverAssigned"
+            (focus)="inputFocus()"
+            (blur)="inputBlur($event)"
+            (dragenter)="onDragEnter('assigned')"
+            (dragleave)="onDragLeave('assigned')"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop('assigned', $event)">
+            @for (item of assignedItems; track item.id) {
+                <div class="list-item"
+                    [class.selected]="isSelected('assigned', item)"
+                    title=""
+                    [attr.draggable]="!disabled && enableDragAndDrop"
+                    (click)="toggleItemSelection('assigned', item)"
+                    (dragstart)="onDragStart('assigned', item, $event)"
+                    (dragover)="onDragOver($event)"
+                    (dragend)="onDragEnd()"
+                >
+                    <div class="item-name">{{ getItemLabel(item) }}</div>
+                    @if (getItemDescription(item)) {
+                        <div class="item-desc">{{ getItemDescription(item) }}</div>
+                    }
+                </div>
+            }
+            @if (assignedItems.length === 0) {
+                <div class="empty-state">{{ emptyAssignedItemsLabel }}</div>
+            }
+        </div>
+    </div>
+</div>

@@ -96,19 +96,23 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
 
         // Load assigned form configurations for this node
         this.subcriptions.push(
-            this.client.form.listConfigurations({ nodeId: this.entityId }).subscribe((res) => {
-                this.assignedConfigurations = res.items;
-                this.selectedFormTypes.setValue(res.items.map(item => this.mapFormTypeToPickListItem(item)));
-                this.changeDetector.markForCheck();
-            }),
+            (this.handler as NodeHandlerService)
+                .listNodeFormConfigurations(this.entityId)
+                .subscribe((items) => {
+                    this.assignedConfigurations = items;
+                    this.selectedFormTypes.setValue(items.map((item) => this.mapFormTypeToPickListItem(item)));
+                    this.changeDetector.markForCheck();
+                }),
         );
 
         // Load all available form types
         this.subcriptions.push(
-            this.client.form.listConfigurations().subscribe((res) => {
-                this.allFormTypes = res.items;
-                this.changeDetector.markForCheck();
-            }),
+            (this.handler as NodeHandlerService)
+                .listAllFormConfigurations()
+                .subscribe((items) => {
+                    this.allFormTypes = items;
+                    this.changeDetector.markForCheck();
+                }),
         );
 
         Promise.all([
@@ -207,6 +211,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                     .map((item) => this.allFormTypes.find((f) => f.type === String(item.id)))
                     .filter(Boolean);
 
+                console.log("Hallo? Editor");
                 return (this.handler as NodeHandlerService)
                     .updateFormConfigurations(this.entityId, updated, this.assignedConfigurations)
                     .pipe(
@@ -245,11 +250,13 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
 
         // Reload form configurations when switching to a different node
         this.subcriptions.push(
-            this.client.form.listConfigurations({ nodeId: this.entityId }).subscribe((res) => {
-                this.assignedConfigurations = res.items;
-                this.selectedFormTypes.setValue(res.items.map(item => this.mapFormTypeToPickListItem(item)));
-                this.changeDetector.markForCheck();
-            }),
+            (this.handler as NodeHandlerService)
+                .listNodeFormConfigurations(this.entityId)
+                .subscribe((items) => {
+                    this.assignedConfigurations = items;
+                    this.selectedFormTypes.setValue(items.map((item) => this.mapFormTypeToPickListItem(item)));
+                    this.changeDetector.markForCheck();
+                }),
         );
 
         Promise.all([

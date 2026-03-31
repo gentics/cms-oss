@@ -224,21 +224,35 @@ export class NodeHandlerService
         );
     }
 
+    listAllFormConfigurations(): Observable<FormTypeConfiguration[]> {
+        return this.client.form.listConfigurations().pipe(
+            map((res) => res.items),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listNodeFormConfigurations(nodeId: number): Observable<FormTypeConfiguration[]> {
+        return this.client.form.listConfigurations({ nodeId }).pipe(
+            map((res) => res.items),
+            this.catchAndRethrowError(),
+        );
+    }
+
     updateFormConfigurations(nodeId: number, updated: FormTypeConfiguration[], current: FormTypeConfiguration[]): Observable<void> {
         const toAssign = updated.filter((u) => !current.some((c) => c.type === u.type));
         const toRemove = current.filter((c) => !updated.some((u) => u.type === c.type));
 
         const calls = [
             ...toAssign.map((form) => this.client.form.assignConfiguration(form.type, nodeId)),
-            ...toRemove.map((form) => this.client.form.removeConfiguration(form.type, nodeId)),
+            ...toRemove.map((form) => this.client.form.unassignConfiguration(form.type, nodeId)),
         ];
 
         if (calls.length === 0) {
-            return of(void 0);
+            return of(null);
         }
 
         return forkJoin(calls).pipe(
-            map(() => void 0),
+            map(() => null),
             tap(() => {
                 this.notification.show({
                     type: 'success',

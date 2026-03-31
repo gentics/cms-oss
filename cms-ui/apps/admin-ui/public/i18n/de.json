@@ -154,6 +154,7 @@
         "description": "Beschreibung",
         "feature_active": "Aktiv",
         "features_updated": "Node Features wurde erfolgreich geändert",
+        "forms_updated": "Node Formulare wurden erfolgreich geändert",
         "hostnameType": "Hostnamen angeben",
         "hostnameType_value": "Hostnamen direkt eingeben",
         "hostnameType_property": "Hostnamen aus Eigenschaft holen",

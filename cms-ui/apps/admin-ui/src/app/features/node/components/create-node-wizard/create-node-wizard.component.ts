@@ -12,7 +12,6 @@ import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesComponent, NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
 import { PickListItem } from '@gentics/ui-core';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
 const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
@@ -77,7 +76,6 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         private nodeOps: NodeOperations,
         private featureOps: FeatureOperations,
         private nodeHandler: NodeHandlerService,
-        private client: GCMSRestClientService,
     ) { }
 
     ngOnInit(): void {
@@ -88,8 +86,8 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
             switchMap(() => this.nodeOps.getAvailableFeatures({ sort: [ { attribute: 'id' } ] })),
         );
 
-        this.client.form.listConfigurations().subscribe((res) => {
-            this.allFormTypes = res.items;
+        this.nodeHandler.listAllFormConfigurations().subscribe((items) => {
+            this.allFormTypes = items;
         });
 
         this.fgNodeFeatures.valueChanges.subscribe((value) => {

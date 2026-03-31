@@ -5,6 +5,7 @@
             data-context-trigger
             size="small"
             type="secondary"
+            [attr.data-id]="activeLanguage?.code"
         >
             <icon left>language</icon>{{ activeLanguage?.name }}
         </gtx-button>

@@ -1,9 +1,12 @@
 <div
     class="editor-shell"
     [class.palette-dragging]="isPaletteDragging"
-    [class.left-panel-expanded]="leftSidebarExpanded"
+    [class.left-panel-expanded]="viewMode() === FormGridViewMode.EDITOR && leftSidebarExpanded"
     [class.right-panel-wide]="selectedElementId && rightSidebarExpanded"
+    [class.no-left-panel]="viewMode() === FormGridViewMode.PREVIEW"
     [class.no-right-panel]="!selectedElementId || !selectedElementDraft"
+    [class.editor-active]="viewMode() === FormGridViewMode.EDITOR"
+    [class.preview-active]="viewMode() === FormGridViewMode.PREVIEW"
 >
 
     <div class="editor-body">
@@ -104,7 +107,7 @@
                     </div>
 
                     <div class="resize-grid-overlay__ticks">
-                        @for (n of (1 | gtxRange:13); track n) {
+                        @for (n of (1 | gtxRange:12); track n) {
                             <div
                                 class="resize-grid-overlay__tick"
                                 [class.is-active]="n === resizeOverlaySpan"
@@ -147,6 +150,10 @@
             </div>
         </main>
 
+        <main class="preview-main">
+            Welcome to preview!
+        </main>
+
         @if (selectedElementId && selectedElementDraft) {
             <aside
                 class="editor-panel editor-panel--right"
@@ -169,7 +176,7 @@
                 </div>
 
                 <div class="panel-content">
-                    <gtx-tabs>
+                    <gtx-tabs class="element-tabs">
                         <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
                             Definitions!
                         </gtx-tab>

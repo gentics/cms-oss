@@ -9,11 +9,13 @@ import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import {
     FormGridComponent,
     FormGridElementsContainerComponent,
+    FormPageManagerComponent,
 } from './components';
 
 const COMPONENTS = [
     FormGridComponent,
     FormGridElementsContainerComponent,
+    FormPageManagerComponent,
 ];
 
 @NgModule({

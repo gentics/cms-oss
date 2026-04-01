@@ -16,19 +16,21 @@ export class RangePipe implements PipeTransform {
         let max = 0;
 
         if (maxOrInclusive != null) {
-            if (typeof maxOrInclusive === 'number') {
+            if (typeof maxOrInclusive === 'boolean') {
+                max = minOrMax;
+                inclusive = maxOrInclusive;
+            } else if (typeof maxOrInclusive === 'number') {
                 min = minOrMax;
                 max = maxOrInclusive;
             } else {
-                min = minOrMax;
-                inclusive = !!maxOrInclusive;
+                max = minOrMax;
             }
         } else {
             max = minOrMax;
         }
 
         const out = [];
-        out.length = (max - (inclusive ? 0 : 1)) - min;
+        out.length = (max + (inclusive ? 1 : 0)) - min;
         return Array.from(out).map((_, idx) => idx + min);
     }
 }

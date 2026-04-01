@@ -88,6 +88,31 @@
                 </div>
             }
 
+            @if (editorState?.editMode === EditMode.EDIT && currentItem && currentItem?.type === 'form') {
+                <div class="form-editing-actions">
+                    <gtx-form-page-manager
+                        [uiSchema]="formUiSchema"
+                        (uiSchemaChange)="updateFormUiSchema($event)"
+                        [pageIndex]="formPageIndex"
+                        (pageIndexChange)="updateFormPageIndex($event)"
+                        [restricted]="formRestricted"
+                    ></gtx-form-page-manager>
+
+                    <gtx-tabs class="form-view-modes" pure [activeId]="formViewMode">
+                        <gtx-tab
+                            [id]="FormGridViewMode.EDITOR"
+                            [title]="'form_grid.view_mode_tab_editor' | gtxI18n"
+                            (select)="updateFormViewMode(FormGridViewMode.EDITOR)"
+                        ></gtx-tab>
+                        <gtx-tab
+                            [id]="FormGridViewMode.PREVIEW"
+                            [title]="'form_grid.view_mode_tab_preview' | gtxI18n"
+                            (select)="updateFormViewMode(FormGridViewMode.PREVIEW)"
+                        ></gtx-tab>
+                    </gtx-tabs>
+                </div>
+            }
+
             <div class="toolbar-actions">
                 <div class="item-status">
                     <item-status-label

@@ -18,16 +18,28 @@
     height: 100%;
     min-height: 0;
 
-    &.no-right-panel {
-        --right-panel-width: 0;
-    }
-
     &.right-panel-wide {
         --right-panel-width: var(--right-w);
     }
 
     &.left-panel-expanded {
         --left-panel-width: var(--left-w);
+    }
+
+    &.no-right-panel {
+        --right-panel-width: 0;
+    }
+
+    &.no-left-panel {
+        --left-panel-width: 0;
+    }
+
+    &:not(.editor-active) .editor-main {
+        display: none;
+    }
+
+    &:not(.preview-active) .preview-main {
+        display: none;
     }
 }
 
@@ -977,5 +989,12 @@ gtx-checkbox [type='checkbox']+label:before {
     .drop-placeholder__cols {
         animation: none !important;
         transition: none !important;
+    }
+}
+
+.element-tabs::ng-deep {
+    .tab-links .tab-link {
+        flex: 1 1 auto;
+        text-align: center;
     }
 }

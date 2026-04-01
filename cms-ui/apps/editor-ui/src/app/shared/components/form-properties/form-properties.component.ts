@@ -167,6 +167,8 @@ export class FormPropertiesComponent
     }
 
     protected configureForm(value: Omit<EditableFormProperties, 'schema' | 'uiSchema'>, loud?: boolean): void {
+        setControlsEnabled(this.form, ['formType'], this.mode === FormPropertiesMode.CREATE);
+
         if (this.formTypeConfigurations != null) {
             this.activeConfiguration = this.formTypeConfigurations[value.formType];
         }

@@ -108,6 +108,11 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
     public selectElementById(id: string, event?: MouseEvent): void {
         cancelEvent(event);
+
+        if (this.resizing()) {
+            return;
+        }
+
         this.selectedElementId.set(id);
     }
 
@@ -269,6 +274,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     return;
                 }
 
+                cancelEvent(e);
                 const surface = this.resizeSurfaceEl;
                 if (!surface) {
                     return;
@@ -301,14 +307,18 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     return;
                 }
 
-                this.zone.run(() => {
+                cancelEvent(e);
+
+                this.resizePointerId = null;
+                this.resizeTarget = null;
+                this.resizeSurfaceEl = null;
+                this.resizeRowBaseCols = 0;
+                this.resizeRowMaxSpan = 12;
+                this.resizeOverlayActive.set(false);
+
+                // Hacky way to prevent an accidental "click"/selection to occur during resizing of an element
+                setTimeout(() => {
                     this.resizing.set(false);
-                    this.resizePointerId = null;
-                    this.resizeTarget = null;
-                    this.resizeSurfaceEl = null;
-                    this.resizeRowBaseCols = 0;
-                    this.resizeRowMaxSpan = 12;
-                    this.resizeOverlayActive.set(false);
                 });
 
                 window.removeEventListener('pointermove', onMove);

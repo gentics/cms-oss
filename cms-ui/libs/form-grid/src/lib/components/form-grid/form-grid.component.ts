@@ -7,7 +7,6 @@ import {
     model,
     OnDestroy,
     OnInit,
-    signal,
 } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import {
@@ -23,6 +22,7 @@ import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
 import { LINE_OPTIONS } from '../../constants/line-options';
 import { ElementLocation, PALETTE_MIME, PaletteDropTarget } from '../../models';
+import { FormGridViewMode } from '../../models/public';
 
 enum EditTabs {
     DEFINITION = 'definition',
@@ -42,16 +42,25 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly ELEMENT_ROOT_CONTAINER_ID = uuidV4();
     public readonly LINE_OPTIONS = LINE_OPTIONS;
     public readonly EditTabs = EditTabs;
+    public readonly FormGridViewMode = FormGridViewMode;
 
     /* INPUTS / OUTPUTS
      * ===================================================================== */
 
     public readonly config = input.required<FormTypeConfiguration>();
+    /** If this form-grid is in the restricted mode */
     public readonly restricted = input.required<boolean>();
+    /** All languages of the current form */
     public readonly languages = input.required<string[]>();
 
+    /** Schema of the current form */
     public readonly schema = model.required<FormSchema>();
+    /** UI-Schema of the current form */
     public readonly uiSchema = model.required<FormUISchema>();
+    /** Index of the currently viewed form page */
+    public readonly pageIndex = model.required<number>();
+    /** Which content to display */
+    public readonly viewMode = input.required<FormGridViewMode>();
 
     /* PAGE & VIEW
      * ===================================================================== */
@@ -61,9 +70,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         return this.uiSchema()?.pages?.[this.pageIndex()]?.elements || [];
     });
 
-    /** Index of the currently viewed form page */
-
-    public readonly pageIndex = signal<number>(0);
     /** The ID of the currently active element */
     public selectedElementId: string | null = null;
     /** Location of the currently selected element */
@@ -102,12 +108,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public resizeActive = false;
     public resizeOverlayActive = false;
     public resizeOverlaySpan = 12;
-
-    /* MISC
-     * ===================================================================== */
-
-    /** Which tab/mode is currently used */
-    public viewMode: 'preview' | 'editor' = 'editor';
 
     /* CONSTRUCTOR
      * ===================================================================== */
@@ -255,7 +255,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             this.selectedElementDraft = null;
             this.selectedElementSchema = null;
         }
-        if (this.viewMode === 'preview') {
+        if (this.viewMode() === FormGridViewMode.PREVIEW) {
             this.ensurePreviewBootstrapData();
         }
     }

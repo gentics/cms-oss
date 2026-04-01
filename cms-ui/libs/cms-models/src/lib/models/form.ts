@@ -133,9 +133,9 @@ export interface Form extends InheritableItem, EditableFormProperties {
      */
     readonly folderId: number;
     /**
-     * The translated label of `formType`
+     * The translated name of `formType` to display to the user directly
      */
-    readonly formTypeLabel: string;
+    readonly formTypeName: string;
     /**
      * Whether the form is modified (the last version of the form is not the currently published one)
      */

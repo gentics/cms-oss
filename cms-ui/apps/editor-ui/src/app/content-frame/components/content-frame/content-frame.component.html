@@ -12,6 +12,12 @@
             [locked]="isLocked"
             [itemPermissions]="itemPermissions"
             [itemLanguage]="itemLanguage"
+
+            [(formPageIndex)]="formPageIndex"
+            [(formViewMode)]="formViewMode"
+            [formUiSchema]="currentItem?.type === 'form' ? currentItem.uiSchema : null"
+            (formUiSchemaChange)="updateFormUiSchema($event)"
+
             (close)="closeEditor()"
             (save)="handleItemSave($event)"
             (timeManagement)="showTimeManagement($event)"
@@ -68,6 +74,8 @@
                 [config]="currentFormConfig"
                 [restricted]="!!currentFormConfig?.external"
                 [languages]="currentItem.languages"
+                [(pageIndex)]="formPageIndex"
+                [viewMode]="formViewMode"
 
                 [schema]="currentItem.schema"
                 [uiSchema]="currentItem.uiSchema"

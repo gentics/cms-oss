@@ -1,0 +1,10 @@
+
+<div class="form-page-info">
+    <span class="info-title">{{ 'form_grid.pagination_title' | gtxI18n }}</span>
+
+    <div class="page-data">
+        <span class="page-current">{{ pageIndex() + 1 }}</span>
+        <span class="page-separator">/</span>
+        <span class="page-total">{{ uiSchema().pages?.length }}</span>
+    </div>
+</div>

@@ -176,9 +176,66 @@
 
                 <div class="panel-content">
                     <gtx-tabs class="element-tabs">
-                        <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
-                            Definitions!
-                        </gtx-tab>
+                        @if (!restricted() && selectedElementSchemaDraft != null) {
+                            <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
+                                <div class="definition-section">
+                                    <div class="definition-section-title">
+                                        {{ 'form_grid.definition_section_title' | gtxI18n }}
+                                    </div>
+
+                                    <div class="definition-fields">
+                                        <div class="definition-field">
+                                            <label class="definition-label" for="def-control-type">
+                                                {{ 'form_grid.definition_control_type' | gtxI18n }}
+                                            </label>
+                                            <select
+                                                id="def-control-type"
+                                                class="fg-select"
+                                                [(ngModel)]="selectedElementSchemaDraft.type"
+                                                (ngModelChange)="onDefinitionChange()"
+                                            >
+                                                @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
+                                                    <option [value]="ctlEntry.key">{{ ctlEntry.value.labelI18n | gtxI18nObject }}</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <div class="definition-field">
+                                            <label class="definition-label" for="def-name">
+                                                {{ 'form_grid.definition_name' | gtxI18n }}
+                                            </label>
+                                            <input
+                                                id="def-name"
+                                                type="text"
+                                                class="fg-input"
+                                                [(ngModel)]="selectedElementSchemaDraft.name"
+                                                (ngModelChange)="onDefinitionChange()"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="definition-checkboxes">
+                                        <gtx-checkbox
+                                            [label]="'form_grid.definition_mandatory' | gtxI18n"
+                                            [(ngModel)]="selectedElementSchemaDraft.mandatory"
+                                            (ngModelChange)="onDefinitionChange()"
+                                        ></gtx-checkbox>
+
+                                        <gtx-checkbox
+                                            [label]="'form_grid.definition_sync_on_change' | gtxI18n"
+                                            [(ngModel)]="selectedElementSchemaDraft.updateOnChange"
+                                            (ngModelChange)="onDefinitionChange()"
+                                        ></gtx-checkbox>
+
+                                        <gtx-checkbox
+                                            [label]="'form_grid.definition_multivalue' | gtxI18n"
+                                            [(ngModel)]="selectedElementSchemaDraft.isList"
+                                            (ngModelChange)="onDefinitionChange()"
+                                        ></gtx-checkbox>
+                                    </div>
+                                </div>
+                            </gtx-tab>
+                        }
                         <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
                             <gtx-form-element-settings
                                 [element]="selectedElement"

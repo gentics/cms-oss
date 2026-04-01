@@ -255,24 +255,24 @@
         min-width: 0;
         /* override global min-width that can cause overflow */
     }
+}
 
-    .fg-select {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 8px 10px;
-        border-radius: 10px;
-        border: 1px solid #d9d9d9;
-        background: #ffffff;
-        font-size: 14px;
-        transition:
-            border-color 160ms ease,
-            box-shadow 160ms ease;
+.editor-panel .fg-select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    background: #ffffff;
+    font-size: 14px;
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease;
 
-        &:focus {
-            outline: none;
-            border-color: #0096dc;
-            box-shadow: 0 0 0 3px rgba(0, 150, 220, 0.15);
-        }
+    &:focus {
+        outline: none;
+        border-color: #0096dc;
+        box-shadow: 0 0 0 3px rgba(0, 150, 220, 0.15);
     }
 }
 
@@ -293,6 +293,75 @@
     >input[type='checkbox'] {
         margin: 0;
         flex: 0 0 auto;
+    }
+}
+
+/* --- Definition tab --- */
+.editor-panel .definition-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 0;
+}
+
+.editor-panel .definition-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(0, 0, 0, 0.75);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+/* 2-column grid: Control Type + Name */
+.editor-panel .definition-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.editor-panel .definition-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.editor-panel .definition-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.1px;
+}
+
+/* Text input styled to match .fg-select */
+.editor-panel .fg-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    background: #ffffff;
+    font-size: 14px;
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+
+    &:focus {
+        outline: none;
+        border-color: #0096dc;
+        box-shadow: 0 0 0 3px rgba(0, 150, 220, 0.15);
+    }
+}
+
+/* Checkbox stack in definition tab */
+.editor-panel .definition-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    gtx-checkbox {
+        float: none;
+        margin: 0;
     }
 }
 

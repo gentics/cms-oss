@@ -112,6 +112,9 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public selectedElementConfiguration: FormElementConfiguration | null = null;
     /** The schema definition of the selected element (if it has one) */
     public selectedElementSchema: FormSchemaProperty | null = null;
+    /** Editable copy of the selected element's schema property.
+     *  Null for formgrid blocks (Text, Image, Spacer) which have no schema entry. */
+    public selectedElementSchemaDraft: Partial<FormSchemaProperty> | null = null;
 
     /* PALETTE
      * ===================================================================== */
@@ -266,6 +269,35 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.updatePageElements(newElements);
     }
 
+    public onDefinitionChange(): void {
+        if (!this.selectedElementSchemaDraft || !this.selectedElement?.id) {
+            return;
+        }
+
+        const elementId = this.selectedElement.id;
+        const currentSchema = this.schema();
+
+        if (!currentSchema?.properties) {
+            return;
+        }
+
+        const copy = structuredClone(currentSchema);
+
+        if (copy.properties[elementId] != null) {
+            Object.assign(copy.properties[elementId], this.selectedElementSchemaDraft);
+            this.updateSchema(copy);
+            return;
+        }
+
+        for (const innerProp of Object.values(copy.properties)) {
+            if (innerProp.properties?.[elementId] != null) {
+                Object.assign(innerProp.properties[elementId], this.selectedElementSchemaDraft);
+                this.updateSchema(copy);
+                return;
+            }
+        }
+    }
+
     private ensurePreviewBootstrapData(): void {
         try {
             this.previewFormJson = JSON.stringify({
@@ -312,6 +344,9 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.selectedElementContainerId = data.containerId;
         this.selectedElementConfiguration = controlConfig || blockConfig;
         this.selectedElementSchema = elementSchema;
+        this.selectedElementSchemaDraft = elementSchema
+            ? structuredClone(elementSchema)
+            : null;
     }
 
     public clearSelectedElement(): void {
@@ -320,6 +355,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.selectedElementContainerId = null;
         this.selectedElementConfiguration = null;
         this.selectedElementSchema = null;
+        this.selectedElementSchemaDraft = null;
     }
 
     // TODO: Do it more angular like, as creating a new untracked HTMLElement is not a great idea

@@ -1053,6 +1053,7 @@ export interface FormCreateRequest extends Partial<EditableFormProperties> {
     nodeId?: number;
     folderId: number;
     languages: string[];
+    formType: string;
 }
 
 /**

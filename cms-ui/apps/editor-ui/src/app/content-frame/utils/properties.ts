@@ -41,7 +41,6 @@ export function getItemProperties(item: InheritableItem | Node): EditablePropert
         case 'form':{
             const f = item as Form;
             const props: Partial<EditableFormProperties> = {
-                formType: f.formType,
                 name: f.name,
                 fileName: f.fileName,
                 description: f.description,

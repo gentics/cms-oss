@@ -4,42 +4,7 @@ import { InheritableItem, ItemVersion } from './item';
 import { Raw } from './type-util';
 import { User } from './user';
 
-/*
- * Temporary Compatibility types for renaming values
- */
-/** @deprecated */
-export type IForm = Form;
-/** @deprecated */
-export type ISchema = FormSchema;
-/** @deprecated */
-export type ISchemaFieldProperties = FormSchemaProperty;
-/** @deprecated */
-export type ISchemaFields = FormSchemaProperties;
-/** @deprecated */
-export type IValidation = FormPropertyValidation;
-/** @deprecated */
-export type UiSchema = FormUISchema;
-/** @deprecated */
-export type Element = FormElement;
-/** @deprecated */
-export type IFormGridOptions = FormGridOptions;
-/** @deprecated */
-export type IFormGridImageOptions = FormGridImageOptions;
-/** @deprecated */
-export type IFormgridType = FormgridType;
-/** @deprecated */
-export interface IFoundElement {
-    element: Element | undefined;
-    pageInUiSchema: number;
-}
-
 export interface EditableFormProperties {
-    /**
-     * The form-type of the form. Used to identify which form-configuration
-     * has has to be used for this form.
-     * May only be edited when creating a new form.
-     */
-    formType: string;
     /**
      * The name of the form
      */
@@ -132,6 +97,12 @@ export interface Form extends InheritableItem, EditableFormProperties {
      * The folderId in which the form resides in
      */
     readonly folderId: number;
+    /**
+     * The form-type of the form. Used to identify which form-configuration
+     * has has to be used for this form.
+     * May only be edited when creating a new form.
+     */
+    readonly formType: string;
     /**
      * The translated name of `formType` to display to the user directly
      */
@@ -455,7 +426,7 @@ export interface FormElement {
     /**
      * Sub-Elements, when this is a container block or a aggregate container.
      */
-    elements?: Element[];
+    elements?: FormElement[];
     /**
      * On which page this element belongs to
      */

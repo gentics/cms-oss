@@ -11,7 +11,7 @@
             @if (formTypeConfigurations) {
                 <gtx-select
                     class="columns small-12"
-                    [label]="('editor.item_type_label' | gtxI18n) + '*'"
+                    [label]="('editor.form_type_label' | gtxI18n) + '*'"
                     [multiple]="false"
                     formControlName="formType"
                 >
@@ -21,6 +21,13 @@
                         </gtx-option>
                     }
                 </gtx-select>
+            } @else if (item?.formTypeName) {
+                <gtx-input
+                    class="columns small-12"
+                    [label]="('editor.form_type_label' | gtxI18n) + '*'"
+                    [readonly]="true"
+                    [value]="item.formTypeName"
+                ></gtx-input>
             }
 
             <gtx-input
@@ -77,7 +84,7 @@
         </div>
 
         <div class="flex-row">
-            <div class="gtx-form-section-title">{{ 'editor.title_administrator_email' | gtxI18n }}</div>
+            <div class="gtx-form-section-title">{{ 'editor.form_administrator_email_title' | gtxI18n }}</div>
 
             <gtx-input
                 class="columns small-12"
@@ -174,7 +181,7 @@
         </div>
 
         <div class="form-section-container">
-            <div class="gtx-form-section-title">{{ 'editor.title_success_page' | gtxI18n }}</div>
+            <div class="gtx-form-section-title">{{ 'editor.form_success_page_title' | gtxI18n }}</div>
 
             <ng-container
                 gtx-radio-group

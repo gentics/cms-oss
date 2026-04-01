@@ -34,6 +34,10 @@ export enum FormPropertiesMode {
     EDIT = 'edit',
 }
 
+export interface FormPropertiesData extends Omit<EditableFormProperties, 'schema' | 'uiSchema'> {
+    formType: string;
+}
+
 @Component({
     selector: 'gtx-form-properties',
     templateUrl: './form-properties.component.html',
@@ -46,7 +50,7 @@ export enum FormPropertiesMode {
     standalone: false,
 })
 export class FormPropertiesComponent
-    extends BaseFormPropertiesComponent<Omit<EditableFormProperties, 'schema' | 'uiSchema'>>
+    extends BaseFormPropertiesComponent<FormPropertiesData>
     implements OnInit, OnChanges {
 
     @Input()
@@ -98,20 +102,22 @@ export class FormPropertiesComponent
     public ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.client.form.listConfigurations({
-            nodeId: this.nodeId,
-            external: false,
-        }).subscribe((res) => {
-            this.formTypeConfigurations = {};
-            for (const config of res.items) {
-                this.formTypeConfigurations[config.type] = config;
-            }
-            if (this.form) {
-                this.activeConfiguration = this.formTypeConfigurations[this.form.value.formType];
-            }
+        if (this.mode === FormPropertiesMode.CREATE) {
+            this.subscriptions.push(this.client.form.listConfigurations({
+                nodeId: this.nodeId,
+                external: false,
+            }).subscribe((res) => {
+                this.formTypeConfigurations = {};
+                for (const config of res.items) {
+                    this.formTypeConfigurations[config.type] = config;
+                }
+                if (this.form) {
+                    this.activeConfiguration = this.formTypeConfigurations[this.form.value.formType];
+                }
 
-            this.changeDetector.markForCheck();
-        }));
+                this.changeDetector.markForCheck();
+            }));
+        }
 
         if (typeof this.value?.successPageId === 'number' && this.value?.successPageId !== 0) {
             this.subscriptions.push(this.client.page.get(this.value?.successPageId, {
@@ -146,8 +152,8 @@ export class FormPropertiesComponent
         );
     }
 
-    protected createForm(): FormGroup<FormProperties<Omit<EditableFormProperties, 'schema' | 'uiSchema'>>> {
-        return new FormGroup<FormProperties<Omit<EditableFormProperties, 'schema' | 'uiSchema'>>>({
+    protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
+        return new FormGroup<FormProperties<FormPropertiesData>>({
             name: new FormControl(this.safeValue('name'), Validators.required),
             formType: new FormControl(this.safeValue('formType'), Validators.required),
             description: new FormControl(this.safeValue('description')),
@@ -166,15 +172,14 @@ export class FormPropertiesComponent
         });
     }
 
-    protected configureForm(value: Omit<EditableFormProperties, 'schema' | 'uiSchema'>, loud?: boolean): void {
+    protected configureForm(value: FormPropertiesData, loud?: boolean): void {
         setControlsEnabled(this.form, ['formType'], this.mode === FormPropertiesMode.CREATE);
-
         if (this.formTypeConfigurations != null) {
             this.activeConfiguration = this.formTypeConfigurations[value.formType];
         }
     }
 
-    protected assembleValue(value: Omit<EditableFormProperties, 'schema' | 'uiSchema'>): Omit<EditableFormProperties, 'schema' | 'uiSchema'> {
+    protected assembleValue(value: FormPropertiesData): FormPropertiesData {
         if (this.activeConfiguration?.flows?.length > 0 && value.flow == null) {
             value.flow = this.activeConfiguration.flows[0].id;
         }

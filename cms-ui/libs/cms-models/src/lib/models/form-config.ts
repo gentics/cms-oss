@@ -78,7 +78,26 @@ export type FormUserSetting = FormBaseSetting & {
  * Picker where a reference to one or more CMS Objects can be selected
  */
 export type FormReferenceSetting = FormBaseSetting & {
-    referenceTypes: ('page' | 'file' | 'image')[];
+    /**
+     * Which items are allowed to be selected
+     */
+    referenceTypes: ('page' | 'file' | 'image' | 'folder')[];
+    /**
+     * For pages, which markup-language the template of the page has to have to be selectable
+     */
+    allowedMarkupLanguageIds?: number[];
+    /**
+     * If multiple items can be picked
+     */
+    multiple?: boolean;
+    /**
+     * If only items from the current node (from where the node is), are allowed to be selected.
+     */
+    onlyInCurrentNode?: boolean;
+    /**
+     * The title in the repository-browser
+     */
+    titleI18n?: I18nString;
 };
 
 export type FormControlConfiguration = FormElementConfiguration & FormControlAggregateSettings;

@@ -7,7 +7,7 @@ import { Subscription, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { v4 as uuidV4 } from 'uuid';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
-import { FormPropertiesMode } from '../form-properties/form-properties.component';
+import { FormPropertiesMode, FormPropertiesData } from '../form-properties/form-properties.component';
 
 @Component({
     selector: 'create-form-modal',
@@ -33,7 +33,7 @@ export class CreateFormModalComponent
     public activeLanguage: Language = null;
 
     public loading = false;
-    public control: FormControl<EditableFormProperties>;
+    public control: FormControl<FormPropertiesData>;
 
     private subscriptions: Subscription[] = [];
 
@@ -47,7 +47,7 @@ export class CreateFormModalComponent
     }
 
     ngOnInit(): void {
-        this.control = new FormControl<EditableFormProperties>(this.defaultProps as any);
+        this.control = new FormControl<FormPropertiesData>(this.defaultProps as any);
 
         const folderState = this.appState.now.folder;
 

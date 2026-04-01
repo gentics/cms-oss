@@ -148,10 +148,10 @@
               [label]="'node.default_image_folder' | gtxI18n"
               formControlName="defaultImageFolderId"
             ></gtx-folder-picker>
-            @if (form?.controls?.externalFormsDefaultFolderId?.enabled) {
+            @if (form?.controls?.defaultFormFolderId?.enabled) {
               <gtx-folder-picker
                 [label]="'node.external_forms_default_folder' | gtxI18n"
-                formControlName="externalFormsDefaultFolderId"
+                formControlName="defaultFormFolderId"
               ></gtx-folder-picker>
             }
           }

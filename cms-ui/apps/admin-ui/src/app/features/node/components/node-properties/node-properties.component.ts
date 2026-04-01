@@ -25,7 +25,7 @@ import {
 
 export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'host' | 'hostProperty'
   | 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId'
-  | 'externalFormsDefaultFolderId' | 'pubDirSegment' | 'publishImageVariants'> & {
+  | 'defaultFormFolderId' | 'pubDirSegment' | 'publishImageVariants'> & {
       description?: string;
       previewType: NodePreviewurlType;
       hostType: NodeHostnameType;
@@ -208,7 +208,7 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
             }),
             defaultFileFolderId: new FormControl(this.safeValue('defaultFileFolderId')),
             defaultImageFolderId: new FormControl(this.safeValue('defaultImageFolderId')),
-            externalFormsDefaultFolderId: new FormControl(this.safeValue('externalFormsDefaultFolderId')),
+            defaultFormFolderId: new FormControl(this.safeValue('defaultFormFolderId')),
         });
     }
 
@@ -245,7 +245,7 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
             });
         }
 
-        setControlsEnabled(this.form, ['externalFormsDefaultFolderId'], this.formsEnabled, {
+        setControlsEnabled(this.form, ['defaultFormFolderId'], this.formsEnabled, {
             emitEvent: loud,
         });
     }

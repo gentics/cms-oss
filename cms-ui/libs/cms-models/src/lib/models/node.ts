@@ -26,7 +26,7 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     defaultImageFolderId?: number;
 
     /** Default Form Upload Folder ID */
-    externalFormsDefaultFolderId?: number;
+    defaultFormFolderId?: number;
 
     /** True if publishing content modifications is disabled */
     disablePublish: boolean;

@@ -1,21 +1,31 @@
 <div
     class="editor-shell"
     [class.palette-dragging]="isPaletteDragging"
-    [class.right-panel-wide]="!!selectedElementId && (!!isSelectedFormgridElement || !!isSelectedNormalElement)"
+    [class.left-panel-expanded]="viewMode() === FormGridViewMode.EDITOR && leftSidebarExpanded"
+    [class.right-panel-wide]="selectedElementId && rightSidebarExpanded"
+    [class.no-left-panel]="viewMode() === FormGridViewMode.PREVIEW"
     [class.no-right-panel]="!selectedElementId || !selectedElementDraft"
+    [class.editor-active]="viewMode() === FormGridViewMode.EDITOR"
+    [class.preview-active]="viewMode() === FormGridViewMode.PREVIEW"
 >
 
     <div class="editor-body">
-        <aside class="editor-panel editor-panel--left" aria-label="Linkes Panel">
+        <aside
+            class="editor-panel editor-panel--left"
+            aria-label="Linkes Panel"
+            [class.expanded]="leftSidebarExpanded"
+        >
 
             <div class="panel-header">
+                <div class="panel-header-title">{{ 'form_grid.new_element_title' | gtxI18n }}</div>
+
                 <button
                     class="panel-toggle-btn"
                     title="Linkes Panel ein-/ausklappen"
                     aria-label="Linkes Panel ein-/ausklappen"
-                    (click)="hideLeftSidebar()"
+                    (click)="toggleLeftSidebar()"
                 >
-                    <icon>chevron_left</icon>
+                    <icon>chevron_right</icon>
                 </button>
             </div>
 
@@ -23,7 +33,7 @@
 
                 @if (!restricted() && config().controls != null) {
                     <div class="panel-section">
-                        <div class="panel-section-title">{{ 'form_grid.section_controls' | gtxI18n }}</div>
+                        <div class="panel-segment-title">{{ 'form_grid.section_controls' | gtxI18n }}</div>
 
                         <div class="palette" [attr.aria-label]="'form_grid.section_controls' | gtxI18n">
                             @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
@@ -51,7 +61,7 @@
 
                 @if (config().blocks != null) {
                     <div class="panel-section">
-                        <div class="panel-section-title">{{ 'form_grid.section_blocks' | gtxI18n }}</div>
+                        <div class="panel-segment-title">{{ 'form_grid.section_blocks' | gtxI18n }}</div>
 
                         <div class="palette" [attr.aria-label]="'form_grid.section_blocks' | gtxI18n">
                             @for (blockEntry of (config().blocks | gtxEntries); track blockEntry.key) {
@@ -97,7 +107,7 @@
                     </div>
 
                     <div class="resize-grid-overlay__ticks">
-                        @for (n of (1 | gtxRange:13); track n) {
+                        @for (n of (1 | gtxRange:12); track n) {
                             <div
                                 class="resize-grid-overlay__tick"
                                 [class.is-active]="n === resizeOverlaySpan"
@@ -108,139 +118,65 @@
                     </div>
                 </div>
 
-                <gtx-sortable-list
-                    class="editor-drop-container editor-drop-container--root"
-                    data-drop-container-id="root"
-                    [class.is-palette-drop-target]="isPaletteDropContainer(items())"
-                    (dragenter)="onPaletteContainerDragOver($event, items(), 'root')"
-                    (dragover)="onPaletteContainerDragOver($event, items(), 'root')"
-                    (drop)="onPaletteContainerDrop($event, items(), 'root')"
-                    (dragEnd)="sortList($event)"
-                >
-                    @if (isPalettePlaceholderVisible(items(), 0) && !items().length) {
-                        <div
-                            class="drop-placeholder form-item columns small-12 drop-placeholder--empty"
-                            aria-hidden="true"
-                        >
-                            <div class="drop-placeholder__box">
-                            <span class="drop-placeholder__line" aria-hidden="true"></span>
-                            <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
-                                name: (paletteDragConfig?.labelI18n | gtxI18nObject)
-                            } }}</span>
-                            <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items()) }}/12</span>
-                            </div>
-                        </div>
-                    }
+                <gtx-form-grid-elements-container
+                    class="root-container"
 
-                    @for (displayItem of displayItems(); track displayItem.id) {
-                        @let item = displayItem.element;
+                    [config]="config()"
+                    [rootId]="ELEMENT_ROOT_CONTAINER_ID"
+                    [id]="ELEMENT_ROOT_CONTAINER_ID"
+                    [level]="0"
+                    [pageIndex]="pageIndex()"
+                    [languages]="languages()"
+                    [restricted]="restricted()"
+                    [gridSurface]="gridSurface"
 
-                        @if (displayItem.config) {
-                            @if (isPalettePlaceholderVisible(items(), $index)) {
-                                <div
-                                    class="drop-placeholder form-item columns"
-                                    [ngClass]="'small-' + getPalettePlaceholderSpan(items())"
-                                    aria-hidden="true"
-                                >
-                                    <div class="drop-placeholder__box">
-                                        <span class="drop-placeholder__line" aria-hidden="true"></span>
-                                        <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
-                                            name: (paletteDragConfig?.labelI18n | gtxI18nObject)
-                                        } }}</span>
-                                        <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items()) }}/12</span>
-                                    </div>
-                                </div>
-                            }
+                    [elements]="items()"
+                    (elementsChange)="updatePageElements($event)"
+                    [selectedElementId]="selectedElementId"
+                    (selectedElementIdChange)="selectElementById($event)"
+                    [schema]="schema()"
+                    (schemaChange)="updateSchema($event)"
 
-                            @if (item.type == 'property') {
-                                <gtx-sortable-item
-                                    [class.is-selected-card]="selectedElementId != null && item?.id === selectedElementId"
-                                    [ngClass]="'form-item columns small-' + item.formGridOptions?.numberOfColumns"
-                                    data-drop-item="true"
-                                    [attr.data-drop-index]="$index"
-                                >
-                                    <gtx-contents-list-item
-                                        class="fg-box"
-                                        [class.empty]="!item.label"
-                                        [attr.data-element-id]="item.id"
-                                        [class.is-selected]="selectedElementId != null && item?.id === selectedElementId"
-                                        (click)="selectElementById(item.id, $event)"
-                                    >
-                                        <div
-                                            class="grid-resize-handle"
-                                            aria-label="Elementbreite ändern"
-                                            title="Breite ändern"
-                                            (pointerdown)="onResizeStart($event, $index, items(), gridSurface)"
-                                        ></div>
+                    [(paletteDragging)]="isPaletteDragging"
+                    [(paletteDropTarget)]="paletteDropTarget"
+                    [paletteDragType]="paletteDragType"
+                    [paletteDragConfig]="paletteDragConfig"
+                    (platteDragStop)="paletteDragEnd()"
 
-                                        <div class="item-primary">
-                                            <div class="actions-container">
-                                                <span class="tag tag-type">
-                                                    <span class="tag-text">{{ item.label | gtxI18nObject }}</span>
-                                                </span>
-
-                                                @if (!displayItem.isControl || !restricted()) {
-                                                    <gtx-button
-                                                        type="alert"
-                                                        class="delete-button"
-                                                        [icon]="true"
-                                                        (click)="deleteElement($event, item, $index, items())"
-                                                    >
-                                                        <icon>delete_outline</icon>
-                                                    </gtx-button>
-                                                }
-                                            </div>
-
-                                            <strong
-                                                class="formtitle"
-                                                [class.is-selected-title]="selectedElementId != null && item?.id === selectedElementId"
-                                            >{{ (item.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
-                                        </div>
-                                    </gtx-contents-list-item>
-                                </gtx-sortable-item>
-                            }
-                        }
-                    }
-
-                    @if (isPalettePlaceholderVisible(items(), items().length) && items().length) {
-                        <div
-                            class="drop-placeholder form-item columns"
-                            [ngClass]="'small-' + getPalettePlaceholderSpan(items())"
-                            aria-hidden="true"
-                        >
-                            <div class="drop-placeholder__box">
-                                <span class="drop-placeholder__line" aria-hidden="true"></span>
-                                <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
-                                    name: (paletteDragConfig?.labelI18n | gtxI18nObject)
-                                } }}</span>
-                                <span class="drop-placeholder__cols">{{ getPalettePlaceholderSpan(items()) }}/12</span>
-                            </div>
-                        </div>
-                    }
-                </gtx-sortable-list>
+                    [(resizing)]="resizeActive"
+                    [(resizeOverlayActive)]="resizeOverlayActive"
+                    [(resizeOverlaySpan)]="resizeOverlaySpan"
+                ></gtx-form-grid-elements-container>
             </div>
+        </main>
+
+        <main class="preview-main">
+            Welcome to preview!
         </main>
 
         @if (selectedElementId && selectedElementDraft) {
             <aside
                 class="editor-panel editor-panel--right"
                 aria-label="Rechtes Panel"
+                [class.expanded]="rightSidebarExpanded"
             >
                 <div class="panel-header">
                     <button
                         class="panel-toggle-btn"
                         title="Rechtes Panel ein-/ausklappen"
                         aria-label="Rechtes Panel ein-/ausklappen"
-                        (click)="hideRightSidebar()"
+                        (click)="toggleRightSidebar()"
                     >
-                        <icon>chevron_right</icon>
+                        <icon>chevron_left</icon>
                     </button>
+
+                    <div class="panel-header-title">{{ 'form_grid.edit_element_title' | gtxI18n:{
+                        label: selectedElementDraft?.label | gtxI18nObject
+                    } }}</div>
                 </div>
 
                 <div class="panel-content">
-                    <div class="panel-segment-title">Element bearbeiten</div>
-
-                    <gtx-tabs>
+                    <gtx-tabs class="element-tabs">
                         <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
                             Definitions!
                         </gtx-tab>

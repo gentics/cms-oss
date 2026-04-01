@@ -1,10 +1,18 @@
 {
     "form_grid": {
+        "new_element_title": "Neue Elemente einfügen",
+        "edit_element_title": "Element \"{{label}}\" bearbeiten",
+        "insert_element_placeholder": "Element \"{{label}}\" einfügen",
         "section_controls": "Eingabe Elemente",
         "section_blocks": "Block Elemente",
-        "drag_element": "{{name}} ziehen",
-        "edit_tab_definition": "Defition",
+        "drag_element": "{{label}} ziehen",
+        "edit_tab_definition": "Definition",
         "edit_tab_settings": "Einstellungen",
-        "edit_tab_translations": "Übersetzungen"
+        "edit_tab_translations": "Übersetzungen",
+        "title_delete_element": "Element entfernen",
+        "confirm_element_delete": "Möchten Sie das element wirklich entfernen?",
+        "view_mode_tab_editor": "Editor",
+        "view_mode_tab_preview": "Preview",
+        "pagination_title": "Seite"
     }
 }

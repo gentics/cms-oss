@@ -3,6 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { JoinOptions, TranslateParameters } from '../../../common/models';
+import { I18nString } from '@gentics/cms-models';
 
 const DEFAULT_JOIN_OPTIONS: JoinOptions = {
     withLast: true,
@@ -21,6 +22,10 @@ export class I18nService {
 
     public getCurrentLanguage(): string {
         return this.translate.getCurrentLang();
+    }
+
+    public getFallbackLanguage(): string {
+        return this.translate.getFallbackLang();
     }
 
     public getAvailableLangues(): readonly string[] {
@@ -56,6 +61,25 @@ export class I18nService {
         key = this.preProcessKey(key, params);
         const translatedParams = this.translateParamsInstant(params);
         return this.translate.instant(key, translatedParams);
+    }
+
+    public fromObject(obj: I18nString, fallbackLanguage: string | null = this.getFallbackLanguage()): string {
+        if (obj == null || typeof obj !== 'object') {
+            return null;
+        }
+
+        const language = this.getCurrentLanguage();
+        const value = obj[language];
+
+        if (value != null) {
+            return value;
+        }
+
+        if (fallbackLanguage != null && fallbackLanguage !== language && obj[fallbackLanguage] != null) {
+            return obj[fallbackLanguage];
+        }
+
+        return null;
     }
 
     /**

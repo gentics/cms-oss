@@ -35,6 +35,7 @@ import {
     User,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { FormGridViewMode } from '@gentics/form-grid';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
 import { debounce, isEqual } from 'lodash-es';
 import {
@@ -158,7 +159,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     editMode: EditMode;
     // currently only used by form editor (not properties editing)
     itemValid = false;
+
+    // Form properties
     currentFormConfig: FormTypeConfiguration;
+    formPageIndex = 0;
+    formViewMode: FormGridViewMode = FormGridViewMode.EDITOR;
 
     iframeUrl: string;
     /** Hacky subject to debounce too fast URL changes, which may mess up the edit mode. */

@@ -44,7 +44,7 @@ export function colorToRGBA(inputColor: any): RGBAColor {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function colorToHex(inputColor: any): string {
+export function colorToHex(inputColor: any, removeAlpha: boolean = false): string {
     let rgba: RGBAColor;
     if (Array.isArray(inputColor)) {
         rgba = inputColor as RGBAColor;
@@ -59,8 +59,11 @@ export function colorToHex(inputColor: any): string {
     }
 
     // In case we have a color without an alpha-channel, we add it
-    if ((rgba as any).length === 3) {
+    if ((rgba as any).length === 3 && !removeAlpha) {
         rgba.push(255);
+    // If we have alpha, but shouldn't, remove it
+    } else if (rgba.length === 4 && removeAlpha) {
+        rgba = rgba.slice(0, 3) as any;
     }
 
     return '#' + rgba.map(function (channelValue) {

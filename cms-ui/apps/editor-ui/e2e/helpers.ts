@@ -515,8 +515,33 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
     await btn.click();
 }
 
-export function overrideAlohaConfig(page: Page, configFilename: string): Promise<void> {
+export function rereouteAlohaConfig(page: Page, configFilename: string): Promise<void> {
     return page.route('/internal/minimal/files/js/aloha-config.js', reroute('GET', `/internal/minimal/files/js/${configFilename}`));
+}
+
+export function overwriteAlohaConfigWith(page: Page, content: string): Promise<void> {
+    return page.route('/internal/minimal/files/js/aloha-config.js', (route) => {
+        route.fulfill({
+            status: 200,
+            contentType: 'text/javascript',
+            body: `
+"use strict";
+
+(() => {
+    // Only load, when Aloha is actually defined/loaded.
+    if (
+        Aloha == null
+        || typeof Aloha !== "object"
+        || typeof Aloha.settings !== "object"
+        || typeof Aloha.settings.plugins !== "object"
+    ) {
+        return;
+    }
+
+    ${content}
+});`,
+        });
+    });
 }
 
 export async function addSearchChip(searchBar: Locator, filter: string): Promise<Locator> {
@@ -543,3 +568,31 @@ export async function setDateChipValue(chip: Locator, value: Date): Promise<void
     await selectDateInPicker(datePickerModal, value);
     await clickModalAction(datePickerModal, 'confirm');
 }
+
+export function findColorPickerPaletteColor(picker: Locator, color: string): Locator {
+    return picker.locator(`.palette .palette-entry[data-value="${color}"]`);
+}
+
+export function findNthColorPickerPaletteColor(picker: Locator, index: number): Locator {
+    return picker.locator(`.palette .palette-entry`).nth(index);
+}
+
+export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
+    return test.step(`Pick palette color ${typeof colorOrIndex === 'number' ? 'on index' + colorOrIndex : colorOrIndex}`, async () => {
+        const dropdown = findDynamicDropdown(page, slot);
+        const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
+        const paletteColor = typeof colorOrIndex === 'number'
+            ? findNthColorPickerPaletteColor(colorPicker, colorOrIndex)
+            : findColorPickerPaletteColor(colorPicker, colorOrIndex);
+        const pickedHexColor = await paletteColor.getAttribute('data-value');
+        await paletteColor.click();
+
+        // If the dropdown needs a confirmation, then we have to click the confirm button
+        if (await dropdown.evaluate((el) => el.classList.contains('with-confirm'))) {
+            await dropdown.locator('.context-menu-header .header-confirm-button').click();
+        }
+
+        return pickedHexColor;
+    });
+}
+

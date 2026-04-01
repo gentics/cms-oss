@@ -4,12 +4,16 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  * Date that can be selected. Value will be a ISO-Date string
  */
+@JsonTypeName(DateSetting.TYPE)
 public class DateSetting extends BaseSetting {
 	private static final long serialVersionUID = 2206236044599941701L;
+
+	protected final static String TYPE = "date";
 
 	/**
 	 * If the editor should also be able to select a time"

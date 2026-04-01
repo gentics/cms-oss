@@ -14,16 +14,16 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		include = JsonTypeInfo.As.PROPERTY, 
 		property = "type")
 @JsonSubTypes({
-	@Type(value = StringSetting.class, name = "string"),
-	@Type(value = TranslationSetting.class, name = "translation"),
-	@Type(value = IntegerSetting.class, name = "integer"),
-	@Type(value = NumberSetting.class, name = "number"),
-	@Type(value = BooleanSetting.class, name = "boolean"),
-	@Type(value = DateSetting.class, name = "date"),
-	@Type(value = SelectSetting.class, name = "select"),
-	@Type(value = OptionsSetting.class, name = "options"),
-	@Type(value = UserSetting.class, name = "user"),
-	@Type(value = ReferenceSetting.class, name = "reference")
+	@Type(StringSetting.class),
+	@Type(TranslationSetting.class),
+	@Type(IntegerSetting.class),
+	@Type(NumberSetting.class),
+	@Type(BooleanSetting.class),
+	@Type(DateSetting.class),
+	@Type(SelectSetting.class),
+	@Type(OptionsSetting.class),
+	@Type(UserSetting.class),
+	@Type(ReferenceSetting.class)
 })
 /**
  * Common properties for all setting types

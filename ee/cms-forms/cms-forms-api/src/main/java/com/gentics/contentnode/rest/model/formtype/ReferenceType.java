@@ -7,6 +7,11 @@ import java.io.Serializable;
  */
 public enum ReferenceType implements Serializable {
 	/**
+	 * Reference to a CMS folder
+	 */
+	folder,
+
+	/**
 	 * Reference to a CMS page
 	 */
 	page,

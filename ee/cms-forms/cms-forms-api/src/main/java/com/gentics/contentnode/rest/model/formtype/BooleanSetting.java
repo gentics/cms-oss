@@ -4,12 +4,16 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  * Boolean/Checkbox that can be checked
  */
+@JsonTypeName(BooleanSetting.TYPE)
 public class BooleanSetting extends BaseSetting {
 	private static final long serialVersionUID = -121448269254812535L;
+
+	protected final static String TYPE = "boolean";
 
 	/**
 	 * Creator

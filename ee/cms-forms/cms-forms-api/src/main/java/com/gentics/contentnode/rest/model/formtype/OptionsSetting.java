@@ -4,14 +4,18 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gentics.contentnode.rest.deserializer.BooleanOrEditableDeserializer;
 
 /**
  * Allow the editor to create options which the user can then use
  */
+@JsonTypeName(OptionsSetting.TYPE)
 public class OptionsSetting extends BaseSetting {
 	private static final long serialVersionUID = -2269868773759926805L;
+
+	protected final static String TYPE = "options";
 
 	/**
 	 * If a boolean, defines if the rendered select for the end-user is multiple or not; If 'editable' the editor can define it.

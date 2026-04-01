@@ -4,12 +4,16 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  * Text which may be entered on a per language basis
  */
+@JsonTypeName(TranslationSetting.TYPE)
 public class TranslationSetting extends BaseSetting {
 	private static final long serialVersionUID = 871244316182096624L;
+
+	protected final static String TYPE = "translation";
 
 	/**
 	 * Whether rich content can be entered

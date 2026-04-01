@@ -5,14 +5,18 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import jakarta.validation.constraints.Size;
 
 /**
  * Select where one or more options can be selected
  */
+@JsonTypeName(SelectSetting.TYPE)
 public class SelectSetting extends BaseSetting {
 	private static final long serialVersionUID = -91439466760302592L;
+
+	protected final static String TYPE = "select";
 
 	/**
 	 * Selectable options

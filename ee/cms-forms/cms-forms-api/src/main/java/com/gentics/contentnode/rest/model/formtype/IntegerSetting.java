@@ -4,12 +4,16 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 /**
  * Integer number that can be entered
  */
+@JsonTypeName(IntegerSetting.TYPE)
 public class IntegerSetting extends BaseSetting {
 	private static final long serialVersionUID = -5310346505920772072L;
+
+	protected final static String TYPE = "integer";
 
 	/**
 	 * Creator

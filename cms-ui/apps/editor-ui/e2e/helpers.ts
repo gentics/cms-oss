@@ -42,6 +42,10 @@ export async function selectNode(element: Page | Locator, nodeId: number | strin
     });
 }
 
+export async function selectItem(item: Locator): Promise<void> {
+    await item.locator('icon-checkbox gtx-checkbox label').click();
+}
+
 export async function itemAction(item: Locator, action: string): Promise<void> {
     await test.step(`Perform item action "${action}"`, async () => {
         const dropdown = await openContext(item.locator('[data-action="item-context"]'));

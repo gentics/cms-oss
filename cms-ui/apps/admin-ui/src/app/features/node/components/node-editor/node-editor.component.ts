@@ -326,6 +326,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             publishImageVariants: this.entity?.publishImageVariants,
             defaultFileFolderId: this.entity?.defaultFileFolderId,
             defaultImageFolderId: this.entity?.defaultImageFolderId,
+            externalFormsDefaultFolderId: this.entity?.externalFormsDefaultFolderId,
             pubDirSegment: this.entity?.pubDirSegment,
             description: this.rootFolder?.description,
         };

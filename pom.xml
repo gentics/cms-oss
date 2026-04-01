@@ -42,7 +42,7 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<cms-oss.version>6.3.14</cms-oss.version>
+		<cms-oss.version>6.3.15-SNAPSHOT</cms-oss.version>
 		<generic-testutils.version>1.15.7</generic-testutils.version>
 		<mesh.forms.plugin.version>3.1.11</mesh.forms.plugin.version>
 		<hazelcast.version>5.5.0</hazelcast.version>
@@ -243,7 +243,6 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-shade-plugin</artifactId>
-					<version>2.1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.enunciate</groupId>

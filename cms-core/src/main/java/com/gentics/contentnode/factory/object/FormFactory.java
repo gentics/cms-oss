@@ -1161,6 +1161,10 @@ public class FormFactory extends AbstractFactory {
 					return getPublisher();
 				case "folder":
 					return getFolder();
+				case "externalId":
+					return getExternalId();
+				case "formType":
+					return getFormType();
 				default:
 					return super.get(key);
 				}

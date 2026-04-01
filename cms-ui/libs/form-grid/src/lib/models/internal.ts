@@ -22,8 +22,7 @@ export interface DropRow {
     items: DropItemRect[];
 }
 
-export interface ElementLocation {
-    location: FormElement[];
-    index: number;
+export interface ElementSelectionEvent {
     element: FormElement;
+    containerId: string;
 }

@@ -4,11 +4,11 @@ import {
     ConstructCategory,
     ConstructCategoryCreateRequest,
     EditableFileProps,
-    EditableFormProperties,
     File,
     Folder,
     FolderCreateRequest,
     Form,
+    FormCreateRequest,
     Group,
     GroupCreateRequest,
     GroupUserCreateRequest,
@@ -430,7 +430,7 @@ export interface ImageImportData extends EditableFileProps, ImportData {
     folderId: string;
 }
 
-export interface FormImportData extends Partial<EditableFormProperties>, ImportData {
+export interface FormImportData extends Omit<FormCreateRequest, 'nodeId' | 'folderId' | 'languages'>, ImportData {
     [IMPORT_TYPE]: typeof ITEM_TYPE_FORM;
 
     /** The nodes `IMPORT_ID` value */

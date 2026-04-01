@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, input, model, NgZone, OnChanges, output, signal, SimpleChanges } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    input,
+    model,
+    NgZone,
+    OnChanges,
+    output,
+    signal,
+    SimpleChanges,
+} from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import {
     FormControlConfiguration,
@@ -11,7 +22,7 @@ import {
 } from '@gentics/cms-models';
 import { cancelEvent, ISortableEvent, ModalService } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
-import { DropRow, PALETTE_MIME, PaletteDropTarget } from '../../models';
+import { DropRow, ElementSelectionEvent, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
 interface DisplayItem {
     id: string;
@@ -48,7 +59,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
     public schema = model.required<FormSchema>();
     public elements = model.required<FormElement[]>();
-    public selectedElementId = model<string | null>();
+    public selectedElement = input<FormElement | null>();
+    public elementSelect = output<ElementSelectionEvent>();
 
     /* PALETTE
      * ===================================================================== */
@@ -106,14 +118,17 @@ export class FormGridElementsContainerComponent implements OnChanges {
     /* TEMPLATE HANDLERS
      * ===================================================================== */
 
-    public selectElementById(id: string, event?: MouseEvent): void {
+    public selectElement(element: FormElement, event?: MouseEvent): void {
         cancelEvent(event);
 
         if (this.resizing()) {
             return;
         }
 
-        this.selectedElementId.set(id);
+        this.elementSelect.emit({
+            element,
+            containerId: this.id(),
+        });
     }
 
     public onPaletteContainerDragOver(event: DragEvent): void {
@@ -543,7 +558,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
         this.elements.set(newElements);
         this.updateDisplayItems();
-        this.selectElementById(created.id);
+        this.selectElement(created);
         this.paletteDragging.set(false);
     }
 

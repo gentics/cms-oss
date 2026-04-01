@@ -1,0 +1,16 @@
+@for (setting of (elementConfig().settings || []); track setting.id) {
+    @switch (setting.type) {
+        @case("string") {
+            <gtx-input
+                [label]="setting.labelI18n | gtxI18nObject"
+                [required]="setting.required ?? false"
+                [value]="$any(element().formGridOptions)[setting.id]"
+                (valueChange)="updateSettingValue(setting.id, $event)"
+            ></gtx-input>
+        }
+
+        @default {
+            <p>Unknown setting type {{setting.type}}</p>
+        }
+    }
+}

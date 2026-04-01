@@ -13,7 +13,6 @@ import {
     FormElement,
     FormElementConfiguration,
     FormSchema,
-    FormSchemaProperties,
     FormSchemaProperty,
     FormTypeConfiguration,
     FormUISchema,
@@ -21,13 +20,25 @@ import {
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
 import { LINE_OPTIONS } from '../../constants/line-options';
-import { ElementLocation, PALETTE_MIME, PaletteDropTarget } from '../../models';
-import { FormGridViewMode } from '../../models/public';
+import { ElementSelectionEvent, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
 enum EditTabs {
     DEFINITION = 'definition',
     SETTINGS = 'settings',
     TRANSLATIONS = 'translations',
+}
+
+function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
+    for (const el of elements) {
+        if (data[el.id]) {
+            console.error(`An element with ID ${el.id} already exists in the map, which indicates that elements with the same ID are duplicated!`);
+        }
+        data[el.id] = el;
+
+        if (Array.isArray(el.elements)) {
+            addElementsToMap(data, el.elements);
+        }
+    }
 }
 
 @Component({
@@ -66,20 +77,41 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
      * ===================================================================== */
 
     /** All currently visible items, i.E. all elements from the current form page */
-    public readonly items = computed<FormElement[]>(() => {
+    public readonly elements = computed<FormElement[]>(() => {
         return this.uiSchema()?.pages?.[this.pageIndex()]?.elements || [];
     });
 
-    /** The ID of the currently active element */
-    public selectedElementId: string | null = null;
-    /** Location of the currently selected element */
-    public selectedElementLoc: ElementLocation | null = null;
+    /** Mapping of ID to each element in a flat map */
+    public readonly elementMap = computed<Record<string, FormElement>>(() => {
+        const data: Record<string, FormElement> = {};
+
+        for (const page of (this.uiSchema()?.pages || [])) {
+            if (page?.elements?.length > 0) {
+                addElementsToMap(data, page.elements);
+            }
+        }
+
+        return data;
+    });
+
+    /** If the left sidebar is expanded */
+    public leftSidebarExpanded = true;
+    /** If the right sidebar is expanded */
+    public rightSidebarExpanded = false;
+
+    /* SELECTION & EDITING
+     * ===================================================================== */
+
+    /** The currently selected element, which may be getting edited. */
+    public selectedElement: FormElement | null = null;
+    /** Which type the element is */
+    public selectedElementType: string | null = null;
+    /** The ID of the container where the selectedElement is contained in. */
+    public selectedElementContainerId: string | null = null;
+    /** The configuration of the currently selected element */
+    public selectedElementConfiguration: FormElementConfiguration | null = null;
     /** The schema definition of the selected element (if it has one) */
     public selectedElementSchema: FormSchemaProperty | null = null;
-    /** Data that is being edited in the right panel */
-    public selectedElementDraft: Partial<FormElement> | null = null;
-    public leftSidebarExpanded = true;
-    public rightSidebarExpanded = false;
 
     /* PALETTE
      * ===================================================================== */
@@ -105,8 +137,14 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     /* RESIZE
      * ===================================================================== */
 
+    /** If the editor is currently resizing an element */
     public resizeActive = false;
+    /** If the resize-overlay should be displayed */
     public resizeOverlayActive = false;
+    /**
+     * How many column-spans the current element has.
+     * Indicates how many bars are filled in the resize overlay.
+     */
     public resizeOverlaySpan = 12;
 
     /* CONSTRUCTOR
@@ -136,19 +174,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     /* IMPLEMENTATION
      * ===================================================================== */
-
-    // TODO: Make static
-    public get isSelectedFormgridElement(): boolean {
-        return !!this.selectedElementDraft?.formGridOptions?.type;
-    }
-
-    // TODO: Make static
-    public get isSelectedNormalElement(): boolean {
-        return (
-            !!this.selectedElementDraft
-            && !this.selectedElementDraft?.formGridOptions?.type
-        );
-    }
 
     public setResizing(flag: boolean): void {
         this.resizeActive = flag;
@@ -223,6 +248,24 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.schema.set(schema);
     }
 
+    public upsetElementChanges(data: FormElement): void {
+        if (this.selectedElementContainerId !== this.ELEMENT_ROOT_CONTAINER_ID) {
+            // TODO: handle nested elements
+            return;
+        }
+
+        const newElements = this.elements().slice();
+        const idx = newElements.findIndex((el) => el.id === data.id);
+
+        // If we can't find the element in the container data, then we have a problem
+        if (idx === -1) {
+            return;
+        }
+
+        newElements.splice(idx, 1, data);
+        this.updatePageElements(newElements);
+    }
+
     private ensurePreviewBootstrapData(): void {
         try {
             this.previewFormJson = JSON.stringify({
@@ -234,73 +277,49 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
     }
 
-    selectElementById(id?: string | null, event?: Event): void {
+    setSelectedElement(data?: ElementSelectionEvent | null, event?: Event): void {
         cancelEvent(event);
 
-        this.selectedElementId = id || null;
-        if (id) {
+        if (data == null || data.element == null || data.containerId == null) {
+            this.clearSelectedElement();
+            return;
+        }
+
+        const blockType = data.element.formGridOptions?.type || null;
+        const elementSchema = this.schema()?.properties?.[data.element.id] || null;
+        const controlConfig = elementSchema
+            ? this.config().controls[elementSchema?.type]
+            : null;
+        const blockConfig = blockType
+            ? this.config().blocks?.[blockType] || null
+            : null;
+
+        // If we have no configuration, we can't do anything with the element
+        if (!controlConfig && !blockConfig) {
+            this.clearSelectedElement();
+            return;
+        }
+
+        // If we had no element before, then the sidebar should be open fully
+        if (this.selectedElement == null) {
             this.rightSidebarExpanded = true;
-            this.selectedElementLoc = this.locateElementById(id, this.items());
-            this.selectedElementDraft = this.selectedElementLoc
-                ? structuredClone(this.selectedElementLoc.element)
-                : null;
-            this.selectedElementSchema = this.selectedElementDraft
-                ? this.findSchemaElement(
-                    (this.schema() || {}).properties,
-                    this.selectedElementDraft.id as string,
-                ) || null
-                : null;
-        } else {
-            this.selectedElementLoc = null;
-            this.selectedElementDraft = null;
-            this.selectedElementSchema = null;
         }
-        if (this.viewMode() === FormGridViewMode.PREVIEW) {
-            this.ensurePreviewBootstrapData();
-        }
+
+        this.selectedElement = data.element;
+        this.selectedElementType = elementSchema != null
+            ? elementSchema.type
+            : blockType;
+        this.selectedElementContainerId = data.containerId;
+        this.selectedElementConfiguration = controlConfig || blockConfig;
+        this.selectedElementSchema = elementSchema;
     }
 
-    private locateElementById(
-        id: string,
-        items: FormElement[] = [],
-    ): ElementLocation | null {
-        if (!Array.isArray(items)) {
-            return null;
-        }
-
-        for (let i = 0; i < items.length; i++) {
-            const el = items[i];
-            if (el.id === id) {
-                return { location: items, index: i, element: el };
-            }
-            if (el.type === 'aggregate' && Array.isArray(el.elements)) {
-                const nested = this.locateElementById(id, el.elements);
-                if (nested) {
-                    return nested;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private findSchemaElement(properties: FormSchemaProperties, key: string): FormSchemaProperty | null {
-        if (properties == null) {
-            return null;
-        }
-
-        if (properties[key]) {
-            return properties[key];
-        }
-
-        const entries = Object.values(properties);
-        for (const innerProps of entries) {
-            if (innerProps.properties?.[key]) {
-                return innerProps.properties[key];
-            }
-        }
-
-        return null;
+    public clearSelectedElement(): void {
+        this.selectedElement = null;
+        this.selectedElementType = null;
+        this.selectedElementContainerId = null;
+        this.selectedElementConfiguration = null;
+        this.selectedElementSchema = null;
     }
 
     // TODO: Do it more angular like, as creating a new untracked HTMLElement is not a great idea

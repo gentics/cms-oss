@@ -2,13 +2,12 @@
     class="editor-shell"
     [class.palette-dragging]="isPaletteDragging"
     [class.left-panel-expanded]="viewMode() === FormGridViewMode.EDITOR && leftSidebarExpanded"
-    [class.right-panel-wide]="selectedElementId && rightSidebarExpanded"
+    [class.right-panel-wide]="selectedElement != null && selectedElementConfiguration != null && rightSidebarExpanded"
     [class.no-left-panel]="viewMode() === FormGridViewMode.PREVIEW"
-    [class.no-right-panel]="!selectedElementId || !selectedElementDraft"
+    [class.no-right-panel]="selectedElement == null || selectedElementConfiguration == null"
     [class.editor-active]="viewMode() === FormGridViewMode.EDITOR"
     [class.preview-active]="viewMode() === FormGridViewMode.PREVIEW"
 >
-
     <div class="editor-body">
         <aside
             class="editor-panel editor-panel--left"
@@ -89,7 +88,7 @@
             </div>
         </aside>
 
-        <main class="editor-main" (click)="selectElementById(null)">
+        <main class="editor-main" (click)="clearSelectedElement()">
             <div
                 #gridSurface
                 class="list-container"
@@ -130,10 +129,10 @@
                     [restricted]="restricted()"
                     [gridSurface]="gridSurface"
 
-                    [elements]="items()"
+                    [elements]="elements()"
                     (elementsChange)="updatePageElements($event)"
-                    [selectedElementId]="selectedElementId"
-                    (selectedElementIdChange)="selectElementById($event)"
+                    [selectedElement]="selectedElement"
+                    (elementSelect)="setSelectedElement($event)"
                     [schema]="schema()"
                     (schemaChange)="updateSchema($event)"
 
@@ -154,7 +153,7 @@
             Welcome to preview!
         </main>
 
-        @if (selectedElementId && selectedElementDraft) {
+        @if (selectedElement && selectedElementConfiguration) {
             <aside
                 class="editor-panel editor-panel--right"
                 aria-label="Rechtes Panel"
@@ -171,7 +170,7 @@
                     </button>
 
                     <div class="panel-header-title">{{ 'form_grid.edit_element_title' | gtxI18n:{
-                        label: selectedElementDraft?.label | gtxI18nObject
+                        label: selectedElement.label | gtxI18nObject
                     } }}</div>
                 </div>
 
@@ -181,7 +180,11 @@
                             Definitions!
                         </gtx-tab>
                         <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
-                            Settings!
+                            <gtx-form-element-settings
+                                [element]="selectedElement"
+                                (elementChange)="upsetElementChanges($event)"
+                                [elementConfig]="selectedElementConfiguration"
+                            ></gtx-form-element-settings>
                         </gtx-tab>
                         <gtx-tab [id]="EditTabs.TRANSLATIONS" [title]="'form_grid.edit_tab_translations' | gtxI18n">
                             Translations!

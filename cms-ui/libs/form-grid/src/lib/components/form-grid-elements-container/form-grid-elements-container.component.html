@@ -41,7 +41,7 @@
     }
 
     @for (displayItem of displayItems(); track displayItem.id) {
-        @let item = displayItem.element;
+        @let element = displayItem.element;
 
         @if (
             paletteDragging()
@@ -56,19 +56,19 @@
             }"></ng-container>
         }
 
-        @if (item.type == 'property') {
+        @if (element.type == 'property') {
             <gtx-sortable-item
-                [class.is-selected-card]="selectedElementId() != null && item?.id === selectedElementId()"
-                [ngClass]="'form-item columns small-' + item.formGridOptions?.numberOfColumns"
+                [class.is-selected-card]="selectedElement() != null && element?.id === selectedElement()?.id"
+                [ngClass]="'form-item columns small-' + element.formGridOptions?.numberOfColumns"
                 data-drop-item="true"
                 [attr.data-drop-index]="$index"
             >
                 <gtx-contents-list-item
                     class="fg-box"
-                    [class.empty]="!item.label"
-                    [attr.data-element-id]="item.id"
-                    [class.is-selected]="selectedElementId() != null && item?.id === selectedElementId()"
-                    (click)="selectElementById(item.id, $event)"
+                    [class.empty]="!element.label"
+                    [attr.data-element-id]="element.id"
+                    [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
+                    (click)="selectElement(element, $event)"
                 >
                     <div
                         class="grid-resize-handle"
@@ -80,7 +80,7 @@
                     <div class="item-primary">
                         <div class="actions-container">
                             <span class="tag tag-type">
-                                <span class="tag-text">{{ item.label | gtxI18nObject }}</span>
+                                <span class="tag-text">{{ element.label | gtxI18nObject }}</span>
                             </span>
 
                             @if (!displayItem.isControl || !restricted()) {
@@ -88,7 +88,7 @@
                                     type="alert"
                                     class="delete-button"
                                     [icon]="true"
-                                    (click)="deleteElement($event, item, $index)"
+                                    (click)="deleteElement($event, element, $index)"
                                 >
                                     <icon>delete_outline</icon>
                                 </gtx-button>
@@ -97,8 +97,8 @@
 
                         <strong
                             class="formtitle"
-                            [class.is-selected-title]="selectedElementId() != null && item?.id === selectedElementId()"
-                        >{{ (item.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
+                            [class.is-selected-title]="selectedElement() != null && element.id === selectedElement()?.id"
+                        >{{ (element.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
                     </div>
                 </gtx-contents-list-item>
             </gtx-sortable-item>

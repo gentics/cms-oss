@@ -1,6 +1,19 @@
 import { I18nString } from './common';
 import { Condition } from './form-conditions';
 
+export enum FormSettingType {
+    STRING = 'string',
+    TRANSLATION = 'translation',
+    INTEGER = 'integer',
+    NUMBER = 'number',
+    BOOLEAN = 'boolean',
+    DATE = 'date',
+    SELECT = 'select',
+    OPTIONS = 'options',
+    USER = 'user',
+    REFERENCE = 'reference',
+}
+
 /**
  * A setting which can be configured by the form creator
  */
@@ -20,6 +33,7 @@ export type FormSettingConfiguration
  * Simple string that can be entered
  */
 export type FormStringSetting = FormBaseSetting & {
+    type: FormSettingType.STRING;
     richContent?: boolean;
 };
 
@@ -27,28 +41,36 @@ export type FormStringSetting = FormBaseSetting & {
  * Text which may be entered on a per language basis
  */
 export type FormTranslationSetting = FormBaseSetting & {
+    type: FormSettingType.TRANSLATION;
     richContent?: boolean;
 };
 
 /**
  * Integer number that can be entered
  */
-export type FormIntegerSetting = FormBaseSetting;
+export type FormIntegerSetting = FormBaseSetting & {
+    type: FormSettingType.INTEGER;
+};
 
 /**
  * All numbers that can be entered
  */
-export type FormNumberSetting = FormBaseSetting;
+export type FormNumberSetting = FormBaseSetting & {
+    type: FormSettingType.NUMBER;
+};
 
 /**
  * Boolean/Checkbox that can be checked
  */
-export type FormBooleanSetting = FormBaseSetting;
+export type FormBooleanSetting = FormBaseSetting & {
+    type: FormSettingType.BOOLEAN;
+};
 
 /**
  * Date that can be selected. Value will be a ISO-Date string
  */
 export type FormDateSetting = FormBaseSetting & {
+    type: FormSettingType.DATE;
     allowTime?: boolean;
 };
 
@@ -56,6 +78,7 @@ export type FormDateSetting = FormBaseSetting & {
  * Select where one or more options can be selected
  */
 export type FormSelectSetting = FormBaseSetting & {
+    type: FormSettingType.SELECT;
     options: FormSelectOption[];
     multiple?: boolean;
 };
@@ -64,6 +87,7 @@ export type FormSelectSetting = FormBaseSetting & {
  * Allow the editor to create options which the user can then use
  */
 export type FormOptionsSetting = FormBaseSetting & {
+    type: FormSettingType.OPTIONS;
     multiple?: boolean;
 };
 
@@ -71,6 +95,7 @@ export type FormOptionsSetting = FormBaseSetting & {
  * Select where one or more options from the user options can be selected
  */
 export type FormUserSetting = FormBaseSetting & {
+    type: FormSettingType.USER;
     multiple?: boolean;
 };
 
@@ -78,6 +103,7 @@ export type FormUserSetting = FormBaseSetting & {
  * Picker where a reference to one or more CMS Objects can be selected
  */
 export type FormReferenceSetting = FormBaseSetting & {
+    type: FormSettingType.REFERENCE;
     /**
      * Which items are allowed to be selected
      */
@@ -218,6 +244,7 @@ export interface FormElementConfiguration {
  * Common properties for all setting types
  */
 export interface FormBaseSetting {
+    type: FormSettingType;
     /**
      * The ID of the setting. Will be used to read the settings value in the backend or form-gen
      */

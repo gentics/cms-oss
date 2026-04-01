@@ -7,12 +7,14 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import {
+    FormElementSettingsComponent,
     FormGridComponent,
     FormGridElementsContainerComponent,
     FormPageManagerComponent,
 } from './components';
 
 const COMPONENTS = [
+    FormElementSettingsComponent,
     FormGridComponent,
     FormGridElementsContainerComponent,
     FormPageManagerComponent,

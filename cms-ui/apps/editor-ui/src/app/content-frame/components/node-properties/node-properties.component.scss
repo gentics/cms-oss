@@ -60,6 +60,10 @@
     > * {
         flex: 1 1 auto;
     }
+
+    &.half-width {
+        width: calc(50% - 1rem);
+    }
 }
 
 .name-row {

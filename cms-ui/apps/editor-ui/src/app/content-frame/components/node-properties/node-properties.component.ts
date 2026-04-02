@@ -142,6 +142,7 @@ export class NodePropertiesComponent
             ]),
             defaultFileFolderId: new FormControl(this.safeValue('defaultFileFolderId')),
             defaultImageFolderId: new FormControl(this.safeValue('defaultImageFolderId')),
+            defaultFormFolderId: new FormControl(this.safeValue('defaultFormFolderId')),
             disablePublish: new FormControl(this.safeValue('disablePublish') ?? false),
             publishFs: new FormControl(this.safeValue('publishFs') ?? false),
             publishFsPages: new FormControl(this.safeValue('publishFsPages') ?? false),

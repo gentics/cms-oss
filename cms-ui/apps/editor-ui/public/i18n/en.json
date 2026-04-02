@@ -246,6 +246,7 @@
         "no_page_with_id": "No object with ID {{id}} found",
         "node_default_file_upload_folder_label": "Default file upload folder",
         "node_default_image_upload_folder_label": "Default image upload folder",
+        "node_default_forms_default_folder": "Default folder for external forms",
         "node_hostname_type_label": "Define Hostname",
         "node_hostname_type_value": "Enter Hostname directly",
         "node_hostname_type_property": "Get Hostname from Property",

@@ -255,24 +255,24 @@
         min-width: 0;
         /* override global min-width that can cause overflow */
     }
+}
 
-    .fg-select {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 8px 10px;
-        border-radius: 10px;
-        border: 1px solid #d9d9d9;
-        background: #ffffff;
-        font-size: 14px;
-        transition:
-            border-color 160ms ease,
-            box-shadow 160ms ease;
+.editor-panel .fg-select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    background: #ffffff;
+    font-size: 14px;
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease;
 
-        &:focus {
-            outline: none;
-            border-color: #0096dc;
-            box-shadow: 0 0 0 3px rgba(0, 150, 220, 0.15);
-        }
+    &:focus {
+        outline: none;
+        border-color: #0096dc;
+        box-shadow: 0 0 0 3px rgba(0, 150, 220, 0.15);
     }
 }
 
@@ -295,6 +295,7 @@
         flex: 0 0 auto;
     }
 }
+
 
 .palette {
     display: flex;

@@ -1,3 +1,4 @@
+import { FeatureOperations } from '../../../../core/providers/operations/feature/feature.operations';
 import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
@@ -6,6 +7,7 @@ import {
     NODE_HOSTNAME_PROPERTY_PREFIX,
     NODE_PREVIEW_URL_PROPERTY_PREFIX,
     Node,
+    NodeFeature,
     NodeHostnameType,
     NodePreviewurlType,
     Raw,
@@ -23,7 +25,7 @@ import {
 
 export type NodePropertiesFormData = Pick<Node, 'name' | 'inheritedFromId' | 'host' | 'hostProperty'
   | 'meshPreviewUrl' | 'meshPreviewUrlProperty' | 'insecurePreviewUrl' | 'meshProjectName' | 'defaultFileFolderId' | 'defaultImageFolderId'
-  | 'pubDirSegment' | 'publishImageVariants'> & {
+  | 'defaultFormFolderId' | 'pubDirSegment' | 'publishImageVariants'> & {
       description?: string;
       previewType: NodePreviewurlType;
       hostType: NodeHostnameType;
@@ -83,6 +85,9 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
     @Input()
     public isChannel = false;
 
+    @Input()
+    public nodeId: number = null;
+
     public nodes: Node<Raw>[];
     protected nodesLoading = false;
     protected nodesLoaded = false;
@@ -94,11 +99,13 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
     public pubDirSegmentActivated: boolean;
     public multiChannelingEnabled = false;
     public meshCrEnabled = false;
+    public formsEnabled = false;
 
     constructor(
         changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
         private client: GCMSRestClientService,
+        private featureOps: FeatureOperations,
     ) {
         super(changeDetector);
     }
@@ -127,6 +134,16 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
 
         if (changes.mode) {
             this.loadNodesIfNeeded();
+        }
+
+        if (changes.nodeId && this.mode !== NodePropertiesMode.CREATE && this.nodeId != null) {
+            this.subscriptions.push(
+                this.featureOps.getNodeFeatures(this.nodeId).subscribe((features) => {
+                    this.formsEnabled = features?.[NodeFeature.FORMS] ?? false;
+                    this.configureForm(this.form?.value);
+                    this.changeDetector.markForCheck();
+                }),
+            );
         }
     }
 
@@ -191,6 +208,7 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
             }),
             defaultFileFolderId: new FormControl(this.safeValue('defaultFileFolderId')),
             defaultImageFolderId: new FormControl(this.safeValue('defaultImageFolderId')),
+            defaultFormFolderId: new FormControl(this.safeValue('defaultFormFolderId')),
         });
     }
 
@@ -226,6 +244,10 @@ export class NodePropertiesComponent extends BaseFormPropertiesComponent<NodePro
                 emitEvent: loud,
             });
         }
+
+        setControlsEnabled(this.form, ['defaultFormFolderId'], this.formsEnabled, {
+            emitEvent: loud,
+        });
     }
 
     protected assembleValue(value: NodePropertiesFormData): NodePropertiesFormData {

@@ -249,6 +249,7 @@
         "no_page_with_id": "Es existiert kein Objekt mit ID {{id}}",
         "node_default_file_upload_folder_label": "Standard Datei Upload Ordner",
         "node_default_image_upload_folder_label": "Standard Bild Upload Ordner",
+        "node_default_forms_default_folder": "Standard Ordner für externe Formulare",
         "node_hostname_type_label": "Hostnamen angeben",
         "node_hostname_type_value": "Hostnamen direkt eingeben",
         "node_hostname_type_property": "Hostnamen aus Eigenschaft holen",

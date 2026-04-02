@@ -152,6 +152,7 @@
         "derived_from": "Abgeleitet von",
         "derives_from": "Abgeleitet von {{master}}",
         "description": "Beschreibung",
+        "external_forms_default_folder": "Standard Ordner für externe Formulare",
         "feature_active": "Aktiv",
         "features_updated": "Node Features wurde erfolgreich geändert",
         "forms_updated": "Node Formulare wurden erfolgreich geändert",

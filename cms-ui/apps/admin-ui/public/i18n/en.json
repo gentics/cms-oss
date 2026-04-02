@@ -152,6 +152,7 @@
         "derived_from": "Derived from",
         "derives_from": "Derives from {{master}}",
         "description": "Description",
+        "external_forms_default_folder": "Default folder for external forms",
         "feature_active": "Active",
         "features_updated": "Node features has been updated successfully",
         "forms_updated": "Node forms have been updated successfully",

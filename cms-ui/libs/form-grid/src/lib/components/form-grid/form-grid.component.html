@@ -176,9 +176,15 @@
 
                 <div class="panel-content">
                     <gtx-tabs class="element-tabs">
-                        <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
-                            Definitions!
-                        </gtx-tab>
+                        @if (!restricted() && selectedElementSchemaDraft != null) {
+                            <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
+                                <gtx-form-element-definition
+                                    [schemaDraft]="selectedElementSchemaDraft"
+                                    (schemaDraftChange)="onDefinitionChange($event)"
+                                    [controls]="config().controls"
+                                ></gtx-form-element-definition>
+                            </gtx-tab>
+                        }
                         <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
                             <gtx-form-element-settings
                                 [element]="selectedElement"

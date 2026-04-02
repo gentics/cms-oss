@@ -25,13 +25,15 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     /** Default Image Upload Folder ID */
     defaultImageFolderId?: number;
 
+    /** Default Form Upload Folder ID */
+    defaultFormFolderId?: number;
+
     /** True if publishing content modifications is disabled */
     disablePublish: boolean;
 
     /**
      * Editor to be used in the node.
      * Possible values are 0 for LiveEditor and 1 for Aloha editor.
-     *
      * @deprecated LiveEditor is no longer supported.
      */
     editorVersion: number;
@@ -116,7 +118,6 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
 
     /**
      * True if the node content should be encoded in UTF8
-     *
      * @deprecated No longer used since Aloha editor requires UTF-8.
      */
     utf8: boolean;
@@ -124,7 +125,6 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     /**
      * If global feature "pub_dir_segment" is activated, node will have this property.
      * Is enabled per node.
-     *
      * @see https://www.gentics.com/Content.Node/cmp8/guides/feature_pub_dir_segment.html
      */
     pubDirSegment?: boolean;

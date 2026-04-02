@@ -1,6 +1,6 @@
 @import "../../../../styles/variables";
 
-:host {
+.content {
     display: flex;
     flex-direction: row;
 
@@ -31,5 +31,18 @@
         border-right: 2px solid $gtx-color-light-gray;
         border-top-right-radius: 3px;
         border-bottom-right-radius: 3px;
+    }
+}
+
+.breadcrumbs {
+    font-size: 0.8rem;
+    color: $gtx-color-dark-gray;
+
+    .breadcrumb-title {
+        &::after {
+            display: inline-block;
+            content: ':';
+            padding-right: 0.25rem;
+        }
     }
 }

@@ -132,6 +132,7 @@
                     [elements]="elements()"
                     (elementsChange)="updatePageElements($event)"
                     [selectedElement]="selectedElement"
+                    [selectedElementContainerId]="selectedElementContainerId"
                     (elementSelect)="setSelectedElement($event)"
                     [schema]="schema()"
                     (schemaChange)="updateSchema($event)"
@@ -187,6 +188,7 @@
                         }
                         <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
                             <gtx-form-element-settings
+                                [config]="config()"
                                 [element]="selectedElement"
                                 (elementChange)="upsetElementChanges($event)"
                                 [elementConfig]="selectedElementConfiguration"

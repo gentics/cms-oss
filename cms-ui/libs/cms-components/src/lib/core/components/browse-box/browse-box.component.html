@@ -1,46 +1,66 @@
-<gtx-input
-  class="value-display"
-  [readonly]="true"
-  [value]="displayValue"
-  [label]="label"
-></gtx-input>
+<div class="content">
+    <gtx-input
+        class="value-display"
+        [readonly]="true"
+        [placeholder]="placeholder"
+        [value]="displayValue"
+        [label]="label"
+    ></gtx-input>
 
-@if (clearable) {
-  <gtx-button
-    icon
-    class="browse-box__button browse-box__button--clear"
-    type="secondary"
-    data-action="clear"
-    [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | gtxI18n"
-    [disabled]="disabled"
-    (click)="clear.emit()"
-    >
-    <icon>clear</icon>
-  </gtx-button>
-}
+    @if (clearable == null ? !required : clearable) {
+        <gtx-button
+            icon
+            class="browse-box__button browse-box__button--clear"
+            type="secondary"
+            data-action="clear"
+            [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | gtxI18n"
+            [disabled]="disabled"
+            (click)="clearItems($event)"
+        >
+            <icon>clear</icon>
+        </gtx-button>
+    }
 
-<gtx-button
-  icon
-  class="browse-box__button browse-box__button--browse"
-  type="secondary"
-  data-action="browse"
-  [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | gtxI18n"
-  [disabled]="disabled"
-  (click)="browse.emit()"
-  >
-  <icon>folder_open</icon>
-</gtx-button>
+        <gtx-button
+            icon
+            class="browse-box__button browse-box__button--browse"
+            type="secondary"
+            data-action="browse"
+            [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | gtxI18n"
+            [disabled]="disabled"
+            (click)="browseItems($event)"
+        >
+            <icon>folder_open</icon>
+        </gtx-button>
 
-@if (canUpload) {
-  <gtx-button
-    icon
-    class="browse-box__button browse-box__button--upload"
-    type="secondary"
-    data-action="upload"
-    [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | gtxI18n"
-    [disabled]="disabled"
-    (click)="upload.emit()"
-    >
-    <icon>cloud_upload</icon>
-  </gtx-button>
+    @if (canUpload) {
+        <gtx-button
+            icon
+            class="browse-box__button browse-box__button--upload"
+            type="secondary"
+            data-action="upload"
+            [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | gtxI18n"
+            [disabled]="disabled"
+            (click)="uploadItems($event)"
+        >
+            <icon>cloud_upload</icon>
+        </gtx-button>
+    }
+</div>
+
+@if ((showBreadcrumb == null ? !multiple : showBreadcrumb) && breadcrumbs?.length > 0) {
+    <div class="breadcrumbs">
+        @if (breadcrumbTitle) {
+            <div class="breadcrumb-title">{{ breadcrumbTitle }}</div>
+        }
+        @if (breadcrumbs.length > 1) {
+            <ul class="breadcrumb-list">
+                @for (crumb of breadcrumbs; track crumb) {
+                    <li class="breadcrumb-item">{{ crumb }}</li>
+                }
+            </ul>
+        } @else {
+            <div class="breadcrumb-path">{{ breadcrumbs[0] }}</div>
+        }
+    </div>
 }

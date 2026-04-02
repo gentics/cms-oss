@@ -107,75 +107,86 @@
                         [value]="useEmailPageTemplate"
                         (valueChange)="updateEmailTemplate($event)"
                     >
-                        <gtx-radio-button
-                            [label]="'editor.item_localized_mail_custom' | gtxI18n"
-                            [value]="true"
-                        ></gtx-radio-button>
+                        <div class="radio-select-container">
+                            <gtx-radio-button
+                                [label]="'editor.item_localized_mail_custom' | gtxI18n"
+                                [value]="true"
+                            ></gtx-radio-button>
 
-                        <div
-                            class="confirmation-page-setting"
-                            [ngClass]="{
-                                'confirmation-page-setting--active': !!useEmailPageTemplate,
-                                'confirmation-page-setting--inactive': !useEmailPageTemplate
-                            }"
-                        >
-                            <browse-box
-                                class="columns small-12"
-                                [label]="'editor.item_mail_custom_description' | gtxI18n"
-                                [displayValue]="loadedMailTemplate ? loadedMailTemplate.name : ('editor.page_no_selection' | gtxI18n)"
-                                [disabled]="disabled || !useEmailPageTemplate"
-                                data-action="pick-mail-page"
-                                [attr.data-target-id]="loadedMailTemplate?.id"
-                                [attr.data-target-node-id]="loadedMailTemplate?.nodeId"
-                                (clear)="setEmailTemplatePage(null)"
-                                (browse)="browseForEmailTemplatePage()"
-                            ></browse-box>
-
-                            @if (mailTemplateBreadcrubs) {
-                                <div class="browse-box__breadcrumbs mail-page-breadcrumbs">
-                                    {{ 'tag_editor.selected_folder' | gtxI18n }}: <span class="breadcrumb-path">{{ mailTemplateBreadcrubs }}</span>
-                                </div>
-                            }
+                            <div
+                                class="confirmation-page-setting"
+                                [ngClass]="{
+                                    'confirmation-page-setting--active': !!useEmailPageTemplate,
+                                    'confirmation-page-setting--inactive': !useEmailPageTemplate
+                                }"
+                            >
+                                <gtx-browse-box
+                                    data-action="pick-mail-page"
+                                    [attr.data-target-id]="form.value.adminEmailPageId"
+                                    [attr.data-target-node-id]="form.value.adminEmailNodeId"
+                                    [label]="'editor.item_mail_custom_description' | gtxI18n"
+                                    [placeholder]="'editor.page_no_selection' | gtxI18n"
+                                    [disabled]="disabled || !useEmailPageTemplate"
+                                    [allowedSelection]="'page'"
+                                    [multiple]="false"
+                                    [includeMlId]="[MarkupLanguageType.FormsEmailTemplate]"
+                                    [browseTitle]="'modal.repository_browser_title_forms_email_template_single' | gtxI18n"
+                                    [startNode]="form.value.adminEmailNodeId || nodeId"
+                                    [showBreadcrumb]="true"
+                                    [breadcrumbTitle]="'tag_editor.selected_folder' | gtxI18n"
+                                    [value]="loadedMailTemplate"
+                                    (valueChange)="setEmailTemplatePage($event)"
+                                ></gtx-browse-box>
+                            </div>
                         </div>
 
-                        <gtx-radio-button
-                            [label]="'editor.item_localized_mail_temp' | gtxI18n"
-                            [value]="false"
-                        ></gtx-radio-button>
+                        <div class="radio-select-container">
+                            <gtx-radio-button
+                                [label]="'editor.item_localized_mail_temp' | gtxI18n"
+                                [value]="false"
+                            ></gtx-radio-button>
 
-                        <div
-                            class="confirmation-page-setting"
-                            [ngClass]="{
-                                'confirmation-page-setting--active': !useEmailPageTemplate,
-                                'confirmation-page-setting--inactive': !!useEmailPageTemplate
-                            }"
-                        >
-                            <gtx-i18n-select
-                                [language]="activeFormLanguageCode"
-                                [availableLanguages]="languages"
-                                (change)="setEmailTemplateOption($event)"
-                                formControlName="adminEmailTemplate"
+                            <div
+                                class="confirmation-page-setting"
+                                [ngClass]="{
+                                    'confirmation-page-setting--active': !useEmailPageTemplate,
+                                    'confirmation-page-setting--inactive': !!useEmailPageTemplate
+                                }"
                             >
-                                @for (option of activeConfiguration?.adminEmailTemplateOptions; track option.value) {
-                                    <gtx-option [value]="option.value">
-                                        {{ option.labelI18n | gtxI18nObject }}
-                                    </gtx-option>
-                                }
-                            </gtx-i18n-select>
+                                <gtx-i18n-select
+                                    [language]="activeFormLanguageCode"
+                                    [availableLanguages]="languages"
+                                    (change)="setEmailTemplateOption($event)"
+                                    formControlName="adminEmailTemplate"
+                                >
+                                    @for (option of activeConfiguration?.adminEmailTemplateOptions; track option.value) {
+                                        <gtx-option [value]="option.value">
+                                            {{ option.labelI18n | gtxI18nObject }}
+                                        </gtx-option>
+                                    }
+                                </gtx-i18n-select>
+                            </div>
                         </div>
                     </gtx-radio-group>
                 } @else {
-                    <browse-box
+                    <gtx-browse-box
                         class="columns small-12"
-                        [label]="'editor.item_mail_custom_description' | gtxI18n"
-                        [displayValue]="loadedMailTemplate ? loadedMailTemplate.name : ('editor.page_no_selection' | gtxI18n)"
-                        [disabled]="disabled || !useEmailPageTemplate"
                         data-action="pick-mail-page"
-                        [attr.data-target-id]="loadedMailTemplate?.id"
-                        [attr.data-target-node-id]="loadedMailTemplate?.nodeId"
-                        (clear)="setEmailTemplatePage(null)"
-                        (browse)="browseForEmailTemplatePage()"
-                    ></browse-box>
+                        [attr.data-target-id]="form.value.adminEmailPageId"
+                        [attr.data-target-node-id]="form.value.adminEmailNodeId"
+                        [label]="'editor.item_mail_custom_description' | gtxI18n"
+                        [placeholder]="'editor.page_no_selection' | gtxI18n"
+                        [disabled]="disabled || !useEmailPageTemplate"
+                        [allowedSelection]="'page'"
+                        [multiple]="false"
+                        [includeMlId]="[MarkupLanguageType.FormsEmailTemplate]"
+                        [browseTitle]="'modal.repository_browser_title_forms_email_template_single' | gtxI18n"
+                        [startNode]="form.value.adminEmailNodeId || nodeId"
+                        [showBreadcrumb]="true"
+                        [breadcrumbTitle]="'tag_editor.selected_folder' | gtxI18n"
+                        [value]="loadedMailTemplate"
+                        (valueChange)="setEmailTemplatePage($event)"
+                    ></gtx-browse-box>
                 }
             }
         </div>
@@ -188,57 +199,58 @@
                 [value]="useInternalSuccessPage"
                 (valueChange)="updateInternalSuccessPage($event)"
             >
-                <gtx-radio-button
-                    data-id="success-page"
-                    [label]="'editor.internal_page' | gtxI18n"
-                    [value]="true"
-                ></gtx-radio-button>
+                <div class="radio-select-container">
+                    <gtx-radio-button
+                        data-id="success-page"
+                        [label]="'editor.internal_page' | gtxI18n"
+                        [value]="true"
+                    ></gtx-radio-button>
 
-                <div
-                    class="confirmation-page-setting"
-                    [ngClass]="{
-                        'confirmation-page-setting--active': !!useInternalSuccessPage,
-                        'confirmation-page-setting--inactive': !useInternalSuccessPage
-                    }"
-                >
-
-                    <browse-box
-                        [label]="'editor.item_success_page' | gtxI18n"
-                        [displayValue]="loadedSuccessPage ? loadedSuccessPage.name : ('editor.page_no_selection' | gtxI18n)"
-                        [disabled]="disabled || !useInternalSuccessPage"
-                        data-action="pick-success-page"
-                        [attr.data-target-id]="loadedSuccessPage?.id"
-                        [attr.data-target-node-id]="loadedSuccessPage?.nodeId"
-                        (clear)="setSuccessPage(null)"
-                        (browse)="browseForPage()">
-                    </browse-box>
-
-                    @if (loadedSuccessPage) {
-                        <div class="browse-box__breadcrumbs success-page-breadcrumbs">
-                            {{ 'tag_editor.selected_folder' | gtxI18n }}: <span class="breadcrumb-path">{{ successPageBreadcrumbs }}</span>
-                        </div>
-                    }
+                    <div
+                        class="confirmation-page-setting"
+                        [ngClass]="{
+                            'confirmation-page-setting--active': !!useInternalSuccessPage,
+                            'confirmation-page-setting--inactive': !useInternalSuccessPage
+                        }"
+                    >
+                        <gtx-browse-box
+                            data-action="pick-success-page"
+                            [attr.data-target-id]="form.value.successPageId"
+                            [attr.data-target-node-id]="form.value.successNodeId"
+                            [label]="'editor.item_success_page' | gtxI18n"
+                            [placeholder]="'editor.page_no_selection' | gtxI18n"
+                            [disabled]="disabled || !useInternalSuccessPage"
+                            [showBreadcrumb]="true"
+                            [breadcrumbTitle]="'tag_editor.selected_folder' | gtxI18n"
+                            [allowedSelection]="'page'"
+                            [multiple]="false"
+                            [value]="loadedSuccessPage"
+                            (valueChange)="setSuccessPage($event)"
+                        ></gtx-browse-box>
+                    </div>
                 </div>
 
-                <gtx-radio-button
-                    data-id="success-url"
-                    [label]="'editor.external_url' | gtxI18n"
-                    [value]="false"
-                ></gtx-radio-button>
+                <div class="radio-select-container">
+                    <gtx-radio-button
+                        data-id="success-url"
+                        [label]="'editor.external_url' | gtxI18n"
+                        [value]="false"
+                    ></gtx-radio-button>
 
-                <div
-                    class="confirmation-page-setting"
-                    [ngClass]="{
-                        'confirmation-page-setting--active': !useInternalSuccessPage,
-                        'confirmation-page-setting--inactive': !!useInternalSuccessPage
-                    }"
-                >
-                    <gtx-i18n-input
-                        [label]="'editor.item_success_url' | gtxI18n"
-                        formControlName="successUrlI18n"
-                        [language]="activeFormLanguageCode"
-                        [availableLanguages]="languages"
-                    ></gtx-i18n-input>
+                    <div
+                        class="confirmation-page-setting"
+                        [ngClass]="{
+                            'confirmation-page-setting--active': !useInternalSuccessPage,
+                            'confirmation-page-setting--inactive': !!useInternalSuccessPage
+                        }"
+                    >
+                        <gtx-i18n-input
+                            [label]="'editor.item_success_url' | gtxI18n"
+                            formControlName="successUrlI18n"
+                            [language]="activeFormLanguageCode"
+                            [availableLanguages]="languages"
+                        ></gtx-i18n-input>
+                    </div>
                 </div>
             </ng-container>
         </div>

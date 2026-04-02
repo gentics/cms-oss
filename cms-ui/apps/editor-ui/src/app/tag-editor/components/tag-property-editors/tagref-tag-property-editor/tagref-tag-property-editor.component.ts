@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { RepositoryBrowserOptions, TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     Folder,
@@ -17,12 +17,10 @@ import {
     Template,
     TemplateTagTagPartProperty,
 } from '@gentics/cms-models';
-import { I18nService } from '@gentics/cms-components';
-import { BehaviorSubject, Observable, Subject, Subscription, merge, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, of } from 'rxjs';
 import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
 import { Api } from '../../../../core/providers/api/api.service';
-import { RepositoryBrowserClient } from '../../../../shared/providers';
 
 /**
  * Helper class for fetching a Page or a Template depending on the TagPropertyType
@@ -122,6 +120,7 @@ class ContainerWrapper {
 }
 
 export interface TagSelection {
+    originalTag: TagInContainer;
     container: Page<Raw> | Template<Raw>;
     tag: Tag;
 }
@@ -140,7 +139,9 @@ interface AugmentedTagSelection extends TagSelection {
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
+export class TagRefTagPropertyEditor implements TagPropertyEditor, OnDestroy {
+
+    public readonly TagPropertyType = TagPropertyType;
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */
     tagPart: TagPart;
@@ -168,10 +169,11 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
     uploadDestination: Folder<Raw>;
 
     /** Page this edited tag belongs to */
-    private page?: Page<Raw>;
+    public page?: Page<Raw>;
 
     /** The objects representing the selected page/template and the selected tag within it. */
-    private selectionSubject = new BehaviorSubject<TagSelection>({ container: null, tag: null });
+    private selectionSubject = new BehaviorSubject<TagSelection>({ originalTag: null, container: null, tag: null });
+    public selectedTag$ = this.selectionSubject.pipe(map((selection) => selection?.originalTag));
     private selection$ = this.selectionSubject.asObservable().pipe(
         switchMap((selection) => this.addTagTypeToSelection(selection)),
     );
@@ -185,80 +187,8 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
     constructor(
         private api: Api,
         private changeDetector: ChangeDetectorRef,
-        private repositoryBrowserClient: RepositoryBrowserClient,
-        private i18n: I18nService,
     ) {
         this.selectedContainerWrapper = new ContainerWrapper(api);
-    }
-
-    ngOnInit(): void {
-        this.tagDisplayValue$ = merge(
-            this.selection$.pipe(
-                tap((selection) => {
-                    this.selectedContainer = selection.container;
-                }),
-                map((selection: AugmentedTagSelection) => {
-                    if (selection) {
-                        this.selectedFullPath = this.generateBreadcrumbsPath(selection.container);
-                    }
-                    if (selection.container && selection.tag && selection.tagType) {
-                        return `${selection.tag.name} - ${selection.tagType.name}`;
-                    } else if (selection.container && (!selection.tag || !selection.tagType)) {
-                        /**
-                         * The tag or tagType is missing, if the container exists but the contained tag was removed.
-                         * This means, that there was a previous selection, but now the tag is gone.
-                         */
-                        if (this.tagProperty) {
-                            if (this.tagProperty.type === TagPropertyType.PAGETAG) {
-                                return this.i18n.instant(
-                                    'editor.tag_not_found_in_page',
-                                    { id: this.tagProperty.contentTagId, pageId: this.tagProperty.pageId },
-                                );
-                            } else {
-                                return this.i18n.instant(
-                                    'editor.tag_not_found_in_template',
-                                    { id: this.tagProperty.templateTagId, templateId: this.tagProperty.templateId },
-                                );
-                            }
-                        } else {
-                            return '';
-                        }
-                    } else {
-                        /**
-                         * null is emitted, when nothing is selected.
-                         * Also, null is emitted in case a referenced page or template got deleted and the tag property data was refetched.
-                         * (Since the pageId or templateId in tagProperty gets removed)
-                         */
-                        return this.i18n.instant('editor.tag_no_selection');
-                    }
-                }),
-            ),
-            this.loadingError$.pipe(
-                map((error: { error: any; item: { itemId: number; nodeId?: number } }) => {
-                    /**
-                     * When a page or a template that contained a chosen tag and is referenced gets deleted, the pageId or templateId is kept in tagProperty.
-                     * When we try to fetch the page or template information we get an error message.
-                     * In that case we want to inform the user that the page or template got deleted
-                     * (and thus avoid suggesting that a valid page or template is still selected).
-                     */
-                    if (this.tagProperty) {
-                        if (this.tagProperty.type === TagPropertyType.PAGETAG) {
-                            return this.i18n.instant(
-                                'editor.tag_not_found_in_page',
-                                { id: this.tagProperty.contentTagId, pageId: this.tagProperty.pageId },
-                            );
-                        } else {
-                            return this.i18n.instant(
-                                'editor.tag_not_found_in_template',
-                                { id: this.tagProperty.templateTagId, templateId: this.tagProperty.templateId },
-                            );
-                        }
-                    } else {
-                        return '';
-                    }
-                }),
-            ),
-        );
     }
 
     ngOnDestroy(): void {
@@ -319,12 +249,19 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
      * to the newSelection. This method must only be called in response to
      * user input.
      */
-    changeSelection(newSelection: TagSelection): void {
+    changeSelection(tag: TagInContainer): void {
+        let containerEl;
         let containerId = 0;
         let tagId = 0;
-        if (newSelection.container && newSelection.tag) {
-            containerId = newSelection.container.id;
-            tagId = newSelection.tag.id;
+        let cleanTag: Tag;
+
+        // Remap the tag from the ridicolus format
+        if (tag && tag.__parent__) {
+            const { __parent__: parentEl, ...tagContent } = tag;
+            containerEl = parentEl;
+            containerId = containerEl.id;
+            cleanTag = tagContent as any;
+            tagId = tag.id;
         }
 
         if (this.tagProperty.type === TagPropertyType.PAGETAG) {
@@ -340,33 +277,15 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
             changes[this.tagPart.keyword] = this.tagProperty;
             this.onChangeFn(changes);
         }
-        this.selectionSubject.next(newSelection);
-    }
 
-    /**
-     * Opens the repository browser to allow the user to select a tag.
-     */
-    browseForTag(): void {
-        let contentLanguage: string;
-        if (this.page) {
-            contentLanguage = this.page.language;
-        }
-        const options: RepositoryBrowserOptions = {
-            allowedSelection: this.tagProperty.type === TagPropertyType.PAGETAG ? 'contenttag' : 'templatetag',
-            selectMultiple: false,
-            contentLanguage,
-            startFolder: this.uploadDestination ? this.uploadDestination.id : undefined,
-        };
-
-        this.repositoryBrowserClient.openRepositoryBrowser(options)
-            .then((selectedTag: TagInContainer) => {
-                const selection: TagSelection = {
-                    container: selectedTag.__parent__,
-                    tag: selectedTag,
-                };
-                delete selectedTag.__parent__;
-                this.changeSelection(selection);
-            });
+        this.selectionSubject.next(tagId && containerEl
+            ? {
+                originalTag: tag,
+                container: containerEl,
+                tag: cleanTag,
+            }
+            : null,
+        );
     }
 
     /**
@@ -381,9 +300,11 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
         const sub = this.selectedContainerWrapper.fetchAndUpdateContainer(this.tagProperty)
             .subscribe(
                 (container: Page<Raw> | Template<Raw>) => {
+                    const tag = container ? this.selectedContainerWrapper.findTag(this.tagProperty) : null;
                     this.selectionSubject.next({
                         container: container,
-                        tag: container ? this.selectedContainerWrapper.findTag(this.tagProperty) : null,
+                        tag: tag,
+                        originalTag: tag ? { ...tag, __parent__: container } : null,
                     });
                     this.changeDetector.markForCheck();
                 },
@@ -417,18 +338,5 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
                 tagType: null,
             })),
         );
-    }
-
-    /**
-     * @returns A string with the breadcrumbs path of the specified Page or Template.
-     */
-    private generateBreadcrumbsPath(selectedContainer: Page<Raw> | Template<Raw>): string {
-        let breadcrumbsPath = '';
-        if (selectedContainer) {
-            breadcrumbsPath = selectedContainer.path + selectedContainer.name;
-            breadcrumbsPath = breadcrumbsPath.replace('/', '');
-            breadcrumbsPath = breadcrumbsPath.split('/').join(' > ');
-        }
-        return breadcrumbsPath;
     }
 }

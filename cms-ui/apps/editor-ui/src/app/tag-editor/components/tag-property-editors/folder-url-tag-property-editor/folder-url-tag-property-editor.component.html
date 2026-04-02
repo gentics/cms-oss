@@ -1,12 +1,15 @@
-<ng-container>
-  <div class="tag-part-editor">
-    <browse-box
-      [label]="tagPart | tagPropLabel"
-      [displayValue]="displayValue$ | async"
-      [disabled]="readOnly"
-      (clear)="changeSelectedItem(null)"
-      (browse)="browseForItem()"
-    ></browse-box>
+<div class="tag-part-editor">
+    <gtx-browse-box
+        [label]="tagPart | tagPropLabel"
+        [placeholder]="'editor.folder_no_selection' | gtxI18n"
+        [disabled]="readOnly"
+        [allowedSelection]="'folder'"
+        [multiple]="false"
+        [contentLanguage]="baseLanguage"
+        [startFolder]="uploadDestination?.id"
+        [value]="selectedFolder.selectedItem$ | async"
+        (valueChange)="changeSelectedItem($event)"
+    ></gtx-browse-box>
 
     @for (file of uploadedFiles; track file.name) {
       <ul class="uploaded-files">
@@ -47,4 +50,3 @@
   }
 
 </div>
-</ng-container>

@@ -4047,7 +4047,11 @@ public class MeshPublisher implements AutoCloseable {
 						if (org.apache.commons.lang3.StringUtils.equals(conflictingUuid, task.uuid)
 								&& !org.apache.commons.lang3.StringUtils.equals(conflictingLanguage, task.language)) {
 							Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
-							NodeObject languageVariant = Trx.supply(() -> task.getLanguageVariant(conflictingLanguage));
+							NodeObject languageVariant = Trx.supply(() -> {
+								try (RenderTypeTrx rTrx = RenderTypeTrx.publish()) {
+									return task.getLanguageVariant(conflictingLanguage);
+								}
+							});
 
 							if (!Trx.supply(() -> cr.mustContain(languageVariant))) {
 								if (renderResult != null) {

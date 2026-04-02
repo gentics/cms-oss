@@ -10,7 +10,7 @@ import java.util.Set;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 
 /**
  * This is a helper to make a list of objecttags, contained by a {@link ObjectTagContainer} resolvable.

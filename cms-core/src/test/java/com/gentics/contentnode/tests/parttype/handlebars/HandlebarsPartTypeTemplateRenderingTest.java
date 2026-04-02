@@ -6,11 +6,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +46,7 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 			new Object[] { "{{#with cms.page.languageset.pages.de}}{{ name }}{{/with}}", "Test Page", null },
 			new Object[] { "{{#with cms.page.languageset.pages.en}}{{ name }}{{/with}}", "English Test Page", null },
 			new Object[] { "{{#each cms.page.pagevariants }}{{ name }}{{#unless @last}},{{/unless}}{{/each}}", "Test Page", null },
-			new Object[] { "{{#each cms.page.template.tags }}{{ @key }}{{#unless @last}},{{/unless}}{{/each}}", "testtag", null },
+			new Object[] { "{{#each cms.page.template.tags }}{{ @key }}{{#unless @last}},{{/unless}}{{/each}}", HBS_TAGNAME, null },
 			new Object[] { "{{gtx_render cms.page.object.secondpage}}", "Contents of second from page", null},
 
 			// OverviewPartType
@@ -80,10 +79,11 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 			new Object[] { "{{#each cms.page.tags.multi_select_construct1.parts.multi.values }}{{ this }}{{#unless @last}},{{/unless}}{{/each}}", "Rot,Blau", null },
 
 			// PageURLPartType
-			new Object[] { "{{gtx_render cms.page.tags.urls_construct1.parts.page }}", "/node/pub/dir/test/Test-Page.de.html", null },
+			new Object[] { "{{gtx_render cms.page.tags.urls_construct1.parts.page }}", "/node/pub/dir/test/Target-Page.de.html", null },
 			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.internal }}", "true", null },
-			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.url }}", "/node/pub/dir/test/Test-Page.de.html", null },
-			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.target.name }}", "Test Page", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.url }}", "/node/pub/dir/test/Target-Page.de.html", null },
+			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.target.name }}", "Target Page", null },
+			new Object[] { "{{gtx_render cms.page.tags.urls_construct1.parts.page.target.tags." + HBS_TAGNAME + " }}", "Target Page", null },
 			new Object[] { "{{ cms.page.tags.urls_construct1.parts.page.node.host }}", "test.node.hostname", null },
 			new Object[] { "{{ cms.page.tags.urls_construct1.parts.extpage.internal }}", "false", null },
 			new Object[] { "{{gtx_render cms.page.tags.urls_construct1.parts.extpage }}", "https://www.gentics.com/", null },
@@ -176,11 +176,11 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 
 	@Before
 	public void setup() throws NodeException {
-		if (!StringUtils.startsWith(testedTemplate, "{{")) {
+		if (!Strings.CI.startsWith(testedTemplate, "{{")) {
 			testedTemplate = String.format("{{ %s }}", testedTemplate);
 		}
 		testPage = update(testPage, p -> {
-			getPartType(HandlebarsPartType.class, p.getContentTag("testtag"), "hb").setText(testedTemplate);
+			getPartType(HandlebarsPartType.class, p.getContentTag(HBS_TAGNAME), "hb").setText(testedTemplate);
 		}).at(editTimestamp).as(editor).unlock().build();
 
 		testPage = update(testPage, p -> {

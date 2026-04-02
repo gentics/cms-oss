@@ -506,6 +506,26 @@ export const FORM_ONE: FormImportData = {
     },
 };
 
+export const FORM_TWO: FormImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FORM,
+    [IMPORT_ID]: 'formTwo',
+
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
+
+    languages: [LANGUAGE_DE, LANGUAGE_EN],
+
+    name: 'Form Two',
+    description: 'Test Form two',
+    data: {
+        type: CmsFormType.GENERIC,
+        mailsubject_i18n: {
+            de: 'Betreff',
+            en: 'Subject',
+        },
+    },
+};
+
 /*
  * FULL SETUP
  * ---------------------------------------------------------------- */

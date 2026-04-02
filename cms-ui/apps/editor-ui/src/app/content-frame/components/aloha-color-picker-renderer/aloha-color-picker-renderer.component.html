@@ -11,7 +11,7 @@
       @for (paletteColor of normalizedPalette; track paletteColor.color) {
         <button
           class="palette-entry"
-          [attr.data-color]="paletteColor.color"
+            [attr.data-value]="paletteColor.color"
           [style.--palette-color]="paletteColor.color"
           [style.--palette-contrast]="paletteColor.contrast"
           [class.active]="paletteColor.color === hexValue"

@@ -72,7 +72,7 @@ public class MigrateForms extends InitJob {
 
 				String formType = StringUtils.toRootLowerCase(data.get("type").asText("generic"));
 
-				if (!formTypeConfigurations.containsKey(formType)) {
+				if (formTypeConfigurations == null || !formTypeConfigurations.containsKey(formType)) {
 					throw new NodeException(
 							"Migration of forms not possible. Missing required form type configuration '%s'."
 									.formatted(formType));

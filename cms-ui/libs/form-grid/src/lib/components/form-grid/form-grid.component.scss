@@ -296,33 +296,6 @@
     }
 }
 
-/* --- Definition tab --- */
-.editor-panel .definition-section {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 4px 0;
-}
-
-/* 2-column grid: Control Type + Name */
-.editor-panel .definition-fields {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    align-items: start;
-}
-
-/* Checkbox stack in definition tab */
-.editor-panel .definition-checkboxes {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-
-    gtx-checkbox {
-        float: none;
-        margin: 0;
-    }
-}
 
 .palette {
     display: flex;

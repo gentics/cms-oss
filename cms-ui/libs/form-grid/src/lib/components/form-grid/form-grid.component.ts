@@ -268,8 +268,10 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.updatePageElements(newElements);
     }
 
-    public onDefinitionChange(): void {
-        if (!this.selectedElementSchemaDraft || !this.selectedElement?.id) {
+    public onDefinitionChange(draft: Partial<FormSchemaProperty>): void {
+        this.selectedElementSchemaDraft = draft;
+
+        if (!this.selectedElement?.id) {
             return;
         }
 

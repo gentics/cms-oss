@@ -1,0 +1,23 @@
+:host {
+    display: block;
+}
+
+.definition-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 0;
+}
+
+.definition-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.definition-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}

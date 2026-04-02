@@ -178,45 +178,11 @@
                     <gtx-tabs class="element-tabs">
                         @if (!restricted() && selectedElementSchemaDraft != null) {
                             <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
-                                <div class="definition-section">
-                                    <div class="definition-fields">
-                                        <gtx-select
-                                            [label]="'form_grid.definition_control_type' | gtxI18n"
-                                            [value]="selectedElementSchemaDraft.type"
-                                            (valueChange)="selectedElementSchemaDraft.type = $event; onDefinitionChange()"
-                                        >
-                                            @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
-                                                <gtx-option [value]="ctlEntry.key">{{ ctlEntry.value.labelI18n | gtxI18nObject }}</gtx-option>
-                                            }
-                                        </gtx-select>
-
-                                        <gtx-input
-                                            [label]="'form_grid.definition_name' | gtxI18n"
-                                            [(ngModel)]="selectedElementSchemaDraft.name"
-                                            (ngModelChange)="onDefinitionChange()"
-                                        ></gtx-input>
-                                    </div>
-
-                                    <div class="definition-checkboxes">
-                                        <gtx-checkbox
-                                            [label]="'form_grid.definition_mandatory' | gtxI18n"
-                                            [(ngModel)]="selectedElementSchemaDraft.mandatory"
-                                            (ngModelChange)="onDefinitionChange()"
-                                        ></gtx-checkbox>
-
-                                        <gtx-checkbox
-                                            [label]="'form_grid.definition_sync_on_change' | gtxI18n"
-                                            [(ngModel)]="selectedElementSchemaDraft.updateOnChange"
-                                            (ngModelChange)="onDefinitionChange()"
-                                        ></gtx-checkbox>
-
-                                        <gtx-checkbox
-                                            [label]="'form_grid.definition_multivalue' | gtxI18n"
-                                            [(ngModel)]="selectedElementSchemaDraft.isList"
-                                            (ngModelChange)="onDefinitionChange()"
-                                        ></gtx-checkbox>
-                                    </div>
-                                </div>
+                                <gtx-form-element-definition
+                                    [schemaDraft]="selectedElementSchemaDraft"
+                                    (schemaDraftChange)="onDefinitionChange($event)"
+                                    [controls]="config().controls"
+                                ></gtx-form-element-definition>
                             </gtx-tab>
                         }
                         <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">

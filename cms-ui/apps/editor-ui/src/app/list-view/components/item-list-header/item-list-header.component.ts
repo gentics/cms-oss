@@ -114,6 +114,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
     wastebinEnabled = false;
     multiChannelingEnabled = false;
     folderLanguage: Language = null;
+    formLanguage: Language = null;
     elasticsearchQueryActive = false;
     searchQueryActive = false;
 
@@ -155,6 +156,13 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             map((langId) => this.entityResolver.getLanguage(langId)),
         ).subscribe((lang) => {
             this.folderLanguage = lang;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeFormLanguage).pipe(
+            map((langId) => this.entityResolver.getLanguage(langId)),
+        ).subscribe((lang) => {
+            this.formLanguage = lang;
             this.changeDetector.markForCheck();
         }));
 

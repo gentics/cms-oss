@@ -71,7 +71,7 @@
             @if (nodeLanguages?.length > 1 && (itemType === 'page' || itemType === 'form')) {
                 <language-context-selector
                     [availableLanguages]="nodeLanguages"
-                    [activeLanguage]="folderLanguage"
+            [activeLanguage]="itemType === 'form' ? formLanguage: folderLanguage"
                     [disabled]="elasticsearchQueryActive"
                     [title]="'editor.language_context_selector_disabled_search' | gtxI18n"
                     (languageChange)="selectLanguage($event)"

@@ -17,3 +17,4 @@ aloha_plugins_global:
   # Disabled until we know how to solve the issue with storing/referecing the
   # citation notes.
   # - "extra/cite"
+  - "extra/textcolor"

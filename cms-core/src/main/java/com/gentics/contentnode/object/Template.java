@@ -26,9 +26,9 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.UpdatePagesResult;
 import com.gentics.contentnode.render.GCNRenderable;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.util.ModelBuilder;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * This is the template object of the object layer.

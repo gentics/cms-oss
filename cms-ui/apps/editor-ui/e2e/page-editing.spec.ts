@@ -29,6 +29,7 @@ import {
     TestSize,
     wait,
     waitForResponseFrom
+    hexToRGB,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -52,13 +53,15 @@ import {
     getAlohaIFrame,
     itemAction,
     openPageForEditing,
-    overrideAlohaConfig,
+    rereouteAlohaConfig,
     selectEditorTab,
     selectNode,
     selectRangeIn,
     selectTextIn,
     setupHelperWindowFunctions,
     upsertLink,
+    pickPaletteColor,
+    overwriteAlohaConfigWith,
 } from './helpers';
 
 const CLASS_ACTIVE = 'active';
@@ -305,7 +308,7 @@ test.describe('Page Editing', () => {
                 }],
             }, async ({ page }) => {
                 const WORDS = ['Sample', 'text', 'to', 'test', 'out', 'different', 'formattings'];
-                await overrideAlohaConfig(page, 'aloha-config-interchangable-names.js');
+                await rereouteAlohaConfig(page, 'aloha-config-interchangable-names.js');
                 await openEditingPageInEditmode(page);
 
                 await mainEditable.click();
@@ -351,6 +354,222 @@ test.describe('Page Editing', () => {
                     await expect(italicButton).toContainClass(CLASS_ACTIVE);
                 });
             });
+
+            const COLOR_SETTINGS = [
+                {
+                    label: 'text color',
+                    slot: 'textColor',
+                    alohaSetting: 'color',
+                    cssProperty: 'color',
+                },
+                {
+                    label: 'text background',
+                    slot: 'textBackground',
+                    alohaSetting: 'background-color',
+                    cssProperty: 'background-color',
+                },
+            ];
+
+            for (const colorSettings of COLOR_SETTINGS) {
+                test(`format ${colorSettings.label}`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }]
+                }, async ({ page }) => {
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await test.step('Open text-color dropdown', async () => {
+                        await selectEditorTab(page, 'formatting');
+                        const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                        await button.click();
+                    });
+
+                    const pickedHexColor = await pickPaletteColor(page, colorSettings.slot, 3);
+
+                    // Convert colors, as each browser does color styling applying differently
+                    const rgbaValue = hexToRGB(pickedHexColor);
+                    if (rgbaValue.length !== 4) {
+                        rgbaValue.push(255);
+                    }
+                    const rgbString = `rgb(${rgbaValue.slice(0, 3).join(', ')})`;
+                    const rgbaString = `rgba(${rgbaValue.join(', ')})`;
+
+                    // Validate
+                    const textEl = mainEditable.locator('span');
+                    await expect(textEl).toBeAttached();
+                    const elColor = await textEl.evaluate((el, settings) => el.style.getPropertyValue(settings.cssProperty), colorSettings);
+                    expect([pickedHexColor, rgbString, rgbaString]).toContainEqual(elColor);
+                });
+
+                test(`format ${colorSettings.label} with custom palette`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }]
+                }, async ({ page }) => {
+                    const PICK_COLOR = '#CC000089';
+
+                    await overwriteAlohaConfigWith(page, `
+                        if (Aloha.settings.plugins.textColor == null) {
+                            Aloha.settings.plugins.textColor = {};
+                        }
+
+                        Aloha.settings.plugins.textcolor.config = {
+                            "${colorSettings.alohaSetting}": {
+                                palette: ['${PICK_COLOR}', 'aquamarine', 'rgb(23, 162, 32)'],
+                            },
+                        };
+                    `);
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await test.step('Open text-color dropdown', async () => {
+                        await selectEditorTab(page, 'formatting');
+                        const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                        await button.click();
+                    });
+
+                    const pickedHexColor = await pickPaletteColor(page, colorSettings.slot, PICK_COLOR);
+
+                    // Convert colors, as each browser does color styling applying differently
+                    const rgbaValue = hexToRGB(pickedHexColor);
+                    if (rgbaValue.length !== 4) {
+                        rgbaValue.push(255);
+                    }
+                    const rgbString = `rgb(${rgbaValue.slice(0, 3).join(', ')})`;
+                    const rgbaString = `rgba(${rgbaValue.join(', ')})`;
+
+                    // Validate
+                    const textEl = mainEditable.locator('span');
+                    await expect(textEl).toBeAttached();
+                    const elColor = await textEl.evaluate((el, settings) => el.style.getPropertyValue(settings.cssProperty), colorSettings);
+                    expect([pickedHexColor, rgbString, rgbaString]).toContainEqual(elColor);
+                });
+
+                // One should be able to define an empty list/palette, to disable palettes
+                test(`format ${colorSettings.label} with empty palette`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }]
+                }, async ({ page }) => {
+                    await overwriteAlohaConfigWith(page, `
+                        if (Aloha.settings.plugins.textColor == null) {
+                            Aloha.settings.plugins.textColor = {};
+                        }
+
+                        Aloha.settings.plugins.textcolor.config = {
+                            "${colorSettings.alohaSetting}": {
+                                palette: [],
+                            },
+                        };
+                    `);
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await test.step('Open text-color dropdown', async () => {
+                        await selectEditorTab(page, 'formatting');
+                        const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                        await button.click();
+                    });
+
+                    // Verify
+                    const dropdown = findDynamicDropdown(page, colorSettings.slot);
+                    const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
+                    const paletteEntries = colorPicker.locator('.palette-wrapper .palette-entry:not(.clear-entry)');
+                    await expect(paletteEntries).not.toBeAttached();
+                });
+
+                test(`format ${colorSettings.label} without clear`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }]
+                }, async ({ page }) => {
+                    await overwriteAlohaConfigWith(page, `
+                        if (Aloha.settings.plugins.textColor == null) {
+                            Aloha.settings.plugins.textColor = {};
+                        }
+
+                        Aloha.settings.plugins.textcolor.config = {
+                            "${colorSettings.alohaSetting}": {
+                                allowClear: false
+                            },
+                        };
+                    `);
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await test.step('Open text-color dropdown', async () => {
+                        await selectEditorTab(page, 'formatting');
+                        const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                        await button.click();
+                    });
+
+                    // Verify
+                    const dropdown = findDynamicDropdown(page, colorSettings.slot);
+                    const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
+                    const clearButton = colorPicker.locator('.palette-wrapper .clear-entry');
+                    await expect(clearButton).not.toBeAttached();
+                });
+
+                test(`format ${colorSettings.label} with color disabled`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }]
+                }, async ({ page }) => {
+                    await overwriteAlohaConfigWith(page, `
+                        if (Aloha.settings.plugins.textColor == null) {
+                            Aloha.settings.plugins.textColor = {};
+                        }
+
+                        Aloha.settings.plugins.textcolor.config = {
+                            "${colorSettings.alohaSetting}": {
+                                enabled: false,
+                            },
+                        };
+                    `);
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await selectEditorTab(page, 'formatting');
+                    const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                    await expect(button).not.toBeAttached();
+                });
+            }
 
             test.describe('toggle formats with keybinds', {
                 annotation: [{
@@ -842,7 +1061,7 @@ test.describe('Page Editing', () => {
             test('should be able to style table with config', async ({ page }) => {
                 const STYLE_NAME = 'table-style-1';
 
-                await overrideAlohaConfig(page, 'aloha-config-table-test.js');
+                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -867,7 +1086,7 @@ test.describe('Page Editing', () => {
             test('should be able to style column with config', async ({ page }) => {
                 const STYLE_NAME = 'column-style-1';
 
-                await overrideAlohaConfig(page, 'aloha-config-table-test.js');
+                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -895,7 +1114,7 @@ test.describe('Page Editing', () => {
             test('should be able to style row with config', async ({ page }) => {
                 const STYLE_NAME = 'row-style-1';
 
-                await overrideAlohaConfig(page, 'aloha-config-table-test.js');
+                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');

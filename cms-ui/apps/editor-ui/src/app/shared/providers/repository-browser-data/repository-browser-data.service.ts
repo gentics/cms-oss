@@ -608,11 +608,22 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         }
 
         if (this.currentNodeIdSubjectWrapper.value() === undefined) {
+            if (folderState.activeNode != null && this.nodeFolders[folderState.activeNode]) {
             this.currentNodeIdSubjectWrapper.next(folderState.activeNode);
+            } else if (nodes.length > 0) {
+                this.currentNodeIdSubjectWrapper.next(nodes[0].id);
+        }
         }
 
         if (this.currentParent$.value === undefined) {
-            this.currentParent$.next(this.entitityResolver.denormalizeEntity('folder', this.entitityResolver.getFolder(folderState.activeFolder)));
+            let parentFolder: Folder;
+            if (folderState.activeFolder) {
+                parentFolder = this.entitityResolver.denormalizeEntity('folder', this.entitityResolver.getFolder(folderState.activeFolder));
+            }
+            if (!parentFolder) {
+                parentFolder = this.nodeFolders[this.currentNodeIdSubjectWrapper.value()];
+            }
+            this.currentParent$.next(parentFolder);
             const breadcumbs = folderState.breadcrumbs.list.map((id) => this.entitityResolver.denormalizeEntity('folder', this.entitityResolver.getFolder(id)));
             this.parentItems$.next(breadcumbs);
         }

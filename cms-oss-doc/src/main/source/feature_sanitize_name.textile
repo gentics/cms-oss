@@ -80,8 +80,6 @@ You can specifically allow other characters, so that they will not be replaced.
 
 WARNING: Use this at your own risk. Also do not add more than 9216 characters.
 
-WARNING: This does not work with Java 1.5. Use this feature only with Java 1.6 and above.
-
 <shell filename="conf/*.yml">
 sanitize_allowed_characters:
   # allow , and µ in filenames
@@ -91,7 +89,7 @@ sanitize_allowed_characters:
 
 h4. Setting the standard replacement character
 
-All characters that are not allowed in filenames are replaced with an underscore by default. You can however redefine the standard replacement character like this:
+All characters that are not allowed in filenames are replaced with an hyphen by default. You can however redefine the standard replacement character like this:
 <shell filename="conf/*.yml">
 sanitize_replacement_character: "-";
 </shell>
@@ -123,19 +121,6 @@ If you want to replace e.g. ( and ) with the default replacement character, you 
 
 <shell filename="/Node/etc/node.conf">
 sanitize_character:
-  "(": "_"
-  ")": "_"
-</shell>
-
-h4. Using hyphens instead of underscores
-
-NOTE: It's considered best practice to use hyphens (-) instead of underscores (_) in URL's. For new installations you should add these settings.
-
-If you want to use hyphens (-) instead of underscores (_), you need to do the following:
-
-<shell filename="/Node/etc/node.conf">
-sanitize_character:
-  " ": "-" # replace space with - instead of _
-  "_": "-" # replace _ with -
-sanitize_replacement_character: "-" # replace not allowed characters with -
+  "(": "-"
+  ")": "-"
 </shell>

@@ -1,0 +1,2 @@
+The internal CMS state was sometimes not cleaned up after failed publish processes, which could lead to
+failures in subsequent publish processes. This has been fixed.

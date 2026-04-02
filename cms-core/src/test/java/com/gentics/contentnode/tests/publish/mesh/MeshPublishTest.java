@@ -708,6 +708,60 @@ public class MeshPublishTest {
 	}
 
 	/**
+	 * Test changing the language back to the published version again (without publishing)
+	 * @throws Exception
+	 */
+	@Test
+	public void testChangePageLanguageMultipleTimes() throws Exception {
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		Folder folder = Builder.create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+		}).build();
+
+		// create and publish a page in "de"
+		Page page = Builder.create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(folder.getId());
+			p.setLanguage(languages.get("de"));
+			p.setName("Page");
+		}).at(1000).publish().build();
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// page must be "de" in mesh
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "de", page);
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en");
+
+		// change page to "en" and publish
+		page = Builder.update(page, p -> {
+			p.setLanguage(languages.get("en"));
+		}).at(2000).publish().build();
+
+		// change page to "de" but do not publish
+		page = Builder.update(page, p -> {
+			p.setLanguage(languages.get("de"));
+		}).at(3000).doNotPublish().build();
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// page must be "en" in mesh
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "en", page);
+		assertPages(mesh.client(), MESH_PROJECT_NAME, Trx.supply(() -> MeshPublisher.getMeshUuid(folder)), "de");
+	}
+
+	/**
 	 * Test checking the contentrepository, when many schemas have been created and assigned to the project
 	 * @throws Exception
 	 */

@@ -296,7 +296,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     itemId: formId,
                     payload: {
                         languages: form.languages.filter((l) => !languageCodesToDelete.includes(l)),
-                        data: this.removeLanguagesFromFormData(form.data, languageCodesToDelete),
+                        data: this.removeLanguagesFromFormData(structuredClone(form.data), languageCodesToDelete),
                     },
                 });
             });
@@ -1052,9 +1052,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     private removeLanguagesFromFormData(formData: CmsFormData, languages: string[]): CmsFormData {
+        if (formData.elements) {
         formData.elements.forEach((element: CmsFormElement) => {
             this.removeLanguagesFromFormElement(element, languages);
         });
+        }
         if (formData.mailsubject_i18n) {
             for (const language of languages) {
                 delete formData.mailsubject_i18n[language];

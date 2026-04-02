@@ -179,39 +179,22 @@
                         @if (!restricted() && selectedElementSchemaDraft != null) {
                             <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
                                 <div class="definition-section">
-                                    <div class="definition-section-title">
-                                        {{ 'form_grid.definition_section_title' | gtxI18n }}
-                                    </div>
-
                                     <div class="definition-fields">
-                                        <div class="definition-field">
-                                            <label class="definition-label" for="def-control-type">
-                                                {{ 'form_grid.definition_control_type' | gtxI18n }}
-                                            </label>
-                                            <select
-                                                id="def-control-type"
-                                                class="fg-select"
-                                                [(ngModel)]="selectedElementSchemaDraft.type"
-                                                (ngModelChange)="onDefinitionChange()"
-                                            >
-                                                @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
-                                                    <option [value]="ctlEntry.key">{{ ctlEntry.value.labelI18n | gtxI18nObject }}</option>
-                                                }
-                                            </select>
-                                        </div>
+                                        <gtx-select
+                                            [label]="'form_grid.definition_control_type' | gtxI18n"
+                                            [value]="selectedElementSchemaDraft.type"
+                                            (valueChange)="selectedElementSchemaDraft.type = $event; onDefinitionChange()"
+                                        >
+                                            @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
+                                                <gtx-option [value]="ctlEntry.key">{{ ctlEntry.value.labelI18n | gtxI18nObject }}</gtx-option>
+                                            }
+                                        </gtx-select>
 
-                                        <div class="definition-field">
-                                            <label class="definition-label" for="def-name">
-                                                {{ 'form_grid.definition_name' | gtxI18n }}
-                                            </label>
-                                            <input
-                                                id="def-name"
-                                                type="text"
-                                                class="fg-input"
-                                                [(ngModel)]="selectedElementSchemaDraft.name"
-                                                (ngModelChange)="onDefinitionChange()"
-                                            />
-                                        </div>
+                                        <gtx-input
+                                            [label]="'form_grid.definition_name' | gtxI18n"
+                                            [(ngModel)]="selectedElementSchemaDraft.name"
+                                            (ngModelChange)="onDefinitionChange()"
+                                        ></gtx-input>
                                     </div>
 
                                     <div class="definition-checkboxes">

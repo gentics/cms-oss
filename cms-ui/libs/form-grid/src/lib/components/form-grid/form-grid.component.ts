@@ -112,8 +112,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public selectedElementConfiguration: FormElementConfiguration | null = null;
     /** The schema definition of the selected element (if it has one) */
     public selectedElementSchema: FormSchemaProperty | null = null;
-    /** Editable copy of the selected element's schema property.
-     *  Null for formgrid blocks (Text, Image, Spacer) which have no schema entry. */
+    /** Editable copy of the selected element's schema property Null for formgrid blocks (Text, Image, Spacer) which have no schema entry. */
     public selectedElementSchemaDraft: Partial<FormSchemaProperty> | null = null;
 
     /* PALETTE

@@ -1,4 +1,4 @@
-import { FeatureOperations } from '@admin-ui/core';
+import { FeatureOperations } from '../../../../core/providers/operations/feature/feature.operations';
 import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';

@@ -140,7 +140,7 @@ public class Migration {
 
 		// do the migration
 		Migration migration = new Migration(line.hasOption("verbose"));
-		migration.doMigration(outFile);
+		migration.doMigration(outFile, line);
 	}
 
 	/**
@@ -158,6 +158,7 @@ public class Migration {
 	 */
 	static private Options createOptions() {
 		Options options = new Options();
+		options.addOption("ui_conf", true, "Path to the ui-conf directory (containing the files to be migrated)");
 		options.addOption("out", true, "Output file");
 		options.addOption("overwrite", false, "Must be set to overwrite existing output files");
 		options.addOption("verbose", false, "Verbose output");
@@ -167,11 +168,17 @@ public class Migration {
 
 	/**
 	 * Get the configured ui-conf path
+	 * @param line command line parameters
 	 * @return path
 	 */
-	static private String getUiConfPath() {
+	static private String getUiConfPath(CommandLine line) {
 		String value = null;
-		value = System.getenv(UI_CONF_PATH_ENV);
+		if (line.hasOption("ui_conf")) {
+			value = line.getOptionValue("ui_conf");
+		}
+		if (StringUtils.isBlank(value)) {
+			value = System.getenv(UI_CONF_PATH_ENV);
+		}
 		if (StringUtils.isBlank(value)) {
 			value = System.getProperty(UI_CONF_PATH_PROP);
 		}
@@ -193,10 +200,11 @@ public class Migration {
 	/**
 	 * Do the migration
 	 * @param out output file
+	 * @param line command line parameters
 	 * @throws IOException
 	 */
-	public void doMigration(File out) throws IOException {
-		String uiConfPath = getUiConfPath();
+	public void doMigration(File out, CommandLine line) throws IOException {
+		String uiConfPath = getUiConfPath(line);
 		FormTypeConfigurationMap configMap = new FormTypeConfigurationMap();
 
 		for (String formType : TYPES) {

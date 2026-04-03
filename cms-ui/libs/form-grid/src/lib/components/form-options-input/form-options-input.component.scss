@@ -1,0 +1,22 @@
+@import 'ui-core/src/styles/variables';
+
+label {
+    color: $gtx-color-dark-gray;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    user-select: none;
+    font-size: 0.8rem;
+
+    transition: inherit;
+}
+
+.entries {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+
+    padding-bottom: 0.5rem;
+}

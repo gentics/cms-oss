@@ -9,25 +9,35 @@
             ></gtx-input>
 
             @if (formTypeConfigurations) {
-                <gtx-select
-                    class="columns small-12"
-                    [label]="('editor.form_type_label' | gtxI18n) + '*'"
-                    [multiple]="false"
-                    formControlName="formType"
-                >
-                    @for (configEntry of formTypeConfigurations | gtxEntries; track configEntry.key) {
-                        <gtx-option [value]="configEntry.key">
-                            {{ configEntry.value.nameI18n | gtxI18nObject }}
-                        </gtx-option>
+                <div class="type-config-row">
+                    <gtx-select
+                        [label]="('editor.form_type_label' | gtxI18n) + '*'"
+                        [multiple]="false"
+                        formControlName="formType"
+                        (valueChange)="setActiveFormType($event)"
+                    >
+                        @for (configEntry of formTypeConfigurations | gtxEntries; track configEntry.key) {
+                            <gtx-option [value]="configEntry.key">
+                                {{ configEntry.value.nameI18n | gtxI18nObject }}
+                            </gtx-option>
+                        }
+                    </gtx-select>
+
+                    @if (activeConfiguration?.flows) {
+                        <gtx-select
+                            class="columns small-12"
+                            [label]="('editor.form_flow_label' | gtxI18n) + '*'"
+                            [required]="true"
+                            formControlName="flow"
+                        >
+                            @for (flow of activeConfiguration.flows; track flow.id) {
+                                <gtx-option [value]="language.code">
+                                    {{ flow.labelI18n | gtxI18nObject }}
+                                </gtx-option>
+                            }
+                        </gtx-select>
                     }
-                </gtx-select>
-            } @else if (item?.formTypeName) {
-                <gtx-input
-                    class="columns small-12"
-                    [label]="('editor.form_type_label' | gtxI18n) + '*'"
-                    [readonly]="true"
-                    [value]="item.formTypeName"
-                ></gtx-input>
+                </div>
             }
 
             <gtx-input
@@ -36,37 +46,19 @@
                 formControlName="description"
             ></gtx-input>
 
-            @if (isMultiLang) {
-                <gtx-select
-                    class="columns small-12"
-                    [label]="('editor.item_language_label' | gtxI18n) + '*'"
-                    [multiple]="true"
-                    [required]="true"
-                    formControlName="languages"
-                >
-                    @for (language of languages; track language.code) {
-                        <gtx-option [value]="language.code">
-                            {{ language.name }}
-                        </gtx-option>
-                    }
-                </gtx-select>
-            }
-
-            @if (activeConfiguration?.flows) {
-                <gtx-select
-                    class="columns small-12"
-                    [label]="('editor.form_flow_label' | gtxI18n) + '*'"
-                    [multiple]="true"
-                    [required]="true"
-                    formControlName="flow"
-                >
-                    @for (flow of activeConfiguration.flows; track flow.id) {
-                        <gtx-option [value]="language.code">
-                            {{ flow.labelI18n | gtxI18nObject }}
-                        </gtx-option>
-                    }
-                </gtx-select>
-            }
+            <gtx-select
+                class="columns small-12"
+                [label]="('editor.item_language_label' | gtxI18n) + '*'"
+                [multiple]="true"
+                [required]="true"
+                formControlName="languages"
+            >
+                @for (language of languages; track language.code) {
+                    <gtx-option [value]="language.code">
+                        {{ language.name }}
+                    </gtx-option>
+                }
+            </gtx-select>
 
             @if (activeConfiguration?.templateOptions) {
                 <gtx-select
@@ -170,7 +162,6 @@
                     </gtx-radio-group>
                 } @else {
                     <gtx-browse-box
-                        class="columns small-12"
                         data-action="pick-mail-page"
                         [attr.data-target-id]="form.value.adminEmailPageId"
                         [attr.data-target-node-id]="form.value.adminEmailNodeId"

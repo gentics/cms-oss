@@ -1,0 +1,169 @@
+@import "../../../styles/variables";
+
+gtx-form-element-container {
+    border-color: $gtx-color-light-gray;
+    transition: 200ms;
+    width: 100%;
+
+    .element-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: 100%;
+
+        transition: inherit;
+        border-color: inherit;
+
+        label {
+            color: $gtx-color-dark-gray;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            user-select: none;
+            font-size: 0.8rem;
+
+            transition: inherit;
+        }
+
+        .box-wrapper {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            width: 100%;
+
+            border: 2px solid;
+            border-radius: 3px;
+
+            transition: inherit;
+            border-color: inherit;
+
+            .box-content {
+                display: flex;
+                flex: 1 1 auto;
+                align-content: center;
+                align-items: center;
+
+                box-sizing: border-box;
+                min-height: calc(2.5rem - 4px);
+                padding: 5px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+
+                transition: inherit;
+                border-color: inherit;
+            }
+
+            .addon-button {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-self: flex-start;
+                height: 100%;
+
+                background: $gtx-color-very-light-gray;
+                color: $gtx-color-dark-gray;
+                border: none;
+                border-left: 1px solid;
+                border-color: inherit;
+                outline: 2px solid transparent;
+
+                transition: inherit;
+                border-color: inherit;
+
+                icon {
+                    color: inherit;
+                    font-size: 20px;
+                }
+
+                &:last-child {
+                    border-top-right-radius: inherit;
+                    border-bottom-right-radius: inherit;
+                }
+
+                &.icon-alert {
+                    color: $gtx-color-alert;
+                }
+
+                &.icon-warning {
+                    color: $gtx-color-warning;
+                }
+
+                &.icon-success {
+                    color: $gtx-color-success;
+                }
+
+                &.icon-primary {
+                    color: $gtx-color-primary;
+                }
+
+                &[disabled] {
+                    cursor: not-allowed;
+                }
+
+                &:not([disabled]):hover {
+                    color: $gtx-color-mid-gray;
+                    cursor: pointer;
+
+                    &.icon-alert {
+                        color: lighten($gtx-color-alert, 15%);
+                    }
+
+                    &.icon-warning {
+                        color: lighten($gtx-color-warning, 15%);
+                    }
+
+                    &.icon-success {
+                        color: lighten($gtx-color-success, 15%);
+                    }
+
+                    &.icon-primary {
+                        color: lighten($gtx-color-primary, 15%);
+                    }
+                }
+
+                &:not([disabled]):focus {
+                    outline-color: $gtx-color-primary;
+                    z-index: 1;
+                }
+            }
+        }
+    }
+
+    &.invalid,
+    &.ng-invalid {
+        border-color: $gtx-color-alert;
+
+        label {
+            color: $gtx-color-alert;
+        }
+    }
+
+    &.active {
+        border-color: $gtx-color-primary;
+    }
+
+    &[readonly] {
+        .box-wrapper {
+            color: lighten($gtx-color-dark-gray, 10%);
+        }
+    }
+
+    &[disabled] {
+        border-color: $gtx-color-light-gray;
+
+        label {
+            color: $gtx-color-dark-gray;
+        }
+
+        .box-wrapper {
+            background-color: $gtx-color-off-white;
+            color: $gtx-color-mid-gray;
+        }
+    }
+
+    &:not([disabled]):not([readonly]) .box-wrapper:focus {
+        border-color: $gtx-color-primary;
+    }
+}

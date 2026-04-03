@@ -1,7 +1,7 @@
 @if (tagProperty) {
     <div class="tag-part-editor">
         <gtx-browse-box
-            [label]="'tag_editor.internal_page' | gtxI18n"
+            [label]="tagPart | tagPropLabel"
             [placeholder]="'editor.form_no_selection' | gtxI18n"
             [disabled]="readOnly"
             [allowedSelection]="'form'"

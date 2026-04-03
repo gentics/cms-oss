@@ -1,54 +1,44 @@
-<div class="content">
-    <gtx-input
-        class="value-display"
-        [readonly]="true"
-        [placeholder]="placeholder"
-        [value]="displayValue"
-        [label]="label"
-    ></gtx-input>
-
-    @if (clearable == null ? !required : clearable) {
-        <gtx-button
-            icon
-            class="browse-box__button browse-box__button--clear"
-            type="secondary"
-            data-action="clear"
-            [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | gtxI18n"
-            [disabled]="disabled"
-            (click)="clearItems($event)"
-        >
-            <icon>clear</icon>
-        </gtx-button>
+<gtx-form-element-container [disabled]="disabled">
+    @if (label) {
+        <label>{{ label }}</label>
     }
 
-        <gtx-button
-            icon
-            class="browse-box__button browse-box__button--browse"
-            type="secondary"
-            data-action="browse"
-            [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | gtxI18n"
-            [disabled]="disabled"
-            (click)="browseItems($event)"
-        >
-            <icon>folder_open</icon>
-        </gtx-button>
+    <div class="display-value">{{ displayValue }}</div>
+
+    <button
+        class="addon-button"
+        data-action="browse"
+        [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | gtxI18n"
+        [disabled]="disabled"
+        (click)="browseItems($event)"
+    >
+        <icon>folder_open</icon>
+    </button>
 
     @if (canUpload) {
-        <gtx-button
-            icon
-            class="browse-box__button browse-box__button--upload"
-            type="secondary"
+        <button
+            class="addon-button icon-success"
             data-action="upload"
             [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | gtxI18n"
             [disabled]="disabled"
             (click)="uploadItems($event)"
         >
             <icon>cloud_upload</icon>
-        </gtx-button>
+        </button>
     }
-</div>
 
-@if ((showBreadcrumb == null ? !multiple : showBreadcrumb) && breadcrumbs?.length > 0) {
+    <button
+        class="addon-button icon-alert"
+        data-action="clear"
+        [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | gtxI18n"
+        [disabled]="disabled"
+        (click)="clearItems($event)"
+    >
+        <icon>clear</icon>
+    </button>
+</gtx-form-element-container>
+
+@if ((showBreadcrumb == null ? !multiple && breadcrumbTitle : showBreadcrumb) && breadcrumbs?.length > 0) {
     <div class="breadcrumbs">
         @if (breadcrumbTitle) {
             <div class="breadcrumb-title">{{ breadcrumbTitle }}</div>

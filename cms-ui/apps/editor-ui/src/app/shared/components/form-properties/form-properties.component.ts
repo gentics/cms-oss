@@ -84,6 +84,7 @@ export class FormPropertiesComponent
 
     public formTypeConfigurations: Record<string, FormTypeConfiguration> | null = null;
     public activeConfiguration: FormTypeConfiguration | null = null;
+    public hadInitialConfiguration = false;
 
     public useEmailPageTemplate: boolean;
     public loadedMailTemplate: Page | null = null;
@@ -92,6 +93,8 @@ export class FormPropertiesComponent
     public useInternalSuccessPage: boolean;
     public loadedSuccessPage: Page | null = null;
     public successPageBreadcrumbs = '';
+
+    protected override delayedSetup = true;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -103,26 +106,32 @@ export class FormPropertiesComponent
     public ngOnInit(): void {
         super.ngOnInit();
 
-        if (this.mode === FormPropertiesMode.CREATE) {
-            this.subscriptions.push(this.client.form.listConfigurations({
-                nodeId: this.nodeId,
-                external: false,
-            }).subscribe((res) => {
-                this.formTypeConfigurations = {};
-                for (const config of res.items) {
-                    this.formTypeConfigurations[config.type] = config;
-                }
-                if (this.form) {
-                    this.activeConfiguration = this.formTypeConfigurations[this.form.value.formType];
-                }
+        this.subscriptions.push(this.client.form.listConfigurations({
+            nodeId: this.nodeId,
+            external: false,
+        }).subscribe((res) => {
+            this.formTypeConfigurations = {};
+            for (const config of res.items) {
+                this.formTypeConfigurations[config.type] = config;
+            }
+            if (this.item?.formType) {
+                this.activeConfiguration = this.formTypeConfigurations[this.item.formType];
+            } else if (this.form) {
+                this.activeConfiguration = this.formTypeConfigurations[this.form.value.formType];
+            }
+            this.hadInitialConfiguration = this.activeConfiguration != null;
 
-                this.changeDetector.markForCheck();
-            }));
-        }
+            this.changeDetector.markForCheck();
+        }));
     }
 
     protected override initializeWithData(): void {
         super.initializeWithData();
+
+        if (this.item?.formType && this.activeConfiguration == null && this.formTypeConfigurations != null) {
+            this.activeConfiguration = this.formTypeConfigurations[this.item.formType];
+            this.hadInitialConfiguration = this.activeConfiguration != null;
+        }
 
         if (Number.isInteger(this.item?.successPageId) && this.item.successPageId !== 0) {
             const options: PageRequestOptions = {};
@@ -163,29 +172,27 @@ export class FormPropertiesComponent
 
     protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
         return new FormGroup<FormProperties<FormPropertiesData>>({
-            name: new FormControl(this.safeValue('name'), Validators.required),
-            formType: new FormControl(this.safeValue('formType'), Validators.required),
-            description: new FormControl(this.safeValue('description')),
-            languages: new FormControl(this.safeValue('languages') || [], Validators.minLength(1)),
-            fileName: new FormControl(this.safeValue('fileName')),
-            flow: new FormControl(this.safeValue('flow')),
-            templateContext: new FormControl(this.safeValue('templateContext')),
-            successUrlI18n: new FormControl(this.safeValue('successUrlI18n')),
-            successPageId: new FormControl(this.safeValue('successPageId')),
-            successNodeId: new FormControl(this.safeValue('successNodeId')),
-            adminEmailAddress: new FormControl(this.safeValue('adminEmailAddress')),
-            adminEmailSubject: new FormControl(this.safeValue('adminEmailSubject')),
-            adminEmailPageId: new FormControl(this.safeValue('adminEmailPageId')),
-            adminEmailNodeId: new FormControl(this.safeValue('adminEmailNodeId')),
-            adminEmailTemplate: new FormControl(this.safeValue('adminEmailTemplate')),
+            name: new FormControl(this.item?.name || this.safeValue('name'), Validators.required),
+            formType: new FormControl(this.item?.formType || this.safeValue('formType'), Validators.required),
+            description: new FormControl(this.item?.description || this.safeValue('description')),
+            languages: new FormControl(this.item?.languages || this.safeValue('languages') || [], Validators.minLength(1)),
+            fileName: new FormControl(this.item?.fileName || this.safeValue('fileName')),
+            flow: new FormControl(this.item?.flow || this.safeValue('flow')),
+            templateContext: new FormControl(this.item?.templateContext || this.safeValue('templateContext')),
+            successUrlI18n: new FormControl(this.item?.successUrlI18n || this.safeValue('successUrlI18n')),
+            successPageId: new FormControl(this.item?.successPageId || this.safeValue('successPageId')),
+            successNodeId: new FormControl(this.item?.successNodeId || this.safeValue('successNodeId')),
+            adminEmailAddress: new FormControl(this.item?.adminEmailAddress || this.safeValue('adminEmailAddress')),
+            adminEmailSubject: new FormControl(this.item?.adminEmailSubject || this.safeValue('adminEmailSubject')),
+            adminEmailPageId: new FormControl(this.item?.adminEmailPageId || this.safeValue('adminEmailPageId')),
+            adminEmailNodeId: new FormControl(this.item?.adminEmailNodeId || this.safeValue('adminEmailNodeId')),
+            adminEmailTemplate: new FormControl(this.item?.adminEmailTemplate || this.safeValue('adminEmailTemplate')),
         });
     }
 
     protected configureForm(value: FormPropertiesData, loud?: boolean): void {
-        setControlsEnabled(this.form, ['formType'], this.mode === FormPropertiesMode.CREATE);
-        if (this.formTypeConfigurations != null) {
-            this.activeConfiguration = this.formTypeConfigurations[value.formType];
-        }
+        // Should be enabled while it's still loading
+        setControlsEnabled(this.form, ['formType'], this.formTypeConfigurations == null || !this.hadInitialConfiguration);
     }
 
     protected assembleValue(value: FormPropertiesData): FormPropertiesData {
@@ -194,6 +201,10 @@ export class FormPropertiesComponent
         }
 
         return value;
+    }
+
+    public setActiveFormType(type: string): void {
+        this.activeConfiguration = this.formTypeConfigurations[type];
     }
 
     updateEmailTemplate(doUse: boolean): void {

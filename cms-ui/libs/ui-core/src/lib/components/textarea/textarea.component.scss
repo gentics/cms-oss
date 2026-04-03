@@ -1,20 +1,23 @@
 @import '../../../styles/base-import';
 
 :host {
-    position: relative;
-    display: block;
-
-    @include input-label-styles('> label');
-
-    > textarea.materialize-textarea {
-        @include input-base;
+    textarea {
         width: 100%;
-        min-height: 2.5rem;
-        line-height: 1.5;
-        overflow-y: auto;
+        min-height: 26px;
+        padding: 3px 0 0 0; // Hacky way to make the text (or first line) to be properly aligned
+        border: none;
+        margin: 0;
+        outline: none;
+        box-shadow: none;
+        resize: vertical;
+
+        &:focus {
+            border: none;
+            box-shadow: none;
+        }
     }
 
-    &.ng-touched.ng-invalid > textarea.materialize-textarea:not(:focus) {
+    &.ng-invalid gtx-form-element-container {
         border-color: $gtx-color-alert;
     }
 }

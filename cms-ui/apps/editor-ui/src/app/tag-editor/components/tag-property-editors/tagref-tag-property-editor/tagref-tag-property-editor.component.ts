@@ -131,6 +131,7 @@ interface AugmentedTagSelection extends TagSelection {
 
 /**
  * Used to edit PAGETAG and TEMPLATETAG TagParts.
+ * @deprecated
  */
 @Component({
     selector: 'tagref-tag-property-editor',

@@ -11,25 +11,26 @@
     }
 }
 
-.flex-row {
-    display: flex;
-    gap: 0 0.5rem;
-    flex-direction: row;
-    flex-wrap: wrap;
-
-    .columns {
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    .gtx-form-section-title {
-        width: 100%;
-    }
-}
-
 .form-section-container {
     display: block;
     width: 100%;
+}
+
+.type-config-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+
+    > * {
+        flex: 1 1 50%;
+        max-width: 100%;
+        min-width: 200px;
+    }
+
+    &.half-width {
+        width: 50%;
+    }
 }
 
 .custom-date-picker {
@@ -54,8 +55,9 @@
     margin-top: 1.5rem;
 }
 
-browse-box {
-    padding-bottom: 15px;
+gtx-browse-box {
+    width: 100%;
+    padding-bottom: 0.75rem;
 }
 
 .confirmation-page-setting {

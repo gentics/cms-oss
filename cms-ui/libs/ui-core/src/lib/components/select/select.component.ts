@@ -17,7 +17,7 @@ import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
 import { SelectOptionGroupDirective } from '../../directives/select-option-group/option-group.directive';
 import { SelectOptionDirective } from '../../directives/select-option/option.directive';
-import { generateFormProvider, getValueByPath } from '../../utils';
+import { cancelEvent, generateFormProvider, getValueByPath } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
 import { DropdownListComponent } from '../dropdown-list/dropdown-list.component';
@@ -76,7 +76,7 @@ export class SelectComponent
      * If true, the clear button is displayed, which allows the user to clear the selection.
      */
     @Input()
-    public clearable = false;
+    public clearable: boolean = null;
 
     /**
      * If true, the select all button is displayed, which allows the user to select all options at once.
@@ -375,7 +375,8 @@ export class SelectComponent
     }
 
     /** Clears the selected value and emits `null` with the `change` event. */
-    clearSelection(): void {
+    clearSelection(event?: Event): void {
+        cancelEvent(event);
         if (this.disabled) {
             return;
         }
@@ -383,7 +384,8 @@ export class SelectComponent
         this.triggerChange(this.multiple ? [] : null);
     }
 
-    selectAllOptions(): void {
+    selectAllOptions(event?: Event): void {
+        cancelEvent(event);
         this.triggerChange(this.selectOptions.map((option) => option.value));
     }
 

@@ -1,64 +1,13 @@
-@import '../../../styles/base-import';
+@import '../../../styles/variables';
 
 :host {
-    display: flex;
-    flex-direction: row;
-
-    > gtx-input {
-        flex: 1 1 auto;
-
-        &.clearable::ng-deep input.input-element {
-            border-top-right-radius: 0px;
-            border-bottom-right-radius: 0px;
-            border-right-width: 1px;
-        }
-
-        &::ng-deep > input:not(:disabled) {
-            color: inherit;
-
-            &, & + label {
-                cursor: pointer;
-            }
-        }
+    &.ng-invalid gtx-form-element-container {
+        border-color: $gtx-color-alert;
     }
 
-    .clear-button {
-        align-self: flex-start;
-        background: $gtx-color-very-light-gray;
-        border-top: 2px solid $gtx-color-light-gray;
-        border-right: 2px solid $gtx-color-light-gray;
-        border-bottom: 2px solid $gtx-color-light-gray;
-        border-top-right-radius: 3px;
-        border-bottom-right-radius: 3px;
-        display: flex;
-        flex-direction: column;
-        height: 2.5rem;
-        justify-content: center;
-        margin-top: 20px;
-
-        icon {
-            color: inherit;
-        }
-
-        &:hover::ng-deep .btn,
-        &:focus::ng-deep .btn {
-            color: $gtx-color-alert !important;
-        }
-    }
-
-    &.ng-touched.ng-invalid {
-        > gtx-input::ng-deep {
-            input {
-                border-color: $gtx-color-alert;
-            }
-
-            label {
-                color: $gtx-color-alert;
-            }
-        }
-
-        .clear-button {
-            border-color: $gtx-color-alert;
-        }
+    .display-value.placeholder {
+        color: $gtx-color-mid-gray;
+        user-select: none;
     }
 }
+

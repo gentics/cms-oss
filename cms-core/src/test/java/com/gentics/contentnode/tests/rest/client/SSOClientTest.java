@@ -20,6 +20,7 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.rest.client.RestClient;
+import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
@@ -77,7 +78,7 @@ public class SSOClientTest {
 
 	@Test
 	public void testSSOLogin() throws Exception {
-		RestClient client = new RestClient(restContext.getBaseUri());
+		RestClient client = new JerseyRestClientImpl(restContext.getBaseUri());
 		client.ssologin();
 	}
 }

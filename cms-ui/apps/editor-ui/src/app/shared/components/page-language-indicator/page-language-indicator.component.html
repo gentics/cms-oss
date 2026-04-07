@@ -6,96 +6,109 @@
     [class.show-deleted]="displayDeleted"
 >
     <ng-container *ngFor="let variant of variants; trackBy: identifyVariant">
-        <gtx-dropdown-list
-            *ngIf="(permissions | gtxMapPermissions:variant.code)?.page?.view"
-            width="contents"
-            data-action="page-language"
-            data-context-id="page-language"
-            [attr.data-id]="variant?.code"
-            [disabled]="mode === ItemListRowMode.SELECT"
-        >
-            <gtx-dropdown-trigger @animNgForChild>
-                <gtx-language-state
-                    data-context-trigger
-                    class="selectable"
-                    [language]="variant"
-                    [activeLanguage]="activeLanguage"
-                    [state]="variant"
-                    [mode]="uiMode"
-                    [showIndicators]="displayStatusInfo"
-                    [showDeleted]="displayDeleted"
-                    (click)="onIconClicked(variant)"
-                ></gtx-language-state>
-            </gtx-dropdown-trigger>
+        <ng-template #variantState>
+            <gtx-language-state
+                data-context-trigger
+                class="selectable"
+                [language]="variant"
+                [activeLanguage]="activeLanguage"
+                [state]="variant"
+                [mode]="uiMode"
+                [showIndicators]="displayStatusInfo"
+                [showDeleted]="displayDeleted"
+                (click)="onIconClicked(variant)"
+            ></gtx-language-state>
+        </ng-template>
 
-            <gtx-dropdown-content data-context-id="page-language" class="page-language-context">
-                <ng-container *ngIf="uiMode === UIMode.EDIT">
-                    <gtx-dropdown-item
-                        *ngIf="!variant.available && !activeLanguage"
-                        data-action="set-source-language"
-                        (click)="languageClicked(variant, false, true)"
-                    >
-                        {{ 'editor.set_as_source_language_label' | i18n:{ language: variant?.name } }}
-                    </gtx-dropdown-item>
+        <ng-container *ngIf="(permissions | gtxMapPermissions:variant.code)?.page?.view">
+            <ng-container *ngIf="mode === ItemListRowMode.SELECT; else variantWithOptions">
+                <div class="language-container" data-action="page-language" [attr.data-id]="variant?.code">
+                    <ng-container [ngTemplateOutlet]="variantState" />
+                </div>
+            </ng-container>
+        </ng-container>
 
-                    <gtx-dropdown-item
-                        *ngIf="variant.available && !variant.deleted"
-                        data-action="preview"
-                        (click)="languageClicked(language)"
-                    >
-                        {{ 'editor.preview_in_language_label' | i18n:{ language: variant?.name } }}
-                    </gtx-dropdown-item>
+        <ng-template #variantWithOptions>
+            <gtx-dropdown-list
+                width="contents"
+                data-action="page-language"
+                data-context-id="page-language"
+                [attr.data-id]="variant?.code"
+                [disabled]="mode === ItemListRowMode.SELECT"
+            >
+                <gtx-dropdown-trigger @animNgForChild>
+                    <ng-container [ngTemplateOutlet]="variantState" />
+                </gtx-dropdown-trigger>
 
-                    <gtx-dropdown-item
-                        *ngIf="variant.available
-                            && page.contentGroupId !== variant.id
-                            && !variant.deleted"
-                        data-action="compare"
-                        (click)="languageClicked(variant, true)"
-                    >
-                        {{ 'editor.compare_languages_label' | i18n:{
-                            language1: activeLanguage?.name,
-                            language2: variant?.name
-                        } }}
-                    </gtx-dropdown-item>
+                <gtx-dropdown-content data-context-id="page-language" class="page-language-context">
+                    <ng-container *ngIf="uiMode === UIMode.EDIT">
+                        <gtx-dropdown-item
+                            *ngIf="!variant.available && !activeLanguage"
+                            data-action="set-source-language"
+                            (click)="languageClicked(variant, false, true)"
+                        >
+                            {{ 'editor.set_as_source_language_label' | i18n:{ language: variant?.name } }}
+                        </gtx-dropdown-item>
 
-                    <gtx-dropdown-item
-                        *ngIf="(!variant.available || variant.deleted)
-                            && activeLanguage
-                            && (permissions | gtxMapPermissions:variant.code)?.page?.edit"
-                        data-action="translate"
-                        (click)="languageClicked(variant)"
-                    >
-                        {{ 'editor.translate_into_label' | i18n:{ language: variant?.name } }}
-                    </gtx-dropdown-item>
+                        <gtx-dropdown-item
+                            *ngIf="variant.available && !variant.deleted"
+                            data-action="preview"
+                            (click)="languageClicked(language)"
+                        >
+                            {{ 'editor.preview_in_language_label' | i18n:{ language: variant?.name } }}
+                        </gtx-dropdown-item>
 
-                    <gtx-dropdown-item
-                        *ngIf="variant.deleted && (permissions | gtxMapPermissions)?.wastebin"
-                        data-action="restore"
-                        (click)="languageClicked(variant, false, false, true)"
-                    >
-                        <icon left>restore_from_trash</icon>
-                        {{ 'editor.restore_from_wastebin_label' | i18n }}
-                    </gtx-dropdown-item>
-                </ng-container>
+                        <gtx-dropdown-item
+                            *ngIf="variant.available
+                                && page.contentGroupId !== variant.id
+                                && !variant.deleted"
+                            data-action="compare"
+                            (click)="languageClicked(variant, true)"
+                        >
+                            {{ 'editor.compare_languages_label' | i18n:{
+                                language1: activeLanguage?.name,
+                                language2: variant?.name
+                            } }}
+                        </gtx-dropdown-item>
 
-                <ng-container *ngIf="uiMode === UIMode.STAGING">
-                    <gtx-dropdown-item
-                        *ngIf="variant.available && !variant.deleted"
-                        data-action="stage"
-                        [attr.data-active]="stagingMap?.[variant?.globalId]?.included"
-                        (click)="onStageLanguageClick(variant, false)"
-                    >
-                        <icon left>{{ stagingMap?.[variant?.globalId]?.included ? 'remove' : 'inventory' }}</icon>
-                        {{ 'editor.' + (stagingMap?.[variant?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | i18n:{
-                            language: variant?.name,
-                            itemType: 'common.type_page' | i18n,
-                            itemTypePlural: 'common.type_pages' | i18n
-                        } }}
-                    </gtx-dropdown-item>
-                </ng-container>
-            </gtx-dropdown-content>
-        </gtx-dropdown-list>
+                        <gtx-dropdown-item
+                            *ngIf="(!variant.available || variant.deleted)
+                                && activeLanguage
+                                && (permissions | gtxMapPermissions:variant.code)?.page?.edit"
+                            data-action="translate"
+                            (click)="languageClicked(variant)"
+                        >
+                            {{ 'editor.translate_into_label' | i18n:{ language: variant?.name } }}
+                        </gtx-dropdown-item>
+
+                        <gtx-dropdown-item
+                            *ngIf="variant.deleted && (permissions | gtxMapPermissions)?.wastebin"
+                            data-action="restore"
+                            (click)="languageClicked(variant, false, false, true)"
+                        >
+                            <icon left>restore_from_trash</icon>
+                            {{ 'editor.restore_from_wastebin_label' | i18n }}
+                        </gtx-dropdown-item>
+                    </ng-container>
+
+                    <ng-container *ngIf="uiMode === UIMode.STAGING">
+                        <gtx-dropdown-item
+                            *ngIf="variant.available && !variant.deleted"
+                            data-action="stage"
+                            [attr.data-active]="stagingMap?.[variant?.globalId]?.included"
+                            (click)="onStageLanguageClick(variant, false)"
+                        >
+                            <icon left>{{ stagingMap?.[variant?.globalId]?.included ? 'remove' : 'inventory' }}</icon>
+                            {{ 'editor.' + (stagingMap?.[variant?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | i18n:{
+                                language: variant?.name,
+                                itemType: 'common.type_page' | i18n,
+                                itemTypePlural: 'common.type_pages' | i18n
+                            } }}
+                        </gtx-dropdown-item>
+                    </ng-container>
+                </gtx-dropdown-content>
+            </gtx-dropdown-list>
+        </ng-template>
     </ng-container>
 
     <div class="expand-toggle">

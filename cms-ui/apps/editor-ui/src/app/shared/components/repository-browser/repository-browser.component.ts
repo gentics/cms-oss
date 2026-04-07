@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Inject, Input, OnDestroy, OnInit } from '@angular/core';
-import { RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '@editor-ui/app/common/models';
+import { FolderPermissionData, RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '@editor-ui/app/common/models';
 import { ApplicationStateService, SetListDisplayFieldsAction } from '@editor-ui/app/state';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
@@ -86,6 +86,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
     showFavourites$: Observable<boolean>;
     startPageId$: Observable<number | undefined>;
     pageShowPath$: Observable<boolean>;
+    folderPermissions$: Observable<FolderPermissionData>;
 
     /** Observable for each type that emits the display fields. */
     displayFieldsForType: { [key: string]: Observable<string[]> };
@@ -287,6 +288,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
         this.sortOrder$ = dataService.sortOrder$;
         this.startPageId$ = dataService.startPageId$;
         this.pageShowPath$ = this.appState.select(state => state.folder.pages.showPath);
+        this.folderPermissions$ = dataService.folderPermissions$;
 
         this.observableForType = {
             folder: dataService.folders$,

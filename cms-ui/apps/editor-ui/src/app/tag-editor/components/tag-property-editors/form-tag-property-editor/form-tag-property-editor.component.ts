@@ -1,13 +1,15 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
+import { ApplicationStateService } from '@editor-ui/app/state';
 import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     CmsFormTagPartProperty,
     EditableTag,
     Form,
     ItemInNode,
+    NodeFeature,
     Raw,
     TagPart,
     TagPartProperty,
@@ -15,7 +17,7 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { Observable, merge } from 'rxjs';
+import { Observable, Subscription, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 
 /**
@@ -28,7 +30,7 @@ import { map, tap } from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false
 })
-export class FormTagPropertyEditorComponent implements TagPropertyEditor {
+export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDestroy {
 
     /** Form this edited tag belongs to */
     private form?: Form<Raw>;
@@ -48,15 +50,24 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
     /** Whether the tag is opened in read-only mode. */
     readOnly: boolean;
 
+    public formFeatureActive = false;
+
     /** The onChange function registered by the TagEditor. */
     private onChangeFn: TagPropertiesChangedFn;
+
+    private subscriptions: Subscription[] = [];
 
     constructor(
         private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private i18n: I18nService,
+        private appState: ApplicationStateService,
     ) { }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach((s) => s.unsubscribe());
+    }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
         this.selectedInternalForm = new SelectedItemHelper('form', context.node.id, this.client);
@@ -97,6 +108,18 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
         ).pipe(
             tap(() => this.changeDetector.markForCheck()),
         );
+
+        this.subscriptions.push(this.appState.select((state) => state.features.nodeFeatures).subscribe((nodeFeatures) => {
+            if (!context.node) {
+                this.formFeatureActive = false;
+                this.changeDetector.markForCheck();
+                return;
+            }
+
+            const currentNodeFeatures = nodeFeatures[context.node?.id] || [];
+            this.formFeatureActive = currentNodeFeatures.includes(NodeFeature.FORMS);
+            this.changeDetector.markForCheck();
+        }));
 
         this.tagPart = tagPart;
         this.readOnly = context.readOnly;

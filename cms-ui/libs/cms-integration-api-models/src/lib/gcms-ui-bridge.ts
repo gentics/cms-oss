@@ -157,6 +157,8 @@ export interface GcmsUiBridge {
      * Opens the debug-tool which allows the dumping of the current application state
      * and other information to be able to debug errors.
      * This should only be used in emergencies and only, if you know what you're doing.
+     *
+     * @deprecated Functionallity has already been removed.
      */
     callDebugTool: () => void;
     /**

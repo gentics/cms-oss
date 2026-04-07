@@ -1,9 +1,9 @@
 <ng-container *ngIf="tagProperty">
     <div class="tag-part-editor">
         <browse-box
-            [label]="'tag_editor.internal_page' | i18n"
-            [displayValue]="internalFormDisplayValue$ | async"
-            [disabled]="readOnly"
+            [label]="tagPart | tagPropLabel"
+            [displayValue]="!formFeatureActive ? ('editor.form_feature_not_available' | i18n) : (internalFormDisplayValue$ | async)"
+            [disabled]="!formFeatureActive || readOnly"
             (clear)="changeSelectedForm(null)"
             (browse)="browseForForm()"
         ></browse-box>

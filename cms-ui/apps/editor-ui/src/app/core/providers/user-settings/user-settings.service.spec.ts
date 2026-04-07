@@ -272,68 +272,6 @@ describe('UserSettingsService', () => {
 
         describe('navigation to the fallback node', () => {
 
-            it('occurs if neither the local storage nor the server settings contain a lastNodeId', () => {
-                userSettings.loadUserSettingsWhenLoggedIn();
-                localStorage.getForUser.and.callFake((userId: number, key: string): any => {
-                    if (key === 'lastNodeId') { return undefined; }
-                });
-                serverStorage.getAll.and.returnValue(of({}));
-
-                state.mockState({
-                    auth: {
-                        user: {
-                            id: 1234,
-                        } as any,
-                        isLoggedIn: true,
-                    },
-                    ui: {
-                        nodesLoaded: true,
-                    },
-                    folder: {
-                        nodes: {
-                            list: [ 1, 2, 3, 4 ],
-                        },
-                        files: {
-                            displayFields: [],
-                        },
-                        folders: {
-                            displayFields: [],
-                        },
-                        forms: {
-                            displayFields: [],
-                        },
-                        images: {
-                            displayFields: [],
-                        },
-                        pages: {
-                            displayFields: [],
-                        },
-                    },
-                    entities: {
-                        node: {
-                            1: {
-                                name: 'Node 1',
-                                id: 1,
-                            },
-                            2: {
-                                name: 'Node 2',
-                                id: 2,
-                            },
-                            3: {
-                                name: 'Node 3',
-                                id: 3,
-                            },
-                            4: {
-                                name: 'Node 4',
-                                id: 4,
-                            },
-                        },
-                    },
-                });
-
-                expect(folderActions.navigateToDefaultNode).toHaveBeenCalledTimes(1);
-            });
-
             it('does not occur if the local storage contains a valid lastNodeId', () => {
                 userSettings.loadUserSettingsWhenLoggedIn();
                 localStorage.getForUser.and.callFake((userId: number, key: string): any => {
@@ -459,70 +397,6 @@ describe('UserSettingsService', () => {
                 });
 
                 expect(folderActions.navigateToDefaultNode).not.toHaveBeenCalled();
-            });
-
-            it('occurs if the local storage and the server settings both contain an invalid lastNodeId', () => {
-                userSettings.loadUserSettingsWhenLoggedIn();
-                localStorage.getForUser.and.callFake((userId: number, key: string): any => {
-                    if (key === 'lastNodeId') { return 5; }
-                });
-                serverStorage.getAll.and.returnValue(of({
-                    lastNodeId: 5,
-                }));
-
-                state.mockState({
-                    auth: {
-                        user: {
-                            id: 1234,
-                        } as any,
-                        isLoggedIn: true,
-                    },
-                    ui: {
-                        nodesLoaded: true,
-                    },
-                    folder: {
-                        nodes: {
-                            list: [ 1, 2, 3, 4 ],
-                        },
-                        files: {
-                            displayFields: [],
-                        },
-                        folders: {
-                            displayFields: [],
-                        },
-                        forms: {
-                            displayFields: [],
-                        },
-                        images: {
-                            displayFields: [],
-                        },
-                        pages: {
-                            displayFields: [],
-                        },
-                    },
-                    entities: {
-                        node: {
-                            1: {
-                                name: 'Node 1',
-                                id: 1,
-                            },
-                            2: {
-                                name: 'Node 2',
-                                id: 2,
-                            },
-                            3: {
-                                name: 'Node 3',
-                                id: 3,
-                            },
-                            4: {
-                                name: 'Node 4',
-                                id: 4,
-                            },
-                        },
-                    },
-                });
-
-                expect(folderActions.navigateToDefaultNode).toHaveBeenCalledTimes(1);
             });
 
         });

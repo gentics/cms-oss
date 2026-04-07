@@ -59,8 +59,8 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 
 	@Override
 	@GET
-	@Path("/{type}/{objId}")
-	public PublishLogDto get(@PathParam("type") String type, @PathParam("objId") Integer objId)
+	@Path("/{protoType}/{objId}")
+	public PublishLogDto get(@PathParam("protoType") String type, @PathParam("objId") Integer objId)
 			throws NodeException {
 		validateRequest(type);
 		try (Trx trx = ContentNodeHelper.trx()) {

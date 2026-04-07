@@ -31,6 +31,12 @@ import {
     matchesPath,
     copyText,
     hexToRGB,
+    PageImportData,
+    IMPORT_TYPE,
+    LANGUAGE_DE,
+    PageTranslationImportData,
+    IMPORT_TYPE_PAGE_TRANSLATION,
+    LANGUAGE_EN,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -73,6 +79,26 @@ test.describe('Page Editing', () => {
 
     const IMPORTER = new EntityImporter();
 
+    const MULTILANG_PAGE: PageImportData = {
+        [IMPORT_TYPE]: ITEM_TYPE_PAGE,
+        [IMPORT_ID]: 'page_editing_links_multilang',
+
+        folderId: NODE_MINIMAL[IMPORT_ID],
+        nodeId: NODE_MINIMAL[IMPORT_ID],
+
+        pageName: 'Multilang Page Example',
+        templateId: BASIC_TEMPLATE_ID,
+        language: LANGUAGE_EN,
+    };
+    const MULTILANG_PAGE_DE: PageTranslationImportData = {
+        [IMPORT_TYPE]: IMPORT_TYPE_PAGE_TRANSLATION,
+        [IMPORT_ID]: 'page_editing_links_multilang_de',
+
+        pageId: MULTILANG_PAGE[IMPORT_ID],
+        pageName: 'Multilang Seite Beispiel',
+        language: LANGUAGE_DE,
+    };
+
     test.beforeAll(async ({ request }) => {
         await test.step('Client Setup', async () => {
             IMPORTER.setApiContext(request);
@@ -102,6 +128,10 @@ test.describe('Page Editing', () => {
 
         await test.step('Specialized Test Setup', async () => {
             await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
+            await IMPORTER.importData([
+                MULTILANG_PAGE,
+                MULTILANG_PAGE_DE,
+            ]);
             await setupHelperWindowFunctions(page);
         });
 
@@ -808,7 +838,7 @@ test.describe('Page Editing', () => {
         });
 
         test.describe('Links', () => {
-            test.beforeEach(async ({page}) => {
+            test.beforeEach(async ({ page }) => {
                 editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
             });
@@ -816,12 +846,12 @@ test.describe('Page Editing', () => {
             test('should be able to select an internal page as link', async ({ page }) => {
                 const TEXT_CONTENT = 'Hello ';
                 const LINK_TEXT = 'World';
-                const LINK_ITEM = IMPORTER.get(PAGE_ONE);
+                const LINK_ITEM = IMPORTER.get(MULTILANG_PAGE);
                 const ITEM_NODE = IMPORTER.get(NODE_MINIMAL)!;
                 const LINK_TITLE = 'My Link Title';
                 const LINK_TARGET = '_blank';
                 const LINK_ANCHOR = 'test-anchor';
-                const LINK_LANGUAGE = 'en';
+                const LINK_LANGUAGE = LANGUAGE_EN;
 
                 // Type content and select text for link
                 await mainEditable.click();
@@ -833,6 +863,10 @@ test.describe('Page Editing', () => {
                 await createInternalLink(page, async (repoBrowser) => {
                     await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
                 }, async form => {
+                    // Validate that the picker already shows the correct language
+                    const picker = form.locator('[data-slot="url"] .target-input.internal');
+                    await expect(picker.locator('.page-language')).toHaveText(LINK_LANGUAGE);
+
                     await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
                     await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
                     await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
@@ -848,6 +882,56 @@ test.describe('Page Editing', () => {
                 await expect(linkElement).toHaveAttribute('data-gentics-aloha-repository', 'com.gentics.aloha.GCN.Page');
                 await expect(linkElement).toHaveAttribute('data-gcn-target-label', LINK_ITEM.name);
                 await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_ITEM.id}`);
+                await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
+                await expect(linkElement).toHaveText(LINK_TEXT);
+            });
+
+            test('should be able to select an internal page in a different language as link', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19559',
+                }],
+            }, async ({ page }) => {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+                const LINK_ITEM = IMPORTER.get(MULTILANG_PAGE);
+                const LINK_TARGET_ITEM = IMPORTER.get(MULTILANG_PAGE_DE);
+                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL)!;
+                const LINK_TITLE = 'My Link Title';
+                const LINK_TARGET = '_blank';
+                const LINK_ANCHOR = 'test-anchor';
+                const LINK_LANGUAGE = LANGUAGE_DE;
+
+                // Type content and select text for link
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                // Select text to make into link
+                expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+                await createInternalLink(page, async (repoBrowser) => {
+                    const repoPageList = repoBrowser.locator('repository-browser-list[data-type="page"]');
+                    await repoPageList.locator(`[data-id="${LINK_ITEM.id}"] [data-action="page-language"][data-id="${LINK_LANGUAGE}"]`).click();
+                }, async form => {
+                    // Validate that the picker already shows the correct language
+                    const picker = form.locator('[data-slot="url"] .target-input.internal');
+                    await expect(picker.locator('.page-language')).toHaveText(LINK_LANGUAGE);
+
+                    await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
+                    await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
+                    await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
+                    await form.locator('[data-slot="lang"] input').fill(LINK_LANGUAGE);
+                });
+
+                // Verify link was created
+                const linkElement = mainEditable.locator('a');
+                await expect(linkElement).toHaveAttribute('href', `/alohapage?real=newview&realid=${LINK_TARGET_ITEM.id}&nodeid=${ITEM_NODE.id}`);
+                await expect(linkElement).toHaveAttribute('hreflang', LINK_LANGUAGE);
+                await expect(linkElement).toHaveAttribute('target', LINK_TARGET);
+                await expect(linkElement).toHaveAttribute('title', LINK_TITLE);
+                await expect(linkElement).toHaveAttribute('data-gentics-aloha-repository', 'com.gentics.aloha.GCN.Page');
+                await expect(linkElement).toHaveAttribute('data-gcn-target-label', LINK_TARGET_ITEM.name);
+                await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_TARGET_ITEM.id}`);
                 await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
                 await expect(linkElement).toHaveText(LINK_TEXT);
             });

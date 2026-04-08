@@ -65,7 +65,7 @@ public enum ConfigurationValue {
 	/**
 	 * Access Log Format
 	 */
-	ACCESS_LOG("ACCESS_LOG", "com.gentics.contentnode.access_log", () -> CustomRequestLog.NCSA_FORMAT),
+	ACCESS_LOG("ACCESS_LOG", "com.gentics.contentnode.access_log", () -> "%{remote}a - %m %U%q %H %s %O - %{ms}T ms trackingId=%{X-Tracking-ID}i"),
 
 	/**
 	 * Path for static file publishing

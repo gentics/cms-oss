@@ -40,6 +40,7 @@
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
 		<module>cms-integration-tests</module>
+		<module>cms-monitoring</module>
 	</modules>
 
 	<properties>
@@ -50,6 +51,7 @@
 		<alohaeditor.date>17.03.2026</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
 		<mesh.version>3.2.5</mesh.version>
+        <liveness.version>0.0.1-SNAPSHOT</liveness.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>3.1.10</jersey.version>

@@ -789,7 +789,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 			form.setDescription("Test Form");
 			form.setLanguages(Arrays.asList("de"));
 			try {
-				form.setData(AbstractIndexerTest.mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class));
+				form.setData(AbstractIndexerTest.mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
 			} catch (IOException e) {
 				throw new NodeException(e);
 			}

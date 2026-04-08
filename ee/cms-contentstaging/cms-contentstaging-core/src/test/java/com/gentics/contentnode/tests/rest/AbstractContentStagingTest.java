@@ -231,7 +231,7 @@ public class AbstractContentStagingTest {
 			f.setFolderId(node1.getFolder().getId());
 
 			try {
-				f.setData(mapper.readValue(FormPublishTest.class.getResource("form_data.json"), ObjectNode.class));
+				f.setData(mapper.readValue(FormPublishTest.class.getResource("generic_form_data.json"), ObjectNode.class));
 			} catch (IOException e) {
 				throw new NodeException(e);
 			}

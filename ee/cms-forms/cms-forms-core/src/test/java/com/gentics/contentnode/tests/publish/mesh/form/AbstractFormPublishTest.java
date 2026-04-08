@@ -50,6 +50,7 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ExceptionChecker;
@@ -76,13 +77,21 @@ public abstract class AbstractFormPublishTest {
 	 */
 	public final static String MESH_PROJECT_NAME = "form_project";
 
-	public final static String pluginFileName = "mesh-forms-plugin.jar";
+	public final static String formsPluginFileName = "mesh-forms-plugin.jar";
 
-	public final static String pluginFilePath = "target/plugins/" + pluginFileName;
+	public final static String formsPluginFilePath = "target/plugins/" + formsPluginFileName;
 
-	public static File pluginJarFile;
+	public static File formsPluginJarFile;
 
-	public static File pluginConfigDir;
+	public static File formsPluginConfigDir;
+
+	public final static String andpPluginFileName = "mesh-andp-plugin.jar";
+
+	public final static String andpPluginFilePath = "target/plugins/" + andpPluginFileName;
+
+	public static File andpPluginJarFile;
+
+	public static File andpPluginConfigDir;
 
 	public static File licenseKeyFile;
 
@@ -90,9 +99,16 @@ public abstract class AbstractFormPublishTest {
 
 	static {
 		try {
-			pluginJarFile = new File(pluginFilePath);
-			assertThat(pluginJarFile).as("Plugin File").exists().canRead().isFile();
-			pluginConfigDir = new File(FormPublishTest.class.getResource("/config").toURI());
+			// forms plugin
+			formsPluginJarFile = new File(formsPluginFilePath);
+			assertThat(formsPluginJarFile).as("Forms Plugin File").exists().canRead().isFile();
+			formsPluginConfigDir = new File(FormPublishTest.class.getResource("/forms/config").toURI());
+
+			// andp plugin
+			andpPluginJarFile = new File(andpPluginFilePath);
+			assertThat(andpPluginJarFile).as("ANDP Plugin File").exists().canRead().isFile();
+			andpPluginConfigDir = new File(FormPublishTest.class.getResource("/andp/config").toURI());
+
 			licenseKeyFile = new File(FormPublishTest.class.getResource("/license.key").toURI());
 		} catch (URISyntaxException e) {
 			fail("Error while preparing plugin", e);
@@ -113,8 +129,10 @@ public abstract class AbstractFormPublishTest {
 	 */
 	@ClassRule
 	public static MeshContext mesh = new MeshContext()
-			.withFileSystemBind(pluginJarFile.getAbsolutePath(), "/plugins/" + pluginFileName, BindMode.READ_ONLY)
-			.withFileSystemBind(pluginConfigDir.getAbsolutePath(), "/plugins/forms", BindMode.READ_ONLY)
+			.withFileSystemBind(formsPluginJarFile.getAbsolutePath(), "/plugins/" + formsPluginFileName, BindMode.READ_ONLY)
+			.withFileSystemBind(formsPluginConfigDir.getAbsolutePath(), "/plugins/forms", BindMode.READ_ONLY)
+			.withFileSystemBind(andpPluginJarFile.getAbsolutePath(), "/plugins/" + andpPluginFileName, BindMode.READ_ONLY)
+			.withFileSystemBind(andpPluginConfigDir.getAbsolutePath(), "/plugins/andp", BindMode.READ_ONLY)
 			.withFileSystemBind(licenseKeyFile.getAbsolutePath(), "/mesh/license.key", BindMode.READ_ONLY);
 
 	protected static final Logger log = LoggerFactory.getLogger(AbstractFormPublishTest.class);
@@ -231,6 +249,11 @@ public abstract class AbstractFormPublishTest {
 		cleanMesh(mesh.client());
 
 		operate(() -> clear(node));
+
+		operate(() -> {
+			DBUtils.update("DELETE FROM publishqueue");
+			DBUtils.update("DELETE FROM dirtqueue");
+		});
 
 		node = update(node, n -> {
 			n.setContentrepositoryId(crId);

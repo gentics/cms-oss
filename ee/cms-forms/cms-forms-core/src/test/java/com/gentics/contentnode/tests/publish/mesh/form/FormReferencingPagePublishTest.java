@@ -132,7 +132,7 @@ public class FormReferencingPagePublishTest extends AbstractFormPublishTest {
 			f.setFolderId(node.getFolder().getId());
 
 			try {
-				ObjectNode data = mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class);
+				ObjectNode data = mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class);
 				data.put("mailsource_pageid", emailPage.getId());
 				f.setData(data);
 			} catch (IOException e) {
@@ -204,7 +204,7 @@ public class FormReferencingPagePublishTest extends AbstractFormPublishTest {
 			f.setFolderId(node.getFolder().getId());
 
 			try {
-				ObjectNode data = mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class);
+				ObjectNode data = mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class);
 				data.put("mailsource_pageid", emailPage.getId());
 				f.setData(data);
 			} catch (IOException e) {

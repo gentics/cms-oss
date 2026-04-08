@@ -141,6 +141,12 @@
 				<version>${mesh.forms.plugin.version}</version>
 				<type>jar</type>
 			</dependency>
+			<dependency>
+				<groupId>com.gentics.andp</groupId>
+				<artifactId>mesh-acta-nova-plugin</artifactId>
+				<version>${mesh.andp.plugin.version}</version>
+				<type>jar</type>
+			</dependency>
 
 			<!-- Multichannelling -->
 			<dependency>

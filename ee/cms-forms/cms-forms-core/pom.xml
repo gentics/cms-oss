@@ -168,6 +168,14 @@
 									<outputDirectory>${project.build.directory}/plugins</outputDirectory>
 									<destFileName>mesh-forms-plugin.jar</destFileName>
 								</artifactItem>
+								<artifactItem>
+									<groupId>com.gentics.andp</groupId>
+									<artifactId>mesh-acta-nova-plugin</artifactId>
+									<type>jar</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}/plugins</outputDirectory>
+									<destFileName>mesh-andp-plugin.jar</destFileName>
+								</artifactItem>
 							</artifactItems>
 						</configuration>
 					</execution>

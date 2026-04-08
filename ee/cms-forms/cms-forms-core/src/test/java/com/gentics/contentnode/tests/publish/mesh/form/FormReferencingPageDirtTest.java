@@ -25,7 +25,6 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.tests.category.MeshTest;
-import com.gentics.contentnode.tests.utils.FormRESTUtils;
 import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -101,7 +100,7 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 			f.setFolderId(node.getFolder().getId());
 
 			try {
-				ObjectNode data = mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class);
+				ObjectNode data = mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class);
 				data.put("mailsource_pageid", refPageEn.getId());
 				ObjectNode element = (ObjectNode)data.get("elements").get(0);
 				element.put("test_pageid", otherRefPageEn.getId());

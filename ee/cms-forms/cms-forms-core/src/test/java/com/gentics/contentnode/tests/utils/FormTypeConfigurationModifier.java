@@ -21,19 +21,33 @@ public class FormTypeConfigurationModifier implements ConfigModifier {
 	 */
 	public final static String GENERIC_TYPE = "generic";
 
+	public final static String ANDP_TYPE = "andp";
+
 	@Override
 	public void accept(MapPreferences prefs) throws NodeException {
 		ObjectMapper mapper = new ObjectMapper();
 
 		FormTypeConfigurationMap formTypeConfiguration = new FormTypeConfigurationMap();
-		FormTypeConfiguration config = new FormTypeConfiguration(Map.of("de", "CMS Formulare", "en", "CMS Forms"),
+
+		// prepare forms config
+		FormTypeConfiguration formsConfig = new FormTypeConfiguration(Map.of("de", "CMS Formular", "en", "CMS Form"),
 				"forms");
 		try {
-			config.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);
+			formsConfig.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);
 		} catch (JsonProcessingException e) {
 			throw new NodeException(e);
 		}
-		formTypeConfiguration.put(GENERIC_TYPE, config);
+		formTypeConfiguration.put(GENERIC_TYPE, formsConfig);
+
+		// prepare andp config
+		FormTypeConfiguration andpConfig = new FormTypeConfiguration(Map.of("de", "ANDP Formular", "en", "ANDP Form"), "acta-nova");
+		try {
+			andpConfig.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);
+		} catch (JsonProcessingException e) {
+			throw new NodeException(e);
+		}
+		formTypeConfiguration.put(ANDP_TYPE, andpConfig);
+
 		prefs.set(FormConfigProvider.TYPES_CONFIG_PATH, formTypeConfiguration);
 	}
 }

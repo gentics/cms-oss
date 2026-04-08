@@ -978,6 +978,9 @@ public class QueueEntry {
 									}
 									dummy.setMeshUuid(meshUuid);
 									dummy.setMeshLanguage(meshLanguage);
+									if (property.length >= 4) {
+										dummy.getAdditionalData().put("formType", property[3]);
+									}
 								}
 								property = null;
 							}

@@ -1878,7 +1878,7 @@ public class FormFactory extends AbstractFactory {
 				// add logcmd
 				ActionLogger.logCmd(ActionLogger.DEL, Form.TYPE_FORM, form.getId(), 0, "Form.delete");
 				Events.trigger(form, new String[] { ObjectTransformer.getString(form.getOwningNode().getId(), ""),
-						MeshPublisher.getMeshUuid(form), MeshPublisher.getMeshLanguage(form) }, Events.DELETE);
+						MeshPublisher.getMeshUuid(form), MeshPublisher.getMeshLanguage(form), form.getFormType() }, Events.DELETE);
 			}
 
 			// delete the forms with their versions

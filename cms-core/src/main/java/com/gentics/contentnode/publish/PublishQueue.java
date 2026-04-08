@@ -35,6 +35,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.DummyObject;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Folder.FileSearch;
@@ -994,12 +995,19 @@ public class PublishQueue {
 			if (attributes.length == 0 && REMOVING_ACTIONS.contains(action)) {
 				// when objects are deleted or taken offline, we need to know, which language the object had, in order to remove the correct language variant from mesh.
 				// exception: when the object was REMOVEd (means: moved to another node), we want to remove all language variants from mesh.
-				if (MeshPublisher.supportsAlternativeLanguages(object) || action == Action.REMOVE) {
-					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object) };
-				} else {
-					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object),
-							"language:" + MeshPublisher.getMeshLanguage(object) };
+				List<String> attrsList = new ArrayList<>();
+				attrsList.add("uuid:%s".formatted(MeshPublisher.getMeshUuid(object)));
+				if (!MeshPublisher.supportsAlternativeLanguages(object) && action != Action.REMOVE) {
+					attrsList.add("language:%s".formatted(MeshPublisher.getMeshLanguage(object)));
 				}
+				if (objType == Form.TYPE_FORM) {
+					if (object instanceof Form form) {
+						attrsList.add("formType:%s".formatted(form.getFormType()));
+					} else if (object instanceof DummyObject dummy) {
+						attrsList.add("formType:%s".formatted(dummy.getAdditionalData().getOrDefault("formType", "")));
+					}
+				}
+				attributes = attrsList.toArray(new String[attrsList.size()]);
 			}
 
 			Entry entry = dirtObject(objType, ObjectTransformer.getInt(object.getId(), 0), action, cId, true, attributes);

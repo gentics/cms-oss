@@ -216,6 +216,8 @@ export class EntityImporter {
     public async setupTest(size: TestSize): Promise<EntityMap> {
         await this.setupClient();
 
+        await this.syncTestPackages(size);
+
         const map = await this.setupContent(size);
 
         // Store all CRs in the entity map
@@ -301,6 +303,8 @@ export class EntityImporter {
             await this.clearEmptyNodeForDeletion(node);
             await this.client.node.delete(node.id).send();
         }
+
+        await this.cleanupTemplates();
     }
 
     /** Apply global features to the CMS */
@@ -1146,6 +1150,21 @@ export class EntityImporter {
                 await this.client.group.delete(group.id).send();
             } catch (err) {
                 // Ignore deletion notices of groups which have already been deleted
+                if (err instanceof GCMSRestClientRequestError && err.responseCode === 404) {
+                    continue;
+                }
+                throw err;
+            }
+        }
+    }
+
+    private async cleanupTemplates(): Promise<void> {
+        const templates = (await this.client.template.list().send()).items || [];
+        for (const tpl of templates) {
+            try {
+                await this.client.template.delete(tpl.id).send();
+            } catch (err) {
+                // Ignore deletion notices of templates which have already been deleted
                 if (err instanceof GCMSRestClientRequestError && err.responseCode === 404) {
                     continue;
                 }

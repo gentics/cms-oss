@@ -76,7 +76,7 @@ import {
     SyncObjectsResponse,
     Template, TemplateFolderListRequest,
     TemplateListRequest,
-    TemplateListResponse,
+    FolderTemplateListResponse,
     TemplateRequestOptions,
     TemplateResponse,
     TemplateUsageResponse,
@@ -512,7 +512,7 @@ export class FolderApi {
     getTemplates(
         parentId: number,
         options?: TemplateFolderListRequest,
-    ): Observable<TemplateListResponse> {
+    ): Observable<FolderTemplateListResponse> {
         const requestParams: TemplateFolderListRequest = this.apiBase.createListRequest(
             parentId,
             options,
@@ -521,7 +521,7 @@ export class FolderApi {
         return this.apiBase
             .get(`folder/getTemplates/${parentId}`, requestParams)
             .pipe(
-                map((res: TemplateListResponse) => {
+                map((res: FolderTemplateListResponse) => {
                     // Templates don't receive a "type" by the API, so we add it
                     if (res.templates) {
                         res.templates.forEach(

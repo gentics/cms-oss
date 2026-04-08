@@ -105,6 +105,7 @@ import {
     FolderResponse,
     FolderSaveRequest,
     FolderStartpageRequest,
+    FolderTemplateListResponse,
     FolderUsageResponse,
     Form,
     FormCreateRequest,
@@ -364,7 +365,6 @@ import {
     UserGroupsResponse,
     UserListOptions,
     UserListResponse,
-    UserRequestOptions,
     UserResponse,
     UserUpdateRequest,
     UserUpdateResponse,
@@ -372,7 +372,7 @@ import {
     ValidateSidResponse,
     VersionResponse,
     WastebinDeleteOptions,
-    WastebinRestoreOptions,
+    WastebinRestoreOptions
 } from '@gentics/cms-models';
 import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
@@ -643,7 +643,7 @@ export interface AbstractFolderAPI extends BasicAPI {
     images: (id: number | string, options?: FolderListOptions) => FileListResponse;
     items: (id: number | string, options?: ItemListOptions) => ItemListResponse;
     pages: (id: number | string, options?: FolderListOptions) => PageListResponse;
-    templates: (id: number | string, options?: FolderListOptions) => TemplateListResponse;
+    templates: (id: number | string, options?: FolderListOptions) => FolderTemplateListResponse;
 
     setStartpage: (id: number | string, body: FolderStartpageRequest) => Response;
     sanitizePublshDirectory: (body: FolderPublishDirSanitizeRequest) => FolderPublishDirSanitizeResponse;

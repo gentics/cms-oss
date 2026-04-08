@@ -19,6 +19,17 @@
         "confirm_element_delete": "Are you sure you want to remove this element?",
         "view_mode_tab_editor": "Editor",
         "view_mode_tab_preview": "Preview",
-        "pagination_title": "Page"
+        "pagination_title": "Page",
+        "definition_validation_title": "Validation",
+        "definition_validation_min_value": "Min. Value",
+        "definition_validation_max_value": "Max. Value",
+        "definition_validation_min_length": "Min. Length",
+        "definition_validation_max_length": "Max. Length",
+        "definition_validation_regex": "Regex Pattern",
+        "definition_type_settings_title": "Type Settings",
+        "definition_type_date_only": "Date only",
+        "definition_type_precision": "Precision",
+        "definition_type_search_min_length": "Search min. length",
+        "definition_type_autocomplete_min_length": "Autocomplete min. length"
     }
 }

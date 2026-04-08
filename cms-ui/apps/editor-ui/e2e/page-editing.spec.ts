@@ -28,7 +28,7 @@ import {
     pickSelectValue,
     TestSize,
     wait,
-    waitForResponseFrom
+    waitForResponseFrom,
     hexToRGB,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';

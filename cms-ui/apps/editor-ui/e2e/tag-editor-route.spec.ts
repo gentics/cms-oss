@@ -112,19 +112,6 @@ test.describe('Tag Editor Route', () => {
         });
     });
 
-    test.afterEach(async ({ request }) => {
-        // Force unlocking of the template
-        const userClient = await createClient({
-            context: request,
-            isPageContext: false,
-            autoLogin: {
-                username: TEST_USER.login,
-                password: TEST_USER.password,
-            },
-        });
-        await userClient.template.unlock(BASIC_TEMPLATE_ID).send();
-    });
-
     test('template overview-tag', {
         annotation: [{
             type: 'ticket',

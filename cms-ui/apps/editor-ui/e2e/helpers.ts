@@ -549,7 +549,7 @@ export function overwriteAlohaConfigWith(page: Page, content: string): Promise<v
     }
 
     ${content}
-});`,
+})();`,
         });
     });
 }
@@ -580,7 +580,7 @@ export async function setDateChipValue(chip: Locator, value: Date): Promise<void
 }
 
 export function findColorPickerPaletteColor(picker: Locator, color: string): Locator {
-    return picker.locator(`.palette .palette-entry[data-value="${color}"]`);
+    return picker.locator(`.palette .palette-entry[data-value="${color.toLowerCase()}"]`);
 }
 
 export function findNthColorPickerPaletteColor(picker: Locator, index: number): Locator {

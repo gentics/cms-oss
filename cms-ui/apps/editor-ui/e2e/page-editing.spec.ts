@@ -28,7 +28,7 @@ import {
     pickSelectValue,
     TestSize,
     wait,
-    waitForResponseFrom
+    waitForResponseFrom,
     hexToRGB,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
@@ -415,15 +415,16 @@ test.describe('Page Editing', () => {
                         description: 'SUP-19597',
                     }]
                 }, async ({ page }) => {
-                    const PICK_COLOR = '#CC000089';
+                    const PICK_COLOR = '#CD000089';
 
                     await overwriteAlohaConfigWith(page, `
-                        if (Aloha.settings.plugins.textColor == null) {
-                            Aloha.settings.plugins.textColor = {};
+                        if (Aloha.settings.plugins.textcolor == null) {
+                            Aloha.settings.plugins.textcolor = {};
                         }
 
                         Aloha.settings.plugins.textcolor.config = {
                             "${colorSettings.alohaSetting}": {
+                                enabled: true,
                                 palette: ['${PICK_COLOR}', 'aquamarine', 'rgb(23, 162, 32)'],
                             },
                         };
@@ -451,7 +452,8 @@ test.describe('Page Editing', () => {
                         rgbaValue.push(255);
                     }
                     const rgbString = `rgb(${rgbaValue.slice(0, 3).join(', ')})`;
-                    const rgbaString = `rgba(${rgbaValue.join(', ')})`;
+                    const alpha = rgbaValue[3] / 255;
+                    const rgbaString = `rgba(${rgbaValue.slice(0, 3).join(', ')}, ${alpha === 1 || alpha === 0 ? alpha : alpha.toFixed(2)})`;
 
                     // Validate
                     const textEl = mainEditable.locator('span');
@@ -468,12 +470,13 @@ test.describe('Page Editing', () => {
                     }]
                 }, async ({ page }) => {
                     await overwriteAlohaConfigWith(page, `
-                        if (Aloha.settings.plugins.textColor == null) {
-                            Aloha.settings.plugins.textColor = {};
+                        if (Aloha.settings.plugins.textcolor == null) {
+                            Aloha.settings.plugins.textcolor = {};
                         }
 
                         Aloha.settings.plugins.textcolor.config = {
                             "${colorSettings.alohaSetting}": {
+                                enabled: true,
                                 palette: [],
                             },
                         };
@@ -507,12 +510,13 @@ test.describe('Page Editing', () => {
                     }]
                 }, async ({ page }) => {
                     await overwriteAlohaConfigWith(page, `
-                        if (Aloha.settings.plugins.textColor == null) {
-                            Aloha.settings.plugins.textColor = {};
+                        if (Aloha.settings.plugins.textcolor == null) {
+                            Aloha.settings.plugins.textcolor = {};
                         }
 
                         Aloha.settings.plugins.textcolor.config = {
                             "${colorSettings.alohaSetting}": {
+                                enabled: true,
                                 allowClear: false
                             },
                         };
@@ -546,8 +550,8 @@ test.describe('Page Editing', () => {
                     }]
                 }, async ({ page }) => {
                     await overwriteAlohaConfigWith(page, `
-                        if (Aloha.settings.plugins.textColor == null) {
-                            Aloha.settings.plugins.textColor = {};
+                        if (Aloha.settings.plugins.textcolor == null) {
+                            Aloha.settings.plugins.textcolor = {};
                         }
 
                         Aloha.settings.plugins.textcolor.config = {

@@ -378,9 +378,12 @@ export interface TemplateResponse extends Response {
 /**
  * Response from `folder/getTemplates`
  */
-export interface TemplateListResponse extends BaseListResponse {
+export interface FolderTemplateListResponse extends BaseListResponse {
     templates: Template<Raw>[];
 }
+
+/** Response from `template` */
+export interface TemplateListResponse extends ListResponse<Template<Raw>> {}
 
 /**
  * Response from `node/{nodeId}/templates`

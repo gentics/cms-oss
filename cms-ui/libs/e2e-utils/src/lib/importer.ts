@@ -941,7 +941,7 @@ export class EntityImporter {
     }
 
     private async getTemplateMapping(): Promise<Record<string, Template>> {
-        const templates = (await this.client.template.list({ reduce: true }).send()).templates || [];
+        const templates = (await this.client.template.list({ reduce: true }).send()).items || [];
         const mapping: Record<string, Template> = {};
 
         for (const tpl of templates) {

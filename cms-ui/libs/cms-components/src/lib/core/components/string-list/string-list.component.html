@@ -1,74 +1,64 @@
 @if (label?.trim().length > 0) {
-  <label>{{ label }}</label>
+    <label>{{ label }}</label>
 }
 
-@if (form.controls.length > 0) {
-  @if (sortable) {
-    <gtx-sortable-list
-      #dragList
-      class="list drag-list"
-      [disabled]="disabled"
-      (dragEnd)="sortList($event)"
-      >
-      @for (control of form.controls; track control; let index = $index) {
-        <gtx-sortable-item>
-          <gtx-contents-list-item class="drag-item">
-            <gtx-input
-              class="item-primary input"
-              [draggable]="true"
-              [formControl]="control"
-              (blur)="triggerTouch()"
-            ></gtx-input>
-            <gtx-button
-              flat="true"
-              size="small"
-              type="alert"
-              class="delete-button"
-              [disabled]="disabled"
-              (click)="removeItem(index)"
-              >
-              <icon>delete</icon>
-            </gtx-button>
-            <gtx-drag-handle></gtx-drag-handle>
-          </gtx-contents-list-item>
-        </gtx-sortable-item>
-      }
-    </gtx-sortable-list>
-  }
-  @if (!sortable) {
-    <div #regularList class="list regular-list">
-      @for (control of form.controls; track control; let index = $index) {
-        <gtx-contents-list-item class="regular-item">
-          <gtx-input
-            class="item-primary input"
-            [class.error]="errors?.errors[index] != null"
-            [formControl]="control"
-            (blur)="triggerTouch()"
-          ></gtx-input>
-          <gtx-button
-            flat="true"
-            size="small"
-            type="alert"
-            class="delete-button"
+<ng-template #entry let-control="control">
+    <gtx-input
+        class="item-primary input"
+        [class.error]="errors?.errors[index] != null"
+        [formControl]="control"
+        (blur)="triggerTouch()"
+    >
+        <button
+            class="addon-button icon-alert"
+            data-action="remove"
             [disabled]="disabled"
             (click)="removeItem(index)"
-            >
+        >
             <icon>delete</icon>
-          </gtx-button>
-        </gtx-contents-list-item>
-      }
-    </div>
-  }
+        </button>
+    </gtx-input>
+</ng-template>
+
+@if (form.controls.length > 0) {
+    @if (sortable) {
+        <gtx-sortable-list
+            #dragList
+            class="list drag-list"
+            [disabled]="disabled"
+            (dragEnd)="sortList($event)"
+        >
+            @for (control of form.controls; track control; let index = $index) {
+                <gtx-sortable-item>
+                    <gtx-contents-list-item class="drag-item">
+                        <ng-container [ngTemplateOutlet]="entry" [ngTemplateOutletContext]="{ control: control }"></ng-container>
+                        <gtx-drag-handle></gtx-drag-handle>
+                    </gtx-contents-list-item>
+                </gtx-sortable-item>
+            }
+        </gtx-sortable-list>
+    }
+
+    @if (!sortable) {
+        <div #regularList class="list regular-list">
+            @for (control of form.controls; track control; let index = $index) {
+                <gtx-contents-list-item class="regular-item">
+                    <ng-container [ngTemplateOutlet]="entry" [ngTemplateOutletContext]="{ control: control }"></ng-container>
+                </gtx-contents-list-item>
+            }
+        </div>
+    }
 }
 
 <div class="button-wrapper">
-  <gtx-button
-    flat="true"
-    size="small"
-    class="add-button"
-    [disabled]="disabled"
-    (click)="addItem()"
+    <gtx-button
+        flat="true"
+        size="small"
+        class="add-button"
+        [disabled]="disabled"
+        (click)="addItem()"
     >
-    {{ addLabel }}<icon right>add</icon>
-  </gtx-button>
+        <icon left>add</icon>
+        {{ addLabel }}
+    </gtx-button>
 </div>

@@ -60,7 +60,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public schema = model.required<FormSchema>();
     public elements = model.required<FormElement[]>();
     public selectedElement = input<FormElement | null>();
-    public elementSelect = output<ElementSelectionEvent>();
+    public selectedElementContainerId = input<string | null>();
+    public elementSelect = output<ElementSelectionEvent | null>();
 
     /* PALETTE
      * ===================================================================== */
@@ -375,6 +376,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 if (!shouldDelete) {
                     return;
                 }
+
+                if (
+                    this.selectedElement()?.id === element.id
+                    && this.selectedElementContainerId() === this.id()
+                ) {
+                    this.elementSelect.emit(null);
+                }
+
                 const newElements = this.elements().slice();
                 newElements.splice(index, 1);
                 this.elements.set(newElements);

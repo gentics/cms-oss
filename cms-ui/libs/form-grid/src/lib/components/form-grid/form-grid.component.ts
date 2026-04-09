@@ -19,7 +19,6 @@ import {
 } from '@gentics/cms-models';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
-import { LINE_OPTIONS } from '../../constants/line-options';
 import { ElementSelectionEvent, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
 enum EditTabs {
@@ -51,7 +50,6 @@ function addElementsToMap(data: Record<string, FormElement>, elements: FormEleme
 export class FormGridComponent extends BaseComponent implements OnInit, OnDestroy {
 
     public readonly ELEMENT_ROOT_CONTAINER_ID = uuidV4();
-    public readonly LINE_OPTIONS = LINE_OPTIONS;
     public readonly EditTabs = EditTabs;
     public readonly FormGridViewMode = FormGridViewMode;
 

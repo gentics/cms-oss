@@ -19,6 +19,8 @@
         "confirm_element_delete": "Möchten Sie das element wirklich entfernen?",
         "view_mode_tab_editor": "Editor",
         "view_mode_tab_preview": "Preview",
-        "pagination_title": "Seite"
+        "pagination_title": "Seite",
+        "user_settings_missing": "Keine optionen konfiguriert für Benutzerdaten!",
+        "add_option": "Option hinzufügen"
     }
 }

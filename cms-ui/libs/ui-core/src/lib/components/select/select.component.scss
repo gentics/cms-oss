@@ -8,78 +8,38 @@ label {
 :host {
     display: flex;
     position: relative;
-    margin: 0 0 20px 0;
-
-    &::ng-deep gtx-dropdown-list {
-        display: block;
-        width: 100%;
-
-        &.has-addon .view-value {
-            border-top-right-radius: 0px;
-            border-bottom-right-radius: 0px;
-            border-right-width: 1px;
-        }
-
-        gtx-dropdown-trigger {
-            width: 100%;
-        }
-    }
 
     .placeholder {
         color: #d6d6d6;
     }
 
+    gtx-form-element-container {
+        width: 100%;
+    }
+
+    gtx-dropdown-list,
+    gtx-dropdown-list::ng-deep > div,
+    gtx-dropdown-trigger {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
     .view-value {
-        @include input-base;
         cursor: pointer;
         display: flex;
-        margin-top: 1px;
         user-select: none;
-
-        > div {
-            flex-grow: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        > icon {
-            margin-top: -1px;
-        }
-    }
-
-    @include input-label-styles;
-
-    &.ng-invalid .view-value,
-    &.ng-invalid .view-value.has-disabled-unknowns,
-    &.ng-invalid .addon-button,
-    &.ng-invalid .addon-button.has-disabled-unknowns {
-        border-color: $gtx-color-alert;
-    }
-
-    .addon-button {
-        align-self: flex-start;
-        background: $gtx-color-very-light-gray;
-        border-top: 2px solid $gtx-color-light-gray;
-        border-right: 2px solid $gtx-color-light-gray;
-        border-bottom: 2px solid $gtx-color-light-gray;
-        border-top-right-radius: 3px;
-        border-bottom-right-radius: 3px;
-        display: flex;
-        flex-direction: column;
-        height: 2.5rem;
-        justify-content: center;
-        margin-top: 1px;
-        transition: 300ms;
+        width: 100%;
+        height: 100%;
+        align-items: center;
 
         icon {
-            color: inherit;
+            margin-left: auto;
         }
     }
 
-    .with-label .view-value,
-    .with-label ~ .addon-button  {
-        margin-top: 20px;
+    &.ng-invalid gtx-form-element-container {
+        border-color: $gtx-color-alert;
     }
 }
 
@@ -89,10 +49,6 @@ label {
 
 .select-all-button:hover::ng-deep .btn {
     color: $gtx-color-success !important;
-}
-
-.material-icons {
-    margin-right: 5px;
 }
 
 .select-options {
@@ -167,6 +123,7 @@ label {
         > icon {
             height: inherit;
             line-height: inherit;
+            margin-right: 5px;
         }
     }
 }

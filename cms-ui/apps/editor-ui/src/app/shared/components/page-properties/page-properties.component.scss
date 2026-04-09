@@ -2,7 +2,6 @@
 
 .no-templates {
     color: $gtx-color-alert;
-    margin-bottom: 1rem;
     margin-top: 0;
 }
 
@@ -11,93 +10,17 @@
 
     & + a {
         display: block;
-        margin-bottom: 1rem;
     }
 }
 
-.basic-flex-row {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 1rem;
-
-    .flex-col {
-        flex: 1 1;
-        min-width: 200px;
-    }
+.actual-date {
+    font-size: 0.8rem;
+    color: $gtx-color-dark-gray;
 }
 
-.custom-date-row {
-    margin-bottom: 1rem;
-}
-
-.custom-date-col {
-    .custom-date-picker::ng-deep .input-element {
-        margin-bottom: 0px !important;
-    }
-
-    .actual-date {
-        font-size: 0.8rem;
-        color: $gtx-color-dark-gray;
-    }
-}
 .error-message {
     color: $gtx-color-alert;
     margin-bottom: 13px;
     margin-top: -18px;
 }
 
-.file-name-wrapper {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-
-    gtx-input {
-        flex: 1 1 auto;
-
-        &::ng-deep input {
-            border-top-right-radius: 0 !important;
-            border-bottom-right-radius: 0 !important;
-            border-right-width: 1px solid;
-        }
-
-        &.ng-invalid + .suggest-button {
-            border-color: $gtx-color-alert;
-        }
-    }
-
-    .suggest-button {
-        flex: 0 0;
-        border-left: none;
-        border-top: 2px solid $gtx-color-light-gray;
-        border-right: 2px solid $gtx-color-light-gray;
-        border-bottom: 2px solid $gtx-color-light-gray;
-        background: $gtx-color-very-light-gray;
-        color: $gtx-color-dark-gray;
-        border-top-right-radius: 3px;
-        border-bottom-right-radius: 3px;
-        display: flex;
-        flex-direction: column;
-        height: 2.5rem;
-        justify-content: center;
-        transition: 300ms;
-        margin-top: 20px;
-        align-self: flex-start;
-        font-size: 1rem;
-        cursor: pointer;
-
-        icon {
-            color: inherit;
-            font-size: inherit;
-        }
-
-        &:hover,
-        &:focus {
-            color: $gtx-color-primary;
-        }
-    }
-
-    &.focused .suggest-button {
-        border-color: $gtx-color-primary;
-    }
-}

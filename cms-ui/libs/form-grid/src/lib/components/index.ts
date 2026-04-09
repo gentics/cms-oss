@@ -3,3 +3,4 @@ export * from './form-grid-elements-container/form-grid-elements-container.compo
 export * from './form-page-manager/form-page-manager.component';
 export * from './form-element-definition/form-element-definition.component';
 export * from './form-element-settings/form-element-settings.component';
+export * from './form-options-input/form-options-input.component';

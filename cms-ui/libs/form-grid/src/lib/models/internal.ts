@@ -9,6 +9,11 @@ export interface PaletteDropTarget {
     index: number;
     /** How many columns the item spans */
     span: number;
+    /** Neighbor that dynamically yields size during a drop simulation (prevents wrapping without flickering) */
+    resizeNeighbor?: {
+        index: number;
+        span: number;
+    };
 }
 
 export interface DropItemRect {

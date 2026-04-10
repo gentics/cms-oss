@@ -7,7 +7,7 @@
 }
 
 .columns {
-    min-height: 50px;
+    height: 100px;
     background: #fafafa;
     border: 1px solid #e5e5e5;
 
@@ -109,32 +109,31 @@
 .editor-drop-container {
     position: relative;
     display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
     width: 100%;
-    border-radius: 22px;
+    border-radius: 4px;
     transition:
         background 180ms ease,
         box-shadow 180ms ease,
         transform 180ms ease;
 
-    &.palette-dragging {
-        padding-top: 6px;
-        padding-bottom: 6px;
-        box-shadow: inset 0 0 0 1px rgba(0, 150, 220, 0.06);
-    }
+    // &.palette-dragging {
+    //     padding-top: 6px;
+    //     padding-bottom: 6px;
+    //     box-shadow: inset 0 0 0 1px rgba(0, 150, 220, 0.06);
+    // }
 
     &.palette-dragging.is-palette-drop-target {
         background:
             radial-gradient(circle at top, rgba(0, 150, 220, 0.08), transparent 46%),
             linear-gradient(180deg, rgba(0, 150, 220, 0.04), rgba(0, 150, 220, 0.08));
-        box-shadow:
-            inset 0 0 0 1px rgba(0, 150, 220, 0.24),
-            0 14px 36px rgba(0, 150, 220, 0.08);
     }
 
-    &.palette-dragging.editor-drop-container--root {
-        padding-top: 8px;
-        padding-bottom: 8px;
-    }
+    // &.palette-dragging.editor-drop-container--root {
+    //     padding-top: 8px;
+    //     padding-bottom: 8px;
+    // }
 
     &.editor-drop-container--root {
         height: 100%;
@@ -247,8 +246,8 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     font-size: 1rem;
 }
 
-.drop-placeholder--empty {
-    min-height: 132px;
+.drop-placeholder {
+    height: 100px;
 }
 
 .drop-placeholder__box {
@@ -257,14 +256,14 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 100%;
-    border-radius: 18px;
+    height: 100%;
+    border-radius: 4px;
     border: 1px dashed rgba(0, 150, 220, 0.42);
     background:
         linear-gradient(180deg, rgba(0, 150, 220, 0.08), rgba(0, 150, 220, 0.14));
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.32),
-        0 12px 30px rgba(0, 150, 220, 0.12);
+    // box-shadow:
+    //     inset 0 0 0 1px rgba(255, 255, 255, 0.32),
+    //     0 12px 30px rgba(0, 150, 220, 0.12);
     overflow: hidden;
 }
 
@@ -278,20 +277,6 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
             rgba(255, 255, 255, 0));
     background-size: 240% 100%;
     animation: dropPlaceholderShimmer 1.8s linear infinite;
-}
-
-.drop-placeholder__line {
-    position: absolute;
-    left: 14px;
-    right: 14px;
-    top: 50%;
-    height: 3px;
-    transform: translateY(-50%);
-    border-radius: 999px;
-    background: linear-gradient(90deg,
-            rgba(0, 150, 220, 0.12),
-            rgba(0, 150, 220, 0.9),
-            rgba(0, 150, 220, 0.12));
 }
 
 .drop-placeholder__badge,

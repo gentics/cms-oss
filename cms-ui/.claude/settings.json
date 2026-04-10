@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls:*)",
+      "Read(//Users/apagtxbarbu/Documents/Gentics/cms-oss/cms-oss/cms-ui/libs/form-grid/**)"
+    ]
+  }
+}

@@ -134,6 +134,18 @@ export class FormGridElementsContainerComponent implements OnChanges {
         });
     }
 
+    public getDisplaySpan(element: FormElement, index: number): number {
+        const isTarget = this.paletteDragging() 
+                      && this.paletteDropTarget()?.elementContainerId === this.id();
+        const neighbor = this.paletteDropTarget()?.resizeNeighbor;
+
+        if (isTarget && neighbor && neighbor.index === index) {
+            return neighbor.span;
+        }
+
+        return this.getSpan(element);
+    }
+
     public onPaletteContainerDragOver(event: DragEvent): void {
         if (
             !this.paletteDragging()
@@ -159,11 +171,31 @@ export class FormGridElementsContainerComponent implements OnChanges {
         const clientX = event.clientX;
         const clientY = event.clientY;
 
+        // Use elementFromPoint for 100% reliable read of cursor target, immune to fast hit-testing loops
+        const realTarget = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+        const isHoveringPlaceholder = realTarget && realTarget.closest('.drop-placeholder') !== null;
+        const hoveredElementId = realTarget?.closest('gtx-contents-list-item')?.getAttribute('data-element-id');
+
         if (this.paletteDragOverFrame) {
             cancelAnimationFrame(this.paletteDragOverFrame);
         }
 
         this.paletteDragOverFrame = requestAnimationFrame(() => {
+            const currentTarget = this.paletteDropTarget();
+
+            // Flickering defense: lock the hover state if the DOM shifted the placeholder under the cursor
+            // or if we're hitting the specific element we dynamically shrunk to prevent infinite hit-test loops.
+            if (currentTarget?.resizeNeighbor) {
+                const neighborId = this.elements()[currentTarget.resizeNeighbor.index]?.id;
+                if (isHoveringPlaceholder || (hoveredElementId && hoveredElementId === neighborId)) {
+                    this.paletteDragOverFrame = 0;
+                    return;
+                }
+            } else if (isHoveringPlaceholder) {
+                this.paletteDragOverFrame = 0;
+                return;
+            }
+
             const nextTarget = this.calculatePaletteInsertTarget(
                 container,
                 clientX,
@@ -175,11 +207,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 || this.paletteDropTarget()?.elementContainerId !== this.id()
                 || this.paletteDropTarget()?.index !== nextTarget.index
                 || this.paletteDropTarget()?.span !== nextTarget.span
+                || this.paletteDropTarget()?.resizeNeighbor?.index !== nextTarget.resizeNeighbor?.index
+                || this.paletteDropTarget()?.resizeNeighbor?.span !== nextTarget.resizeNeighbor?.span
             ) {
                 this.paletteDropTarget.set({
                     elementContainerId: this.id(),
                     index: nextTarget.index,
                     span: nextTarget.span,
+                    resizeNeighbor: nextTarget.resizeNeighbor,
                 });
             }
 
@@ -220,9 +255,10 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 elementContainerId: this.id(),
                 index: fallbackTarget.index,
                 span: fallbackTarget.span,
+                resizeNeighbor: fallbackTarget.resizeNeighbor,
             };
 
-        this.insertDropElement(event, target.index, target.span);
+        this.insertDropElement(event, target);
         this.cleanupPaletteDrag();
     }
 
@@ -460,7 +496,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         container: HTMLElement,
         clientX: number,
         clientY: number,
-    ): { index: number; span: number } {
+    ): { index: number; span: number; resizeNeighbor?: { index: number; span: number } } {
         const defaultSpan = this.getPaletteDefaultSpanForList();
         const rows = this.buildPaletteDropRows(container);
 
@@ -512,11 +548,23 @@ export class FormGridElementsContainerComponent implements OnChanges {
             defaultSpan,
         );
 
-        const span = freeCols > 0
-            ? Math.max(1, Math.min(preferredSpan, freeCols))
-            : Math.max(1, Math.min(12, preferredSpan));
+        let span: number;
+        let resizeNeighbor: { index: number; span: number } | undefined;
 
-        return { index, span };
+        if (freeCols > 0) {
+            span = Math.max(1, Math.min(preferredSpan, freeCols));
+        } else {
+            // No space left: shrink the neighbor element to accommodate the drop safely
+            const targetIndex = index === activeRow.items[activeRow.items.length - 1].index + 1
+                                ? activeRow.items[activeRow.items.length - 1].index
+                                : index;
+
+            const neighborSpan = this.getItemSpanByIndex(targetIndex);
+            span = Math.max(1, Math.floor(neighborSpan / 2));
+            resizeNeighbor = { index: targetIndex, span: neighborSpan - span };
+        }
+
+        return { index, span, resizeNeighbor };
     }
 
     private setSpan(el: any, span: number): void {
@@ -529,8 +577,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
     private insertDropElement(
         event: DragEvent,
-        insertIndex: number,
-        resolvedSpan?: number,
+        target: PaletteDropTarget,
     ): void {
         cancelEvent(event);
 
@@ -541,10 +588,21 @@ export class FormGridElementsContainerComponent implements OnChanges {
         }
 
         const newElements = [...this.elements()];
+        const insertIndex = target.index;
+        const resolvedSpan = target.span;
+        const resizeNeighbor = target.resizeNeighbor;
+
         const type = dt.getData(PALETTE_MIME) || dt.getData('text/plain');
         // TODO: Add type check?
         const safeIndex = Math.max(0, Math.min(insertIndex, newElements.length));
         const isControl = this.config().controls[type] != null;
+
+        if (resizeNeighbor) {
+            const neighbor = newElements[resizeNeighbor.index];
+            if (neighbor) {
+                this.setSpan(neighbor, resizeNeighbor.span);
+            }
+        }
 
         this.pendingPaletteDropSpan = (resolvedSpan ?? (this.paletteDropTarget()?.elementContainerId === this.id())
             ? this.paletteDropTarget()!.span

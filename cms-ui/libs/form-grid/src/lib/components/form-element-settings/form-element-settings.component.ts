@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
-import { FormElement, FormElementConfiguration } from '@gentics/cms-models';
+import { FormElement, FormElementConfiguration, FormTypeConfiguration } from '@gentics/cms-models';
 
 @Component({
     selector: 'gtx-form-element-settings',
@@ -10,6 +10,7 @@ import { FormElement, FormElementConfiguration } from '@gentics/cms-models';
 })
 export class FormElementSettingsComponent {
 
+    public config = input.required<FormTypeConfiguration>();
     public element = model.required<FormElement>();
     public elementConfig = input.required<FormElementConfiguration>();
 

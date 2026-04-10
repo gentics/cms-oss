@@ -19,6 +19,8 @@
         "confirm_element_delete": "Are you sure you want to remove this element?",
         "view_mode_tab_editor": "Editor",
         "view_mode_tab_preview": "Preview",
-        "pagination_title": "Page"
+        "pagination_title": "Page",
+        "user_settings_missing": "No user options have been configured!",
+        "add_option": "Add option"
     }
 }

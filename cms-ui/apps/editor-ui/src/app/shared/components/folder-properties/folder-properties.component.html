@@ -1,75 +1,83 @@
-<form [formGroup]="form">
+<form [formGroup]="form" class="flex-row">
 
-  <div class="validation-element-container">
-    <gtx-input
-      class="gtx-input-with-validation"
-      [label]="('editor.item_name_label' | gtxI18n) + '*'"
-      formControlName="name"
-      [autofocus]="mode === FolderPropertiesMode.CREATE"
-    ></gtx-input>
+    <div class="columns small-12 validation-element-container">
+        <gtx-input
+            class="gtx-input-with-validation"
+            [label]="('editor.item_name_label' | gtxI18n) + '*'"
+            [autofocus]="mode === FolderPropertiesMode.CREATE"
+            [required]="true"
+            formControlName="name"
+        ></gtx-input>
 
-    <div class="gtx-input-validation-msgs">
-      <p
-        [hidden]="!form.controls.name.errors?.[ERROR_NAME_DUPLICATE]"
-        class="invalid"
-        >
-        {{ 'editor.input_invalid_name_already_exists' | gtxI18n }}
-      </p>
-    </div>
-  </div>
-
-  <div class="validation-element-container">
-    <gtx-input
-      class="gtx-input-with-validation"
-      [label]="('editor.item_directory_label' | gtxI18n) + '*'"
-      formControlName="publishDir"
-    ></gtx-input>
-
-    <div class="gtx-input-validation-msgs">
-      <p [hidden]="!form.controls.publishDir.errors?.[ERROR_DIRECTORY_PATTERN]">
-        {{ 'editor.input_invalid_pattern' | gtxI18n:{ charsAllowed: allowedCharacters } }}
-      </p>
-      <p [hidden]="!form.controls.publishDir.errors?.[ERROR_DIRECTORY_DUPLICATE]">
-        {{ 'editor.input_invalid_directory_already_exists' | gtxI18n }}
-      </p>
-    </div>
-  </div>
-
-  <gtx-input
-    [label]="'editor.item_description_label' | gtxI18n"
-    formControlName="description"
-  ></gtx-input>
-
-  @if (languages?.length > 1 && mode !== FolderPropertiesMode.CREATE) {
-    <div>
-      <hr>
-        @if (languages) {
-          <gtx-i18n-panel-group
-            [label]="'editor.i18n_properties_label' | gtxI18n"
-            [languages]="languages"
-            [invalidLanguages]="invalidLanguages"
-            [(activeLanguage)]="activeTabI18nLanguage"
+        <div class="gtx-input-validation-msgs">
+            <p
+                [hidden]="!form.controls.name.errors?.[ERROR_NAME_DUPLICATE]"
+                class="invalid"
             >
-            <gtx-i18n-input
-              [label]="('editor.item_name_label' | gtxI18n)"
-              formControlName="nameI18n"
-              [language]="activeTabI18nLanguage?.code"
-              [availableLanguages]="languages"
-            ></gtx-i18n-input>
-            <gtx-i18n-input
-              [label]="('editor.item_directory_label' | gtxI18n)"
-              formControlName="publishDirI18n"
-              [language]="activeTabI18nLanguage?.code"
-              [availableLanguages]="languages"
-            ></gtx-i18n-input>
-            <gtx-i18n-input
-              [label]="'editor.item_description_label' | gtxI18n"
-              formControlName="descriptionI18n"
-              [language]="activeTabI18nLanguage?.code"
-              [availableLanguages]="languages"
-            ></gtx-i18n-input>
-          </gtx-i18n-panel-group>
+                {{ 'editor.input_invalid_name_already_exists' | gtxI18n }}
+            </p>
+        </div>
+    </div>
+
+    <div class="columns small-12 validation-element-container">
+        <gtx-input
+            class="gtx-input-with-validation"
+            [label]="('editor.item_directory_label' | gtxI18n) + '*'"
+            [required]="true"
+            formControlName="publishDir"
+        ></gtx-input>
+
+        <div class="gtx-input-validation-msgs">
+            <p [hidden]="!form.controls.publishDir.errors?.[ERROR_DIRECTORY_PATTERN]">
+                {{ 'editor.input_invalid_pattern' | gtxI18n:{ charsAllowed: allowedCharacters } }}
+            </p>
+            <p [hidden]="!form.controls.publishDir.errors?.[ERROR_DIRECTORY_DUPLICATE]">
+                {{ 'editor.input_invalid_directory_already_exists' | gtxI18n }}
+            </p>
+        </div>
+    </div>
+
+    <gtx-input
+        class="columns small-12"
+        [label]="'editor.item_description_label' | gtxI18n"
+        formControlName="description"
+    ></gtx-input>
+
+    @if (languages?.length > 1 && mode !== FolderPropertiesMode.CREATE) {
+        @if (languages) {
+            <gtx-i18n-panel-group
+                class="columns small-12"
+                [label]="'editor.i18n_properties_label' | gtxI18n"
+                [languages]="languages"
+                [invalidLanguages]="invalidLanguages"
+                [(activeLanguage)]="activeTabI18nLanguage"
+            >
+                <div class="flex-row">
+                    <gtx-i18n-input
+                        class="columns small-12"
+                        [label]="('editor.item_name_label' | gtxI18n)"
+                        [language]="activeTabI18nLanguage?.code"
+                        [availableLanguages]="languages"
+                        formControlName="nameI18n"
+                    ></gtx-i18n-input>
+
+                    <gtx-i18n-input
+                        class="columns small-12"
+                        [label]="('editor.item_directory_label' | gtxI18n)"
+                        [language]="activeTabI18nLanguage?.code"
+                        [availableLanguages]="languages"
+                        formControlName="publishDirI18n"
+                    ></gtx-i18n-input>
+
+                    <gtx-i18n-input
+                        class="columns small-12"
+                        [label]="'editor.item_description_label' | gtxI18n"
+                        [language]="activeTabI18nLanguage?.code"
+                        [availableLanguages]="languages"
+                        formControlName="descriptionI18n"
+                    ></gtx-i18n-input>
+                </div>
+            </gtx-i18n-panel-group>
         }
-      </div>
     }
-  </form>
+</form>

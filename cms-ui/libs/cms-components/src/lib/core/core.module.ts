@@ -6,7 +6,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import {
     AppVersionLabelComponent,
     BrowseBoxComponent,
-    FormBrowseBoxComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
     I18nSelectComponent,
@@ -47,7 +46,6 @@ import {
 const COMPONENTS: any[] = [
     AppVersionLabelComponent,
     BrowseBoxComponent,
-    FormBrowseBoxComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
     I18nSelectComponent,

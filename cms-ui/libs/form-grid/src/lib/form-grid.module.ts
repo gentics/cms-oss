@@ -11,6 +11,7 @@ import {
     FormElementSettingsComponent,
     FormGridComponent,
     FormGridElementsContainerComponent,
+    FormOptionsInputComponent,
     FormPageManagerComponent,
 } from './components';
 
@@ -19,6 +20,7 @@ const COMPONENTS = [
     FormElementSettingsComponent,
     FormGridComponent,
     FormGridElementsContainerComponent,
+    FormOptionsInputComponent,
     FormPageManagerComponent,
 ];
 

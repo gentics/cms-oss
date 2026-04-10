@@ -1,10 +1,10 @@
 import { createFormValidityTracker, WizardStepNextClickFn } from '@admin-ui/common';
 import { FeatureOperations, NodeHandlerService, NodeOperations } from '@admin-ui/core';
 import { LanguageTableComponent, Wizard, WizardComponent } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
+import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
+import { createNestedControlValidator, I18nService } from '@gentics/cms-components';
 import { FormTypeConfiguration, Language, Node, NodeCreateRequest, NodeFeature, NodeFeatureModel, NodeUrlMode, Raw } from '@gentics/cms-models';
 import { Observable, of as observableOf, of } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
@@ -23,7 +23,7 @@ const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
     templateUrl: './create-node-wizard.component.html',
     styleUrls: ['./create-node-wizard.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
@@ -67,12 +67,12 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
 
     finishClickAction: WizardStepNextClickFn<Node<Raw>> = () => {
         return this.onFinishClick();
-    }
+    };
 
     setChildNodeAction: WizardStepNextClickFn<void> = () => {
         this.setChildNode();
         return Promise.resolve();
-    }
+    };
 
     constructor(
         private changeDetector: ChangeDetectorRef,
@@ -80,14 +80,15 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
         private nodeOps: NodeOperations,
         private featureOps: FeatureOperations,
         private nodeHandler: NodeHandlerService,
+        private i18n: I18nService,
     ) { }
 
     ngOnInit(): void {
         this.initForms();
 
-        this.nodeFeatures$ = this.appState.select(state => state.ui.language).pipe(
+        this.nodeFeatures$ = this.appState.select((state) => state.ui.language).pipe(
             startWith(observableOf(true)),
-            switchMap(() => this.nodeOps.getAvailableFeatures({ sort: [ { attribute: 'id' } ] })),
+            switchMap(() => this.nodeOps.getAvailableFeatures({ sort: [{ attribute: 'id' }] })),
         );
 
         this.nodeHandler.listAllFormConfigurations().subscribe((items) => {
@@ -105,7 +106,7 @@ export class CreateNodeWizardComponent implements OnInit, Wizard<Node<Raw>> {
     mapFormTypeToPickListItem(form: FormTypeConfiguration): PickListItem {
         return {
             id: form.type,
-            label: form.pluginName,
+            label: form.nameI18n[this.i18n.getCurrentLanguage()],
         };
     }
 

@@ -1,6 +1,5 @@
 export * from './app-version-label/app-version-label.component';
 export * from './browse-box/browse-box.component';
-export * from './form-browse-box/form-browse-box.component';
 export * from './i18n-input/i18n-input.component';
 export * from './i18n-panel-group/i18n-panel-group.component';
 export * from './i18n-select/i18n-select.component';

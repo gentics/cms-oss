@@ -17,6 +17,7 @@ import {
     Language,
     MarkupLanguageType,
     Page,
+    PageRequestOptions,
     Raw,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
@@ -27,7 +28,6 @@ import {
     generateValidatorProvider,
     setControlsEnabled,
 } from '@gentics/ui-core';
-import { RepositoryBrowserClient } from '../../providers';
 
 export enum FormPropertiesMode {
     CREATE = 'create',
@@ -52,6 +52,8 @@ export interface FormPropertiesData extends Omit<EditableFormProperties, 'schema
 export class FormPropertiesComponent
     extends BaseFormPropertiesComponent<FormPropertiesData>
     implements OnInit, OnChanges {
+
+    public readonly MarkupLanguageType = MarkupLanguageType;
 
     @Input()
     public nodeId: number;
@@ -82,6 +84,7 @@ export class FormPropertiesComponent
 
     public formTypeConfigurations: Record<string, FormTypeConfiguration> | null = null;
     public activeConfiguration: FormTypeConfiguration | null = null;
+    public hadInitialConfiguration = false;
 
     public useEmailPageTemplate: boolean;
     public loadedMailTemplate: Page | null = null;
@@ -91,10 +94,11 @@ export class FormPropertiesComponent
     public loadedSuccessPage: Page | null = null;
     public successPageBreadcrumbs = '';
 
+    protected override delayedSetup = true;
+
     constructor(
         changeDetector: ChangeDetectorRef,
         public client: GCMSRestClientService,
-        public repoBrowser: RepositoryBrowserClient,
     ) {
         super(changeDetector);
     }
@@ -102,81 +106,93 @@ export class FormPropertiesComponent
     public ngOnInit(): void {
         super.ngOnInit();
 
-        if (this.mode === FormPropertiesMode.CREATE) {
-            this.subscriptions.push(this.client.form.listConfigurations({
-                nodeId: this.nodeId,
-                external: false,
-            }).subscribe((res) => {
-                this.formTypeConfigurations = {};
-                for (const config of res.items) {
-                    this.formTypeConfigurations[config.type] = config;
-                }
-                if (this.form) {
-                    this.activeConfiguration = this.formTypeConfigurations[this.form.value.formType];
-                }
+        this.subscriptions.push(this.client.form.listConfigurations({
+            nodeId: this.nodeId,
+            external: false,
+        }).subscribe((res) => {
+            this.formTypeConfigurations = {};
+            for (const config of res.items) {
+                this.formTypeConfigurations[config.type] = config;
+            }
+            if (this.item?.formType) {
+                this.activeConfiguration = this.formTypeConfigurations[this.item.formType];
+            } else if (this.form) {
+                this.activeConfiguration = this.formTypeConfigurations[this.form.value.formType];
+            }
+            this.hadInitialConfiguration = this.activeConfiguration != null;
 
-                this.changeDetector.markForCheck();
-            }));
+            this.changeDetector.markForCheck();
+        }));
+    }
+
+    protected override initializeWithData(): void {
+        super.initializeWithData();
+
+        if (this.item?.formType && this.activeConfiguration == null && this.formTypeConfigurations != null) {
+            this.activeConfiguration = this.formTypeConfigurations[this.item.formType];
+            this.hadInitialConfiguration = this.activeConfiguration != null;
         }
 
-        if (typeof this.value?.successPageId === 'number' && this.value?.successPageId !== 0) {
-            this.subscriptions.push(this.client.page.get(this.value?.successPageId, {
-                nodeId: this.value?.successNodeId,
-            }).subscribe((res) => {
+        if (Number.isInteger(this.item?.successPageId) && this.item.successPageId !== 0) {
+            const options: PageRequestOptions = {};
+            if (Number.isInteger(this.item.successNodeId) && this.item.successNodeId !== 0) {
+                options.nodeId = this.item.successNodeId;
+            }
+
+            this.subscriptions.push(this.client.page.get(this.item.successPageId, options).subscribe((res) => {
                 this.loadedSuccessPage = res.page;
-                this.successPageBreadcrumbs = this.generateBreadcrumbsPath(res.page as any);
                 this.changeDetector.markForCheck();
             }));
         }
 
-        if (Number.isInteger(this.value?.adminEmailPageId) && this.value.adminEmailPageId !== 0) {
-            this.subscriptions.push(this.client.page.get(this.value.adminEmailPageId, {
-                nodeId: this.value.adminEmailNodeId,
-            }).subscribe((res) => {
+        if (Number.isInteger(this.item?.adminEmailPageId) && this.item.adminEmailPageId !== 0) {
+            const options: PageRequestOptions = {};
+            if (Number.isInteger(this.item.adminEmailNodeId) && this.item.adminEmailNodeId !== 0) {
+                options.nodeId = this.item.adminEmailNodeId;
+            }
+
+            this.subscriptions.push(this.client.page.get(this.item.adminEmailPageId, options).subscribe((res) => {
                 this.loadedMailTemplate = res.page;
-                this.mailTemplateBreadcrubs = this.generateBreadcrumbsPath(res.page as any);
                 this.changeDetector.markForCheck();
             }));
         }
 
         // set initial value for useInternalSuccessPage and useEmailPage radio button group
         this.useInternalSuccessPage = this.isPageUsed(
-            this.value?.successPageId,
-            this.value?.successNodeId,
-            this.value?.successUrlI18n,
+            this.item?.successPageId,
+            this.item?.successNodeId,
+            this.item?.successUrlI18n,
         );
         this.useEmailPageTemplate = this.isPageUsed(
-            this.value?.adminEmailPageId,
-            this.value?.adminEmailNodeId,
-            this.value?.adminEmailTemplate,
+            this.item?.adminEmailPageId,
+            this.item?.adminEmailNodeId,
+            this.item?.adminEmailTemplate,
         );
     }
 
     protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
         return new FormGroup<FormProperties<FormPropertiesData>>({
-            name: new FormControl(this.safeValue('name'), Validators.required),
-            formType: new FormControl(this.safeValue('formType'), Validators.required),
-            description: new FormControl(this.safeValue('description')),
-            languages: new FormControl(this.safeValue('languages') || [], Validators.minLength(1)),
-            fileName: new FormControl(this.safeValue('fileName')),
-            flow: new FormControl(this.safeValue('flow')),
-            templateContext: new FormControl(this.safeValue('templateContext')),
-            successUrlI18n: new FormControl(this.safeValue('successUrlI18n')),
-            successPageId: new FormControl(this.safeValue('successPageId')),
-            successNodeId: new FormControl(this.safeValue('successNodeId')),
-            adminEmailAddress: new FormControl(this.safeValue('adminEmailAddress')),
-            adminEmailSubject: new FormControl(this.safeValue('adminEmailSubject')),
-            adminEmailPageId: new FormControl(this.safeValue('adminEmailPageId')),
-            adminEmailNodeId: new FormControl(this.safeValue('adminEmailNodeId')),
-            adminEmailTemplate: new FormControl(this.safeValue('adminEmailTemplate')),
+            name: new FormControl(this.item?.name || this.safeValue('name'), Validators.required),
+            formType: new FormControl(this.item?.formType || this.safeValue('formType'), Validators.required),
+            description: new FormControl(this.item?.description || this.safeValue('description')),
+            languages: new FormControl(this.item?.languages || this.safeValue('languages') || [], Validators.minLength(1)),
+            fileName: new FormControl(this.item?.fileName || this.safeValue('fileName')),
+            flow: new FormControl(this.item?.flow || this.safeValue('flow')),
+            templateContext: new FormControl(this.item?.templateContext || this.safeValue('templateContext')),
+            successUrlI18n: new FormControl(this.item?.successUrlI18n || this.safeValue('successUrlI18n')),
+            successPageId: new FormControl(this.item?.successPageId || this.safeValue('successPageId')),
+            successNodeId: new FormControl(this.item?.successNodeId || this.safeValue('successNodeId')),
+            adminEmailAddress: new FormControl(this.item?.adminEmailAddress || this.safeValue('adminEmailAddress')),
+            adminEmailSubject: new FormControl(this.item?.adminEmailSubject || this.safeValue('adminEmailSubject')),
+            adminEmailPageId: new FormControl(this.item?.adminEmailPageId || this.safeValue('adminEmailPageId')),
+            adminEmailNodeId: new FormControl(this.item?.adminEmailNodeId || this.safeValue('adminEmailNodeId')),
+            adminEmailTemplate: new FormControl(this.item?.adminEmailTemplate || this.safeValue('adminEmailTemplate')),
         });
     }
 
     protected configureForm(value: FormPropertiesData, loud?: boolean): void {
-        setControlsEnabled(this.form, ['formType'], this.mode === FormPropertiesMode.CREATE);
-        if (this.formTypeConfigurations != null) {
-            this.activeConfiguration = this.formTypeConfigurations[value.formType];
-        }
+        // Should be enabled while it's still loading
+        setControlsEnabled(this.form, ['formType'], this.formTypeConfigurations == null || !this.hadInitialConfiguration);
     }
 
     protected assembleValue(value: FormPropertiesData): FormPropertiesData {
@@ -185,6 +201,10 @@ export class FormPropertiesComponent
         }
 
         return value;
+    }
+
+    public setActiveFormType(type: string): void {
+        this.activeConfiguration = this.formTypeConfigurations[type];
     }
 
     updateEmailTemplate(doUse: boolean): void {
@@ -203,37 +223,8 @@ export class FormPropertiesComponent
         setControlsEnabled(this.form, ['successUrlI18n'], !doUse);
     }
 
-    /**
-     * Opens the repository browser to allow the user to select an internal page.
-     */
-    browseForPage(): void {
-        this.repoBrowser.openRepositoryBrowser({
-            allowedSelection: 'page',
-            selectMultiple: false,
-        })
-            .then((selectedPage: ItemInNode<Page<Raw>>) => {
-                this.setSuccessPage(selectedPage);
-            });
-    }
-
-    browseForEmailTemplatePage(): void {
-        const browserNodeId = this.form.controls.adminEmailNodeId.value || this.nodeId;
-
-        this.repoBrowser.openRepositoryBrowser({
-            allowedSelection: 'page',
-            selectMultiple: false,
-            includeMlId: [MarkupLanguageType.FormsEmailTemplate],
-            title: 'modal.repository_browser_title_forms_email_template_single',
-            startNode: browserNodeId,
-        })
-            .then((selectedTemplatePage: ItemInNode<Page<Raw>>) => {
-                this.setEmailTemplatePage(selectedTemplatePage);
-            });
-    }
-
     setSuccessPage(page: ItemInNode<Page<Raw>>): void {
         this.loadedSuccessPage = page;
-        this.successPageBreadcrumbs = this.generateBreadcrumbsPath(page);
 
         const pageId = Number.isInteger(page?.id) ? page.id : 0;
         const nodeId = Number.isInteger(page?.nodeId) ? page.nodeId : 0;
@@ -252,7 +243,6 @@ export class FormPropertiesComponent
 
     setEmailTemplatePage(page: ItemInNode<Page<Raw>>): void {
         this.loadedMailTemplate = page;
-        this.mailTemplateBreadcrubs = this.generateBreadcrumbsPath(page);
 
         const pageId = Number.isInteger(page?.id) ? page.id : 0;
         const nodeId = Number.isInteger(page?.nodeId) ? page.nodeId : 0;
@@ -267,21 +257,6 @@ export class FormPropertiesComponent
 
         this.form.updateValueAndValidity();
         this.changeDetector.markForCheck();
-    }
-
-    /**
-     * @returns A string with the breadcrumbs path of the specified Page.
-     */
-    private generateBreadcrumbsPath(page: ItemInNode<Page<Raw>>): string {
-        let breadcrumbsPath = '';
-        if (page && page.path) {
-            breadcrumbsPath = page.path.replace('/', '');
-            if (breadcrumbsPath.length > 0 && breadcrumbsPath.charAt(breadcrumbsPath.length - 1) === '/') {
-                breadcrumbsPath = breadcrumbsPath.substring(0, breadcrumbsPath.length - 1);
-            }
-            breadcrumbsPath = breadcrumbsPath.split('/').join(' > ');
-        }
-        return breadcrumbsPath;
     }
 
     private isPageUsed(pageId: number, nodeId: number, other: I18nString): boolean {

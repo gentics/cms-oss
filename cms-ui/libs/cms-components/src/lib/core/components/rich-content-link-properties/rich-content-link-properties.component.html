@@ -35,15 +35,17 @@
         }
       </gtx-select>
       @if (form.controls.itemId.enabled) {
-        <browse-box
-          class="item-browser"
-          property-name="item"
-          [label]="(('richContent.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | gtxI18n) + '*'"
-          [disabled]="disabled"
-          [displayValue]="loadingItem ? ('richContent.link_item_loading_text' | gtxI18n) : itemDisplayValue"
-          [clearable]="false"
-          (browse)="pickItem()"
-        ></browse-box>
+        <gtx-browse-box
+            class="item-browser"
+            property-name="item"
+            [label]="(('richContent.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | gtxI18n) + '*'"
+            [disabled]="disabled"
+            [clearable]="false"
+            [allowedSelection]="linkItemType"
+            [multiple]="false"
+            [value]="pickedItemRef"
+            (valueChange)="setPickedItem($event)"
+        ></gtx-browse-box>
       }
       @if (form.controls.url.enabled) {
         <gtx-input

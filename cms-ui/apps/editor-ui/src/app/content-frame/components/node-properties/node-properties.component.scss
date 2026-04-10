@@ -11,13 +11,13 @@
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
+    flex: 0 0 100%;
 }
 
 .heading {
     border-bottom: 1px solid $gtx-color-light-gray;
     font-size: 1.4rem;
-    padding-top: 1.5rem;
-    margin-bottom: 1.5rem;
+    flex: 0 0 100%;
 }
 
 .simple-header {
@@ -25,14 +25,7 @@
     text-transform: uppercase;
 }
 
-.flex-row {
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-}
-
 .checkbox-group {
-    padding: 1rem 0;
     justify-content: space-between;
 }
 
@@ -51,20 +44,6 @@
     }
 }
 
-.rendering-section {
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    padding-top: 1rem;
-
-    > * {
-        flex: 1 1 auto;
-    }
-
-    &.half-width {
-        width: calc(50% - 1rem);
-    }
-}
 
 .name-row {
     display: flex;
@@ -88,8 +67,7 @@
 .linkable-fields-wrapper {
     position: relative;
     width: 100%;
-    padding-top: 0.5rem;
-    padding-bottom: 20px;
+    padding-bottom: 1rem;
 
     display: grid;
     grid-template: "a b" auto "c b" auto / 1fr 30px;
@@ -171,7 +149,6 @@
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
-        width: unset;
         gap: 0.5rem;
 
         .link-inputs {
@@ -196,8 +173,6 @@
 
 .hostname-group {
     align-items: center;
-    gap: 2rem;
-    padding-top: 0.5rem;
 
     .hostname-type {
         flex: 1 1 auto;

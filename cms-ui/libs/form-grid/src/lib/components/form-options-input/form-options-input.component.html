@@ -1,0 +1,29 @@
+@if (label) {
+    <label>{{ label }}</label>
+}
+
+<div class="entries">
+    @for (option of value; track option.value) {
+        <gtx-input
+            [disabled]="disabled"
+            [value]="option.value"
+            (valueChange)="updateOptionValue($index, $event)"
+        >
+            <button
+                class="addon-button icon-alert"
+                data-action="remove"
+                [disabled]="disabled"
+                (click)="removeOption($index)"
+            >
+                <icon>delete</icon>
+            </button>
+        </gtx-input>
+    }
+</div>
+
+<gtx-button
+    type="primary"
+    size="small"
+    [disabled]="disabled"
+    (click)="addNewOption($event)"
+><icon left>add</icon>{{ 'form_grid.add_option' | gtxI18n }}</gtx-button>

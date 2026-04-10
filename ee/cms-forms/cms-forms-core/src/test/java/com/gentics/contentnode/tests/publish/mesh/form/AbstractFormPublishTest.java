@@ -50,13 +50,12 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.VelocityPartType;
-import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
-import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.ConfigBy;
+import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 

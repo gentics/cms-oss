@@ -56,6 +56,7 @@ public interface FormResource {
 	 * <li><code>id</code></li>
 	 * <li><code>name</code></li>
 	 * <li><code>description</code></li>
+	 * <li><code>formType</code></li>
 	 * </ul>
 	 * @param inFolder parameter bean
 	 * @param filter parameter bean

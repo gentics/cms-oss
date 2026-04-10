@@ -44,6 +44,10 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
@@ -59,6 +63,7 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.perm.PermissionStore;
+import com.gentics.contentnode.rest.client.ObjectMapperProvider;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.ItemVersion;
 import com.gentics.contentnode.rest.model.form.FormListResponse;
@@ -782,6 +787,40 @@ public class FormResourceTest {
 					return target.path("form").path(EXTERNAL_FORM_ID).queryParam("nodeId", Integer.toString(node.getId())).request().put(Entity.json(request), FormResponse.class);
 				}, perm(nodeRootFolder, PermType.read), perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
 		assertThat(response.getItem()).as("Updated form").isNotNull().hasName("Updated Name").hasVersion("0.2");
+	}
+
+	@Test
+	public void testPartialUpdate() throws NodeException, JsonMappingException, JsonProcessingException {
+		JsonMapper mapper = JsonMapper.builder().build();
+
+		JsonNode initialData = mapper.readTree("{\"schema\": {\"properties\": {}}}");
+		JsonNode updateData = mapper.readTree("{\"ui-schema\": {\"formname\": {\"de\": \"Test Form\", \"en\": \"Test Form\"}}}");
+
+		JsonNode finalData = mapper.readTree("{\"schema\": {\"properties\": {}}, \"ui-schema\": {\"formname\": {\"de\": \"Test Form\", \"en\": \"Test Form\"}}}");
+
+		Form form = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setExternalId(EXTERNAL_FORM_ID);
+			f.setName("Test Form");
+			f.setFolderId(testFolder.getId());
+			f.setLanguages(Arrays.asList("de"));
+			f.setData(initialData);
+		}));
+
+		String formId = Integer.toString(form.getId());
+		consume(Form::unlock, form);
+		form = execute(Form::reload, form);
+
+		waitForNextSecond();
+
+		FormResponse response = assertRequiredPermissions(testGroup, "formtester", "formtester", restContext,
+				target -> {
+					FormModel request = new FormModel();
+					request.setName("Updated Name");
+					request.setData(updateData);
+					return target.path("form").path(formId).request().put(Entity.json(request), FormResponse.class);
+				}, perm(testFolder, PermType.read), perm(testFolder, PermType.viewform), perm(testFolder, PermType.updateform));
+		assertThat(response.getItem()).as("Updated form").isNotNull().hasName("Updated Name").hasVersion("0.2").hasFormData(finalData);
 	}
 
 	@Test

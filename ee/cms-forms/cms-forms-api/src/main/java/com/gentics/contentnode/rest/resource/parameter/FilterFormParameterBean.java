@@ -11,4 +11,10 @@ public class FilterFormParameterBean extends FilterParameterBean {
 	 */
 	@QueryParam("formType")
 	public String formType;
+
+	/**
+	 * True to return external forms, false for internal, empty for all forms
+	 */
+	@QueryParam("external")
+	public Boolean external;
 }

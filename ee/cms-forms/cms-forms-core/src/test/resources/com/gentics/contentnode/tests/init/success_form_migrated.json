@@ -1,0 +1,30 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubjectI18n": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplateI18n": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrlI18n": {
+        "de": "https://www.gentics.com/"
+    },
+    "templateContext": "theme-blue",
+    "schema": {
+        "properties": {}
+    },
+    "ui-schema": {
+        "formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		},
+		"formdescription": {
+			"de": "This is the Test Form",
+			"en": "This is the Test Form"
+		},
+        "pages": [
+			{
+            }
+        ]
+    }
+}

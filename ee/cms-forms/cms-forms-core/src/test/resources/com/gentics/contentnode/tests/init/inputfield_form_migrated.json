@@ -1,0 +1,71 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubjectI18n": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplateI18n": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrlI18n": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {
+            "input_e6729f2b_5e93_4e15_8670_c401fe9581a2": {
+                "type": "string",
+                "updateOnChange": false,
+                "validation": {
+                    "maxLength": 20,
+                    "minLength": 0
+                },
+                "mandatory": true,
+                "isList": false,
+                "name": "input_e6729f2b_5e93_4e15_8670_c401fe9581a2"
+            },
+            "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a": {
+                "type": "string",
+                "updateOnChange": false,
+                "validation": {
+                    "maxLength": 10,
+                    "minLength": 0
+                },
+                "mandatory": false,
+                "isList": false,
+                "name": "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a"
+            }
+        }
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "elements": [
+                    {
+						"type": "property",
+						"id": "input_e6729f2b_5e93_4e15_8670_c401fe9581a2",
+						"label": {
+							"de": "Verpflichtend",
+							"en": "Mandatory"
+						},
+						"description": {}
+					},
+                    {
+						"type": "property",
+						"id": "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a",
+						"label": {
+							"de": "Nicht verpflichtend",
+                            "en": "Not mandatory"
+						},
+						"description": {}
+					}
+                ]
+            }
+        ]
+    }
+}

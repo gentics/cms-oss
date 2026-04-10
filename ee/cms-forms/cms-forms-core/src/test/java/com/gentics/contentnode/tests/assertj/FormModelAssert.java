@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.assertj.core.api.AbstractAssert;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.rest.model.form.FormModel;
 
 public class FormModelAssert extends AbstractAssert<FormModelAssert, FormModel> {
@@ -130,6 +132,11 @@ public class FormModelAssert extends AbstractAssert<FormModelAssert, FormModel> 
 
 	public FormModelAssert hasExternalId(String externalId) {
 		assertThat(actual.getExternalId()).as(descriptionText() + " external ID").isEqualTo(externalId);
+		return this;
+	}
+
+	public FormModelAssert hasFormData(JsonNode formData) throws NodeException {
+		assertThat(actual.getData()).as(descriptionText() + " form data").isEqualTo(formData);
 		return this;
 	}
 }

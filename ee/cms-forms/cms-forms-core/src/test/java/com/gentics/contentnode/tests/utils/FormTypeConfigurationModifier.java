@@ -41,6 +41,7 @@ public class FormTypeConfigurationModifier implements ConfigModifier {
 
 		// prepare andp config
 		FormTypeConfiguration andpConfig = new FormTypeConfiguration(Map.of("de", "ANDP Formular", "en", "ANDP Form"), "acta-nova");
+		andpConfig.external = true;
 		try {
 			andpConfig.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);
 		} catch (JsonProcessingException e) {

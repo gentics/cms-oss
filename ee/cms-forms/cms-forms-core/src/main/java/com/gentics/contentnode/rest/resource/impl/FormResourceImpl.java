@@ -8,6 +8,8 @@ import static com.gentics.contentnode.rest.util.MiscUtils.loadFormWithoutPermiss
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -226,7 +228,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			form.setLanguages(restModel.getLanguages());
 		}
 		if (restModel.getData() != null) {
-			form.setData(restModel.getData());
+			form.updateData(restModel.getData());
 		}
 		if (restModel.getFormType() != null) {
 			form.setFormType(restModel.getFormType());
@@ -260,7 +262,22 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			// switch to the master folder
 			folder = folder.getMaster();
 
-			FormSearch search = FormSearch.create().setRecursive(inFolder.recursive).setFormType(filter.formType).setSearchString(filter.query)
+			Set<String> formTypes = null;
+			if (!StringUtils.isBlank(filter.formType)) {
+				formTypes = new HashSet<>();
+				formTypes.add(filter.formType);
+			}
+			if (filter.external != null) {
+				if (formTypes == null) {
+					formTypes = new HashSet<>();
+				}
+				formTypes.addAll(Optional.ofNullable(FormConfigProvider.getConfig()).map(configMap -> {
+					return configMap.entrySet().stream().filter(entry -> entry.getValue().external == filter.external)
+							.map(Entry::getKey).collect(Collectors.toSet());
+				}).orElse(Collections.emptySet()));
+			}
+
+			FormSearch search = FormSearch.create().setRecursive(inFolder.recursive).setFormTypes(formTypes).setSearchString(filter.query)
 					.set(publishable);
 
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.WASTEBIN)
@@ -270,7 +287,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			List<Form> forms = folder.getForms(search);
 			FormListResponse response = ListBuilder.from(forms, TRANSFORM2REST)
 				.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
-				.sort(ResolvableComparator.get(sorting, "id", "name", "description", "cdate", "edate", "pdate"))
+				.sort(ResolvableComparator.get(sorting, "id", "name", "description", "cdate", "edate", "pdate", "formType"))
 				.page(paging)
 				.to(new FormListResponse());
 			response.setStagingStatus(StagingUtil.checkStagingStatus(forms, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));

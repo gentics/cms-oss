@@ -1,7 +1,7 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EditableEntity, EntityEditorHandler, EntityList, EntityListHandler, NodeBO } from '@admin-ui/common';
 import { ErrorHandler } from '@admin-ui/core';
-import { BaseEntityHandlerService } from '@admin-ui/core/providers/base-entity-handler/base-entity-handler';
-import { NodeFeaturesMap } from '@admin-ui/state';
+import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
+import { NodeFeaturesMap } from '../../../state/features/features.state';
 import { Injectable } from '@angular/core';
 import { discard, I18nNotificationService } from '@gentics/cms-components';
 import {
@@ -18,8 +18,8 @@ import {
     NodeSaveRequest,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { forkJoin, Observable, of } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { forkJoin, Observable, of, throwError } from 'rxjs';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 @Injectable()
 export class NodeHandlerService
@@ -259,7 +259,10 @@ export class NodeHandlerService
                     message: 'node.forms_updated',
                 });
             }),
-            this.catchAndRethrowError(),
+            catchError((err) => {
+                this.errorHandler.catch(err);
+                return throwError(err);
+            }),
         );
     }
 }

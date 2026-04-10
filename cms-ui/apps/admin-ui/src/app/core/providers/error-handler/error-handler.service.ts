@@ -9,6 +9,8 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { AdminUIModuleRoutes } from '../../../common';
 import { ServiceBase } from '../../../shared/providers/service-base/service.base';
 import { AppStateService } from '../../../state';
+import { ResponseCode } from '@gentics/cms-models';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 
 /**
  * A central error handler that shows a notification for occuring errors,
@@ -91,64 +93,19 @@ export class ErrorHandler extends ServiceBase {
         }
 
         if (error instanceof ApiError) {
-            // Invalid SID always display the login screen, or tries to login with SSO
-            // So it can mislead the user, therefore we not display it.
-            const isInvalidSid = !!error.response && error.response.toString().toLowerCase() === 'invalid sid';
-
-            switch (error.reason) {
-                case 'failed':
-                case 'http':
-                    // If 'invalid sid' response get as http error, and we are still logged in, the backend logged us out
-                    if (isInvalidSid && this.appState.snapshot().auth.isLoggedIn) {
-                        returnValue = error.message || error.toString();
-                        this.userWasLoggedOut();
-                        return returnValue;
-                    }
-
-                // eslint-disable-next-line no-fallthrough
-                case 'invalid_data':
-                case 'permissions':
-                    returnValue = error.message || error.toString();
-                    if (showNotification && !isInvalidSid) {
-                        this.notification.show({
-                            message: returnValue,
-                            type: 'alert',
-                            delay: 10000,
-                        });
-                    }
-                    // break;
-                    return returnValue;
-
-                case 'auth':
-                    // User should be logged in but is not - he was logged out by the backend.
-                    if (this.appState.snapshot().auth.isLoggedIn) {
-                        this.userWasLoggedOut();
-                    } else if (showNotification) {
-                        returnValue = error.message;
-                        this.notification.show({
-                            message: returnValue,
-                            type: 'alert',
-                            delay: 10000,
-                        });
-                    }
-                    // break;
-                    return returnValue;
-
-                default:
-                    console.error(`Need to handle: ApiError(reason = "${error.reason}")`);
-                    // break;
-                    returnValue = error.message;
-                    return returnValue;
-            }
+            this.handleApiError(error, showNotification);
+        } else if (error instanceof GCMSRestClientRequestError) {
+            this.handleRestClientError(error, showNotification);
+        } else if (error.cause != null && error.cause instanceof GCMSRestClientRequestError) {
+            this.handleRestClientError(error.cause, showNotification);
         } else {
             // TODO: If we need to handle other errors, here's the spot for it.
             // debugger;
             if (showNotification) {
-                returnValue = error.message || error.toString();
                 this.notification.show({
-                    message: returnValue,
+                    message: (error.cause as any)?.message || error.message || error.toString(),
                     type: 'alert',
-                    delay: 10000,
+                    delay: 10_000,
                 });
             }
         }
@@ -159,6 +116,103 @@ export class ErrorHandler extends ServiceBase {
 
         return returnValue;
     };
+
+    private handleApiError(error: ApiError, showNotification: boolean): void {
+        switch (error.reason) {
+            case 'failed':
+            case 'invalid_data':
+            case 'http':
+            case 'permissions': {
+                // Invalid SID always display the login screen, or tries to login with SSO
+                // So it can mislead the user, therefore we not display it.
+                const msg = (error.response?.responseInfo?.responseMessage || error.response?.toString?.() || '').toLowerCase();
+                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+
+                if (showNotification && !isInvalidSid) {
+                    this.notification.show({
+                        message: error.message || error.toString(),
+                        type: 'alert',
+                        delay: 10_000,
+                    });
+                }
+
+                // If the user has been signed out (usually due to activating the maintanance-mode),
+                // but the state still isn't updated yet, then we do this now.
+                // Additionally, send the User back to the Login with the proper return URL.
+                if (isInvalidSid && this.appState.now.auth.isLoggedIn) {
+                    this.userWasLoggedOut();
+                }
+
+                break;
+            }
+
+            case 'auth':
+                // User should be logged in but is not - he was logged out by the backend.
+                if (this.appState.now.auth.isLoggedIn) {
+                    this.userWasLoggedOut();
+                } else if (showNotification) {
+                    this.notification.show({
+                        message: error.message,
+                        type: 'alert',
+                        delay: 10_000,
+                    });
+                }
+                break;
+
+            default:
+                console.error(`Need to handle: ApiError(reason = "${error.reason}")`);
+                break;
+        }
+    }
+
+    private handleRestClientError(error: GCMSRestClientRequestError, showNotification: boolean): void {
+        switch (error.data?.responseInfo?.responseCode) {
+            case ResponseCode.AUTH_REQUIRED:
+            case ResponseCode.MAINTENANCE_MODE:
+                // User should be logged in but is not - he was logged out by the backend.
+                if (this.appState.now.auth.isLoggedIn) {
+                    this.userWasLoggedOut();
+                } else if (showNotification) {
+                    this.notification.show({
+                        message: error.message,
+                        type: 'alert',
+                        delay: 10_000,
+                    });
+                }
+                break;
+
+            case ResponseCode.OK:
+                // No idea how we got here
+                // Throw a new error for each non-success/info message
+                (error.data?.messages || [])
+                    .filter((msg) => msg.type !== 'INFO' && msg.type !== 'SUCCESS')
+                    .forEach((msg) => this.catch(new Error(msg.message), { notification: true }));
+                break;
+
+            default: {
+                // All other codes have the message simply in them
+                // Invalid SID always display the login screen, or tries to login with SSO
+                // So it can mislead the user, therefore we not display it.
+
+                const msg = (error?.data?.responseInfo?.responseMessage || error?.data?.toString?.() || '').toLowerCase();
+                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+
+                if (showNotification && !isInvalidSid) {
+                    (error.data?.messages || [])
+                        .forEach((msg) => this.catch(new Error(msg.message), { notification: true }));
+                }
+
+                // If the user has been signed out (usually due to activating the maintanance-mode),
+                // but the state still isn't updated yet, then we do this now.
+                // Additionally, send the User back to the Login with the proper return URL.
+                if (isInvalidSid && this.appState.now.auth.isLoggedIn) {
+                    this.userWasLoggedOut();
+                }
+
+                break;
+            }
+        }
+    }
 
     /**
      * Handles the error by showing a notification and then rethrowing it.

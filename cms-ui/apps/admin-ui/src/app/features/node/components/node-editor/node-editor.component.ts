@@ -20,12 +20,13 @@ import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { Feature, Folder, FormTypeConfiguration, Language, NodeFeature, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService, PickListItem, TableRow } from '@gentics/ui-core';
-import { finalize } from 'rxjs/operators';
+import { catchError, finalize } from 'rxjs/operators';
 import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/assign-languages-to-node-modal.component';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
 import { I18nService } from '@gentics/cms-components';
+import { of } from 'rxjs';
 
 @Component({
     selector: 'gtx-node-editor',
@@ -218,6 +219,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                             this.assignedConfigurations = updated;
                             this.changeDetector.markForCheck();
                         }),
+                        catchError(() => of(null)),
                         finalize(() => this.selectedFormTypes.enable()),
                     )
                     .toPromise();

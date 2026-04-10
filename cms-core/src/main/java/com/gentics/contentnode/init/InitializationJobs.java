@@ -8,11 +8,16 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.commons.lang3.Strings;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -29,6 +34,11 @@ public class InitializationJobs {
 	 * Logger instance
 	 */
 	private static NodeLogger logger = NodeLogger.getNodeLogger(InitializationJobs.class);
+
+	/**
+	 * Service loader util for InitJobs
+	 */
+	protected final static ServiceLoaderUtil<InitJob> initJobServiceLoader = ServiceLoaderUtil.load(InitJob.class);
 
 	/**
 	 * This will start all init jobs, that are scheduled
@@ -87,9 +97,9 @@ public class InitializationJobs {
 				if (logger.isInfoEnabled()) {
 					logger.info("Starting job '" + job.nodeSetupKey + "'.");
 				}
-				job.start();
-
-				DBUtils.executeUpdate("DELETE FROM nodesetup WHERE name = ?", new Object[] { job.nodeSetupKey });
+				if (job.start()) {
+					DBUtils.executeUpdate("DELETE FROM nodesetup WHERE name = ?", new Object[] { job.nodeSetupKey });
+				}
 			}
 
 			if (logger.isInfoEnabled()) {
@@ -101,6 +111,17 @@ public class InitializationJobs {
 				t.commit();
 			}
 		}
+	}
+
+	/**
+	 * Check whether the job instance is annotated with the given job name
+	 * @param job job instance
+	 * @param name name
+	 * @return true when the job is annotated with the name, false if not
+	 */
+	protected static boolean isAnnotatedWith(InitJob job, String name) {
+		return Optional.ofNullable(job.getClass().getAnnotation(InitJobName.class))
+				.filter(annotation -> Strings.CI.equals(annotation.value(), name)).isPresent();
 	}
 
 	/**
@@ -160,7 +181,7 @@ public class InitializationJobs {
 		/**
 		 * Job that migrates forms
 		 */
-		MIGRATE_FORMS("migrateforms", MigrateForms.class, 11);
+		MIGRATE_FORMS("migrateforms", null, 11);
 
 		/**
 		 * Get the nodesetup keys of all existing jobs
@@ -196,6 +217,11 @@ public class InitializationJobs {
 		private String nodeSetupKey;
 
 		/**
+		 * Just like the nodeSetupKey, but without the "job:"
+		 */
+		private String jobName;
+
+		/**
 		 * Sortorder of the init jobs
 		 */
 		private int sortOrder;
@@ -217,29 +243,42 @@ public class InitializationJobs {
 				nodeSetupKey = "job:" + nodeSetupKey;
 			}
 			this.nodeSetupKey = nodeSetupKey;
+			this.jobName = Strings.CI.removeStart(this.nodeSetupKey, "job:");
 			this.jobClass = jobClass;
 			this.sortOrder = sortOrder;
 		}
 
 		/**
 		 * Start the job with specified foreground time
+		 * @return true when the job was executed, false if not
 		 * @throws NodeException
 		 */
-		public void start() throws NodeException {
+		public boolean start() throws NodeException {
 			try {
+				AtomicBoolean jobExecuted = new AtomicBoolean(false);
 				TransactionManager.execute(new Executable() {
 					/* (non-Javadoc)
 					 * @see com.gentics.contentnode.factory.TransactionManager.Executable#execute()
 					 */
 					public void execute() throws NodeException {
 						try {
-							InitJob job = jobClass.newInstance();
-							job.execute();
+							if (jobClass != null) {
+								InitJob job = jobClass.getDeclaredConstructor().newInstance();
+								job.execute();
+								jobExecuted.set(true);
+							} else {
+								initJobServiceLoader.callForFirstMatching(job -> isAnnotatedWith(job, jobName), job -> {
+									job.execute();
+									jobExecuted.set(true);
+								});
+							}
 						} catch (Exception e) {
 							throw new NodeException("Error while starting job '" + nodeSetupKey + "' of " + jobClass, e);
 						}
 					}
 				});
+
+				return jobExecuted.get();
 			} catch (NodeException e) {
 				throw new RuntimeException("The InitJob " + name() + " failed.", e);
 			}

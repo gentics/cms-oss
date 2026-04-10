@@ -11,8 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -28,7 +31,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.msg.NodeMessage;
-import com.gentics.contentnode.object.Folder.FormSearch;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
@@ -2148,9 +2150,9 @@ public interface Folder
 		protected String searchString;
 
 		/**
-		 * Form type (may be null)
+		 * Form types (may be null or empty)
 		 */
-		protected String formType;
+		protected Set<String> formTypes;
 
 		/**
 		 * When set true, only forms last edited by the current user are returned
@@ -2256,12 +2258,12 @@ public interface Folder
 		public FormSearch() {}
 
 		/**
-		 * Set the form type
-		 * @param formType form type
+		 * Set the form types
+		 * @param formTypes form types
 		 * @return this object (for chaining)
 		 */
-		public FormSearch setFormType(String formType) {
-			this.formType = formType;
+		public FormSearch setFormTypes(Set<String> formTypes) {
+			this.formTypes = formTypes;
 			return this;
 		}
 
@@ -2528,7 +2530,7 @@ public interface Folder
 		 * @return true when the search is empty, false if not
 		 */
 		public boolean isEmpty() {
-			return StringUtils.isEmpty(searchString) && StringUtils.isEmpty(formType) && !editor && !creator
+			return StringUtils.isEmpty(searchString) && formTypes == null && !editor && !creator
 					&& !publisher && editors == null && creators == null && publishers == null
 					&& editedBefore == 0 && editedSince == 0 && createdBefore == 0 && createdSince == 0 && publishedBefore == 0 && publishedSince == 0
 					&& !recursive && online == null && modified == null && planned == null && wastebin == Wastebin.EXCLUDE;
@@ -2543,11 +2545,11 @@ public interface Folder
 		}
 
 		/**
-		 * Get the form type
-		 * @return form type
+		 * Get the form types
+		 * @return form types
 		 */
-		public String getFormType() {
-			return formType;
+		public Set<String> getFormTypes() {
+			return formTypes;
 		}
 
 		/**

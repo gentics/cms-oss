@@ -171,6 +171,15 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	}
 
 	/**
+	 * Update the form data with the given object. This allows partial updates (on the first level)
+	 * @param data new data
+	 * @throws ReadOnlyException
+	 */
+	default void updateData(JsonNode data) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
+
+	/**
 	 * Get language specific form data
 	 * @param language language
 	 * @return language specific form data

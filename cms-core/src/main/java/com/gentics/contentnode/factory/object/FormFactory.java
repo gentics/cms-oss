@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -1442,6 +1443,18 @@ public class FormFactory extends AbstractFactory {
 			if (!Objects.equals(this.data, data)) {
 				this.modified = true;
 				this.data = data;
+			}
+		}
+
+		@Override
+		public void updateData(JsonNode data) throws ReadOnlyException {
+			if (data != null) {
+				ObjectNode existingData = Optional.ofNullable(this.data).orElseGet(() -> mapper.createObjectNode())
+						.deepCopy();
+				data.properties().forEach(entry -> {
+					existingData.set(entry.getKey(), entry.getValue());
+				});
+				setData(existingData);
 			}
 		}
 

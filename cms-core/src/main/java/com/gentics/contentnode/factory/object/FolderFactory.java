@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
@@ -2403,6 +2404,12 @@ public class FolderFactory extends AbstractFactory {
 			if (search == null) {
 				search = FormSearch.create();
 			}
+
+			// shortcut for empty search
+			if (search.getFormTypes() != null && search.getFormTypes().isEmpty()) {
+				return Collections.emptyList();
+			}
+
 			final FormSearch fSearch = search;
 			int userId = TransactionManager.getCurrentTransaction().getUserId();
 
@@ -2418,8 +2425,9 @@ public class FolderFactory extends AbstractFactory {
 			sql.append(StringUtils.repeat("?", folderIds.size(), ","));
 			sql.append(")");
 
-			if (!StringUtils.isEmpty(fSearch.getFormType())) {
-				sql.append(" AND formtype = ?");
+			if (fSearch.getFormTypes() != null) {
+				sql.append(" AND formtype IN (").append(StringUtils.repeat("?", fSearch.getFormTypes().size(), ","))
+						.append(")");
 			}
 
 			if (!StringUtils.isEmpty(fSearch.getSearchString())) {
@@ -2501,8 +2509,10 @@ public class FolderFactory extends AbstractFactory {
 					st.setObject(pCounter++, fId);
 				}
 
-				if (!StringUtils.isEmpty(fSearch.getFormType())) {
-					st.setString(pCounter++, fSearch.getFormType());
+				if (fSearch.getFormTypes() != null) {
+					for (String formType : fSearch.getFormTypes()) {
+						st.setString(pCounter++, formType);
+					}
 				}
 
 				if (!StringUtils.isEmpty(fSearch.getSearchString())) {

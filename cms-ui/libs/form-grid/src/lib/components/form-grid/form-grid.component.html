@@ -177,12 +177,13 @@
 
                 <div class="panel-content">
                     <gtx-tabs class="element-tabs">
-                        @if (!restricted() && selectedElementSchemaDraft != null) {
+                        @if (selectedElementSchemaDraft != null) {
                             <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
                                 <gtx-form-element-definition
                                     [schemaDraft]="selectedElementSchemaDraft"
                                     (schemaDraftChange)="onDefinitionChange($event)"
                                     [controls]="config().controls"
+                                    [restricted]="restricted()"
                                 ></gtx-form-element-definition>
                             </gtx-tab>
                         }

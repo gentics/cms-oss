@@ -4,3 +4,4 @@ export * from './form-page-manager/form-page-manager.component';
 export * from './form-element-definition/form-element-definition.component';
 export * from './form-element-settings/form-element-settings.component';
 export * from './form-options-input/form-options-input.component';
+export * from './form-element-translation/form-element-translation.component';

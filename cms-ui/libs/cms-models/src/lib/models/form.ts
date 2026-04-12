@@ -314,6 +314,11 @@ export interface FormUISchema {
 
 export type FormSchemaProperties = Record<string, FormSchemaProperty>;
 
+export interface FormStaticOption {
+    value: string;
+    label: I18nString;
+}
+
 export interface FormSchemaProperty {
     /**
      * The type of this property
@@ -382,6 +387,10 @@ export interface FormSchemaProperty {
      * Which sub-properties this property manages.
      */
     properties?: FormSchemaProperties;
+    /**
+     * Static options for select-type controls, with translatable labels.
+     */
+    staticOptions?: FormStaticOption[];
 }
 
 export interface FormPage {
@@ -414,6 +423,18 @@ export interface FormElement {
      * The description of this element in all languages.
      */
     description?: I18nString;
+    /**
+     * The default language used as fallback for translations.
+     */
+    defaultLanguage?: string;
+    /**
+     * A plain-text fallback value used when no language-specific translation is available.
+     */
+    fallbackText?: string;
+    /**
+     * Whether to use the fallback language when a translation is missing.
+     */
+    useFallbackLanguage?: boolean;
     /**
      * If a user uploads a CSV which contains this element's ID,
      * that the value of the CSV can be used to fill in this element's value.

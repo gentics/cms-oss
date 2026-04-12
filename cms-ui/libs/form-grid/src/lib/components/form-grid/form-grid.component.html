@@ -195,8 +195,20 @@
                                 [elementConfig]="selectedElementConfiguration"
                             ></gtx-form-element-settings>
                         </gtx-tab>
-                        <gtx-tab [id]="EditTabs.TRANSLATIONS" [title]="'form_grid.edit_tab_translations' | gtxI18n">
-                            Translations!
+                        <gtx-tab
+                            [id]="EditTabs.TRANSLATIONS"
+                            [title]="(hasMissingTranslations() ? '⚠ ' : '') + ('form_grid.edit_tab_translations' | gtxI18n)"
+                        >
+                            <gtx-form-element-translation
+                                [element]="selectedElement"
+                                (elementChange)="upsetElementChanges($event)"
+                                [elementConfig]="selectedElementConfiguration"
+                                [schema]="selectedElementSchemaDraft"
+                                (schemaChange)="onDefinitionChange($event)"
+                                [languages]="languages()"
+                                [restricted]="restricted()"
+                                (hasMissingTranslationsChange)="hasMissingTranslations.set($event)"
+                            ></gtx-form-element-translation>
                         </gtx-tab>
                     </gtx-tabs>
                 </div>

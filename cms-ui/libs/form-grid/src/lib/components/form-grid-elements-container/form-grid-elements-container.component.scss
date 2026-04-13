@@ -112,29 +112,22 @@
     flex-wrap: wrap;
     align-content: flex-start;
     width: 100%;
-    border-radius: 4px;
+    border-radius: 2px;
     transition:
         background 180ms ease,
         box-shadow 180ms ease,
-        transform 180ms ease;
+        transform 180ms ease,
+        row-gap 180ms ease,
+        padding-top 180ms ease,
+        padding-bottom 180ms ease;
 
-    // &.palette-dragging {
-    //     padding-top: 6px;
-    //     padding-bottom: 6px;
-    //     box-shadow: inset 0 0 0 1px rgba(0, 150, 220, 0.06);
-    // }
-
-    &.palette-dragging.is-palette-drop-target {
-        background:
-            radial-gradient(circle at top, rgba(0, 150, 220, 0.08), transparent 46%),
-            linear-gradient(180deg, rgba(0, 150, 220, 0.04), rgba(0, 150, 220, 0.08));
+    &.is-palette-drop-target {
+        padding-top: 24px;
+        padding-bottom: 40px;
+        row-gap: 20px;
+        background: rgba(0, 150, 220, 0.08);
     }
-
-    // &.palette-dragging.editor-drop-container--root {
-    //     padding-top: 8px;
-    //     padding-bottom: 8px;
-    // }
-
+    
     &.editor-drop-container--root {
         height: 100%;
     }
@@ -164,6 +157,7 @@ gtx-contents-list-item {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
+        padding: 0;
     }
 }
 
@@ -203,24 +197,12 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 }
 
 .fg-container-wrapper {
+    // Plain layout wrapper — no visual decoration here.
+    // The card header (.fg-container-card) carries the visual identity instead.
     position: relative;
     display: flex;
     flex-direction: column;
     width: 100%;
-    border: 1px solid rgba(0, 150, 220, 0.20);
-    border-radius: 6px;
-    background: rgba(0, 150, 220, 0.04);
-    overflow: hidden;
-
-    &.is-selected {
-        border-color: rgba(0, 150, 220, 0.55);
-        box-shadow: 0 0 0 2px rgba(0, 150, 220, 0.20);
-    }
-
-    .fg-container-wrapper {
-        // Subtly darker tint for nested containers
-        background: rgba(0, 150, 220, 0.07);
-    }
 
     &:hover .grid-resize-handle,
     &:focus-within .grid-resize-handle {
@@ -228,34 +210,21 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     }
 }
 
-.fg-container-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 8px 12px;
-    background: rgba(0, 150, 220, 0.08);
+.fg-container-card {
+    flex: 0 0 auto;
+    min-height: auto !important;
+    border-radius: 2px 2px 0 0;
     border-bottom: 1px solid rgba(0, 150, 220, 0.14);
-    cursor: pointer;
-
-    .container-label {
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .delete-button {
-        flex-shrink: 0;
-    }
 }
 
 .fg-container-body {
     padding: 8px;
     min-height: 80px;
     display: flex;
+    border: 1px solid rgba(0, 150, 220, 0.16);
+    border-top: none;
+    border-radius: 0 0 2px 2px;
+    background: rgba(0, 150, 220, 0.03);
 
     // The recursive <gtx-form-grid-elements-container> needs to actually fill the body
     // so the cursor truly enters its <gtx-sortable-list> during a drag — otherwise the
@@ -327,7 +296,7 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     justify-content: center;
     width: 100%;
     height: 100%;
-    border-radius: 4px;
+    border-radius: 2px;
     border: 1px dashed rgba(0, 150, 220, 0.42);
     background:
         linear-gradient(180deg, rgba(0, 150, 220, 0.08), rgba(0, 150, 220, 0.14));
@@ -388,7 +357,7 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     }
 
     .fg-box {
-        padding: 0;
+        padding: 0 ;
     }
 
     .fg-select {
@@ -452,10 +421,11 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     position: absolute;
     top: 0;
     right: 0;
+    margin: -1px;
     width: 12px;
     bottom: 0;
-    border-top-right-radius: 14px;
-    border-bottom-right-radius: 14px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
     cursor: ew-resize;
     opacity: 0;
     transition: opacity 140ms ease, background 140ms ease, box-shadow 140ms ease;
@@ -476,17 +446,6 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     background: rgba(0, 0, 0, 0.10);
 }
 
-.grid-resize-handle::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 6px;
-    height: 24px;
-    transform: translate(-50%, -50%);
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.04);
-}
 
 .fg-box:hover .grid-resize-handle,
 .fg-box:focus-within .grid-resize-handle {

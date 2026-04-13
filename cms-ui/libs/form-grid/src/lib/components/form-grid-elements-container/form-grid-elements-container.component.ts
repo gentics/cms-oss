@@ -38,7 +38,7 @@ interface DisplayItem {
     schema?: FormSchemaProperty;
 }
 
-const DROP_ROW_TOLERANCE = 10;
+const DROP_ROW_TOLERANCE = 0;
 /**
  * How close (in px) the cursor must be to a container/aggregate item's left or right edge
  * for the parent grid to claim a "before/after" insert slot. Anywhere else over the body
@@ -209,9 +209,39 @@ export class FormGridElementsContainerComponent implements OnChanges {
             // or if we're hitting the specific element we dynamically shrunk to prevent infinite hit-test loops.
             if (currentTarget?.resizeNeighbor) {
                 const neighborId = this.elements()[currentTarget.resizeNeighbor.index]?.id;
-                if (isHoveringPlaceholder || (hoveredElementId && hoveredElementId === neighborId)) {
+
+                if (isHoveringPlaceholder) {
                     this.paletteDragOverFrame = 0;
                     return;
+                }
+
+                if (hoveredElementId && hoveredElementId === neighborId) {
+                    // Check if the placeholder is logically before (left) or after (right) the neighbor
+                    const isPlaceholderBefore = currentTarget.index <= currentTarget.resizeNeighbor.index;
+                    
+                    const neighborEl = realTarget?.closest('[data-drop-item="true"]') as HTMLElement | null;
+                    if (neighborEl) {
+                        const neighborRect = neighborEl.getBoundingClientRect();
+                        const midpointX = neighborRect.left + neighborRect.width / 2;
+                        const isOnLeftHalf = clientX < midpointX;
+
+                        // Stay locked if placeholder is left AND mouse is on the left half
+                        // OR if placeholder is right AND mouse is on the right half
+                        if (isPlaceholderBefore && isOnLeftHalf) {
+                            this.paletteDragOverFrame = 0;
+                            return;
+                        } else if (!isPlaceholderBefore && !isOnLeftHalf) {
+                            this.paletteDragOverFrame = 0;
+                            return;
+                        }
+                        // If we reached here, the user moved the mouse to the OTHER half of the shrunk element!
+                        // We do NOT return/lock, but intentionally fall through so calculatePaletteInsertTarget 
+                        // is re-run to cleanly swap sides.
+                    } else {
+                        // Fallback lock if we cannot find the exact bounding box
+                        this.paletteDragOverFrame = 0;
+                        return;
+                    }
                 }
             } else if (isHoveringPlaceholder) {
                 this.paletteDragOverFrame = 0;
@@ -589,7 +619,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         const activeRow = this.findPaletteDropRow(rows, clientY);
 
         if (!activeRow) {
-            if (clientY < rows[0].top - DROP_ROW_TOLERANCE) {
+            if (clientY <= rows[0].top - DROP_ROW_TOLERANCE) {
                 return { index: 0, span: defaultSpan };
             }
 
@@ -598,11 +628,18 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 const nextRow = rows[i + 1];
 
                 if (
-                    clientY > currentRow.bottom + DROP_ROW_TOLERANCE
-                    && clientY < nextRow.top - DROP_ROW_TOLERANCE
+                    clientY >= currentRow.bottom + DROP_ROW_TOLERANCE
+                    && clientY <= nextRow.top - DROP_ROW_TOLERANCE
                 ) {
+                    // The cursor is in the visual gap between two rows → insert a new row before the next
                     return { index: nextRow.items[0].index, span: defaultSpan };
                 }
+            }
+
+            // Cursor is below the last row (in the bottom padding area) → append new row at the end
+            const lastRow = rows[rows.length - 1];
+            if (clientY >= lastRow.bottom + DROP_ROW_TOLERANCE) {
+                return { index: this.elements().length, span: defaultSpan };
             }
 
             return { index: this.elements().length, span: defaultSpan };
@@ -657,14 +694,23 @@ export class FormGridElementsContainerComponent implements OnChanges {
         if (freeCols > 0) {
             span = Math.max(1, Math.min(preferredSpan, freeCols));
         } else {
-            // No space left: shrink the neighbor element to accommodate the drop safely
-            const targetIndex = index === activeRow.items[activeRow.items.length - 1].index + 1
-                                ? activeRow.items[activeRow.items.length - 1].index
-                                : index;
+            // No space left: shrink the neighbor element to accommodate the drop safely.
+            // Find the element the mouse is physically hovering to use as the shrink target.
+            // This ensures that when hovering an element's right half, that specific element shrinks instead of the next one.
+            let resizeTargetIndex = index === activeRow.items[activeRow.items.length - 1].index + 1
+                                    ? activeRow.items[activeRow.items.length - 1].index
+                                    : index;
 
-            const neighborSpan = this.getItemSpanByIndex(targetIndex);
+            for (const item of activeRow.items) {
+                if (clientX >= item.rect.left && clientX <= item.rect.right) {
+                    resizeTargetIndex = item.index;
+                    break;
+                }
+            }
+
+            const neighborSpan = this.getItemSpanByIndex(resizeTargetIndex);
             span = Math.max(1, Math.floor(neighborSpan / 2));
-            resizeNeighbor = { index: targetIndex, span: neighborSpan - span };
+            resizeNeighbor = { index: resizeTargetIndex, span: neighborSpan - span };
         }
 
         return { index, span, resizeNeighbor };
@@ -879,6 +925,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
     }
 
     private getPaletteDefaultSpanForList(): number {
-        return this.id() === this.rootId() ? 12 : 6;
+        return 12;
     }
 }

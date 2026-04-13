@@ -118,32 +118,45 @@
                     [class.is-aggregate]="element.type === 'aggregate'"
                     [class.is-container]="element.type === 'container'"
                 >
-                    <div
-                        class="grid-resize-handle"
-                        aria-label="Elementbreite ändern"
-                        title="Breite ändern"
-                        (pointerdown)="onResizeStart($event, $index)"
-                    ></div>
+                    <gtx-contents-list-item
+                        class="fg-box fg-container-card"
+                        [class.empty]="!element.label"
+                        [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
+                        (click)="selectElement(element, $event)"
+                    >
+                        <div
+                            class="grid-resize-handle"
+                            aria-label="Elementbreite ändern"
+                            title="Breite ändern"
+                            (pointerdown)="onResizeStart($event, $index)"
+                        ></div>
 
-                    <div class="fg-container-header" (click)="selectElement(element, $event)">
-                        <span class="tag tag-type">
-                            <span class="tag-text">{{ displayItem.label | gtxI18nObject }}</span>
-                        </span>
+                        <div class="item-primary">
+                            <div class="actions-container">
+                                <span class="tag tag-type">
+                                    <span class="tag-text">{{ displayItem.label | gtxI18nObject }}</span>
+                                </span>
 
-                        <strong class="container-label">{{ (element.label | gtxI18nObject) || ('form_grid.container_label' | gtxI18n) }}</strong>
+                                @if (!restricted()) {
+                                    <gtx-button
+                                        type="alert"
+                                        class="delete-button"
+                                        [icon]="true"
+                                        (click)="deleteElement($event, element, $index)"
+                                    >
+                                        <icon>delete_outline</icon>
+                                    </gtx-button>
+                                }
+                            </div>
 
-                        @if (!restricted()) {
-                            <gtx-button
-                                type="alert"
-                                class="delete-button"
-                                [icon]="true"
-                                (click)="deleteElement($event, element, $index)"
-                            >
-                                <icon>delete_outline</icon>
-                            </gtx-button>
-                        }
-                    </div>
+                            <strong
+                                class="formtitle"
+                                [class.is-selected-title]="selectedElement() != null && element.id === selectedElement()?.id"
+                            >{{ (element.label | gtxI18nObject) || ('form_grid.container_label' | gtxI18n) }}</strong>
+                        </div>
+                    </gtx-contents-list-item>
 
+                    <!-- Plain body: no border/color, just holds the nested elements -->
                     <div class="fg-container-body">
                         <gtx-form-grid-elements-container
                             [config]="config()"

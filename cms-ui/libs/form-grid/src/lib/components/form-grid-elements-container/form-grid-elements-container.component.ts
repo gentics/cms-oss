@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import {
+    FormBlockConfiguration,
     FormControlConfiguration,
     FormElement,
     FormElementConfiguration,
@@ -30,11 +31,20 @@ interface DisplayItem {
     element: FormElement;
     isBlock: boolean;
     isControl: boolean;
+    isAggregate: boolean;
+    isContainer: boolean;
+    whitelist: string[] | null;
     config: FormElementConfiguration;
     schema?: FormSchemaProperty;
 }
 
 const DROP_ROW_TOLERANCE = 10;
+/**
+ * How close (in px) the cursor must be to a container/aggregate item's left or right edge
+ * for the parent grid to claim a "before/after" insert slot. Anywhere else over the body
+ * defers to the inner container's own drop handler.
+ */
+const CONTAINER_EDGE_THRESHOLD_PX = 24;
 
 @Component({
     selector: 'gtx-form-grid-elements-container',
@@ -58,6 +68,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly pageIndex = input.required<number>();
     public readonly languages = input.required<string[]>();
     public readonly gridSurface = input.required<HTMLElement>();
+    /** Optional whitelist of allowed element types for this container (null/empty = allow all) */
+    public whitelist = input<string[] | null>(null);
 
     public readonly schema = model.required<FormSchema>();
     public readonly elements = model.required<FormElement[]>();
@@ -156,6 +168,16 @@ export class FormGridElementsContainerComponent implements OnChanges {
             return;
         }
 
+        // Whitelist enforcement: if this container has a whitelist, refuse non-allowed types.
+        // We do NOT call cancelEvent here so the event bubbles up to a parent container that may accept it.
+        if (!this.isTypeAllowed(this.paletteDragType())) {
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = 'none';
+            }
+            event.preventDefault();
+            return;
+        }
+
         cancelEvent(event);
 
         if (event.dataTransfer) {
@@ -202,6 +224,13 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 clientY,
             );
 
+            // null means: cursor is over the body of a nested container element. Defer to the
+            // inner container's drop handler — do not claim/clobber the shared paletteDropTarget.
+            if (nextTarget == null) {
+                this.paletteDragOverFrame = 0;
+                return;
+            }
+
             if (
                 !this.paletteDropTarget()
                 || this.paletteDropTarget()?.elementContainerId !== this.id()
@@ -232,24 +261,40 @@ export class FormGridElementsContainerComponent implements OnChanges {
             return;
         }
 
-        cancelEvent(event);
+        // Whitelist enforcement: refuse non-allowed types and bubble the event up to a parent container.
+        if (!this.isTypeAllowed(this.paletteDragType())) {
+            event.preventDefault();
+            return;
+        }
 
         const container = event.currentTarget as HTMLElement | null;
-        const fallbackTarget = container
+        const computedTarget = container
             ? this.calculatePaletteInsertTarget(
                 container,
                 event.clientX,
                 event.clientY,
             )
-            : {
-                index: this.elements().length,
-                span: this.getPaletteDefaultSpanForList(),
-            };
+            : null;
 
-        const target: PaletteDropTarget = (
-            this.paletteDropTarget()
-            && this.paletteDropTarget()?.elementContainerId === this.id()
-        )
+        const claimedByThis = this.paletteDropTarget()
+          && this.paletteDropTarget()?.elementContainerId === this.id();
+
+        // If we have no claim AND no computed insert position, the cursor is over a nested
+        // container's body (calculate returned null). Don't claim the drop — bubble up so the
+        // inner container can handle it.
+        if (!claimedByThis && computedTarget == null) {
+            event.preventDefault();
+            return;
+        }
+
+        cancelEvent(event);
+
+        const fallbackTarget = computedTarget ?? {
+            index: this.elements().length,
+            span: this.getPaletteDefaultSpanForList(),
+        };
+
+        const target: PaletteDropTarget = claimedByThis
             ? this.paletteDropTarget()!
             : {
                 elementContainerId: this.id(),
@@ -389,10 +434,18 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public deleteElement(event: MouseEvent, element: FormElement, index: number): void {
         cancelEvent(event);
 
+        const childCount = Array.isArray(element.elements) ? element.elements.length : 0;
+        const hasChildren = childCount > 0;
+
         this.modals.dialog({
-            title: this.i18n.instant('form_grid.title_delete_element'),
-            body: this.i18n.instant('form_grid.confirm_element_delete', {
+            title: this.i18n.instant(hasChildren
+                ? 'form_grid.title_delete_container'
+                : 'form_grid.title_delete_element'),
+            body: this.i18n.instant(hasChildren
+                ? 'form_grid.confirm_container_delete_with_children'
+                : 'form_grid.confirm_element_delete', {
                 name: this.i18n.fromObject(element.label),
+                count: childCount,
             }),
             buttons: [
                 {
@@ -432,6 +485,17 @@ export class FormGridElementsContainerComponent implements OnChanges {
             });
     }
 
+    /**
+     * Called by a recursively-rendered child container when its element list changes.
+     * Updates the parent element's `.elements` field and re-emits this container's elements
+     * model so the change propagates upward.
+     */
+    public updateChildElements(parent: FormElement, children: FormElement[]): void {
+        const updated = this.elements().map(el => el.id === parent.id ? { ...el, elements: children } : el);
+        this.elements.set(updated);
+        this.updateDisplayItems();
+    }
+
     public sortElements(event: ISortableEvent): void {
         // Sort the visible list
         const newElements = [...this.elements()];
@@ -446,6 +510,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
     /* INTERNALS
      * ===================================================================== */
 
+    private isTypeAllowed(type: string | null | undefined): boolean {
+        const wl = this.whitelist();
+        if (!wl || wl.length === 0) {
+            return true;
+        }
+        return type != null && wl.includes(type);
+    }
+
     private updateDisplayItems(): void {
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
         this.displayItems.set((this.elements() || []).map((el) => {
@@ -458,12 +530,17 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     return null;
                 }
 
+                const isAggregate = !!(itemConfig as FormControlConfiguration).aggregate;
+
                 return {
                     id: el.id,
                     label: itemConfig.labelI18n,
                     element: el,
                     isBlock: false,
                     isControl: true,
+                    isAggregate,
+                    isContainer: false,
+                    whitelist: isAggregate ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
                     schema: itemSchema,
                 };
@@ -480,12 +557,17 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     return null;
                 }
 
+                const isContainer = !!(itemConfig as FormBlockConfiguration).container;
+
                 return {
                     id: el.id,
                     label: itemConfig.labelI18n,
                     element: el,
                     isControl: false,
                     isBlock: true,
+                    isAggregate: false,
+                    isContainer,
+                    whitelist: isContainer ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
                 };
             }
@@ -496,7 +578,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         container: HTMLElement,
         clientX: number,
         clientY: number,
-    ): { index: number; span: number; resizeNeighbor?: { index: number; span: number } } {
+    ): { index: number; span: number; resizeNeighbor?: { index: number; span: number } } | null {
         const defaultSpan = this.getPaletteDefaultSpanForList();
         const rows = this.buildPaletteDropRows(container);
 
@@ -529,10 +611,31 @@ export class FormGridElementsContainerComponent implements OnChanges {
         let index = activeRow.items[activeRow.items.length - 1].index + 1;
 
         for (const item of activeRow.items) {
-            const midpointX = item.rect.left + item.rect.width / 2;
-            if (clientX < midpointX) {
-                index = item.index;
-                break;
+            const el = this.elements()[item.index];
+            const isContainerLike = el?.type === 'aggregate' || el?.type === 'container';
+
+            if (isContainerLike) {
+                // For containers, only claim a before/after slot when the cursor is genuinely
+                // near the left/right edge. When the cursor is over the container's body, defer
+                // to the inner container's own drop handler (return null = no parent claim).
+                const edgeThreshold = Math.min(CONTAINER_EDGE_THRESHOLD_PX, item.rect.width / 4);
+
+                if (clientX < item.rect.left + edgeThreshold) {
+                    index = item.index;
+                    break;
+                }
+                if (clientX < item.rect.right - edgeThreshold) {
+                    return null;
+                }
+                // cursor is in the right-edge zone of this container — fall through and let the
+                // loop continue: the next iteration may pick the next item, otherwise the default
+                // (after-last) index applies.
+            } else {
+                const midpointX = item.rect.left + item.rect.width / 2;
+                if (clientX < midpointX) {
+                    index = item.index;
+                    break;
+                }
             }
         }
 
@@ -645,11 +748,12 @@ export class FormGridElementsContainerComponent implements OnChanges {
     private createPaletteElement(type: string): FormElement {
         const defaultSpan = this.pendingPaletteDropSpan ?? 12;
         this.pendingPaletteDropSpan = null;
-        const isAggregate = (this.paletteDragConfig() as FormControlConfiguration).aggregate;
+        const isAggregate = !!(this.paletteDragConfig() as FormControlConfiguration).aggregate;
+        const isContainer = !!(this.paletteDragConfig() as FormBlockConfiguration).container;
 
         const el: FormElement = {
             id: uuidV4(),
-            type: isAggregate ? 'aggregate' : 'property',
+            type: isContainer ? 'container' : (isAggregate ? 'aggregate' : 'property'),
             label: {},
             formGridOptions: {
                 type,
@@ -666,8 +770,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
             uiSchemaPage: this.pageIndex(),
         };
 
-        // If it's an aggregate, then default an empty items array
-        if (isAggregate) {
+        // If it's an aggregate or container, then default an empty items array
+        if (isAggregate || isContainer) {
             el.elements = [];
         }
 

@@ -202,8 +202,78 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     margin: 0;
 }
 
-.fg-agg {
-    background: beige !important;
+.fg-container-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border: 1px solid rgba(0, 150, 220, 0.20);
+    border-radius: 6px;
+    background: rgba(0, 150, 220, 0.04);
+    overflow: hidden;
+
+    &.is-selected {
+        border-color: rgba(0, 150, 220, 0.55);
+        box-shadow: 0 0 0 2px rgba(0, 150, 220, 0.20);
+    }
+
+    .fg-container-wrapper {
+        // Subtly darker tint for nested containers
+        background: rgba(0, 150, 220, 0.07);
+    }
+
+    &:hover .grid-resize-handle,
+    &:focus-within .grid-resize-handle {
+        opacity: 1;
+    }
+}
+
+.fg-container-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 8px 12px;
+    background: rgba(0, 150, 220, 0.08);
+    border-bottom: 1px solid rgba(0, 150, 220, 0.14);
+    cursor: pointer;
+
+    .container-label {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .delete-button {
+        flex-shrink: 0;
+    }
+}
+
+.fg-container-body {
+    padding: 8px;
+    min-height: 80px;
+    display: flex;
+
+    // The recursive <gtx-form-grid-elements-container> needs to actually fill the body
+    // so the cursor truly enters its <gtx-sortable-list> during a drag — otherwise the
+    // empty list has 0 height, dragover events bubble up to the parent, and the parent's
+    // previous drop placeholder never gets superseded.
+    > gtx-form-grid-elements-container {
+        display: flex;
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 64px;
+
+        > .editor-drop-container,
+        > gtx-sortable-list.editor-drop-container {
+            flex: 1 1 auto;
+            min-height: 64px;
+            align-content: flex-start;
+        }
+    }
 }
 
 

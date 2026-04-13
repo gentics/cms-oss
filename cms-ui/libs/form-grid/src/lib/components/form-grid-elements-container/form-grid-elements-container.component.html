@@ -103,6 +103,81 @@
                 </gtx-contents-list-item>
             </gtx-sortable-item>
         }
+
+        @if (element.type === 'aggregate' || element.type === 'container') {
+            <gtx-sortable-item
+                [class.is-selected-card]="selectedElement() != null && element?.id === selectedElement()?.id"
+                [ngClass]="'form-item columns small-' + getDisplaySpan(element, $index)"
+                data-drop-item="true"
+                [attr.data-drop-index]="$index"
+            >
+                <div
+                    class="fg-container-wrapper"
+                    [attr.data-element-id]="element.id"
+                    [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
+                    [class.is-aggregate]="element.type === 'aggregate'"
+                    [class.is-container]="element.type === 'container'"
+                >
+                    <div
+                        class="grid-resize-handle"
+                        aria-label="Elementbreite ändern"
+                        title="Breite ändern"
+                        (pointerdown)="onResizeStart($event, $index)"
+                    ></div>
+
+                    <div class="fg-container-header" (click)="selectElement(element, $event)">
+                        <span class="tag tag-type">
+                            <span class="tag-text">{{ displayItem.label | gtxI18nObject }}</span>
+                        </span>
+
+                        <strong class="container-label">{{ (element.label | gtxI18nObject) || ('form_grid.container_label' | gtxI18n) }}</strong>
+
+                        @if (!restricted()) {
+                            <gtx-button
+                                type="alert"
+                                class="delete-button"
+                                [icon]="true"
+                                (click)="deleteElement($event, element, $index)"
+                            >
+                                <icon>delete_outline</icon>
+                            </gtx-button>
+                        }
+                    </div>
+
+                    <div class="fg-container-body">
+                        <gtx-form-grid-elements-container
+                            [config]="config()"
+                            [rootId]="rootId()"
+                            [id]="element.id"
+                            [level]="level() + 1"
+                            [pageIndex]="pageIndex()"
+                            [languages]="languages()"
+                            [restricted]="restricted()"
+                            [gridSurface]="gridSurface()"
+                            [whitelist]="displayItem.whitelist"
+
+                            [elements]="element.elements || []"
+                            (elementsChange)="updateChildElements(element, $event)"
+                            [(schema)]="schema"
+
+                            [selectedElement]="selectedElement()"
+                            [selectedElementContainerId]="selectedElementContainerId()"
+                            (elementSelect)="elementSelect.emit($event)"
+
+                            [(paletteDragging)]="paletteDragging"
+                            [(paletteDropTarget)]="paletteDropTarget"
+                            [paletteDragType]="paletteDragType()"
+                            [paletteDragConfig]="paletteDragConfig()"
+                            (platteDragStop)="platteDragStop.emit()"
+
+                            [(resizing)]="resizing"
+                            [(resizeOverlayActive)]="resizeOverlayActive"
+                            [(resizeOverlaySpan)]="resizeOverlaySpan"
+                        ></gtx-form-grid-elements-container>
+                    </div>
+                </div>
+            </gtx-sortable-item>
+        }
     }
 
     @if (

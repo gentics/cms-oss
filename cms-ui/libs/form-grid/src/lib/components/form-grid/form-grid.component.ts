@@ -284,21 +284,33 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     }
 
     public upsetElementChanges(data: FormElement): void {
-        if (this.selectedElementContainerId !== this.ELEMENT_ROOT_CONTAINER_ID) {
-            // TODO: handle nested elements
-            return;
+        const pageElements = structuredClone(this.elements());
+        if (this.replaceElementInTree(pageElements, data)) {
+            this.updatePageElements(pageElements);
         }
+    }
 
-        const newElements = this.elements().slice();
-        const idx = newElements.findIndex((el) => el.id === data.id);
-
-        // If we can't find the element in the container data, then we have a problem
-        if (idx === -1) {
-            return;
+    /**
+     * Recursively walks the element tree to find the element with the matching ID and replaces it.
+     * The existing children (`.elements`) of the matched node are preserved so an edit on a
+     * container's settings cannot accidentally wipe its children.
+     */
+    private replaceElementInTree(elements: FormElement[], replacement: FormElement): boolean {
+        for (let i = 0; i < elements.length; i++) {
+            if (elements[i].id === replacement.id) {
+                elements[i] = {
+                    ...replacement,
+                    elements: elements[i].elements ?? replacement.elements,
+                };
+                return true;
+            }
+            if (Array.isArray(elements[i].elements)
+                && this.replaceElementInTree(elements[i].elements!, replacement)
+            ) {
+                return true;
+            }
         }
-
-        newElements.splice(idx, 1, data);
-        this.updatePageElements(newElements);
+        return false;
     }
 
     public updateElementSchema(elementSchema: FormSchemaProperty | null): void {

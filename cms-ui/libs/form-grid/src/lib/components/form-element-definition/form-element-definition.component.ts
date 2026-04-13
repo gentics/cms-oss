@@ -10,8 +10,9 @@ import { FormControlConfiguration, FormSchemaProperty } from '@gentics/cms-model
 })
 export class FormElementDefinitionComponent {
 
-    public schemaDraft = model.required<Partial<FormSchemaProperty>>();
-    public controls = input.required<Record<string, FormControlConfiguration>>();
+    public readonly disabled = input.required<boolean>();
+    public readonly schemaDraft = model.required<Partial<FormSchemaProperty>>();
+    public readonly controls = input.required<Record<string, FormControlConfiguration>>();
 
     public updateDraft(patch: Partial<FormSchemaProperty>): void {
         this.schemaDraft.set({ ...this.schemaDraft(), ...patch });

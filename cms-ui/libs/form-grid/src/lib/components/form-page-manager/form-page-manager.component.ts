@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormUISchema } from '@gentics/cms-models';
+import { FormGridEditMode } from '../../models';
 
 @Component({
     selector: 'gtx-form-page-manager',
@@ -10,8 +11,8 @@ import { FormUISchema } from '@gentics/cms-models';
 })
 export class FormPageManagerComponent {
 
-    public uiSchema = model.required<FormUISchema>();
-    public pageIndex = model.required<number>();
-    public restricted = input<boolean>();
+    public readonly uiSchema = model.required<FormUISchema>();
+    public readonly pageIndex = model.required<number>();
+    public readonly mode = input<FormGridEditMode>();
 
 }

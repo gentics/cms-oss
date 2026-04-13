@@ -1,0 +1,288 @@
+<div class="left-items">
+    <icon-checkbox
+        class="left"
+        [disabled]="totalCount() === 0"
+        [selected]="selection().size > 0 && totalCount() === selection().size"
+        [icon]="'list_alt'"
+        (change)="toggleSelection($event)"
+    ></icon-checkbox>
+
+    <span class="type">
+        @if (0 < selection().size) {
+            <span class="count-full">
+                <span class="item-list-status selected" [class.filtering]="filterTerm() !== ''">
+                    {{ (filterTerm() === '' ? 'editor.item_count_header_selected' : 'editor.item_count_header_selected_matching') | gtxI18n: {
+                        selected: selection().size,
+                        count: totalCount(),
+                        items: ('common.type_' + (external() ? 'external_form' : 'form') + (totalCount() !== 1 ? 's_dative' : '')) | gtxI18n,
+                    } }}
+                </span>
+            </span>
+            <span class="count-part">
+                {{ 'editor.item_count_header_selected_simple' | gtxI18n: {
+                    count: selection().size,
+                    items: ('common.type_' + (external() ? 'external_form' : 'form') + (totalCount() !== 1 ? 's' : '')) | gtxI18n
+                } }}
+            </span>
+        } @else {
+            <span class="count-full">
+                @if (pageSize() >= totalCount() && filterTerm() === '') {
+                    <span class="item-list-status all-items">
+                        {{ 'editor.item_count_header_simple' | gtxI18n: {
+                            count: totalCount(),
+                            items: ('common.type_' + (external() ? 'external_form' : 'form')) | gtxI18n
+                        } }}
+                    </span>
+                }
+                @if (pageSize() < totalCount() && filterTerm() === '') {
+                    <span class="item-list-status partial-items">
+                        @let count = (totalCount() - (currentPage() - 1) * pageSize() < pageSize())
+                                ? totalCount() - (currentPage() - 1) * pageSize()
+                                : pageSize();
+                        {{ 'editor.item_count_header_partial' | gtxI18n: {
+                            count: count,
+                            total: totalCount(),
+                            items: ('common.type_' + (external() ? 'external_form' : 'form') + (count !== 1 ? 's_dative' : '')) | gtxI18n,
+                        } }}
+                    </span>
+                }
+                @if (filterTerm() !== '') {
+                    <span class="item-list-status filtering">
+                        @let count = (currentPageItems() | filterItems:filterTerm():false)?.length;
+                        {{ 'editor.item_count_header_matching' | gtxI18n: {
+                            count: count,
+                            items: ('common.type_' + (external() ? 'external_form' : 'form') + (count !== 1 ? 's' : '')) | gtxI18n
+                        } }}
+                    </span>
+                }
+            </span>
+            <span class="count-part">
+                {{ 'editor.item_count_header_simple' | gtxI18n: {
+                    count: currentPageItems().length,
+                    items: ('common.type_' + (external() ? 'external_form' : 'form') + (currentPageItems().length !== 1 ? 's' : '')) | gtxI18n
+                } }}
+            </span>
+        }
+    </span>
+</div>
+
+<div class="header-controls right-items">
+    @if (selection()?.size === 0 && uiMode() === UIMode.EDIT) {
+
+        <div class="type-actions">
+            @if (!external() && permissions().form.create) {
+                <gtx-button
+                    size="small"
+                    type="secondary"
+                    flat
+                    data-action="create-new-item"
+                    [overrideParams]="{ FOLDERID: folderId(), NODEID: node().id }"
+                    (click)="createClicked()"
+                >
+                    <icon left>add</icon>
+                    {{ 'common.type_form' | gtxI18n }}
+                </gtx-button>
+            }
+
+            <gtx-dropdown-list
+                align="right"
+                data-action="open-list-context"
+                [attr.data-context-id]="'form-list-options'"
+            >
+                <gtx-dropdown-trigger>
+                    <gtx-button icon type="secondary" data-context-trigger>
+                        <icon>more_vert</icon>
+                    </gtx-button>
+                </gtx-dropdown-trigger>
+
+                <gtx-dropdown-content class="item-list-header-context" [attr.data-context-id]="'form-list-options'">
+                    <gtx-dropdown-item data-action="select-display-fields" (click)="selectDisplayFields()">
+                        {{ 'editor.select_display_fields_label' | gtxI18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item
+                        class="sort-mode"
+                        data-action="select-sorting"
+                        [disabled]="elasticSearchQueryActive()"
+                        (click)="selectSorting()"
+                    >
+                        <span class="sort-label">{{ 'editor.sorting_by_label' | gtxI18n:{ field: ('common.sort_' + sortBy() | gtxI18n) } }}</span>
+                        <icon class="sort-icon">{{ sortOrder() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</icon>
+                    </gtx-dropdown-item>
+
+                    @if (nodeLanguages()?.length > 1) {
+                        <gtx-dropdown-item
+                            class="page-language-toggle"
+                            data-action="toggle-language-display"
+                            [attr.data-active]="showAllLanguages()"
+                            (click)="toggleDisplayAllLanguages($event)"
+                        >
+                            <gtx-checkbox
+                                [checked]="showAllLanguages()"
+                                (change)="toggleDisplayAllLanguages()"
+                            ></gtx-checkbox>
+                            {{ 'editor.display_all_languages_label' | gtxI18n }}
+                        </gtx-dropdown-item>
+                    }
+
+                    @if (uiMode() === UIMode.EDIT) {
+                        <gtx-dropdown-item
+                            class="page-language-toggle"
+                            data-action="toggle-status-icons"
+                            [attr.data-active]="showStatusIcons()"
+                            (click)="toggleDisplayStatusIcons()"
+                        >
+                            <gtx-checkbox
+                                [checked]="showStatusIcons()"
+                                (change)="toggleDisplayStatusIcons()"
+                            ></gtx-checkbox>
+                            {{ 'editor.display_status_icons_label' | gtxI18n }}
+                        </gtx-dropdown-item>
+
+                        @if (wastebinEnabled()) {
+                            <gtx-dropdown-item
+                                class="show-deleted-toggle"
+                                data-action="toggle-wastebin"
+                                [attr.data-active]="showDeleted()"
+                                (click)="toggleDisplayDeleted()"
+                            >
+                                <gtx-checkbox
+                                    [checked]="showDeleted()"
+                                    (change)="toggleDisplayDeleted()"
+                                ></gtx-checkbox>
+                                {{ 'editor.display_deleted_label' | gtxI18n }}
+                            </gtx-dropdown-item>
+                        }
+                    }
+                </gtx-dropdown-content>
+            </gtx-dropdown-list>
+        </div>
+
+    }
+
+    @if (selection().size > 0) {
+        <div class="group-actions">
+            @if (uiMode() === UIMode.EDIT && permissions().form.edit) {
+                @if (!external()) {
+                    <gtx-button
+                        icon
+                        type="secondary"
+                        data-action="copy"
+                        [title]="'editor.copy_label' | gtxI18n"
+                        (click)="copySelected()"
+                    >
+                        <icon>file_copy</icon>
+                    </gtx-button>
+                }
+
+                <gtx-button
+                    icon
+                    type="secondary"
+                    data-action="move"
+                    [title]="'editor.move_label' | gtxI18n"
+                    (click)="moveSelected()"
+                >
+                    <icon>subdirectory_arrow_right</icon>
+                </gtx-button>
+            }
+
+            @if (
+                uiMode() === UIMode.STAGING
+                || permissions().form.delete
+                || (selectedItems() | anyItemPublished)
+            ) {
+                <gtx-dropdown-list align="right">
+                    <gtx-dropdown-trigger>
+                        <gtx-button
+                            icon
+                            type="secondary"
+                            data-action="open-list-selection-context"
+                        >
+                            <icon>more_vert</icon>
+                        </gtx-button>
+                    </gtx-dropdown-trigger>
+
+                    <gtx-dropdown-content class="list-selection-context">
+                        @if (uiMode() === UIMode.EDIT) {
+                            @if (permissions().form.edit) {
+                                <gtx-dropdown-item
+                                    class="success"
+                                    data-action="publish"
+                                    (click)="publishSelected()"
+                                >
+                                    <icon left>cloud_upload</icon>
+                                    {{ 'editor.publish_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if ((selectedItems() | anyItemPublished) && permissions().form.edit) {
+                                <gtx-dropdown-item
+                                    class="alert"
+                                    data-action="take-offline"
+                                    (click)="takeSelectedOffline()"
+                                >
+                                    <icon left>cloud_off</icon>
+                                    {{ 'editor.take_offline_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (permissions().form.delete) {
+                                <gtx-dropdown-item
+                                    class="alert"
+                                    data-action="delete"
+                                    (click)="deleteSelected()"
+                                >
+                                    <icon left>delete</icon>
+                                    {{ 'editor.delete_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+
+                            @if (showDeleted() && (selectedItems() | anyItemDeleted)) {
+                                <gtx-dropdown-item
+                                    data-action="restore"
+                                    (click)="restoreSelected()"
+                                >
+                                    <icon left>restore_from_trash</icon>
+                                    {{ 'editor.restore_from_wastebin_label' | gtxI18n }}
+                                </gtx-dropdown-item>
+                            }
+                        }
+
+                        @if (uiMode() === UIMode.STAGING) {
+                            <gtx-dropdown-item data-action="stage" (click)="stageItems(StagingMode.REGULAR)">
+                                <icon left>inventory</icon>
+                                {{ 'editor.stage_multiple_items_label' | gtxI18n:{
+                                    itemType: ('common.type_' + (external() ? 'external_form' : 'form') | gtxI18n),
+                                    itemTypePlural: ('common.type_' + (external() ? 'external_forms' : 'forms') | gtxI18n)
+                                } }}
+                            </gtx-dropdown-item>
+
+                            <gtx-dropdown-item data-action="unstage" (click)="unstageItems(StagingMode.REGULAR)">
+                                <icon left>remove</icon>
+                                {{ 'editor.unstage_multiple_items_label' | gtxI18n:{
+                                    itemType: ('common.type_' + (external() ? 'external_form' : 'form') | gtxI18n),
+                                    itemTypePlural: ('common.type_' + (external() ? 'external_forms' : 'forms') | gtxI18n)
+                                } }}
+                            </gtx-dropdown-item>
+                        }
+                    </gtx-dropdown-content>
+                </gtx-dropdown-list>
+            }
+        </div>
+    }
+
+     <div
+        class="collapse-icon"
+        [class.collapsed]="collapsed()"
+        (click)="collapsed.set(!collapsed())"
+    >
+        <gtx-button
+            data-action="collapse"
+            icon
+            type="secondary"
+            [disabled]="currentPageItems()?.length === 0"
+        >
+            <icon>keyboard_arrow_down</icon>
+        </gtx-button>
+    </div>
+</div>

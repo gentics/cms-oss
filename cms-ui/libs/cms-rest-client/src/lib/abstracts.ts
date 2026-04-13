@@ -714,6 +714,10 @@ export interface AbstractFormAPI extends BasicAPI {
 
     restoreFromWastebin: (id: number | string, options?: WastebinRestoreOptions) => Response;
     deleteFromWastebin: (id: number | string, options?: WastebinDeleteOptions) => Response;
+
+    usageInPages: (options?: UsageInPagesOptions) => PageUsageResponse;
+    usageInTemplates: (options?: UsageInTemplatesOptions) => TemplateUsageResponse;
+    usageInTotal: (options?: UsageInTotalOptions) => TotalUsageResponse;
 }
 
 export interface AbstractGroupAPI extends BasicAPI {

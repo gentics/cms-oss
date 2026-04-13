@@ -42,19 +42,9 @@ export function getItemProperties(item: InheritableItem | Node): EditablePropert
             const f = item as Form;
             const props: Partial<EditableFormProperties> = {
                 name: f.name,
-                fileName: f.fileName,
                 description: f.description,
                 languages: f.languages,
-                templateContext: f.templateContext,
-                flow: f.flow,
-                successPageId: f.successPageId,
-                successNodeId: f.successNodeId,
-                successUrlI18n: f.successUrlI18n,
-                adminEmailAddress: f.adminEmailAddress,
-                adminEmailSubject: f.adminEmailSubject,
-                adminEmailPageId: f.adminEmailPageId,
-                adminEmailNodeId: f.adminEmailNodeId,
-                adminEmailTemplate: f.adminEmailTemplate,
+                data: f.data,
             };
             return props;
         }

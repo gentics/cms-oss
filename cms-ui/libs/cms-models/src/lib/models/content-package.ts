@@ -304,12 +304,9 @@ export type ContentPackagePage = ContentPackageFolderObject & StagedPage;
 export interface StagedForm extends StagingBase, Pick<Form,
   | 'description'
   | 'languages'
-  | 'schema'
-  | 'uiSchema'
+  | 'data'
 > {
     version: StagedObjectVersion;
-    successPageId: string;
-    successNodeId: string;
 }
 
 export type ContentPackageForm = ContentPackageFolderObject & StagedForm;

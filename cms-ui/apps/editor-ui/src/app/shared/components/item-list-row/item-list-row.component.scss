@@ -12,6 +12,7 @@ gtx-contents-list-item {
     align-items: flex-start;
     border-bottom: 1px dotted $gtx-color-very-light-gray;
     min-height: $item-list-min-height;
+    width: 100%;
 
     ::ng-deep .item-name {
         align-items: baseline;

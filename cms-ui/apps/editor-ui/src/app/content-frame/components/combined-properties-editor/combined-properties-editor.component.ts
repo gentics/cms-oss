@@ -917,10 +917,13 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                  */
                 updatePromise = this.folderActions.updateFormProperties(itemId, {
                     ...props,
-                    successNodeId: props.successNodeId ?? 0,
-                    successPageId: props.successPageId ?? 0,
-                    adminEmailPageId: props.adminEmailPageId ?? 0,
-                    adminEmailNodeId: props.adminEmailNodeId ?? 0,
+                    data: {
+                        ...props.data,
+                        successNodeId: props.data.successNodeId ?? 0,
+                        successPageId: props.data.successPageId ?? 0,
+                        adminEmailPageId: props.data.adminEmailPageId ?? 0,
+                        adminEmailNodeId: props.data.adminEmailNodeId ?? 0,
+                    },
                 }, postUpdateBehavior);
                 break;
             }

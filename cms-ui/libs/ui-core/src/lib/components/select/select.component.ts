@@ -76,7 +76,7 @@ export class SelectComponent
      * If true, the clear button is displayed, which allows the user to clear the selection.
      */
     @Input()
-    public clearable: boolean = null;
+    public clearable = false;
 
     /**
      * If true, the select all button is displayed, which allows the user to select all options at once.

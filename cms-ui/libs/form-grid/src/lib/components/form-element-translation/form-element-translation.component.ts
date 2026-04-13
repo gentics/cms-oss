@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, model, output, signal } from '@angular/core';
 import {
     FormElement,
     FormElementConfiguration,
@@ -26,9 +26,7 @@ export class FormElementTranslationComponent {
     public hasMissingTranslationsChange = output<boolean>();
     public schemaChange = output<Partial<FormSchemaProperty>>();
 
-    public effectiveDefaultLanguage = computed(() =>
-        this.element().defaultLanguage ?? this.languages()[0] ?? null,
-    );
+    public selectedLanguage = signal<string>('');
 
     public translationSettings = computed(() =>
         this.elementConfig().settings?.filter((s) => s.type === FormSettingType.TRANSLATION) ?? [],
@@ -48,54 +46,55 @@ export class FormElementTranslationComponent {
 
     constructor() {
         effect(() => {
+            const langs = this.languages();
+            if (langs.length > 0 && !langs.includes(this.selectedLanguage())) {
+                this.selectedLanguage.set(langs[0]);
+            }
+        });
+
+        effect(() => {
             const missing = Object.values(this.missingByLanguage()).some(Boolean);
             this.hasMissingTranslationsChange.emit(missing);
         });
     }
 
-    public updateDefaultLanguage(value: string | number | (string | number)[] | null): void {
+    public updateSelectedLanguage(value: string | number | (string | number)[] | null): void {
         const lang = Array.isArray(value) ? value[0] : value;
-        this.element.update((el) => ({ ...el, defaultLanguage: lang != null ? String(lang) : undefined }));
+        if (lang != null) {
+            this.selectedLanguage.set(String(lang));
+        }
     }
 
-    public updateFallbackText(value: string | number | null): void {
-        this.element.update((el) => ({ ...el, fallbackText: value != null ? String(value) : undefined }));
+    public updateLabel(value: I18nString | null): void {
+        this.element.update((el) => ({ ...el, label: value ?? {} }));
     }
 
-    public updateUseFallbackLanguage(checked: boolean): void {
-        this.element.update((el) => ({ ...el, useFallbackLanguage: checked }));
+    public updateDescription(value: I18nString | null): void {
+        this.element.update((el) => ({ ...el, description: value ?? undefined }));
     }
 
-    public updateLabelForLanguage(lang: string, value: string | number | null): void {
+    public updateSummary(value: I18nString | null): void {
         this.element.update((el) => ({
             ...el,
-            label: { ...el.label, [lang]: value != null ? String(value) : '' },
+            formGridOptions: { ...el.formGridOptions, valueSummary: value ?? undefined },
         }));
     }
 
-    public updateDescriptionForLanguage(lang: string, value: string | number | null): void {
-        this.element.update((el) => ({
-            ...el,
-            description: { ...el.description, [lang]: value != null ? String(value) : '' },
-        }));
-    }
-
-    public updateTranslationSettingForLanguage(id: string, lang: string, value: string | number | null): void {
+    public updateTranslationSetting(id: string, value: I18nString | null): void {
         this.element.update((el) => {
             const copy = structuredClone(el);
-            const current: I18nString = (copy.formGridOptions as any)?.[id] ?? {};
-            (copy.formGridOptions as any)[id] = { ...current, [lang]: value != null ? String(value) : '' };
+            (copy.formGridOptions as any)[id] = value ?? {};
             return copy;
         });
     }
 
-    public updateStaticOptionLabelForLanguage(index: number, lang: string, value: string | number | null): void {
+    public updateStaticOptionLabel(index: number, value: I18nString | null): void {
         const current = this.schema();
         if (current == null) {
             return;
         }
         const opts = structuredClone(current.staticOptions ?? []);
-        opts[index] = { ...opts[index], label: { ...opts[index].label, [lang]: value != null ? String(value) : '' } };
+        opts[index] = { ...opts[index], label: value ?? {} };
         this.schemaChange.emit({ ...current, staticOptions: opts });
     }
 

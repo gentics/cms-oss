@@ -9,10 +9,15 @@
     padding: 4px 0;
 }
 
-.translation-top-row,
-.translation-fields-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    align-items: start;
+.translation-section-title {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.translation-definition,
+.translation-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }

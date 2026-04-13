@@ -424,18 +424,6 @@ export interface FormElement {
      */
     description?: I18nString;
     /**
-     * The default language used as fallback for translations.
-     */
-    defaultLanguage?: string;
-    /**
-     * A plain-text fallback value used when no language-specific translation is available.
-     */
-    fallbackText?: string;
-    /**
-     * Whether to use the fallback language when a translation is missing.
-     */
-    useFallbackLanguage?: boolean;
-    /**
      * If a user uploads a CSV which contains this element's ID,
      * that the value of the CSV can be used to fill in this element's value.
      */

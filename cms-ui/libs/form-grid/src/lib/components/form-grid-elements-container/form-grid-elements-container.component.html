@@ -50,6 +50,7 @@
     [attr.data-drop-container-id]="id()"
     [class.palette-dragging]="paletteDragging() && paletteDropTarget()?.elementContainerId === id()"
     [class.is-palette-drop-target]="paletteDragging()"
+    [class.drag-blocked]="isDragBlocked()"
     [class.editor-drop-container--root]="id() === rootId()"
     (dragenter)="onPaletteContainerDragOver($event)"
     (dragover)="onPaletteContainerDragOver($event)"
@@ -182,7 +183,10 @@
                     </gtx-contents-list-item>
 
                     <!-- Plain body: no border/color, just holds the nested elements -->
-                    <div class="fg-container-body">
+                    <div
+                        class="fg-container-body"
+                        [class.drag-blocked]="paletteDragging() && displayItem.whitelist?.length && (paletteDragType() == null || !displayItem.whitelist!.includes(paletteDragType()!))"
+                    >
                         <gtx-form-grid-elements-container
                             [config]="config()"
                             [rootId]="rootId()"

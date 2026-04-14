@@ -128,6 +128,12 @@
         row-gap: 20px;
         background: rgba(0, 150, 220, 0.08);
     }
+
+    &.drag-blocked {
+        &.is-palette-drop-target {
+            background: rgba(0, 0, 0, 0.04);
+        }
+    }
     
     &.editor-drop-container--root {
         height: 100%;
@@ -225,6 +231,12 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     border: 1px solid rgba(0, 150, 220, 0.16);
     border-radius: 4px;
     background: rgba(0, 150, 220, 0.08);
+    transition: border-color 160ms ease, background 160ms ease;
+
+    &.drag-blocked {
+        border-color: rgba(0, 0, 0, 0.18);
+        background: rgba(0, 0, 0, 0.05);
+    }
 
     // The recursive <gtx-form-grid-elements-container> needs to actually fill the body
     // so the cursor truly enters its <gtx-sortable-list> during a drag — otherwise the

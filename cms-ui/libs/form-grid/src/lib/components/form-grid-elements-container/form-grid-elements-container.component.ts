@@ -2,6 +2,7 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    computed,
     input,
     model,
     NgZone,
@@ -120,6 +121,19 @@ export class FormGridElementsContainerComponent implements OnChanges {
      * ===================================================================== */
 
     public readonly displayItems = signal<DisplayItem[]>([]);
+
+    /** True when palette-dragging is active and this container's whitelist rejects the dragged type. */
+    public isDragBlocked = computed(() => {
+        if (!this.paletteDragging()) {
+            return false;
+        }
+        const wl = this.whitelist();
+        if (!wl || wl.length === 0) {
+            return false;
+        }
+        const type = this.paletteDragType();
+        return type == null || !wl.includes(type);
+    });
 
     /* CONSTRUCTOR
      * ===================================================================== */

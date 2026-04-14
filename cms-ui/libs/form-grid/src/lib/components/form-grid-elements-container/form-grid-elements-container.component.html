@@ -89,6 +89,12 @@
                 data-drop-item="true"
                 [attr.data-drop-index]="$index"
             >
+                <div
+                    class="grid-resize-handle"
+                    aria-label="Elementbreite ändern"
+                    title="Breite ändern"
+                    (pointerdown)="onResizeStart($event, $index)"
+                ></div>
                 <gtx-contents-list-item
                     class="fg-box"
                     [class.empty]="!element.label"
@@ -96,13 +102,6 @@
                     [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                     (click)="selectElement(element, $event)"
                 >
-                    <div
-                        class="grid-resize-handle"
-                        aria-label="Elementbreite ändern"
-                        title="Breite ändern"
-                        (pointerdown)="onResizeStart($event, $index)"
-                    ></div>
-
                     <div class="item-primary">
                         <div class="actions-container">
                             <span class="tag tag-type">
@@ -138,25 +137,25 @@
                 [attr.data-drop-index]="$index"
             >
                 <div
+                    class="grid-resize-handle"
+                    aria-label="Elementbreite ändern"
+                    title="Breite ändern"
+                    (pointerdown)="onResizeStart($event, $index)"
+                ></div>
+                    
+                <div
                     class="fg-container-wrapper"
                     [attr.data-element-id]="element.id"
                     [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                     [class.is-aggregate]="element.type === 'aggregate'"
                     [class.is-container]="element.type === 'container'"
-                >
+                > 
                     <gtx-contents-list-item
                         class="fg-box fg-container-card"
                         [class.empty]="!element.label"
                         [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                         (click)="selectElement(element, $event)"
                     >
-                        <div
-                            class="grid-resize-handle"
-                            aria-label="Elementbreite ändern"
-                            title="Breite ändern"
-                            (pointerdown)="onResizeStart($event, $index)"
-                        ></div>
-
                         <div class="item-primary">
                             <div class="actions-container">
                                 <span class="tag tag-type">

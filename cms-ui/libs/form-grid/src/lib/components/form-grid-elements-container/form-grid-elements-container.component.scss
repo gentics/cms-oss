@@ -599,8 +599,8 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 }
 
 
-.fg-box:hover .grid-resize-handle,
-.fg-box:focus-within .grid-resize-handle {
+.form-item:hover .grid-resize-handle,
+.form-item:focus-within .grid-resize-handle {
     opacity: 1;
 }
 

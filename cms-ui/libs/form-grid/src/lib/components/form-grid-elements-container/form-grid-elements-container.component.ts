@@ -98,6 +98,10 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly resizeOverlayActive = model<boolean>();
     public readonly resizeOverlaySpan = model<number>();
 
+    /** Local overlay state — used when this is a nested container (level > 0). */
+    public resizeOverlayActiveLocal = signal(false);
+    public resizeOverlaySpanLocal = signal(12);
+
     private resizePointerId: number | null = null;
     private resizeStartX: number;
     private resizeTarget: FormElement | null = null;
@@ -381,7 +385,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         this.resizePointerId = event.pointerId;
         this.resizeStartX = event.clientX;
         this.resizeTarget = this.elements()[index];
-        this.resizeSurfaceEl = this.gridSurface();
+        this.resizeSurfaceEl = parentEl ?? this.gridSurface();
         this.resizeRowBaseCols = rowBase;
         this.resizeRowMaxSpan = rowMax;
 
@@ -392,11 +396,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
         this.setSpan(this.resizeTarget, initialSpan);
 
         this.resizeStartSpan = initialSpan;
-        this.resizeOverlayActive.set(true);
-        this.resizeOverlaySpan.set(Math.max(
-            1,
-            Math.min(12, this.resizeRowBaseCols + this.resizeStartSpan),
-        ));
+        const initialOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + this.resizeStartSpan));
+        if (this.level() > 0) {
+            this.resizeOverlayActiveLocal.set(true);
+            this.resizeOverlaySpanLocal.set(initialOverlaySpan);
+        } else {
+            this.resizeOverlayActive.set(true);
+            this.resizeOverlaySpan.set(initialOverlaySpan);
+        }
 
         try {
             (event.target as HTMLElement)?.setPointerCapture?.(event.pointerId);
@@ -424,10 +431,12 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
                 this.zone.run(() => {
                     this.setSpan(this.resizeTarget, nextSpan);
-                    this.resizeOverlaySpan.set(Math.max(
-                        1,
-                        Math.min(12, this.resizeRowBaseCols + nextSpan),
-                    ));
+                    const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + nextSpan));
+                    if (this.level() > 0) {
+                        this.resizeOverlaySpanLocal.set(nextOverlaySpan);
+                    } else {
+                        this.resizeOverlaySpan.set(nextOverlaySpan);
+                    }
                     this.changeDetector.markForCheck();
                 });
             };
@@ -449,6 +458,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 this.resizeRowBaseCols = 0;
                 this.resizeRowMaxSpan = 12;
                 this.resizeOverlayActive.set(false);
+                this.resizeOverlayActiveLocal.set(false);
 
                 // Hacky way to prevent an accidental "click"/selection to occur during resizing of an element
                 setTimeout(() => {

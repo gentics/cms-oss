@@ -20,6 +20,31 @@
     </div>
 </ng-template>
 
+@if (level() > 0) {
+<div
+    class="resize-grid-overlay resize-grid-overlay--container"
+    aria-hidden="true"
+    [class.active]="resizeOverlayActiveLocal()"
+    [style.--active-cols]="resizeOverlaySpanLocal()"
+>
+    <div class="resize-grid-overlay__rail">
+        <div class="resize-grid-overlay__fill"></div>
+        <div class="resize-grid-overlay__marker"></div>
+    </div>
+
+    <div class="resize-grid-overlay__ticks">
+        @for (n of (1 | gtxRange:12); track n) {
+        <div
+            class="resize-grid-overlay__tick"
+            [class.is-active]="n === resizeOverlaySpanLocal()"
+        >
+            <span class="resize-grid-overlay__num">{{ n }}</span>
+        </div>
+        }
+    </div>
+</div>
+}
+
 <gtx-sortable-list
     class="editor-drop-container"
     [attr.data-drop-container-id]="id()"

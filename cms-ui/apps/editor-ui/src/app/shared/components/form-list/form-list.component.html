@@ -1,74 +1,86 @@
 <div
     class="content-list form"
-    [class.empty]="items?.length === 0"
-    [attr.data-item-type]="'form'"
-    [attr.data-ui-mode]="uiMode"
+    [class.empty]="items()?.length === 0"
+    [attr.data-item-type]="external() ? 'external_form' : 'form'"
+    [attr.data-ui-mode]="uiMode()"
 >
-    <item-list-header
-        #header
-        class="list-header icon-checkbox-trigger"
-        [currentFolderId]="folderId()"
-        [activeNode]="node()"
+    <gtx-form-list-header
+        class="list-header"
+        [permissions]="permissions() | gtxMapPermissions"
+        [folderId]="folderId()"
+        [node]="node()"
+        [external]="external()"
         [nodeLanguages]="nodeLanguages()"
 
+        [pageSize]="pageSize()"
+        [totalCount]="totalCount()"
+        [currentPage]="currentPage()"
+        [currentPageItems]="items()"
         [selectedItems]="selectedItems()"
-        [folderPermissions]="permissions() | gtxMapPermissions"
-        [canCreateItem]="true"
-        [acceptUploads]="acceptUploads()"
+        [selection]="selection()"
+        [sortBy]="sortBy()"
+        [sortOrder]="sortOrder()"
 
-        [itemsInfo]="itemsInfo"
-        [items]="items"
+        [showAllLanguages]="showAllLanguages()"
+        [showStatusIcons]="showStatusIcons()"
+        [wastebinEnabled]="wastebinEnabled()"
+        [showDeleted]="showDeleted()"
+        [filterTerm]="filterTerm()"
+        [elasticSearchQueryActive]="elasticSearchQueryActive()"
+        [displayFields]="displayFields()"
 
-        [icon]="'list_alt'"
-        [itemType]="'form'"
-
-        [showAllLanguages]="showAllLanguages"
-        [showStatusIcons]="showStatusIcons"
-        [showDeleted]="showDeleted"
         [uiMode]="uiMode()"
+        [collapsed]="collapsed()"
+        (collapsedChange)="collapsed.set($event)"
 
-        (requestRefresh)="reload()"
-    ></item-list-header>
-
-    <!--
-    [filterTerm]="filterTerm"
-    [acceptUploads]="acceptUploads"
-    [paginationConfig]="paginationConfig"
-    [showImagesGridView]="showImagesGridView$ | async"
-    -->
+        (toggleAllSelection)="toggleAllSelection($event)"
+        (requestReload)="reload()"
+    />
 
     <gtx-progress-bar [active]="loadingItems()" />
 
-    <div class="list-body" [class.collapsed]="header.isCollapsed" [hidden]="loadingItems()">
-        @for (singleItem of items; track singleItem.id) {
+    <div class="list-body" [class.collapsed]="collapsed()" [hidden]="loadingItems()">
+        @for (singleItem of items() | paginate:{
+            id: UNIQUE_ID,
+            currentPage: currentPage(),
+            itemsPerPage: pageSize(),
+            totalItems: totalCount(),
+        }; track singleItem.id) {
             <item-list-row
                 [item]="singleItem"
                 [activeNode]="node()"
                 [nodeId]="node()?.id"
                 [selected]="selection() | gtxIncludes:singleItem.id"
+                (selectedChange)="updateItemSelection(singleItem.id, $event)"
                 [permissions]="permissions()"
                 [nodeLanguages]="nodeLanguages()"
-                [startPageId]="startPageId()"
                 [activeItemId]="activeItemId()"
 
-                [activeLanguage]="activeLanguage"
-                [itemsInfo]="itemsInfo"
-
+                [itemsInfo]="itemsInfo()"
                 [icon]="'list_alt'"
                 [itemType]="'form'"
 
                 [uiMode]="uiMode()"
-                [searching]="searchTerm || elasticSearchQueryActive"
-                [linkPaths]="!!searchTerm"
-                [expandByDefault]="showAllLanguages"
-                [showStatusIcons]="showStatusIcons"
-                [showDeleted]="showDeleted"
+                [searching]="searchTerm() || elasticSearchQueryActive()"
+                [linkPaths]="!!searchTerm()"
+                [expandByDefault]="showAllLanguages()"
+                [showStatusIcons]="showStatusIcons()"
+                [showDeleted]="showDeleted()"
+                [filterTerm]="filterTerm()"
 
-                [stagingMap]="stagingMap"
-            ></item-list-row>
-            <!--
-                [filterTerm]="filterTerm"
-            -->
+                [stagingMap]="stagingMap()"
+            />
         }
+
+        <div class="paginate-wrapper">
+            <paging-controls [id]="UNIQUE_ID" (pageChange)="loadPage($event)"></paging-controls>
+
+            @if (totalCount() > 10) {
+                <gtx-page-size-selector
+                    [size]="pageSize()"
+                    (sizeChange)="updatePageSize($event)"
+                ></gtx-page-size-selector>
+            }
+        </div>
     </div>
 </div>

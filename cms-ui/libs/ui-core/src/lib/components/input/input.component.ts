@@ -120,7 +120,7 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
      * Wether the element should be clearable or not
      */
     @Input()
-    public clearable = null;
+    public clearable = false;
 
     /**
      * Sets the readonly state of the input

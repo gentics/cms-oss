@@ -123,7 +123,7 @@
                     [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
                     [allowedSelection]="setting.referenceTypes"
                     [onlyInCurrentNode]="setting.onlyInCurrentNode"
-                    [multiple]="setting.multiple"
+                    [multiple]="setting.multiple ?? false"
                     [includeMlId]="setting.allowedMarkupLanguageIds"
                     [browseTitle]="setting.titleI18n | gtxI18nObject"
                     [value]="$any(element().formGridOptions)[setting.id]"

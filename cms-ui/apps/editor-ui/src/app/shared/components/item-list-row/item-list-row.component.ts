@@ -38,6 +38,7 @@ import {
 } from '../../../state';
 import { TranslatePageModal, TranslatePageModalActions, TranslateResult } from '../translate-page-modal/translate-page-modal.component';
 import { UsageModalComponent } from '../usage-modal/usage-modal.component';
+import { FormListLoaderService } from '../../providers';
 
 type AllowedItemType
     = | Folder<Raw | Normalized>
@@ -161,6 +162,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         private decisionModals: DecisionModalsService,
         private folderActions: FolderActionsService,
         private wastebinActions: WastebinActionsService,
+        private formListLoader: FormListLoaderService,
     ) {
         super(changeDetector);
     }
@@ -254,7 +256,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.activeLanguage.id;
+        const currentLanguageId = this.activeLanguage?.id;
         this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
             .then((modal) => modal.open())
             .catch(this.errorHandler.catch);
@@ -356,7 +358,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
         await this.folderActions.updateFormLanguage(item, language);
         await this.folderActions.setActiveFormLanguage(language.id);
-        await this.folderActions.refreshList('form');
+        this.formListLoader.reload();
         this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, EditMode.EDIT).navigate();
     }
 

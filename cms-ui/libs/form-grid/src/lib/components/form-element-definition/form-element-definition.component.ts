@@ -10,6 +10,7 @@ import { FormControlConfiguration, FormPropertyValidation, FormSchemaProperty } 
 })
 export class FormElementDefinitionComponent {
 
+    public readonly disabled = input.required<boolean>();
     public schemaDraft = model.required<Partial<FormSchemaProperty>>();
     public controls = input.required<Record<string, FormControlConfiguration>>();
     public restricted = input.required<boolean>();

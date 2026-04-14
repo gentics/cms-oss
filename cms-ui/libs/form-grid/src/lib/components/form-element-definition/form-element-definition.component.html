@@ -3,7 +3,7 @@
         <gtx-select
             [label]="'form_grid.definition_control_type' | gtxI18n"
             [value]="schemaDraft().type ?? null"
-            [disabled]="restricted()"
+            [disabled]="disabled()"
             (valueChange)="updateType($event)"
         >
             @for (ctlEntry of (controls() | gtxEntries); track ctlEntry.key) {
@@ -14,7 +14,7 @@
         <gtx-input
             [label]="'form_grid.definition_name' | gtxI18n"
             [value]="schemaDraft().name ?? null"
-            [disabled]="restricted()"
+            [disabled]="disabled()"
             (valueChange)="updateName($event)"
         ></gtx-input>
     </div>
@@ -23,21 +23,21 @@
         <gtx-checkbox
             [label]="'form_grid.definition_mandatory' | gtxI18n"
             [checked]="schemaDraft().mandatory ?? false"
-            [disabled]="restricted()"
+            [disabled]="disabled()"
             (change)="updateDraft({ mandatory: $event === true })"
         ></gtx-checkbox>
 
         <gtx-checkbox
             [label]="'form_grid.definition_sync_on_change' | gtxI18n"
             [checked]="schemaDraft().updateOnChange ?? false"
-            [disabled]="restricted()"
+            [disabled]="disabled()"
             (change)="updateDraft({ updateOnChange: $event === true })"
         ></gtx-checkbox>
 
         <gtx-checkbox
             [label]="'form_grid.definition_multivalue' | gtxI18n"
             [checked]="schemaDraft().isList ?? false"
-            [disabled]="restricted()"
+            [disabled]="disabled()"
             (change)="updateDraft({ isList: $event === true })"
         ></gtx-checkbox>
     </div>

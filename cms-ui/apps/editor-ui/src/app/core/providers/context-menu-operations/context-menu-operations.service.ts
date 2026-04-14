@@ -46,7 +46,7 @@ import {
     SynchronizeChannelModal,
     TimeManagementModal,
 } from '../../../shared/components';
-import { RepositoryBrowserClient } from '../../../shared/providers';
+import { FormListLoaderService, RepositoryBrowserClient } from '../../../shared/providers';
 import { EntityStateUtil, PublishableStateUtil } from '../../../shared/util/entity-states';
 import {
     ApplicationStateService,
@@ -92,6 +92,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         private repositoryBrowserClient: RepositoryBrowserClient,
         private templateActions: TemplateActionsService,
         private contentStagingActions: ContentStagingActionsService,
+        private formListLoader: FormListLoaderService,
     ) {
         super();
         // Actual way to initialize the service is only done in the admin-ui
@@ -346,7 +347,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         if (deleteResult && deleteResult.failed) {
             this.showMultiDeleteErrorNotification(type, deleteResult.failed, deleteResult.error);
         }
-        await this.folderActions.refreshList(type);
+        if (type === 'form') {
+            this.formListLoader.reload();
+        } else {
+            await this.folderActions.refreshList(type);
+        }
         await this.state.dispatch(new ChangeListSelectionAction(type, 'remove', removedItemIds)).toPromise();
 
         return removedItemIds;
@@ -497,7 +502,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             .then(() => {
                 // refresh folder content list to display new TimeManagement settings
                 this.folderActions.refreshList('page');
-                this.folderActions.refreshList('form');
+                this.formListLoader.reload();
             })
             .catch((err) => {
                 if (!wasClosedByUser(err)) {
@@ -593,7 +598,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         try {
             await this.folderActions.takeFormsOffline(formIds);
             await this.state.dispatch(new ChangeListSelectionAction('form', 'clear')).toPromise();
-            await this.folderActions.refreshList('form');
+            this.formListLoader.reload();
         } catch (error) {
             this.errorHandler.catch(error);
         }
@@ -738,7 +743,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         const { activeFolder, activeNode } = this.state.now.folder;
 
         if (folder.id === activeFolder && folder.nodeId === activeNode) {
-            this.folderActions.refreshList(itemType);
+            if (itemType === 'form') {
+                this.formListLoader.reload();
+            } else {
+                this.folderActions.refreshList(itemType);
+            }
             return Promise.resolve();
         } else {
             return this.navigationService.list(folder.nodeId, folder.id).navigate();
@@ -890,7 +899,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         return this.folderActions.publishForms(formsToPublish)
             .then(({ queued, published }) => {
                 this.state.dispatch(new ChangeListSelectionAction('form', 'clear'));
-                this.folderActions.refreshList('form');
+                this.formListLoader.reload();
                 return published.map((form) => form.id);
             });
     }

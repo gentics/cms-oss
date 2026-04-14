@@ -146,9 +146,8 @@
                 ></div>
             }
 
-            @if ((item.type === 'page' || item.type === 'form')
+            @if (((item.type === 'page' && activeLanguage != null) || item.type === 'form')
                 && nodeLanguages?.length > 1
-                && activeLanguage != null
             ) {
                 <div class="language-indicator">
                     @if (item.type === 'page') {
@@ -171,7 +170,6 @@
                     @if (item.type === 'form') {
                         <form-language-indicator
                             [languages]="nodeLanguages"
-                            [activeLanguage]="activeLanguage"
                             [form]="item"
                             [permissions]="permissions"
                             [mode]="mode"

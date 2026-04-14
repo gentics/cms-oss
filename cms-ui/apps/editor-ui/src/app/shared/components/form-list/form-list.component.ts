@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { BaseItemListComponent, ItemLoadData } from '../base-item-list/base-item-list.component';
-import { Form, PagingSortOrder } from '@gentics/cms-models';
-import { map, Observable } from 'rxjs';
-import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, input, OnInit } from '@angular/core';
+import { Form } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { isEqual, pick } from 'lodash-es';
+import { distinctUntilChanged, map, Observable } from 'rxjs';
+import { ItemLoadData, ItemsInfo } from '../../../common/models';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ApplicationStateService } from '../../../state';
-import { ChangesOf } from '@gentics/ui-core';
+import { FormListLoaderService } from '../../providers/form-list-loader/form-list-loader.service';
+import { BaseItemListComponent } from '../base-item-list/base-item-list.component';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+
+type ListUserSettings = Pick<ItemsInfo, 'itemsPerPage' | 'sortBy' | 'sortOrder'>;
 
 @Component({
     selector: 'gtx-form-list',
@@ -16,13 +21,15 @@ import { ChangesOf } from '@gentics/ui-core';
 })
 export class FormListComponent extends BaseItemListComponent<Form> implements OnInit {
 
-    private activeLanguageId: number;
+    public readonly external = input.required<boolean>();
 
     constructor(
         changeDetector: ChangeDetectorRef,
         errorHandler: ErrorHandler,
         appState: ApplicationStateService,
         public client: GCMSRestClientService,
+        protected loader: FormListLoaderService,
+        protected userSettings: UserSettingsService,
     ) {
         super(changeDetector, errorHandler, appState);
     }
@@ -30,56 +37,72 @@ export class FormListComponent extends BaseItemListComponent<Form> implements On
     public ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.appState.select((state) => state.folder.activeFormLanguage).subscribe((id) => {
-            this.activeLanguageId = id;
-            this.determineActiveLanguage();
-            this.changeDetector.markForCheck();
+        // Register this list to the reload mechanic of the service, so other components can actually reload this list if needed
+        this.subscriptions.push(this.loader.reload$.subscribe(() => {
+            this.reload();
         }));
 
-        // Selection is currently deeply woven into the state, therefore we'll load it from there for the time being
-        this.subscriptions.push(this.appState.select((state) => state.folder.forms.selected).subscribe((selectedFormIds) => {
-            this.selection.set(selectedFormIds);
-            this.updateItemsInfo();
-            this.changeDetector.markForCheck();
+        // Currently user settings are managed via the global store, as these actually make sense to be there
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.forms.displayFields).pipe(
+            distinctUntilChanged(isEqual),
+        ).subscribe((displayFields: string[]) => {
+            if (!Array.isArray(displayFields)) {
+                displayFields = [];
+            }
+
+            // We need a reload when the usage has been added to the display fields, as these are loaded explicitly for the items.
+            const needsReload = !this.displayFields().includes('usage') && displayFields.includes('usage');
+            this.displayFields.set(displayFields);
+
+            if (needsReload) {
+                this.reload();
+            }
         }));
-    }
 
-    public override ngOnChanges(changes: ChangesOf<this>): void {
-        super.ngOnChanges(changes);
-
-        if (changes.nodeLanguages) {
-            this.determineActiveLanguage();
-        }
+        this.subscriptions.push(this.appState.select((state) => state.folder.forms).pipe(
+            distinctUntilChanged(isEqual),
+            map((formState: ItemsInfo) => {
+                return pick(formState, 'itemsPerPage', 'sortBy', 'sortOrder');
+            }),
+            distinctUntilChanged<ListUserSettings>(isEqual),
+        ).subscribe((formState) => {
+            this.sortBy.set(formState.sortBy);
+            this.sortOrder.set(formState.sortOrder as any);
+            this.pageSize.set(formState.itemsPerPage);
+            this.reload();
+        }));
     }
 
     public loadItems(
         folderId: number,
-        _nodeId: number,
+        nodeId: number,
         page: number,
         pageSize: number,
     ): Observable<ItemLoadData<Form>> {
-        return this.client.form.list({
+        return this.loader.loadItems({
             folderId: folderId,
+            nodeId: nodeId,
+            recursive: !!this.searchTerm(),
+
             page: page,
             pageSize: pageSize,
-            wastebin: this.showDeleted ? 'include' : 'exclude',
-            q: this.searchTerm || '',
-            sort: {
-                sortOrder: PagingSortOrder.Asc,
-                attribute: 'name',
-            },
-            recursive: !!this.searchTerm,
-        }).pipe(
-            map((res) => {
-                return {
-                    items: res.items,
-                    totalCount: res.numItems,
-                };
-            }),
-        );
+
+            showDeleted: this.showDeleted(),
+            searchString: this.searchTerm(),
+
+            sortBy: this.sortBy(),
+            sortOrder: this.sortOrder(),
+
+            external: this.external(),
+            withUsage: this.displayFields().includes('usage'),
+        });
     }
 
-    private determineActiveLanguage(): void {
-        this.activeLanguage = (this.nodeLanguages() || []).find((lang) => lang.id === this.activeLanguageId);
+    public updatePageSize(pageSize: number): void {
+        // Always reset the pagination. We could calculate where exactly this is supposed to end up,
+        // but for now this is good enough.
+        this.currentPage.set(1);
+        this.userSettings.setItemsPerPage('form', pageSize);
     }
 }

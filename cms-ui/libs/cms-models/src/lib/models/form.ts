@@ -10,10 +10,6 @@ export interface EditableFormProperties {
      */
     name: string;
     /**
-     * Filename of the from for publishing
-     */
-    fileName: string;
-    /**
      * Description of the form
      */
     description: string;
@@ -22,9 +18,20 @@ export interface EditableFormProperties {
      */
     languages: string[];
     /**
-     * The flow of the form, which is defined in the configuration.
+     * The content/data of the form
      */
-    flow: string;
+    data: EditableFormData;
+}
+
+export interface EditableFormData {
+    /**
+     * How many columns the form should span.
+     */
+    formWidth: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+    /**
+     * The id of the flow of the form, which is defined in the configuration.
+     */
+    flowId: string;
     /**
      * The template setting for this form. Usually used to create a different styling
      * for the same configuration.
@@ -302,14 +309,6 @@ export interface FormUISchema {
      * The pages of this form, which define the layout and the setting-values of the elements
      */
     pages: FormPage[];
-    /**
-     * Settings from the Form Grid
-     */
-    formGrid: {
-        width: number;
-        widthOptimized: boolean;
-        flow: string;
-    };
 }
 
 export type FormSchemaProperties = Record<string, FormSchemaProperty>;

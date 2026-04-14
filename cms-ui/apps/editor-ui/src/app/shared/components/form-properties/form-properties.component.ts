@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import {
+    EditableFormData,
     EditableFormProperties,
     Form,
     FormTypeConfiguration,
@@ -82,6 +83,8 @@ export class FormPropertiesComponent
     @Input()
     public showDetailProperties = false;
 
+    public formData: FormGroup<FormProperties<Partial<EditableFormData>>>;
+
     public formTypeConfigurations: Record<string, FormTypeConfiguration> | null = null;
     public activeConfiguration: FormTypeConfiguration | null = null;
     public hadInitialConfiguration = false;
@@ -133,25 +136,25 @@ export class FormPropertiesComponent
             this.hadInitialConfiguration = this.activeConfiguration != null;
         }
 
-        if (Number.isInteger(this.item?.successPageId) && this.item.successPageId !== 0) {
+        if (Number.isInteger(this.item?.data?.successPageId) && this.item.data.successPageId !== 0) {
             const options: PageRequestOptions = {};
-            if (Number.isInteger(this.item.successNodeId) && this.item.successNodeId !== 0) {
-                options.nodeId = this.item.successNodeId;
+            if (Number.isInteger(this.item.data?.successNodeId) && this.item.data.successNodeId !== 0) {
+                options.nodeId = this.item.data.successNodeId;
             }
 
-            this.subscriptions.push(this.client.page.get(this.item.successPageId, options).subscribe((res) => {
+            this.subscriptions.push(this.client.page.get(this.item.data.successPageId, options).subscribe((res) => {
                 this.loadedSuccessPage = res.page;
                 this.changeDetector.markForCheck();
             }));
         }
 
-        if (Number.isInteger(this.item?.adminEmailPageId) && this.item.adminEmailPageId !== 0) {
+        if (Number.isInteger(this.item?.data?.adminEmailPageId) && this.item.data.adminEmailPageId !== 0) {
             const options: PageRequestOptions = {};
-            if (Number.isInteger(this.item.adminEmailNodeId) && this.item.adminEmailNodeId !== 0) {
-                options.nodeId = this.item.adminEmailNodeId;
+            if (Number.isInteger(this.item?.data?.adminEmailNodeId) && this.item.data.adminEmailNodeId !== 0) {
+                options.nodeId = this.item.data.adminEmailNodeId;
             }
 
-            this.subscriptions.push(this.client.page.get(this.item.adminEmailPageId, options).subscribe((res) => {
+            this.subscriptions.push(this.client.page.get(this.item.data.adminEmailPageId, options).subscribe((res) => {
                 this.loadedMailTemplate = res.page;
                 this.changeDetector.markForCheck();
             }));
@@ -159,34 +162,37 @@ export class FormPropertiesComponent
 
         // set initial value for useInternalSuccessPage and useEmailPage radio button group
         this.useInternalSuccessPage = this.isPageUsed(
-            this.item?.successPageId,
-            this.item?.successNodeId,
-            this.item?.successUrlI18n,
+            this.item?.data?.successPageId,
+            this.item?.data?.successNodeId,
+            this.item?.data?.successUrlI18n,
         );
         this.useEmailPageTemplate = this.isPageUsed(
-            this.item?.adminEmailPageId,
-            this.item?.adminEmailNodeId,
-            this.item?.adminEmailTemplate,
+            this.item?.data?.adminEmailPageId,
+            this.item?.data?.adminEmailNodeId,
+            this.item?.data?.adminEmailTemplate,
         );
     }
 
     protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
+        this.formData = new FormGroup<FormProperties<Partial<EditableFormData>>>({
+            flowId: new FormControl(this.item?.data?.flowId || this.safeValue(['data', 'flowId'])),
+            templateContext: new FormControl(this.item?.data?.templateContext || this.safeValue(['data', 'templateContext'])),
+            successUrlI18n: new FormControl(this.item?.data?.successUrlI18n || this.safeValue(['data', 'successUrlI18n'])),
+            successPageId: new FormControl(this.item?.data?.successPageId || this.safeValue(['data', 'successPageId'])),
+            successNodeId: new FormControl(this.item?.data?.successNodeId || this.safeValue(['data', 'successNodeId'])),
+            adminEmailAddress: new FormControl(this.item?.data?.adminEmailAddress || this.safeValue(['data', 'adminEmailAddress'])),
+            adminEmailSubject: new FormControl(this.item?.data?.adminEmailSubject || this.safeValue(['data', 'adminEmailSubject'])),
+            adminEmailPageId: new FormControl(this.item?.data?.adminEmailPageId || this.safeValue(['data', 'adminEmailPageId'])),
+            adminEmailNodeId: new FormControl(this.item?.data?.adminEmailNodeId || this.safeValue(['data', 'adminEmailNodeId'])),
+            adminEmailTemplate: new FormControl(this.item?.data?.adminEmailTemplate || this.safeValue(['data', 'adminEmailTemplate'])),
+        });
+
         return new FormGroup<FormProperties<FormPropertiesData>>({
             name: new FormControl(this.item?.name || this.safeValue('name'), Validators.required),
             formType: new FormControl(this.item?.formType || this.safeValue('formType'), Validators.required),
             description: new FormControl(this.item?.description || this.safeValue('description')),
             languages: new FormControl(this.item?.languages || this.safeValue('languages') || [], Validators.minLength(1)),
-            fileName: new FormControl(this.item?.fileName || this.safeValue('fileName')),
-            flow: new FormControl(this.item?.flow || this.safeValue('flow')),
-            templateContext: new FormControl(this.item?.templateContext || this.safeValue('templateContext')),
-            successUrlI18n: new FormControl(this.item?.successUrlI18n || this.safeValue('successUrlI18n')),
-            successPageId: new FormControl(this.item?.successPageId || this.safeValue('successPageId')),
-            successNodeId: new FormControl(this.item?.successNodeId || this.safeValue('successNodeId')),
-            adminEmailAddress: new FormControl(this.item?.adminEmailAddress || this.safeValue('adminEmailAddress')),
-            adminEmailSubject: new FormControl(this.item?.adminEmailSubject || this.safeValue('adminEmailSubject')),
-            adminEmailPageId: new FormControl(this.item?.adminEmailPageId || this.safeValue('adminEmailPageId')),
-            adminEmailNodeId: new FormControl(this.item?.adminEmailNodeId || this.safeValue('adminEmailNodeId')),
-            adminEmailTemplate: new FormControl(this.item?.adminEmailTemplate || this.safeValue('adminEmailTemplate')),
+            data: this.formData as any,
         });
     }
 
@@ -196,8 +202,11 @@ export class FormPropertiesComponent
     }
 
     protected assembleValue(value: FormPropertiesData): FormPropertiesData {
-        if (this.activeConfiguration?.flows?.length > 0 && value.flow == null) {
-            value.flow = this.activeConfiguration.flows[0].id;
+        if (this.activeConfiguration?.flows?.length > 0 && value.data?.flowId == null) {
+            if (value.data == null) {
+                value.data = {} as any;
+            }
+            value.data.flowId = this.activeConfiguration.flows[0].id;
         }
 
         return value;
@@ -211,16 +220,16 @@ export class FormPropertiesComponent
         this.useEmailPageTemplate = doUse;
         this.form.markAsDirty();
 
-        setControlsEnabled(this.form, ['adminEmailPageId', 'adminEmailNodeId'], doUse);
-        setControlsEnabled(this.form, ['adminEmailTemplate'], !doUse);
+        setControlsEnabled(this.formData, ['adminEmailPageId', 'adminEmailNodeId'], doUse);
+        setControlsEnabled(this.formData, ['adminEmailTemplate'], !doUse);
     }
 
     updateInternalSuccessPage(doUse: boolean): void {
         this.useInternalSuccessPage = doUse;
         this.form.markAsDirty();
 
-        setControlsEnabled(this.form, ['successPageId', 'successNodeId'], doUse);
-        setControlsEnabled(this.form, ['successUrlI18n'], !doUse);
+        setControlsEnabled(this.formData, ['successPageId', 'successNodeId'], doUse);
+        setControlsEnabled(this.formData, ['successUrlI18n'], !doUse);
     }
 
     setSuccessPage(page: ItemInNode<Page<Raw>>): void {
@@ -229,13 +238,13 @@ export class FormPropertiesComponent
         const pageId = Number.isInteger(page?.id) ? page.id : 0;
         const nodeId = Number.isInteger(page?.nodeId) ? page.nodeId : 0;
 
-        this.form.controls.successPageId.setValue(pageId, { emitEvent: false });
-        this.form.controls.successPageId.markAsTouched({ emitEvent: false });
-        this.form.controls.successPageId.markAsDirty({ emitEvent: false });
+        this.formData.controls.successPageId.setValue(pageId, { emitEvent: false });
+        this.formData.controls.successPageId.markAsTouched({ emitEvent: false });
+        this.formData.controls.successPageId.markAsDirty({ emitEvent: false });
 
-        this.form.controls.successNodeId.setValue(nodeId, { emitEvent: false });
-        this.form.controls.successNodeId.markAsTouched({ emitEvent: false });
-        this.form.controls.successNodeId.markAsDirty({ emitEvent: false });
+        this.formData.controls.successNodeId.setValue(nodeId, { emitEvent: false });
+        this.formData.controls.successNodeId.markAsTouched({ emitEvent: false });
+        this.formData.controls.successNodeId.markAsDirty({ emitEvent: false });
 
         this.form.updateValueAndValidity();
         this.changeDetector.markForCheck();
@@ -247,13 +256,13 @@ export class FormPropertiesComponent
         const pageId = Number.isInteger(page?.id) ? page.id : 0;
         const nodeId = Number.isInteger(page?.nodeId) ? page.nodeId : 0;
 
-        this.form.controls.adminEmailPageId.setValue(pageId, { emitEvent: false });
-        this.form.controls.adminEmailPageId.markAsTouched({ emitEvent: false });
-        this.form.controls.adminEmailPageId.markAsDirty({ emitEvent: false });
+        this.formData.controls.adminEmailPageId.setValue(pageId, { emitEvent: false });
+        this.formData.controls.adminEmailPageId.markAsTouched({ emitEvent: false });
+        this.formData.controls.adminEmailPageId.markAsDirty({ emitEvent: false });
 
-        this.form.controls.adminEmailNodeId.setValue(nodeId, { emitEvent: false });
-        this.form.controls.adminEmailNodeId.markAsTouched({ emitEvent: false });
-        this.form.controls.adminEmailNodeId.markAsDirty({ emitEvent: false });
+        this.formData.controls.adminEmailNodeId.setValue(nodeId, { emitEvent: false });
+        this.formData.controls.adminEmailNodeId.markAsTouched({ emitEvent: false });
+        this.formData.controls.adminEmailNodeId.markAsDirty({ emitEvent: false });
 
         this.form.updateValueAndValidity();
         this.changeDetector.markForCheck();

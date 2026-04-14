@@ -1,6 +1,7 @@
 export * from './breadcrumbs.service';
 export * from './chip-search-bar-config/chip-search-bar-config.service';
 export * from './document-ref';
+export * from './form-list-loader/form-list-loader.service';
 export * from './link-template/link-template.service';
 export * from './presentation/presentation.service';
 export * from './query-assembler/query-assembler-elasticsearch/query-assembler-elasticsearch.service';
@@ -8,5 +9,5 @@ export * from './query-assembler/query-assembler-gcmssearch/query-assembler-gcms
 export * from './repository-browser-client/repository-browser-client.service';
 export * from './repository-browser-data/repository-browser-data.service';
 export * from './suggestion-search/suggestion-search.service';
-export * from './ui-overrides/ui-overrides.service';
 export * from './translation-actions/translation-actions.service';
+export * from './ui-overrides/ui-overrides.service';

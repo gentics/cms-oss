@@ -22,7 +22,7 @@ import {
 } from '@gentics/cms-models';
 import { cancelEvent, ISortableEvent, ModalService } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
-import { DropRow, ElementSelectionEvent, PALETTE_MIME, PaletteDropTarget } from '../../models';
+import { DropRow, ElementSelectionEvent, FormGridEditMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
 interface DisplayItem {
     id: string;
@@ -45,32 +45,34 @@ const DROP_ROW_TOLERANCE = 10;
 })
 export class FormGridElementsContainerComponent implements OnChanges {
 
+    public readonly FormGridEditMode = FormGridEditMode;
+
     /* BASIC INPUT/OUTPUT
      * ===================================================================== */
 
-    public rootId = input.required<string>();
-    public id = input.required<string>();
-    public config = input.required<FormTypeConfiguration>();
-    public level = input.required<number>();
-    public restricted = input.required<boolean>();
-    public pageIndex = input.required<number>();
-    public languages = input.required<string[]>();
-    public gridSurface = input.required<HTMLElement>();
+    public readonly rootId = input.required<string>();
+    public readonly id = input.required<string>();
+    public readonly config = input.required<FormTypeConfiguration>();
+    public readonly level = input.required<number>();
+    public readonly mode = input.required<FormGridEditMode>();
+    public readonly pageIndex = input.required<number>();
+    public readonly languages = input.required<string[]>();
+    public readonly gridSurface = input.required<HTMLElement>();
 
-    public schema = model.required<FormSchema>();
-    public elements = model.required<FormElement[]>();
-    public selectedElement = input<FormElement | null>();
-    public selectedElementContainerId = input<string | null>();
-    public elementSelect = output<ElementSelectionEvent | null>();
+    public readonly schema = model.required<FormSchema>();
+    public readonly elements = model.required<FormElement[]>();
+    public readonly selectedElement = input<FormElement | null>();
+    public readonly selectedElementContainerId = input<string | null>();
+    public readonly elementSelect = output<ElementSelectionEvent | null>();
 
     /* PALETTE
      * ===================================================================== */
 
-    public paletteDragging = model<boolean>();
-    public paletteDropTarget = model<PaletteDropTarget | null>();
-    public paletteDragType = input<string | null>();
-    public paletteDragConfig = input<FormElementConfiguration | null>();
-    public platteDragStop = output<void>();
+    public readonly paletteDragging = model<boolean>();
+    public readonly paletteDropTarget = model<PaletteDropTarget | null>();
+    public readonly paletteDragType = input<string | null>();
+    public readonly paletteDragConfig = input<FormElementConfiguration | null>();
+    public readonly platteDragStop = output<void>();
 
     /** How many spans/columns the currently dragged element would use if dropped */
     public pendingPaletteDropSpan: number | null;
@@ -80,9 +82,9 @@ export class FormGridElementsContainerComponent implements OnChanges {
     /* RESIZE
      * ===================================================================== */
 
-    public resizing = model<boolean>();
-    public resizeOverlayActive = model<boolean>();
-    public resizeOverlaySpan = model<number>();
+    public readonly resizing = model<boolean>();
+    public readonly resizeOverlayActive = model<boolean>();
+    public readonly resizeOverlaySpan = model<number>();
 
     private resizePointerId: number | null = null;
     private resizeStartX: number;
@@ -95,7 +97,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
     /* MISC
      * ===================================================================== */
 
-    public displayItems = signal<DisplayItem[]>([]);
+    public readonly displayItems = signal<DisplayItem[]>([]);
 
     /* CONSTRUCTOR
      * ===================================================================== */

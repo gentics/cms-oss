@@ -83,7 +83,7 @@
                                 <span class="tag-text">{{ element.label | gtxI18nObject }}</span>
                             </span>
 
-                            @if (!displayItem.isControl || !restricted()) {
+                            @if (!displayItem.isControl || mode() === FormGridEditMode.FULL) {
                                 <gtx-button
                                     type="alert"
                                     class="delete-button"

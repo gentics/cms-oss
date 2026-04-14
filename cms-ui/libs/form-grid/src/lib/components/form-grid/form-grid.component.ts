@@ -20,7 +20,7 @@ import {
 } from '@gentics/cms-models';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
-import { ElementSelectionEvent, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
+import { ElementSelectionEvent, FormGridEditMode, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
 enum EditTabs {
     DEFINITION = 'definition',
@@ -52,14 +52,16 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     public readonly ELEMENT_ROOT_CONTAINER_ID = uuidV4();
     public readonly EditTabs = EditTabs;
+    public readonly FormGridEditMode = FormGridEditMode;
     public readonly FormGridViewMode = FormGridViewMode;
 
     /* INPUTS / OUTPUTS
      * ===================================================================== */
 
+    /** The config for this form-grid */
     public readonly config = input.required<FormTypeConfiguration>();
-    /** If this form-grid is in the restricted mode */
-    public readonly restricted = input.required<boolean>();
+    /** Which mode this form-grid operates in. */
+    public readonly mode = input.required<FormGridEditMode>();
     /** All languages of the current form */
     public readonly languages = input.required<string[]>();
 

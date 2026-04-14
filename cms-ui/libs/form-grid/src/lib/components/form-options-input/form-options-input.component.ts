@@ -31,10 +31,10 @@ export class FormOptionsInputComponent extends BaseFormElementComponent<FormSele
         this.triggerChange(newItems);
     }
 
-    public updateOptionValue(index: number, value: string): void {
+    public updateOptionValue(index: number, value: string | number): void {
         // Create a clone so changes are detected
         const newItems = [...this.value || []];
-        newItems[index].value = value;
+        newItems[index].value = value as string;
         this.triggerChange(newItems);
     }
 }

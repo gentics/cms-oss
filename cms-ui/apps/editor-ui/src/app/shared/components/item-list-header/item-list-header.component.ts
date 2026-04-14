@@ -34,6 +34,7 @@ import { ApplicationStateService, ChangeListSelectionAction, FolderActionsServic
 import { CreateFolderModalComponent } from '../create-folder-modal/create-folder-modal.component';
 import { CreateFormModalComponent } from '../create-form-modal/create-form-modal.component';
 import { CreatePageModalComponent } from '../create-page-modal/create-page-modal.component';
+import { FormListLoaderService } from '../../providers';
 
 @Component({
     selector: 'item-list-header',
@@ -138,6 +139,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
         private contextMenuOperations: ContextMenuOperationsService,
         private notifications: I18nNotificationService,
         private i18n: I18nService,
+        private formListLoader: FormListLoaderService,
     ) {}
 
     ngOnInit(): void {
@@ -313,7 +315,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
         this.userSettings.setDisplayDeleted(!currentVal);
         // refresh list as refetch is required
         this.folderActions.refreshList('folder');
-        this.folderActions.refreshList('form');
+        this.formListLoader.reload();
         this.folderActions.refreshList('page');
         this.folderActions.refreshList('file');
         this.folderActions.refreshList('image');

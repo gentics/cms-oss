@@ -1332,7 +1332,7 @@ export class FolderActionsService {
                 (entity as any).type = type;
             }
 
-            await this.appState.dispatch(new ItemFetchingSuccessAction(type, entity as any)).toPromise();
+            await this.appState.dispatch(new ItemFetchingSuccessAction(type, structuredClone(entity) as any)).toPromise();
             return entity;
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction(type, error.message, true)).toPromise();
@@ -1771,10 +1771,7 @@ export class FolderActionsService {
         const formProps: Partial<EditableFormProperties> = {
             name: properties.name,
             description: properties.description,
-            successPageId: properties.successPageId,
-            successNodeId: properties.successNodeId,
-            schema: properties.schema,
-            uiSchema: properties.uiSchema,
+            data: properties.data,
         };
         return this.updateItem(
             'form',

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, effect, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, model, output, signal } from '@angular/core';
 import {
     FormElement,
     FormElementConfiguration,
@@ -7,6 +7,7 @@ import {
     FormStaticOption,
     I18nString,
 } from '@gentics/cms-models';
+import { FormGridEditMode } from '../../models';
 
 @Component({
     selector: 'gtx-form-element-translation',
@@ -15,13 +16,15 @@ import {
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class FormElementTranslationComponent implements OnInit {
+export class FormElementTranslationComponent {
+
+    public readonly FormGridEditMode = FormGridEditMode;
 
     public element = model.required<FormElement>();
     public elementConfig = input.required<FormElementConfiguration>();
     public schema = input<Partial<FormSchemaProperty> | null>(null);
     public languages = input.required<string[]>();
-    public restricted = input.required<boolean>();
+    public mode = input.required<FormGridEditMode>();
 
     public hasMissingTranslationsChange = output<boolean>();
     public schemaChange = output<Partial<FormSchemaProperty>>();
@@ -44,7 +47,7 @@ export class FormElementTranslationComponent implements OnInit {
         return result;
     });
 
-    public ngOnInit(): void {
+    constructor() {
         effect(() => {
             const langs = this.languages();
             if (langs.length > 0 && !langs.includes(this.selectedLanguage())) {

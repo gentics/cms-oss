@@ -10,86 +10,84 @@
     [class.preview-active]="viewMode() === FormGridViewMode.PREVIEW"
 >
     <div class="editor-body">
-        @if (mode() !== FormGridEditMode.NONE) {
-            <aside
-                class="editor-panel editor-panel--left"
-                aria-label="Linkes Panel"
-                [class.expanded]="leftSidebarExpanded"
-            >
+        <aside
+            class="editor-panel editor-panel--left"
+            aria-label="Linkes Panel"
+            [class.expanded]="leftSidebarExpanded"
+        >
 
-                <div class="panel-header">
-                    <div class="panel-header-title">{{ 'form_grid.new_element_title' | gtxI18n }}</div>
+            <div class="panel-header">
+                <div class="panel-header-title">{{ 'form_grid.new_element_title' | gtxI18n }}</div>
 
-                    <button
-                        class="panel-toggle-btn"
-                        title="Linkes Panel ein-/ausklappen"
-                        aria-label="Linkes Panel ein-/ausklappen"
-                        (click)="toggleLeftSidebar()"
-                    >
-                        <icon>chevron_right</icon>
-                    </button>
-                </div>
+                <button
+                    class="panel-toggle-btn"
+                    title="Linkes Panel ein-/ausklappen"
+                    aria-label="Linkes Panel ein-/ausklappen"
+                    (click)="toggleLeftSidebar()"
+                >
+                    <icon>chevron_right</icon>
+                </button>
+            </div>
 
-                <div class="panel-content">
+            <div class="panel-content">
 
-                    @if (mode() === FormGridEditMode.FULL && config().controls != null) {
-                        <div class="panel-section">
-                            <div class="panel-segment-title">{{ 'form_grid.section_controls' | gtxI18n }}</div>
+                @if (mode() === FormGridEditMode.FULL && config().controls != null) {
+                    <div class="panel-section">
+                        <div class="panel-segment-title">{{ 'form_grid.section_controls' | gtxI18n }}</div>
 
-                            <div class="palette" [attr.aria-label]="'form_grid.section_controls' | gtxI18n">
-                                @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
-                                    @let label = ctlEntry.value.labelI18n | gtxI18nObject;
-                                    @let description = ctlEntry.value.descriptionI18n | gtxI18nObject:null;
+                        <div class="palette" [attr.aria-label]="'form_grid.section_controls' | gtxI18n">
+                            @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
+                                @let label = ctlEntry.value.labelI18n | gtxI18nObject;
+                                @let description = ctlEntry.value.descriptionI18n | gtxI18nObject:null;
 
-                                    <button
-                                        type="button"
-                                        class="palette-item"
-                                        draggable="true"
-                                        [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
-                                        [attr.title]="label"
-                                        (dragstart)="paletteDragStart($event, ctlEntry.key, ctlEntry.value)"
-                                        (dragend)="paletteDragEnd()"
-                                    >
-                                        <span class="palette-item--label">{{ label }}</span>
-                                        @if (description) {
-                                            <div class="palette-item--description">{{ description }}</div>
-                                        }
-                                    </button>
-                                }
-                            </div>
+                                <button
+                                    type="button"
+                                    class="palette-item"
+                                    draggable="true"
+                                    [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
+                                    [attr.title]="label"
+                                    (dragstart)="paletteDragStart($event, ctlEntry.key, ctlEntry.value)"
+                                    (dragend)="paletteDragEnd()"
+                                >
+                                    <span class="palette-item--label">{{ label }}</span>
+                                    @if (description) {
+                                        <div class="palette-item--description">{{ description }}</div>
+                                    }
+                                </button>
+                            }
                         </div>
-                    }
+                    </div>
+                }
 
-                    @if (config().blocks != null) {
-                        <div class="panel-section">
-                            <div class="panel-segment-title">{{ 'form_grid.section_blocks' | gtxI18n }}</div>
+                @if (config().blocks != null) {
+                    <div class="panel-section">
+                        <div class="panel-segment-title">{{ 'form_grid.section_blocks' | gtxI18n }}</div>
 
-                            <div class="palette" [attr.aria-label]="'form_grid.section_blocks' | gtxI18n">
-                                @for (blockEntry of (config().blocks | gtxEntries); track blockEntry.key) {
-                                    @let label = blockEntry.value.labelI18n | gtxI18nObject;
-                                    @let description = blockEntry.value.descriptionI18n | gtxI18nObject:null;
+                        <div class="palette" [attr.aria-label]="'form_grid.section_blocks' | gtxI18n">
+                            @for (blockEntry of (config().blocks | gtxEntries); track blockEntry.key) {
+                                @let label = blockEntry.value.labelI18n | gtxI18nObject;
+                                @let description = blockEntry.value.descriptionI18n | gtxI18nObject:null;
 
-                                    <button
-                                        type="button"
-                                        class="palette-item"
-                                        draggable="true"
-                                        [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
-                                        [attr.title]="label"
-                                        (dragstart)="paletteDragStart($event, blockEntry.key, blockEntry.value)"
-                                        (dragend)="paletteDragEnd()"
-                                    >
-                                        <span class="palette-item--label">{{ label }}</span>
-                                        @if (description) {
-                                            <div class="palette-item--description">{{ description }}</div>
-                                        }
-                                    </button>
-                                }
-                            </div>
+                                <button
+                                    type="button"
+                                    class="palette-item"
+                                    draggable="true"
+                                    [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
+                                    [attr.title]="label"
+                                    (dragstart)="paletteDragStart($event, blockEntry.key, blockEntry.value)"
+                                    (dragend)="paletteDragEnd()"
+                                >
+                                    <span class="palette-item--label">{{ label }}</span>
+                                    @if (description) {
+                                        <div class="palette-item--description">{{ description }}</div>
+                                    }
+                                </button>
+                            }
                         </div>
-                    }
-                </div>
-            </aside>
-        }
+                    </div>
+                }
+            </div>
+        </aside>
 
         <main class="editor-main" (click)="clearSelectedElement()">
             <div
@@ -187,7 +185,7 @@
                                     [disabled]="mode() !== FormGridEditMode.FULL"
                                     (schemaDraftChange)="onDefinitionChange($event)"
                                     [controls]="config().controls"
-                                    [restricted]="restricted()"
+                                    [restricted]="mode() !== FormGridEditMode.FULL"
                                 ></gtx-form-element-definition>
                             </gtx-tab>
                         }
@@ -202,7 +200,8 @@
                         </gtx-tab>
                         <gtx-tab
                             [id]="EditTabs.TRANSLATIONS"
-                            [title]="(hasMissingTranslations() ? '⚠ ' : '') + ('form_grid.edit_tab_translations' | gtxI18n)"
+                            [icon]="hasMissingTranslations() ? 'warning' : ''"
+                            [title]="'form_grid.edit_tab_translations' | gtxI18n"
                         >
                             <gtx-form-element-translation
                                 [element]="selectedElement"
@@ -210,8 +209,8 @@
                                 [elementConfig]="selectedElementConfiguration"
                                 [schema]="selectedElementSchemaDraft"
                                 (schemaChange)="onDefinitionChange($event)"
+                                [mode]="mode()"
                                 [languages]="languages()"
-                                [restricted]="restricted()"
                                 (hasMissingTranslationsChange)="hasMissingTranslations.set($event)"
                             ></gtx-form-element-translation>
                         </gtx-tab>

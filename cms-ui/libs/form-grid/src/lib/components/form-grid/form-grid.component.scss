@@ -30,7 +30,8 @@
         --right-panel-width: 0;
     }
 
-    &.no-left-panel {
+    &.no-left-panel,
+    &.mode-none {
         --left-panel-width: 0;
     }
 

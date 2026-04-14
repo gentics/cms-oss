@@ -5,8 +5,8 @@
         (valueChange)="updateSelectedLanguage($event)"
     >
         @for (lang of languages(); track lang) {
-            <gtx-option [value]="lang">
-                {{ lang }}{{ missingByLanguage()[lang] ? ' ⚠' : '' }}
+            <gtx-option [value]="lang" [icon]="missingByLanguage()[lang] ? 'warning' : ''">
+                {{ lang }}
             </gtx-option>
         }
     </gtx-select>
@@ -17,6 +17,7 @@
         <gtx-i18n-input
             [label]="'form_grid.translation_label' | gtxI18n"
             [value]="element().label"
+            [disabled]="mode() === FormGridEditMode.NONE"
             [language]="selectedLanguage()"
             [availableLanguages]="languages()"
             (valueChange)="updateLabel($event)"
@@ -25,6 +26,7 @@
         <gtx-i18n-input
             [label]="'form_grid.translation_description' | gtxI18n"
             [value]="element().description ?? null"
+            [disabled]="mode() === FormGridEditMode.NONE"
             [language]="selectedLanguage()"
             [availableLanguages]="languages()"
             (valueChange)="updateDescription($event)"
@@ -33,6 +35,7 @@
         <gtx-i18n-input
             [label]="'form_grid.translation_summary' | gtxI18n"
             [value]="element().formGridOptions?.valueSummary ?? null"
+            [disabled]="mode() === FormGridEditMode.NONE"
             [language]="selectedLanguage()"
             [availableLanguages]="languages()"
             (valueChange)="updateSummary($event)"
@@ -45,7 +48,7 @@
                     [value]="opt.label"
                     [language]="selectedLanguage()"
                     [availableLanguages]="languages()"
-                    [disabled]="restricted()"
+                    [disabled]="mode() !== FormGridEditMode.FULL"
                     (valueChange)="updateStaticOptionLabel(i, $event)"
                 ></gtx-i18n-input>
             }
@@ -62,7 +65,7 @@
                     [value]="$any(element().formGridOptions)[setting.id]"
                     [language]="selectedLanguage()"
                     [availableLanguages]="languages()"
-                    [disabled]="restricted()"
+                    [disabled]="mode() !== FormGridEditMode.FULL"
                     (valueChange)="updateTranslationSetting(setting.id, $event)"
                 ></gtx-i18n-input>
             }

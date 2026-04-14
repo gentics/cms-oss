@@ -1,14 +1,13 @@
-import { ContentRepositoryLicenseBO } from '@admin-ui/common';
-import { ErrorHandler } from '@admin-ui/core';
-import { BaseEntityTableComponent } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { License, PushLicenseRequest } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, toValidNumber } from '@gentics/ui-core';
 import { map, Observable } from 'rxjs';
+import { ContentRepositoryLicenseBO } from '../../../../common';
+import { ErrorHandler } from '../../../../core';
+import { BaseEntityTableComponent } from '../../../../shared';
+import { AppStateService } from '../../../../state';
 import { ContentRepositoryLicenseTableLoaderService } from '../../providers';
 import { ContentRepositoryLicenseInfoModal } from '../content-repository-license-info-modal/content-repository-license-info-modal.component';
 
@@ -109,7 +108,7 @@ export class ContentRepositoryLicenseTableComponent
             case ACTION_PUSH:
                 this.pushLicense({
                     crIds: this.getAffectedEntityIds(event)
-                        .map(Number)
+                        .map(toValidNumber)
                         .filter((id) => Number.isInteger(id)),
                 }, true);
                 break;

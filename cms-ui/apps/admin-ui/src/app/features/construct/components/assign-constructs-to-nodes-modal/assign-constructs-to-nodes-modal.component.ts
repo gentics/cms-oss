@@ -1,11 +1,11 @@
-import { ConstructBO } from '@admin-ui/common';
-import { ConstructHandlerService, NodeOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { IndexById, Node, Raw } from '@gentics/cms-models';
-import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray, toValidNumber } from '@gentics/ui-core';
 import { Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ConstructBO } from '../../../../common';
+import { ConstructHandlerService, NodeOperations } from '../../../../core';
 
 @Component({
     selector: 'gtx-assign-constructs-to-nodes-modal',
@@ -103,8 +103,8 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<boolean> im
         let didChange = false;
 
         for (const construct of this.constructs) {
-            const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
-            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
+            const toAdd = new Set<number>(toSelectionArray(this.selected).map(toValidNumber));
+            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(toValidNumber));
 
             for (const nodeToAdd of toAdd) {
                 if (this.currentAssignment[nodeToAdd]?.has?.(construct.id)) {

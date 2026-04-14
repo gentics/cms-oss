@@ -1,19 +1,18 @@
-import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@admin-ui/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
+import { I18nService, typeIdsToName } from '@gentics/cms-components';
+import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn, toValidNumber } from '@gentics/ui-core';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '../../../common';
 import {
     DevToolPackageTableLoaderService,
     ErrorHandler,
     ObjectPropertyTableLoaderOptions,
     ObjectPropertyTableLoaderService,
     PermissionsService,
-} from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
-import { typeIdsToName } from '@gentics/cms-components';
-import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
-import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
-import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+} from '../../../core';
+import { AppStateService } from '../../../state';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import {
     AssignNodeRestrictionsToObjectPropertiesModalComponent,
@@ -187,7 +186,7 @@ export class ObjectPropertyTableComponent
     public override handleAction(event: TableActionClickEvent<ObjectPropertyBO>): void {
         switch (event.actionId) {
             case ASSIGN_TO_NODES_ACTION:
-                this.setObjectpropertyNodeRestrictions(this.getAffectedEntityIds(event).map(Number));
+                this.setObjectpropertyNodeRestrictions(this.getAffectedEntityIds(event).map(toValidNumber));
                 return;
         }
 

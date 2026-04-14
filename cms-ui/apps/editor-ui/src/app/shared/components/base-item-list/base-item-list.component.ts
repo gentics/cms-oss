@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, computed, input, model, OnChanges, OnDestroy, OnInit, signal } from '@angular/core';
 import { discard } from '@gentics/cms-components';
 import { Feature, Item, Language, Node, PagingSortOrder, StagedItemsMap } from '@gentics/cms-models';
-import { ChangesOf, randomId } from '@gentics/ui-core';
+import { ChangesOf, randomId, toValidNumber } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { catchError, debounceTime, distinctUntilChanged, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { emptyItemInfo, FolderPermissionData, ItemLoadData, ItemsInfo, UIMode } from '../../../common/models';
@@ -258,7 +258,7 @@ export abstract class BaseItemListComponent<T extends Item> implements OnInit, O
 
         // If we have all items already cached/fetched once, then we can simply reuse them
         if (allIds.length === this.totalCount()) {
-            this.selection.set(new Set(allIds.map(Number)));
+            this.selection.set(new Set(allIds.map((id) => toValidNumber(id))));
             return;
         }
 

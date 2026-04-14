@@ -90,6 +90,12 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public pendingPaletteDropSpan: number | null;
 
     private paletteDragOverFrame: number | null = null;
+    /**
+     * Original Y-bounds of the row at the moment resizeNeighbor was activated.
+     * Used to keep the state locked while the cursor stays in that area, preventing
+     * the oscillation caused by the shrunk neighbor reflowing into a previous row.
+     */
+    private lockedResizeRowBounds: { top: number; bottom: number } | null = null;
 
     /* RESIZE
      * ===================================================================== */
@@ -151,8 +157,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
     }
 
     public getDisplaySpan(element: FormElement, index: number): number {
-        const isTarget = this.paletteDragging() 
-                      && this.paletteDropTarget()?.elementContainerId === this.id();
+        const isTarget = this.paletteDragging()
+          && this.paletteDropTarget()?.elementContainerId === this.id();
         const neighbor = this.paletteDropTarget()?.resizeNeighbor;
 
         if (isTarget && neighbor && neighbor.index === index) {
@@ -227,7 +233,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 if (hoveredElementId && hoveredElementId === neighborId) {
                     // Check if the placeholder is logically before (left) or after (right) the neighbor
                     const isPlaceholderBefore = currentTarget.index <= currentTarget.resizeNeighbor.index;
-                    
+
                     const neighborEl = realTarget?.closest('[data-drop-item="true"]') as HTMLElement | null;
                     if (neighborEl) {
                         const neighborRect = neighborEl.getBoundingClientRect();
@@ -244,10 +250,21 @@ export class FormGridElementsContainerComponent implements OnChanges {
                             return;
                         }
                         // If we reached here, the user moved the mouse to the OTHER half of the shrunk element!
-                        // We do NOT return/lock, but intentionally fall through so calculatePaletteInsertTarget 
+                        // We do NOT return/lock, but intentionally fall through so calculatePaletteInsertTarget
                         // is re-run to cleanly swap sides.
                     } else {
                         // Fallback lock if we cannot find the exact bounding box
+                        this.paletteDragOverFrame = 0;
+                        return;
+                    }
+                } else {
+                    // Cursor is not over the neighbor element (and not over the placeholder).
+                    // If we are still within the row's original Y-bounds, lock to prevent the
+                    // oscillation where the shrunk neighbor reflows into a previous row, making
+                    // the cursor appear to be "below all rows" and resetting the state.
+                    if (this.lockedResizeRowBounds
+                      && clientY >= this.lockedResizeRowBounds.top
+                      && clientY <= this.lockedResizeRowBounds.bottom) {
                         this.paletteDragOverFrame = 0;
                         return;
                     }
@@ -284,6 +301,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     span: nextTarget.span,
                     resizeNeighbor: nextTarget.resizeNeighbor,
                 });
+                this.lockedResizeRowBounds = nextTarget.resizeNeighbor ? (nextTarget.rowBounds ?? null) : null;
             }
 
             this.paletteDragOverFrame = 0;
@@ -536,7 +554,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
      * model so the change propagates upward.
      */
     public updateChildElements(parent: FormElement, children: FormElement[]): void {
-        const updated = this.elements().map(el => el.id === parent.id ? { ...el, elements: children } : el);
+        const updated = this.elements().map((el) => el.id === parent.id ? { ...el, elements: children } : el);
         this.elements.set(updated);
         this.updateDisplayItems();
     }
@@ -575,7 +593,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     return null;
                 }
 
-                const isAggregate = !!(itemConfig as FormControlConfiguration).aggregate;
+                const isAggregate = !!(itemConfig).aggregate;
 
                 return {
                     id: el.id,
@@ -602,7 +620,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     return null;
                 }
 
-                const isContainer = !!(itemConfig as FormBlockConfiguration).container;
+                const isContainer = !!(itemConfig).container;
 
                 return {
                     id: el.id,
@@ -623,7 +641,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         container: HTMLElement,
         clientX: number,
         clientY: number,
-    ): { index: number; span: number; resizeNeighbor?: { index: number; span: number } } | null {
+    ): { index: number; span: number; resizeNeighbor?: { index: number; span: number }; rowBounds?: { top: number; bottom: number } } | null {
         const defaultSpan = this.getPaletteDefaultSpanForList();
         const rows = this.buildPaletteDropRows(container);
 
@@ -697,24 +715,19 @@ export class FormGridElementsContainerComponent implements OnChanges {
         );
         const freeCols = Math.max(0, 12 - usedCols);
 
-        const preferredSpan = this.getPaletteInRowSpan(
-            activeRow,
-            index,
-            defaultSpan,
-        );
-
         let span: number;
         let resizeNeighbor: { index: number; span: number } | undefined;
 
         if (freeCols > 0) {
-            span = Math.max(1, Math.min(preferredSpan, freeCols));
+            // The row already has elements but is not full — fill the remaining space entirely.
+            span = freeCols;
         } else {
             // No space left: shrink the neighbor element to accommodate the drop safely.
             // Find the element the mouse is physically hovering to use as the shrink target.
             // This ensures that when hovering an element's right half, that specific element shrinks instead of the next one.
             let resizeTargetIndex = index === activeRow.items[activeRow.items.length - 1].index + 1
-                                    ? activeRow.items[activeRow.items.length - 1].index
-                                    : index;
+                ? activeRow.items[activeRow.items.length - 1].index
+                : index;
 
             for (const item of activeRow.items) {
                 if (clientX >= item.rect.left && clientX <= item.rect.right) {
@@ -728,7 +741,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
             resizeNeighbor = { index: resizeTargetIndex, span: neighborSpan - span };
         }
 
-        return { index, span, resizeNeighbor };
+        return { index, span, resizeNeighbor, rowBounds: { top: activeRow.top, bottom: activeRow.bottom } };
     }
 
     private setSpan(el: any, span: number): void {
@@ -796,6 +809,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
     }
 
     private cleanupPaletteDrag(): void {
+        this.lockedResizeRowBounds = null;
         this.pendingPaletteDropSpan = null;
 
         if (this.paletteDragOverFrame) {
@@ -844,38 +858,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
         }
 
         return el;
-    }
-
-    private getPaletteInRowSpan(
-        row: DropRow,
-        insertIndex: number,
-        fallback: number,
-    ): number {
-        const rowIndices = new Set(row.items.map((item) => item.index));
-        const leftIndex = insertIndex - 1;
-        const rightIndex = insertIndex;
-
-        const leftSpan = rowIndices.has(leftIndex)
-            ? this.getItemSpanByIndex(leftIndex)
-            : null;
-
-        const rightSpan = rowIndices.has(rightIndex)
-            ? this.getItemSpanByIndex(rightIndex)
-            : null;
-
-        if (leftSpan != null && rightSpan != null) {
-            return Math.min(leftSpan, rightSpan);
-        }
-
-        if (leftSpan != null) {
-            return leftSpan;
-        }
-
-        if (rightSpan != null) {
-            return rightSpan;
-        }
-
-        return fallback;
     }
 
     private buildPaletteDropRows(container: HTMLElement): DropRow[] {

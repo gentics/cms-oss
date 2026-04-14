@@ -158,6 +158,11 @@ export class FormGridElementsContainerComponent implements OnChanges {
         return this.getSpan(element);
     }
 
+    public isPaletteContainerType(): boolean {
+        const cfg = this.paletteDragConfig() as any;
+        return !!(cfg?.container || cfg?.aggregate);
+    }
+
     public onPaletteContainerDragOver(event: DragEvent): void {
         if (
             !this.paletteDragging()

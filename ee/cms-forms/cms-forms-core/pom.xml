@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-forms</artifactId>
-		<version>6.3.15-SNAPSHOT</version>
+		<version>6.3.15</version>
 	</parent>
 
 	<artifactId>cms-forms-core</artifactId>

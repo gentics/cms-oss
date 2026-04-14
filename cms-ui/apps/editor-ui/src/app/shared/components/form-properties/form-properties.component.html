@@ -4,15 +4,18 @@
             <gtx-input
                 class="columns small-12"
                 [label]="('editor.item_name_label' | gtxI18n) + '*'"
+                [required]="true"
                 [autofocus]="mode === 'create'"
                 formControlName="name"
             ></gtx-input>
 
             @if (formTypeConfigurations) {
-                <div class="type-config-row">
+                <div class="flex-row columns small-12">
                     <gtx-select
                         [label]="('editor.form_type_label' | gtxI18n) + '*'"
                         [multiple]="false"
+                        [required]="true"
+                        class="columns small-6"
                         formControlName="formType"
                         (valueChange)="setActiveFormType($event)"
                     >
@@ -25,10 +28,11 @@
 
                     @if (activeConfiguration?.flows) {
                         <gtx-select
-                            class="columns small-12"
+                            class="columns small-6"
+                            [required]="true"
                             [label]="('editor.form_flow_label' | gtxI18n) + '*'"
                             [required]="true"
-                            formControlName="flow"
+                            formControlName="data.flowId"
                         >
                             @for (flow of activeConfiguration.flows; track flow.id) {
                                 <gtx-option [value]="language.code">
@@ -64,7 +68,7 @@
                 <gtx-select
                     class="columns small-12"
                     [label]="('editor.item_template_context_label' | gtxI18n)"
-                    formControlName="templateContext"
+                    formControlName="data.templateContext"
                 >
                     @for (option of activeConfiguration.templateOptions; track option.value) {
                         <gtx-option [value]="option.value">
@@ -75,7 +79,7 @@
             }
         </div>
 
-        <div class="flex-row">
+        <div class="flex-row" formGroupName="data">
             <div class="gtx-form-section-title">{{ 'editor.form_administrator_email_title' | gtxI18n }}</div>
 
             <gtx-input
@@ -182,7 +186,7 @@
             }
         </div>
 
-        <div class="form-section-container">
+        <div class="form-section-container" formGroupName="data">
             <div class="gtx-form-section-title">{{ 'editor.form_success_page_title' | gtxI18n }}</div>
 
             <ng-container

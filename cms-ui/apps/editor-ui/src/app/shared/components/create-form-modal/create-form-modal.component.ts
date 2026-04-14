@@ -8,6 +8,7 @@ import { map } from 'rxjs/operators';
 import { v4 as uuidV4 } from 'uuid';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { FormPropertiesMode, FormPropertiesData } from '../form-properties/form-properties.component';
+import { createDefaultFormPageName } from '../../../content-frame/models/content-frame';
 
 @Component({
     selector: 'create-form-modal',
@@ -90,27 +91,22 @@ export class CreateFormModalComponent
             nodeId: this.nodeId,
             folderId: this.folderId,
             languages: this.control.value.languages || [],
-            schema: {
-                key: id,
-                version: '1.0',
-                properties: {},
-            },
-            uiSchema: {
-                key: id,
-                version: '1.0',
-                formGrid: {
-                    // TODO: Define flows
-                    flow: '',
-                    width: 12,
-                    widthOptimized: false,
+            data: {
+                ...this.control.value.data,
+                formWidth: 12,
+                schema: {
+                    key: id,
+                    version: '1.0',
+                    properties: {},
                 },
-                pages: [{
-                    pagename: {
-                        de: 'Standart Seite',
-                        en: 'Default Page',
-                    },
-                    elements: [],
-                }],
+                uiSchema: {
+                    key: id,
+                    version: '1.0',
+                    pages: [{
+                        pagename: createDefaultFormPageName(),
+                        elements: [],
+                    }],
+                },
             },
         };
 

@@ -1,3 +1,5 @@
+export * from './base-item-list-header/base-item-list-header.component';
+export * from './base-item-list/base-item-list.component';
 export * from './channel-dependencies-modal/channel-dependencies-modal.component';
 export * from './chip-search-bar/chip-search-bar.component';
 export * from './create-folder-modal/create-folder-modal.component';
@@ -13,6 +15,7 @@ export * from './folder-picker/folder-picker.component';
 export * from './folder-properties/folder-properties.component';
 export * from './form-language-indicator/form-language-indicator.component';
 export * from './form-language-selector/form-language-selector.component';
+export * from './form-list-header/form-list-header.component';
 export * from './form-list/form-list.component';
 export * from './form-properties/form-properties.component';
 export * from './icon-checkbox/icon-checkbox.component';

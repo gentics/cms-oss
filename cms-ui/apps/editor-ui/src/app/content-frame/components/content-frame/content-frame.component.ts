@@ -35,7 +35,7 @@ import {
     User,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { FormGridViewMode } from '@gentics/form-grid';
+import { FormGridEditMode, FormGridViewMode } from '@gentics/form-grid';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
 import { debounce, isEqual } from 'lodash-es';
 import {
@@ -99,13 +99,14 @@ import {
     StartSavingAction,
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
-import { BLANK_PAGE, CNParentWindow, CNWindow } from '../../models/content-frame';
+import { BLANK_PAGE, CNParentWindow, CNWindow, createDefaultFormPageName } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../../providers';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
+import { FormListLoaderService } from '../../../shared/providers';
 
 /**
  * This component wraps the GCMS content in an iframe, and provides the means for interacting with
@@ -129,6 +130,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
     public readonly EditMode = EditMode;
     public readonly LocalizationType = LocalizationType;
+    public readonly FormGridEditMode = FormGridEditMode;
 
     @ViewChild('iframe', { static: true })
     private iframe: ElementRef<HTMLIFrameElement>;
@@ -239,6 +241,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private tagEditorService: TagEditorService,
         private aloha: AlohaIntegrationService,
         private urlBuilder: ResourceUrlBuilder,
+        private formListLoader: FormListLoaderService,
     ) { }
 
     ngOnInit(): void {
@@ -337,27 +340,25 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                         this.cancelEditingDebounced(this.currentItem);
                     }
                     if (item.type === 'form') {
-                        if ((item as Form).schema == null) {
-                            (item as Form).schema = {
+                        if ((item as Form).data == null) {
+                            (item as Form).data = {
+                                formWidth: 12,
+                            } as any;
+                        }
+
+                        if ((item as Form).data.schema == null) {
+                            (item as Form).data.schema = {
                                 key: '',
                                 version: '',
                                 properties: {},
                             };
                         }
-                        if ((item as Form).uiSchema == null) {
-                            (item as Form).uiSchema = {
+                        if ((item as Form).data.uiSchema == null) {
+                            (item as Form).data.uiSchema = {
                                 key: '',
                                 version: '',
-                                formGrid: {
-                                    flow: '',
-                                    width: 12,
-                                    widthOptimized: false,
-                                },
                                 pages: [{
-                                    pagename: {
-                                        de: 'Standard Seite',
-                                        en: 'Default page',
-                                    },
+                                    pagename: createDefaultFormPageName(),
                                     elements: [],
                                 }],
                             };
@@ -667,12 +668,6 @@ span.diff-html-added {
         return;
     }
 
-    formChange(form: Form): void {
-        this.currentItem = form;
-        this.onItemUpdate();
-        this.setContentModified(true, false);
-    }
-
     onItemUpdate(): void {
         this.tagEditorService.forceCloseTagEditor();
         this.isLocked = this.isLockedByAnother();
@@ -912,12 +907,12 @@ span.diff-html-added {
     }
 
     public updateFormSchema(changes: FormSchema): void {
-        (this.currentItem as Form).schema = changes;
+        (this.currentItem as Form).data.schema = changes;
         this.markContentAsModifiedInState(true);
     }
 
     public updateFormUiSchema(changes: FormUISchema): void {
-        (this.currentItem as Form).uiSchema = changes;
+        (this.currentItem as Form).data.uiSchema = changes;
         this.markContentAsModifiedInState(true);
     }
 
@@ -1285,8 +1280,7 @@ span.diff-html-added {
         const form = this.currentItem as Form;
         return this.folderActions.publishForms([form])
             .then(() => {
-                // refresh content list to update state changes
-                this.folderActions.refreshList('form');
+                this.formListLoader.reload();
                 if (closeEditor) {
                     this.closeEditor();
                 }
@@ -1426,17 +1420,16 @@ span.diff-html-added {
         this.appState.dispatch(new StartSavingAction());
 
         return this.client.form.update(id, {
+            data: {
+                ...currentForm.data,
+            },
             name: currentForm.name,
             description: currentForm.description,
-            successPageId: currentForm.successPageId,
-            successNodeId: currentForm.successNodeId,
             languages: currentForm.languages,
-            schema: currentForm.schema,
-            uiSchema: currentForm.uiSchema,
         }).pipe(
             tap(() => {
                 this.appState.dispatch(new SaveSuccessAction());
-                this.folderActions.refreshList('form');
+                this.formListLoader.reload();
 
                 this.notification.show({
                     id: `form-save-success-with-publish:${this.currentItem.id}`,

@@ -15,7 +15,7 @@
 
             [(formPageIndex)]="formPageIndex"
             [(formViewMode)]="formViewMode"
-            [formUiSchema]="currentItem?.type === 'form' ? currentItem.uiSchema : null"
+            [formUiSchema]="currentItem?.type === 'form' ? currentItem.data.uiSchema : null"
             (formUiSchemaChange)="updateFormUiSchema($event)"
 
             (close)="closeEditor()"
@@ -72,13 +72,15 @@
         <div class="form-editor">
             <gtx-form-grid
                 [config]="currentFormConfig"
-                [restricted]="!!currentFormConfig?.external"
+                [mode]="editMode === EditMode.PREVIEW
+                    ? FormGridEditMode.NONE
+                    : (currentFormConfig?.external ? FormGridEditMode.RESTRICTED : FormGridEditMode.FULL)"
                 [languages]="currentItem.languages"
                 [(pageIndex)]="formPageIndex"
                 [viewMode]="formViewMode"
 
-                [schema]="currentItem.schema"
-                [uiSchema]="currentItem.uiSchema"
+                [schema]="currentItem.data.schema"
+                [uiSchema]="currentItem.data.uiSchema"
                 (schemaChange)="updateFormSchema($event)"
                 (uiSchemaChange)="updateFormUiSchema($event)"
             ></gtx-form-grid>

@@ -692,6 +692,15 @@ export interface FormListOptions extends BaseListOptionsWithPaging<Form> {
      * only to return only deleted objects.
      */
     wastebin?: 'exclude' | 'include' | 'only';
+
+    package?: string;
+
+    /**
+     * If omitted, will load all forms regardless of external state.
+     * If set to true, will only load external forms.
+     * If set to false, will only load internal forms.
+     */
+    external?: boolean;
 }
 
 export interface FormLoadOptions {

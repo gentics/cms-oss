@@ -549,6 +549,10 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         restoreFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/restore/${id}`, null, options),
         deleteFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/delete/${id}`, null, options),
+
+        usageInPages: (options) => this.executeMappedJsonRequest(GET, '/form/usage/pages', null, options),
+        usageInTemplates: (options) => this.executeMappedJsonRequest(GET, '/form/usage/templates', null, options),
+        usageInTotal: (options) => this.executeMappedJsonRequest(GET, '/form/usage/total', null, options),
     } as const;
 
     public fum: GCMSFileUploadManipulatorAPI = {

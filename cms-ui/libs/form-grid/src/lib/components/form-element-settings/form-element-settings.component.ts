@@ -10,9 +10,10 @@ import { FormElement, FormElementConfiguration, FormTypeConfiguration } from '@g
 })
 export class FormElementSettingsComponent {
 
-    public config = input.required<FormTypeConfiguration>();
-    public element = model.required<FormElement>();
-    public elementConfig = input.required<FormElementConfiguration>();
+    public readonly config = input.required<FormTypeConfiguration>();
+    public readonly disabled = input.required<boolean>();
+    public readonly element = model.required<FormElement>();
+    public readonly elementConfig = input.required<FormElementConfiguration>();
 
     public updateSettingValue(id: string, value: unknown): void {
         const copy = structuredClone(this.element());

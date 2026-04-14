@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, input, model, output, signal } from '@angular/core';
 import {
     FormElement,
     FormElementConfiguration,
@@ -15,7 +15,7 @@ import {
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class FormElementTranslationComponent {
+export class FormElementTranslationComponent implements OnInit {
 
     public element = model.required<FormElement>();
     public elementConfig = input.required<FormElementConfiguration>();
@@ -44,7 +44,7 @@ export class FormElementTranslationComponent {
         return result;
     });
 
-    constructor() {
+    public ngOnInit(): void {
         effect(() => {
             const langs = this.languages();
             if (langs.length > 0 && !langs.includes(this.selectedLanguage())) {

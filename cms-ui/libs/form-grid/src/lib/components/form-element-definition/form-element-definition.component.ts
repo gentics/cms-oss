@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 import { FormControlConfiguration, FormPropertyValidation, FormSchemaProperty } from '@gentics/cms-models';
+import { toValidNumber } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-form-element-definition',
@@ -30,43 +31,35 @@ export class FormElementDefinitionComponent {
 
     public updateType(value: string | number | (string | number)[] | null): void {
         const type = Array.isArray(value) ? value[0] : value;
-        this.updateDraft({ type: type != null ? String(type) : undefined });
+        this.updateDraft({ type: type != null ? `${type}` : undefined });
     }
 
     public updateName(value: string | number | null): void {
-        this.updateDraft({ name: value != null ? String(value) : undefined });
+        this.updateDraft({ name: value != null ? `${value}` : undefined });
     }
 
     public updateValidationMinValue(value: string | number | null): void {
-        this.updateValidation({ minValue: this.toNumber(value) });
+        this.updateValidation({ minValue: toValidNumber(value) ?? undefined });
     }
 
     public updateValidationMaxValue(value: string | number | null): void {
-        this.updateValidation({ maxValue: this.toNumber(value) });
+        this.updateValidation({ maxValue: toValidNumber(value) ?? undefined });
     }
 
     public updateValidationMinLength(value: string | number | null): void {
-        this.updateValidation({ minLength: this.toNumber(value) });
+        this.updateValidation({ minLength: toValidNumber(value) ?? undefined });
     }
 
     public updateValidationMaxLength(value: string | number | null): void {
-        this.updateValidation({ maxLength: this.toNumber(value) });
+        this.updateValidation({ maxLength: toValidNumber(value) ?? undefined });
     }
 
     public updateValidationRegex(value: string | number | null): void {
-        const regex = value != null ? String(value) : undefined;
+        const regex = value != null ? `${value}` : undefined;
         this.updateValidation({
             regexValidation: regex
                 ? { errorMessage: this.schemaDraft().validation?.regexValidation?.errorMessage ?? {}, regex }
                 : undefined,
         });
-    }
-
-    private toNumber(value: string | number | null): number | undefined {
-        if (value == null) {
-            return undefined;
-        }
-        const n = Number(value);
-        return isNaN(n) ? undefined : n;
     }
 }

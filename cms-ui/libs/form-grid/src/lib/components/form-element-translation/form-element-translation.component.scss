@@ -1,0 +1,23 @@
+:host {
+    display: block;
+}
+
+.translation-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 0;
+}
+
+.translation-section-title {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.translation-definition,
+.translation-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

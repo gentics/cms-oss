@@ -9,6 +9,7 @@ import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import {
     FormElementDefinitionComponent,
     FormElementSettingsComponent,
+    FormElementTranslationComponent,
     FormGridComponent,
     FormGridElementsContainerComponent,
     FormOptionsInputComponent,
@@ -18,6 +19,7 @@ import {
 const COMPONENTS = [
     FormElementDefinitionComponent,
     FormElementSettingsComponent,
+    FormElementTranslationComponent,
     FormGridComponent,
     FormGridElementsContainerComponent,
     FormOptionsInputComponent,

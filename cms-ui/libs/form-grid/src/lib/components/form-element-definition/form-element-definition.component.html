@@ -4,7 +4,7 @@
             [label]="'form_grid.definition_control_type' | gtxI18n"
             [value]="schemaDraft().type ?? null"
             [disabled]="disabled()"
-            (valueChange)="updateDraft({ type: $any($event) })"
+            (valueChange)="updateType($event)"
         >
             @for (ctlEntry of (controls() | gtxEntries); track ctlEntry.key) {
                 <gtx-option [value]="ctlEntry.key">{{ ctlEntry.value.labelI18n | gtxI18nObject }}</gtx-option>
@@ -15,7 +15,7 @@
             [label]="'form_grid.definition_name' | gtxI18n"
             [value]="schemaDraft().name ?? null"
             [disabled]="disabled()"
-            (valueChange)="updateDraft({ name: $any($event) })"
+            (valueChange)="updateName($event)"
         ></gtx-input>
     </div>
 
@@ -41,4 +41,92 @@
             (change)="updateDraft({ isList: $event === true })"
         ></gtx-checkbox>
     </div>
+
+    <div class="definition-validation">
+        <span class="definition-section-title">{{ 'form_grid.definition_validation_title' | gtxI18n }}</span>
+
+        <div class="definition-fields">
+            <gtx-input
+                type="number"
+                [label]="'form_grid.definition_validation_min_value' | gtxI18n"
+                [value]="schemaDraft().validation?.minValue ?? null"
+                [disabled]="restricted()"
+                (valueChange)="updateValidationMinValue($event)"
+            ></gtx-input>
+
+            <gtx-input
+                type="number"
+                [label]="'form_grid.definition_validation_max_value' | gtxI18n"
+                [value]="schemaDraft().validation?.maxValue ?? null"
+                [disabled]="restricted()"
+                (valueChange)="updateValidationMaxValue($event)"
+            ></gtx-input>
+
+            <gtx-input
+                type="number"
+                [label]="'form_grid.definition_validation_min_length' | gtxI18n"
+                [value]="schemaDraft().validation?.minLength ?? null"
+                [disabled]="restricted()"
+                (valueChange)="updateValidationMinLength($event)"
+            ></gtx-input>
+
+            <gtx-input
+                type="number"
+                [label]="'form_grid.definition_validation_max_length' | gtxI18n"
+                [value]="schemaDraft().validation?.maxLength ?? null"
+                [disabled]="restricted()"
+                (valueChange)="updateValidationMaxLength($event)"
+            ></gtx-input>
+        </div>
+
+        <gtx-input
+            [label]="'form_grid.definition_validation_regex' | gtxI18n"
+            [value]="schemaDraft().validation?.regexValidation?.regex ?? null"
+            [disabled]="restricted()"
+            (valueChange)="updateValidationRegex($event)"
+        ></gtx-input>
+    </div>
+
+    @if (hasReadonlySettings()) {
+        <div class="definition-readonly-settings">
+            <span class="definition-section-title">{{ 'form_grid.definition_type_settings_title' | gtxI18n }}</span>
+
+            <div class="definition-fields">
+                @if (schemaDraft().dateOnly != null) {
+                    <gtx-checkbox
+                        [disabled]="true"
+                        [label]="'form_grid.definition_type_date_only' | gtxI18n"
+                        [checked]="schemaDraft().dateOnly ?? false"
+                    ></gtx-checkbox>
+                }
+
+                @if (schemaDraft().precision != null) {
+                    <gtx-input
+                        [disabled]="true"
+                        type="number"
+                        [label]="'form_grid.definition_type_precision' | gtxI18n"
+                        [value]="schemaDraft().precision ?? null"
+                    ></gtx-input>
+                }
+
+                @if (schemaDraft().searchReferenceValueMinLength != null) {
+                    <gtx-input
+                        [disabled]="true"
+                        type="number"
+                        [label]="'form_grid.definition_type_search_min_length' | gtxI18n"
+                        [value]="schemaDraft().searchReferenceValueMinLength ?? null"
+                    ></gtx-input>
+                }
+
+                @if (schemaDraft().autoCompleteMinLength != null) {
+                    <gtx-input
+                        [disabled]="true"
+                        type="number"
+                        [label]="'form_grid.definition_type_autocomplete_min_length' | gtxI18n"
+                        [value]="schemaDraft().autoCompleteMinLength ?? null"
+                    ></gtx-input>
+                }
+            </div>
+        </div>
+    }
 </div>

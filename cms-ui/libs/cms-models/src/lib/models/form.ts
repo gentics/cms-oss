@@ -313,6 +313,11 @@ export interface FormUISchema {
 
 export type FormSchemaProperties = Record<string, FormSchemaProperty>;
 
+export interface FormStaticOption {
+    value: string;
+    label: I18nString;
+}
+
 export interface FormSchemaProperty {
     /**
      * The type of this property
@@ -381,6 +386,10 @@ export interface FormSchemaProperty {
      * Which sub-properties this property manages.
      */
     properties?: FormSchemaProperties;
+    /**
+     * Static options for select-type controls, with translatable labels.
+     */
+    staticOptions?: FormStaticOption[];
 }
 
 export interface FormPage {

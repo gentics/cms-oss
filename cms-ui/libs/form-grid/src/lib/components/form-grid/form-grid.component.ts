@@ -7,6 +7,7 @@ import {
     model,
     OnDestroy,
     OnInit,
+    signal,
 } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import {
@@ -80,6 +81,9 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly elements = computed<FormElement[]>(() => {
         return this.uiSchema()?.pages?.[this.pageIndex()]?.elements || [];
     });
+
+    /** Whether the selected element has any missing translations across all form languages */
+    public hasMissingTranslations = signal(false);
 
     /** Mapping of ID to each element in a flat map */
     public readonly elementMap = computed<Record<string, FormElement>>(() => {

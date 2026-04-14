@@ -21,6 +21,24 @@
         "view_mode_tab_preview": "Preview",
         "pagination_title": "Seite",
         "user_settings_missing": "Keine optionen konfiguriert für Benutzerdaten!",
-        "add_option": "Option hinzufügen"
+        "add_option": "Option hinzufügen",
+        "definition_validation_title": "Validierung",
+        "definition_validation_min_value": "Min. Wert",
+        "definition_validation_max_value": "Max. Wert",
+        "definition_validation_min_length": "Min. Länge",
+        "definition_validation_max_length": "Max. Länge",
+        "definition_validation_regex": "Regex Muster",
+        "definition_type_settings_title": "Typeinstellungen",
+        "definition_type_date_only": "Nur Datum",
+        "definition_type_precision": "Präzision",
+        "definition_type_search_min_length": "Mindestlänge Suche",
+        "definition_type_autocomplete_min_length": "Mindestlänge Autovervollständigung",
+        "translation_language": "Sprache",
+        "translation_section_definition": "Definition",
+        "translation_section_settings": "Einstellungen",
+        "translation_label": "Label",
+        "translation_description": "Beschreibung",
+        "translation_summary": "Zusammenfassung",
+        "translation_static_option_label": "Optionsbezeichnung"
     }
 }

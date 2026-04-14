@@ -157,15 +157,9 @@ gtx-contents-list-item {
 
 .form-item {
     position: relative;
-    // height: fit-content removed → flex row's align-items: stretch
-    // will now equalize all items in the same row to the tallest one.
 
-    .item-primary {
-        gap: 0.5rem;
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        padding: 0;
+    &:hover {
+        cursor: pointer;
     }
 }
 
@@ -562,8 +556,9 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: inherit;
+    gap: 0.5em;
     padding: 0 !important;
+    margin-bottom: 0.5em;
     overflow: hidden;
     width: 100%;
     flex: 0 0 100%;

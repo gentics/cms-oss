@@ -70,7 +70,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly pageIndex = input.required<number>();
     public readonly languages = input.required<string[]>();
     public readonly gridSurface = input.required<HTMLElement>();
-    public whitelist = input<string[] | null>(null);
+    public readonly whitelist = input<string[] | null>(null);
 
     public readonly schema = model.required<FormSchema>();
     public readonly elements = model.required<FormElement[]>();

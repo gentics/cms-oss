@@ -141,14 +141,14 @@
                     title="Breite ändern"
                     (pointerdown)="onResizeStart($event, $index)"
                 ></div>
-                    
+
                 <div
                     class="fg-container-wrapper"
                     [attr.data-element-id]="element.id"
                     [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                     [class.is-aggregate]="element.type === 'aggregate'"
                     [class.is-container]="element.type === 'container'"
-                > 
+                >
                     <gtx-contents-list-item
                         class="fg-box fg-container-card"
                         [class.empty]="!element.label"
@@ -161,7 +161,7 @@
                                     <span class="tag-text">{{ displayItem.label | gtxI18nObject }}</span>
                                 </span>
 
-                                @if (!restricted()) {
+                                @if (mode() !== FormGridEditMode.FULL) {
                                     <gtx-button
                                         type="alert"
                                         class="delete-button"
@@ -192,7 +192,7 @@
                             [level]="level() + 1"
                             [pageIndex]="pageIndex()"
                             [languages]="languages()"
-                            [restricted]="restricted()"
+                            [mode]="mode()"
                             [gridSurface]="gridSurface()"
                             [whitelist]="displayItem.whitelist"
 

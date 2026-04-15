@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class DateSetting extends BaseSetting {
 	private static final long serialVersionUID = 2206236044599941701L;
 
-	protected final static String TYPE = "date";
+	public final static String TYPE = "date";
 
 	/**
 	 * If the editor should also be able to select a time"

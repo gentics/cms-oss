@@ -10,18 +10,17 @@
     "templateContext": "theme-red",
     "schema": {
         "properties": {
-            "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed": {
-                "type": "boolean",
+            "recaptcha_828322fa_7a6d_4dde_b84c_94596702995e": {
+                "type": "recaptcha",
                 "updateOnChange": false,
                 "validation": {},
-                "mandatory": true,
+                "mandatory": false,
                 "isList": false,
-                "name": "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed",
-                "defaultValue": "X"
+                "name": "recaptcha_828322fa_7a6d_4dde_b84c_94596702995e"
             }
         }
     },
-    "ui-schema": {
+    "uiSchema": {
         "formname": {
             "de": "Test Form",
             "en": "Test Form"
@@ -34,14 +33,11 @@
             {
                 "elements": [
                     {
-						"type": "property",
-						"id": "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed",
-						"label": {
-                            "de": "Klick mich",
-                            "en": "Click me"
-                        },
-						"description": {}
-					}
+                        "type": "property",
+                        "id": "recaptcha_828322fa_7a6d_4dde_b84c_94596702995e",
+                        "label": {},
+                        "description": {}
+                    }
                 ]
             }
         ]

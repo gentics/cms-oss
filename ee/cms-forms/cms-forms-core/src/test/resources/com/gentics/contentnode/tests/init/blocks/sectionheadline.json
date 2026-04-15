@@ -1,0 +1,21 @@
+{
+    "elements": [
+        {
+            "globalId": "d02b7702-9920-4459-b2ff-6e58f96e929d",
+            "name": "sectionheadline_d02b7702_9920_4459_b2ff_6e58f96e929d",
+            "type": "sectionheadline",
+            "active": true,
+            "elements": [],
+            "text_i18n": {
+                "de": "Das ist eine Überschrift"
+            }
+        }
+    ],
+    "email": "",
+    "mailsubject_i18n": {},
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {},
+    "type": "GENERIC",
+    "templateContext": "theme-red"
+}

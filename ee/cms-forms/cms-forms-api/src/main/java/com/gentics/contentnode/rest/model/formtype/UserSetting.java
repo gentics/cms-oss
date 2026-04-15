@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class UserSetting extends BaseSetting {
 	private static final long serialVersionUID = 19895567674627946L;
 
-	protected final static String TYPE = "user";
+	public final static String TYPE = "user";
 
 	/**
 	 * If multiple values can be selected

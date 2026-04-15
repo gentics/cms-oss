@@ -1,0 +1,36 @@
+{
+    "elements": [
+        {
+            "globalId": "85f0431b-ecfd-40a6-b87d-26255767d335",
+            "name": "file_85f0431b_ecfd_40a6_b87d_26255767d335",
+            "type": "file",
+            "active": true,
+            "elements": [],
+            "label_i18n": {
+                "de": "Ein Bild"
+            },
+            "mandatory_i18n": null,
+            "description_i18n": {
+                "de": "Ein Bild von dir bitte!"
+            },
+            "tooltip_i18n": {
+                "de": "Bitte Bitte"
+            },
+            "max_filesize_i18n": {
+                "de": 20
+            },
+            "allowedFiletypes_i18n": {
+                "de": [
+                    "image"
+                ]
+            }
+        }
+    ],
+    "email": "",
+    "mailsubject_i18n": {},
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {},
+    "type": "GENERIC",
+    "templateContext": "theme-red"
+}

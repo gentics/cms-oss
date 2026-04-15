@@ -1,0 +1,59 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubjectI18n": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplateI18n": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrlI18n": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {
+            "input_23a9b382_bd6b_42f0_a9ee_75ad4f3762f7": {
+                "type": "string",
+                "numberOfLines": 1,
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "input_23a9b382_bd6b_42f0_a9ee_75ad4f3762f7"
+            }
+        }
+    },
+    "uiSchema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "id": "group_ca721ba9_8f9b_4893_b05c_1b27f27fd9d3",
+                        "type": "property",
+                        "label": {},
+                        "description": {},
+                        "formGridOptions": {
+                            "type": "group"
+                        },
+                        "elements": [
+                            {
+                                "type": "property",
+                                "id": "input_23a9b382_bd6b_42f0_a9ee_75ad4f3762f7",
+                                "label": {
+                                    "de": "Inneres Input"
+                                },
+                                "description": {}
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

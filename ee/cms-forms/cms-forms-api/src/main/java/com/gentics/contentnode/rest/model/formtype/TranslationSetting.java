@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class TranslationSetting extends BaseSetting {
 	private static final long serialVersionUID = 871244316182096624L;
 
-	protected final static String TYPE = "translation";
+	public final static String TYPE = "translation";
 
 	/**
 	 * Whether rich content can be entered

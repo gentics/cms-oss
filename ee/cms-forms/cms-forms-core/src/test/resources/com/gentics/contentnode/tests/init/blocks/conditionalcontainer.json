@@ -1,0 +1,91 @@
+{
+    "elements": [
+        {
+            "globalId": "21292415-2d85-49a6-ae74-d1eefc01a7d8",
+            "name": "checkbox_21292415_2d85_49a6_ae74_d1eefc01a7d8",
+            "type": "checkbox",
+            "active": true,
+            "elements": [],
+            "label_i18n": {
+                "de": "Geklicke"
+            },
+            "mandatory_i18n": null,
+            "checked_i18n": null,
+            "value_i18n": {
+                "en": "X",
+                "de": "X",
+                "pl": "X",
+                "cs": "X",
+                "hu": "X",
+                "sl": "X",
+                "ar": "X",
+                "bg": "X",
+                "bs": "X",
+                "da": "X",
+                "es": "X",
+                "et": "X",
+                "fa": "X",
+                "fi": "X",
+                "fr": "X",
+                "hr": "X",
+                "it": "X",
+                "ja": "X",
+                "ko": "X",
+                "mk": "X",
+                "nl": "X",
+                "pt": "X",
+                "ro": "X",
+                "ru": "X",
+                "sk": "X",
+                "sq": "X",
+                "sr": "X",
+                "tr": "X",
+                "uk": "X",
+                "ar_eg": "X",
+                "en_ca": "X",
+                "fr_ca": "X"
+            }
+        },
+        {
+            "globalId": "db21db23-b608-4591-b8fd-f76ab73711a9",
+            "name": "conditionalcontainer_db21db23_b608_4591_b8fd_f76ab73711a9",
+            "type": "conditionalcontainer",
+            "active": true,
+            "elements": [
+                {
+                    "globalId": "a5ed52d4-c5a8-4dd0-a184-d441117c3a4c",
+                    "name": "input_a5ed52d4_c5a8_4dd0_a184_d441117c3a4c",
+                    "type": "input",
+                    "active": true,
+                    "elements": [],
+                    "label_i18n": {
+                        "de": "Innerer Input"
+                    },
+                    "mandatory_i18n": null,
+                    "placeholder_i18n": null,
+                    "validation_i18n": null,
+                    "value_i18n": null,
+                    "minVal_i18n": null,
+                    "maxVal_i18n": null,
+                    "maxCharCount_i18n": null
+                }
+            ],
+            "label_i18n": {
+                "de": "Was auch immer"
+            },
+            "element_to_check_i18n": {
+                "de": "checkbox_21292415_2d85_49a6_ae74_d1eefc01a7d8"
+            },
+            "value_to_check_i18n": {
+                "de": "X"
+            }
+        }
+    ],
+    "email": "",
+    "mailsubject_i18n": {},
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {},
+    "type": "GENERIC",
+    "templateContext": "theme-red"
+}

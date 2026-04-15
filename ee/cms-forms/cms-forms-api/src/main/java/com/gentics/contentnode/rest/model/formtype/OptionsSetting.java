@@ -15,7 +15,7 @@ import com.gentics.contentnode.rest.deserializer.BooleanOrEditableDeserializer;
 public class OptionsSetting extends BaseSetting {
 	private static final long serialVersionUID = -2269868773759926805L;
 
-	protected final static String TYPE = "options";
+	public final static String TYPE = "options";
 
 	/**
 	 * If a boolean, defines if the rendered select for the end-user is multiple or not; If 'editable' the editor can define it.

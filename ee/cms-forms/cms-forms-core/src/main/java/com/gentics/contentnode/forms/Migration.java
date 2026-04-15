@@ -40,6 +40,7 @@ import com.gentics.contentnode.rest.model.formtype.ReferenceType;
 import com.gentics.contentnode.rest.model.formtype.SelectOption;
 import com.gentics.contentnode.rest.model.formtype.SelectSetting;
 import com.gentics.contentnode.rest.model.formtype.StringSetting;
+import com.gentics.contentnode.rest.model.formtype.TranslationSetting;
 
 /**
  * Migration tool for form type configurations
@@ -48,7 +49,47 @@ public class Migration {
 	/**
 	 * Known types
 	 */
-	protected final static List<String> TYPES = Arrays.asList("generic", "poll");
+	protected final static List<String> FORM_TYPES = Arrays.asList("generic", "poll");
+
+	/**
+	 * List of unmigrated properties (properties, which are standard)
+	 */
+	protected final static List<String> UNMIGRATED_PROPERTIES = Arrays.asList("label", "description", "mandatory",
+			"minVal", "maxVal", "maxCharCount", "validation", "select_type", "element_to_check", "value_to_check");
+
+	/**
+	 * Migration map for property ids
+	 */
+	public final static Map<String, String> PROPERTY_MIGRATION_MAP = Map.of(
+			"additional_element", "customOption",
+			"max_filesize", "maxFileSize",
+			"options", "selectOptions",
+			"value", "defaultValue");
+
+	/**
+	 * List of property ids, which are backend properties (have the backend flag set)
+	 */
+	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("maxFileSize", "allowedFiletypes",
+			"mailsubject", "mailtemplate", "mailsource", "defaultValue", "selectOptions");
+
+	/**
+	 * List of property ids, which should be migrated to "string" instead of "translation"
+	 */
+	public final static List<String> STRING_PROPERTIES = Arrays.asList("defaultValue");
+
+	/**
+	 * List of unmigrated element types
+	 */
+	protected final static List<String> UNMIGRATED_ELEMENT_TYPES = Arrays.asList("textarea", "buttons");
+
+	/**
+	 * Migration map for element types
+	 */
+	protected final static Map<String, String> ELEMENT_TYPE_MIGRATION_MAP = Map.of(
+			"input", "string",
+			"checkbox", "boolean",
+			"selectgroup", "catalog",
+			"file", "binary");
 
 	/**
 	 * Map of form types to configuration files (expected to reside in the ui-conf directory)
@@ -207,7 +248,7 @@ public class Migration {
 		String uiConfPath = getUiConfPath(line);
 		FormTypeConfigurationMap configMap = new FormTypeConfigurationMap();
 
-		for (String formType : TYPES) {
+		for (String formType : FORM_TYPES) {
 			String fileName = CONFIG_FILENAMES.get(formType);
 			File configFile = new File(uiConfPath, fileName);
 			if (configFile.exists() && configFile.isFile()) {
@@ -227,13 +268,23 @@ public class Migration {
 	 * @return migrated configuration
 	 * @throws IOException
 	 */
-	protected FormTypeConfiguration migrate(String formType, File configFile) throws IOException {
+	public FormTypeConfiguration migrate(String formType, File configFile) throws IOException {
 		currentFileName = configFile.getName();
 		if (verbose) {
 			System.out.println("Migrating file %s to form type configuration '%s'".formatted(configFile.getAbsolutePath(), formType));
 		}
-		JsonNode config = mapper.readTree(configFile);
 
+		return migrate(formType, mapper.readTree(configFile));
+	}
+
+	/**
+	 * Migrate the configuration from the given JsonNode
+	 * @param formType form type
+	 * @param config old configuration
+	 * @return migrated configuration
+	 * @throws IOException
+	 */
+	public FormTypeConfiguration migrate(String formType, JsonNode config) throws IOException {
 		// basic data (name, pluginName, external, submitOnce)
 		FormTypeConfiguration out = new FormTypeConfiguration(NAMES.get(formType), "forms");
 		out.external = false;
@@ -262,9 +313,9 @@ public class Migration {
 							if (StringUtils.isBlank(key)) {
 								System.err.println("%s: Ignoring element with empty type: '%s'".formatted(currentFileName, element.toString()));
 							} else if (isBlock(key, element)) {
-								out.blocks.put(key, toBlock(element));
+								toBlock(key, element, out.blocks);
 							} else {
-								out.controls.put(key, toControl(element));
+								toControl(key, element, out.controls);
 							}
 						}, () -> {
 							System.err.println("%s: Ignoring element without type: '%s'".formatted(currentFileName, element.toString()));
@@ -368,25 +419,78 @@ public class Migration {
 
 	/**
 	 * Migrate the given element to a block
+	 * @param key type key
 	 * @param element element
-	 * @return block
+	 * @param blocks map of blocks
 	 */
-	protected BlockConfig toBlock(JsonNode element) {
+	protected void toBlock(String key, JsonNode element, Map<String, BlockConfig> blocks) {
 		BlockConfig block = new BlockConfig(getTranslationMap(element, "type_label_i18n_ui", true));
 		fillElementConfig(block, element);
 		block.container = getBoolean(element, "is_container");
-		return block;
+		blocks.put(key, block);
 	}
 
 	/**
-	 * Migrate the given element to a control
+	 * Migrate the given element to a control (or probable multiple controls)
+	 * @param key type key
 	 * @param element element
-	 * @return control
+	 * @param controls map of controls
 	 */
-	protected ControlConfig toControl(JsonNode element) {
+	protected void toControl(String key, JsonNode element, Map<String, ControlConfig> controls) {
+		if (UNMIGRATED_ELEMENT_TYPES.contains(key)) {
+			return;
+		}
+		key = ELEMENT_TYPE_MIGRATION_MAP.getOrDefault(key, key);
 		ControlConfig control = new ControlConfig(getTranslationMap(element, "type_label_i18n_ui", true));
 		fillElementConfig(control, element);
-		return control;
+		controls.put(key, control);
+
+		// some types require special handling
+		switch (key) {
+		case "string":
+			element.optional("properties").filter(JsonNode::isArray).ifPresent(properties -> {
+				properties.valueStream()
+						.filter(el -> el.optional("name").filter(JsonNode::isTextual).map(JsonNode::asText)
+								.filter(name -> Strings.CI.equals(name, "validation")).isPresent())
+						.findFirst().ifPresent(validation -> {
+							validation.optional("options").filter(JsonNode::isArray).ifPresent(options -> {
+								for (JsonNode option : options) {
+									String optionKey = option.optional("key").filter(JsonNode::isTextual)
+											.map(JsonNode::asText).orElse("");
+									switch (optionKey) {
+									case "number":
+										ControlConfig numberControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
+										fillElementConfig(numberControl, element);
+										controls.put("number", numberControl);
+										break;
+									case "telephone":
+										// TODO add regex validation
+										break;
+									case "socialsecurity":
+										// TODO add regex validation
+										break;
+									case "date":
+										ControlConfig dateTimeControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
+										fillElementConfig(dateTimeControl, element);
+										controls.put("datetime", dateTimeControl);
+										break;
+									case "datepicker":
+										break;
+									case "time":
+										ControlConfig timeControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
+										fillElementConfig(timeControl, element);
+										controls.put("time", timeControl);
+										break;
+									case "email":
+										// TODO add regex validation
+										break;
+									}
+								}
+							});
+						});
+			});
+			break;
+		}
 	}
 
 	/**
@@ -419,14 +523,27 @@ public class Migration {
 			System.err.println("%s: Ignoring property without id '%s'".formatted(property.toString()));
 			return null;
 		}
+
+		if (UNMIGRATED_PROPERTIES.contains(id)) {
+			return null;
+		}
+
+		id = PROPERTY_MIGRATION_MAP.getOrDefault(id, id);
+
 		Map<String, String> label = getTranslationMap(property, "label_i18n_ui", true);
 		BaseSetting setting = null;
 
 		switch (type) {
 		case "string":
-			StringSetting stringSetting = new StringSetting(id, label);
-			stringSetting.richContent = getBoolean(property, "allow_rich_content");
-			setting = stringSetting;
+			if (STRING_PROPERTIES.contains(id)) {
+				StringSetting stringSetting = new StringSetting(id, label);
+				stringSetting.richContent = getBoolean(property, "allow_rich_content");
+				setting = stringSetting;
+			} else {
+				TranslationSetting translationSetting = new TranslationSetting(id, label);
+				translationSetting.richContent = getBoolean(property, "allow_rich_content");
+				setting = translationSetting;
+			}
 			break;
 		case "boolean":
 			setting = new BooleanSetting(id, label);
@@ -471,6 +588,7 @@ public class Migration {
 
 		if (setting != null) {
 			setting.descriptionI18n = toTranslationMap(property.get("description_i18n_ui"));
+			setting.backend = BACKEND_PROPERTIES.contains(id);
 		}
 
 		return setting;

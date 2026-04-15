@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Size;
 public class ReferenceSetting extends BaseSetting {
 	private static final long serialVersionUID = -4930905191871790064L;
 
-	protected final static String TYPE = "reference";
+	public final static String TYPE = "reference";
 
 	/**
 	 * Allowed referenced types

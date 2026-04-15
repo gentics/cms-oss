@@ -12,6 +12,7 @@
         "properties": {
             "input_e6729f2b_5e93_4e15_8670_c401fe9581a2": {
                 "type": "string",
+                "numberOfLines": 1,
                 "updateOnChange": false,
                 "validation": {
                     "maxLength": 20,
@@ -23,6 +24,7 @@
             },
             "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a": {
                 "type": "string",
+                "numberOfLines": 1,
                 "updateOnChange": false,
                 "validation": {
                     "maxLength": 10,
@@ -34,7 +36,7 @@
             }
         }
     },
-    "ui-schema": {
+    "uiSchema": {
         "formname": {
             "de": "Test Form",
             "en": "Test Form"
@@ -47,23 +49,29 @@
             {
                 "elements": [
                     {
-						"type": "property",
-						"id": "input_e6729f2b_5e93_4e15_8670_c401fe9581a2",
-						"label": {
-							"de": "Verpflichtend",
-							"en": "Mandatory"
-						},
-						"description": {}
-					},
+                        "type": "property",
+                        "id": "input_e6729f2b_5e93_4e15_8670_c401fe9581a2",
+                        "label": {
+                            "de": "Verpflichtend",
+                            "en": "Mandatory"
+                        },
+                        "description": {},
+                        "formGridOptions": {
+                            "placeholder": {
+                                "de": "Gib was ein",
+                                "en": "Enter something"
+                            }
+                        }
+                    },
                     {
-						"type": "property",
-						"id": "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a",
-						"label": {
-							"de": "Nicht verpflichtend",
+                        "type": "property",
+                        "id": "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a",
+                        "label": {
+                            "de": "Nicht verpflichtend",
                             "en": "Not mandatory"
-						},
-						"description": {}
-					}
+                        },
+                        "description": {}
+                    }
                 ]
             }
         ]

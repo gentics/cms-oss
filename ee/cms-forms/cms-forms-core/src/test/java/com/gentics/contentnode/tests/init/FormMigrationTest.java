@@ -15,7 +15,6 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,8 +29,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
@@ -39,6 +38,7 @@ import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.FormFactory;
+import com.gentics.contentnode.forms.Migration;
 import com.gentics.contentnode.init.MigrateForms;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
@@ -49,6 +49,9 @@ import com.gentics.contentnode.testutils.ConfigModifier;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
+/**
+ * Test cases for form migration
+ */
 @GCNFeature(set = { Feature.FORMS })
 @ConfigBy(FormMigrationTest.class)
 @RunWith(Parameterized.class)
@@ -69,9 +72,16 @@ public class FormMigrationTest implements ConfigModifier {
 
 	private static Node node;
 
+	protected static ObjectMapper mapper = new ObjectMapper();
+
 	@Parameters(name = "{index}: form: {0}")
 	public static Collection<Object[]> data() {
-		return Stream.of("simple_form.json", "success_form.json", "mailsettings_form.json", "inputfield_form.json", "checkboxfield_form.json")
+		return Stream
+				.of("form/simple.json", "form/success.json", "form/mailsettings.json", "form/pages.json",
+						"controls/input.json", "controls/checkbox.json", "controls/textarea.json",
+						"controls/select.json", "controls/file.json", "controls/usermail.json",
+						"controls/recaptcha.json", "blocks/sectionheadline.json", "blocks/text.json",
+						"blocks/spacer.json", "blocks/conditionalcontainer.json", "blocks/group.json")
 				.map(fileName -> new Object[] { fileName }).collect(Collectors.toList());
 	}
 
@@ -126,11 +136,13 @@ public class FormMigrationTest implements ConfigModifier {
 	public void accept(MapPreferences prefs) throws NodeException {
 		FormTypeConfigurationMap formTypeConfiguration = new FormTypeConfigurationMap();
 
-		// prepare forms config
-		formTypeConfiguration.put(GENERIC_TYPE,
-				new FormTypeConfiguration(Map.of("de", "CMS Formular", "en", "CMS Form"), "forms"));
-		formTypeConfiguration.put(POLL_TYPE,
-				new FormTypeConfiguration(Map.of("de", "Umfrage", "en", "Poll"), "forms"));
+		Migration typeMigrationTool = new Migration(false);
+		try {
+			formTypeConfiguration.put(GENERIC_TYPE, typeMigrationTool.migrate(GENERIC_TYPE, mapper.readTree(getFile("form-editor.json"))));
+			formTypeConfiguration.put(POLL_TYPE, typeMigrationTool.migrate(POLL_TYPE, mapper.readTree(getFile("form-poll-editor.json"))));
+		} catch (IOException e) {
+			throw new NodeException(e);
+		}
 
 		prefs.set(FormConfigProvider.TYPES_CONFIG_PATH, formTypeConfiguration);
 	}

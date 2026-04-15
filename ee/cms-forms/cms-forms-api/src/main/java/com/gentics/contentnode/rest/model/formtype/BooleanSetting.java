@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class BooleanSetting extends BaseSetting {
 	private static final long serialVersionUID = -121448269254812535L;
 
-	protected final static String TYPE = "boolean";
+	public final static String TYPE = "boolean";
 
 	/**
 	 * Creator

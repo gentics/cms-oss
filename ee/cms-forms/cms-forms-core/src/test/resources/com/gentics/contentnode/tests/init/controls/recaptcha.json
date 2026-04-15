@@ -1,0 +1,18 @@
+{
+    "elements": [
+        {
+            "globalId": "828322fa-7a6d-4dde-b84c-94596702995e",
+            "name": "recaptcha_828322fa_7a6d_4dde_b84c_94596702995e",
+            "type": "recaptcha",
+            "active": true,
+            "elements": []
+        }
+    ],
+    "email": "",
+    "mailsubject_i18n": {},
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {},
+    "type": "GENERIC",
+    "templateContext": "theme-red"
+}

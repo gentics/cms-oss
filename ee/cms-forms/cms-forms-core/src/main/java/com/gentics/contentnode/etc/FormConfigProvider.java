@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -19,6 +21,7 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.rest.model.formtype.BlockConfig;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.log.NodeLogger;
@@ -125,6 +128,7 @@ public final class FormConfigProvider implements ConfigurationService {
 	 * <ul>
 	 * <li>Forms exist that use unknown formtypes</li>
 	 * <li>Forms exist in nodes that do not have the formtype assigned</li>
+	 * <li>Form type configurations are inconsistent</li>
 	 * </ul>
 	 */
 	public void check() {
@@ -159,6 +163,27 @@ public final class FormConfigProvider implements ConfigurationService {
 							logger.error("Node '%s' contains forms of formtype '%s', which is not assigned to the node"
 									.formatted(nodeName, formType));
 							consistent.set(false);
+						}
+					});
+				});
+
+				configurationMap.entrySet().stream().forEach(entry -> {
+					String formType = entry.getKey();
+					FormTypeConfiguration config = entry.getValue();
+					Optional.ofNullable(config.blocks).ifPresent(blocks -> {
+						for (Entry<String, BlockConfig> blockEntry : blocks.entrySet()) {
+							String blockType = blockEntry.getKey();
+							BlockConfig blockConfig = blockEntry.getValue();
+							Optional.ofNullable(blockConfig.settings).ifPresent(settings -> {
+								settings.stream().forEach(setting -> {
+									if (setting.backend) {
+										logger.error(
+												"Formtype configuration '%s' contains block configuration '%s' with setting '%s' having backend=true, which is not allowed."
+														.formatted(formType, blockType, setting.id));
+										consistent.set(false);
+									}
+								});
+							});
 						}
 					});
 				});

@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Size;
 public class SelectSetting extends BaseSetting {
 	private static final long serialVersionUID = -91439466760302592L;
 
-	protected final static String TYPE = "select";
+	public final static String TYPE = "select";
 
 	/**
 	 * Selectable options

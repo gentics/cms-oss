@@ -13,7 +13,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class IntegerSetting extends BaseSetting {
 	private static final long serialVersionUID = -5310346505920772072L;
 
-	protected final static String TYPE = "integer";
+	public final static String TYPE = "integer";
 
 	/**
 	 * Creator

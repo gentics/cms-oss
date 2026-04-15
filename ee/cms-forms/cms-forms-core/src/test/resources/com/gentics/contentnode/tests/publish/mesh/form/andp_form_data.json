@@ -357,7 +357,7 @@
 			}
 		}
 	},
-	"ui-schema": {
+	"uiSchema": {
 		"key": "626218D9-E978-42CC-8C39-817EAD7DE0B6_TenantID_212_123",
 		"version": "162",
 		"formname": {

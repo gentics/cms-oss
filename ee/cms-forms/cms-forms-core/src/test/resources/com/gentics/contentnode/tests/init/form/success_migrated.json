@@ -1,17 +1,19 @@
 {
-    "adminEmailAddress": "n.pomaroli@gentics.com",
+    "adminEmailAddress": "",
     "adminEmailSubjectI18n": {},
     "adminEmailPageId": 0,
     "adminEmailNodeId": 0,
     "adminEmailTemplateI18n": {},
     "successPageId": 4711,
     "successNodeId": 42,
-    "successUrlI18n": {},
-    "templateContext": "theme-red",
+    "successUrlI18n": {
+        "de": "https://www.gentics.com/"
+    },
+    "templateContext": "theme-blue",
     "schema": {
         "properties": {}
     },
-    "ui-schema": {
+    "uiSchema": {
         "formname": {
 			"de": "Test Form",
 			"en": "Test Form"

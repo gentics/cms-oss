@@ -1,3 +1,5 @@
+export * from './dynamic-form-settings/dynamic-form-settings.component';
+export * from './dynamic-form-translations/dynamic-form-translations.component';
 export * from './form-condition-input/form-condition-input.component';
 export * from './form-element-definition/form-element-definition.component';
 export * from './form-element-settings/form-element-settings.component';

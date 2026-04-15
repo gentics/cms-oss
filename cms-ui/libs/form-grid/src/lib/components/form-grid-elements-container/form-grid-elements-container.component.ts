@@ -550,6 +550,10 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 const newElements = this.elements().slice();
                 newElements.splice(index, 1);
                 this.elements.set(newElements);
+                this.schema.update((data) => {
+                    delete data.properties[element.id];
+                    return data;
+                });
                 this.updateDisplayItems();
             })
             .catch(() => {

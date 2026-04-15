@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import {
     FormCondition,
+    FormConditionSourceControl,
     FormConditionSourceSchema,
     FormConditionSourceSetting,
     FormElement,
@@ -10,14 +11,20 @@ import {
 } from '@gentics/cms-models';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 
-type SourceType = keyof FormConditionSourceSetting | keyof FormConditionSourceSchema;
+type SourceType
+    = | keyof FormConditionSourceSetting
+      | keyof FormConditionSourceSchema
+      | keyof FormConditionSourceControl
+      ;
+
 const SOURCE_TYPES: SourceType[] = [
-    'schema',
     /*
-     * A setting as source don't actually make sense here, as these are for setting-conditions,
+     * These setting as source don't actually make sense here, as these are for setting-conditions,
      * and not for element conditions. They just use the same condition source format.
      */
+    // 'schema',
     // 'setting',
+    'control',
 ];
 const SOURCE_TYPE_OPTIONS: { value: SourceType; translationKey: string }[] = SOURCE_TYPES.map((type) => ({
     value: type,

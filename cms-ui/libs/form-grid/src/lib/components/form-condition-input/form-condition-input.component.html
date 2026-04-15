@@ -11,12 +11,12 @@
     </gtx-select>
 }
 
-@if (sourceType() === 'schema') {
+@if (sourceType() === 'control') {
     <div class="schema-source-container">
         <gtx-select
             class="source-target-selector"
-            [label]="'form_grid.condition_source_schema' | gtxI18n"
-            [value]="$any(value)?.source?.schema"
+            [label]="'form_grid.condition_source_control' | gtxI18n"
+            [value]="$any(value)?.source?.control"
             [clearable]="true"
             (valueChange)="updateSourceTarget($event)"
         >
@@ -25,7 +25,7 @@
             }
         </gtx-select>
 
-        @if ($any(value)?.source?.schema) {
+        @if ($any(value)?.source?.control) {
             <gtx-input
                 class="schema-compare"
                 [label]="'form_grid.condition_equals_compare_value' | gtxI18n"
@@ -34,16 +34,5 @@
             />
         }
     </div>
-} @else if (sourceType() === 'setting') {
-    <gtx-select
-        class="source-target-selector"
-        [label]="'form_grid.condition_source_setting' | gtxI18n"
-        [value]="$any(value)?.source?.setting"
-        (valueChange)="updateSourceTarget($event)"
-    >
-        @for (option of settingOptions(); track option.value) {
-            <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
-        }
-    </gtx-select>
 }
 

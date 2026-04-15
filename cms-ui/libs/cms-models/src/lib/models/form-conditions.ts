@@ -32,9 +32,11 @@ export type FormCondition
 /**
  * The source from where the value should be pulled from
  */
-export type FormConditionControlSource
+export type FormConditionSource
     = | FormConditionSourceSetting
-      | FormConditionSourceSchema;
+      | FormConditionSourceSchema
+      | FormConditionSourceControl
+      ;
 
 export type FormCompareValue = string | number | boolean | null;
 
@@ -63,12 +65,13 @@ export interface FormConditionNot {
  * Met when the control value strictly equals the specified value
  */
 export interface FormConditionEquals {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     equals: FormCompareValue;
 }
 
 /**
- * Source which targets another setting which has been defined
+ * Source which targets another setting which has been defined.
+ * Used by `FormSettingConfiguration`.
  */
 export interface FormConditionSourceSetting {
     /** ID of the setting from this element which is to be checked against */
@@ -76,7 +79,8 @@ export interface FormConditionSourceSetting {
 }
 
 /**
- * Source which targets one of the defined form schema fields or the current schema property
+ * Source which targets one of the defined form schema fields or the current schema property.
+ * Used by `FormSettingConfiguration`.
  */
 export interface FormConditionSourceSchema {
     /**
@@ -86,10 +90,19 @@ export interface FormConditionSourceSchema {
 }
 
 /**
+ * Source which targets a control within the current form.
+ * Used by `FormElement`.
+ */
+export interface FormConditionSourceControl {
+    /** The ID of the control within `schema.properties`. */
+    control: string;
+}
+
+/**
  * Met when the specified RegExp matches the control value
  */
 export interface FormConditionMatches {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     /**
      * RegExp to match against the control value
      */
@@ -100,7 +113,7 @@ export interface FormConditionMatches {
  * Met when one of the controls (array/list) values equals the specified value
  */
 export interface FormConditionContains {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     contains: FormCompareValue;
 }
 
@@ -108,7 +121,7 @@ export interface FormConditionContains {
  * Met when the controls value equals one of the specified values
  */
 export interface FormConditionIncludedIn {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     includedIn: [FormCompareValue, ...FormCompareValue[]];
 }
 
@@ -116,7 +129,7 @@ export interface FormConditionIncludedIn {
  * Met when the control value is (excluding) bigger than the specified value
  */
 export interface FormConditionBiggerThan {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     biggerThan: number;
 }
 
@@ -124,7 +137,7 @@ export interface FormConditionBiggerThan {
  * Met when the control value is (excluding) lower than the specified value
  */
 export interface FormConditionLowerThan {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     lowerThan: number;
 }
 
@@ -132,7 +145,7 @@ export interface FormConditionLowerThan {
  * Met when the control value is or isn't empty/null
  */
 export interface FormConditionEmpty {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     empty: boolean;
 }
 
@@ -140,7 +153,7 @@ export interface FormConditionEmpty {
  * Met when the control is or isn't visible
  */
 export interface FormConditionVisible {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     visible: boolean;
 }
 
@@ -148,6 +161,6 @@ export interface FormConditionVisible {
  * Met when the control is or isn't disabled
  */
 export interface FormConditionDisabled {
-    source: FormConditionControlSource;
+    source: FormConditionSource;
     disabled: boolean;
 }

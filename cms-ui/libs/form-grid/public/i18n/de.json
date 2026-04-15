@@ -44,8 +44,9 @@
         "translation_description": "Beschreibung",
         "translation_summary": "Zusammenfassung",
         "translation_static_option_label": "Optionsbezeichnung",
-        "condition_source_type": "Bedingung: Element Typ",
-        "condition_source_schema": "Bedingung: Element",
+        "condition_source_type": "Bedingung: Quelltyp",
+        "condition_source_schema": "Bedingung: Schema Attribut",
+        "condition_source_control": "Bedingung: Eingabe Element",
         "condition_equals_compare_value": "Bedingung: Vergleichswert"
     }
 }

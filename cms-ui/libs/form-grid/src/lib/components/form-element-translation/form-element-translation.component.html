@@ -41,56 +41,30 @@
             (valueChange)="updateSummary($event)"
         ></gtx-i18n-input>
 
-        @if (staticOptions().length > 0) {
-            @for (opt of staticOptions(); track opt.value) {
-                <gtx-i18n-input
-                    [label]="('form_grid.translation_static_option_label' | gtxI18n) + ': ' + opt.value"
-                    [value]="opt.label"
-                    [language]="selectedLanguage()"
-                    [availableLanguages]="languages()"
-                    [disabled]="mode() !== FormGridEditMode.FULL"
-                    (valueChange)="updateStaticOptionLabel($index, $event)"
-                ></gtx-i18n-input>
-            }
+        @if (elementSchema()) {
+            <gtx-dynamic-form-translations
+                [languages]="languages()"
+                [selectedLanguage]="selectedLanguage()"
+                [disabled]="mode() !== FormGridEditMode.FULL"
+                [settings]="schemaSettings()"
+                [data]="elementSchema()!.formGridOptions || {}"
+                (dataChange)="updateSchemaOptions($event)"
+            />
         }
     </div>
 
-    @if (translationSettings().length > 0) {
+    @if (elementSettings().length > 0) {
         <div class="translation-settings">
             <span class="translation-section-title">{{ 'form_grid.translation_section_settings' | gtxI18n }}</span>
 
-            @if (optionsSettings().length > 0) {
-                @for (setting of optionsSettings(); track setting.id) {
-                    <div class="option-translation">
-                        <span class="option-translation-title">{{ setting.labelI18n | gtxI18nObject }}</span>
-
-                        <div class="option-translation-entries">
-                            @for (opt of element().formGridOptions?.[setting.id] || []; track opt.value) {
-                                <gtx-i18n-input
-                                    class="option-translation-input"
-                                    [label]="opt.value"
-                                    [value]="opt.label"
-                                    [language]="selectedLanguage()"
-                                    [availableLanguages]="languages()"
-                                    [disabled]="mode() !== FormGridEditMode.FULL"
-                                    (valueChange)="updateOptionLabel(setting.id, $index, $event)"
-                                ></gtx-i18n-input>
-                            }
-                        </div>
-                    </div>
-                }
-            }
-
-            @for (setting of translationSettings(); track setting.id) {
-                <gtx-i18n-input
-                    [label]="setting.labelI18n | gtxI18nObject"
-                    [value]="$any(element().formGridOptions)[setting.id]"
-                    [language]="selectedLanguage()"
-                    [availableLanguages]="languages()"
-                    [disabled]="mode() !== FormGridEditMode.FULL"
-                    (valueChange)="updateTranslationSetting(setting.id, $event)"
-                ></gtx-i18n-input>
-            }
+            <gtx-dynamic-form-translations
+                [languages]="languages()"
+                [selectedLanguage]="selectedLanguage()"
+                [disabled]="mode() !== FormGridEditMode.FULL"
+                [settings]="elementSettings()"
+                [data]="element().formGridOptions || {}"
+                (dataChange)="updateElementOptions($event)"
+            />
         </div>
     }
 </div>

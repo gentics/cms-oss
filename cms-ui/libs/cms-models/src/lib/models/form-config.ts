@@ -126,14 +126,7 @@ export type FormReferenceSetting = FormBaseSetting & {
     titleI18n?: I18nString;
 };
 
-export enum FormOptionsType {
-    STATIC = 'static',
-    DYNAMIC = 'dynamic',
-}
-
-export type FormControlConfiguration = FormElementConfiguration & FormControlAggregateSettings & {
-    optionsType?: FormOptionsType;
-};
+export type FormControlConfiguration = FormElementConfiguration & FormControlAggregateSettings;
 
 /**
  * Aggregation allows a group of controls to be entered multiple times. The value will be aggregated into a list of objects

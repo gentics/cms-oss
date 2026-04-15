@@ -181,11 +181,11 @@
                         @if (selectedElementSchema() != null) {
                             <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
                                 <gtx-form-element-definition
+                                    [config]="config()"
                                     [schema]="schema()"
-                                    [controls]="config().controls"
                                     [elementConfig]="selectedElementConfiguration()!"
                                     [elementSchema]="selectedElementSchema()!"
-                                    [disabled]="mode() !== FormGridEditMode.FULL"
+                                    [mode]="mode()"
                                     (elementSchemaChange)="updateElementSchema($event)"
                                 ></gtx-form-element-definition>
                             </gtx-tab>

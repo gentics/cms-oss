@@ -360,6 +360,20 @@ export interface FormSchemaProperty {
      * Unknown
      */
     formPage?: number;
+    /**
+     * Options of the form-grid which are only for backend evaluation
+     */
+    formGridOptions?: {
+        /**
+         * The options of a select/cataloge
+         */
+        selectOptions?: FormSelectOptionValue[];
+        /**
+         * The default value for the component.
+         * Used only in internal forms.
+         */
+        defaultValue?: unknown;
+    };
 
     /*
      * Type Specific settings
@@ -392,10 +406,6 @@ export interface FormSchemaProperty {
      * Which sub-properties this property manages.
      */
     properties?: FormSchemaProperties;
-    /**
-     * Static options for select-type controls, with translatable labels.
-     */
-    staticOptions?: FormSelectOptionValue[];
 }
 
 export interface FormPage {

@@ -45,7 +45,7 @@
             @for (opt of staticOptions(); track opt.value) {
                 <gtx-i18n-input
                     [label]="('form_grid.translation_static_option_label' | gtxI18n) + ': ' + opt.value"
-                    [value]="opt.labelI18n"
+                    [value]="opt.label"
                     [language]="selectedLanguage()"
                     [availableLanguages]="languages()"
                     [disabled]="mode() !== FormGridEditMode.FULL"

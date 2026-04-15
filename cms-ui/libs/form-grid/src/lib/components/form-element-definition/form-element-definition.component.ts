@@ -5,7 +5,7 @@ import {
     FormPropertyValidation,
     FormSchema,
     FormSchemaProperty,
-    FormSelectOption,
+    FormSelectOptionValue,
 } from '@gentics/cms-models';
 import { toValidNumber } from '@gentics/ui-core';
 
@@ -66,7 +66,7 @@ export class FormElementDefinitionComponent {
         this.updateValidation({ maxLength: toValidNumber(value) ?? undefined });
     }
 
-    public updateStaticOptions(value: FormSelectOption[]): void {
+    public updateStaticOptions(value: FormSelectOptionValue[]): void {
         this.updateElementSchema({ staticOptions: value });
     }
 

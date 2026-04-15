@@ -441,7 +441,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                     .filter((key: number) => !isNaN(key));
 
                 const updatedItems: RepoItem[] = this.items$.value.map((item: RepoItem) => {
-                    const clone = cloneWithSymbols(item);
+                    const clone = cloneWithSymbols(item) as any;
                     if (clone.type === type) {
                         if (idsWithUsage.includes(clone.id)) {
                             clone.usage = usage[clone.id];

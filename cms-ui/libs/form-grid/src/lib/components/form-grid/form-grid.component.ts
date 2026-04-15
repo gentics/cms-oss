@@ -99,25 +99,54 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     });
 
     /** If the left sidebar is expanded */
-    public leftSidebarExpanded = true;
+    public readonly leftSidebarExpanded = signal(true);
     /** If the right sidebar is expanded */
-    public rightSidebarExpanded = false;
+    public readonly rightSidebarExpanded = signal(false);
 
     /* SELECTION & EDITING
      * ===================================================================== */
 
-    /** The currently selected element, which may be getting edited. */
-    public selectedElement: FormElement | null = null;
-    /** Which type the element is */
-    public selectedElementType: string | null = null;
+    /** The ID of the current selected element. */
+    public readonly selectedElementId = signal<string | null>(null);
     /** The ID of the container where the selectedElement is contained in. */
     public selectedElementContainerId: string | null = null;
-    /** The configuration of the currently selected element */
-    public selectedElementConfiguration: FormElementConfiguration | null = null;
+
+    /** The currently selected element, which may be getting edited. */
+    public readonly selectedElement = computed(() => {
+        const id = this.selectedElementId();
+        return id == null ? null : this.elementMap()[id];
+    });
+
     /** The schema definition of the selected element (if it has one) */
-    public selectedElementSchema: FormSchemaProperty | null = null;
-    /** Editable copy of the selected element's schema property Null for formgrid blocks (Text, Image, Spacer) which have no schema entry. */
-    public selectedElementSchemaDraft: Partial<FormSchemaProperty> | null = null;
+    public readonly selectedElementSchema = computed(() => {
+        const id = this.selectedElementId();
+        return id == null ? null : (this.schema()?.properties || {})?.[id];
+    });
+
+    /** Which type the element is */
+    public selectedElementType = computed(() => {
+        const element = this.selectedElement();
+        if (element == null) {
+            return null;
+        }
+
+        const schema = this.selectedElementSchema();
+        return schema == null ? element.formGridOptions!.type : schema.type;
+    });
+
+    /** The configuration of the currently selected element */
+    public readonly selectedElementConfiguration = computed(() => {
+        const element = this.selectedElement();
+        if (element == null) {
+            return null;
+        }
+
+        const schema = this.selectedElementSchema();
+
+        return schema == null
+            ? (this.config().blocks || {})[element.formGridOptions!.type]
+            : this.config().controls[schema.type];
+    });
 
     /* PALETTE
      * ===================================================================== */
@@ -186,11 +215,11 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     }
 
     public toggleLeftSidebar(): void {
-        this.leftSidebarExpanded = !this.leftSidebarExpanded;
+        this.leftSidebarExpanded.update((val) => !val);
     }
 
     public toggleRightSidebar(): void {
-        this.rightSidebarExpanded = !this.rightSidebarExpanded;
+        this.rightSidebarExpanded.update((val) => !val);
     }
 
     public paletteDragStart(event: DragEvent, id: string, element: FormElementConfiguration): void {
@@ -272,14 +301,17 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.updatePageElements(newElements);
     }
 
-    public onDefinitionChange(draft: Partial<FormSchemaProperty>): void {
-        this.selectedElementSchemaDraft = draft;
-
-        if (!this.selectedElement?.id) {
+    public updateElementSchema(elementSchema: FormSchemaProperty | null): void {
+        if (elementSchema == null) {
             return;
         }
 
-        const elementId = this.selectedElement.id;
+        const elementId = this.selectedElementId();
+
+        if (!elementId) {
+            return;
+        }
+
         const currentSchema = this.schema();
 
         if (!currentSchema?.properties) {
@@ -289,14 +321,14 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         const copy = structuredClone(currentSchema);
 
         if (copy.properties[elementId] != null) {
-            Object.assign(copy.properties[elementId], this.selectedElementSchemaDraft);
+            Object.assign(copy.properties[elementId], elementSchema);
             this.updateSchema(copy);
             return;
         }
 
         for (const innerProp of Object.values(copy.properties)) {
             if (innerProp.properties?.[elementId] != null) {
-                Object.assign(innerProp.properties[elementId], this.selectedElementSchemaDraft);
+                Object.assign(innerProp.properties[elementId], elementSchema);
                 this.updateSchema(copy);
                 return;
             }
@@ -338,29 +370,17 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
 
         // If we had no element before, then the sidebar should be open fully
-        if (this.selectedElement == null) {
-            this.rightSidebarExpanded = true;
+        if (this.selectedElementId() == null) {
+            this.rightSidebarExpanded.set(true);
         }
 
-        this.selectedElement = data.element;
-        this.selectedElementType = elementSchema != null
-            ? elementSchema.type
-            : blockType;
+        this.selectedElementId.set(data.element.id);
         this.selectedElementContainerId = data.containerId;
-        this.selectedElementConfiguration = controlConfig || blockConfig;
-        this.selectedElementSchema = elementSchema;
-        this.selectedElementSchemaDraft = elementSchema
-            ? structuredClone(elementSchema)
-            : null;
     }
 
     public clearSelectedElement(): void {
-        this.selectedElement = null;
-        this.selectedElementType = null;
+        this.selectedElementId.set(null);
         this.selectedElementContainerId = null;
-        this.selectedElementConfiguration = null;
-        this.selectedElementSchema = null;
-        this.selectedElementSchemaDraft = null;
     }
 
     // TODO: Do it more angular like, as creating a new untracked HTMLElement is not a great idea

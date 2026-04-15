@@ -15,6 +15,7 @@
         "definition_mandatory": "Pflichtfeld",
         "definition_sync_on_change": "Synchronisierung bei Änderung",
         "definition_multivalue": "Mehrfachwert",
+        "definition_condition": "Bedingung",
         "title_delete_element": "Element entfernen",
         "confirm_element_delete": "Möchten Sie das element wirklich entfernen?",
         "view_mode_tab_editor": "Editor",
@@ -39,6 +40,9 @@
         "translation_label": "Label",
         "translation_description": "Beschreibung",
         "translation_summary": "Zusammenfassung",
-        "translation_static_option_label": "Optionsbezeichnung"
+        "translation_static_option_label": "Optionsbezeichnung",
+        "condition_source_type": "Bedingung: Element Typ",
+        "condition_source_schema": "Bedingung: Element",
+        "condition_equals_compare_value": "Bedingung: Vergleichswert"
     }
 }

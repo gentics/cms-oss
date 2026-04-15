@@ -1,3 +1,5 @@
+@import 'ui-core/src/styles/variables';
+
 :host {
     display: block;
 }
@@ -5,19 +7,31 @@
 .translation-section {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 4px 0;
+    gap: 1rem;
+    padding: 0.5rem 0.5rem 0.5rem 0;
 }
 
 .translation-section-title {
     display: block;
     font-weight: bold;
-    margin-bottom: 8px;
 }
 
 .translation-definition,
 .translation-settings {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 1rem;
+}
+
+.option-translation {
+    .option-translation-title {
+        font-size: 0.8rem;
+        color: $gtx-color-dark-gray;
+    }
+
+    .option-translation-entries {
+        border: 1px solid $gtx-color-light-gray;
+        border-radius: 3px;
+        padding: 0.5rem;
+    }
 }

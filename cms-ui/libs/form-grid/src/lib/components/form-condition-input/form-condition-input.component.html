@@ -1,0 +1,49 @@
+@if (SOURCE_TYPE_OPTIONS.length > 1) {
+    <gtx-select
+        class="source-type-selector"
+        [label]="'form_grid.condition_source_type' | gtxI18n"
+        [value]="sourceType()"
+        (valueChange)="updateSourceType($event)"
+    >
+        @for (option of SOURCE_TYPE_OPTIONS; track option.value) {
+            <gtx-option [value]="option.value">{{ option.translationKey | gtxI18n }}</gtx-option>
+        }
+    </gtx-select>
+}
+
+@if (sourceType() === 'schema') {
+    <div class="schema-source-container">
+        <gtx-select
+            class="source-target-selector"
+            [label]="'form_grid.condition_source_schema' | gtxI18n"
+            [value]="$any(value)?.source?.schema"
+            [clearable]="true"
+            (valueChange)="updateSourceTarget($event)"
+        >
+            @for (option of schemaOptions(); track option.value) {
+                <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
+            }
+        </gtx-select>
+
+        @if ($any(value)?.source?.schema) {
+            <gtx-input
+                class="schema-compare"
+                [label]="'form_grid.condition_equals_compare_value' | gtxI18n"
+                [value]="$any(value)?.equals"
+                (valueChange)="updateCompareValue($event)"
+            />
+        }
+    </div>
+} @else if (sourceType() === 'setting') {
+    <gtx-select
+        class="source-target-selector"
+        [label]="'form_grid.condition_source_setting' | gtxI18n"
+        [value]="$any(value)?.source?.setting"
+        (valueChange)="updateSourceTarget($event)"
+    >
+        @for (option of settingOptions(); track option.value) {
+            <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
+        }
+    </gtx-select>
+}
+

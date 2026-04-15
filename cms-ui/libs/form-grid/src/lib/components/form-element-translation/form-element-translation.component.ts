@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, effect, input, model, out
 import {
     FormElement,
     FormElementConfiguration,
+    FormOptionsSetting,
     FormSchemaProperty,
+    FormSelectOption,
     FormSettingType,
-    FormStaticOption,
     I18nString,
 } from '@gentics/cms-models';
 import { FormGridEditMode } from '../../models';
@@ -22,12 +23,11 @@ export class FormElementTranslationComponent {
 
     public element = model.required<FormElement>();
     public elementConfig = input.required<FormElementConfiguration>();
-    public schema = input<Partial<FormSchemaProperty> | null>(null);
+    public elementSchema = model<FormSchemaProperty | null>(null);
     public languages = input.required<string[]>();
     public mode = input.required<FormGridEditMode>();
 
     public hasMissingTranslationsChange = output<boolean>();
-    public schemaChange = output<Partial<FormSchemaProperty>>();
 
     public selectedLanguage = signal<string>('');
 
@@ -35,8 +35,13 @@ export class FormElementTranslationComponent {
         this.elementConfig().settings?.filter((s) => s.type === FormSettingType.TRANSLATION) ?? [],
     );
 
-    public staticOptions = computed<FormStaticOption[]>(() =>
-        this.schema()?.staticOptions ?? [],
+    public staticOptions = computed<FormSelectOption[]>(() =>
+        this.elementSchema()?.staticOptions ?? [],
+    );
+
+    public optionsSettings = computed<FormOptionsSetting[]>(() =>
+        (this.elementConfig().settings || [])
+            .filter((setting) => setting.type === FormSettingType.OPTIONS),
     );
 
     public missingByLanguage = computed<Record<string, boolean>>(() => {
@@ -79,7 +84,7 @@ export class FormElementTranslationComponent {
     public updateSummary(value: I18nString | null): void {
         this.element.update((el) => ({
             ...el,
-            formGridOptions: { ...el.formGridOptions, valueSummary: value ?? undefined },
+            formGridOptions: { ...el.formGridOptions, valueSummary: value ?? undefined } as any,
         }));
     }
 
@@ -92,13 +97,24 @@ export class FormElementTranslationComponent {
     }
 
     public updateStaticOptionLabel(index: number, value: I18nString | null): void {
-        const current = this.schema();
+        const current = this.elementSchema();
         if (current == null) {
             return;
         }
         const opts = structuredClone(current.staticOptions ?? []);
-        opts[index] = { ...opts[index], label: value ?? {} };
-        this.schemaChange.emit({ ...current, staticOptions: opts });
+        opts[index] = { ...opts[index], labelI18n: value ?? {} };
+        this.elementSchema.set({ ...current, staticOptions: opts });
+    }
+
+    public updateOptionLabel(settingId: string, index: number, value: I18nString | null): void {
+        this.element.update((el) => {
+            const copy = structuredClone(el);
+            const opt = (copy.formGridOptions as any)?.[settingId]?.[index];
+            if (opt != null) {
+                opt.labelI18n = value;
+            }
+            return copy;
+        });
     }
 
     private isMissingForLanguage(lang: string): boolean {
@@ -109,7 +125,10 @@ export class FormElementTranslationComponent {
         if (el.description != null && !el.description?.[lang]) {
             return true;
         }
-        if (this.staticOptions().some((opt) => !opt.label?.[lang])) {
+        if (this.optionsSettings().some((setting) => {
+            const options: FormSelectOption[] = (el.formGridOptions as any)?.[setting.id] || [];
+            return options.some((option) => !option.labelI18n[lang]);
+        })) {
             return true;
         }
         if (this.translationSettings().some((s) => !(el.formGridOptions as any)?.[s.id]?.[lang])) {

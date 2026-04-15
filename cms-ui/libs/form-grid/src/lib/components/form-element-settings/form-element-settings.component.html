@@ -1,4 +1,15 @@
 <div class="settings-container">
+    <gtx-form-condition-input
+        class="settings-entry"
+        [label]="'form_grid.definition_condition' | gtxI18n"
+        [schema]="schema()"
+        [elementMap]="elementMap()"
+        [element]="element()"
+        [elementConfig]="elementConfig()"
+        [value]="element()?.formGridOptions?.condition"
+        (valueChange)="updateSettingValue('condition', $event)"
+    />
+
     @for (setting of (elementConfig().settings || []); track setting.id) {
         @switch (setting.type) {
             @case ("string") {
@@ -136,7 +147,7 @@
                     [includeMlId]="setting.allowedMarkupLanguageIds"
                     [browseTitle]="setting.titleI18n | gtxI18nObject"
                     [value]="$any(element().formGridOptions)[setting.id]"
-                    (valueChange)="updateSettingValue(setting.id, $event)"
+                    (valueChange)="updateReferenceValue(setting.id, $event)"
                 ></gtx-browse-box>
             }
 

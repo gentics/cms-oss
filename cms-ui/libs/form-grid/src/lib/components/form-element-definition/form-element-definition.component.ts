@@ -1,5 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
-import { FormControlConfiguration, FormPropertyValidation, FormSchemaProperty } from '@gentics/cms-models';
+import {
+    FormControlConfiguration,
+    FormOptionsType,
+    FormPropertyValidation,
+    FormSchema,
+    FormSchemaProperty,
+    FormSelectOption,
+} from '@gentics/cms-models';
 import { toValidNumber } from '@gentics/ui-core';
 
 @Component({
@@ -11,31 +18,36 @@ import { toValidNumber } from '@gentics/ui-core';
 })
 export class FormElementDefinitionComponent {
 
+    public readonly FormOptionsType = FormOptionsType;
+
+    public readonly schema = input.required<FormSchema>();
+    public readonly controls = input.required<Record<string, FormControlConfiguration>>();
+
+    public readonly elementSchema = model.required<FormSchemaProperty>();
+    public readonly elementConfig = input.required<FormControlConfiguration>();
+
     public readonly disabled = input.required<boolean>();
-    public schemaDraft = model.required<Partial<FormSchemaProperty>>();
-    public controls = input.required<Record<string, FormControlConfiguration>>();
-    public restricted = input.required<boolean>();
 
     public hasReadonlySettings = computed(() => {
-        const d = this.schemaDraft();
-        return [d.dateOnly, d.precision, d.searchReferenceValueMinLength, d.autoCompleteMinLength].some((v) => v != null);
+        const ref = this.elementSchema();
+        return [ref.dateOnly, ref.precision, ref.searchReferenceValueMinLength, ref.autoCompleteMinLength].some((v) => v != null);
     });
 
-    public updateDraft(patch: Partial<FormSchemaProperty>): void {
-        this.schemaDraft.set({ ...this.schemaDraft(), ...patch });
+    public updateElementSchema(patch: Partial<FormSchemaProperty>): void {
+        this.elementSchema.set({ ...this.elementSchema(), ...patch });
     }
 
     public updateValidation(patch: Partial<FormPropertyValidation>): void {
-        this.updateDraft({ validation: { ...this.schemaDraft().validation, ...patch } });
+        this.updateElementSchema({ validation: { ...this.elementSchema().validation, ...patch } });
     }
 
     public updateType(value: string | number | (string | number)[] | null): void {
         const type = Array.isArray(value) ? value[0] : value;
-        this.updateDraft({ type: type != null ? `${type}` : undefined });
+        this.updateElementSchema({ type: type != null ? `${type}` : undefined });
     }
 
     public updateName(value: string | number | null): void {
-        this.updateDraft({ name: value != null ? `${value}` : undefined });
+        this.updateElementSchema({ name: value != null ? `${value}` : undefined });
     }
 
     public updateValidationMinValue(value: string | number | null): void {
@@ -54,11 +66,15 @@ export class FormElementDefinitionComponent {
         this.updateValidation({ maxLength: toValidNumber(value) ?? undefined });
     }
 
+    public updateStaticOptions(value: FormSelectOption[]): void {
+        this.updateElementSchema({ staticOptions: value });
+    }
+
     public updateValidationRegex(value: string | number | null): void {
         const regex = value != null ? `${value}` : undefined;
         this.updateValidation({
             regexValidation: regex
-                ? { errorMessage: this.schemaDraft().validation?.regexValidation?.errorMessage ?? {}, regex }
+                ? { errorMessage: this.elementSchema().validation?.regexValidation?.errorMessage ?? {}, regex }
                 : undefined,
         });
     }

@@ -7,6 +7,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import {
+    FormConditionInputComponent,
     FormElementDefinitionComponent,
     FormElementSettingsComponent,
     FormElementTranslationComponent,
@@ -17,6 +18,7 @@ import {
 } from './components';
 
 const COMPONENTS = [
+    FormConditionInputComponent,
     FormElementDefinitionComponent,
     FormElementSettingsComponent,
     FormElementTranslationComponent,

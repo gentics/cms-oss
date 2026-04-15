@@ -1,5 +1,5 @@
 import { I18nString } from './common';
-import { Condition } from './form-conditions';
+import { FormCondition } from './form-conditions';
 
 export enum FormSettingType {
     STRING = 'string',
@@ -126,7 +126,14 @@ export type FormReferenceSetting = FormBaseSetting & {
     titleI18n?: I18nString;
 };
 
-export type FormControlConfiguration = FormElementConfiguration & FormControlAggregateSettings;
+export enum FormOptionsType {
+    STATIC = 'static',
+    DYNAMIC = 'dynamic',
+}
+
+export type FormControlConfiguration = FormElementConfiguration & FormControlAggregateSettings & {
+    optionsType?: FormOptionsType;
+};
 
 /**
  * Aggregation allows a group of controls to be entered multiple times. The value will be aggregated into a list of objects
@@ -268,7 +275,7 @@ export interface FormBaseSetting {
     /**
      * Which condition needs to be met, in order for this setting to be displayed to the editor.
      */
-    condition?: Condition;
+    condition?: FormCondition;
 }
 
 export interface FormSelectOption {

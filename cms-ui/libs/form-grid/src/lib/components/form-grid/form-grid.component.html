@@ -2,10 +2,10 @@
     class="editor-shell"
     [ngClass]="'mode-' + mode()"
     [class.palette-dragging]="isPaletteDragging"
-    [class.left-panel-expanded]="viewMode() === FormGridViewMode.EDITOR && leftSidebarExpanded"
-    [class.right-panel-wide]="selectedElement != null && selectedElementConfiguration != null && rightSidebarExpanded"
+    [class.left-panel-expanded]="viewMode() === FormGridViewMode.EDITOR && leftSidebarExpanded()"
+    [class.right-panel-wide]="selectedElement() != null && selectedElementConfiguration() != null && rightSidebarExpanded()"
     [class.no-left-panel]="viewMode() === FormGridViewMode.PREVIEW"
-    [class.no-right-panel]="selectedElement == null || selectedElementConfiguration == null"
+    [class.no-right-panel]="selectedElement() == null || selectedElementConfiguration() == null"
     [class.editor-active]="viewMode() === FormGridViewMode.EDITOR"
     [class.preview-active]="viewMode() === FormGridViewMode.PREVIEW"
 >
@@ -13,7 +13,7 @@
         <aside
             class="editor-panel editor-panel--left"
             aria-label="Linkes Panel"
-            [class.expanded]="leftSidebarExpanded"
+            [class.expanded]="leftSidebarExpanded()"
         >
 
             <div class="panel-header">
@@ -132,7 +132,7 @@
 
                     [elements]="elements()"
                     (elementsChange)="updatePageElements($event)"
-                    [selectedElement]="selectedElement"
+                    [selectedElement]="selectedElement()"
                     [selectedElementContainerId]="selectedElementContainerId"
                     (elementSelect)="setSelectedElement($event)"
                     [schema]="schema()"
@@ -155,11 +155,11 @@
             Welcome to preview!
         </main>
 
-        @if (selectedElement && selectedElementConfiguration) {
+        @if (selectedElement() && selectedElementConfiguration()) {
             <aside
                 class="editor-panel editor-panel--right"
                 aria-label="Rechtes Panel"
-                [class.expanded]="rightSidebarExpanded"
+                [class.expanded]="rightSidebarExpanded()"
             >
                 <div class="panel-header">
                     <button
@@ -172,43 +172,48 @@
                     </button>
 
                     <div class="panel-header-title">{{ 'form_grid.edit_element_title' | gtxI18n:{
-                        label: selectedElement.label | gtxI18nObject
+                        label: selectedElement()?.label | gtxI18nObject
                     } }}</div>
                 </div>
 
                 <div class="panel-content">
                     <gtx-tabs class="element-tabs">
-                        @if (selectedElementSchemaDraft != null) {
+                        @if (selectedElementSchema() != null) {
                             <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
                                 <gtx-form-element-definition
-                                    [schemaDraft]="selectedElementSchemaDraft"
-                                    [disabled]="mode() !== FormGridEditMode.FULL"
-                                    (schemaDraftChange)="onDefinitionChange($event)"
+                                    [schema]="schema()"
                                     [controls]="config().controls"
-                                    [restricted]="mode() !== FormGridEditMode.FULL"
+                                    [elementConfig]="selectedElementConfiguration()!"
+                                    [elementSchema]="selectedElementSchema()!"
+                                    [disabled]="mode() !== FormGridEditMode.FULL"
+                                    (elementSchemaChange)="updateElementSchema($event)"
                                 ></gtx-form-element-definition>
                             </gtx-tab>
                         }
+
                         <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
                             <gtx-form-element-settings
                                 [config]="config()"
-                                [element]="selectedElement"
+                                [schema]="schema()"
+                                [elementMap]="elementMap()"
+                                [element]="selectedElement()!"
+                                [elementConfig]="selectedElementConfiguration()!"
                                 [disabled]="mode() !== FormGridEditMode.FULL"
                                 (elementChange)="upsetElementChanges($event)"
-                                [elementConfig]="selectedElementConfiguration"
                             ></gtx-form-element-settings>
                         </gtx-tab>
+
                         <gtx-tab
                             [id]="EditTabs.TRANSLATIONS"
                             [icon]="hasMissingTranslations() ? 'warning' : ''"
                             [title]="'form_grid.edit_tab_translations' | gtxI18n"
                         >
                             <gtx-form-element-translation
-                                [element]="selectedElement"
+                                [element]="selectedElement()!"
                                 (elementChange)="upsetElementChanges($event)"
-                                [elementConfig]="selectedElementConfiguration"
-                                [schema]="selectedElementSchemaDraft"
-                                (schemaChange)="onDefinitionChange($event)"
+                                [elementConfig]="selectedElementConfiguration()!"
+                                [elementSchema]="selectedElementSchema()!"
+                                (elementSchemaChange)="updateElementSchema($event)"
                                 [mode]="mode()"
                                 [languages]="languages()"
                                 (hasMissingTranslationsChange)="hasMissingTranslations.set($event)"

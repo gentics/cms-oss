@@ -26,27 +26,24 @@
             </span>
         } @else {
             <span class="count-full">
-                @if (pageSize() >= totalCount() && filterTerm() === '') {
-                    <span class="item-list-status all-items">
-                        {{ 'editor.item_count_header_simple' | gtxI18n: {
-                            count: totalCount(),
-                            items: ('common.type_' + (external() ? 'external_form' : 'form')) | gtxI18n
-                        } }}
-                    </span>
-                }
-                @if (pageSize() < totalCount() && filterTerm() === '') {
-                    <span class="item-list-status partial-items">
-                        @let count = (totalCount() - (currentPage() - 1) * pageSize() < pageSize())
-                                ? totalCount() - (currentPage() - 1) * pageSize()
-                                : pageSize();
-                        {{ 'editor.item_count_header_partial' | gtxI18n: {
-                            count: count,
-                            total: totalCount(),
-                            items: ('common.type_' + (external() ? 'external_form' : 'form') + (count !== 1 ? 's_dative' : '')) | gtxI18n,
-                        } }}
-                    </span>
-                }
-                @if (filterTerm() !== '') {
+                @if (filterTerm() === '') {
+                    @if (pageSize() >= totalCount()) {
+                        <span class="item-list-status all-items">
+                            {{ 'editor.item_count_header_simple' | gtxI18n: {
+                                count: totalCount(),
+                                items: ('common.type_' + (external() ? 'external_form' : 'form')) | gtxI18n
+                            } }}
+                        </span>
+                    } @else {
+                        <span class="item-list-status partial-items">
+                            {{ 'editor.item_count_header_partial' | gtxI18n: {
+                                count: currentPageItems().length,
+                                total: totalCount(),
+                                items: ('common.type_' + (external() ? 'external_form' : 'form') + (currentPageItems().length !== 1 ? 's_dative' : '')) | gtxI18n,
+                            } }}
+                        </span>
+                    }
+                } @else {
                     <span class="item-list-status filtering">
                         @let count = (currentPageItems() | filterItems:filterTerm():false)?.length;
                         {{ 'editor.item_count_header_matching' | gtxI18n: {

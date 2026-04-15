@@ -16,6 +16,8 @@ export type ItemInNode<T extends Item<Raw> = Item<Raw>> = T & {
     nodeId: number;
 };
 
+export type ItemRef<T extends Item<Raw> = Item<Raw>> = Pick<ItemInNode<T>, 'id' | 'nodeId' | 'type' | 'name'>;
+
 /** Represents an Tag inside a container, as returned by the RepositoryBrowser. */
 export type TagInContainer<T extends Page<Raw> | Template<Raw> = Page<Raw> | Template<Raw>> = Tag & {
     /** The parent container (reference added by the RepositoryBrowser). */

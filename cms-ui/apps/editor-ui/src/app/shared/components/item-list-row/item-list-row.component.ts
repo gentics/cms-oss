@@ -79,6 +79,9 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
     public itemType: FolderItemType;
 
     @Input()
+    public external = false;
+
+    @Input()
     public permissions: FolderPermissionData;
 
     @Input()

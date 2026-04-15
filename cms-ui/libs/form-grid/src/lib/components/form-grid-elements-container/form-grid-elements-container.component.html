@@ -80,7 +80,7 @@
                     <div class="item-primary">
                         <div class="actions-container">
                             <span class="tag tag-type">
-                                <span class="tag-text">{{ element.label | gtxI18nObject }}</span>
+                                <span class="tag-text">{{ displayItem.config.labelI18n | gtxI18nObject }}</span>
                             </span>
 
                             @if (!displayItem.isControl || mode() === FormGridEditMode.FULL) {

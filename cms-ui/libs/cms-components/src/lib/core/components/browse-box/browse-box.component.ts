@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
-import { AllowedItemSelectionType, Item, ItemInNode, ItemRequestOptions, MarkupLanguageType } from '@gentics/cms-models';
+import { AllowedItemSelectionType, Item, ItemInNode, ItemRef, ItemRequestOptions, MarkupLanguageType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseFormElementComponent, cancelEvent } from '@gentics/ui-core';
-import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices } from '../../providers/gcms-ui-services/gcms-ui-services';
 import { map } from 'rxjs';
+import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices } from '../../providers/gcms-ui-services/gcms-ui-services';
 
 /**
  * Component which wrapps the repository-browser API and allows for items to be picked.
@@ -129,7 +129,7 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
     /** The breadrcrumbs/path of the item(s) */
     public breadcrumbs: string[] = [];
 
-    private cachedItems: Record<string, Item> = {};
+    private cachedItems: Record<string, ItemRef> = {};
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -216,6 +216,12 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
     }
 
     protected loadItemIntoCache(item: ItemInNode, hash: string): void {
+        // If the item is already "loaded", or at least the name is available, then we store it as it is.
+        if (item.name) {
+            this.cachedItems[hash] = item;
+            return;
+        }
+
         let loader: Promise<Item> | null = null;
         const options: ItemRequestOptions = {};
         if (Number.isInteger(item.nodeId) && item.nodeId !== 0) {
@@ -259,8 +265,13 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
             return;
         }
 
-        loader.then((item) => {
-            this.cachedItems[hash] = item;
+        loader.then((loadedItem) => {
+            this.cachedItems[hash] = {
+                id: item.id,
+                nodeId: item.nodeId,
+                type: item.type,
+                name: loadedItem.name,
+            };
             this.updateDisplayName();
             this.changeDetector.markForCheck();
         });

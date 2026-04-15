@@ -1,5 +1,7 @@
 /* eslint-disable jsdoc/no-undefined-types */
 import { I18nString } from './common';
+import { FormCondition } from './form-conditions';
+import { FormSelectOption } from './form-config';
 import { InheritableItem, ItemVersion } from './item';
 import { Raw } from './type-util';
 import { User } from './user';
@@ -313,11 +315,6 @@ export interface FormUISchema {
 
 export type FormSchemaProperties = Record<string, FormSchemaProperty>;
 
-export interface FormStaticOption {
-    value: string;
-    label: I18nString;
-}
-
 export interface FormSchemaProperty {
     /**
      * The type of this property
@@ -389,7 +386,7 @@ export interface FormSchemaProperty {
     /**
      * Static options for select-type controls, with translatable labels.
      */
-    staticOptions?: FormStaticOption[];
+    staticOptions?: FormSelectOption[];
 }
 
 export interface FormPage {
@@ -462,9 +459,14 @@ export interface FormGridImageOptions {
 }
 
 export interface FormGridOptions {
-    /** @deprecated Will be removed */
-    dependsOn?: string;
-
+    /** The type of the element */
+    type: string;
+    /**
+     * Condition which needs to match in order for this element to be available.
+     * Currently only equals is supported, while the definition for other conditions
+     * already exists.
+     */
+    condition?: FormCondition;
     /**
      * How many columns this element should use in the grid
      */
@@ -484,7 +486,6 @@ export interface FormGridOptions {
     disableDelete?: boolean;
     showFilter?: boolean;
     showOnlyFirstLine?: boolean;
-    type?: string;
     value?: I18nString;
     valueSummary?: I18nString;
     replacementText?: boolean;
@@ -528,6 +529,8 @@ export interface FormGridOptions {
     image?: FormGridImageOptions;
     inForm?: boolean;
     inSummary?: boolean;
+
+    [key: string]: any;
 }
 
 /**

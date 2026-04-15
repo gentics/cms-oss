@@ -11,20 +11,30 @@
 
             @if (formTypeConfigurations) {
                 <div class="flex-row columns small-12">
-                    <gtx-select
-                        [label]="('editor.form_type_label' | gtxI18n) + '*'"
-                        [multiple]="false"
-                        [required]="true"
-                        class="columns small-6"
-                        formControlName="formType"
-                        (valueChange)="setActiveFormType($event)"
-                    >
-                        @for (configEntry of formTypeConfigurations | gtxEntries; track configEntry.key) {
-                            <gtx-option [value]="configEntry.key">
-                                {{ configEntry.value.nameI18n | gtxI18nObject }}
-                            </gtx-option>
-                        }
-                    </gtx-select>
+                    @if (item?.formTypeName) {
+                        <gtx-form-element-container
+                            class="columns small-6"
+                            [readonly]="true"
+                        >
+                            <label>{{ ('editor.form_type_label' | gtxI18n) + '*' }}</label>
+                            <span>{{ item.formTypeName }}</span>
+                        </gtx-form-element-container>
+                    } @else {
+                        <gtx-select
+                            [label]="('editor.form_type_label' | gtxI18n) + '*'"
+                            [multiple]="false"
+                            [required]="true"
+                            class="columns small-6"
+                            formControlName="formType"
+                            (valueChange)="setActiveFormType($event)"
+                        >
+                            @for (configEntry of formTypeConfigurations | gtxEntries; track configEntry.key) {
+                                <gtx-option [value]="configEntry.key">
+                                    {{ configEntry.value.nameI18n | gtxI18nObject }}
+                                </gtx-option>
+                            }
+                        </gtx-select>
+                    }
 
                     @if (activeConfiguration?.flows) {
                         <gtx-select
@@ -166,6 +176,7 @@
                     </gtx-radio-group>
                 } @else {
                     <gtx-browse-box
+                        class="columns small-12"
                         data-action="pick-mail-page"
                         [attr.data-target-id]="form.value.adminEmailPageId"
                         [attr.data-target-node-id]="form.value.adminEmailNodeId"

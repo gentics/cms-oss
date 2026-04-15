@@ -39,6 +39,7 @@ interface DisplayItem {
     schema?: FormSchemaProperty;
 }
 
+const DEFAULT_ELEMENT_SPAN = 12;
 const DROP_ROW_TOLERANCE = 0;
 /**
  * How close (in px) the cursor must be to a container/aggregate item's left or right edge
@@ -69,7 +70,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly pageIndex = input.required<number>();
     public readonly languages = input.required<string[]>();
     public readonly gridSurface = input.required<HTMLElement>();
-    /** Optional whitelist of allowed element types for this container (null/empty = allow all) */
     public whitelist = input<string[] | null>(null);
 
     public readonly schema = model.required<FormSchema>();
@@ -93,8 +93,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
     private paletteDragOverFrame: number | null = null;
     /**
      * Original Y-bounds of the row at the moment resizeNeighbor was activated.
-     * Used to keep the state locked while the cursor stays in that area, preventing
-     * the oscillation caused by the shrunk neighbor reflowing into a previous row.
+     * Used to prevent the oscillation caused by the shrunk neighbor reflowing
+     * into a previous row.
      */
     private lockedResizeRowBounds: { top: number; bottom: number } | null = null;
 
@@ -197,8 +197,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
             return;
         }
 
-        // Whitelist enforcement: if this container has a whitelist, refuse non-allowed types.
-        // We do NOT call cancelEvent here so the event bubbles up to a parent container that may accept it.
         if (!this.isTypeAllowed(this.paletteDragType())) {
             if (event.dataTransfer) {
                 event.dataTransfer.dropEffect = 'none';
@@ -234,8 +232,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         this.paletteDragOverFrame = requestAnimationFrame(() => {
             const currentTarget = this.paletteDropTarget();
 
-            // Flickering defense: lock the hover state if the DOM shifted the placeholder under the cursor
-            // or if we're hitting the specific element we dynamically shrunk to prevent infinite hit-test loops.
+            // for flickering defense purposes
             if (currentTarget?.resizeNeighbor) {
                 const neighborId = this.elements()[currentTarget.resizeNeighbor.index]?.id;
 
@@ -294,8 +291,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 clientY,
             );
 
-            // null means: cursor is over the body of a nested container element. Defer to the
-            // inner container's drop handler — do not claim/clobber the shared paletteDropTarget.
+            // null means: cursor is over the body of a nested container element.
             if (nextTarget == null) {
                 this.paletteDragOverFrame = 0;
                 return;
@@ -332,7 +328,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
             return;
         }
 
-        // Whitelist enforcement: refuse non-allowed types and bubble the event up to a parent container.
+        // Whitelist enforcement
         if (!this.isTypeAllowed(this.paletteDragType())) {
             event.preventDefault();
             return;
@@ -350,9 +346,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
         const claimedByThis = this.paletteDropTarget()
           && this.paletteDropTarget()?.elementContainerId === this.id();
 
-        // If we have no claim AND no computed insert position, the cursor is over a nested
-        // container's body (calculate returned null). Don't claim the drop — bubble up so the
-        // inner container can handle it.
+        // Cursor is over a nested container's body (calculate returned null).
+        // Don't claim the drop — bubble up so the inner container can handle it.
         if (!claimedByThis && computedTarget == null) {
             event.preventDefault();
             return;
@@ -362,7 +357,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
         const fallbackTarget = computedTarget ?? {
             index: this.elements().length,
-            span: this.getPaletteDefaultSpanForList(),
+            span: DEFAULT_ELEMENT_SPAN,
         };
 
         const target: PaletteDropTarget = claimedByThis
@@ -564,8 +559,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
     /**
      * Called by a recursively-rendered child container when its element list changes.
-     * Updates the parent element's `.elements` field and re-emits this container's elements
-     * model so the change propagates upward.
      */
     public updateChildElements(parent: FormElement, children: FormElement[]): void {
         const updated = this.elements().map((el) => el.id === parent.id ? { ...el, elements: children } : el);
@@ -656,7 +649,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         clientX: number,
         clientY: number,
     ): { index: number; span: number; resizeNeighbor?: { index: number; span: number }; rowBounds?: { top: number; bottom: number } } | null {
-        const defaultSpan = this.getPaletteDefaultSpanForList();
+        const defaultSpan = DEFAULT_ELEMENT_SPAN;
         const rows = this.buildPaletteDropRows(container);
 
         if (!rows.length) {
@@ -699,9 +692,9 @@ export class FormGridElementsContainerComponent implements OnChanges {
             const isContainerLike = el?.type === 'aggregate' || el?.type === 'container';
 
             if (isContainerLike) {
-                // For containers, only claim a before/after slot when the cursor is genuinely
+                // For containers, only claim a before/after slot when the cursor is
                 // near the left/right edge. When the cursor is over the container's body, defer
-                // to the inner container's own drop handler (return null = no parent claim).
+                // to the inner container's own drop handler.
                 const edgeThreshold = Math.min(CONTAINER_EDGE_THRESHOLD_PX, item.rect.width / 4);
 
                 if (clientX < item.rect.left + edgeThreshold) {
@@ -711,9 +704,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 if (clientX < item.rect.right - edgeThreshold) {
                     return null;
                 }
-                // cursor is in the right-edge zone of this container — fall through and let the
-                // loop continue: the next iteration may pick the next item, otherwise the default
-                // (after-last) index applies.
             } else {
                 const midpointX = item.rect.left + item.rect.width / 2;
                 if (clientX < midpointX) {
@@ -736,9 +726,9 @@ export class FormGridElementsContainerComponent implements OnChanges {
             // The row already has elements but is not full — fill the remaining space entirely.
             span = freeCols;
         } else {
-            // No space left: shrink the neighbor element to accommodate the drop safely.
-            // Find the element the mouse is physically hovering to use as the shrink target.
-            // This ensures that when hovering an element's right half, that specific element shrinks instead of the next one.
+            // No space left: shrink the neighbor element. Find the element the mouse is physically
+            // hovering to use as the shrink target. This ensures that when hovering an element's
+            // right half, that specific element shrinks instead of the next one.
             let resizeTargetIndex = index === activeRow.items[activeRow.items.length - 1].index + 1
                 ? activeRow.items[activeRow.items.length - 1].index
                 : index;
@@ -797,7 +787,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
         this.pendingPaletteDropSpan = (resolvedSpan ?? (this.paletteDropTarget()?.elementContainerId === this.id())
             ? this.paletteDropTarget()!.span
-            : this.getPaletteDefaultSpanForList()
+            : DEFAULT_ELEMENT_SPAN
         );
 
         const created = this.createPaletteElement(type);
@@ -933,9 +923,5 @@ export class FormGridElementsContainerComponent implements OnChanges {
             clientY >= row.top - DROP_ROW_TOLERANCE
             && clientY <= row.bottom + DROP_ROW_TOLERANCE,
         ) ?? null;
-    }
-
-    private getPaletteDefaultSpanForList(): number {
-        return 12;
     }
 }

@@ -199,8 +199,6 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 }
 
 .fg-container-wrapper {
-    // Plain layout wrapper — no visual decoration here.
-    // The card header (.fg-container-card) carries the visual identity instead.
     position: relative;
     display: flex;
     flex-direction: column;
@@ -232,10 +230,6 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
         background: rgba(0, 0, 0, 0.05);
     }
 
-    // The recursive <gtx-form-grid-elements-container> needs to actually fill the body
-    // so the cursor truly enters its <gtx-sortable-list> during a drag — otherwise the
-    // empty list has 0 height, dragover events bubble up to the parent, and the parent's
-    // previous drop placeholder never gets superseded.
     > gtx-form-grid-elements-container {
         display: flex;
         flex-direction: column;
@@ -431,7 +425,6 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 }
 
 .drop-placeholder--container {
-    // Header card (~80px) + fg-container-body (min-height: 80px + 16px padding) ≈ 176px
     min-height: 190px;
 }
 
@@ -446,9 +439,6 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     border: 1px dashed rgba(0, 150, 220, 0.42);
     background:
         linear-gradient(180deg, rgba(0, 150, 220, 0.08), rgba(0, 150, 220, 0.14));
-    // box-shadow:
-    //     inset 0 0 0 1px rgba(255, 255, 255, 0.32),
-    //     0 12px 30px rgba(0, 150, 220, 0.12);
     overflow: hidden;
 }
 

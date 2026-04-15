@@ -2,6 +2,7 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    computed,
     input,
     model,
     NgZone,
@@ -12,6 +13,7 @@ import {
 } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import {
+    FormBlockConfiguration,
     FormControlConfiguration,
     FormElement,
     FormElementConfiguration,
@@ -30,11 +32,21 @@ interface DisplayItem {
     element: FormElement;
     isBlock: boolean;
     isControl: boolean;
+    isAggregate: boolean;
+    isContainer: boolean;
+    whitelist: string[] | null;
     config: FormElementConfiguration;
     schema?: FormSchemaProperty;
 }
 
-const DROP_ROW_TOLERANCE = 10;
+const DEFAULT_ELEMENT_SPAN = 12;
+const DROP_ROW_TOLERANCE = 0;
+/**
+ * How close (in px) the cursor must be to a container/aggregate item's left or right edge
+ * for the parent grid to claim a "before/after" insert slot. Anywhere else over the body
+ * defers to the inner container's own drop handler.
+ */
+const CONTAINER_EDGE_THRESHOLD_PX = 24;
 
 @Component({
     selector: 'gtx-form-grid-elements-container',
@@ -58,6 +70,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly pageIndex = input.required<number>();
     public readonly languages = input.required<string[]>();
     public readonly gridSurface = input.required<HTMLElement>();
+    public readonly whitelist = input<string[] | null>(null);
 
     public readonly schema = model.required<FormSchema>();
     public readonly elements = model.required<FormElement[]>();
@@ -78,6 +91,12 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public pendingPaletteDropSpan: number | null;
 
     private paletteDragOverFrame: number | null = null;
+    /**
+     * Original Y-bounds of the row at the moment resizeNeighbor was activated.
+     * Used to prevent the oscillation caused by the shrunk neighbor reflowing
+     * into a previous row.
+     */
+    private lockedResizeRowBounds: { top: number; bottom: number } | null = null;
 
     /* RESIZE
      * ===================================================================== */
@@ -85,6 +104,10 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly resizing = model<boolean>();
     public readonly resizeOverlayActive = model<boolean>();
     public readonly resizeOverlaySpan = model<number>();
+
+    /** Local overlay state — used when this is a nested container (level > 0). */
+    public resizeOverlayActiveLocal = signal(false);
+    public resizeOverlaySpanLocal = signal(12);
 
     private resizePointerId: number | null = null;
     private resizeStartX: number;
@@ -98,6 +121,19 @@ export class FormGridElementsContainerComponent implements OnChanges {
      * ===================================================================== */
 
     public readonly displayItems = signal<DisplayItem[]>([]);
+
+    /** True when palette-dragging is active and this container's whitelist rejects the dragged type. */
+    public isDragBlocked = computed(() => {
+        if (!this.paletteDragging()) {
+            return false;
+        }
+        const wl = this.whitelist();
+        if (!wl || wl.length === 0) {
+            return false;
+        }
+        const type = this.paletteDragType();
+        return type == null || !wl.includes(type);
+    });
 
     /* CONSTRUCTOR
      * ===================================================================== */
@@ -134,6 +170,23 @@ export class FormGridElementsContainerComponent implements OnChanges {
         });
     }
 
+    public getDisplaySpan(element: FormElement, index: number): number {
+        const isTarget = this.paletteDragging()
+          && this.paletteDropTarget()?.elementContainerId === this.id();
+        const neighbor = this.paletteDropTarget()?.resizeNeighbor;
+
+        if (isTarget && neighbor && neighbor.index === index) {
+            return neighbor.span;
+        }
+
+        return this.getSpan(element);
+    }
+
+    public isPaletteContainerType(): boolean {
+        const cfg = this.paletteDragConfig() as any;
+        return !!(cfg?.container || cfg?.aggregate);
+    }
+
     public onPaletteContainerDragOver(event: DragEvent): void {
         if (
             !this.paletteDragging()
@@ -141,6 +194,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
             || !this.paletteDragConfig()
             || !Array.isArray(this.elements())
         ) {
+            return;
+        }
+
+        if (!this.isTypeAllowed(this.paletteDragType())) {
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = 'none';
+            }
+            event.preventDefault();
             return;
         }
 
@@ -159,28 +220,98 @@ export class FormGridElementsContainerComponent implements OnChanges {
         const clientX = event.clientX;
         const clientY = event.clientY;
 
+        // Use elementFromPoint for 100% reliable read of cursor target, immune to fast hit-testing loops
+        const realTarget = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+        const isHoveringPlaceholder = realTarget && realTarget.closest('.drop-placeholder') !== null;
+        const hoveredElementId = realTarget?.closest('gtx-contents-list-item')?.getAttribute('data-element-id');
+
         if (this.paletteDragOverFrame) {
             cancelAnimationFrame(this.paletteDragOverFrame);
         }
 
         this.paletteDragOverFrame = requestAnimationFrame(() => {
+            const currentTarget = this.paletteDropTarget();
+
+            // for flickering defense purposes
+            if (currentTarget?.resizeNeighbor) {
+                const neighborId = this.elements()[currentTarget.resizeNeighbor.index]?.id;
+
+                if (isHoveringPlaceholder) {
+                    this.paletteDragOverFrame = 0;
+                    return;
+                }
+
+                if (hoveredElementId && hoveredElementId === neighborId) {
+                    // Check if the placeholder is logically before (left) or after (right) the neighbor
+                    const isPlaceholderBefore = currentTarget.index <= currentTarget.resizeNeighbor.index;
+
+                    const neighborEl = realTarget?.closest('[data-drop-item="true"]') as HTMLElement | null;
+                    if (neighborEl) {
+                        const neighborRect = neighborEl.getBoundingClientRect();
+                        const midpointX = neighborRect.left + neighborRect.width / 2;
+                        const isOnLeftHalf = clientX < midpointX;
+
+                        // Stay locked if placeholder is left AND mouse is on the left half
+                        // OR if placeholder is right AND mouse is on the right half
+                        if (isPlaceholderBefore && isOnLeftHalf) {
+                            this.paletteDragOverFrame = 0;
+                            return;
+                        } else if (!isPlaceholderBefore && !isOnLeftHalf) {
+                            this.paletteDragOverFrame = 0;
+                            return;
+                        }
+                        // If we reached here, the user moved the mouse to the OTHER half of the shrunk element!
+                        // We do NOT return/lock, but intentionally fall through so calculatePaletteInsertTarget
+                        // is re-run to cleanly swap sides.
+                    } else {
+                        // Fallback lock if we cannot find the exact bounding box
+                        this.paletteDragOverFrame = 0;
+                        return;
+                    }
+                } else {
+                    // Cursor is not over the neighbor element (and not over the placeholder).
+                    // If we are still within the row's original Y-bounds, lock to prevent the
+                    // oscillation where the shrunk neighbor reflows into a previous row, making
+                    // the cursor appear to be "below all rows" and resetting the state.
+                    if (this.lockedResizeRowBounds
+                      && clientY >= this.lockedResizeRowBounds.top
+                      && clientY <= this.lockedResizeRowBounds.bottom) {
+                        this.paletteDragOverFrame = 0;
+                        return;
+                    }
+                }
+            } else if (isHoveringPlaceholder) {
+                this.paletteDragOverFrame = 0;
+                return;
+            }
+
             const nextTarget = this.calculatePaletteInsertTarget(
                 container,
                 clientX,
                 clientY,
             );
 
+            // null means: cursor is over the body of a nested container element.
+            if (nextTarget == null) {
+                this.paletteDragOverFrame = 0;
+                return;
+            }
+
             if (
                 !this.paletteDropTarget()
                 || this.paletteDropTarget()?.elementContainerId !== this.id()
                 || this.paletteDropTarget()?.index !== nextTarget.index
                 || this.paletteDropTarget()?.span !== nextTarget.span
+                || this.paletteDropTarget()?.resizeNeighbor?.index !== nextTarget.resizeNeighbor?.index
+                || this.paletteDropTarget()?.resizeNeighbor?.span !== nextTarget.resizeNeighbor?.span
             ) {
                 this.paletteDropTarget.set({
                     elementContainerId: this.id(),
                     index: nextTarget.index,
                     span: nextTarget.span,
+                    resizeNeighbor: nextTarget.resizeNeighbor,
                 });
+                this.lockedResizeRowBounds = nextTarget.resizeNeighbor ? (nextTarget.rowBounds ?? null) : null;
             }
 
             this.paletteDragOverFrame = 0;
@@ -197,32 +328,48 @@ export class FormGridElementsContainerComponent implements OnChanges {
             return;
         }
 
-        cancelEvent(event);
+        // Whitelist enforcement
+        if (!this.isTypeAllowed(this.paletteDragType())) {
+            event.preventDefault();
+            return;
+        }
 
         const container = event.currentTarget as HTMLElement | null;
-        const fallbackTarget = container
+        const computedTarget = container
             ? this.calculatePaletteInsertTarget(
                 container,
                 event.clientX,
                 event.clientY,
             )
-            : {
-                index: this.elements().length,
-                span: this.getPaletteDefaultSpanForList(),
-            };
+            : null;
 
-        const target: PaletteDropTarget = (
-            this.paletteDropTarget()
-            && this.paletteDropTarget()?.elementContainerId === this.id()
-        )
+        const claimedByThis = this.paletteDropTarget()
+          && this.paletteDropTarget()?.elementContainerId === this.id();
+
+        // Cursor is over a nested container's body (calculate returned null).
+        // Don't claim the drop — bubble up so the inner container can handle it.
+        if (!claimedByThis && computedTarget == null) {
+            event.preventDefault();
+            return;
+        }
+
+        cancelEvent(event);
+
+        const fallbackTarget = computedTarget ?? {
+            index: this.elements().length,
+            span: DEFAULT_ELEMENT_SPAN,
+        };
+
+        const target: PaletteDropTarget = claimedByThis
             ? this.paletteDropTarget()!
             : {
                 elementContainerId: this.id(),
                 index: fallbackTarget.index,
                 span: fallbackTarget.span,
+                resizeNeighbor: fallbackTarget.resizeNeighbor,
             };
 
-        this.insertDropElement(event, target.index, target.span);
+        this.insertDropElement(event, target);
         this.cleanupPaletteDrag();
     }
 
@@ -265,7 +412,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         this.resizePointerId = event.pointerId;
         this.resizeStartX = event.clientX;
         this.resizeTarget = this.elements()[index];
-        this.resizeSurfaceEl = this.gridSurface();
+        this.resizeSurfaceEl = parentEl ?? this.gridSurface();
         this.resizeRowBaseCols = rowBase;
         this.resizeRowMaxSpan = rowMax;
 
@@ -276,11 +423,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
         this.setSpan(this.resizeTarget, initialSpan);
 
         this.resizeStartSpan = initialSpan;
-        this.resizeOverlayActive.set(true);
-        this.resizeOverlaySpan.set(Math.max(
-            1,
-            Math.min(12, this.resizeRowBaseCols + this.resizeStartSpan),
-        ));
+        const initialOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + this.resizeStartSpan));
+        if (this.level() > 0) {
+            this.resizeOverlayActiveLocal.set(true);
+            this.resizeOverlaySpanLocal.set(initialOverlaySpan);
+        } else {
+            this.resizeOverlayActive.set(true);
+            this.resizeOverlaySpan.set(initialOverlaySpan);
+        }
 
         try {
             (event.target as HTMLElement)?.setPointerCapture?.(event.pointerId);
@@ -308,10 +458,12 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
                 this.zone.run(() => {
                     this.setSpan(this.resizeTarget, nextSpan);
-                    this.resizeOverlaySpan.set(Math.max(
-                        1,
-                        Math.min(12, this.resizeRowBaseCols + nextSpan),
-                    ));
+                    const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + nextSpan));
+                    if (this.level() > 0) {
+                        this.resizeOverlaySpanLocal.set(nextOverlaySpan);
+                    } else {
+                        this.resizeOverlaySpan.set(nextOverlaySpan);
+                    }
                     this.changeDetector.markForCheck();
                 });
             };
@@ -333,6 +485,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 this.resizeRowBaseCols = 0;
                 this.resizeRowMaxSpan = 12;
                 this.resizeOverlayActive.set(false);
+                this.resizeOverlayActiveLocal.set(false);
 
                 // Hacky way to prevent an accidental "click"/selection to occur during resizing of an element
                 setTimeout(() => {
@@ -353,10 +506,18 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public deleteElement(event: MouseEvent, element: FormElement, index: number): void {
         cancelEvent(event);
 
+        const childCount = Array.isArray(element.elements) ? element.elements.length : 0;
+        const hasChildren = childCount > 0;
+
         this.modals.dialog({
-            title: this.i18n.instant('form_grid.title_delete_element'),
-            body: this.i18n.instant('form_grid.confirm_element_delete', {
+            title: this.i18n.instant(hasChildren
+                ? 'form_grid.title_delete_container'
+                : 'form_grid.title_delete_element'),
+            body: this.i18n.instant(hasChildren
+                ? 'form_grid.confirm_container_delete_with_children'
+                : 'form_grid.confirm_element_delete', {
                 name: this.i18n.fromObject(element.label),
+                count: childCount,
             }),
             buttons: [
                 {
@@ -396,6 +557,15 @@ export class FormGridElementsContainerComponent implements OnChanges {
             });
     }
 
+    /**
+     * Called by a recursively-rendered child container when its element list changes.
+     */
+    public updateChildElements(parent: FormElement, children: FormElement[]): void {
+        const updated = this.elements().map((el) => el.id === parent.id ? { ...el, elements: children } : el);
+        this.elements.set(updated);
+        this.updateDisplayItems();
+    }
+
     public sortElements(event: ISortableEvent): void {
         // Sort the visible list
         const newElements = [...this.elements()];
@@ -410,6 +580,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
     /* INTERNALS
      * ===================================================================== */
 
+    private isTypeAllowed(type: string | null | undefined): boolean {
+        const wl = this.whitelist();
+        if (!wl || wl.length === 0) {
+            return true;
+        }
+        return type != null && wl.includes(type);
+    }
+
     private updateDisplayItems(): void {
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
         this.displayItems.set((this.elements() || []).map((el) => {
@@ -422,12 +600,17 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     return null;
                 }
 
+                const isAggregate = !!(itemConfig).aggregate;
+
                 return {
                     id: el.id,
                     label: itemConfig.labelI18n,
                     element: el,
                     isBlock: false,
                     isControl: true,
+                    isAggregate,
+                    isContainer: false,
+                    whitelist: isAggregate ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
                     schema: itemSchema,
                 };
@@ -444,12 +627,17 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     return null;
                 }
 
+                const isContainer = !!(itemConfig).container;
+
                 return {
                     id: el.id,
                     label: itemConfig.labelI18n,
                     element: el,
                     isControl: false,
                     isBlock: true,
+                    isAggregate: false,
+                    isContainer,
+                    whitelist: isContainer ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
                 };
             }
@@ -460,8 +648,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
         container: HTMLElement,
         clientX: number,
         clientY: number,
-    ): { index: number; span: number } {
-        const defaultSpan = this.getPaletteDefaultSpanForList();
+    ): { index: number; span: number; resizeNeighbor?: { index: number; span: number }; rowBounds?: { top: number; bottom: number } } | null {
+        const defaultSpan = DEFAULT_ELEMENT_SPAN;
         const rows = this.buildPaletteDropRows(container);
 
         if (!rows.length) {
@@ -471,7 +659,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         const activeRow = this.findPaletteDropRow(rows, clientY);
 
         if (!activeRow) {
-            if (clientY < rows[0].top - DROP_ROW_TOLERANCE) {
+            if (clientY <= rows[0].top - DROP_ROW_TOLERANCE) {
                 return { index: 0, span: defaultSpan };
             }
 
@@ -480,11 +668,18 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 const nextRow = rows[i + 1];
 
                 if (
-                    clientY > currentRow.bottom + DROP_ROW_TOLERANCE
-                    && clientY < nextRow.top - DROP_ROW_TOLERANCE
+                    clientY >= currentRow.bottom + DROP_ROW_TOLERANCE
+                    && clientY <= nextRow.top - DROP_ROW_TOLERANCE
                 ) {
+                    // The cursor is in the visual gap between two rows → insert a new row before the next
                     return { index: nextRow.items[0].index, span: defaultSpan };
                 }
+            }
+
+            // Cursor is below the last row (in the bottom padding area) → append new row at the end
+            const lastRow = rows[rows.length - 1];
+            if (clientY >= lastRow.bottom + DROP_ROW_TOLERANCE) {
+                return { index: this.elements().length, span: defaultSpan };
             }
 
             return { index: this.elements().length, span: defaultSpan };
@@ -493,10 +688,28 @@ export class FormGridElementsContainerComponent implements OnChanges {
         let index = activeRow.items[activeRow.items.length - 1].index + 1;
 
         for (const item of activeRow.items) {
-            const midpointX = item.rect.left + item.rect.width / 2;
-            if (clientX < midpointX) {
-                index = item.index;
-                break;
+            const el = this.elements()[item.index];
+            const isContainerLike = el?.type === 'aggregate' || el?.type === 'container';
+
+            if (isContainerLike) {
+                // For containers, only claim a before/after slot when the cursor is
+                // near the left/right edge. When the cursor is over the container's body, defer
+                // to the inner container's own drop handler.
+                const edgeThreshold = Math.min(CONTAINER_EDGE_THRESHOLD_PX, item.rect.width / 4);
+
+                if (clientX < item.rect.left + edgeThreshold) {
+                    index = item.index;
+                    break;
+                }
+                if (clientX < item.rect.right - edgeThreshold) {
+                    return null;
+                }
+            } else {
+                const midpointX = item.rect.left + item.rect.width / 2;
+                if (clientX < midpointX) {
+                    index = item.index;
+                    break;
+                }
             }
         }
 
@@ -506,17 +719,33 @@ export class FormGridElementsContainerComponent implements OnChanges {
         );
         const freeCols = Math.max(0, 12 - usedCols);
 
-        const preferredSpan = this.getPaletteInRowSpan(
-            activeRow,
-            index,
-            defaultSpan,
-        );
+        let span: number;
+        let resizeNeighbor: { index: number; span: number } | undefined;
 
-        const span = freeCols > 0
-            ? Math.max(1, Math.min(preferredSpan, freeCols))
-            : Math.max(1, Math.min(12, preferredSpan));
+        if (freeCols > 0) {
+            // The row already has elements but is not full — fill the remaining space entirely.
+            span = freeCols;
+        } else {
+            // No space left: shrink the neighbor element. Find the element the mouse is physically
+            // hovering to use as the shrink target. This ensures that when hovering an element's
+            // right half, that specific element shrinks instead of the next one.
+            let resizeTargetIndex = index === activeRow.items[activeRow.items.length - 1].index + 1
+                ? activeRow.items[activeRow.items.length - 1].index
+                : index;
 
-        return { index, span };
+            for (const item of activeRow.items) {
+                if (clientX >= item.rect.left && clientX <= item.rect.right) {
+                    resizeTargetIndex = item.index;
+                    break;
+                }
+            }
+
+            const neighborSpan = this.getItemSpanByIndex(resizeTargetIndex);
+            span = Math.max(1, Math.floor(neighborSpan / 2));
+            resizeNeighbor = { index: resizeTargetIndex, span: neighborSpan - span };
+        }
+
+        return { index, span, resizeNeighbor, rowBounds: { top: activeRow.top, bottom: activeRow.bottom } };
     }
 
     private setSpan(el: any, span: number): void {
@@ -529,8 +758,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
     private insertDropElement(
         event: DragEvent,
-        insertIndex: number,
-        resolvedSpan?: number,
+        target: PaletteDropTarget,
     ): void {
         cancelEvent(event);
 
@@ -541,14 +769,25 @@ export class FormGridElementsContainerComponent implements OnChanges {
         }
 
         const newElements = [...this.elements()];
+        const insertIndex = target.index;
+        const resolvedSpan = target.span;
+        const resizeNeighbor = target.resizeNeighbor;
+
         const type = dt.getData(PALETTE_MIME) || dt.getData('text/plain');
         // TODO: Add type check?
         const safeIndex = Math.max(0, Math.min(insertIndex, newElements.length));
         const isControl = this.config().controls[type] != null;
 
+        if (resizeNeighbor) {
+            const neighbor = newElements[resizeNeighbor.index];
+            if (neighbor) {
+                this.setSpan(neighbor, resizeNeighbor.span);
+            }
+        }
+
         this.pendingPaletteDropSpan = (resolvedSpan ?? (this.paletteDropTarget()?.elementContainerId === this.id())
             ? this.paletteDropTarget()!.span
-            : this.getPaletteDefaultSpanForList()
+            : DEFAULT_ELEMENT_SPAN
         );
 
         const created = this.createPaletteElement(type);
@@ -574,6 +813,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
     }
 
     private cleanupPaletteDrag(): void {
+        this.lockedResizeRowBounds = null;
         this.pendingPaletteDropSpan = null;
 
         if (this.paletteDragOverFrame) {
@@ -587,11 +827,12 @@ export class FormGridElementsContainerComponent implements OnChanges {
     private createPaletteElement(type: string): FormElement {
         const defaultSpan = this.pendingPaletteDropSpan ?? 12;
         this.pendingPaletteDropSpan = null;
-        const isAggregate = (this.paletteDragConfig() as FormControlConfiguration).aggregate;
+        const isAggregate = !!(this.paletteDragConfig() as FormControlConfiguration).aggregate;
+        const isContainer = !!(this.paletteDragConfig() as FormBlockConfiguration).container;
 
         const el: FormElement = {
             id: uuidV4(),
-            type: isAggregate ? 'aggregate' : 'property',
+            type: isContainer ? 'container' : (isAggregate ? 'aggregate' : 'property'),
             label: {},
             formGridOptions: {
                 type,
@@ -608,8 +849,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
             uiSchemaPage: this.pageIndex(),
         };
 
-        // If it's an aggregate, then default an empty items array
-        if (isAggregate) {
+        // If it's an aggregate or container, then default an empty items array
+        if (isAggregate || isContainer) {
             el.elements = [];
         }
 
@@ -621,38 +862,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
         }
 
         return el;
-    }
-
-    private getPaletteInRowSpan(
-        row: DropRow,
-        insertIndex: number,
-        fallback: number,
-    ): number {
-        const rowIndices = new Set(row.items.map((item) => item.index));
-        const leftIndex = insertIndex - 1;
-        const rightIndex = insertIndex;
-
-        const leftSpan = rowIndices.has(leftIndex)
-            ? this.getItemSpanByIndex(leftIndex)
-            : null;
-
-        const rightSpan = rowIndices.has(rightIndex)
-            ? this.getItemSpanByIndex(rightIndex)
-            : null;
-
-        if (leftSpan != null && rightSpan != null) {
-            return Math.min(leftSpan, rightSpan);
-        }
-
-        if (leftSpan != null) {
-            return leftSpan;
-        }
-
-        if (rightSpan != null) {
-            return rightSpan;
-        }
-
-        return fallback;
     }
 
     private buildPaletteDropRows(container: HTMLElement): DropRow[] {
@@ -714,9 +923,5 @@ export class FormGridElementsContainerComponent implements OnChanges {
             clientY >= row.top - DROP_ROW_TOLERANCE
             && clientY <= row.bottom + DROP_ROW_TOLERANCE,
         ) ?? null;
-    }
-
-    private getPaletteDefaultSpanForList(): number {
-        return this.id() === this.rootId() ? 12 : 6;
     }
 }

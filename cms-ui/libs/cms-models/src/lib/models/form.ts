@@ -419,7 +419,7 @@ export interface FormElement {
      * Which type this element is. Can mostly be ignored, the relevant
      * type is saved in `formGridOptions.type` instead.
      */
-    type: 'property' | 'aggregate';
+    type: 'property' | 'aggregate' | 'container';
     /**
      * The label of this element in all languages.
      */

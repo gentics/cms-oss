@@ -556,12 +556,7 @@ gtx-checkbox [type='checkbox']+label:before {
     position: relative;
     height: 12px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.85);
     border: 1px solid rgba(0, 0, 0, 0.08);
-    box-shadow:
-        0 10px 26px rgba(0, 0, 0, 0.10),
-        0 0 0 4px rgba(0, 150, 220, 0.08);
-    backdrop-filter: blur(6px);
     overflow: hidden;
 }
 
@@ -597,9 +592,6 @@ gtx-checkbox [type='checkbox']+label:before {
     transform: translateX(-1.5px);
     border-radius: 999px;
     background: rgba(0, 150, 220, 0.92);
-    box-shadow:
-        0 0 0 3px rgba(255, 255, 255, 0.75),
-        0 10px 22px rgba(0, 150, 220, 0.22);
     transition: left 90ms linear;
     filter: saturate(1.1);
 }

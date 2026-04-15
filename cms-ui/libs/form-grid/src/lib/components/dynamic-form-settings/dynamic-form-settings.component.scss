@@ -1,0 +1,21 @@
+@import 'ui-core/src/styles/variables';
+
+.dynamic-settings-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .settings-entry {
+        flex: 0 0 100%;
+        margin: 0;
+
+        &[data-control-type="boolean"] {
+            flex: 0 0 50%;
+        }
+    }
+}
+
+.error-message {
+    color: $gtx-color-alert;
+}

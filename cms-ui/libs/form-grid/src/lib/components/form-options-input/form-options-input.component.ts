@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormSelectOptionValue } from '@gentics/cms-models';
-import { BaseFormElementComponent, cancelEvent } from '@gentics/ui-core';
+import { BaseFormElementComponent, cancelEvent, generateFormProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-form-options-input',
     templateUrl: './form-options-input.component.html',
     styleUrls: ['./form-options-input.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(FormOptionsInputComponent)],
     standalone: false,
 })
 export class FormOptionsInputComponent extends BaseFormElementComponent<FormSelectOptionValue[]> {

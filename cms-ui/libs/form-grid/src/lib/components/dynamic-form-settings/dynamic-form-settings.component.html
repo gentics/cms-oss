@@ -1,0 +1,148 @@
+<div class="dynamic-settings-list">
+    @for (setting of (visibleSettings()); track setting.id) {
+        @switch (setting.type) {
+            @case ("string") {
+                <gtx-input
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [value]="data()[setting.id]"
+                    (valueChange)="updateData(setting.id, $event)"
+                ></gtx-input>
+            }
+
+            @case ("translation") {}
+
+            @case ("integer") {
+                <gtx-input
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [type]="'number'"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [value]="data()[setting.id]"
+                    (valueChange)="updateData(setting.id, $event)"
+                ></gtx-input>
+            }
+
+            @case ("number") {
+                <gtx-input
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [type]="'number'"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [value]="data()[setting.id]"
+                    (valueChange)="updateData(setting.id, $event)"
+                ></gtx-input>
+            }
+
+            @case ("boolean") {
+                <gtx-checkbox
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [disabled]="disabled()"
+                    [value]="data()[setting.id]"
+                    (valueChange)="updateData(setting.id, $event)"
+                ></gtx-checkbox>
+            }
+
+            @case ("date") {
+                <gtx-date-time-picker
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [displayTime]="setting.allowTime ?? false"
+                    [value]="data()[setting.id]"
+                    (valueChange)="updateData(setting.id, $event)"
+                ></gtx-date-time-picker>
+            }
+
+            @case ("select") {
+                <gtx-select
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [required]="setting.required ?? false"
+                    [multiple]="setting.multiple ?? false"
+                    [disabled]="disabled()"
+                    [value]="data()[setting.id]"
+                    (valueChange)="updateData(setting.id, $event)"
+                >
+                    @for (option of setting.options; track option.value) {
+                        <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
+                    }
+                </gtx-select>
+            }
+
+            @case ("options") {
+                <gtx-form-options-input
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [value]="data()[setting.id]"
+                    (valueChange)="updateData(setting.id, $event)"
+                ></gtx-form-options-input>
+            }
+
+            @case ("user") {
+                @if (config().userOptions) {
+                    <gtx-select
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [required]="setting.required ?? false"
+                        [disabled]="disabled()"
+                        [multiple]="setting.multiple ?? false"
+                        [value]="data()[setting.id]"
+                        (valueChange)="updateData(setting.id, $event)"
+                    >
+                        @for (option of (config().userOptions || []); track option.value) {
+                            <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
+                        }
+                    </gtx-select>
+                } @else {
+                    <span class="error-message">{{ 'form_grid.user_settings_missing' | gtxI18n }}</span>
+                }
+            }
+
+            @case ("reference") {
+                <gtx-browse-box
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [allowedSelection]="setting.referenceTypes"
+                    [onlyInCurrentNode]="setting.onlyInCurrentNode"
+                    [multiple]="setting.multiple ?? false"
+                    [disabled]="disabled()"
+                    [includeMlId]="setting.allowedMarkupLanguageIds"
+                    [browseTitle]="setting.titleI18n | gtxI18nObject"
+                    [value]="data()[setting.id]"
+                    (valueChange)="updateReferenceValue(setting.id, $event)"
+                ></gtx-browse-box>
+            }
+
+            @default {
+                <span class="error-message">Unknown setting type {{setting.type}}</span>
+            }
+        }
+    }
+</div>

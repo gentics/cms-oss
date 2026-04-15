@@ -7,6 +7,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import {
+    DynamicFormSettingsComponent,
+    DynamicFormTranslationsComponent,
     FormConditionInputComponent,
     FormElementDefinitionComponent,
     FormElementSettingsComponent,
@@ -18,6 +20,8 @@ import {
 } from './components';
 
 const COMPONENTS = [
+    DynamicFormSettingsComponent,
+    DynamicFormTranslationsComponent,
     FormConditionInputComponent,
     FormElementDefinitionComponent,
     FormElementSettingsComponent,

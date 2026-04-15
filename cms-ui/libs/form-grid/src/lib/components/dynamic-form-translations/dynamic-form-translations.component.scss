@@ -1,0 +1,26 @@
+@import 'ui-core/src/styles/variables';
+
+.dynamic-settings-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .settings-entry {
+        flex: 0 0 100%;
+        margin: 0;
+    }
+}
+
+.option-translation {
+    .option-translation-title {
+        font-size: 0.8rem;
+        color: $gtx-color-dark-gray;
+    }
+
+    .option-translation-entries {
+        border: 1px solid $gtx-color-light-gray;
+        border-radius: 3px;
+        padding: 0.5rem;
+    }
+}

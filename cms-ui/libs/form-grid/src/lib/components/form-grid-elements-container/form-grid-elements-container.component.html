@@ -6,12 +6,11 @@
     let-itemColumns="itemColumns"
 >
     <div
-        class="drop-placeholder form-item columns"
+        class="drop-placeholder"
         [ngClass]="['small-' + size, classes]"
         aria-hidden="true"
     >
         <div class="drop-placeholder__box">
-            <span class="drop-placeholder__line" aria-hidden="true"></span>
             <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
                 label: label
             } }}</span>
@@ -20,11 +19,37 @@
     </div>
 </ng-template>
 
+@if (level() > 0) {
+<div
+    class="resize-grid-overlay resize-grid-overlay--container"
+    aria-hidden="true"
+    [class.active]="resizeOverlayActiveLocal()"
+    [style.--active-cols]="resizeOverlaySpanLocal()"
+>
+    <div class="resize-grid-overlay__rail">
+        <div class="resize-grid-overlay__fill"></div>
+        <div class="resize-grid-overlay__marker"></div>
+    </div>
+
+    <div class="resize-grid-overlay__ticks">
+        @for (n of (1 | gtxRange:12); track n) {
+        <div
+            class="resize-grid-overlay__tick"
+            [class.is-active]="n === resizeOverlaySpanLocal()"
+        >
+            <span class="resize-grid-overlay__num">{{ n }}</span>
+        </div>
+        }
+    </div>
+</div>
+}
+
 <gtx-sortable-list
     class="editor-drop-container"
     [attr.data-drop-container-id]="id()"
     [class.palette-dragging]="paletteDragging() && paletteDropTarget()?.elementContainerId === id()"
     [class.is-palette-drop-target]="paletteDragging()"
+    [class.drag-blocked]="isDragBlocked()"
     [class.editor-drop-container--root]="id() === rootId()"
     (dragenter)="onPaletteContainerDragOver($event)"
     (dragover)="onPaletteContainerDragOver($event)"
@@ -33,10 +58,10 @@
 >
     @if (!elements()?.length && paletteDragging() && paletteDropTarget()?.elementContainerId === id()) {
         <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
-            size: 12,
-            classes: elements().length === 0 ? 'drop-placeholder--empty' : '',
+            size: paletteDropTarget()?.span || 12,
+            classes: (elements().length === 0 ? 'drop-placeholder--empty' : '') + (isPaletteContainerType() ? ' drop-placeholder--container' : ''),
             label: paletteDragConfig()?.labelI18n | gtxI18nObject,
-            itemColumns: level() === 0 || $any(paletteDragConfig())?.container ? 12 : 6
+            itemColumns: paletteDropTarget()?.span || 12
         }"></ng-container>
     }
 
@@ -49,20 +74,26 @@
             && paletteDropTarget()?.index === $index
         ) {
             <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
-                size: 12,
-                classes: 'before-element',
+                size: paletteDropTarget()?.span || 12,
+                classes: 'before-element' + (isPaletteContainerType() ? ' drop-placeholder--container' : ''),
                 label: paletteDragConfig()?.labelI18n | gtxI18nObject,
-                itemColumns: level() === 0 || $any(paletteDragConfig())?.container ? 12 : 6
+                itemColumns: paletteDropTarget()?.span || 12
             }"></ng-container>
         }
 
         @if (element.type == 'property') {
             <gtx-sortable-item
                 [class.is-selected-card]="selectedElement() != null && element?.id === selectedElement()?.id"
-                [ngClass]="'form-item columns small-' + element.formGridOptions?.numberOfColumns"
+                [ngClass]="'form-item columns small-' + getDisplaySpan(element, $index)"
                 data-drop-item="true"
                 [attr.data-drop-index]="$index"
             >
+                <div
+                    class="grid-resize-handle"
+                    aria-label="Elementbreite ändern"
+                    title="Breite ändern"
+                    (pointerdown)="onResizeStart($event, $index)"
+                ></div>
                 <gtx-contents-list-item
                     class="fg-box"
                     [class.empty]="!element.label"
@@ -70,13 +101,6 @@
                     [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                     (click)="selectElement(element, $event)"
                 >
-                    <div
-                        class="grid-resize-handle"
-                        aria-label="Elementbreite ändern"
-                        title="Breite ändern"
-                        (pointerdown)="onResizeStart($event, $index)"
-                    ></div>
-
                     <div class="item-primary">
                         <div class="actions-container">
                             <span class="tag tag-type">
@@ -103,6 +127,97 @@
                 </gtx-contents-list-item>
             </gtx-sortable-item>
         }
+
+        @if (element.type === 'aggregate' || element.type === 'container') {
+            <gtx-sortable-item
+                [class.is-selected-card]="selectedElement() != null && element?.id === selectedElement()?.id"
+                [ngClass]="'form-item columns small-' + getDisplaySpan(element, $index)"
+                data-drop-item="true"
+                [attr.data-drop-index]="$index"
+            >
+                <div
+                    class="grid-resize-handle"
+                    aria-label="Elementbreite ändern"
+                    title="Breite ändern"
+                    (pointerdown)="onResizeStart($event, $index)"
+                ></div>
+
+                <div
+                    class="fg-container-wrapper"
+                    [attr.data-element-id]="element.id"
+                    [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
+                    [class.is-aggregate]="element.type === 'aggregate'"
+                    [class.is-container]="element.type === 'container'"
+                >
+                    <gtx-contents-list-item
+                        class="fg-box fg-container-card"
+                        [class.empty]="!element.label"
+                        [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
+                        (click)="selectElement(element, $event)"
+                    >
+                        <div class="item-primary">
+                            <div class="actions-container">
+                                <span class="tag tag-type">
+                                    <span class="tag-text">{{ displayItem.label | gtxI18nObject }}</span>
+                                </span>
+
+                                @if (mode() !== FormGridEditMode.FULL) {
+                                    <gtx-button
+                                        type="alert"
+                                        class="delete-button"
+                                        [icon]="true"
+                                        (click)="deleteElement($event, element, $index)"
+                                    >
+                                        <icon>delete_outline</icon>
+                                    </gtx-button>
+                                }
+                            </div>
+
+                            <strong
+                                class="formtitle"
+                                [class.is-selected-title]="selectedElement() != null && element.id === selectedElement()?.id"
+                            >{{ (element.label | gtxI18nObject) || ('form_grid.container_label' | gtxI18n) }}</strong>
+                        </div>
+                    </gtx-contents-list-item>
+
+                    <!-- Plain body: no border/color, just holds the nested elements -->
+                    <div
+                        class="fg-container-body"
+                        [class.drag-blocked]="paletteDragging() && displayItem.whitelist?.length && (paletteDragType() == null || !displayItem.whitelist!.includes(paletteDragType()!))"
+                    >
+                        <gtx-form-grid-elements-container
+                            [config]="config()"
+                            [rootId]="rootId()"
+                            [id]="element.id"
+                            [level]="level() + 1"
+                            [pageIndex]="pageIndex()"
+                            [languages]="languages()"
+                            [mode]="mode()"
+                            [gridSurface]="gridSurface()"
+                            [whitelist]="displayItem.whitelist"
+
+                            [elements]="element.elements || []"
+                            (elementsChange)="updateChildElements(element, $event)"
+                            [(schema)]="schema"
+
+                            [selectedElement]="selectedElement()"
+                            [selectedElementContainerId]="selectedElementContainerId()"
+                            (elementSelect)="elementSelect.emit($event)"
+
+                            [(paletteDragging)]="paletteDragging"
+                            [(paletteDropTarget)]="paletteDropTarget"
+                            [paletteDragType]="paletteDragType()"
+                            [paletteDragConfig]="paletteDragConfig()"
+                            (platteDragStop)="platteDragStop.emit()"
+
+                            [(resizing)]="resizing"
+                            [(resizeOverlayActive)]="resizeOverlayActive"
+                            [(resizeOverlaySpan)]="resizeOverlaySpan"
+                        ></gtx-form-grid-elements-container>
+                    </div>
+                </div>
+            </gtx-sortable-item>
+        }
     }
 
     @if (
@@ -112,10 +227,10 @@
         && paletteDropTarget()?.index === elements().length
     ) {
         <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
-            size: 12,
-            classes: 'after-element',
+            size: paletteDropTarget()?.span || 12,
+            classes: 'after-element' + (isPaletteContainerType() ? ' drop-placeholder--container' : ''),
             label: paletteDragConfig()?.labelI18n | gtxI18nObject,
-            itemColumns: level() === 0 || $any(paletteDragConfig())?.container ? 12 : 6
+            itemColumns: paletteDropTarget()?.span || 12
         }"></ng-container>
     }
 </gtx-sortable-list>

@@ -7,9 +7,10 @@
 }
 
 .columns {
-    min-height: 50px;
+    min-height: 100px;
     background: #fafafa;
     border: 1px solid #e5e5e5;
+    border-radius: 2px;
 
     div {
         font-size: 14px;
@@ -109,33 +110,31 @@
 .editor-drop-container {
     position: relative;
     display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
     width: 100%;
-    border-radius: 22px;
+    border-radius: 4px;
     transition:
         background 180ms ease,
         box-shadow 180ms ease,
-        transform 180ms ease;
+        transform 180ms ease,
+        row-gap 180ms ease,
+        padding-top 180ms ease,
+        padding-bottom 180ms ease;
 
-    &.palette-dragging {
-        padding-top: 6px;
-        padding-bottom: 6px;
-        box-shadow: inset 0 0 0 1px rgba(0, 150, 220, 0.06);
+    &.is-palette-drop-target {
+        padding-top: 24px;
+        padding-bottom: 40px;
+        row-gap: 20px;
+        background: rgba(0, 150, 220, 0.08);
     }
 
-    &.palette-dragging.is-palette-drop-target {
-        background:
-            radial-gradient(circle at top, rgba(0, 150, 220, 0.08), transparent 46%),
-            linear-gradient(180deg, rgba(0, 150, 220, 0.04), rgba(0, 150, 220, 0.08));
-        box-shadow:
-            inset 0 0 0 1px rgba(0, 150, 220, 0.24),
-            0 14px 36px rgba(0, 150, 220, 0.08);
+    &.drag-blocked {
+        &.is-palette-drop-target {
+            background: rgba(0, 0, 0, 0.04);
+        }
     }
-
-    &.palette-dragging.editor-drop-container--root {
-        padding-top: 8px;
-        padding-bottom: 8px;
-    }
-
+    
     &.editor-drop-container--root {
         height: 100%;
     }
@@ -158,13 +157,9 @@ gtx-contents-list-item {
 
 .form-item {
     position: relative;
-    height: fit-content;
 
-    .item-primary {
-        gap: 0.5rem;
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
+    &:hover {
+        cursor: pointer;
     }
 }
 
@@ -203,8 +198,186 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     margin: 0;
 }
 
-.fg-agg {
-    background: beige !important;
+.fg-container-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    &:hover .grid-resize-handle,
+    &:focus-within .grid-resize-handle {
+        opacity: 1;
+    }
+}
+
+.fg-container-card {
+    flex: 0 0 auto;
+    min-height: auto !important;
+}
+
+.fg-container-body {
+    position: relative;
+    padding: 8px;
+    min-height: 80px;
+    display: flex;
+    border: 1px solid rgba(0, 150, 220, 0.16);
+    border-radius: 4px;
+    background: rgba(0, 150, 220, 0.08);
+    transition: border-color 160ms ease, background 160ms ease;
+
+    &.drag-blocked {
+        border-color: rgba(0, 0, 0, 0.18);
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    > gtx-form-grid-elements-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 64px;
+
+        > .editor-drop-container,
+        > gtx-sortable-list.editor-drop-container {
+            flex: 1 1 auto;
+            min-height: 64px;
+            align-content: flex-start;
+        }
+    }
+}
+
+// --- Resize overlay scoped to a nested container ---
+.resize-grid-overlay--container {
+    --active-cols: 12;
+    flex: 0 0 auto;
+    width: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-100%);
+    background-color: white;
+    padding: 8px;
+    border-radius: 4px;
+    transition:
+        max-height 200ms cubic-bezier(0.2, 0.9, 0.2, 1),
+        opacity 160ms ease,
+        transform 200ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.10);
+
+    &.active {
+        max-height: 60px;
+        opacity: 1;
+    }
+
+    .resize-grid-overlay__rail {
+        position: relative;
+        height: 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(90deg,
+                    rgba(0, 0, 0, 0.12) 0,
+                    rgba(0, 0, 0, 0.12) 1px,
+                    rgba(255, 255, 255, 0) 1px,
+                    rgba(255, 255, 255, 0) 100%);
+            background-size: calc(100% / 12) 100%;
+            background-repeat: repeat;
+            opacity: 0.55;
+            pointer-events: none;
+        }
+    }
+
+    .resize-grid-overlay__fill {
+        position: absolute;
+        inset: 0;
+        width: calc(var(--active-cols) * 8.333333%);
+        background: linear-gradient(90deg, rgba(0, 150, 220, 0.18), rgba(0, 150, 220, 0.45));
+        transition: width 90ms linear;
+    }
+
+    .resize-grid-overlay__marker {
+        position: absolute;
+        top: -6px;
+        bottom: -6px;
+        left: calc(var(--active-cols) * 8.333333%);
+        width: 3px;
+        transform: translateX(-1.5px);
+        border-radius: 999px;
+        background: rgba(0, 150, 220, 0.92);
+        transition: left 90ms linear;
+    }
+
+    .resize-grid-overlay__ticks {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 0;
+        margin-top: 6px;
+        padding: 0 2px;
+    }
+
+    .resize-grid-overlay__tick {
+        position: relative;
+        height: 18px;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 1px;
+            height: 10px;
+            transform: translateX(-0.5px);
+            background: rgba(0, 0, 0, 0.16);
+        }
+
+        &.is-active::before {
+            background: rgba(0, 150, 220, 0.70);
+            height: 12px;
+        }
+    }
+
+    .resize-grid-overlay__num {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        transform: translateX(-50%);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        color: rgba(0, 0, 0, 0.55);
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        transition: color 140ms ease, background 140ms ease, border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+    }
+
+    .resize-grid-overlay__tick.is-active .resize-grid-overlay__num {
+        color: rgba(0, 150, 220, 0.98);
+        background: rgba(255, 255, 255, 0.96);
+        border-color: rgba(0, 150, 220, 0.55);
+        box-shadow:
+            0 0 0 4px rgba(0, 150, 220, 0.14),
+            0 10px 22px rgba(0, 150, 220, 0.20);
+        transform: translateX(-50%) translateY(-1px) scale(1.06);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .resize-grid-overlay--container,
+    .resize-grid-overlay--container .resize-grid-overlay__fill,
+    .resize-grid-overlay--container .resize-grid-overlay__marker {
+        transition: none !important;
+    }
 }
 
 
@@ -212,7 +385,7 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 .tag {
     display: flex;
     padding: 2px 10px;
-    border-radius: 3px;
+    border-radius: 4px;
     font-size: 12px;
     font-weight: 700;
     color: #fff;
@@ -247,8 +420,12 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     font-size: 1rem;
 }
 
-.drop-placeholder--empty {
-    min-height: 132px;
+.drop-placeholder {
+    min-height: 100px;
+}
+
+.drop-placeholder--container {
+    min-height: 190px;
 }
 
 .drop-placeholder__box {
@@ -257,14 +434,11 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 100%;
-    border-radius: 18px;
+    height: 100%;
+    border-radius: 4px;
     border: 1px dashed rgba(0, 150, 220, 0.42);
     background:
         linear-gradient(180deg, rgba(0, 150, 220, 0.08), rgba(0, 150, 220, 0.14));
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.32),
-        0 12px 30px rgba(0, 150, 220, 0.12);
     overflow: hidden;
 }
 
@@ -278,20 +452,6 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
             rgba(255, 255, 255, 0));
     background-size: 240% 100%;
     animation: dropPlaceholderShimmer 1.8s linear infinite;
-}
-
-.drop-placeholder__line {
-    position: absolute;
-    left: 14px;
-    right: 14px;
-    top: 50%;
-    height: 3px;
-    transform: translateY(-50%);
-    border-radius: 999px;
-    background: linear-gradient(90deg,
-            rgba(0, 150, 220, 0.12),
-            rgba(0, 150, 220, 0.9),
-            rgba(0, 150, 220, 0.12));
 }
 
 .drop-placeholder__badge,
@@ -333,7 +493,7 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     }
 
     .fg-box {
-        padding: 0;
+        padding: 0 ;
     }
 
     .fg-select {
@@ -386,8 +546,9 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: inherit;
+    gap: 0.5em;
     padding: 0 !important;
+    margin-bottom: 0.5em;
     overflow: hidden;
     width: 100%;
     flex: 0 0 100%;
@@ -397,10 +558,11 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     position: absolute;
     top: 0;
     right: 0;
+    margin: -1px;
     width: 12px;
     bottom: 0;
-    border-top-right-radius: 14px;
-    border-bottom-right-radius: 14px;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
     cursor: ew-resize;
     opacity: 0;
     transition: opacity 140ms ease, background 140ms ease, box-shadow 140ms ease;
@@ -421,20 +583,9 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     background: rgba(0, 0, 0, 0.10);
 }
 
-.grid-resize-handle::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 6px;
-    height: 24px;
-    transform: translate(-50%, -50%);
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.04);
-}
 
-.fg-box:hover .grid-resize-handle,
-.fg-box:focus-within .grid-resize-handle {
+.form-item:hover .grid-resize-handle,
+.form-item:focus-within .grid-resize-handle {
     opacity: 1;
 }
 

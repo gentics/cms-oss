@@ -1,14 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
-import { FormElement, FormElementConfiguration, FormSchema, FormTypeConfiguration, ItemInNode, ItemRef } from '@gentics/cms-models';
-
-function sanitizeItemReference(item: ItemInNode): ItemRef {
-    return {
-        id: item.id,
-        nodeId: item.nodeId,
-        type: item.type as any,
-        name: item.name,
-    };
-}
+import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
+import { FormElement, FormElementConfiguration, FormSchema, FormTypeConfiguration } from '@gentics/cms-models';
 
 @Component({
     selector: 'gtx-form-element-settings',
@@ -28,22 +19,23 @@ export class FormElementSettingsComponent {
 
     public readonly disabled = input.required<boolean>();
 
+    public readonly visibleSettings = computed(() => {
+        const all = this.elementConfig().settings || [];
+        return all.filter((setting) => !setting.backend);
+    });
+
     public updateSettingValue(id: string, value: unknown): void {
         const copy = structuredClone(this.element());
         (copy.formGridOptions as any)[id] = value;
         this.element.set(copy);
     }
 
-    public updateReferenceValue(id: string, value: ItemInNode | ItemInNode[]): void {
-        if (value == null) {
-            this.updateSettingValue(id, value);
-            return;
-        }
-
-        if (Array.isArray(value)) {
-            this.updateSettingValue(id, value.map(sanitizeItemReference));
-        } else {
-            this.updateSettingValue(id, sanitizeItemReference(value));
-        }
+    public updateFormGridOptions(data: Record<string, any>): void {
+        this.element.update((el) => {
+            return {
+                ...el,
+                formGridOptions: data as any,
+            };
+        });
     }
 }

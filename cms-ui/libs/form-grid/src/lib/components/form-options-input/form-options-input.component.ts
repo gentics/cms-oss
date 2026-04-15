@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { FormSelectOption } from '@gentics/cms-models';
+import { FormSelectOptionValue } from '@gentics/cms-models';
 import { BaseFormElementComponent, cancelEvent } from '@gentics/ui-core';
 
 @Component({
@@ -9,7 +9,7 @@ import { BaseFormElementComponent, cancelEvent } from '@gentics/ui-core';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class FormOptionsInputComponent extends BaseFormElementComponent<FormSelectOption[]> {
+export class FormOptionsInputComponent extends BaseFormElementComponent<FormSelectOptionValue[]> {
 
     protected override onValueChange(): void {}
 
@@ -19,7 +19,7 @@ export class FormOptionsInputComponent extends BaseFormElementComponent<FormSele
             ...this.value || [],
             {
                 value: '',
-                labelI18n: {},
+                label: {},
             },
         ]);
     }

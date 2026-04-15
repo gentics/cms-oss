@@ -1,10 +1,19 @@
 /* eslint-disable jsdoc/no-undefined-types */
 import { I18nString } from './common';
 import { FormCondition } from './form-conditions';
-import { FormSelectOption } from './form-config';
 import { InheritableItem, ItemVersion } from './item';
 import { Raw } from './type-util';
 import { User } from './user';
+
+/**
+ * Slight variation of the FormSelectOption, which is used in the Configuration.
+ * Here only the label is called without the I18n-Suffix, as to be consistent within the form
+ * data, since the suffix is only used in the configuration.
+ */
+export interface FormSelectOptionValue {
+    value: string;
+    label: I18nString;
+}
 
 export interface EditableFormProperties {
     /**
@@ -386,7 +395,7 @@ export interface FormSchemaProperty {
     /**
      * Static options for select-type controls, with translatable labels.
      */
-    staticOptions?: FormSelectOption[];
+    staticOptions?: FormSelectOptionValue[];
 }
 
 export interface FormPage {

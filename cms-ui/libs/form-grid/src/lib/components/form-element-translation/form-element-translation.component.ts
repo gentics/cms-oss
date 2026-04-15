@@ -5,6 +5,7 @@ import {
     FormOptionsSetting,
     FormSchemaProperty,
     FormSelectOption,
+    FormSelectOptionValue,
     FormSettingType,
     I18nString,
 } from '@gentics/cms-models';
@@ -35,7 +36,7 @@ export class FormElementTranslationComponent {
         this.elementConfig().settings?.filter((s) => s.type === FormSettingType.TRANSLATION) ?? [],
     );
 
-    public staticOptions = computed<FormSelectOption[]>(() =>
+    public staticOptions = computed<FormSelectOptionValue[]>(() =>
         this.elementSchema()?.staticOptions ?? [],
     );
 
@@ -101,17 +102,17 @@ export class FormElementTranslationComponent {
         if (current == null) {
             return;
         }
-        const opts = structuredClone(current.staticOptions ?? []);
-        opts[index] = { ...opts[index], labelI18n: value ?? {} };
+        const opts: FormSelectOptionValue[] = structuredClone(current.staticOptions ?? []);
+        opts[index].label = value || {};
         this.elementSchema.set({ ...current, staticOptions: opts });
     }
 
     public updateOptionLabel(settingId: string, index: number, value: I18nString | null): void {
         this.element.update((el) => {
             const copy = structuredClone(el);
-            const opt = (copy.formGridOptions as any)?.[settingId]?.[index];
+            const opt: FormSelectOptionValue | null = (copy.formGridOptions as any)?.[settingId]?.[index];
             if (opt != null) {
-                opt.labelI18n = value;
+                opt.label = value || {};
             }
             return copy;
         });

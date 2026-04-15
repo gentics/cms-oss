@@ -90,11 +90,24 @@
         </aside>
 
         <main class="editor-main" (click)="clearSelectedElement()">
-            <div
-                #gridSurface
-                class="list-container"
-                (dragover)="editorDragOver($event)"
-            >
+            <div class="page-container">
+                <gtx-form-page-manager
+                    [uiSchema]="uiSchema()"
+                    (uiSchemaChange)="uiSchema.set($event)"
+                    [pageIndex]="pageIndex()"
+                    (pageIndexChange)="pageIndex.set($event)"
+                    [schema]="schema()"
+                    (schemaChange)="updateSchema($event)"
+                    [languages]="languages()"
+                    [mode]="mode()"
+                    (elementInterPageMove)="moveElementBetweenPages($event)"
+                ></gtx-form-page-manager>
+
+                <div
+                    #gridSurface
+                    class="list-container"
+                    (dragover)="editorDragOver($event)"
+                >
                 <div
                     class="resize-grid-overlay"
                     aria-hidden="true"
@@ -148,6 +161,7 @@
                     [(resizeOverlayActive)]="resizeOverlayActive"
                     [(resizeOverlaySpan)]="resizeOverlaySpan"
                 ></gtx-form-grid-elements-container>
+                </div>
             </div>
         </main>
 

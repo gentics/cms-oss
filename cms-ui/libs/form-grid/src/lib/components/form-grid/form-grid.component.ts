@@ -28,19 +28,6 @@ enum EditTabs {
     TRANSLATIONS = 'translations',
 }
 
-function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
-    for (const el of elements) {
-        if (data[el.id]) {
-            console.error(`An element with ID ${el.id} already exists in the map, which indicates that elements with the same ID are duplicated!`);
-        }
-        data[el.id] = el;
-
-        if (Array.isArray(el.elements)) {
-            addElementsToMap(data, el.elements);
-        }
-    }
-}
-
 @Component({
     selector: 'gtx-form-grid',
     templateUrl: './form-grid.component.html',
@@ -82,21 +69,18 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         return this.uiSchema()?.pages?.[this.pageIndex()]?.elements || [];
     });
 
+    /** Map of element IDs to elements for quick lookups */
+    public readonly elementMap = computed<Record<string, FormElement>>(() => {
+        const map: Record<string, FormElement> = {};
+        const elements = this.elements();
+        for (const el of elements) {
+            map[el.id] = el;
+        }
+        return map;
+    });
+
     /** Whether the selected element has any missing translations across all form languages */
     public hasMissingTranslations = signal(false);
-
-    /** Mapping of ID to each element in a flat map */
-    public readonly elementMap = computed<Record<string, FormElement>>(() => {
-        const data: Record<string, FormElement> = {};
-
-        for (const page of (this.uiSchema()?.pages || [])) {
-            if (page?.elements?.length > 0) {
-                addElementsToMap(data, page.elements);
-            }
-        }
-
-        return data;
-    });
 
     /** If the left sidebar is expanded */
     public readonly leftSidebarExpanded = signal(true);
@@ -281,6 +265,24 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     public updateSchema(schema: FormSchema): void {
         this.schema.set(schema);
+    }
+
+    public moveElementBetweenPages(event: { elementId: string; fromPage: number; toPage: number }): void {
+        const copy = structuredClone(this.uiSchema());
+        const fromElements = copy.pages[event.fromPage]?.elements;
+        if (!fromElements) {
+            return;
+        }
+        const idx = fromElements.findIndex((el) => el.id === event.elementId);
+        if (idx === -1) {
+            return;
+        }
+        const [element] = fromElements.splice(idx, 1);
+        element.uiSchemaPage = event.toPage;
+        copy.pages[event.toPage].elements.push(element);
+        this.uiSchema.set(copy);
+        this.pageIndex.set(event.toPage);
+        this.clearSelectedElement();
     }
 
     public upsetElementChanges(data: FormElement): void {

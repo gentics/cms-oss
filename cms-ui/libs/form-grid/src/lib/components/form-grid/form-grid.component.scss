@@ -236,6 +236,20 @@
     min-width: 0;
     min-height: 0;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-container {
+    border: 1px solid #d0d0d0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
 }
 
 /* Forms inside side panels: stack labels over selects, avoid horizontal scrolling */
@@ -345,12 +359,14 @@ h1 {
 }
 
 .list-container {
-    padding: 15px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     gap: 0.5rem;
+    overflow-y: auto;
 }
 
 gtx-checkbox {

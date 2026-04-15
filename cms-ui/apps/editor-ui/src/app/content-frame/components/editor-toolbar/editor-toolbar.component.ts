@@ -27,7 +27,7 @@ import {
     Page,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { FormGridViewMode } from '@gentics/form-grid';
+import { FormGridEditMode, FormGridViewMode } from '@gentics/form-grid';
 import { ChangesOf, IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
@@ -74,6 +74,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public readonly EditMode = EditMode;
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
     public readonly FormGridViewMode = FormGridViewMode;
+    public readonly FormGridEditMode = FormGridEditMode;
 
     @Input()
     public nodeInherited: boolean;

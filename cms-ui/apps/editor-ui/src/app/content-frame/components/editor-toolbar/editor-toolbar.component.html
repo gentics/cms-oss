@@ -90,14 +90,6 @@
 
             @if (editorState?.editMode === EditMode.EDIT && currentItem && currentItem?.type === 'form') {
                 <div class="form-editing-actions">
-                    <gtx-form-page-manager
-                        [uiSchema]="formUiSchema"
-                        (uiSchemaChange)="updateFormUiSchema($event)"
-                        [pageIndex]="formPageIndex"
-                        (pageIndexChange)="updateFormPageIndex($event)"
-                        [restricted]="formRestricted"
-                    ></gtx-form-page-manager>
-
                     <gtx-tabs class="form-view-modes" pure [activeId]="formViewMode">
                         <gtx-tab
                             [id]="FormGridViewMode.EDITOR"

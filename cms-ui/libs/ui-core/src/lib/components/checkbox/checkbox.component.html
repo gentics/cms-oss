@@ -1,21 +1,33 @@
-<div>
-    <input type="checkbox"
-           [attr.id]="id"
-           [attr.name]="name"
-           [checked]="checkState === true"
-           [indeterminate]="checkState === 'indeterminate'"
-           [attr.data-state]="checkState"
-           [disabled]="disabled"
-           [required]="required"
-           [value]="value"
+<input
+    ype="checkbox"
+    tabindex="-1"
+    aria-hidden="true"
+    [attr.id]="id"
+    [attr.name]="name"
+    [attr.state]="value"
+    [disabled]="disabled"
+    [required]="required"
+    [checked]="value === CHECKBOX_STATE_INDETERMINATE ? null : value"
+    [indeterminate]="value === CHECKBOX_STATE_INDETERMINATE"
+    [value]="formValue"
 
-           (blur)="onBlur()"
-           (focus)="onFocus()"
-           (change)="onInputChanged($event, input)"
+    (blur)="handleBlur()"
+    (change)="cancelEvent"
+>
 
-           [class.tabbed]="tabbedFocus"
-
-           #input
-    >
-    <label [attr.for]="id" #labelElement>{{ label }}</label>
-</div>
+<label
+    tabindex="0"
+    role="checkbox"
+    [class.disabled]="disabled"
+    [attr.for]="id"
+    [attr.aria-checked]="value === CHECKBOX_STATE_INDETERMINATE ? 'mixed' : value"
+    [attr.aria-disabled]="disabled"
+    [attr.aria-current]="value === CHECKBOX_STATE_INDETERMINATE ? null : value"
+    [attr.aria-required]="required"
+    [attr.data-value]="value"
+    (click)="toggleState($event)"
+    (keydown)="handleKeyDown($event)"
+>
+    <span class="indicator" [ngClass]="'state-' + value"></span>
+    <span class="label-content">{{ label }}</span>
+</label>

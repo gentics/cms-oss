@@ -597,3 +597,14 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 .grid-resize-handle:hover::before {
     background: rgba(0, 150, 220, 0.85);
 }
+
+.condition-warning-icon {
+    color: #e65100;
+    font-size: 1rem;
+    vertical-align: middle;
+}
+
+gtx-sortable-item.has-condition-warning .fg-box {
+    border-color: #ffb74d;
+    background: #fff8f0;
+}

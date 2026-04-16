@@ -236,6 +236,23 @@
     min-width: 0;
     min-height: 0;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-container {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+
+.page-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 /* Forms inside side panels: stack labels over selects, avoid horizontal scrolling */
@@ -348,12 +365,15 @@ h1 {
 }
 
 .list-container {
-    padding: 15px;
+    padding: 16px;
+    padding-top: 0;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     gap: 0.5rem;
+    overflow-y: auto;
 }
 
 gtx-checkbox {
@@ -605,6 +625,7 @@ gtx-checkbox [type='checkbox']+label:before {
     gap: 0;
     margin-top: 8px;
     padding: 0 2px;
+    margin-bottom: 8px;
 }
 
 .resize-grid-overlay__tick {

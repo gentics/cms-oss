@@ -1,10 +1,49 @@
+<div class="page-manager">
+    @for (page of uiSchema().pages; track $index) {
+        <div
+            class="page-tab"
+            [class.active]="pageIndex() === $index"
+            [class.droppable]="mode() === FormGridEditMode.FULL"
+            [class.drop-target-hint]="elementDragging() && pageIndex() !== $index"
+            (click)="pageIndex.set($index)"
+            (dragover)="onPageTabDragOver($event, $index)"
+            (drop)="onPageTabDrop($event, $index)"
+        >
+            <span class="page-tab-label">
+                {{ page.pagename | gtxI18nObject }}
+                @if (!(page.pagename | gtxI18nObject)) {
+                    {{ 'form_grid.page_untitled' | gtxI18n:{number: $index + 1} }}
+                }
+            </span>
 
-<div class="form-page-info">
-    <span class="info-title">{{ 'form_grid.pagination_title' | gtxI18n }}</span>
+            @if (mode() === FormGridEditMode.FULL) {
+                <gtx-button
+                    [icon]="true"
+                    [title]="'form_grid.page_edit_title' | gtxI18n"
+                    (click)="editPage.emit($index); $event.stopPropagation()"
+                >
+                    <icon>edit</icon>
+                </gtx-button>
+                <gtx-button
+                    type="alert"
+                    [icon]="true"
+                    [title]="'form_grid.page_delete_title' | gtxI18n"
+                    (click)="deletePage($index); $event.stopPropagation()"
+                >
+                    <icon>delete_outline</icon>
+                </gtx-button>
+            }
+        </div>
+    }
 
-    <div class="page-data">
-        <span class="page-current">{{ pageIndex() + 1 }}</span>
-        <span class="page-separator">/</span>
-        <span class="page-total">{{ uiSchema().pages?.length }}</span>
-    </div>
+    @if (mode() === FormGridEditMode.FULL) {
+        <gtx-button
+            class="add-page-btn"
+            [icon]="true"
+            [title]="'form_grid.page_add' | gtxI18n"
+            (click)="addPage()"
+        >
+            <icon>add</icon>
+        </gtx-button>
+    }
 </div>

@@ -11,6 +11,17 @@
     padding: 0.5rem 0.5rem 0.5rem 0;
 }
 
+.definition-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1rem;
+
+    > * {
+        flex: 1 1 50%;
+    }
+}
+
 .definition-fields {
     display: grid;
     grid-template-columns: 1fr 1fr;

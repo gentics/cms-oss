@@ -10,23 +10,20 @@ import {
     signal,
 } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
+import { TranslateStore } from '@ngx-translate/core';
 import {
     FormElement,
     FormElementConfiguration,
+    FormPage,
     FormSchema,
     FormSchemaProperty,
     FormTypeConfiguration,
     FormUISchema,
+    I18nString,
 } from '@gentics/cms-models';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
-import { ElementSelectionEvent, FormGridEditMode, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
-
-enum EditTabs {
-    DEFINITION = 'definition',
-    SETTINGS = 'settings',
-    TRANSLATIONS = 'translations',
-}
+import { ElementInterPageMoveEvent, ElementSelectionEvent, FormGridEditMode, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
 function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
     for (const el of elements) {
@@ -39,6 +36,12 @@ function addElementsToMap(data: Record<string, FormElement>, elements: FormEleme
             addElementsToMap(data, el.elements);
         }
     }
+}
+
+enum EditTabs {
+    DEFINITION = 'definition',
+    SETTINGS = 'settings',
+    TRANSLATIONS = 'translations',
 }
 
 @Component({
@@ -82,10 +85,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         return this.uiSchema()?.pages?.[this.pageIndex()]?.elements || [];
     });
 
-    /** Whether the selected element has any missing translations across all form languages */
-    public hasMissingTranslations = signal(false);
-
-    /** Mapping of ID to each element in a flat map */
+    /** Mapping of ID to each element in a flat map for the current page */
     public readonly elementMap = computed<Record<string, FormElement>>(() => {
         const data: Record<string, FormElement> = {};
 
@@ -96,6 +96,23 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
 
         return data;
+    });
+
+    /** Whether the selected element has any missing translations across all form languages */
+    public hasMissingTranslations = signal(false);
+    public isElementDragging = signal(false);
+
+    /* PAGE EDITING
+     * ===================================================================== */
+
+    /** Index of the page currently being edited in the sidebar (null = none) */
+    public readonly editingPageIndex = signal<number | null>(null);
+    /** Selected language for page name editing */
+    public readonly selectedPageLanguage = signal<string>('');
+    /** The page currently being edited */
+    public readonly editingPage = computed<FormPage | null>(() => {
+        const idx = this.editingPageIndex();
+        return idx == null ? null : (this.uiSchema()?.pages?.[idx] ?? null);
     });
 
     /** If the left sidebar is expanded */
@@ -188,6 +205,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     constructor(
         changeDetector: ChangeDetectorRef,
         private i18n: I18nService,
+        private translateStore: TranslateStore,
     ) {
         super(changeDetector);
     }
@@ -283,6 +301,25 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.schema.set(schema);
     }
 
+    public moveElementBetweenPages(event: ElementInterPageMoveEvent): void {
+        const copy = structuredClone(this.uiSchema());
+        const fromElements = copy.pages[event.fromPage]?.elements;
+        if (!fromElements) {
+            return;
+        }
+        const idx = fromElements.findIndex((el) => el.id === event.elementId);
+        if (idx === -1) {
+            return;
+        }
+        const [element] = fromElements.splice(idx, 1);
+        element.uiSchemaPage = event.toPage;
+        copy.pages[event.toPage].elements.push(element);
+        this.uiSchema.set(copy);
+        this.pageIndex.set(event.toPage);
+        this.isElementDragging.set(false);
+        this.clearSelectedElement();
+    }
+
     public upsetElementChanges(data: FormElement): void {
         const pageElements = structuredClone(this.elements());
         if (this.replaceElementInTree(pageElements, data)) {
@@ -305,7 +342,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
                 return true;
             }
             if (Array.isArray(elements[i].elements)
-                && this.replaceElementInTree(elements[i].elements!, replacement)
+              && this.replaceElementInTree(elements[i].elements!, replacement)
             ) {
                 return true;
             }
@@ -366,6 +403,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             return;
         }
 
+        this.editingPageIndex.set(null);
+
         const blockType = data.element.formGridOptions?.type || null;
         const elementSchema = this.schema()?.properties?.[data.element.id] || null;
         const controlConfig = elementSchema
@@ -390,9 +429,51 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.selectedElementContainerId = data.containerId;
     }
 
+    public startEditPage(index: number): void {
+        this.selectedPageLanguage.set(this.languages()[0] ?? '');
+        this.clearSelectedElement();
+
+        // Pre-fill pagename with the default "Page N" label if the page has no name yet
+        const page = this.uiSchema().pages[index];
+        const hasName = page?.pagename && Object.values(page.pagename).some((v) => !!v);
+        if (!hasName) {
+            const pageNum = index + 1;
+            const fallback = this.i18n.instant('form_grid.page_untitled', { ['number']: pageNum });
+            const copy = structuredClone(this.uiSchema());
+            const filled: I18nString = {};
+            for (const lang of this.languages()) {
+                const langTrans = this.translateStore.getTranslations(lang) as any;
+                const template: string | undefined = langTrans?.['form_grid']?.['page_untitled'];
+                filled[lang] = template
+                    ? template.replace(/\{\{number\}\}/g, String(pageNum))
+                    : fallback;
+            }
+            copy.pages[index].pagename = filled;
+            this.uiSchema.set(copy);
+        }
+
+        this.editingPageIndex.set(index);
+        this.rightSidebarExpanded.set(true);
+    }
+
+    public stopEditPage(): void {
+        this.editingPageIndex.set(null);
+    }
+
+    public updateEditingPageName(value: I18nString | null): void {
+        const idx = this.editingPageIndex();
+        if (idx == null) {
+            return;
+        }
+        const copy = structuredClone(this.uiSchema());
+        copy.pages[idx].pagename = value ?? {};
+        this.uiSchema.set(copy);
+    }
+
     public clearSelectedElement(): void {
         this.selectedElementId.set(null);
         this.selectedElementContainerId = null;
+        this.editingPageIndex.set(null);
     }
 
     // TODO: Do it more angular like, as creating a new untracked HTMLElement is not a great idea

@@ -1,6 +1,7 @@
 import { FormElement } from '@gentics/cms-models';
 
 export const PALETTE_MIME = 'application/x-andp-formgrid-palette';
+export const ELEMENT_MIME = 'application/x-form-grid-element';
 
 export interface PaletteDropTarget {
     /** The ID of the element-container, to determine where to place the item in. */
@@ -30,4 +31,10 @@ export interface DropRow {
 export interface ElementSelectionEvent {
     element: FormElement;
     containerId: string;
+}
+
+export interface ElementInterPageMoveEvent {
+    elementId: string;
+    fromPage: number;
+    toPage: number;
 }

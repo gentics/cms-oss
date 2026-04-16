@@ -24,7 +24,7 @@ import {
 } from '@gentics/cms-models';
 import { cancelEvent, ISortableEvent, ModalService } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
-import { DropRow, ElementSelectionEvent, FormGridEditMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
+import { DropRow, ELEMENT_MIME, ElementSelectionEvent, FormGridEditMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
 interface DisplayItem {
     id: string;
@@ -86,6 +86,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly paletteDragType = input<string | null>();
     public readonly paletteDragConfig = input<FormElementConfiguration | null>();
     public readonly platteDragStop = output<void>();
+    public readonly elementDraggingChange = output<boolean>();
 
     /** How many spans/columns the currently dragged element would use if dropped */
     public pendingPaletteDropSpan: number | null;
@@ -590,6 +591,22 @@ export class FormGridElementsContainerComponent implements OnChanges {
             return true;
         }
         return type != null && wl.includes(type);
+    }
+
+    public onElementDragStart(event: DragEvent, element: FormElement): void {
+        if (this.mode() !== FormGridEditMode.FULL) {
+            event.preventDefault();
+            return;
+        }
+        event.dataTransfer?.setData(ELEMENT_MIME, element.id);
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+        }
+        this.elementDraggingChange.emit(true);
+    }
+
+    public onElementDragEnd(): void {
+        this.elementDraggingChange.emit(false);
     }
 
     private updateDisplayItems(): void {

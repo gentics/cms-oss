@@ -4,7 +4,7 @@ import {
     FormPropertyValidation,
     FormSchema,
     FormSchemaProperty,
-    FormTypeConfiguration,
+    FormTypeConfiguration
 } from '@gentics/cms-models';
 import { toValidNumber } from '@gentics/ui-core';
 import { FormGridEditMode } from '../../models';

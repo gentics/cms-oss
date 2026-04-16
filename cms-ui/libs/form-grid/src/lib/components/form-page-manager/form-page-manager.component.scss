@@ -1,37 +1,91 @@
-@import 'ui-core/src/styles/variables';
+:host {
+    display: block;
+}
 
-.form-page-info {
+.page-manager {
     display: flex;
-    flex-direction: column;
-    padding: 4px 12px;
-    border-radius: 4px;
-    border: 1px solid $gtx-color-primary;
-    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 12px;
     align-items: center;
-    gap: 0.25rem;
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.06),
-        0 6px 18px rgba(0, 0, 0, 0.06);
+}
 
-    .info-title {
-        font-size: 0.7rem;
-        text-align: center;
-        width: 100%;
-        line-height: 1;
+.page-tab {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    color: #999;
+
+    &.active {
+        background: #ffffff;
+        border: 1px solid #d0d0d0;
+        color: #1976d2;
+        font-weight: 500;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     }
 
-    .page-data {
-        font-size: 0.95rem;
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        gap: 0.25rem;
-        line-height: 1;
-
-        .page-current {}
-
-        .page-separator {}
-
-        .page-total {}
+    &.droppable:not(.active) {
+        &.dragover,
+        &:hover {
+            background: #fafafa;
+            border-color: #d0d0d0;
+            color: #333;
+        }
     }
+
+    &.drop-target-hint {
+        border-color: #1976d2;
+        background: #e3f2fd;
+        color: #1565c0;
+        animation: pulse-border 1s ease-in-out infinite alternate;
+    }
+
+    &.drop-target-hint:hover,
+    &.drop-target-hint.dragover {
+        background: #bbdefb;
+        border-color: #1565c0;
+    }
+
+    .page-tab-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .page-language-select {
+        width: 80px;
+        flex-shrink: 0;
+    }
+
+    .page-name-input {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    gtx-button {
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+
+    &:hover gtx-button,
+    &.active gtx-button {
+        opacity: 1;
+    }
+}
+
+.add-page-btn {
+    margin-left: 4px;
+}
+
+@keyframes pulse-border {
+    from { border-color: #1976d2; box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.3); }
+    to   { border-color: #1565c0; box-shadow: 0 0 0 4px rgba(25, 118, 210, 0); }
 }

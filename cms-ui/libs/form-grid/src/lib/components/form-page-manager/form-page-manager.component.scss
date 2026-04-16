@@ -60,6 +60,11 @@
         font-weight: 500;
     }
 
+    .page-language-select {
+        width: 80px;
+        flex-shrink: 0;
+    }
+
     .page-name-input {
         flex: 1;
         min-width: 120px;

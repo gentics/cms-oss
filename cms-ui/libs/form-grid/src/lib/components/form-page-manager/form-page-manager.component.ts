@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, input, model, OnInit, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
-import { FormElement, FormSchema, FormUISchema, I18nString } from '@gentics/cms-models';
+import { FormElement, FormSchema, FormUISchema } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { ELEMENT_MIME, FormGridEditMode } from '../../models';
+import { ELEMENT_MIME, ElementInterPageMoveEvent, FormGridEditMode } from '../../models';
 
 function collectElementIds(elements: FormElement[]): string[] {
     const ids: string[] = [];
@@ -30,19 +30,11 @@ export class FormPageManagerComponent {
     public readonly pageIndex = model.required<number>();
     /** Optional: required for schema cleanup when deleting pages. */
     public readonly schema = model<FormSchema | null>(null);
-    /** Optional: required for pagename inline editing. */
-    public readonly languages = input<string[]>([]);
     public readonly mode = input<FormGridEditMode>(FormGridEditMode.NONE);
     public readonly elementDragging = input<boolean>(false);
 
-    public readonly elementInterPageMove = output<{
-        elementId: string;
-        fromPage: number;
-        toPage: number;
-    }>();
-
-    /** Index of the page currently being renamed inline (null = none) */
-    public editingPageIndex = signal<number | null>(null);
+    public readonly elementInterPageMove = output<ElementInterPageMoveEvent>();
+    public readonly editPage = output<number>();
 
     constructor(
         private modals: ModalService,
@@ -54,20 +46,6 @@ export class FormPageManagerComponent {
         copy.pages.push({ pagename: {}, elements: [] });
         this.uiSchema.set(copy);
         this.pageIndex.set(copy.pages.length - 1);
-    }
-
-    public startEditPage(index: number): void {
-        this.editingPageIndex.set(index);
-    }
-
-    public updatePageName(index: number, value: I18nString | null): void {
-        const copy = structuredClone(this.uiSchema());
-        copy.pages[index].pagename = value ?? {};
-        this.uiSchema.set(copy);
-    }
-
-    public finishEditPage(): void {
-        this.editingPageIndex.set(null);
     }
 
     public deletePage(index: number): void {
@@ -156,6 +134,5 @@ export class FormPageManagerComponent {
 
         this.uiSchema.set(uiCopy);
         this.pageIndex.set(Math.max(0, newIndex));
-        this.editingPageIndex.set(null);
     }
 }

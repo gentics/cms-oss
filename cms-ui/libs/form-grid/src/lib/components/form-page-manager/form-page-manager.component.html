@@ -9,47 +9,29 @@
             (dragover)="onPageTabDragOver($event, $index)"
             (drop)="onPageTabDrop($event, $index)"
         >
-            @if (editingPageIndex() === $index) {
-                <gtx-i18n-input
-                    class="page-name-input"
-                    [value]="page.pagename"
-                    [language]="languages()[0]"
-                    [availableLanguages]="languages()"
-                    (valueChange)="updatePageName($index, $event)"
-                    (click)="$event.stopPropagation()"
-                ></gtx-i18n-input>
+            <span class="page-tab-label">
+                {{ page.pagename | gtxI18nObject }}
+                @if (!(page.pagename | gtxI18nObject)) {
+                    {{ 'form_grid.page_untitled' | gtxI18n:{number: $index + 1} }}
+                }
+            </span>
+
+            @if (mode() === FormGridEditMode.FULL) {
                 <gtx-button
                     [icon]="true"
-                    title="{{ 'form_grid.page_edit_done' | gtxI18n }}"
-                    (click)="finishEditPage(); $event.stopPropagation()"
+                    [title]="'form_grid.page_edit_title' | gtxI18n"
+                    (click)="editPage.emit($index); $event.stopPropagation()"
                 >
-                    <icon>check</icon>
+                    <icon>edit</icon>
                 </gtx-button>
-            } @else {
-                <span class="page-tab-label">
-                    {{ page.pagename | gtxI18nObject }}
-                    @if (!(page.pagename | gtxI18nObject)) {
-                        {{ 'form_grid.page_untitled' | gtxI18n:{number: $index + 1} }}
-                    }
-                </span>
-
-                @if (mode() === FormGridEditMode.FULL) {
-                    <gtx-button
-                        [icon]="true"
-                        title="{{ 'form_grid.page_edit_title' | gtxI18n }}"
-                        (click)="startEditPage($index); $event.stopPropagation()"
-                    >
-                        <icon>edit</icon>
-                    </gtx-button>
-                    <gtx-button
-                        type="alert"
-                        [icon]="true"
-                        title="{{ 'form_grid.page_delete_title' | gtxI18n }}"
-                        (click)="deletePage($index); $event.stopPropagation()"
-                    >
-                        <icon>delete_outline</icon>
-                    </gtx-button>
-                }
+                <gtx-button
+                    type="alert"
+                    [icon]="true"
+                    [title]="'form_grid.page_delete_title' | gtxI18n"
+                    (click)="deletePage($index); $event.stopPropagation()"
+                >
+                    <icon>delete_outline</icon>
+                </gtx-button>
             }
         </div>
     }
@@ -58,7 +40,7 @@
         <gtx-button
             class="add-page-btn"
             [icon]="true"
-            title="{{ 'form_grid.page_add' | gtxI18n }}"
+            [title]="'form_grid.page_add' | gtxI18n"
             (click)="addPage()"
         >
             <icon>add</icon>

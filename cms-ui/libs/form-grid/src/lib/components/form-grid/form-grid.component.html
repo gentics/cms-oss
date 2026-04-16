@@ -3,9 +3,9 @@
     [ngClass]="'mode-' + mode()"
     [class.palette-dragging]="isPaletteDragging"
     [class.left-panel-expanded]="viewMode() === FormGridViewMode.EDITOR && leftSidebarExpanded()"
-    [class.right-panel-wide]="selectedElement() != null && selectedElementConfiguration() != null && rightSidebarExpanded()"
+    [class.right-panel-wide]="(editingPage() != null || (selectedElement() != null && selectedElementConfiguration() != null)) && rightSidebarExpanded()"
     [class.no-left-panel]="viewMode() === FormGridViewMode.PREVIEW"
-    [class.no-right-panel]="selectedElement() == null || selectedElementConfiguration() == null"
+    [class.no-right-panel]="editingPage() == null && (selectedElement() == null || selectedElementConfiguration() == null)"
     [class.editor-active]="viewMode() === FormGridViewMode.EDITOR"
     [class.preview-active]="viewMode() === FormGridViewMode.PREVIEW"
 >
@@ -98,10 +98,10 @@
                     (pageIndexChange)="pageIndex.set($event)"
                     [schema]="schema()"
                     (schemaChange)="$event && updateSchema($event)"
-                    [languages]="languages()"
                     [mode]="mode()"
                     [elementDragging]="isElementDragging()"
                     (elementInterPageMove)="moveElementBetweenPages($event)"
+                    (editPage)="startEditPage($event)"
                 ></gtx-form-page-manager>
 
                 <div
@@ -170,6 +170,52 @@
         <main class="preview-main">
             Welcome to preview!
         </main>
+
+        @if (editingPage()) {
+            <aside
+                class="editor-panel editor-panel--right"
+                aria-label="Rechtes Panel"
+                [class.expanded]="rightSidebarExpanded()"
+            >
+                <div class="panel-header">
+                    <button
+                        class="panel-toggle-btn"
+                        title="Rechtes Panel ein-/ausklappen"
+                        aria-label="Rechtes Panel ein-/ausklappen"
+                        (click)="toggleRightSidebar()"
+                    >
+                        <icon>chevron_left</icon>
+                    </button>
+
+                    <div class="panel-header-title">{{ 'form_grid.page_edit_title' | gtxI18n }}</div>
+                </div>
+
+                <div class="panel-content">
+                    <div class="page-edit-form">
+                        @if (languages().length > 1) {
+                            <gtx-select
+                                [label]="'form_grid.translation_language' | gtxI18n"
+                                [value]="selectedPageLanguage()"
+                                (valueChange)="selectedPageLanguage.set($any($event))"
+                            >
+                                @for (lang of languages(); track lang) {
+                                    <gtx-option [value]="lang">{{ lang }}</gtx-option>
+                                }
+                            </gtx-select>
+                        }
+
+                        <gtx-i18n-input
+                            [label]="'form_grid.page_name_label' | gtxI18n"
+                            [value]="editingPage()!.pagename"
+                            [language]="selectedPageLanguage()"
+                            [availableLanguages]="languages()"
+                            [disabled]="mode() !== FormGridEditMode.FULL"
+                            (valueChange)="updateEditingPageName($event)"
+                        ></gtx-i18n-input>
+                    </div>
+                </div>
+            </aside>
+        }
 
         @if (selectedElement() && selectedElementConfiguration()) {
             <aside

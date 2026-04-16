@@ -50,6 +50,7 @@
         "condition_equals_compare_value": "Condition: Compare value",
         "page_add": "Add page",
         "page_edit_title": "Edit page name",
+        "page_name_label": "Page name",
         "page_edit_done": "Done",
         "page_untitled": "Page {{number}}",
         "page_delete_title": "Delete page",

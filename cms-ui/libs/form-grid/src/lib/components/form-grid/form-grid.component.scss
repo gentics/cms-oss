@@ -241,15 +241,18 @@
 }
 
 .page-container {
-    border: 1px solid #d0d0d0;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     overflow: hidden;
-    background: #ffffff;
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 0;
+}
+
+
+.page-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
 /* Forms inside side panels: stack labels over selects, avoid horizontal scrolling */

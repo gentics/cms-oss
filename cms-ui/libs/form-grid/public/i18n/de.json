@@ -50,6 +50,7 @@
         "condition_equals_compare_value": "Bedingung: Vergleichswert",
         "page_add": "Seite hinzufügen",
         "page_edit_title": "Seitenname bearbeiten",
+        "page_name_label": "Seitenname",
         "page_edit_done": "Fertig",
         "page_untitled": "Seite {{number}}",
         "page_delete_title": "Seite löschen",

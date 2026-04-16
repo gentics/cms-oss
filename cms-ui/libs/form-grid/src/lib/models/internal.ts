@@ -32,3 +32,9 @@ export interface ElementSelectionEvent {
     element: FormElement;
     containerId: string;
 }
+
+export interface ElementInterPageMoveEvent {
+    elementId: string;
+    fromPage: number;
+    toPage: number;
+}

@@ -141,7 +141,6 @@ export class GroupedTabsComponent
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private elementRef: ElementRef,
     ) {
         super(changeDetector);
         this.booleanInputs.push('pure', 'wrap', 'statusIcons');
@@ -162,6 +161,7 @@ export class GroupedTabsComponent
                     try {
                         group.tabs.notifyOnChanges();
                         allChanges.push(group.tabs.changes.pipe(startWith(group.tabs)));
+                        this.changeDetector.markForCheck();
                     } catch (e) {
                         if (e instanceof ObjectUnsubscribedError) {
                         // To prevent Unsubscribe error
@@ -178,11 +178,13 @@ export class GroupedTabsComponent
 
         this.subscriptions.push(tabChanges.subscribe(() => {
             this.collectTabs(true);
+            this.changeDetector.markForCheck();
         }));
 
         this.tabPanes.notifyOnChanges();
         this.tabGroups.notifyOnChanges();
         this.collectTabs(true);
+        this.changeDetector.markForCheck();
     }
 
     ngOnChanges(changes: SimpleChanges): void {

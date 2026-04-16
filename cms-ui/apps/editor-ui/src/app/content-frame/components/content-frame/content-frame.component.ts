@@ -1078,6 +1078,7 @@ span.diff-html-added {
                 })
                     .then(() => {
                         this.currentItemClean = true;
+                        this.formListLoader.reload();
                         this.changeDetector.markForCheck();
 
                         this.notification.show({

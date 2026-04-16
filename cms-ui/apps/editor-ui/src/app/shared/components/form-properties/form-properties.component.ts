@@ -35,7 +35,7 @@ export enum FormPropertiesMode {
     EDIT = 'edit',
 }
 
-export interface FormPropertiesData extends Omit<EditableFormProperties, 'schema' | 'uiSchema'> {
+export interface FormPropertiesData extends EditableFormProperties {
     formType: string;
 }
 
@@ -93,6 +93,9 @@ export class FormPropertiesComponent
     public useInternalSuccessPage: boolean;
     public loadedSuccessPage: Page | null = null;
     public successPageBreadcrumbs = '';
+
+    public formLanguages: Language[] = [];
+    public activeLanguage: Language | null = null;
 
     protected override delayedSetup = true;
 
@@ -189,7 +192,7 @@ export class FormPropertiesComponent
             formType: new FormControl(this.item?.formType || this.safeValue('formType'), Validators.required),
             description: new FormControl(this.item?.description || this.safeValue('description')),
             languages: new FormControl(this.item?.languages || this.safeValue('languages') || [], Validators.minLength(1)),
-            data: this.formData as any,
+            data: this.formData,
         });
     }
 
@@ -199,6 +202,13 @@ export class FormPropertiesComponent
             this.formTypeConfigurations == null
             || !this.hadInitialConfiguration
         ));
+
+        const selectedLangs = (value?.languages || []);
+        this.formLanguages = this.languages.filter((lang) => selectedLangs.includes(lang.code));
+        if (this.formLanguages.length > 0 && this.activeLanguage == null) {
+            this.activeLanguage = this.formLanguages[0];
+        }
+        this.changeDetector.markForCheck();
     }
 
     protected assembleValue(value: FormPropertiesData): FormPropertiesData {

@@ -1767,16 +1767,10 @@ export class FolderActionsService {
      * Update the editable properties of a form.
      */
     updateFormProperties(formId: number, properties: EditableFormProperties, postUpdateBehavior?: PostUpdateBehavior): Promise<Form | void> {
-        // FIXME: Investigate why we map this again?? whats the point
-        const formProps: Partial<EditableFormProperties> = {
-            name: properties.name,
-            description: properties.description,
-            data: properties.data,
-        };
         return this.updateItem(
             'form',
             formId,
-            formProps as any,
+            properties,
             {},
             postUpdateBehavior,
         );

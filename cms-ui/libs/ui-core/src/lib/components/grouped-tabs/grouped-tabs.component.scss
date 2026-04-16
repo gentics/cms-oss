@@ -2,7 +2,7 @@
 
 @mixin is-active {
     border-left: 2px solid $gtx-tabs-active-border-color;
-    border-right: 1px solid white;
+    border-right-color: transparent;
 }
 
 @mixin inline-ellipsis-text {
@@ -51,6 +51,17 @@
             box-shadow: none;
             margin: 0;
             background: white;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+
+            &::after {
+                display: block;
+                content: '';
+                flex: 1 1 auto;
+                min-height: 1px;
+                border-right: 1px solid $gtx-color-light-gray;
+            }
 
             & > li {
                 background: white;

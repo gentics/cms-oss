@@ -37,19 +37,21 @@
                     }
 
                     @if (activeConfiguration?.flows) {
-                        <gtx-select
-                            class="columns small-6"
-                            [required]="true"
-                            [label]="('editor.form_flow_label' | gtxI18n) + '*'"
-                            [required]="true"
-                            formControlName="data.flowId"
-                        >
-                            @for (flow of activeConfiguration.flows; track flow.id) {
-                                <gtx-option [value]="language.code">
-                                    {{ flow.labelI18n | gtxI18nObject }}
-                                </gtx-option>
-                            }
-                        </gtx-select>
+                        <ng-container formGroupName="data">
+                            <gtx-select
+                                class="columns small-6"
+                                [required]="true"
+                                [label]="('editor.form_flow_label' | gtxI18n) + '*'"
+                                [required]="true"
+                                formControlName="flowId"
+                            >
+                                @for (flow of activeConfiguration.flows; track flow.id) {
+                                    <gtx-option [value]="language.code">
+                                        {{ flow.labelI18n | gtxI18nObject }}
+                                    </gtx-option>
+                                }
+                            </gtx-select>
+                        </ng-container>
                     }
                 </div>
             }
@@ -75,17 +77,19 @@
             </gtx-select>
 
             @if (activeConfiguration?.templateOptions) {
-                <gtx-select
-                    class="columns small-12"
-                    [label]="('editor.item_template_context_label' | gtxI18n)"
-                    formControlName="data.templateContext"
-                >
-                    @for (option of activeConfiguration.templateOptions; track option.value) {
-                        <gtx-option [value]="option.value">
-                            {{ option.labelI18n | gtxI18nObject }}
-                        </gtx-option>
-                    }
-                </gtx-select>
+                <ng-container formGroupName="data">
+                    <gtx-select
+                        class="columns small-12"
+                        [label]="('editor.item_template_context_label' | gtxI18n)"
+                        formControlName="templateContext"
+                    >
+                        @for (option of activeConfiguration.templateOptions; track option.value) {
+                            <gtx-option [value]="option.value">
+                                {{ option.labelI18n | gtxI18nObject }}
+                            </gtx-option>
+                        }
+                    </gtx-select>
+                </ng-container>
             }
         </div>
 
@@ -99,13 +103,18 @@
             ></gtx-input>
 
             @if (showDetailProperties) {
-                <gtx-i18n-input
+                <gtx-i18n-panel-group
                     class="columns small-12"
-                    [label]="'editor.item_localized_mail_subject' | gtxI18n"
-                    formControlName="adminEmailSubject"
-                    [language]="activeFormLanguageCode"
-                    [availableLanguages]="languages"
-                ></gtx-i18n-input>
+                    [languages]="formLanguages"
+                    [(activeLanguage)]="activeLanguage"
+                >
+                    <gtx-i18n-input
+                        [label]="'editor.item_localized_mail_subject' | gtxI18n"
+                        [language]="activeLanguage?.code"
+                        [availableLanguages]="form?.value?.languages"
+                        formControlName="adminEmailSubject"
+                    ></gtx-i18n-input>
+                </gtx-i18n-panel-group>
 
                 @if (activeConfiguration?.adminEmailTemplateOptions) {
                     <gtx-radio-group

@@ -1,9 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { Form, FormListOptions, FormListResponse, PagingSortOrder, UsageInTotalOptions } from '@gentics/cms-models';
+import { Form, FormListOptions, FormListResponse, PagingSortOrder } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { from, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { ItemListLoaderService, ItemLoadData, ListLoadOptions } from '../../../common/models';
 import { FolderActionsService } from '../../../state';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
 abstract class BaseListLoaderService<T, O extends ListLoadOptions = ListLoadOptions> implements ItemListLoaderService<T, O> {
 
@@ -22,7 +22,9 @@ interface FormListLoadOptions extends ListLoadOptions {
     external?: boolean;
 }
 
-@Injectable()
+@Injectable({
+    providedIn: 'root',
+})
 export class FormListLoaderService extends BaseListLoaderService<Form, FormListLoadOptions> {
 
     private folderActions = inject(FolderActionsService);

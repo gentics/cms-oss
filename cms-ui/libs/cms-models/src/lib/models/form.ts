@@ -31,7 +31,7 @@ export interface EditableFormProperties {
     /**
      * The content/data of the form
      */
-    data: EditableFormData;
+    data: Partial<EditableFormData>;
 }
 
 export interface EditableFormData {

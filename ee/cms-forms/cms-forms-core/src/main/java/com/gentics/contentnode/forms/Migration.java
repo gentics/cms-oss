@@ -120,6 +120,11 @@ public class Migration {
 	protected final static String UI_CONF_PATH_DEFAULT = "ui-conf";
 
 	/**
+	 * Pattern for migration of the social security number validation
+	 */
+	protected final static String SOCIAL_SECURITY_PATTERN = "^[1-9]\\d{9}$";
+
+	/**
 	 * Flag to enable verbose output
 	 */
 	protected boolean verbose;

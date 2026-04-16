@@ -152,6 +152,30 @@ public class MigrateForms extends InitJob {
 	};
 
 	/**
+	 * Migrator for numer schema properties
+	 */
+	private BiConsumer<ObjectNode, ObjectNode> NUMBER_PROPERTY_MIGRATOR = (elementNode, property) -> {
+		property.put("precision", 0);
+		property.put("isRaw", true);
+		property.withObjectProperty("unit");
+		getMaxIntFromI18n(elementNode, "minVal_i18n").ifPresent(minValue -> {
+			property.withObjectProperty("validation")
+				.put("minValue", minValue);
+		});
+		getMaxIntFromI18n(elementNode, "maxVal_i18n").ifPresent(minValue -> {
+			property.withObjectProperty("validation")
+				.put("maxValue", minValue);
+		});
+	};
+
+	/**
+	 * Migrator for date schema properties
+	 */
+	private BiConsumer<ObjectNode, ObjectNode> DATE_PROPERTY_MIGRATOR = (elementNode, property) -> {
+		property.put("dateOnly", true);
+	};
+
+	/**
 	 * Migrator for multiline string schema properties
 	 */
 	private BiConsumer<ObjectNode, ObjectNode> MULTILINE_STRING_PROPERTY_MIGRATOR = (elementNode, property) -> {
@@ -334,7 +358,7 @@ public class MigrateForms extends InitJob {
 	 * Migrate the form data
 	 * @param config form type configuration
 	 * @param toMigrate form to migrate
-	 * @param formType TODO
+	 * @param formType form type
 	 * @return migrated form data
 	 */
 	protected JsonNode migrateFormData(FormTypeConfiguration config, FormToMigrate toMigrate, String formType) {
@@ -409,7 +433,23 @@ public class MigrateForms extends InitJob {
 		case "formprogress":
 			break;
 		case "input":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+			// if there is a special validation, the element may be migrated to another type
+			String validation = getStringFromI18n(elementNode, "validation_i18n").orElse("");
+			switch (validation) {
+			case "number":
+				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "number", NUMBER_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+				break;
+			case "date":
+			case "datepicker":
+				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "datetime", DATE_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+				break;
+			case "time":
+				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "time", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
+				break;
+			default:
+				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+				break;
+			}
 			break;
 		case "textarea":
 			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", MULTILINE_STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
@@ -592,7 +632,7 @@ public class MigrateForms extends InitJob {
 			oldName = INVERTED_PROPERTY_MIGRATION_MAP.getOrDefault(setting.id, setting.id);
 			elementNode.optional(oldName).filter(JsonNode::isArray).ifPresent(options -> {
 				options.valueStream().map(option -> {
-					JsonNode migratedOption = mapper.createObjectNode().put("key", option.get("key").asText())
+					JsonNode migratedOption = mapper.createObjectNode().put("value", option.get("key").asText())
 							.set("label", option.get("value_i18n"));
 					return migratedOption;
 				}).forEach(option -> {

@@ -80,7 +80,7 @@ public class Migration {
 	/**
 	 * List of unmigrated element types
 	 */
-	protected final static List<String> UNMIGRATED_ELEMENT_TYPES = Arrays.asList("textarea", "buttons");
+	protected final static List<String> UNMIGRATED_ELEMENT_TYPES = Arrays.asList("textarea", "buttons", "formpage", "formprogress");
 
 	/**
 	 * Migration map for element types
@@ -409,8 +409,6 @@ public class Migration {
 		case "spacer":
 		case "group":
 		case "conditionalcontainer":
-		case "formpage":
-		case "formprogress":
 			return true;
 		default:
 			return false;
@@ -424,6 +422,9 @@ public class Migration {
 	 * @param blocks map of blocks
 	 */
 	protected void toBlock(String key, JsonNode element, Map<String, BlockConfig> blocks) {
+		if (UNMIGRATED_ELEMENT_TYPES.contains(key)) {
+			return;
+		}
 		BlockConfig block = new BlockConfig(getTranslationMap(element, "type_label_i18n_ui", true));
 		fillElementConfig(block, element);
 		block.container = getBoolean(element, "is_container");

@@ -25,6 +25,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
 import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.FormFactory;
@@ -61,6 +62,16 @@ public class MigrateForms extends InitJob {
 	 * Name of the form group options attribute
 	 */
 	protected final static String FORM_GRID_OPTIONS = "formGridOptions";
+
+	/**
+	 * SQL Statement to get up to 100 unmigrated forms
+	 */
+	protected final static String SQL_UNMIGRATED_FORMS = "SELECT form.id, folder.node_id, form.name, form.description, form.languages, form.data, form.success_page_id, form.success_node_id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.formtype = ? LIMIT 100";
+
+	/**
+	 * SQL Statement to get the form versions of a batch of forms
+	 */
+	protected final static String SQL_UNMIGRATED_FORM_VERSIONS = "SELECT auto_id, name, description, languages, data, success_page_id, success_node_id FROM form_nodeversion WHERE id IN (%s)";
 
 	/**
 	 * Get the boolean property from a given i18n property. When at least one translation contains true, this will return true, otherwise an empty optional
@@ -196,6 +207,16 @@ public class MigrateForms extends InitJob {
 			.put("radio", radio);
 	};
 
+	/**
+	 * Current form, which is migrated (for logging)
+	 */
+	protected FormToMigrate current;
+
+	/**
+	 * Current form type configuration (for logging)
+	 */
+	protected String currentFormType;
+
 	@Override
 	public void execute() throws NodeException {
 		FormTypeConfigurationMap formTypeConfigurations = FormConfigProvider.getConfig();
@@ -204,40 +225,9 @@ public class MigrateForms extends InitJob {
 
 		// migrate the forms in batches of max 100 forms
 		while (true) {
-			@SuppressWarnings("unchecked")
-			Map<Integer, FormToMigrate> toMigrate = DBUtils.select(
-					"SELECT form.id, folder.node_id, form.name, form.description, form.languages, form.data, form.success_page_id, form.success_node_id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.formtype = ? LIMIT 100",
-					pst -> {
-						pst.setString(1, FormFactory.UNMIGRATED_FORMS);
-					}, rs -> {
-						Map<Integer, FormToMigrate> result = new HashMap<>();
-
-						while (rs.next()) {
-							int formId = rs.getInt("id");
-							int nodeId = rs.getInt("node_id");
-							String formName = rs.getString("name");
-							String formDescription = rs.getString("description");
-							int successPageId = rs.getInt("success_page_id");
-							int successNodeId = rs.getInt("success_node_id");
-
-							JsonNode data;
-							try {
-								data = mapper.readTree(rs.getString("data"));
-							} catch (JsonProcessingException e) {
-								data = mapper.createObjectNode();
-							}
-
-							List<String> languages;
-							try {
-								languages = mapper.readValue(ObjectTransformer.getString(rs.getString("languages"), "[]"), List.class);
-							} catch (JsonProcessingException e) {
-								languages = Collections.emptyList();
-							}
-							result.put(formId, new FormToMigrate(nodeId, formName, formDescription, languages, data,
-									successPageId, successNodeId));
-						}
-						return result;
-					});
+			Map<Integer, FormToMigrate> toMigrate = DBUtils.select(SQL_UNMIGRATED_FORMS, pst -> {
+				pst.setString(1, FormFactory.UNMIGRATED_FORMS);
+			}, resultSetHandler(false));
 
 			if (toMigrate.isEmpty()) {
 				break;
@@ -248,7 +238,8 @@ public class MigrateForms extends InitJob {
 				int nodeId = entry.getValue().nodeId();
 				JsonNode data = entry.getValue().data();
 
-				String formType = StringUtils.toRootLowerCase(data.get("type").asText("generic"));
+				String formType = StringUtils
+						.toRootLowerCase(data.optional("type").map(n -> n.asText("generic")).orElse("generic"));
 
 				if (formTypeConfigurations == null || !formTypeConfigurations.containsKey(formType)) {
 					throw new NodeException(
@@ -258,11 +249,38 @@ public class MigrateForms extends InitJob {
 
 				formTypesPerNode.computeIfAbsent(nodeId, key -> new HashSet<>()).add(formType);
 
-				JsonNode migratedData = migrateFormData(formTypeConfigurations.get(formType), entry.getValue());
+				JsonNode migratedData = migrateFormData(formTypeConfigurations.get(formType), entry.getValue(), formType);
 
 				DBUtils.update("UPDATE form SET data = ?, formtype = ? WHERE id = ?", migratedData.toString(), formType, formId);
+			}
 
-				// TODO migrate all form_nodeversion data
+			// migrate also the form versions
+			String sqlFormVersions = SQL_UNMIGRATED_FORM_VERSIONS
+					.formatted(StringUtils.repeat("?", ",", toMigrate.size()));
+
+			Map<Integer, FormToMigrate> versionsToMigrate = DBUtils.select(sqlFormVersions, pst -> {
+				int pCounter = 0;
+				for (int formId : toMigrate.keySet()) {
+					pst.setInt(++pCounter, formId);
+				}
+			}, resultSetHandler(true));
+
+			for (Map.Entry<Integer, FormToMigrate> entry : versionsToMigrate.entrySet()) {
+				int autoId = entry.getKey();
+				JsonNode data = entry.getValue().data();
+
+				String formType = StringUtils
+						.toRootLowerCase(data.optional("type").map(n -> n.asText("generic")).orElse("generic"));
+
+				if (formTypeConfigurations == null || !formTypeConfigurations.containsKey(formType)) {
+					throw new NodeException(
+							"Migration of forms not possible. Missing required form type configuration '%s'."
+									.formatted(formType));
+				}
+
+				JsonNode migratedData = migrateFormData(formTypeConfigurations.get(formType), entry.getValue(), formType);
+
+				DBUtils.update("UPDATE form_nodeversion SET data = ? WHERE auto_id = ?", migratedData.toString(), autoId);
 			}
 
 			TransactionManager.getCurrentTransaction().commit(false);
@@ -279,13 +297,49 @@ public class MigrateForms extends InitJob {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	protected HandleSelectResultSet<Map<Integer, FormToMigrate>> resultSetHandler(boolean version) {
+		return rs -> {
+			Map<Integer, FormToMigrate> result = new HashMap<>();
+
+			while (rs.next()) {
+				int formId = version ? rs.getInt("auto_id") : rs.getInt("id");
+				int nodeId = version ? 0 : rs.getInt("node_id");
+				String formName = rs.getString("name");
+				String formDescription = rs.getString("description");
+				int successPageId = rs.getInt("success_page_id");
+				int successNodeId = rs.getInt("success_node_id");
+
+				JsonNode data;
+				try {
+					data = mapper.readTree(rs.getString("data"));
+				} catch (JsonProcessingException e) {
+					data = mapper.createObjectNode();
+				}
+
+				List<String> languages;
+				try {
+					languages = mapper.readValue(ObjectTransformer.getString(rs.getString("languages"), "[]"), List.class);
+				} catch (JsonProcessingException e) {
+					languages = Collections.emptyList();
+				}
+				result.put(formId, new FormToMigrate(nodeId, formName, formDescription, languages, data,
+						successPageId, successNodeId));
+			}
+			return result;
+		};
+	}
+
 	/**
 	 * Migrate the form data
 	 * @param config form type configuration
 	 * @param toMigrate form to migrate
+	 * @param formType TODO
 	 * @return migrated form data
 	 */
-	protected JsonNode migrateFormData(FormTypeConfiguration config, FormToMigrate toMigrate) {
+	protected JsonNode migrateFormData(FormTypeConfiguration config, FormToMigrate toMigrate, String formType) {
+		current = toMigrate;
+		currentFormType = formType;
 		ObjectNode migrated = mapper.createObjectNode();
 
 		// migrate some basic data
@@ -351,6 +405,9 @@ public class MigrateForms extends InitJob {
 		String elementType = elementNode.optional("type").map(n -> n.asText()).orElse("unknown");
 
 		switch (elementType) {
+		case "buttons":
+		case "formprogress":
+			break;
 		case "input":
 			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
 			break;
@@ -404,6 +461,11 @@ public class MigrateForms extends InitJob {
 
 		Optional<ControlConfig> optionalControl = Optional.ofNullable(config.controls).map(c -> c.get(migratedType));
 		Optional<BlockConfig> optionalBlock = Optional.ofNullable(config.blocks).map(c -> c.get(migratedType));
+
+		if (optionalControl.isEmpty() && optionalBlock.isEmpty()) {
+			logger.error("Error while migrating form '%s': type '%s' of element '%s' is unknown in the form type configuration '%s'"
+					.formatted(Optional.ofNullable(current).map(FormToMigrate::name).orElse("<unknown form>"), migratedType, name, currentFormType));
+		}
 
 		optionalControl.ifPresent(controlConfig -> {
 			// create the schema property and migrate common data

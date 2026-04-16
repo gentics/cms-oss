@@ -4,6 +4,7 @@ gtx-form-element-container {
     border-color: $gtx-color-light-gray;
     transition: 200ms;
     width: 100%;
+    font-size: 1rem;
 
     .element-container {
         display: flex;
@@ -21,7 +22,7 @@ gtx-form-element-container {
             white-space: nowrap;
             text-overflow: ellipsis;
             user-select: none;
-            font-size: 0.8rem;
+            font-size: 0.85em;
 
             transition: inherit;
         }
@@ -45,8 +46,9 @@ gtx-form-element-container {
                 align-items: center;
 
                 box-sizing: border-box;
-                min-height: calc(2.5rem - 4px);
-                padding: 5px;
+                min-height: 2.2em;
+                padding: 0.3em;
+                font-size: inherit;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -68,13 +70,14 @@ gtx-form-element-container {
                 border-left: 1px solid;
                 border-color: inherit;
                 outline: 2px solid transparent;
+                padding: 0 0.2em;
 
                 transition: inherit;
                 border-color: inherit;
 
                 icon {
                     color: inherit;
-                    font-size: 20px;
+                    font-size: 1.3em;
                 }
 
                 &:last-child {
@@ -152,6 +155,7 @@ gtx-form-element-container {
 
     &[disabled] {
         border-color: $gtx-color-light-gray;
+        background: $gtx-color-very-light-gray;
 
         label {
             color: $gtx-color-dark-gray;

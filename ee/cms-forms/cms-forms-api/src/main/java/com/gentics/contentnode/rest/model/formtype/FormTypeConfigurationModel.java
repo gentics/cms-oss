@@ -85,4 +85,10 @@ public class FormTypeConfigurationModel implements Serializable {
 	 */
 	@JsonProperty
 	public List<SelectOption> adminEmailTemplateOptions;
+
+	/**
+	 * Definition of all available FormFlows for this formtypeconfig
+	 */
+	@JsonProperty
+	public List<FormFlow> flows;
 }

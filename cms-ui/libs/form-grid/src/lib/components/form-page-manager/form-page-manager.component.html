@@ -4,6 +4,7 @@
             class="page-tab"
             [class.active]="pageIndex() === $index"
             [class.droppable]="mode() === FormGridEditMode.FULL"
+            [class.drop-target-hint]="elementDragging() && pageIndex() !== $index"
             (click)="pageIndex.set($index)"
             (dragover)="onPageTabDragOver($event, $index)"
             (drop)="onPageTabDrop($event, $index)"

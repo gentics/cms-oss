@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input, model, OnInit, output, signa
 import { I18nService } from '@gentics/cms-components';
 import { FormElement, FormSchema, FormUISchema, I18nString } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { PALETTE_MIME, FormGridEditMode } from '../../models';
+import { ELEMENT_MIME, FormGridEditMode } from '../../models';
 
 function collectElementIds(elements: FormElement[]): string[] {
     const ids: string[] = [];
@@ -33,6 +33,7 @@ export class FormPageManagerComponent {
     /** Optional: required for pagename inline editing. */
     public readonly languages = input<string[]>([]);
     public readonly mode = input<FormGridEditMode>(FormGridEditMode.NONE);
+    public readonly elementDragging = input<boolean>(false);
 
     public readonly elementInterPageMove = output<{
         elementId: string;
@@ -105,7 +106,7 @@ export class FormPageManagerComponent {
         if (this.mode() !== FormGridEditMode.FULL) {
             return;
         }
-        if (event.dataTransfer?.types.includes(PALETTE_MIME)) {
+        if (event.dataTransfer?.types.includes(ELEMENT_MIME)) {
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
         }
@@ -115,7 +116,7 @@ export class FormPageManagerComponent {
         if (this.mode() !== FormGridEditMode.FULL) {
             return;
         }
-        const elementId = event.dataTransfer?.getData(PALETTE_MIME);
+        const elementId = event.dataTransfer?.getData(ELEMENT_MIME);
         if (!elementId) {
             return;
         }

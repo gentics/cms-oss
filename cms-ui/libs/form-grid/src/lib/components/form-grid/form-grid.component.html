@@ -97,9 +97,10 @@
                     [pageIndex]="pageIndex()"
                     (pageIndexChange)="pageIndex.set($event)"
                     [schema]="schema()"
-                    (schemaChange)="updateSchema($event)"
+                    (schemaChange)="$event && updateSchema($event)"
                     [languages]="languages()"
                     [mode]="mode()"
+                    [elementDragging]="isElementDragging()"
                     (elementInterPageMove)="moveElementBetweenPages($event)"
                 ></gtx-form-page-manager>
 
@@ -156,6 +157,7 @@
                     [paletteDragType]="paletteDragType"
                     [paletteDragConfig]="paletteDragConfig"
                     (platteDragStop)="paletteDragEnd()"
+                    (elementDraggingChange)="isElementDragging.set($event)"
 
                     [(resizing)]="resizeActive"
                     [(resizeOverlayActive)]="resizeOverlayActive"

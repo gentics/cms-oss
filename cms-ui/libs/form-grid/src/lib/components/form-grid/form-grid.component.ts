@@ -81,6 +81,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     /** Whether the selected element has any missing translations across all form languages */
     public hasMissingTranslations = signal(false);
+    public isElementDragging = signal(false);
 
     /** If the left sidebar is expanded */
     public readonly leftSidebarExpanded = signal(true);
@@ -282,6 +283,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         copy.pages[event.toPage].elements.push(element);
         this.uiSchema.set(copy);
         this.pageIndex.set(event.toPage);
+        this.isElementDragging.set(false);
         this.clearSelectedElement();
     }
 

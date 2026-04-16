@@ -87,6 +87,9 @@
                 [ngClass]="'form-item columns small-' + getDisplaySpan(element, $index)"
                 data-drop-item="true"
                 [attr.data-drop-index]="$index"
+                [attr.draggable]="mode() === FormGridEditMode.FULL ? 'true' : 'false'"
+                (dragstart)="onElementDragStart($event, element)"
+                (dragend)="onElementDragEnd()"
             >
                 <div
                     class="grid-resize-handle"
@@ -134,6 +137,9 @@
                 [ngClass]="'form-item columns small-' + getDisplaySpan(element, $index)"
                 data-drop-item="true"
                 [attr.data-drop-index]="$index"
+                [attr.draggable]="mode() === FormGridEditMode.FULL ? 'true' : 'false'"
+                (dragstart)="onElementDragStart($event, element)"
+                (dragend)="onElementDragEnd()"
             >
                 <div
                     class="grid-resize-handle"

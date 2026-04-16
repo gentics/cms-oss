@@ -25,6 +25,19 @@ import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
 import { ElementInterPageMoveEvent, ElementSelectionEvent, FormGridEditMode, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
+function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
+    for (const el of elements) {
+        if (data[el.id]) {
+            console.error(`An element with ID ${el.id} already exists in the map, which indicates that elements with the same ID are duplicated!`);
+        }
+        data[el.id] = el;
+
+        if (Array.isArray(el.elements)) {
+            addElementsToMap(data, el.elements);
+        }
+    }
+}
+
 enum EditTabs {
     DEFINITION = 'definition',
     SETTINGS = 'settings',
@@ -74,11 +87,15 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     /** Mapping of ID to each element in a flat map for the current page */
     public readonly elementMap = computed<Record<string, FormElement>>(() => {
-        const map: Record<string, FormElement> = {};
-        for (const el of this.elements()) {
-            map[el.id] = el;
+        const data: Record<string, FormElement> = {};
+
+        for (const page of (this.uiSchema()?.pages || [])) {
+            if (page?.elements?.length > 0) {
+                addElementsToMap(data, page.elements);
+            }
         }
-        return map;
+
+        return data;
     });
 
     /** Whether the selected element has any missing translations across all form languages */
@@ -325,7 +342,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
                 return true;
             }
             if (Array.isArray(elements[i].elements)
-                && this.replaceElementInTree(elements[i].elements!, replacement)
+              && this.replaceElementInTree(elements[i].elements!, replacement)
             ) {
                 return true;
             }
@@ -385,6 +402,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             this.clearSelectedElement();
             return;
         }
+
+        this.editingPageIndex.set(null);
 
         const blockType = data.element.formGridOptions?.type || null;
         const elementSchema = this.schema()?.properties?.[data.element.id] || null;

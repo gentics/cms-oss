@@ -1,9 +1,9 @@
 <div class="definition-section">
-    <div class="definition-fields">
+    <div class="definition-row">
         <gtx-select
             [label]="'form_grid.definition_control_type' | gtxI18n"
             [value]="elementSchema().type ?? null"
-            [disabled]="mode() !== FormGridEditMode.FULL"
+            [disabled]="true"
             (valueChange)="updateType($event)"
         >
             @for (ctlEntry of (controls() | gtxEntries); track ctlEntry.key) {
@@ -11,12 +11,14 @@
             }
         </gtx-select>
 
-        <gtx-input
-            [label]="'form_grid.definition_name' | gtxI18n"
-            [value]="elementSchema().name ?? null"
-            [disabled]="mode() !== FormGridEditMode.FULL"
-            (valueChange)="updateName($event)"
-        ></gtx-input>
+        @if (mode() !== FormGridEditMode.FULL) {
+            <gtx-input
+                [label]="'form_grid.definition_name' | gtxI18n"
+                [value]="elementSchema().name ?? null"
+                [disabled]="true"
+                (valueChange)="updateName($event)"
+            ></gtx-input>
+        }
     </div>
 
     <div class="definition-checkboxes">

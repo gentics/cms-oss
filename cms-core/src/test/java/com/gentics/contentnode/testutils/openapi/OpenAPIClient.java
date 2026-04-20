@@ -20,7 +20,7 @@ import org.openapitools.client.model.VersionResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.contentnode.devtools.Synchronizer;
-import com.gentics.contentnode.rest.client.RestClient;
+import com.gentics.contentnode.rest.client.RestApi;
 import com.gentics.contentnode.rest.client.exceptions.AuthRequiredRestException;
 import com.gentics.contentnode.rest.client.exceptions.FailureRestException;
 import com.gentics.contentnode.rest.client.exceptions.InvalidDataRestException;
@@ -41,7 +41,7 @@ import jakarta.ws.rs.core.MediaType;
 /**
  * A class to test the generated client of OpenAPI specification
  */
-public class OpenAPIClient implements RestClient {
+public class OpenAPIClient implements RestApi {
 
 	private CookieHandler cookieHandler = new CookieManager();
 	private final DefaultApi client;

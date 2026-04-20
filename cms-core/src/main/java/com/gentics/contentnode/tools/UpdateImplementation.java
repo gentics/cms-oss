@@ -29,8 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.rest.client.ObjectMapperProvider;
+import com.gentics.contentnode.rest.client.RestApi;
 import com.gentics.contentnode.rest.client.RestClient;
-import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.ContentMaintenanceAction;
 import com.gentics.contentnode.rest.model.ContentMaintenanceType;
@@ -64,7 +64,7 @@ public class UpdateImplementation implements AutoCloseable {
 
 	protected Config config;
 
-	protected RestClient client;
+	protected RestApi client;
 
 	protected boolean schedulerWasRunning = false;
 
@@ -179,7 +179,7 @@ public class UpdateImplementation implements AutoCloseable {
 		System.out.println(String.format("Updating implementation on CMS with base URL %s as user %s", config.getBase(),
 				config.getUser()));
 
-		client = new JerseyRestClientImpl(() -> {
+		client = new RestClient(() -> {
 			ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider())
 					.property(ClientProperties.CONNECT_TIMEOUT, config.getTimeout())
 					.property(ClientProperties.READ_TIMEOUT, config.getTimeout());

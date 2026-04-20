@@ -32,8 +32,8 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
+import com.gentics.contentnode.rest.client.RestApi;
 import com.gentics.contentnode.rest.client.RestClient;
-import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
@@ -174,7 +174,7 @@ public class ClientTest {
 	 */
 	@Test
 	public void testLogin() throws NodeException, RestException {
-		RestClient client = new JerseyRestClientImpl(restContext.getBaseUri());
+		RestApi client = new RestClient(restContext.getBaseUri());
 		client.login(LOGIN, PASSWORD);
 
 		// assert successful login
@@ -220,7 +220,7 @@ public class ClientTest {
 	@Test
 	public void testClientFilter() throws Exception {
 		final AtomicInteger filterCounter = new AtomicInteger();
-		RestClient client = new JerseyRestClientImpl(() -> {
+		RestApi client = new RestClient(() -> {
 			ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider());
 			return JerseyClientBuilder.createClient(clientConfig).register(JacksonFeature.class).register(new ClientRequestFilter() {
 				@Override

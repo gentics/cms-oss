@@ -20,8 +20,8 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.junit.rules.ExternalResource;
 
+import com.gentics.contentnode.rest.client.RestApi;
 import com.gentics.contentnode.rest.client.RestClient;
-import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
 import com.gentics.contentnode.testutils.openapi.OpenAPIClient;
@@ -307,7 +307,7 @@ public class RESTAppContext extends ExternalResource {
 	 * AutoCloseable implementation that creates a logged in client
 	 */
 	public class LoggedInClient implements AutoCloseable {
-		protected RestClient client;
+		protected RestApi client;
 
 		/**
 		 * Create an instance
@@ -319,7 +319,7 @@ public class RESTAppContext extends ExternalResource {
 			if (Boolean.parseBoolean(System.getProperty("test.client.use.openapi", "false"))) {
 				client = new OpenAPIClient(getBaseUri());
 			} else {
-				client = new JerseyRestClientImpl(getBaseUri());
+				client = new RestClient(getBaseUri());
 			}
 			client.login(login, password);
 		}
@@ -333,7 +333,7 @@ public class RESTAppContext extends ExternalResource {
 		 * Get the client
 		 * @return client
 		 */
-		public RestClient get() {
+		public RestApi get() {
 			return client;
 		}
 	}

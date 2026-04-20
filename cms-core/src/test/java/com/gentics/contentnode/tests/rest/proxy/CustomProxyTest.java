@@ -17,8 +17,8 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.rest.client.RestApi;
 import com.gentics.contentnode.rest.client.RestClient;
-import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -115,7 +115,7 @@ public class CustomProxyTest {
 	 */
 	@Test(expected = NotAuthorizedException.class)
 	public void testNoLogin() throws RestException {
-		RestClient client = new JerseyRestClientImpl(restContext.getBaseUri());
+		RestApi client = new RestClient(restContext.getBaseUri());
 		// set invalid sid, so that the RestClient allows to make the request
 		client.setSid("bla");
 		client.base().path("proxy").path(RESOURCE_KEY).path("hello").request().get(String.class);

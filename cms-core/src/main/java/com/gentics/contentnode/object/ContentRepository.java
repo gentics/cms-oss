@@ -1109,6 +1109,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	protected String[] getCheckedAttributes(AttributeType attrType) throws NodeException {
 		switch (attrType) {
+		case json:
 		case binary:
 		case oldbinary:
 		case bool:

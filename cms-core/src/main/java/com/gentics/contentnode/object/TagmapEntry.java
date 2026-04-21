@@ -621,7 +621,12 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		/**
 		 * Micronode
 		 */
-		micronode(12, ContentRepositoryModel.Type.mesh);
+		micronode(12, ContentRepositoryModel.Type.mesh),
+
+		/**
+		 * JSON
+		 */
+		json(13, ContentRepositoryModel.Type.mesh),;
 
 		/**
 		 * numerical type

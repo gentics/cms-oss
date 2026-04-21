@@ -137,6 +137,7 @@ import com.gentics.lib.log.NodeLogCollector;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 import com.gentics.mesh.MeshStatus;
+import com.gentics.mesh.core.rest.JsonSchema;
 import com.gentics.mesh.core.rest.MeshServerInfoModel;
 import com.gentics.mesh.core.rest.admin.consistency.ConsistencyCheckResponse;
 import com.gentics.mesh.core.rest.admin.consistency.ConsistencyRating;
@@ -161,6 +162,7 @@ import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.node.NodeUpdateRequest;
 import com.gentics.mesh.core.rest.node.NodeUpsertRequest;
 import com.gentics.mesh.core.rest.node.field.BinaryField;
+import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.gentics.mesh.core.rest.node.field.MicronodeField;
 import com.gentics.mesh.core.rest.node.field.NodeFieldListItem;
 import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
@@ -170,12 +172,14 @@ import com.gentics.mesh.core.rest.node.field.image.ImageVariantsResponse;
 import com.gentics.mesh.core.rest.node.field.impl.BinaryFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.DateFieldImpl;
+import com.gentics.mesh.core.rest.node.field.impl.JsonFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NodeFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NumberFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.StringFieldImpl;
 import com.gentics.mesh.core.rest.node.field.list.FieldList;
 import com.gentics.mesh.core.rest.node.field.list.impl.BooleanFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.DateFieldListImpl;
+import com.gentics.mesh.core.rest.node.field.list.impl.JsonFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.MicronodeFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.NodeFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.NodeFieldListItemImpl;
@@ -195,6 +199,7 @@ import com.gentics.mesh.core.rest.schema.change.impl.SchemaChangeOperation;
 import com.gentics.mesh.core.rest.schema.impl.BinaryFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.BooleanFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.DateFieldSchemaImpl;
+import com.gentics.mesh.core.rest.schema.impl.JsonFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.ListFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.MicronodeFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.NodeFieldSchemaImpl;
@@ -3114,6 +3119,13 @@ public class MeshPublisher implements AutoCloseable {
 				fieldSchema = new DateFieldSchemaImpl();
 			}
 			break;
+		case json:
+			if (entry.isMultivalue()) {
+				fieldSchema = new ListFieldSchemaImpl().setListType(FieldTypes.JSON.toString());
+			} else {
+				fieldSchema = new JsonFieldSchemaImpl().setAllowedSchemas(new JsonSchema[0]);
+			}
+			break;
 		case bool:
 			if (entry.isMultivalue()) {
 				fieldSchema = new ListFieldSchemaImpl().setListType(FieldTypes.BOOLEAN.toString());
@@ -3771,6 +3783,22 @@ public class MeshPublisher implements AutoCloseable {
 						}
 					} else {
 						fields.put(entry.getMapname(), new BooleanFieldImpl().setValue(ObjectTransformer.getBoolean(value, null)));
+					}
+					break;
+				}
+				case json:
+				{
+					if (entry.isMultivalue()) {
+						FieldList<JsonContent> field = new JsonFieldListImpl();
+						fields.put(entry.getMapname(), field);
+						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
+							String jsonString = ObjectTransformer.getString(o, null);
+							if (jsonString != null) {
+								field.add(new JsonContent().setString(jsonString));
+							}
+						}
+					} else {
+						fields.put(entry.getMapname(), new JsonFieldImpl().setJson(new JsonContent().setString(ObjectTransformer.getString(value, null))));
 					}
 					break;
 				}

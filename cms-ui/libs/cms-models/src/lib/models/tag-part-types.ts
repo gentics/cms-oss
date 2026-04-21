@@ -134,6 +134,8 @@ export enum TagPartType {
     CmsForm = 42,
 
     Handlebars = 43,
+
+    Json = 44,
 }
 
 /** Pairs must be set correctly. */
@@ -169,6 +171,7 @@ export const TagPartTypePropertyType: Readonly<{ [key in TagPartType]: TagProper
     [TagPartType.Form]: TagPropertyType.FORM,
     [TagPartType.CmsForm]: TagPropertyType.CMSFORM,
     [TagPartType.Handlebars]: TagPropertyType.RICHTEXT,
+    [TagPartType.Json]: TagPropertyType.RICHTEXT,
 } as const;
 
 /**

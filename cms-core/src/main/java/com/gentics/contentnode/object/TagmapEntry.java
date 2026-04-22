@@ -626,7 +626,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		/**
 		 * JSON
 		 */
-		json(13, ContentRepositoryModel.Type.mesh),;
+		json(13, ContentRepositoryModel.Type.mesh);
 
 		/**
 		 * numerical type

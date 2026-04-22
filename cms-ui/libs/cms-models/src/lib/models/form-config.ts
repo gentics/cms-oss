@@ -99,6 +99,29 @@ export type FormUserSetting = FormBaseSetting & {
     multiple?: boolean;
 };
 
+export enum FormReferenceItemType {
+    PAGE = 'page',
+    FILE = 'file',
+    IMAGE = 'image',
+    FOLDER = 'folder',
+}
+
+export enum FormReferencePublishType {
+    /**
+     * If the item should be rendered and it's content is to be published.
+     * Only applicable for Pages.
+     */
+    CONTENT = 'content',
+    /**
+     * Generates a URL to the item(s) which is reachable in the front-end.
+     */
+    URL = 'url',
+    /**
+     * Generates a Mesh-Link to the item(s) which can be resolved via Mesh.
+     */
+    MESH_LINK = 'meshlink',
+}
+
 /**
  * Picker where a reference to one or more CMS Objects can be selected
  */
@@ -107,7 +130,11 @@ export type FormReferenceSetting = FormBaseSetting & {
     /**
      * Which items are allowed to be selected
      */
-    referenceTypes: ('page' | 'file' | 'image' | 'folder')[];
+    referenceTypes: FormReferenceItemType[];
+    /**
+     * How the referenced item(s) should be published into Mesh.
+     */
+    publishAs: FormReferencePublishType;
     /**
      * For pages, which markup-language the template of the page has to have to be selectable
      */

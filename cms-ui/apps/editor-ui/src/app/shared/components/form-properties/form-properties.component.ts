@@ -77,9 +77,6 @@ export class FormPropertiesComponent
     @Input()
     public isMultiLang: boolean;
 
-    @Input()
-    public showDetailProperties = false;
-
     public formData: FormGroup<FormProperties<Partial<EditableFormData>>>;
 
     public formTypeConfigurations: Record<string, FormTypeConfiguration> | null = null;
@@ -204,7 +201,7 @@ export class FormPropertiesComponent
         ));
 
         const selectedLangs = (value?.languages || []);
-        this.formLanguages = this.languages.filter((lang) => selectedLangs.includes(lang.code));
+        this.formLanguages = (this.languages || []).filter((lang) => selectedLangs.includes(lang.code));
         if (this.formLanguages.length > 0 && this.activeLanguage == null) {
             this.activeLanguage = this.formLanguages[0];
         }

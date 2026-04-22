@@ -431,11 +431,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             distinctUntilChanged(isEqual),
             switchMap((item) => this.loadItemFolder(item)),
             switchMap((itemAndFolder) => this.loadLanguagesAndTemplates(itemAndFolder.item, itemAndFolder.folder)),
-            startWith({
-                item: null,
-                languages: [],
-                templates: [],
-            }),
             publishReplay(1),
             refCount(),
         );
@@ -1081,7 +1076,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (node.id === folderState.activeNode && !folderState.activeNodeLanguages.fetching && folderState.activeNodeLanguages.total) {
             const languageIds = folderState.activeNodeLanguages.list;
             const languages = languageIds.map((id) => this.entityResolver.getLanguage(id));
-            return of(languages);
+            if (languageIds.length === languages.length) {
+                return of(languages);
+            }
         }
 
         return this.client.node.listLanguages(node.id).pipe(

@@ -15,18 +15,6 @@ export type FormCondition
       | FormConditionLowerThan
       | FormConditionEmpty
       | FormConditionVisible
-      | FormConditionDisabled
-      | FormConditionOr
-      | FormConditionAnd
-      | FormConditionNot
-      | FormConditionEquals
-      | FormConditionMatches
-      | FormConditionContains
-      | FormConditionIncludedIn
-      | FormConditionBiggerThan
-      | FormConditionLowerThan
-      | FormConditionEmpty
-      | FormConditionVisible
       | FormConditionDisabled;
 
 /**

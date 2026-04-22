@@ -6,7 +6,7 @@ import { Language } from '@gentics/cms-models';
     templateUrl: './i18n-panel-group.component.html',
     styleUrls: ['./i18n-panel-group.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class I18nPanelGroupComponent {
 
@@ -26,7 +26,7 @@ export class I18nPanelGroupComponent {
     public activeLanguageChange = new EventEmitter<Language>();
 
     setActiveLanguage(languageId: number): void {
-        const lang = this.languages.find(lang => lang.id === languageId);
+        const lang = this.languages.find((lang) => lang.id === languageId);
         if (!lang) {
             return;
         }

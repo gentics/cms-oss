@@ -13,7 +13,7 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import { BehaviorSubject, combineLatest, ObjectUnsubscribedError } from 'rxjs';
-import { debounceTime, startWith, switchMap } from 'rxjs/operators';
+import { debounceTime, startWith, switchMap, tap } from 'rxjs/operators';
 import { BaseComponent } from '../base-component/base.component';
 import { TabGroupComponent } from '../tab-group/tab-group.component';
 import { TabPaneComponent } from '../tab-pane/tab-pane.component';
@@ -84,7 +84,7 @@ let uniqueGroupedTabsId = 0;
     templateUrl: './grouped-tabs.component.html',
     styleUrls: ['./grouped-tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class GroupedTabsComponent
     extends BaseComponent
@@ -148,31 +148,13 @@ export class GroupedTabsComponent
 
     ngAfterContentInit(): void {
         const tabChanges = combineLatest([
-            this.tabPanes.changes,
-            this.tabGroups.changes,
+            this.tabPanes.changes.pipe(
+                startWith(this.tabPanes),
+            ),
+            this.tabGroups.changes.pipe(
+                startWith(this.tabGroups),
+            ),
         ]).pipe(
-            switchMap(([tabPanes, tabGroups]: [QueryList<TabPaneComponent>, QueryList<TabGroupComponent>]) => {
-                const allChanges = [
-                    tabPanes.changes.pipe(startWith(tabPanes)),
-                    tabGroups.changes.pipe(startWith(tabGroups)),
-                ];
-
-                tabGroups.map((group) => {
-                    try {
-                        group.tabs.notifyOnChanges();
-                        allChanges.push(group.tabs.changes.pipe(startWith(group.tabs)));
-                        this.changeDetector.markForCheck();
-                    } catch (e) {
-                        if (e instanceof ObjectUnsubscribedError) {
-                        // To prevent Unsubscribe error
-                        } else {
-                            throw e;
-                        }
-                    }
-                });
-
-                return combineLatest(allChanges);
-            }),
             debounceTime(5),
         );
 
@@ -196,23 +178,25 @@ export class GroupedTabsComponent
     }
 
     get currentTab(): TabPaneComponent {
-        return this.tabPanes.filter(tab => tab.active === true)[0];
+        return this.tabPanes ? this.tabPanes.filter((tab) => tab.active === true)[0] : null;
     }
 
     collectTabs(activate: boolean = false): void {
         const tabs = Array<TabPaneComponent | TabGroupComponent>();
 
         // Collect all the available tabs and groups
-        this.tabPanes.map(item => {
-            const tabGroup = this.tabGroups.find(group => group.tabs.some(tab => tab === item));
-            if (tabGroup !== undefined) {
-                if (tabs.indexOf(tabGroup) === -1) {
-                    tabs.push(tabGroup);
+        if (this.tabPanes) {
+            this.tabPanes.map((item) => {
+                const tabGroup = this.tabGroups.find((group) => group.tabs.some((tab) => tab === item));
+                if (tabGroup !== undefined) {
+                    if (tabs.indexOf(tabGroup) === -1) {
+                        tabs.push(tabGroup);
+                    }
+                } else {
+                    tabs.push(item);
                 }
-            } else {
-                tabs.push(item);
-            }
-        });
+            });
+        }
 
         // Activates the first tab if there are no active currently
         if (activate) {
@@ -226,7 +210,11 @@ export class GroupedTabsComponent
             this.setActiveTab();
             return;
         }
-        const activeTabs = this.tabPanes.filter(tab => tab.active);
+        if (!this.tabPanes) {
+            return;
+        }
+
+        const activeTabs = this.tabPanes.filter((tab) => tab.active);
 
         // if there is no active tab set, activate the first
         if (activeTabs.length === 0) {
@@ -239,7 +227,7 @@ export class GroupedTabsComponent
      */
     setActiveTab(): void {
         if (this.tabPanes) {
-            const tabToActivate = this.tabPanes.filter(t => t.id === this.activeId)[0];
+            const tabToActivate = this.tabPanes.filter((t) => t.id === this.activeId)[0];
             this.setAsActive(tabToActivate);
         }
     }
@@ -266,20 +254,22 @@ export class GroupedTabsComponent
     }
 
     public setAsActive(tabToActivate?: TabPaneComponent): void {
-        this.tabPanes.toArray().forEach(tab => {
-            if (tabToActivate != null) {
-                tab.active = tab.id == null && tabToActivate.id == null
-                    ? tab === tabToActivate
-                    : tab.id === tabToActivate.id;
-            } else {
-                tab.active = false;
-            }
-            tab.changeDetector.markForCheck();
-        });
+        if (this.tabPanes) {
+            this.tabPanes.toArray().forEach((tab) => {
+                if (tabToActivate != null) {
+                    tab.active = tab.id == null && tabToActivate.id == null
+                        ? tab === tabToActivate
+                        : tab.id === tabToActivate.id;
+                } else {
+                    tab.active = false;
+                }
+                tab.changeDetector.markForCheck();
+            });
+        }
 
-        if (tabToActivate != null) {
-            this.tabGroups.map(group => {
-                if (group.tabs.some(currentTab => currentTab.id == null && tabToActivate.id == null
+        if (tabToActivate != null && this.tabGroups) {
+            this.tabGroups.map((group) => {
+                if (group.tabs.some((currentTab) => currentTab.id == null && tabToActivate.id == null
                     ? currentTab === tabToActivate
                     : currentTab.id === tabToActivate.id,
                 )) {

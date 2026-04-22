@@ -14,8 +14,10 @@
         class="settings-entry"
         [config]="config()"
         [settings]="visibleSettings()"
-        [data]="element().formGridOptions || {}"
+        [element]="element()"
+        [elementConfig]="elementConfig()"
+        [elementSchema]="elementSchema()"
         [disabled]="disabled()"
-        (dataChange)="updateFormGridOptions($event)"
+        (elementChange)="element.set($event)"
     />
 </div>

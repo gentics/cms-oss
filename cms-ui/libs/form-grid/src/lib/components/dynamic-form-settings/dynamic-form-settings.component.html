@@ -1,5 +1,12 @@
 <div class="dynamic-settings-list">
     @for (setting of (visibleSettings()); track setting.id) {
+        @let settingSourceData = setting.backend
+            ? $any(this.elementSchema())
+            : $any(this.element());
+        @let settingData = setting.propertyPath
+            ? (settingSourceData | gtxValuePath:setting.propertyPath)
+            : (settingSourceData | gtxValuePath:['formGridOptions', setting.id]);
+
         @switch (setting.type) {
             @case ("string") {
                 <gtx-input
@@ -9,8 +16,8 @@
                     [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
                     [required]="setting.required ?? false"
                     [disabled]="disabled()"
-                    [value]="data()[setting.id]"
-                    (valueChange)="updateData(setting.id, $event)"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
                 ></gtx-input>
             }
 
@@ -25,8 +32,8 @@
                     [type]="'number'"
                     [required]="setting.required ?? false"
                     [disabled]="disabled()"
-                    [value]="data()[setting.id]"
-                    (valueChange)="updateData(setting.id, $event)"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
                 ></gtx-input>
             }
 
@@ -39,8 +46,8 @@
                     [type]="'number'"
                     [required]="setting.required ?? false"
                     [disabled]="disabled()"
-                    [value]="data()[setting.id]"
-                    (valueChange)="updateData(setting.id, $event)"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
                 ></gtx-input>
             }
 
@@ -51,8 +58,8 @@
                     [attr.data-control-type]="setting.type"
                     [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
                     [disabled]="disabled()"
-                    [value]="data()[setting.id]"
-                    (valueChange)="updateData(setting.id, $event)"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
                 ></gtx-checkbox>
             }
 
@@ -65,8 +72,8 @@
                     [required]="setting.required ?? false"
                     [disabled]="disabled()"
                     [displayTime]="setting.allowTime ?? false"
-                    [value]="data()[setting.id]"
-                    (valueChange)="updateData(setting.id, $event)"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
                 ></gtx-date-time-picker>
             }
 
@@ -79,8 +86,8 @@
                     [required]="setting.required ?? false"
                     [multiple]="setting.multiple ?? false"
                     [disabled]="disabled()"
-                    [value]="data()[setting.id]"
-                    (valueChange)="updateData(setting.id, $event)"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
                 >
                     @for (option of setting.options; track option.value) {
                         <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
@@ -96,8 +103,8 @@
                     [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
                     [required]="setting.required ?? false"
                     [disabled]="disabled()"
-                    [value]="data()[setting.id]"
-                    (valueChange)="updateData(setting.id, $event)"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
                 ></gtx-form-options-input>
             }
 
@@ -111,7 +118,7 @@
                         [required]="setting.required ?? false"
                         [disabled]="disabled()"
                         [multiple]="setting.multiple ?? false"
-                        [value]="data()[setting.id]?.userReference"
+                        [value]="settingData?.userReference"
                         (valueChange)="updateUserValue(setting.id, $event)"
                     >
                         @for (option of (config().userOptions || []); track option.value) {
@@ -135,7 +142,7 @@
                     [disabled]="disabled()"
                     [includeMlId]="setting.allowedMarkupLanguageIds"
                     [browseTitle]="setting.titleI18n | gtxI18nObject"
-                    [value]="data()[setting.id]"
+                    [value]="settingData"
                     (valueChange)="updateReferenceValue(setting.id, $event)"
                 ></gtx-browse-box>
             }

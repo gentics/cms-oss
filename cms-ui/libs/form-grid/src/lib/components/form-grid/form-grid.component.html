@@ -245,9 +245,11 @@
                                 <gtx-form-element-definition
                                     [config]="config()"
                                     [schema]="schema()"
+                                    [element]="selectedElement()!"
                                     [elementConfig]="selectedElementConfiguration()!"
                                     [elementSchema]="selectedElementSchema()!"
                                     [mode]="mode()"
+                                    (elementChange)="upsetElementChanges($event)"
                                     (elementSchemaChange)="updateElementSchema($event)"
                                 ></gtx-form-element-definition>
                             </gtx-tab>
@@ -260,6 +262,7 @@
                                 [elementMap]="elementMap()"
                                 [element]="selectedElement()!"
                                 [elementConfig]="selectedElementConfiguration()!"
+                                [elementSchema]="selectedElementSchema()"
                                 [disabled]="mode() !== FormGridEditMode.FULL"
                                 (elementChange)="upsetElementChanges($event)"
                             ></gtx-form-element-settings>

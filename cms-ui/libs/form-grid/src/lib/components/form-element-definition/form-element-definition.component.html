@@ -4,7 +4,6 @@
             [label]="'form_grid.definition_control_type' | gtxI18n"
             [value]="elementSchema().type ?? null"
             [disabled]="true"
-            (valueChange)="updateType($event)"
         >
             @for (ctlEntry of (controls() | gtxEntries); track ctlEntry.key) {
                 <gtx-option [value]="ctlEntry.key">{{ ctlEntry.value.labelI18n | gtxI18nObject }}</gtx-option>
@@ -16,7 +15,6 @@
                 [label]="'form_grid.definition_name' | gtxI18n"
                 [value]="elementSchema().name ?? null"
                 [disabled]="true"
-                (valueChange)="updateName($event)"
             ></gtx-input>
         }
     </div>
@@ -42,51 +40,6 @@
             [disabled]="mode() !== FormGridEditMode.FULL"
             (change)="updateElementSchema({ isList: $event === true })"
         ></gtx-checkbox>
-    </div>
-
-    <div class="definition-validation">
-        <span class="definition-section-title">{{ 'form_grid.definition_validation_title' | gtxI18n }}</span>
-
-        <div class="definition-fields">
-            <gtx-input
-                type="number"
-                [label]="'form_grid.definition_validation_min_value' | gtxI18n"
-                [value]="elementSchema().validation?.minValue ?? null"
-                [disabled]="mode() !== FormGridEditMode.FULL"
-                (valueChange)="updateValidationMinValue($event)"
-            ></gtx-input>
-
-            <gtx-input
-                type="number"
-                [label]="'form_grid.definition_validation_max_value' | gtxI18n"
-                [value]="elementSchema().validation?.maxValue ?? null"
-                [disabled]="mode() !== FormGridEditMode.FULL"
-                (valueChange)="updateValidationMaxValue($event)"
-            ></gtx-input>
-
-            <gtx-input
-                type="number"
-                [label]="'form_grid.definition_validation_min_length' | gtxI18n"
-                [value]="elementSchema().validation?.minLength ?? null"
-                [disabled]="mode() !== FormGridEditMode.FULL"
-                (valueChange)="updateValidationMinLength($event)"
-            ></gtx-input>
-
-            <gtx-input
-                type="number"
-                [label]="'form_grid.definition_validation_max_length' | gtxI18n"
-                [value]="elementSchema().validation?.maxLength ?? null"
-                [disabled]="mode() !== FormGridEditMode.FULL"
-                (valueChange)="updateValidationMaxLength($event)"
-            ></gtx-input>
-        </div>
-
-        <gtx-input
-            [label]="'form_grid.definition_validation_regex' | gtxI18n"
-            [value]="elementSchema().validation?.regexValidation?.regex ?? null"
-            [disabled]="mode() !== FormGridEditMode.FULL"
-            (valueChange)="updateValidationRegex($event)"
-        ></gtx-input>
     </div>
 
     @if (hasReadonlySettings()) {
@@ -136,8 +89,11 @@
         class="schema-settings"
         [config]="config()"
         [settings]="visibleSettings()"
-        [data]="elementSchema().formGridOptions || {}"
+        [element]="element()"
+        [elementConfig]="elementConfig()"
+        [elementSchema]="elementSchema()"
         [disabled]="mode() === FormGridEditMode.NONE"
-        (dataChange)="updateFormGridOptions($event)"
+        (elementChange)="element.set($event)"
+        (elementSchemaChange)="updateElementSchema($event)"
     />
 </div>

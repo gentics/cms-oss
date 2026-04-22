@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 import {
     FormControlConfiguration,
-    FormPropertyValidation,
+    FormElement,
     FormSchema,
     FormSchemaProperty,
-    FormTypeConfiguration
+    FormTypeConfiguration,
 } from '@gentics/cms-models';
-import { toValidNumber } from '@gentics/ui-core';
 import { FormGridEditMode } from '../../models';
 
 @Component({
@@ -23,8 +22,9 @@ export class FormElementDefinitionComponent {
     public readonly config = input.required<FormTypeConfiguration>();
     public readonly schema = input.required<FormSchema>();
 
-    public readonly elementSchema = model.required<FormSchemaProperty>();
+    public readonly element = model.required<FormElement>();
     public readonly elementConfig = input.required<FormControlConfiguration>();
+    public readonly elementSchema = model.required<FormSchemaProperty>();
 
     public readonly mode = input.required<FormGridEditMode>();
 
@@ -44,44 +44,6 @@ export class FormElementDefinitionComponent {
 
     public updateElementSchema(patch: Partial<FormSchemaProperty>): void {
         this.elementSchema.set({ ...this.elementSchema(), ...patch });
-    }
-
-    public updateValidation(patch: Partial<FormPropertyValidation>): void {
-        this.updateElementSchema({ validation: { ...this.elementSchema().validation, ...patch } });
-    }
-
-    public updateType(value: string | number | (string | number)[] | null): void {
-        const type = Array.isArray(value) ? value[0] : value;
-        this.updateElementSchema({ type: type != null ? `${type}` : undefined });
-    }
-
-    public updateName(value: string | number | null): void {
-        this.updateElementSchema({ name: value != null ? `${value}` : undefined });
-    }
-
-    public updateValidationMinValue(value: string | number | null): void {
-        this.updateValidation({ minValue: toValidNumber(value) ?? undefined });
-    }
-
-    public updateValidationMaxValue(value: string | number | null): void {
-        this.updateValidation({ maxValue: toValidNumber(value) ?? undefined });
-    }
-
-    public updateValidationMinLength(value: string | number | null): void {
-        this.updateValidation({ minLength: toValidNumber(value) ?? undefined });
-    }
-
-    public updateValidationMaxLength(value: string | number | null): void {
-        this.updateValidation({ maxLength: toValidNumber(value) ?? undefined });
-    }
-
-    public updateValidationRegex(value: string | number | null): void {
-        const regex = value != null ? `${value}` : undefined;
-        this.updateValidation({
-            regexValidation: regex
-                ? { errorMessage: this.elementSchema().validation?.regexValidation?.errorMessage ?? {}, regex }
-                : undefined,
-        });
     }
 
     public updateFormGridOptions(data: Record<string, any>): void {

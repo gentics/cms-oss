@@ -296,6 +296,11 @@ export interface FormBaseSetting {
      * Which condition needs to be met, in order for this setting to be displayed to the editor.
      */
     condition?: FormCondition;
+    /**
+     * JSON path to where the property value should be stored.
+     * @default `formGridOptions[this.id]`
+     */
+    propertyPath?: string;
 }
 
 export interface FormSelectOption {

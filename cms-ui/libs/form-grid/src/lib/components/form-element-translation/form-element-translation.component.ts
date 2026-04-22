@@ -20,30 +20,32 @@ export class FormElementTranslationComponent {
 
     public readonly FormGridEditMode = FormGridEditMode;
 
+    public readonly mode = input.required<FormGridEditMode>();
+
     public readonly element = model.required<FormElement>();
     public readonly elementConfig = input.required<FormElementConfiguration>();
     public readonly elementSchema = model<FormSchemaProperty | null>(null);
+
     public readonly languages = input.required<string[]>();
-    public readonly mode = input.required<FormGridEditMode>();
 
     public readonly hasMissingTranslationsChange = output<boolean>();
 
     public readonly selectedLanguage = signal<string>('');
 
-    public readonly elementSettings = computed(() => {
+    public readonly translationSettings = computed(() => {
         const all = this.elementConfig().settings || [];
-        return all.filter((setting) => !setting.backend && (
+        return all.filter((setting) => (
             setting.type === FormSettingType.TRANSLATION
             || setting.type === FormSettingType.OPTIONS
         ));
     });
 
+    public readonly elementSettings = computed(() => {
+        return this.translationSettings().filter((setting) => !setting.backend);
+    });
+
     public readonly schemaSettings = computed(() => {
-        const all = this.elementConfig().settings || [];
-        return all.filter((setting) => setting.backend && (
-            setting.type === FormSettingType.TRANSLATION
-            || setting.type === FormSettingType.OPTIONS
-        ));
+        return this.translationSettings().filter((setting) => setting.backend);
     });
 
     public readonly missingByLanguage = computed<Record<string, boolean>>(() => {
@@ -90,28 +92,6 @@ export class FormElementTranslationComponent {
         }));
     }
 
-    public updateElementOptions(data: Record<string, any>): void {
-        this.element.update((el) => {
-            return {
-                ...el,
-                formGridOptions: data as any,
-            };
-        });
-    }
-
-    public updateSchemaOptions(data: Record<string, any>): void {
-        this.elementSchema.update((el) => {
-            if (el == null) {
-                return null;
-            }
-
-            return {
-                ...el,
-                formGridOptions: data as any,
-            };
-        });
-    }
-
     private isMissingForLanguage(lang: string): boolean {
         const el = this.element();
         if (!el.label?.[lang]) {
@@ -128,7 +108,7 @@ export class FormElementTranslationComponent {
             const effectiveOptions: Record<string, any> = setting.backend ? schemaOptions : elementOptions;
             if (setting.type === FormSettingType.OPTIONS) {
                 const options: FormSelectOptionValue[] = effectiveOptions?.[setting.id] || [];
-                return options.some((option) => !option.label[lang]);
+                return options.some((option) => !option?.label?.[lang]);
             } else if (setting.type === FormSettingType.TRANSLATION) {
                 return !effectiveOptions[setting.id]?.[lang];
             } else {

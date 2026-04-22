@@ -23,4 +23,12 @@
         border-radius: 3px;
         padding: 0.5rem;
     }
+
+    .no-options {
+        display: block;
+    }
+}
+
+.error-message {
+    color: $gtx-color-alert;
 }

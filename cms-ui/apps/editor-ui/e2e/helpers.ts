@@ -521,6 +521,16 @@ export async function expectItemLanguageCode(item: Locator, languageCode: string
     await expect(item.locator('>gtx-language-state .language-code')).toHaveText(languageCode);
 }
 
+export function pageListRowLanguage(item: Locator, lang: string): Locator {
+    return item.locator(`page-language-indicator [data-action="page-language"][data-id="${lang}"]`);
+}
+
+export async function setListLanguage(list: Locator, lang: string): Promise<void> {
+    const langSelector = list.locator('language-context-selector');
+    const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+    await dropdown.locator(`gtx-dropdown-item[data-id="${lang}"]`).click();
+}
+
 export async function openToolOrAction(page: Page, id: string): Promise<void> {
     const context = await openContext(page.locator('gtx-top-bar gtx-actions-selector gtx-dropdown-list'));
     const btn = context.locator(`.action-button[data-tool-id="${id}"], .action-button[data-action-id="${id}"]`);

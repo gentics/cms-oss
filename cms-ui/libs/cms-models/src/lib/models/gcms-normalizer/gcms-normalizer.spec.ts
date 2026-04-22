@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es';
 import { getExampleEntityStore } from '../../testing';
 import { File, FileOrImage } from '../file';
 import { Folder } from '../folder';
@@ -24,13 +23,13 @@ xdescribe('GcmsNormalizer', () => {
     }
 
     function denormalizePage(page: Page<Normalized>): Page<Raw> {
-        const denormalizedPage: Page<Raw> = cloneDeep(page) as any;
+        const denormalizedPage: Page<Raw> = structuredClone(page) as any;
         replaceUser(denormalizedPage, 'creator');
         replaceUser(denormalizedPage, 'editor');
         replaceUser(denormalizedPage, 'publisher');
         delete denormalizedPage[IS_NORMALIZED];
 
-        denormalizedPage.template = cloneDeep(mockEntities.template[page.template]) as any;
+        denormalizedPage.template = structuredClone(mockEntities.template[page.template]) as any;
         replaceUser(denormalizedPage.template, 'creator');
         replaceUser(denormalizedPage.template, 'editor');
 
@@ -39,7 +38,7 @@ xdescribe('GcmsNormalizer', () => {
         }
 
         const denormalizeSubPage = (subPageId: number) => {
-            const subPage: Page<Raw> = cloneDeep(mockEntities.page[subPageId]) as any;
+            const subPage: Page<Raw> = structuredClone(mockEntities.page[subPageId]) as any;
             replaceUser(subPage, 'creator');
             replaceUser(subPage, 'editor');
             replaceUser(subPage, 'publisher');
@@ -65,14 +64,14 @@ xdescribe('GcmsNormalizer', () => {
     }
 
     function denormalizeFolder(folder: Folder<Normalized>): Folder<Raw> {
-        const denormalizedFolder: Folder<Raw> = cloneDeep(folder) as any;
+        const denormalizedFolder: Folder<Raw> = structuredClone(folder) as any;
         replaceUser(denormalizedFolder, 'creator');
         replaceUser(denormalizedFolder, 'editor');
         delete denormalizedFolder[IS_NORMALIZED];
 
         if (denormalizedFolder.subfolders) {
             denormalizedFolder.subfolders = denormalizedFolder.subfolders.map(subfolderId => {
-                const subfolder: Folder<Raw> = cloneDeep(mockEntities.folder[subfolderId as any]) as any;
+                const subfolder: Folder<Raw> = structuredClone(mockEntities.folder[subfolderId as any]) as any;
                 replaceUser(subfolder, 'creator');
                 replaceUser(subfolder, 'editor');
                 delete subfolder.subfolders;
@@ -84,7 +83,7 @@ xdescribe('GcmsNormalizer', () => {
     }
 
     function denormalizeFile(file: FileOrImage<Normalized>): FileOrImage<Raw> {
-        const denormalizedFile: FileOrImage<Raw> = cloneDeep(file) as any;
+        const denormalizedFile: FileOrImage<Raw> = structuredClone(file) as any;
         denormalizedFile.folder = denormalizeFolder(mockEntities.folder[denormalizedFile.folderId] as any);
         replaceUser(denormalizedFile, 'creator');
         replaceUser(denormalizedFile, 'editor');
@@ -93,7 +92,7 @@ xdescribe('GcmsNormalizer', () => {
     }
 
     function denormalizeUser(user: User<Normalized>): User<Raw> {
-        const denormalizedUser: User<Raw> = cloneDeep(user) as any;
+        const denormalizedUser: User<Raw> = structuredClone(user) as any;
         if (denormalizedUser.groups) {
             denormalizedUser.groups = denormalizedUser.groups.map(groupId =>
                 denormalizeGroup(mockEntities.group[groupId as any] as any),
@@ -104,10 +103,10 @@ xdescribe('GcmsNormalizer', () => {
     }
 
     function denormalizeGroup(group: Group<Normalized>): Group<Raw> {
-        const denormalizedGroup: Group<Raw> = cloneDeep(group) as any;
+        const denormalizedGroup: Group<Raw> = structuredClone(group) as any;
         if (denormalizedGroup.children) {
             denormalizedGroup.children = denormalizedGroup.children.map(subGroupId => {
-                const subGroup: Group<Raw> = cloneDeep(mockEntities.group[subGroupId as any]) as any;
+                const subGroup: Group<Raw> = structuredClone(mockEntities.group[subGroupId as any]) as any;
                 delete subGroup.children;
                 return subGroup;
             });
@@ -161,7 +160,7 @@ xdescribe('GcmsNormalizer', () => {
 
         it('works for a single entity', () => {
             const normalizedPage: Page<Normalized> = mockEntities.page[PAGE_ID] as any;
-            const expectedPages = cloneDeep(mockEntities.page);
+            const expectedPages = structuredClone(mockEntities.page);
             delete expectedPages[PAGE_ID2].template;
             // since page with id PAGE_ID has languageVariants that contain the page with id PAGE_ID2, the languageVariants have to be copied
             expectedPages[PAGE_ID2].languageVariants = normalizedPage.languageVariants;
@@ -185,7 +184,7 @@ xdescribe('GcmsNormalizer', () => {
 
         it('works for an array of entities', () => {
             const normalizedPages: Page<Normalized>[] = [ mockEntities.page[PAGE_ID] as any, mockEntities.page[PAGE_ID2] as any ];
-            const expectedPages = cloneDeep(mockEntities.page);
+            const expectedPages = structuredClone(mockEntities.page);
             // since page with id PAGE_ID has languageVariants that contain the page with id PAGE_ID2, the languageVariants have to be copied
             expectedPages[PAGE_ID2].languageVariants = mockEntities.page[PAGE_ID].languageVariants;
             const expectedTemplates: IndexById<Template<Normalized>> = { };
@@ -214,7 +213,7 @@ xdescribe('GcmsNormalizer', () => {
         let origEntities: any;
 
         beforeEach(() => {
-            origEntities = cloneDeep(mockEntities);
+            origEntities = structuredClone(mockEntities);
         });
 
         afterEach(() => {
@@ -247,7 +246,7 @@ xdescribe('GcmsNormalizer', () => {
         });
 
         it('works for a page without variants and folder', () => {
-            const page: Page<Normalized> = cloneDeep(mockEntities.page[PAGE_ID]) as any;
+            const page: Page<Normalized> = structuredClone(mockEntities.page[PAGE_ID]) as any;
             page[IS_NORMALIZED] = true;
             const expectedResult = denormalizePage(page);
             delete page.languageVariants;
@@ -264,7 +263,7 @@ xdescribe('GcmsNormalizer', () => {
         it('works for a normalized page', () => {
             const page: Page<Normalized> = mockEntities.page[PAGE_ID] as any;
             const expectedResult = denormalizePage(page);
-            const denormalizedPage = cloneDeep(expectedResult);
+            const denormalizedPage = structuredClone(expectedResult);
 
             const actualResult = normalizer.denormalize('page', denormalizedPage, mockEntities);
             expect(actualResult).toEqual(expectedResult);
@@ -308,7 +307,7 @@ xdescribe('GcmsNormalizer', () => {
 
         it('works for a language', () => {
             const language: Language = mockEntities.language[1] as any;
-            const expectedResult = cloneDeep(language);
+            const expectedResult = structuredClone(language);
             delete expectedResult[IS_NORMALIZED];
 
             const actualResult = normalizer.denormalize('language', language, mockEntities);
@@ -317,7 +316,7 @@ xdescribe('GcmsNormalizer', () => {
 
         it('works for a message', () => {
             const message: Message<Normalized> = mockEntities.message[1000] as any;
-            const expectedResult: Message<Raw> = cloneDeep(message) as any;
+            const expectedResult: Message<Raw> = structuredClone(message) as any;
             replaceUser(expectedResult, 'sender');
             delete expectedResult[IS_NORMALIZED];
 
@@ -327,7 +326,7 @@ xdescribe('GcmsNormalizer', () => {
 
         it('works for a node', () => {
             const node: Node<Normalized> = mockEntities.node[1] as any;
-            const expectedResult: Node<Raw> = cloneDeep(node) as any;
+            const expectedResult: Node<Raw> = structuredClone(node) as any;
             replaceUser(expectedResult, 'creator');
             replaceUser(expectedResult, 'editor');
             delete expectedResult[IS_NORMALIZED];
@@ -339,7 +338,7 @@ xdescribe('GcmsNormalizer', () => {
         it('works for a template', () => {
             const template: Template<Normalized> = mockEntities.template[1];
             const templateBO: TemplateBO<Normalized> = Object.assign({}, template, { id: `${template.id}` });
-            const expectedResultBO: TemplateBO<Raw> = cloneDeep(templateBO) as any;
+            const expectedResultBO: TemplateBO<Raw> = structuredClone(templateBO) as any;
 
             replaceUser(expectedResultBO, 'creator');
             replaceUser(expectedResultBO, 'editor');

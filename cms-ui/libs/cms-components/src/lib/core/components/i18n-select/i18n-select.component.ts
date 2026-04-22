@@ -15,7 +15,6 @@ import {
 import { AbstractControl, ControlValueAccessor, UntypedFormControl, ValidationErrors, Validator } from '@angular/forms';
 import { I18nString } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider, SelectOptionDirective } from '@gentics/ui-core';
-import { cloneDeep } from 'lodash-es';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -75,8 +74,8 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
 
     ngOnInit(): void {
         this.valueChangesSubscription = this.i18nSelect.valueChanges.subscribe((value: string | null) => {
-            if (this.i18nData) {
-                const tmp = cloneDeep(this.i18nData || {});
+            if (this.i18nData && this.language) {
+                const tmp = structuredClone(this.i18nData || {});
                 tmp[this.language] = value;
                 this.i18nData = tmp;
                 if (this.cvaChange) {

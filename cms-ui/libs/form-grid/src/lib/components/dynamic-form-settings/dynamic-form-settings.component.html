@@ -111,8 +111,8 @@
                         [required]="setting.required ?? false"
                         [disabled]="disabled()"
                         [multiple]="setting.multiple ?? false"
-                        [value]="data()[setting.id]"
-                        (valueChange)="updateData(setting.id, $event)"
+                        [value]="data()[setting.id]?.userReference"
+                        (valueChange)="updateUserValue(setting.id, $event)"
                     >
                         @for (option of (config().userOptions || []); track option.value) {
                             <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>

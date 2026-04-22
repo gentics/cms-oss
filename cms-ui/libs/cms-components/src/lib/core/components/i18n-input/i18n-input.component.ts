@@ -14,7 +14,6 @@ import {
 } from '@angular/forms';
 import { I18nString } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
-import { cloneDeep } from 'lodash-es';
 
 @Component({
     selector: 'gtx-i18n-input',
@@ -76,7 +75,7 @@ export class I18nInputComponent
             // Has to be a clone. Since the value is passed as ref, we'd edit it
             // in here and the change detection above would not detect any changes,
             // since the value is already present/updated.
-            const tmp = cloneDeep(this.value || {});
+            const tmp = structuredClone(this.value || {});
             tmp[this.language] = changeValue;
             this.triggerChange(tmp);
             this.validatorChange();

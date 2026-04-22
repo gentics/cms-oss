@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, HostBinding, input, model } from '@angular/core';
-import { FormSettingConfiguration, FormTypeConfiguration, ItemInNode, ItemRef } from '@gentics/cms-models';
+import { FormSettingConfiguration, FormTypeConfiguration, FormUserOptionReference, ItemInNode, ItemRef } from '@gentics/cms-models';
 
 function sanitizeItemReference(item: ItemInNode): ItemRef {
     return {
@@ -40,6 +40,18 @@ export class DynamicFormSettingsComponent {
                 [key]: value,
             };
         });
+    }
+
+    public updateUserValue(id: string, value: string | string[]): void {
+        let actualValue: FormUserOptionReference | null = null;
+
+        if (value != null) {
+            actualValue = {
+                userReference: value,
+            };
+        }
+
+        this.updateData(id, actualValue);
     }
 
     public updateReferenceValue(id: string, value: ItemInNode | ItemInNode[]): void {

@@ -305,6 +305,10 @@ export interface FormSchema {
     properties: FormSchemaProperties;
 }
 
+export interface FormUserOptionReference {
+    userReference: string | string[];
+}
+
 export interface FormUISchema {
     /**
      * The Key of the form? Basically the ID

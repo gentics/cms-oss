@@ -9,16 +9,52 @@
 
         @switch (setting.type) {
             @case ("string") {
-                <gtx-input
-                    class="settings-entry"
-                    [attr.data-control]="setting.id"
-                    [attr.data-control-type]="setting.type"
-                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
-                    [required]="setting.required ?? false"
-                    [disabled]="disabled()"
-                    [value]="settingData"
-                    (valueChange)="updateData(setting, $event)"
-                ></gtx-input>
+                @if (setting.richContent) {
+                    <gtx-rich-content-editor
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [required]="setting.required ?? false"
+                        [disabled]="disabled()"
+                        [allowMultiLine]="setting.multiline ?? false"
+                        [value]="settingData"
+                        (valueChange)="updateData(setting, $event)"
+                    ></gtx-rich-content-editor>
+                } @else if (setting.multiline) {
+                    <gtx-textarea
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [required]="setting.required ?? false"
+                        [disabled]="disabled()"
+                        [value]="settingData"
+                        (valueChange)="updateData(setting, $event)"
+                    ></gtx-textarea>
+                } @else if (setting.multiple) {
+                    <gtx-string-list
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [addLabel]="'editor.add_label' | gtxI18n"
+                        [disabled]="disabled()"
+                        [value]="settingData"
+                        (valueChange)="updateData(setting, $event)"
+                    ></gtx-string-list>
+                } @else {
+                    <gtx-input
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [required]="setting.required ?? false"
+                        [disabled]="disabled()"
+                        [value]="settingData"
+                        (valueChange)="updateData(setting, $event)"
+                    ></gtx-input>
+                }
             }
 
             @case ("translation") {}

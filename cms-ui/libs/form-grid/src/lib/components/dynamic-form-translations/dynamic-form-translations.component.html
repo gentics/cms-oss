@@ -18,6 +18,8 @@
                     [language]="selectedLanguage()"
                     [availableLanguages]="languages()"
                     [disabled]="disabled()"
+                    [useRichEditor]="setting.richContent ?? false"
+                    [useTextArea]="setting.multiline ?? false"
                     (valueChange)="updateTranslationSetting(setting, $event)"
                 ></gtx-i18n-input>
             }

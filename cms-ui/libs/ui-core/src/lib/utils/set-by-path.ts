@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function setByPath(root: any, path: string | string[], value: any): void {
     if (typeof path === 'string' && path) {
-        path = [path];
+        path = path.split('.');
     } else if (!Array.isArray(path)) {
         // If invalid path, skip
         return;

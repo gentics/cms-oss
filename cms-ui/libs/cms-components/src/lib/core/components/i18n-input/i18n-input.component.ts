@@ -46,6 +46,9 @@ export class I18nInputComponent
     @Input()
     public useRichEditor = false;
 
+    @Input()
+    public useTextArea = false;
+
     private validatorChange: () => void = () => { /* no op until assigned */ };
 
     public isTranslated = true;

@@ -34,7 +34,19 @@ export type FormSettingConfiguration
  */
 export type FormStringSetting = FormBaseSetting & {
     type: FormSettingType.STRING;
+    /**
+     * If the content should be editable with a rich-content editor.
+     * Enabled HTML editing within the editor.
+     */
     richContent?: boolean;
+    /**
+     * If it should render a multiline input (textarea) for editing instead.
+     */
+    multiline?: boolean;
+    /**
+     * If multiple string values should be able to be entered.
+     */
+    multiple?: boolean;
 };
 
 /**
@@ -42,7 +54,15 @@ export type FormStringSetting = FormBaseSetting & {
  */
 export type FormTranslationSetting = FormBaseSetting & {
     type: FormSettingType.TRANSLATION;
+    /**
+     * If the content should be editable with a rich-content editor.
+     * Enabled HTML editing within the editor.
+     */
     richContent?: boolean;
+    /**
+     * If it should render a multiline input (textarea) for editing instead.
+     */
+    multiline?: boolean;
 };
 
 /**
@@ -71,6 +91,9 @@ export type FormBooleanSetting = FormBaseSetting & {
  */
 export type FormDateSetting = FormBaseSetting & {
     type: FormSettingType.DATE;
+    /**
+     * If the editor should also be able to pick a time.
+     */
     allowTime?: boolean;
 };
 
@@ -79,7 +102,13 @@ export type FormDateSetting = FormBaseSetting & {
  */
 export type FormSelectSetting = FormBaseSetting & {
     type: FormSettingType.SELECT;
+    /**
+     * The options the editor can choose from.
+     */
     options: FormSelectOption[];
+    /**
+     * If the editor should be able to select more than one option.
+     */
     multiple?: boolean;
 };
 
@@ -88,7 +117,6 @@ export type FormSelectSetting = FormBaseSetting & {
  */
 export type FormOptionsSetting = FormBaseSetting & {
     type: FormSettingType.OPTIONS;
-    multiple?: boolean;
 };
 
 /**
@@ -96,6 +124,9 @@ export type FormOptionsSetting = FormBaseSetting & {
  */
 export type FormUserSetting = FormBaseSetting & {
     type: FormSettingType.USER;
+    /**
+     * If the editor should be able to select more than one option.
+     */
     multiple?: boolean;
 };
 
@@ -271,6 +302,9 @@ export interface FormElementConfiguration {
  * Common properties for all setting types
  */
 export interface FormBaseSetting {
+    /**
+     * The type of the setting.
+     */
     type: FormSettingType;
     /**
      * The ID of the setting. Will be used to read the settings value in the backend or form-gen
@@ -304,7 +338,13 @@ export interface FormBaseSetting {
 }
 
 export interface FormSelectOption {
+    /**
+     * The value/key that is being saved for this option.
+     */
     value: string;
+    /**
+     * The label which is being displayed to the editor.
+     */
     labelI18n: I18nString;
 }
 

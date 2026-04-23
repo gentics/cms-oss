@@ -48,11 +48,19 @@ public class ReferenceSetting extends BaseSetting {
 	@JsonProperty
 	public boolean onlyInCurrentNode;
 
+	/**
+	 * How the reference has to be published
+	 */
+	@JsonProperty
+	public PublishAsType publishAs;
+
 	@JsonCreator
 	public ReferenceSetting(@JsonProperty(value = "id", required = true) String id,
 			@JsonProperty(value = "labelI18n", required = true) Map<String, String> labelI18n,
-			@JsonProperty(value = "referenceTypes", required = true) @Size(min = 1) Set<ReferenceType> referenceTypes) {
+			@JsonProperty(value = "referenceTypes", required = true) @Size(min = 1) Set<ReferenceType> referenceTypes,
+			@JsonProperty(value = "publishAs", required = true) PublishAsType publishAs) {
 		super(id, labelI18n);
 		this.referenceTypes = referenceTypes;
+		this.publishAs = publishAs;
 	}
 }

@@ -1,5 +1,7 @@
 package com.gentics.contentnode.init;
 
+import static com.gentics.contentnode.publish.mesh.FormsPublisherService.FORM_GRID_OPTIONS;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,11 +59,6 @@ public class MigrateForms extends InitJob {
 	 * Map from new property ids to old property names
 	 */
 	protected static Map<String, String> INVERTED_PROPERTY_MIGRATION_MAP = MapUtils.invertMap(Migration.PROPERTY_MIGRATION_MAP);
-
-	/**
-	 * Name of the form group options attribute
-	 */
-	protected final static String FORM_GRID_OPTIONS = "formGridOptions";
 
 	/**
 	 * SQL Statement to get up to 100 unmigrated forms
@@ -227,7 +224,7 @@ public class MigrateForms extends InitJob {
 			break;
 		}
 
-		property.withObjectProperty("formGridOptions")
+		property.withObjectProperty(FORM_GRID_OPTIONS)
 			.put("radio", radio);
 	};
 
@@ -370,12 +367,12 @@ public class MigrateForms extends InitJob {
 		migrated.put("adminEmailAddress", toMigrate.data().optional("email").map(n -> n.asText()).orElse(""));
 		migrated.put("adminEmailPageId", toMigrate.data().optional("mailsource_pageid").map(n -> n.asInt()).orElse(0));
 		migrated.put("adminEmailNodeId", toMigrate.data().optional("mailsource_nodeid").map(n -> n.asInt()).orElse(0));
-		migrated.set("adminEmailSubjectI18n", toMigrate.data().optional("mailsubject_i18n").orElseGet(() -> mapper.createObjectNode()));
-		migrated.set("adminEmailTemplateI18n", toMigrate.data().optional("mailtemp_i18n").orElseGet(() -> mapper.createObjectNode()));
+		migrated.set("adminEmailSubject", toMigrate.data().optional("mailsubject_i18n").orElseGet(() -> mapper.createObjectNode()));
+		migrated.set("adminEmailTemplate", toMigrate.data().optional("mailtemp_i18n").orElseGet(() -> mapper.createObjectNode()));
 		migrated.put("templateContext", toMigrate.data().optional("templateContext").map(n -> n.asText()).orElse(""));
 		migrated.put("successPageId", toMigrate.successPageId());
 		migrated.put("successNodeId", toMigrate.successNodeId());
-		migrated.set("successUrlI18n", toMigrate.data().optional("successurl_i18n").orElseGet(() -> mapper.createObjectNode()));
+		migrated.set("successUrl", toMigrate.data().optional("successurl_i18n").orElseGet(() -> mapper.createObjectNode()));
 
 		ObjectNode schema = mapper.createObjectNode();
 		ObjectNode schemaProperties = mapper.createObjectNode();

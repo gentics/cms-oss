@@ -1,17 +1,47 @@
 package com.gentics.contentnode.publish.mesh;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.configuration.FormTypeConfiguration;
+import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.PropertyTrx;
+import com.gentics.contentnode.events.Dependency;
+import com.gentics.contentnode.factory.ChannelTrx;
+import com.gentics.contentnode.factory.PageLanguageFallbackList;
+import com.gentics.contentnode.factory.PublishCacheTrx;
+import com.gentics.contentnode.factory.RenderTypeTrx;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.object.LanguageFactory;
+import com.gentics.contentnode.factory.url.StaticUrlFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.jmx.MBeanRegistry;
+import com.gentics.contentnode.object.File;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
+import com.gentics.contentnode.object.ImageFile;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.PublishAction;
+import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.render.RenderUrl;
+import com.gentics.contentnode.render.RenderUrlFactory;
+import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
+import com.gentics.contentnode.rest.model.formtype.BaseSetting;
+import com.gentics.contentnode.rest.model.formtype.BlockConfig;
+import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
+import com.gentics.contentnode.rest.model.formtype.ReferenceType;
 
 import io.reactivex.Completable;
 import io.vertx.core.json.JsonObject;
@@ -22,9 +52,9 @@ import io.vertx.core.json.JsonObject;
  */
 class FormWriteTask extends AbstractWriteTask {
 	/**
-	 * Map of language code -&gt; language specific form data
+	 * Transformed form data, which will be written to Mesh
 	 */
-	protected Map<String, String> dataMap = new HashMap<>();
+	protected String transformedFormData;
 
 	/**
 	 * Name of the plugin to write to
@@ -48,42 +78,26 @@ class FormWriteTask extends AbstractWriteTask {
 		this.uuid = MeshPublisher.getMeshUuid(form);
 		this.publisher = publisher;
 
-		for (String language : form.getLanguages()) {
-			dataMap.put(language, form.getData(language).toString());
-		}
+		this.transformedFormData = FormsPublisherService.transform(form).toString();
 	}
 
 	@Override
 	public void perform(boolean withSemaphore) throws NodeException {
-		List<Completable> observableList = new ArrayList<>();
-		for (Map.Entry<String, String> entry : dataMap.entrySet()) {
-			String language = entry.getKey();
-			String data = entry.getValue();
-			observableList.add(publish(data, language));
-		}
-
-		publisher.getExistingFormLanguages(project, uuid).flatMapCompletable(langSet -> {
-			// add completables which will remove languages from Mesh, which are not used any more
-			langSet.stream().filter(lang -> !dataMap.keySet().contains(lang)).forEach(lang -> {
-				observableList.add(remove(lang));
-			});
-
-			return Completable.concat(observableList).doOnError(t -> {
-				publisher.errorHandler.accept(new NodeException(
-						String.format("Error while performing task '%s' for '%s'", this, publisher.cr.getName()), t));
-			}).doOnSubscribe(disp -> {
-				MeshPublisher.logger.debug(String.format("Start publishing form %d as %s in languages %s", objId, uuid, dataMap.keySet()));
-			}).doOnComplete(() -> {
-				if (publisher.renderResult != null) {
-					try {
-						publisher.renderResult.info(MeshPublisher.class,
-								String.format("written %d.%d into {%s} for node %d", objType, objId, publisher.cr.getName(), nodeId));
-					} catch (NodeException e) {
-					}
+		publish(transformedFormData).doOnError(t -> {
+			publisher.errorHandler.accept(new NodeException(
+					String.format("Error while performing task '%s' for '%s'", this, publisher.cr.getName()), t));
+		}).doOnSubscribe(disp -> {
+			MeshPublisher.logger.debug(String.format("Start publishing form %d as %s", objId, uuid));
+		}).doOnComplete(() -> {
+			if (publisher.renderResult != null) {
+				try {
+					publisher.renderResult.info(MeshPublisher.class,
+							String.format("written %d.%d into {%s} for node %d", objType, objId, publisher.cr.getName(), nodeId));
+				} catch (NodeException e) {
 				}
+			}
 
-				reportDone();
-			});
+			reportDone();
 		}).blockingAwait();
 	}
 
@@ -113,29 +127,28 @@ class FormWriteTask extends AbstractWriteTask {
 	/**
 	 * Publish the given form data as language variant of the form
 	 * @param data form data
-	 * @param language language
 	 * @return completable
 	 * @throws NodeException 
 	 */
-	protected Completable publish(String data, String language) throws NodeException {
-		ObjectMapper objectMapper = new ObjectMapper();
-		JsonNode form;
-		try {
-			form = objectMapper.readTree(data);
-		} catch (Exception e) {
-			throw new NodeException(e);
-		}
-		JsonNode renderedData = MeshPublisher.renderFormTextUrls(form, language);
+	protected Completable publish(String data) throws NodeException {
+//		ObjectMapper objectMapper = new ObjectMapper();
+//		JsonNode form;
+//		try {
+//			form = objectMapper.readTree(data);
+//		} catch (Exception e) {
+//			throw new NodeException(e);
+//		}
+//		JsonNode renderedData = MeshPublisher.renderFormTextUrls(form, language);
 
 		String formUrl = FormsPublisherService.getFormUrl(project, pluginName, uuid);
 		String formOnlineUrl = FormsPublisherService.getFormOnlineUrl(project, pluginName, uuid);
 
-		Completable saveForm = publisher.client.post(formUrl, new JsonObject(renderedData.toString())).toCompletable()
+		Completable saveForm = publisher.client.post(formUrl, new JsonObject(data)).toCompletable()
 				.doOnSubscribe(disp -> {
 					MeshPublisher.logger
-							.debug("Saving form %s, language %s, json: %s".formatted(uuid, language, renderedData));
+							.debug("Saving form %s, json: %s".formatted(uuid, data));
 				}).doOnComplete(() -> {
-					MeshPublisher.logger.debug("Saved form %s, language %s".formatted(uuid, language));
+					MeshPublisher.logger.debug("Saved form %s".formatted(uuid));
 				});
 
 		Completable publishForm = publisher.client.put(formOnlineUrl).toCompletable()
@@ -158,4 +171,5 @@ class FormWriteTask extends AbstractWriteTask {
 			MeshPublisher.logger.debug(String.format("Removing language %s from form %s", language, uuid));
 		});
 	}
+
 }

@@ -35,6 +35,7 @@ import com.gentics.contentnode.rest.model.formtype.ControlConfig;
 import com.gentics.contentnode.rest.model.formtype.ElementConfig;
 import com.gentics.contentnode.rest.model.formtype.NumberSetting;
 import com.gentics.contentnode.rest.model.formtype.OptionsSetting;
+import com.gentics.contentnode.rest.model.formtype.PublishAsType;
 import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
 import com.gentics.contentnode.rest.model.formtype.ReferenceType;
 import com.gentics.contentnode.rest.model.formtype.SelectOption;
@@ -208,6 +209,7 @@ public class Migration {
 		options.addOption("out", true, "Output file");
 		options.addOption("overwrite", false, "Must be set to overwrite existing output files");
 		options.addOption("verbose", false, "Verbose output");
+		options.addOption("custom", true, "Custom migration groovy script");
 		options.addOption("help", false, "Help");
 		return options;
 	}
@@ -569,7 +571,7 @@ public class Migration {
 			break;
 		case "repository_browser":
 			ReferenceSetting referenceSetting = new ReferenceSetting(id, label,
-					getReferenceTypes(property, true, "options", "allowedSelection"));
+					getReferenceTypes(property, true, "options", "allowedSelection"), PublishAsType.content);
 
 			referenceSetting.multiple = getBoolean(property, "options", "selectMultiple");
 			referenceSetting.onlyInCurrentNode = getBoolean(property, "options", "onlyInCurrentNode");

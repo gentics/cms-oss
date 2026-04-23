@@ -22,6 +22,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
@@ -57,6 +58,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
+import com.gentics.contentnode.publish.mesh.FormsPublisherService;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
@@ -783,6 +785,16 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			try (MeshPublisher mp = new MeshPublisher(cr)) {
 				return mp.render(copy, language);
 			}
+		}
+	}
+
+	// TODO: DEBUG ONLY
+	@GET
+	@Path("{id}/transform")
+	public ObjectNode transform(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = loadForm(formId, nodeId);
+			return FormsPublisherService.transform(form);
 		}
 	}
 

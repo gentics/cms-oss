@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
-import { FormElement, FormElementConfiguration, FormSchema, FormTypeConfiguration } from '@gentics/cms-models';
+import { FormElement, FormElementConfiguration, FormSchema, FormSchemaProperty, FormTypeConfiguration } from '@gentics/cms-models';
 
 @Component({
     selector: 'gtx-form-element-settings',
@@ -16,6 +16,7 @@ export class FormElementSettingsComponent {
 
     public readonly element = model.required<FormElement>();
     public readonly elementConfig = input.required<FormElementConfiguration>();
+    public readonly elementSchema = input<FormSchemaProperty>();
 
     public readonly disabled = input.required<boolean>();
 

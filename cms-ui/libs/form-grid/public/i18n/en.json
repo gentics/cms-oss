@@ -48,6 +48,7 @@
         "condition_source_schema": "Condition: Schema Attribute",
         "condition_source_control": "Bedingung: Control element",
         "condition_equals_compare_value": "Condition: Compare value",
+        "translation_no_options_defined": "No options defined",
         "page_add": "Add page",
         "page_edit_title": "Edit page name",
         "page_name_label": "Page name",

@@ -12,7 +12,9 @@ import { BaseFormElementComponent, cancelEvent, generateFormProvider } from '@ge
 })
 export class FormOptionsInputComponent extends BaseFormElementComponent<FormSelectOptionValue[]> {
 
-    protected override onValueChange(): void {}
+    protected override onValueChange(): void {
+        console.log(this.value);
+    }
 
     public addNewOption(event?: Event): void {
         cancelEvent(event);

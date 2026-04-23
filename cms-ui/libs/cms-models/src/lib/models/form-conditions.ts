@@ -1,5 +1,3 @@
-import { FormSchemaProperty } from './form';
-
 /**
  * Which condition has to be met in order to display this setting to the editor
  */
@@ -50,14 +48,6 @@ export interface FormConditionNot {
 }
 
 /**
- * Met when the control value strictly equals the specified value
- */
-export interface FormConditionEquals {
-    source: FormConditionSource;
-    equals: FormCompareValue;
-}
-
-/**
  * Source which targets another setting which has been defined.
  * Used by `FormSettingConfiguration`.
  */
@@ -72,9 +62,9 @@ export interface FormConditionSourceSetting {
  */
 export interface FormConditionSourceSchema {
     /**
-     * All values which are defined in 'schema.properties' of a form
+     * A JSON path to the schema property you want to check for.
      */
-    schema: Omit<keyof FormSchemaProperty, 'properties'>;
+    schema: string;
 }
 
 /**
@@ -86,11 +76,24 @@ export interface FormConditionSourceControl {
     control: string;
 }
 
+export interface BaseFormCondition {
+    /**
+     * The source of the value that is used for this condition.
+     */
+    source: FormConditionSource;
+}
+
+/**
+ * Met when the control value strictly equals the specified value
+ */
+export interface FormConditionEquals extends BaseFormCondition {
+    equals: FormCompareValue;
+}
+
 /**
  * Met when the specified RegExp matches the control value
  */
-export interface FormConditionMatches {
-    source: FormConditionSource;
+export interface FormConditionMatches extends BaseFormCondition {
     /**
      * RegExp to match against the control value
      */
@@ -100,55 +103,48 @@ export interface FormConditionMatches {
 /**
  * Met when one of the controls (array/list) values equals the specified value
  */
-export interface FormConditionContains {
-    source: FormConditionSource;
+export interface FormConditionContains extends BaseFormCondition {
     contains: FormCompareValue;
 }
 
 /**
  * Met when the controls value equals one of the specified values
  */
-export interface FormConditionIncludedIn {
-    source: FormConditionSource;
+export interface FormConditionIncludedIn extends BaseFormCondition {
     includedIn: [FormCompareValue, ...FormCompareValue[]];
 }
 
 /**
  * Met when the control value is (excluding) bigger than the specified value
  */
-export interface FormConditionBiggerThan {
-    source: FormConditionSource;
+export interface FormConditionBiggerThan extends BaseFormCondition {
     biggerThan: number;
 }
 
 /**
  * Met when the control value is (excluding) lower than the specified value
  */
-export interface FormConditionLowerThan {
-    source: FormConditionSource;
+export interface FormConditionLowerThan extends BaseFormCondition {
     lowerThan: number;
 }
 
 /**
  * Met when the control value is or isn't empty/null
  */
-export interface FormConditionEmpty {
-    source: FormConditionSource;
+export interface FormConditionEmpty extends BaseFormCondition {
     empty: boolean;
 }
 
 /**
  * Met when the control is or isn't visible
  */
-export interface FormConditionVisible {
-    source: FormConditionSource;
+export interface FormConditionVisible extends BaseFormCondition {
     visible: boolean;
 }
 
 /**
  * Met when the control is or isn't disabled
  */
-export interface FormConditionDisabled {
-    source: FormConditionSource;
+export interface FormConditionDisabled extends BaseFormCondition {
     disabled: boolean;
 }

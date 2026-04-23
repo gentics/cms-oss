@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, HostBinding, input, model } from '@angular/core';
-import { FormSettingConfiguration, FormTypeConfiguration, FormUserOptionReference, ItemInNode, ItemRef } from '@gentics/cms-models';
-
-function sanitizeItemReference(item: ItemInNode): ItemRef {
-    return {
-        id: item.id,
-        nodeId: item.nodeId,
-        type: item.type as any,
-        name: item.name,
-    };
-}
+import {
+    FormElement,
+    FormElementConfiguration,
+    FormSchemaProperty,
+    FormSettingConfiguration,
+    FormTypeConfiguration,
+    FormUserOptionReference,
+    ItemInNode,
+} from '@gentics/cms-models';
+import { setByPath } from '@gentics/ui-core';
+import { isSettingVisible } from '../../utils/conditions';
+import { sanitizeItemReference } from '../../utils/sanitize';
 
 @Component({
     selector: 'gtx-dynamic-form-settings',
@@ -20,50 +22,67 @@ function sanitizeItemReference(item: ItemInNode): ItemRef {
 export class DynamicFormSettingsComponent {
 
     public readonly config = input.required<FormTypeConfiguration>();
+
     public readonly settings = input.required<FormSettingConfiguration[]>();
-    public readonly data = model.required<Record<string, any>>();
+    public readonly element = model.required<FormElement>();
+    public readonly elementConfig = input.required<FormElementConfiguration>();
+    public readonly elementSchema = model<FormSchemaProperty>();
 
     public readonly disabled = input.required<boolean>();
 
     public readonly visibleSettings = computed(() => {
-        // TODO: Filter conditions
-        return this.settings();
+        const elConf = this.elementConfig();
+        const el = this.element();
+        const elSchema = this.elementSchema();
+
+        return this.settings().filter((setting) => isSettingVisible(setting, elConf, el, elSchema));
     });
 
     @HostBinding('class.has-settings')
     public readonly hasVisibleSettings = computed(() => this.visibleSettings().length > 0);
 
-    public updateData(key: string, value: unknown): void {
-        this.data.update((data) => {
-            return {
-                ...data,
-                [key]: value,
-            };
-        });
+    public updateData(setting: FormSettingConfiguration, value: unknown): void {
+        const path = setting.propertyPath
+            ? setting.propertyPath
+            : ['formGridOptions', setting.id];
+
+        if (setting.backend) {
+            this.elementSchema.update((data) => {
+                const copy = structuredClone(data);
+                setByPath(copy, path, value);
+                return copy;
+            });
+        } else {
+            this.element.update((data) => {
+                const copy = structuredClone(data);
+                setByPath(copy, path, value);
+                return copy;
+            });
+        }
     }
 
-    public updateUserValue(id: string, value: string | string[]): void {
+    public updateUserValue(setting: FormSettingConfiguration, value: number | string | (string | number)[]): void {
         let actualValue: FormUserOptionReference | null = null;
 
         if (value != null) {
             actualValue = {
-                userReference: value,
+                userReference: value as string | string[],
             };
         }
 
-        this.updateData(id, actualValue);
+        this.updateData(setting, actualValue);
     }
 
-    public updateReferenceValue(id: string, value: ItemInNode | ItemInNode[]): void {
+    public updateReferenceValue(setting: FormSettingConfiguration, value: ItemInNode | ItemInNode[]): void {
         if (value == null) {
-            this.updateData(id, value);
+            this.updateData(setting, value);
             return;
         }
 
         if (Array.isArray(value)) {
-            this.updateData(id, value.map(sanitizeItemReference));
+            this.updateData(setting, value.map(sanitizeItemReference));
         } else {
-            this.updateData(id, sanitizeItemReference(value));
+            this.updateData(setting, sanitizeItemReference(value));
         }
     }
 }

@@ -23,6 +23,7 @@ import { DropdownContentComponent } from '../dropdown-content/dropdown-content.c
 import { DropdownListComponent } from '../dropdown-list/dropdown-list.component';
 
 export interface NormalizedOptionGroup {
+    id: string;
     options: SelectOptionDirective[];
     label: string;
     disabled: boolean;
@@ -421,6 +422,7 @@ export class SelectComponent
     private buildOptionGroups(): NormalizedOptionGroup[] {
         const groups = this.selectOptionGroups.map((g) => {
             return {
+                get id(): string { return g.id; },
                 get options(): SelectOptionDirective[] { return g.options; },
                 get label(): string { return g.label; },
                 get disabled(): boolean { return g.disabled; },
@@ -430,6 +432,7 @@ export class SelectComponent
 
         if (this.selectOptions.length) {
             groups.unshift({
+                id: '_default_',
                 options: this.selectOptions.toArray(),
                 label: '',
                 isDefaultGroup: true,

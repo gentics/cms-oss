@@ -42,49 +42,6 @@
         ></gtx-checkbox>
     </div>
 
-    @if (hasReadonlySettings()) {
-        <div class="definition-readonly-settings">
-            <span class="definition-section-title">{{ 'form_grid.definition_type_settings_title' | gtxI18n }}</span>
-
-            <div class="definition-fields">
-                @if (elementSchema().dateOnly != null) {
-                    <gtx-checkbox
-                        [disabled]="true"
-                        [label]="'form_grid.definition_type_date_only' | gtxI18n"
-                        [checked]="elementSchema().dateOnly ?? false"
-                    ></gtx-checkbox>
-                }
-
-                @if (elementSchema().precision != null) {
-                    <gtx-input
-                        [disabled]="true"
-                        type="number"
-                        [label]="'form_grid.definition_type_precision' | gtxI18n"
-                        [value]="elementSchema().precision ?? null"
-                    ></gtx-input>
-                }
-
-                @if (elementSchema().searchReferenceValueMinLength != null) {
-                    <gtx-input
-                        [disabled]="true"
-                        type="number"
-                        [label]="'form_grid.definition_type_search_min_length' | gtxI18n"
-                        [value]="elementSchema().searchReferenceValueMinLength ?? null"
-                    ></gtx-input>
-                }
-
-                @if (elementSchema().autoCompleteMinLength != null) {
-                    <gtx-input
-                        [disabled]="true"
-                        type="number"
-                        [label]="'form_grid.definition_type_autocomplete_min_length' | gtxI18n"
-                        [value]="elementSchema().autoCompleteMinLength ?? null"
-                    ></gtx-input>
-                }
-            </div>
-        </div>
-    }
-
     <gtx-dynamic-form-settings
         class="schema-settings"
         [config]="config()"

@@ -19,6 +19,7 @@ export class FormElementDefinitionComponent {
 
     public readonly FormGridEditMode = FormGridEditMode;
 
+    public readonly mode = input.required<FormGridEditMode>();
     public readonly config = input.required<FormTypeConfiguration>();
     public readonly schema = input.required<FormSchema>();
 
@@ -26,15 +27,8 @@ export class FormElementDefinitionComponent {
     public readonly elementConfig = input.required<FormControlConfiguration>();
     public readonly elementSchema = model.required<FormSchemaProperty>();
 
-    public readonly mode = input.required<FormGridEditMode>();
-
     public readonly controls = computed(() => {
         return this.config().controls || {};
-    });
-
-    public hasReadonlySettings = computed(() => {
-        const ref = this.elementSchema();
-        return [ref.dateOnly, ref.precision, ref.searchReferenceValueMinLength, ref.autoCompleteMinLength].some((v) => v != null);
     });
 
     public visibleSettings = computed(() => {

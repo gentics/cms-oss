@@ -1,8 +1,8 @@
 <div class="list-header">
   <gtx-checkbox
-    [checked]="areAllSelected()"
+    [value]="areAllSelected()"
     [label]="'common.select_all_label' | gtxI18n"
-    (change)="toggleSelectall()"
+    (valueChange)="toggleSelectall()"
   ></gtx-checkbox>
 </div>
 
@@ -14,8 +14,8 @@
       >
       <gtx-checkbox
         class="row-checkbox"
-        [checked]="selectedMap[user.id]"
-        (change)="toggleSelect(user.id)"
+        [value]="selectedMap[user.id]"
+        (valueChange)="toggleSelect(user.id)"
       ></gtx-checkbox>
       <div class="item-primary">
         {{ user.firstName }} {{ user.lastName }}

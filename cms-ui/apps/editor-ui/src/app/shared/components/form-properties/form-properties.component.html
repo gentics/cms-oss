@@ -46,7 +46,7 @@
                                 formControlName="flowId"
                             >
                                 @for (flow of activeConfiguration.flows; track flow.id) {
-                                    <gtx-option [value]="language.code">
+                                    <gtx-option [value]="flow.id">
                                         {{ flow.labelI18n | gtxI18nObject }}
                                     </gtx-option>
                                 }
@@ -102,7 +102,7 @@
                 formControlName="adminEmailAddress"
             ></gtx-input>
 
-            @if (formLanguages) {
+            @if (formLanguages?.length > 0) {
                 <gtx-i18n-panel-group
                     class="columns small-12"
                     [languages]="formLanguages"

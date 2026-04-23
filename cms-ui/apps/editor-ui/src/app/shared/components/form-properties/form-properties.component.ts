@@ -195,7 +195,7 @@ export class FormPropertiesComponent
 
     protected configureForm(value: FormPropertiesData, loud?: boolean): void {
         // Should be enabled while it's still loading, and if the name isn't in the item (i.E. something has already been selected)
-        setControlsEnabled(this.form, ['formType'], !this.item.formTypeName && (
+        setControlsEnabled(this.form, ['formType'], !this.item?.formTypeName && (
             this.formTypeConfigurations == null
             || !this.hadInitialConfiguration
         ));

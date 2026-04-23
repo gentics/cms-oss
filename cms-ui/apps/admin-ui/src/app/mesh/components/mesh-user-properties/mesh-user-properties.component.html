@@ -23,8 +23,8 @@
           <gtx-checkbox
             class="columns small-12 password-checkbox"
             [label]="'mesh.update_password' | gtxI18n"
-            [checked]="updatePassword"
-            (change)="togglePasswordSet()"
+            [value]="updatePassword"
+            (valueChange)="togglePasswordSet()"
           ></gtx-checkbox>
         }
         @if (form.get('password').enabled) {

@@ -29,5 +29,7 @@
     (keydown)="handleKeyDown($event)"
 >
     <span class="indicator" [ngClass]="'state-' + value"></span>
-    <span class="label-content">{{ label }}</span>
+    @if (label) {
+        <span class="label-content">{{ label }}</span>
+    }
 </label>

@@ -17,5 +17,7 @@
 
 <label [attr.for]="id || UNIQUE_ID" (click)="input.click()">
     <span class="indicator"></span>
-    <span class="label-content">{{ label }}</span>
+    @if (label) {
+        <span class="label-content">{{ label }}</span>
+    }
 </label>

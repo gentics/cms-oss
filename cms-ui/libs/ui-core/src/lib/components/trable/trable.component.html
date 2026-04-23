@@ -61,8 +61,8 @@
                 <gtx-checkbox
                     *ngIf="row.selectable"
                     class="selection-checkbox"
-                    [checked]="rowSelected"
-                    (click)="updateRowSelection(row, $event)"
+                    [value]="rowSelected"
+                    (valueChange)="updateRowSelection(row, $event)"
                 ></gtx-checkbox>
             </div>
         </ng-template>

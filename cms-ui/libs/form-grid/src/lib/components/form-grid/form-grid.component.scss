@@ -1,3 +1,5 @@
+@import 'ui-core/src/styles/variables';
+
 :host {
     display: block;
     height: 100%;
@@ -705,8 +707,6 @@ gtx-checkbox [type='checkbox']+label:before {
 }
 
 /* Selected item highlight */
-.fg-box.is-selected {}
-
 .is-selected-title {
     color: #0096DC;
     font-weight: 700;
@@ -1045,4 +1045,8 @@ gtx-checkbox [type='checkbox']+label:before {
         flex: 1 1 auto;
         text-align: center;
     }
+}
+
+.element-tabs.missing-translations::ng-deep .tab-links .tab-link[data-id="translations"] icon {
+    color: $gtx-color-warning;
 }

@@ -30,14 +30,16 @@
             && languageState
             && itemType === 'page'
         ) {
-            <gtx-language-state
-                [language]="languageState"
-                [activeLanguage]="activeLanguage"
-                [state]="languageState"
-                [mode]="uiMode"
-                [showIndicators]="true"
-                [showDeleted]="showDeleted"
-            ></gtx-language-state>
+            <div class="current-language-container">
+                <gtx-language-state
+                    [language]="languageState"
+                    [activeLanguage]="activeLanguage"
+                    [state]="languageState"
+                    [mode]="uiMode"
+                    [showIndicators]="true"
+                    [showDeleted]="showDeleted"
+                ></gtx-language-state>
+            </div>
         }
 
         <div #itemPrimary class="item-primary">

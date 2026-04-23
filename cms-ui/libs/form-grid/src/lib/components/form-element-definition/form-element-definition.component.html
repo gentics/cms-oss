@@ -22,23 +22,16 @@
     <div class="definition-checkboxes">
         <gtx-checkbox
             [label]="'form_grid.definition_mandatory' | gtxI18n"
-            [checked]="elementSchema().mandatory ?? false"
+            [value]="elementSchema().mandatory ?? false"
             [disabled]="mode() !== FormGridEditMode.FULL"
-            (change)="updateElementSchema({ mandatory: $event === true })"
+            (valueChange)="updateElementSchema({ mandatory: $event === true })"
         ></gtx-checkbox>
 
         <gtx-checkbox
             [label]="'form_grid.definition_sync_on_change' | gtxI18n"
-            [checked]="elementSchema().updateOnChange ?? false"
+            [value]="elementSchema().updateOnChange ?? false"
             [disabled]="mode() !== FormGridEditMode.FULL"
-            (change)="updateElementSchema({ updateOnChange: $event === true })"
-        ></gtx-checkbox>
-
-        <gtx-checkbox
-            [label]="'form_grid.definition_multivalue' | gtxI18n"
-            [checked]="elementSchema().isList ?? false"
-            [disabled]="mode() !== FormGridEditMode.FULL"
-            (change)="updateElementSchema({ isList: $event === true })"
+            (valueChange)="updateElementSchema({ updateOnChange: $event === true })"
         ></gtx-checkbox>
     </div>
 

@@ -1,7 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, HostBinding, input, model } from '@angular/core';
-import { FormElement, FormElementConfiguration, FormSchemaProperty, FormSelectOptionValue, FormSettingConfiguration, I18nString } from '@gentics/cms-models';
-import { isSettingVisible } from '../../utils/conditions';
+import { ChangeDetectionStrategy, Component, computed, effect, HostBinding, input, model } from '@angular/core';
+import {
+    FormElement,
+    FormElementConfiguration,
+    FormSchemaProperty,
+    FormSelectOptionValue,
+    FormSettingConfiguration,
+    I18nString,
+} from '@gentics/cms-models';
 import { getValueByPath, setByPath } from '@gentics/ui-core';
+import { isSettingVisible } from '../../utils/conditions';
 
 @Component({
     selector: 'gtx-dynamic-form-translations',
@@ -32,7 +39,14 @@ export class DynamicFormTranslationsComponent {
     });
 
     @HostBinding('class.has-settings')
-    public readonly hasVisibleSettings = computed(() => this.visibleSettings().length > 0);
+    public hasVisibleSettings = false;
+
+    constructor() {
+        // Ugly workaround, as HostBindings don't work with signals
+        effect(() => {
+            this.hasVisibleSettings = this.visibleSettings().length > 0;
+        });
+    }
 
     public updateData(setting: FormSettingConfiguration, valueProvider: (original: unknown) => unknown): void {
         const path = setting.propertyPath

@@ -13,6 +13,19 @@ gtx-contents-list-item {
     border-bottom: 1px dotted $gtx-color-very-light-gray;
     min-height: $item-list-min-height;
     width: 100%;
+    gap: 0.5rem;
+
+    .item-primary {
+        padding: 0;
+    }
+
+    .current-language-container {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
     ::ng-deep .item-name {
         align-items: baseline;
@@ -71,10 +84,11 @@ gtx-contents-list-item {
         }
 
         .item-name {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             overflow: hidden;
             max-width: 100%;
+            min-height: 30px;
             gap: 0.25rem;
 
             .localized-icon,

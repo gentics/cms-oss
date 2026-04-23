@@ -61,12 +61,12 @@ export class DynamicFormSettingsComponent {
         }
     }
 
-    public updateUserValue(setting: FormSettingConfiguration, value: string | string[]): void {
+    public updateUserValue(setting: FormSettingConfiguration, value: number | string | (string | number)[]): void {
         let actualValue: FormUserOptionReference | null = null;
 
         if (value != null) {
             actualValue = {
-                userReference: value,
+                userReference: value as string | string[],
             };
         }
 

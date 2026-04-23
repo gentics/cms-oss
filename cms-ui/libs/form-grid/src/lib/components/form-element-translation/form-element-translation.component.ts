@@ -24,7 +24,7 @@ export class FormElementTranslationComponent {
 
     public readonly element = model.required<FormElement>();
     public readonly elementConfig = input.required<FormElementConfiguration>();
-    public readonly elementSchema = model<FormSchemaProperty | null>(null);
+    public readonly elementSchema = model<FormSchemaProperty>();
 
     public readonly languages = input.required<string[]>();
 

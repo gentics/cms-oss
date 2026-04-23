@@ -119,7 +119,7 @@
                         [disabled]="disabled()"
                         [multiple]="setting.multiple ?? false"
                         [value]="settingData?.userReference"
-                        (valueChange)="updateUserValue(setting.id, $event)"
+                        (valueChange)="updateUserValue(setting, $event)"
                     >
                         @for (option of (config().userOptions || []); track option.value) {
                             <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
@@ -143,7 +143,7 @@
                     [includeMlId]="setting.allowedMarkupLanguageIds"
                     [browseTitle]="setting.titleI18n | gtxI18nObject"
                     [value]="settingData"
-                    (valueChange)="updateReferenceValue(setting.id, $event)"
+                    (valueChange)="updateReferenceValue(setting, $event)"
                 ></gtx-browse-box>
             }
 

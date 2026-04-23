@@ -131,13 +131,13 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     /** The currently selected element, which may be getting edited. */
     public readonly selectedElement = computed(() => {
         const id = this.selectedElementId();
-        return id == null ? null : this.elementMap()[id];
+        return id == null ? undefined : this.elementMap()[id];
     });
 
     /** The schema definition of the selected element (if it has one) */
     public readonly selectedElementSchema = computed(() => {
         const id = this.selectedElementId();
-        return id == null ? null : (this.schema()?.properties || {})?.[id];
+        return id == null ? undefined : (this.schema()?.properties || {})?.[id];
     });
 
     /** Which type the element is */
@@ -155,7 +155,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly selectedElementConfiguration = computed(() => {
         const element = this.selectedElement();
         if (element == null) {
-            return null;
+            return undefined;
         }
 
         const schema = this.selectedElementSchema();
@@ -350,7 +350,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         return false;
     }
 
-    public updateElementSchema(elementSchema: FormSchemaProperty | null): void {
+    public updateElementSchema(elementSchema?: FormSchemaProperty): void {
         if (elementSchema == null) {
             return;
         }

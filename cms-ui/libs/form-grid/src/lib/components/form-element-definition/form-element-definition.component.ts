@@ -42,7 +42,7 @@ export class FormElementDefinitionComponent {
         return all.filter((setting) => setting.backend);
     });
 
-    public updateElementSchema(patch: Partial<FormSchemaProperty>): void {
+    public updateElementSchema(patch?: Partial<FormSchemaProperty>): void {
         this.elementSchema.set({ ...this.elementSchema(), ...patch });
     }
 

@@ -3,6 +3,7 @@ package com.gentics.contentnode.forms;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
@@ -21,11 +23,15 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.stream.Streams;
+import org.codehaus.groovy.control.CompilationFailedException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.rest.model.formtype.BaseSetting;
@@ -43,6 +49,12 @@ import com.gentics.contentnode.rest.model.formtype.SelectSetting;
 import com.gentics.contentnode.rest.model.formtype.StringSetting;
 import com.gentics.contentnode.rest.model.formtype.TranslationSetting;
 
+import groovy.json.JsonOutput;
+import groovy.json.JsonSlurper;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
+
 /**
  * Migration tool for form type configurations
  */
@@ -56,7 +68,24 @@ public class Migration {
 	 * List of unmigrated properties (properties, which are standard)
 	 */
 	protected final static List<String> UNMIGRATED_PROPERTIES = Arrays.asList("label", "description", "mandatory",
-			"minVal", "maxVal", "maxCharCount", "validation", "select_type", "element_to_check", "value_to_check");
+			"validation", "select_type", "element_to_check", "value_to_check");
+
+	/**
+	 * List of unmigrated properties per element type ID
+	 */
+	protected final static Map<String, List<String>> UNMIGRATED_PROPERTIES_PER_ID = Map.of(
+			"string", Arrays.asList("minVal", "maxVal"),
+			"datetime", Arrays.asList("minVal", "maxVal", "maxCharCount"),
+			"time", Arrays.asList("minVal", "maxVal", "maxCharCount"),
+			"number", Arrays.asList("maxCharCount"));
+
+	/**
+	 * Map of property id to propertyPath settings
+	 */
+	protected final static Map<String, String> PROPERTY_PATH_MAP = Map.of(
+			"minValue", "validation.minValue",
+			"maxValue", "validation.maxValue",
+			"maxLength", "validation.maxLength");
 
 	/**
 	 * Migration map for property ids
@@ -65,12 +94,15 @@ public class Migration {
 			"additional_element", "customOption",
 			"max_filesize", "maxFileSize",
 			"options", "selectOptions",
-			"value", "defaultValue");
+			"value", "defaultValue",
+			"minVal", "minValue",
+			"maxVal", "maxValue",
+			"maxCharCount", "maxLength");
 
 	/**
 	 * List of property ids, which are backend properties (have the backend flag set)
 	 */
-	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("maxFileSize", "allowedFiletypes",
+	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("minValue", "maxValue", "maxLength", "maxFileSize", "allowedFiletypes",
 			"mailsubject", "mailtemplate", "mailsource", "defaultValue", "selectOptions");
 
 	/**
@@ -121,9 +153,19 @@ public class Migration {
 	protected final static String UI_CONF_PATH_DEFAULT = "ui-conf";
 
 	/**
+	 * Pattern for migration of the telephone number validation
+	 */
+	protected final static String TELEPHONE_PATTERN = "^[\\s\\d\\+\\/]*$";
+
+	/**
 	 * Pattern for migration of the social security number validation
 	 */
 	protected final static String SOCIAL_SECURITY_PATTERN = "^[1-9]\\d{9}$";
+
+	/**
+	 * Pattern for migration of the email validation
+	 */
+	protected final static String EMAIL_PATTERN = "^(([^<>()\\[\\]\\\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\\\.,;:\\s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
 
 	/**
 	 * Flag to enable verbose output
@@ -134,6 +176,21 @@ public class Migration {
 	 * Current file name
 	 */
 	protected String currentFileName;
+
+	/**
+	 * Optional custom migration script
+	 */
+	protected Script customMigrationScript;
+
+	/**
+	 * Groovy shell
+	 */
+	protected GroovyShell shell;
+
+	/**
+	 * Shared data for the custom migration script
+	 */
+	protected Binding sharedData;
 
 	/**
 	 * Object mapper instance used to parse the input files
@@ -187,6 +244,9 @@ public class Migration {
 
 		// do the migration
 		Migration migration = new Migration(line.hasOption("verbose"));
+		if (line.hasOption("custom")) {
+			migration.parseScript(new File(line.getOptionValue("custom")));
+		}
 		migration.doMigration(outFile, line);
 	}
 
@@ -243,6 +303,18 @@ public class Migration {
 	 */
 	public Migration(boolean verbose) {
 		this.verbose = verbose;
+	}
+
+	/**
+	 * Parse the custom migration script
+	 * @param scriptFile
+	 * @throws CompilationFailedException
+	 * @throws IOException
+	 */
+	public void parseScript(File scriptFile) throws CompilationFailedException, IOException {
+		sharedData = new Binding();
+		shell = new GroovyShell(sharedData);
+		customMigrationScript = shell.parse(scriptFile);
 	}
 
 	/**
@@ -320,9 +392,9 @@ public class Migration {
 							if (StringUtils.isBlank(key)) {
 								System.err.println("%s: Ignoring element with empty type: '%s'".formatted(currentFileName, element.toString()));
 							} else if (isBlock(key, element)) {
-								toBlock(key, element, out.blocks);
+								migrate(key, element, e -> toBlock(key, e, out.blocks));
 							} else {
-								toControl(key, element, out.controls);
+								migrate(key, element, e -> toControl(key, e, out.controls));
 							}
 						}, () -> {
 							System.err.println("%s: Ignoring element without type: '%s'".formatted(currentFileName, element.toString()));
@@ -423,17 +495,42 @@ public class Migration {
 	}
 
 	/**
+	 * Migrate the element to a control. Omit elements with keys listed in {@link #UNMIGRATED_ELEMENT_TYPES}.
+	 * If a {@link #customMigrationScript} is present, first call the script with the element data.
+	 * @param key element key
+	 * @param element element to migrate
+	 * @param migrator migrator
+	 */
+	protected void migrate(String key, JsonNode element, Consumer<JsonNode> migrator) {
+		if (UNMIGRATED_ELEMENT_TYPES.contains(key)) {
+			return;
+		}
+		if (customMigrationScript != null) {
+			sharedData.getVariables().clear();
+			sharedData.setVariable("verbose", verbose);
+			sharedData.setVariable("element", new JsonSlurper().parseText(element.toString()));
+			boolean migrate = ObjectTransformer.getBoolean(customMigrationScript.run(), true);
+			if (!migrate) {
+				return;
+			}
+			try {
+				element = mapper.readTree(JsonOutput.toJson(sharedData.getVariable("element")));
+			} catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		migrator.accept(element);
+	}
+
+	/**
 	 * Migrate the given element to a block
 	 * @param key type key
 	 * @param element element
 	 * @param blocks map of blocks
 	 */
 	protected void toBlock(String key, JsonNode element, Map<String, BlockConfig> blocks) {
-		if (UNMIGRATED_ELEMENT_TYPES.contains(key)) {
-			return;
-		}
 		BlockConfig block = new BlockConfig(getTranslationMap(element, "type_label_i18n_ui", true));
-		fillElementConfig(block, element);
+		fillElementConfig(key, block, element);
 		block.container = getBoolean(element, "is_container");
 		blocks.put(key, block);
 	}
@@ -445,22 +542,26 @@ public class Migration {
 	 * @param controls map of controls
 	 */
 	protected void toControl(String key, JsonNode element, Map<String, ControlConfig> controls) {
-		if (UNMIGRATED_ELEMENT_TYPES.contains(key)) {
-			return;
-		}
 		key = ELEMENT_TYPE_MIGRATION_MAP.getOrDefault(key, key);
 		ControlConfig control = new ControlConfig(getTranslationMap(element, "type_label_i18n_ui", true));
-		fillElementConfig(control, element);
+		fillElementConfig(key, control, element);
 		controls.put(key, control);
 
 		// some types require special handling
 		switch (key) {
 		case "string":
+			SelectSetting validationSetting = new SelectSetting("validation", Collections.emptyMap(),
+					new ArrayList<>());
+			validationSetting.backend = true;
+			validationSetting.propertyPath = "validation.regexValidation";
+
 			element.optional("properties").filter(JsonNode::isArray).ifPresent(properties -> {
 				properties.valueStream()
 						.filter(el -> el.optional("name").filter(JsonNode::isTextual).map(JsonNode::asText)
 								.filter(name -> Strings.CI.equals(name, "validation")).isPresent())
 						.findFirst().ifPresent(validation -> {
+							validationSetting.labelI18n = getTranslationMap(validation, "label_i18n_ui", true);
+
 							validation.optional("options").filter(JsonNode::isArray).ifPresent(options -> {
 								for (JsonNode option : options) {
 									String optionKey = option.optional("key").filter(JsonNode::isTextual)
@@ -468,59 +569,88 @@ public class Migration {
 									switch (optionKey) {
 									case "number":
 										ControlConfig numberControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
-										fillElementConfig(numberControl, element);
+										fillElementConfig("number", numberControl, element);
 										controls.put("number", numberControl);
 										break;
 									case "telephone":
-										// TODO add regex validation
+										validationSetting.options
+												.add(createRegexValidationOption(option, TELEPHONE_PATTERN));
 										break;
 									case "socialsecurity":
-										// TODO add regex validation
+										validationSetting.options
+												.add(createRegexValidationOption(option, SOCIAL_SECURITY_PATTERN));
 										break;
 									case "date":
 										ControlConfig dateTimeControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
-										fillElementConfig(dateTimeControl, element);
+										fillElementConfig("datetime", dateTimeControl, element);
 										controls.put("datetime", dateTimeControl);
 										break;
 									case "datepicker":
 										break;
 									case "time":
 										ControlConfig timeControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
-										fillElementConfig(timeControl, element);
+										fillElementConfig("time", timeControl, element);
 										controls.put("time", timeControl);
 										break;
 									case "email":
-										// TODO add regex validation
+										validationSetting.options
+												.add(createRegexValidationOption(option, EMAIL_PATTERN));
 										break;
 									}
 								}
 							});
 						});
 			});
+
+			if (!validationSetting.options.isEmpty()) {
+				if (control.settings == null) {
+					control.settings = new ArrayList<>();
+				}
+				control.settings.add(validationSetting);
+			}
+
 			break;
 		}
 	}
 
 	/**
+	 * Transform the given option into a {@link SelectOption}
+	 * @param option option to transform
+	 * @param defaultRegex default regex, if none was stored in the option
+	 * @return SelectOption instance
+	 */
+	protected SelectOption createRegexValidationOption(JsonNode option, String defaultRegex) {
+		ObjectNode value = mapper.createObjectNode();
+		value.put("key", option.optional("key").map(JsonNode::asText).orElse(null));
+		value.put("regex",
+				option.optional("regex").filter(JsonNode::isTextual).map(JsonNode::asText).orElse(defaultRegex));
+		value.set("errorMessage", option.get("errorMessage"));
+
+		return new SelectOption(value, getTranslationMap(option, "value_i18n_ui", true));
+	}
+
+	/**
 	 * Fill the common ElementConfig properties from the source into the given element
+	 * @param key element key
 	 * @param element element to modify
 	 * @param source source
 	 */
-	protected void fillElementConfig(ElementConfig element, JsonNode source) {
+	protected void fillElementConfig(String key, ElementConfig element, JsonNode source) {
 		source.optional("description_i18n_ui").map(this::toTranslationMap)
 				.ifPresent(description -> element.descriptionI18n = description);
 		source.optional("properties").filter(properties -> properties.isArray()).ifPresent(properties -> {
-			element.settings = properties.valueStream().map(this::toSetting).filter(setting -> setting != null)
+			element.settings = properties.valueStream().map(s -> toSetting(key, s)).filter(setting -> setting != null)
 					.collect(Collectors.toList());
 		});
 	}
 
 	/**
 	 * Migrate the given property to setting
+	 * @param elementType for which the setting is defined
 	 * @param property property to migrate
 	 * @return setting
 	 */
-	protected BaseSetting toSetting(JsonNode property) {
+	protected BaseSetting toSetting(String elementType, JsonNode property) {
 		String type = property.optional("type").map(JsonNode::asText).orElse(null).toLowerCase();
 		if (StringUtils.isBlank(type)) {
 			System.err.println("%s: Ignoring property without type '%s'".formatted(property.toString()));
@@ -533,6 +663,10 @@ public class Migration {
 		}
 
 		if (UNMIGRATED_PROPERTIES.contains(id)) {
+			return null;
+		}
+
+		if (UNMIGRATED_PROPERTIES_PER_ID.getOrDefault(elementType, Collections.emptyList()).contains(id)) {
 			return null;
 		}
 
@@ -597,6 +731,7 @@ public class Migration {
 		if (setting != null) {
 			setting.descriptionI18n = toTranslationMap(property.get("description_i18n_ui"));
 			setting.backend = BACKEND_PROPERTIES.contains(id);
+			setting.propertyPath = PROPERTY_PATH_MAP.get(id);
 		}
 
 		return setting;

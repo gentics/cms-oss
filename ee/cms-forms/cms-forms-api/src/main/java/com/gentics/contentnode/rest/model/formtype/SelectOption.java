@@ -16,7 +16,7 @@ public class SelectOption implements Serializable {
 	 * Option value
 	 */
 	@JsonProperty
-	public String value;
+	public Object value;
 
 	/**
 	 * Label of the option which is displayed to the editor
@@ -30,7 +30,7 @@ public class SelectOption implements Serializable {
 	 * @param labelI18n label
 	 */
 	@JsonCreator
-	public SelectOption(@JsonProperty(value = "value", required = true) String value,
+	public SelectOption(@JsonProperty(value = "value", required = true) Object value,
 			@JsonProperty(value = "labelI18n", required = true) Map<String, String> labelI18n) {
 		this.value = value;
 		this.labelI18n = labelI18n;

@@ -29,7 +29,7 @@ public abstract class ElementConfig implements Serializable {
 	 * The settings which an editor can configure when inserting this element
 	 */
 	@JsonProperty
-	public List<? extends BaseSetting> settings;
+	public List<BaseSetting> settings;
 
 	/**
 	 * Creator

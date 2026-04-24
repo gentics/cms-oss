@@ -2,6 +2,8 @@ package com.gentics.contentnode.init;
 
 import static com.gentics.contentnode.publish.mesh.FormsPublisherService.FORM_GRID_OPTIONS;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,14 +12,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.stream.Streams;
+import org.codehaus.groovy.control.CompilationFailedException;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -46,6 +53,14 @@ import com.gentics.contentnode.rest.model.formtype.SelectSetting;
 import com.gentics.contentnode.rest.model.formtype.StringSetting;
 import com.gentics.contentnode.rest.model.formtype.TranslationSetting;
 import com.gentics.contentnode.rest.model.formtype.UserSetting;
+import com.gentics.contentnode.runtime.ConfigurationValue;
+import com.google.common.base.Objects;
+
+import groovy.json.JsonOutput;
+import groovy.json.JsonSlurper;
+import groovy.lang.Binding;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 
 /**
  * Init Job that migrates forms. The "type" attribute of the form "data" is transformed into the "formtype" (lowercase).
@@ -55,6 +70,11 @@ import com.gentics.contentnode.rest.model.formtype.UserSetting;
  */
 @InitJobName("migrateforms")
 public class MigrateForms extends InitJob {
+	/**
+	 * Name of the optional custom migration script file (read from the configuration)
+	 */
+	protected final static String CUSTOM_MIGRATION_SCRIPT_NAME = "form_migration.groovy";
+
 	/**
 	 * Map from new property ids to old property names
 	 */
@@ -132,6 +152,26 @@ public class MigrateForms extends InitJob {
 	private ObjectMapper mapper = new ObjectMapper();
 
 	/**
+	 * Optional custom migration script
+	 */
+	protected Script customMigrationScript;
+
+	/**
+	 * Groovy shell
+	 */
+	protected GroovyShell shell;
+
+	/**
+	 * Shared data for the custom migration script
+	 */
+	protected Binding sharedData;
+
+	/**
+	 * JSON Slurper
+	 */
+	protected JsonSlurper slurper = new JsonSlurper();
+
+	/**
 	 * Empty migrator
 	 */
 	private BiConsumer<ObjectNode, ObjectNode> EMPTY_MIGRATOR = (elementNode, property) -> {};
@@ -141,11 +181,6 @@ public class MigrateForms extends InitJob {
 	 */
 	private BiConsumer<ObjectNode, ObjectNode> STRING_PROPERTY_MIGRATOR = (elementNode, property) -> {
 		property.put("numberOfLines", 1);
-		getMaxIntFromI18n(elementNode, "maxCharCount_i18n").ifPresent(maxCharCount -> {
-			property.withObjectProperty("validation")
-				.put("minLength", 0)
-				.put("maxLength", maxCharCount);
-		});
 	};
 
 	/**
@@ -155,14 +190,6 @@ public class MigrateForms extends InitJob {
 		property.put("precision", 0);
 		property.put("isRaw", true);
 		property.withObjectProperty("unit");
-		getMaxIntFromI18n(elementNode, "minVal_i18n").ifPresent(minValue -> {
-			property.withObjectProperty("validation")
-				.put("minValue", minValue);
-		});
-		getMaxIntFromI18n(elementNode, "maxVal_i18n").ifPresent(minValue -> {
-			property.withObjectProperty("validation")
-				.put("maxValue", minValue);
-		});
 	};
 
 	/**
@@ -240,6 +267,17 @@ public class MigrateForms extends InitJob {
 
 	@Override
 	public void execute() throws NodeException {
+		File customMigrationScriptFile = getCustomMigrationScriptFile();
+		if (customMigrationScriptFile != null) {
+			sharedData = new Binding();
+			shell = new GroovyShell(sharedData);
+			try {
+				customMigrationScript = shell.parse(customMigrationScriptFile);
+			} catch (CompilationFailedException | IOException e) {
+				throw new NodeException(e);
+			}
+		}
+
 		FormTypeConfigurationMap formTypeConfigurations = FormConfigProvider.getConfig();
 
 		Map<Integer, Set<String>> formTypesPerNode = new HashMap<>();
@@ -316,6 +354,57 @@ public class MigrateForms extends InitJob {
 				DBUtils.update("INSERT IGNORE INTO node_formtype (node_id, formtype) VALUES (?, ?)", nodeId, formType);
 			}
 		}
+	}
+
+	/**
+	 * Find the custom forms migration file (if present)
+	 * @return custom migration file or null if not found
+	 */
+	protected File getCustomMigrationScriptFile() {
+		String confPath = ConfigurationValue.CONF_PATH.get();
+		String configFiles = ConfigurationValue.CONF_FILES.get();
+
+		for (String filePath : StringUtils.split(configFiles, ", ")) {
+			File configFile = null;
+			if (!StringUtils.isBlank(confPath) && new File(confPath, filePath).exists()) {
+				configFile = new File(confPath, filePath);
+			} else {
+				configFile = new File(filePath);
+			}
+			if (configFile.isDirectory()) {
+				// if the configured file is a directory, we read the files in the directory
+				Optional<File> optFile = Streams.of(configFile.listFiles(file -> {
+					return file.isFile() && Strings.CI.equals(file.getName(), CUSTOM_MIGRATION_SCRIPT_NAME);
+				})).findFirst();
+				if (optFile.isPresent()) {
+					return optFile.get();
+				}
+			} else if (configFile.exists() && Strings.CI.equals(configFile.getName(), CUSTOM_MIGRATION_SCRIPT_NAME)) {
+				return configFile;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Put the given data node into the {@link #sharedData} with given variable name
+	 * @param name variable name
+	 * @param data data node
+	 */
+	protected void putToSharedData(String name, JsonNode data) {
+		sharedData.setVariable(name, slurper.parseText(data.toString()));
+	}
+
+	/**
+	 * Get the data node from the {@link #sharedData} with given variable name
+	 * @param name variable name
+	 * @return data node
+	 * @throws JsonMappingException
+	 * @throws JsonProcessingException
+	 */
+	protected JsonNode getFromSharedData(String name) throws JsonMappingException, JsonProcessingException {
+		return mapper.readTree(JsonOutput.toJson(sharedData.getVariable(name)));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -504,9 +593,12 @@ public class MigrateForms extends InitJob {
 					.formatted(Optional.ofNullable(current).map(FormToMigrate::name).orElse("<unknown form>"), migratedType, name, currentFormType));
 		}
 
+		AtomicReference<JsonNode> propertyRef = new AtomicReference<>();
+
 		optionalControl.ifPresent(controlConfig -> {
 			// create the schema property and migrate common data
 			ObjectNode property = mapper.createObjectNode();
+
 			property.put("name", name);
 			property.put("type", migratedType);
 			property.put("updateOnChange", false);
@@ -520,8 +612,8 @@ public class MigrateForms extends InitJob {
 			// migrate type specific data
 			propertyMigrator.accept(elementNode, property);
 
-			// add the schema property to the schema
-			schemaProperties.set(property.get("name").asText(), property);
+			// store the property in the reference, we will add it later
+			propertyRef.set(property);
 
 			// migrate all backend settings
 			Optional.ofNullable(controlConfig.settings).ifPresent(settings -> {
@@ -576,8 +668,42 @@ public class MigrateForms extends InitJob {
 		// migrate type specific ui data
 		uiPropertyMigrator.accept(elementNode, uiProperty);
 
+		AtomicReference<JsonNode> uiPropertyRef = new AtomicReference<>(uiProperty);
+
+		// run the optional migration script
+		if (customMigrationScript != null) {
+			// clear shared data
+			sharedData.getVariables().clear();
+
+			putToSharedData("element", elementNode);
+			// add data
+			if (propertyRef.get() != null) {
+				putToSharedData("property", propertyRef.get());
+			}
+			putToSharedData("uiProperty", uiPropertyRef.get());
+
+			// run the script
+			customMigrationScript.run();
+
+			// get possibly modified property and uiProperty
+			try {
+				if (propertyRef.get() != null) {
+					propertyRef.set(getFromSharedData("property"));
+				}
+				uiPropertyRef.set(getFromSharedData("uiProperty"));
+			} catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
+
+		}
+
+		// add the schema property to the schema
+		if (propertyRef.get() != null) {
+			schemaProperties.set(propertyRef.get().get("name").asText(), propertyRef.get());
+		}
+
 		// add the ui property to the current page
-		currentPage.withArrayProperty("elements").add(uiProperty);
+		currentPage.withArrayProperty("elements").add(uiPropertyRef.get());
 	}
 
 	/**
@@ -591,37 +717,52 @@ public class MigrateForms extends InitJob {
 
 		String settingTypeName = Optional.ofNullable(setting.getClass().getAnnotation(JsonTypeName.class))
 				.map(JsonTypeName::value).orElse("");
+
+		String propertyPath = Optional.ofNullable(setting.propertyPath)
+				.orElse("%s.%s".formatted(FORM_GRID_OPTIONS, setting.id));
+
 		switch (settingTypeName) {
 		case StringSetting.TYPE:
 			getStringFromI18n(elementNode, oldName)
-					.ifPresent(string -> propertyOrUiProperty.withObjectProperty(FORM_GRID_OPTIONS).put(setting.id, string));
+					.ifPresent(string -> setProperty(propertyOrUiProperty, propertyPath, (n, p) -> n.put(p, string)));
 			break;
 		case TranslationSetting.TYPE:
 			elementNode.optional(oldName).filter(n -> !n.isNull()).ifPresent(
-					translation -> propertyOrUiProperty.withObjectProperty(FORM_GRID_OPTIONS).set(setting.id, translation));
+					translation -> setProperty(propertyOrUiProperty, propertyPath, (n, p) -> n.set(p, translation)));
 			break;
 		case IntegerSetting.TYPE:
 			getMaxIntFromI18n(elementNode, oldName)
-					.ifPresent(value -> propertyOrUiProperty.withObjectProperty(FORM_GRID_OPTIONS).put(setting.id, value));
+					.ifPresent(value -> setProperty(propertyOrUiProperty, propertyPath, (n, p) -> n.put(p, value)));
 			break;
 		case NumberSetting.TYPE:
 			getMaxNumberFromI18n(elementNode, oldName)
-				.ifPresent(value -> propertyOrUiProperty.withObjectProperty(FORM_GRID_OPTIONS).put(setting.id, value));
+				.ifPresent(value -> setProperty(propertyOrUiProperty, propertyPath, (n, p) -> n.put(p, value)));
 			break;
 		case BooleanSetting.TYPE:
-			propertyOrUiProperty.withObjectProperty(FORM_GRID_OPTIONS).put(setting.id,
-					getBooleanFromI18n(elementNode, oldName).orElse(false));
+			boolean booleanValue = getBooleanFromI18n(elementNode, oldName).orElse(false);
+			setProperty(propertyOrUiProperty, propertyPath, (n, p) -> n.put(p, booleanValue));
 			break;
 		case DateSetting.TYPE:
 			break;
 		case SelectSetting.TYPE:
 			if (setting instanceof SelectSetting selectSetting) {
 				if (selectSetting.multiple) {
-					getMultiSelectionFromI18n(elementNode, oldName).ifPresent(selection -> propertyOrUiProperty
-							.withObjectProperty(FORM_GRID_OPTIONS).set(setting.id, mapper.valueToTree(selection)));
+					getMultiSelectionFromI18n(elementNode, oldName)
+							.ifPresent(selection -> setProperty(propertyOrUiProperty, propertyPath,
+									(n, p) -> n.set(p, mapper.valueToTree(selection))));
 				} else {
-					getStringFromI18n(elementNode, oldName).ifPresent(
-							selection -> propertyOrUiProperty.withObjectProperty(FORM_GRID_OPTIONS).put(setting.id, selection));
+					getStringFromI18n(elementNode, oldName).ifPresent(selection -> {
+						// get the selection from the setting
+						Object selectedOption = getSelectedOption(selectSetting, selection);
+						if (selectedOption instanceof Map<?, ?> mapOption) {
+							JsonNode nodeOption = mapper.valueToTree(mapOption);
+							setProperty(propertyOrUiProperty, propertyPath, (n, p) -> n.set(p, nodeOption));
+						} else if (selectedOption instanceof JsonNode nodeOption) {
+							setProperty(propertyOrUiProperty, propertyPath, (n, p) -> n.set(p, nodeOption));
+						} else if (selectedOption instanceof String stringOption) {
+							setProperty(propertyOrUiProperty, propertyPath, (n, p) -> n.put(p, stringOption));
+						}
+					});
 				}
 			}
 			break;
@@ -667,6 +808,41 @@ public class MigrateForms extends InitJob {
 
 			break;
 		}
+	}
+
+	/**
+	 * Get the selected option based on the given value.
+	 * Either the option.value equals the given value, or it as a property "key" that equals the value
+	 * @param selectSetting select setting
+	 * @param value property to be migrated
+	 * @return selected option value
+	 */
+	protected Object getSelectedOption(SelectSetting selectSetting, String value) {
+		return Optional.ofNullable(selectSetting.options).flatMap(options -> options.stream().filter(option -> {
+			if (Objects.equal(option.value, value)) {
+				return true;
+			} else if (option.value instanceof JsonNode oValue) {
+				return Objects.equal(oValue.optional("key"), value);
+			} else if (option.value instanceof Map<?, ?> oMap) {
+				return Objects.equal(oMap.get("key"), value);
+			} else {
+				return false;
+			}
+		}).findFirst()).map(option -> option.value).orElse(value);
+	}
+
+	/**
+	 * Set the property by path to the node
+	 * @param node node to modify
+	 * @param path property path
+	 * @param setter setter
+	 */
+	protected void setProperty(ObjectNode node, String path, BiConsumer<ObjectNode, String> setter) {
+		String[] parts = StringUtils.split(path, '.');
+		for (int i = 0; i < parts.length - 1; i++) {
+			node = node.withObjectProperty(parts[i]);
+		}
+		setter.accept(node, parts[parts.length - 1]);
 	}
 
 	/**

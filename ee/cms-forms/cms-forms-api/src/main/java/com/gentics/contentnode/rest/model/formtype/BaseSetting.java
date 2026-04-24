@@ -62,7 +62,8 @@ public abstract class BaseSetting implements Serializable {
 	public boolean backend;
 
 	/**
-	 * Property path for writing the value of this setting. If this is not set, the value will be written to the formGridOptions
+	 * A simple JSON path to where the property value should be saved to.
+	 * If not specified, will use "formGridOptions.{setting.id}"
 	 */
 	@JsonProperty
 	public String propertyPath;

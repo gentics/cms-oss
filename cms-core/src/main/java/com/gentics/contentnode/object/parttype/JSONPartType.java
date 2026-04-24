@@ -58,31 +58,7 @@ public class JSONPartType extends TextPartType {
 			if (StringUtils.isNotBlank(stringValue)) {
 				Object current = JsonContent.fromString(stringValue);
 				if (current instanceof JsonContent jc) {
-					if (key.indexOf("[") > 0 && key.endsWith("]")) {
-						String subkeyOrIndex = key.substring(key.indexOf("[")+1, key.indexOf("]")+1);
-						String rootKey = key.substring(0, key.indexOf("["));
-						JsonObject jcc = jc.getObject();
-						if (jcc != null) {
-							Object root = jcc.getValue(rootKey);
-							if (root instanceof JsonArray ja) {
-								try {
-									int i = Integer.parseInt(subkeyOrIndex);
-									if (ja.size() > i) {
-										current = ja.getValue(i);
-									} else {
-										return null;
-									}
-								} catch (NumberFormatException e) {
-								}
-							} else if (root instanceof JsonObject jo) {
-								current = jo.getValue(subkeyOrIndex);
-							} else {
-								return null;
-							}
-						} else {
-							return null;
-						}
-					} else if (jc.isArray()) {
+					if (jc.isArray()) {
 						try {
 							int i = Integer.parseInt(key);
 							JsonArray ja = jc.getArray();

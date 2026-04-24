@@ -89,15 +89,15 @@ public class JSONPartTypeResolvingTest extends HandlebarsPartTypeResolvingTest {
 		}).unlock().build();
 	}
 
-	@Parameters(name = "{index}: template {0}")
+	@Parameters(name = "{index}: keys {1} source {2} content {3}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = Arrays.asList(
-//			new Object[] { JSONPartType.class, "whatever, whoever", "{\"whatever\":\"wherever\", \"whoever\":[\"me\", \"notme\"]}", HANDLEBARS_CONTENT_ITERATE_KEYS },
-	//		new Object[] { JSONPartType.class, "0, 1", "[\"me\", \"notme\"]", HANDLEBARS_CONTENT_ITERATE_KEYS },
+			new Object[] { JSONPartType.class, "whatever, whoever", "{\"whatever\":\"wherever\", \"whoever\":[\"me\", \"notme\"]}", HANDLEBARS_CONTENT_ITERATE_KEYS },
+			new Object[] { JSONPartType.class, "0, 1", "[\"me\", \"notme\"]", HANDLEBARS_CONTENT_ITERATE_KEYS },
 			new Object[] { JSONPartType.class, "", "{}", HANDLEBARS_CONTENT_ITERATE_KEYS },
-		//	new Object[] { JSONPartType.class, "wherever, wherever, who", 
-			//		"{\"whatever\":{\"whoever\": \"wherever\"}, \"whoever\":[{\"whatever\": \"wherever\"}], \"wherever\": [\"what\", \"who\", \"where\"]}", 
-				//	"{{cms.tag.parts.otherpart.whatever.whoever}}, {{cms.tag.parts.otherpart.whoever.0.whatever}}, {{cms.tag.parts.otherpart.wherever.1}}" },
+			new Object[] { JSONPartType.class, "wherever, wherever, who", 
+					"{\"whatever\":{\"whoever\": \"wherever\"}, \"whoever\":[{\"whatever\": \"wherever\"}], \"wherever\": [\"what\", \"who\", \"where\"]}", 
+					"{{cms.tag.parts.otherpart.whatever.whoever}}, {{cms.tag.parts.otherpart.whoever.0.whatever}}, {{cms.tag.parts.otherpart.wherever.1}}" },
 			new Object[] { JSONPartType.class, "wherever, wherever, who", 
 					"{\"whatever\":{\"whoever\": \"wherever\"}, \"whoever\":[{\"whatever\": \"wherever\"}], \"wherever\": [\"what\", \"who\", \"where\"]}", 
 					"{{json_path cms.tag.parts.otherpart \"$[*]['whoever']\"}}, {{json_path cms.tag.parts.otherpart \"$.whoever[0].whatever\"}}, {{json_path cms.tag.parts.otherpart \"$.wherever[1]\"}}" }

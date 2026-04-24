@@ -97,6 +97,7 @@ export const VIABLE_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.SelectMultiple,
     TagPartType.Velocity,
     TagPartType.Handlebars,
+    TagPartType.Json,
 ];
 
 export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
@@ -323,6 +324,7 @@ export class ConstructPartPropertiesComponent
             case TagPartType.Html:
             case TagPartType.HtmlLong:
             case TagPartType.Handlebars:
+            case TagPartType.Json:
                 defaultPropertyEnabled = true;
                 markupEnabled = true;
 

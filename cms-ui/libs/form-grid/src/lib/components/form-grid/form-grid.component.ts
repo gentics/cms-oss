@@ -3,6 +3,7 @@ import {
     ChangeDetectorRef,
     Component,
     computed,
+    HostListener,
     input,
     model,
     OnDestroy,
@@ -23,7 +24,17 @@ import {
 } from '@gentics/cms-models';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
-import { ElementInterPageMoveEvent, ElementSelectionEvent, FormGridEditMode, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
+import {
+    CLIPBOARD_MIME,
+    CLIPBOARD_STORAGE_KEY,
+    ElementInterPageMoveEvent,
+    ElementSelectionEvent,
+    FormGridClipboardData,
+    FormGridEditMode,
+    FormGridViewMode,
+    PALETTE_MIME,
+    PaletteDropTarget,
+} from '../../models';
 
 function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
     for (const el of elements) {
@@ -76,6 +87,13 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly pageIndex = model.required<number>();
     /** Which content to display */
     public readonly viewMode = input.required<FormGridViewMode>();
+
+    /** The ID of the form currently being edited */
+    public readonly formId = input<number | null>(null);
+    /** The type of the form currently being edited */
+    public readonly formType = input<string>('');
+    /** The name of the form currently being edited */
+    public readonly formName = input<string>('');
 
     /* PAGE & VIEW
      * ===================================================================== */
@@ -222,6 +240,44 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
         if (this.paletteDragGhost != null) {
             this.paletteDragGhost.remove();
+        }
+    }
+
+    /* CLIPBOARD
+     * ===================================================================== */
+
+    @HostListener('document:copy', ['$event'])
+    handleCopyEvent(event: ClipboardEvent): void {
+        const element = this.selectedElement();
+        if (element == null) {
+            return;
+        }
+
+        // Don't intercept copy when the user is working in an input field
+        const activeEl = document.activeElement;
+        const isEditable = activeEl instanceof HTMLInputElement
+          || activeEl instanceof HTMLTextAreaElement
+          || activeEl?.getAttribute('contenteditable') === 'true';
+
+        if (isEditable) {
+            return;
+        }
+
+        const data: FormGridClipboardData = {
+            element: structuredClone(element),
+            elementSchema: this.selectedElementSchema() ? structuredClone(this.selectedElementSchema()!) : undefined,
+            formId: this.formId(),
+            formType: this.formType(),
+            formName: this.formName(),
+        };
+
+        const json = JSON.stringify(data);
+
+        try {
+            event.clipboardData?.setData(CLIPBOARD_MIME, json);
+            event.preventDefault();
+        } catch {
+            localStorage.setItem(CLIPBOARD_STORAGE_KEY, json);
         }
     }
 

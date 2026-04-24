@@ -22,7 +22,7 @@ import {
     FormUISchema,
     I18nString,
 } from '@gentics/cms-models';
-import { BaseComponent, cancelEvent } from '@gentics/ui-core';
+import { BaseComponent, cancelEvent, NotificationService } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
 import {
     CLIPBOARD_MIME,
@@ -224,6 +224,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         changeDetector: ChangeDetectorRef,
         private i18n: I18nService,
         private translateStore: TranslateStore,
+        private notification: NotificationService,
     ) {
         super(changeDetector);
     }
@@ -279,6 +280,143 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         } catch {
             localStorage.setItem(CLIPBOARD_STORAGE_KEY, json);
         }
+    }
+
+    @HostListener('document:paste', ['$event'])
+    handlePasteEvent(event: ClipboardEvent): void {
+        if (this.mode() !== FormGridEditMode.FULL) {
+            return;
+        }
+
+        const activeEl = document.activeElement;
+        const isEditable = activeEl instanceof HTMLInputElement
+          || activeEl instanceof HTMLTextAreaElement
+          || activeEl?.getAttribute('contenteditable') === 'true';
+
+        if (isEditable) {
+            return;
+        }
+
+        let json = event.clipboardData?.getData(CLIPBOARD_MIME);
+        if (!json) {
+            json = localStorage.getItem(CLIPBOARD_STORAGE_KEY) ?? '';
+        }
+
+        if (!json) {
+            return;
+        }
+
+        let clipboardData: FormGridClipboardData;
+        try {
+            clipboardData = JSON.parse(json);
+        } catch {
+            return;
+        }
+
+        if (!clipboardData?.element) {
+            return;
+        }
+
+        event.preventDefault();
+
+        // Validate matching form type
+        if (clipboardData.formType && clipboardData.formType !== this.formType()) {
+            this.notification.show({
+                message: this.i18n.instant('form_grid.paste_form_type_mismatch', {
+                    sourceType: clipboardData.formType,
+                }),
+                type: 'warning',
+            });
+            return;
+        }
+
+        const pastedElement = structuredClone(clipboardData.element);
+        const oldToNewIdMap = this.reassignElementIds(pastedElement);
+        pastedElement.uiSchemaPage = this.pageIndex();
+
+        if (clipboardData.elementSchema) {
+            const schemaCopy = structuredClone(this.schema());
+            const newSchema = structuredClone(clipboardData.elementSchema);
+            newSchema.formPage = this.pageIndex();
+            schemaCopy.properties[pastedElement.id] = newSchema;
+
+            //   remap nested schema properties for aggregate/container
+            for (const [oldId, newId] of Object.entries(oldToNewIdMap)) {
+                if (oldId === pastedElement.id) {
+                    continue;
+                }
+                const nestedSchema = clipboardData.elementSchema.properties?.[oldId];
+                if (nestedSchema) {
+                    if (!schemaCopy.properties[pastedElement.id].properties) {
+                        schemaCopy.properties[pastedElement.id].properties = {};
+                    }
+                    schemaCopy.properties[pastedElement.id].properties![newId] = structuredClone(nestedSchema);
+                }
+            }
+
+            this.updateSchema(schemaCopy);
+        }
+
+        const pageElements = structuredClone(this.elements());
+        const selected = this.selectedElement();
+
+        if (selected != null) {
+            // If container, paste at the end of the container
+            if (Array.isArray(selected.elements)) {
+                const updatedSelected = structuredClone(selected);
+                updatedSelected.elements!.push(pastedElement);
+                if (this.replaceElementInTree(pageElements, updatedSelected)) {
+                    this.updatePageElements(pageElements);
+                }
+            } else {
+                // Insert after selected element of current page
+                const selectedIndex = this.findElementIndex(pageElements, selected.id);
+                if (selectedIndex !== -1) {
+                    pageElements.splice(selectedIndex + 1, 0, pastedElement);
+                } else {
+                    pageElements.push(pastedElement);
+                }
+                this.updatePageElements(pageElements);
+            }
+        } else {
+            // to end of current page
+            pageElements.push(pastedElement);
+            this.updatePageElements(pageElements);
+        }
+
+        this.setSelectedElement({
+            element: pastedElement,
+            containerId: this.selectedElementContainerId ?? this.ELEMENT_ROOT_CONTAINER_ID,
+        });
+    }
+
+    /**
+     * Assigns new UUIDs to the element and all nested child elements.
+     * Returns a map of old ID -> new ID for schema remapping.
+     */
+    private reassignElementIds(element: FormElement): Record<string, string> {
+        const idMap: Record<string, string> = {};
+        this.reassignElementIdsRecursive(element, idMap);
+        return idMap;
+    }
+
+    private reassignElementIdsRecursive(element: FormElement, idMap: Record<string, string>): void {
+        const oldId = element.id;
+        element.id = uuidV4();
+        idMap[oldId] = element.id;
+
+        if (Array.isArray(element.elements)) {
+            for (const child of element.elements) {
+                this.reassignElementIdsRecursive(child, idMap);
+            }
+        }
+    }
+
+    /**
+     * Finds the index of an element by ID in a flat list (top-level only).
+     */
+    private findElementIndex(elements: FormElement[], id: string): number {
+        return elements.findIndex((el) => el.id === id);
     }
 
     /* IMPLEMENTATION

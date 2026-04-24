@@ -55,6 +55,7 @@
         "page_edit_done": "Fertig",
         "page_untitled": "Seite {{number}}",
         "page_delete_title": "Seite löschen",
-        "page_delete_confirm": "Diese Seite hat noch Elemente. Alle Elemente und die Seite löschen?"
+        "page_delete_confirm": "Diese Seite hat noch Elemente. Alle Elemente und die Seite löschen?",
+        "paste_form_type_mismatch": "Einfügen nicht möglich: Das kopierte Element stammt aus einem anderen Formulartyp (\"{{sourceType}}\")."
     }
 }

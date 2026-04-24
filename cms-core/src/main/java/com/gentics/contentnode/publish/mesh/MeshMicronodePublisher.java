@@ -61,7 +61,9 @@ import com.gentics.mesh.core.rest.microschema.impl.MicroschemaCreateRequest;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaResponse;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaUpdateRequest;
 import com.gentics.mesh.core.rest.node.field.Field;
+import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
+import com.gentics.mesh.core.rest.node.field.impl.JsonFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NodeFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NumberFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.StringFieldImpl;
@@ -70,6 +72,7 @@ import com.gentics.mesh.core.rest.schema.FieldSchema;
 import com.gentics.mesh.core.rest.schema.MicroschemaModel;
 import com.gentics.mesh.core.rest.schema.MicroschemaReference;
 import com.gentics.mesh.core.rest.schema.impl.BooleanFieldSchemaImpl;
+import com.gentics.mesh.core.rest.schema.impl.JsonFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.ListFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.MicroschemaReferenceImpl;
 import com.gentics.mesh.core.rest.schema.impl.NodeFieldSchemaImpl;
@@ -645,6 +648,9 @@ public class MeshMicronodePublisher {
 			case 40: // Node
 				fieldSchemas.add(new NumberFieldSchemaImpl());
 				break;
+			case 44: // Node
+				fieldSchemas.add(new JsonFieldSchemaImpl());
+				break;
 		}
 
 		if (fieldSchemas.isEmpty()) {
@@ -828,6 +834,12 @@ public class MeshMicronodePublisher {
 			if (node != null) {
 				fieldList.add(ImmutablePair.of(value.getPart().getKeyname(), new NumberFieldImpl().setNumber(node.getId())));
 			}
+			break;
+		case 44:
+			fieldList.add(ImmutablePair.of(value.getPart().getKeyname(), new JsonFieldImpl().setJson(
+					StringUtils.isNotBlank(value.getValueText()) 
+						? JsonContent.fromString(value.getValueText()) 
+						: null)));
 			break;
 		}
 

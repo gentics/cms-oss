@@ -8,6 +8,8 @@
     [class.no-right-panel]="editingPage() == null && (selectedElement() == null || selectedElementConfiguration() == null)"
     [class.editor-active]="viewMode() === FormGridViewMode.EDITOR"
     [class.preview-active]="viewMode() === FormGridViewMode.PREVIEW"
+    [class.right-panel-resizing]="rightPanelResizing"
+    [style.--right-w]="rightPanelWidth() + 'px'"
 >
     <div class="editor-body">
         <aside
@@ -177,6 +179,11 @@
                 aria-label="Rechtes Panel"
                 [class.expanded]="rightSidebarExpanded()"
             >
+                <div
+                    class="panel-resize-handle"
+                    (pointerdown)="onRightPanelResizeStart($event)"
+                ></div>
+
                 <div class="panel-header">
                     <button
                         class="panel-toggle-btn"
@@ -223,6 +230,11 @@
                 aria-label="Rechtes Panel"
                 [class.expanded]="rightSidebarExpanded()"
             >
+                <div
+                    class="panel-resize-handle"
+                    (pointerdown)="onRightPanelResizeStart($event)"
+                ></div>
+
                 <div class="panel-header">
                     <button
                         class="panel-toggle-btn"

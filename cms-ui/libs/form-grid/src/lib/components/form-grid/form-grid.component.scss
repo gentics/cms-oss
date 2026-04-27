@@ -8,7 +8,6 @@
 
     /* widths controlled via CSS variables so transitions stay smooth */
     --left-w: 280px;
-    --right-w: 33%;
     --collapsed-w: 56px;
 
     --left-panel-width: var(--collapsed-w);
@@ -19,6 +18,7 @@
 .editor-shell {
     height: 100%;
     min-height: 0;
+    --right-w: 640px;
 
     &.right-panel-wide {
         --right-panel-width: var(--right-w);
@@ -60,13 +60,16 @@
     }
 }
 
-/* When an element is selected, give the right panel more room */
-.editor-shell.right-panel-wide .editor-body {
-    --right-w: 640px;
+/* --right-w is set on .editor-shell (default 640px) and can be overridden
+   by the inline style binding when the user resizes the panel. */
+
+/* Disable grid transition while the user is dragging the resize handle */
+.editor-shell.right-panel-resizing .editor-body {
+    transition: none;
 }
 
 .editor-shell.no-right-panel .editor-body {
-    --right-w: 0px;
+    --right-panel-width: 0;
 }
 
 .editor-panel {
@@ -92,6 +95,41 @@
 
     &.editor-panel--right {
         border-left: 1px solid #e5e5e5;
+        position: relative;
+    }
+
+    .panel-resize-handle {
+        position: absolute;
+        top: 0;
+        left: -4px;
+        width: 8px;
+        height: 100%;
+        cursor: col-resize;
+        z-index: 10;
+
+        &::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 50px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.12);
+            opacity: 0;
+            transition: opacity 160ms ease, background 160ms ease;
+        }
+
+        &:hover::after {
+            opacity: 1;
+            background: rgba(0, 150, 220, 0.45);
+        }
+
+        &:active::after {
+            opacity: 1;
+            background: rgba(0, 150, 220, 0.7);
+        }
     }
 
     .panel-content,

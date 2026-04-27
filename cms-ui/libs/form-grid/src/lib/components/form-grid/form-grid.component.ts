@@ -5,6 +5,7 @@ import {
     computed,
     input,
     model,
+    NgZone,
     OnDestroy,
     OnInit,
     signal,
@@ -199,6 +200,16 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
      */
     public resizeOverlaySpan = 12;
 
+    /* RIGHT PANEL RESIZE
+     * ===================================================================== */
+
+    public static readonly RIGHT_PANEL_MIN_WIDTH = 640;
+
+    /** Current width of the right sidebar in pixels */
+    public readonly rightPanelWidth = signal(FormGridComponent.RIGHT_PANEL_MIN_WIDTH);
+    /** Whether the right panel is currently being resized */
+    public rightPanelResizing = false;
+
     /* CONSTRUCTOR
      * ===================================================================== */
 
@@ -206,6 +217,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         changeDetector: ChangeDetectorRef,
         private i18n: I18nService,
         private translateStore: TranslateStore,
+        private zone: NgZone,
     ) {
         super(changeDetector);
     }
@@ -238,6 +250,43 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     public toggleRightSidebar(): void {
         this.rightSidebarExpanded.update((val) => !val);
+    }
+
+    public onRightPanelResizeStart(event: PointerEvent): void {
+        event.preventDefault();
+
+        const startX = event.clientX;
+        const startWidth = this.rightPanelWidth();
+        this.rightPanelResizing = true;
+
+        try {
+            (event.target as HTMLElement)?.setPointerCapture?.(event.pointerId);
+        } catch {}
+
+        this.zone.runOutsideAngular(() => {
+            const onMove = (e: PointerEvent) => {
+                const dx = startX - e.clientX;
+                const nextWidth = Math.max(
+                    FormGridComponent.RIGHT_PANEL_MIN_WIDTH,
+                    startWidth + dx,
+                );
+                this.zone.run(() => {
+                    this.rightPanelWidth.set(nextWidth);
+                    this.changeDetector.markForCheck();
+                });
+            };
+
+            const onUp = () => {
+                this.rightPanelResizing = false;
+                window.removeEventListener('pointermove', onMove);
+                window.removeEventListener('pointerup', onUp);
+                window.removeEventListener('pointercancel', onUp);
+            };
+
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+            window.addEventListener('pointercancel', onUp);
+        });
     }
 
     public paletteDragStart(event: DragEvent, id: string, element: FormElementConfiguration): void {

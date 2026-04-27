@@ -82,6 +82,7 @@ export enum MeshTagmapEntryAttributeTypes {
     DATE = 10,
     BOOLEAN = 11,
     MICRONODE = 12,
+    JSON = 13,
 }
 
 export enum SQLTagmapEntryAttributeTypes {
@@ -103,6 +104,7 @@ export enum TagmapEntryAttributeTypes {
     DATE = 10,
     BOOLEAN = 11,
     MICRONODE = 12,
+    JSON = 13,
 }
 
 export interface TagmapEntryError {

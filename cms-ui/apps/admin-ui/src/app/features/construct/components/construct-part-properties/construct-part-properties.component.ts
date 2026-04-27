@@ -29,6 +29,7 @@ import {
     TagPartValidatorConfigs,
     TagPartValidatorId,
     TagPropertyType,
+    MarkupLanguageType,
 } from '@gentics/cms-models';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { I18nService } from '@gentics/cms-components';
@@ -305,6 +306,7 @@ export class ConstructPartPropertiesComponent
                 break;
 
             case TagPartType.DataSource:
+            case TagPartType.Json:
                 defaultPropertyEnabled = true;
                 break;
 
@@ -324,7 +326,6 @@ export class ConstructPartPropertiesComponent
             case TagPartType.Html:
             case TagPartType.HtmlLong:
             case TagPartType.Handlebars:
-            case TagPartType.Json:
                 defaultPropertyEnabled = true;
                 markupEnabled = true;
 
@@ -362,7 +363,9 @@ export class ConstructPartPropertiesComponent
             output.name = this.value?.name;
             output.type = this.value?.type;
         }
-
+        if (formData.typeId === TagPartType.Json) {
+            (output as TagPartPropertiesFormData).markupLanguageId = MarkupLanguageType.JSON;
+        }
         return output as TagPartPropertiesFormData;
     }
 }

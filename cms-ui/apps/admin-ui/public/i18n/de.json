@@ -654,6 +654,7 @@
         "attributetype_date": "Datum",
         "attributetype_boolean": "Boolean",
         "attributetype_micronode": "Micronode",
+        "attributetype_json": "JSON",
         "title_reference_settings": "Referenz",
         "title_elasticsearch_settings": "Elasticsearch",
         "title_misc_settings": "Sonstige"

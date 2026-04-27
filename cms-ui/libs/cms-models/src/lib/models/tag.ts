@@ -226,7 +226,7 @@ export type ConstructBO = TagTypeBO;
 export function findTagPart(property: TagPartProperty, tagType: TagType): TagPart {
     if (tagType.parts) {
         const tagPart = tagType.parts.find(part => property.partId === part.id
-            || (part.defaultProperty != null && property.partId === part.defaultProperty.partId),
+          || (part.defaultProperty != null && property.partId === part.defaultProperty.partId),
         );
         return tagPart || null;
     } else {

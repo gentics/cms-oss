@@ -132,9 +132,9 @@ export enum TagPartType {
      * NOTE: Parts of this type can only be used in the new Editor User Interface.
      */
     CmsForm = 42,
-
+    /** Handlebars template part type */
     Handlebars = 43,
-
+    /** JSON content part type */
     Json = 44,
 }
 

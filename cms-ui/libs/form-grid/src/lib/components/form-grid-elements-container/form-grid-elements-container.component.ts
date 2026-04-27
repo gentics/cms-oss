@@ -22,7 +22,7 @@ import {
     FormTypeConfiguration,
     I18nString,
 } from '@gentics/cms-models';
-import { cancelEvent, ISortableEvent, ModalService } from '@gentics/ui-core';
+import { cancelEvent, ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
 import { DropRow, ELEMENT_MIME, ElementSelectionEvent, FormGridEditMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
 
@@ -40,6 +40,8 @@ interface DisplayItem {
 }
 
 const DEFAULT_ELEMENT_SPAN = 12;
+const MIN_SPAN_CONTAINER = 6;
+const MIN_SPAN_ELEMENT = 3;
 const DROP_ROW_TOLERANCE = 0;
 /**
  * How close (in px) the cursor must be to a container/aggregate item's left or right edge
@@ -117,6 +119,19 @@ export class FormGridElementsContainerComponent implements OnChanges {
     private resizeRowBaseCols: number;
     private resizeRowMaxSpan: number;
     private resizeStartSpan: number;
+
+    /* SORTABLE GROUP
+     * ===================================================================== */
+
+    /** Shared group configuration so elements can be dragged between containers */
+    public readonly sortableGroup: SortableGroup = {
+        name: 'formgrid-elements',
+        pull: true,
+        put: true,
+    };
+
+    /** Key used to stash the element data on the dragged DOM node during cross-list moves */
+    private static readonly TRANSFER_KEY = '__formGridElement';
 
     /* MISC
      * ===================================================================== */
@@ -455,7 +470,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 const deltaCols = Math.round(dx / colW);
 
                 const nextRaw = this.resizeStartSpan + deltaCols;
-                const nextSpan = Math.max(1, Math.min(this.resizeRowMaxSpan, nextRaw));
+                const minSpan = this.getMinSpan(this.resizeTarget);
+                const nextSpan = Math.max(minSpan, Math.min(this.resizeRowMaxSpan, nextRaw));
 
                 this.zone.run(() => {
                     this.setSpan(this.resizeTarget, nextSpan);
@@ -571,7 +587,24 @@ export class FormGridElementsContainerComponent implements OnChanges {
         this.updateDisplayItems();
     }
 
+    /**
+     * Called when SortableJS begins dragging an item from this list.
+     * Stashes the element data on the DOM node so that the target list's
+     * `onSortableAdd` can retrieve it — `onAdd` fires *before* `onRemove` in SortableJS.
+     */
+    public onSortableDragStart(event: ISortableEvent): void {
+        const idx = event.oldIndex;
+        if (idx != null && idx >= 0 && idx < this.elements().length) {
+            (event.item as any)[FormGridElementsContainerComponent.TRANSFER_KEY] = this.elements()[idx];
+        }
+    }
+
     public sortElements(event: ISortableEvent): void {
+        // Cross-list moves are handled by onSortableAdd/onSortableRemove
+        if (event.from !== event.to) {
+            return;
+        }
+
         // Sort the visible list
         const newElements = [...this.elements()];
         const sorted = event.sort(newElements);
@@ -579,6 +612,55 @@ export class FormGridElementsContainerComponent implements OnChanges {
         // Persist back into the current page (this.pages is usually a reference to uiSchema.pages,
         // but we also explicitly write to uiSchema to be safe)
         this.elements.set(sorted);
+        this.updateDisplayItems();
+    }
+
+    /**
+     * Called when SortableJS drops an element INTO this container from another container.
+     * Fires *before* `onSortableRemove` in SortableJS's event order.
+     */
+    public onSortableAdd(event: ISortableEvent): void {
+        const key = FormGridElementsContainerComponent.TRANSFER_KEY;
+        const element: FormElement | undefined = (event.item as any)[key];
+        delete (event.item as any)[key];
+
+        // Revert the DOM insertion SortableJS made — Angular will re-render from the data model.
+        if (event.item?.parentNode) {
+            event.item.parentNode.removeChild(event.item);
+        }
+
+        if (!element) {
+            return;
+        }
+
+        const newIndex = event.newIndex ?? this.elements().length;
+        const newElements = [...this.elements()];
+        newElements.splice(newIndex, 0, element);
+        this.elements.set(newElements);
+        this.updateDisplayItems();
+    }
+
+    /**
+     * Called when SortableJS removes an element FROM this container to another container.
+     * Fires *after* `onSortableAdd` in SortableJS's event order.
+     */
+    public onSortableRemove(event: ISortableEvent): void {
+        const oldIndex = event.oldIndex;
+        if (oldIndex == null || oldIndex < 0 || oldIndex >= this.elements().length) {
+            return;
+        }
+
+        // Revert the DOM removal — put the item back so Angular can properly destroy the view.
+        const itemEl = event.item;
+        const fromEl = event.from;
+        if (itemEl && fromEl && !fromEl.contains(itemEl)) {
+            const refNode = fromEl.children[oldIndex] || null;
+            fromEl.insertBefore(itemEl, refNode);
+        }
+
+        const newElements = [...this.elements()];
+        newElements.splice(oldIndex, 1);
+        this.elements.set(newElements);
         this.updateDisplayItems();
     }
 
@@ -773,8 +855,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
         if (!el.formGridOptions) {
             el.formGridOptions = {};
         }
-        // TODO: Update uiSchema?
-        el.formGridOptions.numberOfColumns = Math.max(1, Math.min(12, span));
+        const min = this.getMinSpan(el);
+        el.formGridOptions.numberOfColumns = Math.max(min, Math.min(12, span));
     }
 
     private insertDropElement(
@@ -930,13 +1012,24 @@ export class FormGridElementsContainerComponent implements OnChanges {
         return this.getSpan(Array.isArray(this.elements()) ? this.elements()[index] : null);
     }
 
+    private getMinSpan(el: FormElement | null): number {
+        if (el == null) {
+            return MIN_SPAN_ELEMENT;
+        }
+        if (el.type === 'container' || el.type === 'aggregate') {
+            return MIN_SPAN_CONTAINER;
+        }
+        return MIN_SPAN_ELEMENT;
+    }
+
     private getSpan(el: FormElement | null): number {
         const raw = el?.formGridOptions?.numberOfColumns;
         const n = typeof raw === 'string' ? parseInt(raw, 10) : raw;
         if (n == null || !Number.isInteger(n)) {
             return 12;
         }
-        return Math.max(1, Math.min(12, n));
+        const min = this.getMinSpan(el);
+        return Math.max(min, Math.min(12, n));
     }
 
     private findPaletteDropRow(rows: DropRow[], clientY: number): DropRow | null {

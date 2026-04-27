@@ -51,10 +51,14 @@
     [class.is-palette-drop-target]="paletteDragging()"
     [class.drag-blocked]="isDragBlocked()"
     [class.editor-drop-container--root]="id() === rootId()"
+    [group]="sortableGroup"
     (dragenter)="onPaletteContainerDragOver($event)"
     (dragover)="onPaletteContainerDragOver($event)"
     (drop)="onPaletteContainerDrop($event)"
+    (dragStart)="onSortableDragStart($event)"
     (dragEnd)="sortElements($event)"
+    (addItem)="onSortableAdd($event)"
+    (removeItem)="onSortableRemove($event)"
 >
     @if (!elements()?.length && paletteDragging() && paletteDropTarget()?.elementContainerId === id()) {
         <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{

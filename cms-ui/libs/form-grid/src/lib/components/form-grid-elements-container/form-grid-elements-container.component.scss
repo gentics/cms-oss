@@ -619,3 +619,26 @@ gtx-sortable-item.has-condition-warning .fg-box {
     border-color: #ffb74d;
     background: #fff8f0;
 }
+
+/* --- SortableJS drag visual feedback --- */
+:host ::ng-deep .sortable-ghost {
+    opacity: 0.35;
+    background: rgba(0, 150, 220, 0.06);
+    border: 2px dashed rgba(0, 150, 220, 0.4) !important;
+    border-radius: 10px;
+    box-shadow: none !important;
+
+    > * {
+        visibility: hidden;
+    }
+}
+
+:host ::ng-deep .sortable-chosen {
+    cursor: grabbing;
+}
+
+:host ::ng-deep .sortable-drag {
+    opacity: 0.9;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    border-radius: 10px;
+}

@@ -264,9 +264,16 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             return;
         }
 
+        // nested child elements
+        const childSchemas: Record<string, FormSchemaProperty> = {};
+        if (Array.isArray(element.elements)) {
+            this.collectChildSchemas(element.elements, childSchemas);
+        }
+
         const data: FormGridClipboardData = {
             element: structuredClone(element),
             elementSchema: this.selectedElementSchema() ? structuredClone(this.selectedElementSchema()!) : undefined,
+            childSchemas: Object.keys(childSchemas).length > 0 ? structuredClone(childSchemas) : undefined,
             formId: this.formId(),
             formType: this.formType(),
             formName: this.formName(),
@@ -334,13 +341,16 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         const oldToNewIdMap = this.reassignElementIds(pastedElement);
         pastedElement.uiSchemaPage = this.pageIndex();
 
+        // Insert schema properties for the pasted element and its children
+        const schemaCopy = structuredClone(this.schema());
+        let schemaChanged = false;
+
         if (clipboardData.elementSchema) {
-            const schemaCopy = structuredClone(this.schema());
             const newSchema = structuredClone(clipboardData.elementSchema);
             newSchema.formPage = this.pageIndex();
             schemaCopy.properties[pastedElement.id] = newSchema;
 
-            //   remap nested schema properties for aggregate/container
+            // Remap nested schema properties (inside the parent's .properties, for aggregates)
             for (const [oldId, newId] of Object.entries(oldToNewIdMap)) {
                 if (oldId === pastedElement.id) {
                     continue;
@@ -354,6 +364,22 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
                 }
             }
 
+            schemaChanged = true;
+        }
+
+        if (clipboardData.childSchemas) {
+            for (const [oldId, childSchema] of Object.entries(clipboardData.childSchemas)) {
+                const newId = oldToNewIdMap[oldId];
+                if (newId) {
+                    const newChildSchema = structuredClone(childSchema);
+                    newChildSchema.formPage = this.pageIndex();
+                    schemaCopy.properties[newId] = newChildSchema;
+                    schemaChanged = true;
+                }
+            }
+        }
+
+        if (schemaChanged) {
             this.updateSchema(schemaCopy);
         }
 
@@ -408,6 +434,21 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         if (Array.isArray(element.elements)) {
             for (const child of element.elements) {
                 this.reassignElementIdsRecursive(child, idMap);
+            }
+        }
+    }
+
+    private collectChildSchemas(elements: FormElement[], out: Record<string, FormSchemaProperty>): void {
+        const schemaProps = this.schema()?.properties || {};
+
+        for (const child of elements) {
+            const childSchema = schemaProps[child.id];
+            if (childSchema) {
+                out[child.id] = childSchema;
+            }
+
+            if (Array.isArray(child.elements)) {
+                this.collectChildSchemas(child.elements, out);
             }
         }
     }

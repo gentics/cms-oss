@@ -8,6 +8,8 @@ export const CLIPBOARD_STORAGE_KEY = 'formgrid-clipboard';
 export interface FormGridClipboardData {
     element: FormElement;
     elementSchema?: FormSchemaProperty;
+    /** Schema properties of all nested child elements, keyed by their original element ID */
+    childSchemas?: Record<string, FormSchemaProperty>;
     formId: number | null;
     formType: string;
     formName: string;

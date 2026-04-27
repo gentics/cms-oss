@@ -1432,6 +1432,7 @@
         "tagPartType_41": "Form List",
         "tagPartType_42": "Form",
         "tagPartType_43": "Handlebars",
+        "tagPartType_44": "JSON",
         "validator_name_number_natural": "Number (natural, small)",
         "validator_name_email_address": "E-mail address",
         "validator_name_must_not_be_emty": "May not be empty",

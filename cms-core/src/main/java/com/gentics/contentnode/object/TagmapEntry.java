@@ -585,6 +585,9 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		case foreignlink:
 			return String.format("%d: %s -> %s (%s from %d.%s, mul: %b, stat: %b, opt: %b, fs: %b, cat: %s)", getObject(), getTagname(), getMapname(),
 					getAttributetype(), getTargetType(), getForeignlinkAttribute(), isMultivalue(), isStatic(), isOptimized(), isFilesystem(), getCategory());
+		case json:
+			return String.format("%d: %s -> %s (mul: %b, stat: %b, opt: %b, fs: %b, cat: %s, schema: %s)", getObject(), getTagname(), getMapname(),
+					isMultivalue(), isStatic(), isOptimized(), isFilesystem(), getCategory(), getJSONSchemaFilter());
 		default:
 			return String.format("%d: %s -> %s (%s, mul: %b, stat: %b, opt: %b, fs: %b, cat: %s)", getObject(), getTagname(), getMapname(), getAttributetype(),
 					isMultivalue(), isStatic(), isOptimized(), isFilesystem(), getCategory());

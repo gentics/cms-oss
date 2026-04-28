@@ -1361,6 +1361,7 @@
         "mandatory": "Mandatory",
         "type": "Type",
         "defaultProperty": "Default properties",
+        "jsonSchema": "Allowed JSON schema(s)",
         "regex": "Validator (RegEx)",
         "hideInEditor": "Hide in editor",
         "options": "Options",

@@ -7,6 +7,8 @@ package com.gentics.contentnode.object;
 
 import java.net.URI;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -110,6 +112,11 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		switch (to.getPartTypeId()) {
+		case Part.JSON:
+			if (StringUtils.isNotEmpty(from.getJSONSchema()) ) {
+				to.setInfoText(from.getJSONSchema());
+			}
+			// fallthrough
 		case Part.TEXT:
 		case Part.TEXTHMTL:
 		case Part.HTML:
@@ -189,6 +196,9 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 		to.setTypeId(from.getPartTypeId());
 
 		switch (from.getPartTypeId()) {
+		case Part.JSON:
+			to.setJSONSchema(from.getInfoText());
+			// fallthrough
 		case Part.TEXT:
 		case Part.TEXTHMTL:
 		case Part.HTML:

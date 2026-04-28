@@ -118,8 +118,8 @@ public class FormResourceTypesTest {
 
 		assertThat(response.getItem()).as("Loaded form type configuration")
 				.hasFieldOrPropertyWithValue("type", FormTypeConfigurationModifier.GENERIC_TYPE)
-				.hasFieldOrPropertyWithValue("nameI18n", Map.of("de", "CMS Formulare", "en", "CMS Forms"))
-				.hasOnlyFields("type", "nameI18n", "descriptionI18n", "external", "submitOnce", "pluginName", "blocks",
+				.hasFieldOrPropertyWithValue("nameI18n", Map.of("de", "CMS Formular", "en", "CMS Form"))
+				.hasOnlyFields("type", "flows", "nameI18n", "descriptionI18n", "external", "submitOnce", "pluginName", "blocks",
 						"controls", "templateOptions", "userOptions", "userEmailTemplateOptions",
 						"adminEmailTemplateOptions");
 	}
@@ -221,7 +221,7 @@ public class FormResourceTypesTest {
 		}).build();
 
 		exceptionChecker.expect(ClientErrorException.class, "Formulartyp %s wird im Node %s noch verwendet."
-				.formatted(FormTypeConfigurationModifier.GENERIC_TYPE, "Master"));
+				.formatted("CMS Formular", "Master"));
 
 		assertRequiredPermissions(testGroup, "formtester", "formtester", restContext, target -> {
 			return target.path("form").path("nodes").path(Integer.toString(node.getId())).path("types")

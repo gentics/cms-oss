@@ -47,6 +47,8 @@ import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FormFactory;
+import com.gentics.contentnode.forms.FormTransformer;
+import com.gentics.contentnode.forms.FormTransformer.TransformationTarget;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
@@ -54,11 +56,9 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Folder.FormSearch;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
-import com.gentics.contentnode.publish.mesh.FormsPublisherService;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
@@ -264,29 +264,32 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			// switch to the master folder
 			folder = folder.getMaster();
 
-			Set<String> formTypes = null;
+			Set<String> formTypes = new HashSet<>(FormFactory.getFormTypeAssignment(folder.getOwningNode().getId()));
 			if (!StringUtils.isBlank(filter.formType)) {
-				formTypes = new HashSet<>();
-				formTypes.add(filter.formType);
+				formTypes.retainAll(Collections.singleton(filter.formType));
 			}
 			if (filter.external != null) {
-				if (formTypes == null) {
-					formTypes = new HashSet<>();
-				}
-				formTypes.addAll(Optional.ofNullable(FormConfigProvider.getConfig()).map(configMap -> {
+				Set<String> matchingFormTypes = Optional.ofNullable(FormConfigProvider.getConfig()).map(configMap -> {
 					return configMap.entrySet().stream().filter(entry -> entry.getValue().external == filter.external)
 							.map(Entry::getKey).collect(Collectors.toSet());
-				}).orElse(Collections.emptySet()));
+				}).orElse(Collections.emptySet());
+				formTypes.retainAll(matchingFormTypes);
 			}
 
-			FormSearch search = FormSearch.create().setRecursive(inFolder.recursive).setFormTypes(formTypes).setSearchString(filter.query)
-					.set(publishable);
+			List<Form> forms;
+			if (formTypes.isEmpty()) {
+				forms = Collections.emptyList();
+			} else {
+				FormSearch search = FormSearch.create().setRecursive(inFolder.recursive).setFormTypes(formTypes).setSearchString(filter.query)
+						.set(publishable);
 
-			if (NodeConfigRuntimeConfiguration.isFeature(Feature.WASTEBIN)
-					&& t.getPermHandler().canWastebin(folder.getOwningNode())) {
-				search.setWastebin(wastebin.wastebinSearch);
+				if (NodeConfigRuntimeConfiguration.isFeature(Feature.WASTEBIN)
+						&& t.getPermHandler().canWastebin(folder.getOwningNode())) {
+					search.setWastebin(wastebin.wastebinSearch);
+				}
+				forms = folder.getForms(search);
 			}
-			List<Form> forms = folder.getForms(search);
+
 			FormListResponse response = ListBuilder.from(forms, TRANSFORM2REST)
 				.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
 				.sort(ResolvableComparator.get(sorting, "id", "name", "description", "cdate", "edate", "pdate", "formType"))
@@ -752,49 +755,13 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		}
 	}
 
-	@Override
-	@GET
-	@Path("{id}/preview/{language}")
-	@Produces({ MediaType.TEXT_HTML })
-	public String preview(@PathParam("id") String formId, @PathParam("language") String language, @QueryParam("nodeId") String nodeId) throws NodeException {
-		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form form = loadForm(formId, nodeId);
-			ContentRepository cr = getMeshCrForPreview(form);
-
-			try (MeshPublisher mp = new MeshPublisher(cr)) {
-				return mp.render(form, language);
-			}
-		}
-	}
-
-	@Override
-	@POST
-	@Path("{id}/preview/{language}")
-	@Produces({ MediaType.TEXT_HTML })
-	public String preview(@PathParam("id") String formId, @PathParam("language") String language, @QueryParam("nodeId") String nodeId, FormModel formModel)
-			throws NodeException {
-		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Form form = loadForm(formId, nodeId);
-			ContentRepository cr = getMeshCrForPreview(form);
-
-			Form copy = (Form) form.copy();
-			copy.setGlobalId(form.getGlobalId());
-			formModel.setFormType(null);
-			copy = REST2NODE.apply(formModel, copy);
-
-			try (MeshPublisher mp = new MeshPublisher(cr)) {
-				return mp.render(copy, language);
-			}
-		}
-	}
-
 	// TODO: DEBUG ONLY
 	@GET
 	@Path("{id}/transform")
 	public ObjectNode transform(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Form form = loadForm(formId, nodeId);
-			return FormsPublisherService.transform(form);
+			return new FormTransformer().withTransformationTarget(TransformationTarget.publish).transform(form);
 		}
 	}
 
@@ -1110,11 +1077,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	public GenericResponse removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = MiscUtils.load(Node.class, nodeId, ObjectPermission.edit);
-			getFormTypeConfiguration(type);
+			FormTypeConfiguration formTypeConfiguration = getFormTypeConfiguration(type);
 
 			if (FormFactory.getFormTypeUsage(node.getId()).contains(type)) {
-				throw new RestMappedException(I18NHelper.get("form.form_type_configuration.used", type, I18NHelper.getName(node)))
-					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+				throw new RestMappedException(I18NHelper.get("form.form_type_configuration.used",
+						I18NHelper.get(formTypeConfiguration.nameI18n), I18NHelper.getName(node)))
+						.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
 			}
 
 			FormFactory.removeFormTypeFromNode(type, node.getId());

@@ -1,6 +1,6 @@
 package com.gentics.contentnode.init;
 
-import static com.gentics.contentnode.publish.mesh.FormsPublisherService.FORM_GRID_OPTIONS;
+import static com.gentics.contentnode.etc.FormDataUtils.FORM_GRID_OPTIONS;
 
 import java.io.File;
 import java.io.IOException;

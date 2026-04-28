@@ -239,244 +239,244 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		}
 	}
 
-	@Test
-	@Ignore
-	public void testForeignLinkPreview() throws Exception {
-		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
-		ContentNodeRESTUtils.assertResponseOK(response);
-		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//	@Test
+//	@Ignore
+//	public void testForeignLinkPreview() throws Exception {
+//		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+//		ContentNodeRESTUtils.assertResponseOK(response);
+//		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(formType);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(String.format(
+//						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
+//						"{{ LINK|URL:https&col;//gentics.com|Blume herunterladen &dollar;|_self }}", 
+//						StringUtils.EMPTY, 
+//						StringUtils.EMPTY
+//					), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+//
+//		FormModel previewModel = new FormModel();
+//		operate(() -> {
+//			try {
+//				previewModel.setData(mapper.readValue(String.format(
+//						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
+//						"{{ LINK|URL:https&col;//gentics.com|Blume herunterladen &dollar;|_self }}", 
+//						StringUtils.EMPTY, 
+//						StringUtils.EMPTY
+//					), ObjectNode.class));
+//			} catch (Throwable e) {
+//				throw new NodeException(e);
+//			}
+//		});
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
+//			StringWriter writer = new StringWriter();
+//			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
+//			String expected = String.format(writer.toString(), 
+//					meshUuid, "", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen $&lt;/a&gt;", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen $&lt;/a&gt;");
+//			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
+//		}
+//	}
 
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(formType);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
+//	@Test
+//	@Ignore
+//	public void testMultipleTextLinksPreview() throws Exception {
+//		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+//		ContentNodeRESTUtils.assertResponseOK(response);
+//		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//
+//		Integer noNodeConstructId = supply(() -> createConstruct(null, ShortTextPartType.class, "nonode", "text"));
+//		Template template = supply(() -> createTemplate(node.getFolder(), "Template"));
+//
+//		Page page1 = supply(() -> create(Page.class, p -> {
+//			p.setFolderId(node.getFolder().getId());
+//			p.setTemplateId(template.getId());
+//			p.setName("Seite 1");
+//
+//			p.getContent().addContentTag(noNodeConstructId);
+//			p.setLanguage(getLanguage("de"));
+//		}));
+//		Page page2 = supply(() -> execute(p -> {
+//			Page translation = (Page)p.copy();
+//			translation.setLanguage(getLanguage("en"));
+//			translation.setName("Page 1");
+//			translation.save();
+//			return translation.reload();
+//		}, page1));
+//
+//		ByteArrayOutputStream out = new ByteArrayOutputStream();
+//		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(IMAGE_NAME), out);
+//		ImageFile image1 = (ImageFile) supply(() -> createImage(node.getFolder(), IMAGE_NAME, out.toByteArray()));
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(String.format(
+//						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
+//						"{{ LINK|FILE:" + node.getId() + ":" + image1.getId() + "|Blume herunterladen|_self }}", 
+//						"{{ LINK|PAGE:" + node.getId() + ":" + page2.getId() + ":en|English version }}",
+//						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + ":de|Deutsche Version }}"
+//					), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+//
+//		FormModel previewModel = new FormModel();
+//		operate(() -> {
+//			try {
+//				previewModel.setData(mapper.readValue(String.format(
+//						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
+//						"{{ LINK|FILE:" + node.getId() + ":" + image1.getId() + "|Blume herunterladen|_self }}", 
+//						"{{ LINK|PAGE:" + node.getId() + ":" + page2.getId() + ":en|English version }}",
+//						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + ":de|Deutsche Version }}"
+//					), ObjectNode.class));
+//			} catch (Throwable e) {
+//				throw new NodeException(e);
+//			}
+//		});
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
+//			StringWriter writer = new StringWriter();
+//			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
+//			String expected = String.format(writer.toString(), 
+//					meshUuid, "", "&lt;a href&#x3D;&#x27;/home/image-dpi66x44-res311x211.jpg&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen&lt;/a&gt;", "&lt;a href&#x3D;&#x27;/home/image-dpi66x44-res311x211.jpg&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen&lt;/a&gt;");
+//			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
+//		}
+//	}
 
-			try {
-				f.setData(mapper.readValue(String.format(
-						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|URL:https&col;//gentics.com|Blume herunterladen &dollar;|_self }}", 
-						StringUtils.EMPTY, 
-						StringUtils.EMPTY
-					), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+//	@Test
+//	@Ignore
+//	public void testSinglePageTextLinkPreview() throws Exception {
+//		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+//		ContentNodeRESTUtils.assertResponseOK(response);
+//		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//
+//		Integer noNodeConstructId = supply(() -> createConstruct(null, ShortTextPartType.class, "nonode", "text"));
+//		Template template = supply(() -> createTemplate(node.getFolder(), "Template"));
+//
+//		Page page1 = supply(() -> create(Page.class, p -> {
+//			p.setFolderId(node.getFolder().getId());
+//			p.setTemplateId(template.getId());
+//			p.setName("Page 1");
+//
+//			p.getContent().addContentTag(noNodeConstructId);
+//		}));
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(String.format(
+//						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
+//						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}", 
+//						StringUtils.EMPTY, 
+//						StringUtils.EMPTY
+//					), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+//
+//		FormModel previewModel = new FormModel();
+//		operate(() -> {
+//			try {
+//				previewModel.setData(mapper.readValue(String.format(
+//						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
+//						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}", 
+//						StringUtils.EMPTY, 
+//						StringUtils.EMPTY
+//					), ObjectNode.class));
+//			} catch (Throwable e) {
+//				throw new NodeException(e);
+//			}
+//		});
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
+//			StringWriter writer = new StringWriter();
+//			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
+//			String expected = String.format(writer.toString(), meshUuid, "", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;|&quot;&#x27;AGB herunterladen&#x27;&quot;|&lt;/a&gt;", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;|&quot;&#x27;AGB herunterladen&#x27;&quot;|&lt;/a&gt;");
+//			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
+//		}
+//	}
 
-		FormModel previewModel = new FormModel();
-		operate(() -> {
-			try {
-				previewModel.setData(mapper.readValue(String.format(
-						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|URL:https&col;//gentics.com|Blume herunterladen &dollar;|_self }}", 
-						StringUtils.EMPTY, 
-						StringUtils.EMPTY
-					), ObjectNode.class));
-			} catch (Throwable e) {
-				throw new NodeException(e);
-			}
-		});
-
-		for (String language : Arrays.asList("de", "en")) {
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
-			String expected = String.format(writer.toString(), 
-					meshUuid, "", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen $&lt;/a&gt;", "&lt;a href&#x3D;&#x27;https://gentics.com&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen $&lt;/a&gt;");
-			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
-		}
-	}
-
-	@Test
-	@Ignore
-	public void testMultipleTextLinksPreview() throws Exception {
-		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
-		ContentNodeRESTUtils.assertResponseOK(response);
-		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
-
-		Integer noNodeConstructId = supply(() -> createConstruct(null, ShortTextPartType.class, "nonode", "text"));
-		Template template = supply(() -> createTemplate(node.getFolder(), "Template"));
-
-		Page page1 = supply(() -> create(Page.class, p -> {
-			p.setFolderId(node.getFolder().getId());
-			p.setTemplateId(template.getId());
-			p.setName("Seite 1");
-
-			p.getContent().addContentTag(noNodeConstructId);
-			p.setLanguage(getLanguage("de"));
-		}));
-		Page page2 = supply(() -> execute(p -> {
-			Page translation = (Page)p.copy();
-			translation.setLanguage(getLanguage("en"));
-			translation.setName("Page 1");
-			translation.save();
-			return translation.reload();
-		}, page1));
-
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(IMAGE_NAME), out);
-		ImageFile image1 = (ImageFile) supply(() -> createImage(node.getFolder(), IMAGE_NAME, out.toByteArray()));
-
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				f.setData(mapper.readValue(String.format(
-						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|FILE:" + node.getId() + ":" + image1.getId() + "|Blume herunterladen|_self }}", 
-						"{{ LINK|PAGE:" + node.getId() + ":" + page2.getId() + ":en|English version }}",
-						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + ":de|Deutsche Version }}"
-					), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
-
-		FormModel previewModel = new FormModel();
-		operate(() -> {
-			try {
-				previewModel.setData(mapper.readValue(String.format(
-						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|FILE:" + node.getId() + ":" + image1.getId() + "|Blume herunterladen|_self }}", 
-						"{{ LINK|PAGE:" + node.getId() + ":" + page2.getId() + ":en|English version }}",
-						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + ":de|Deutsche Version }}"
-					), ObjectNode.class));
-			} catch (Throwable e) {
-				throw new NodeException(e);
-			}
-		});
-
-		for (String language : Arrays.asList("de", "en")) {
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
-			String expected = String.format(writer.toString(), 
-					meshUuid, "", "&lt;a href&#x3D;&#x27;/home/image-dpi66x44-res311x211.jpg&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen&lt;/a&gt;", "&lt;a href&#x3D;&#x27;/home/image-dpi66x44-res311x211.jpg&#x27; target&#x3D;&#x27;_self&#x27;&gt;Blume herunterladen&lt;/a&gt;");
-			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
-		}
-	}
-
-	@Test
-	@Ignore
-	public void testSinglePageTextLinkPreview() throws Exception {
-		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
-		ContentNodeRESTUtils.assertResponseOK(response);
-		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
-
-		Integer noNodeConstructId = supply(() -> createConstruct(null, ShortTextPartType.class, "nonode", "text"));
-		Template template = supply(() -> createTemplate(node.getFolder(), "Template"));
-
-		Page page1 = supply(() -> create(Page.class, p -> {
-			p.setFolderId(node.getFolder().getId());
-			p.setTemplateId(template.getId());
-			p.setName("Page 1");
-
-			p.getContent().addContentTag(noNodeConstructId);
-		}));
-
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				f.setData(mapper.readValue(String.format(
-						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}", 
-						StringUtils.EMPTY, 
-						StringUtils.EMPTY
-					), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
-
-		FormModel previewModel = new FormModel();
-		operate(() -> {
-			try {
-				previewModel.setData(mapper.readValue(String.format(
-						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks_preview.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|" + MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}", 
-						StringUtils.EMPTY, 
-						StringUtils.EMPTY
-					), ObjectNode.class));
-			} catch (Throwable e) {
-				throw new NodeException(e);
-			}
-		});
-
-		for (String language : Arrays.asList("de", "en")) {
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(getClass().getResourceAsStream(String.format("form_data_textlinks_preview_%s.html", language)), writer);
-			String expected = String.format(writer.toString(), meshUuid, "", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;|&quot;&#x27;AGB herunterladen&#x27;&quot;|&lt;/a&gt;", "&lt;a href&#x3D;&#x27;/home/Page-1.html&#x27; target&#x3D;&#x27;_blank&#x27;&gt;|&quot;&#x27;AGB herunterladen&#x27;&quot;|&lt;/a&gt;");
-			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
-		}
-	}
-
-	@Test
-	@Ignore
-	public void testMultipleTextLinksPublishing() throws Exception {
-
-		Integer noNodeConstructId = supply(() -> createConstruct(null, ShortTextPartType.class, "nonode", "text"));
-		Template template = supply(() -> createTemplate(node.getFolder(), "Template"));
-
-		Page page1 = supply(() -> create(Page.class, p -> {
-			p.setFolderId(node.getFolder().getId());
-			p.setTemplateId(template.getId());
-			p.setName("Seite 1");
-
-			p.getContent().addContentTag(noNodeConstructId);
-			p.setLanguage(getLanguage("de"));
-		}));
-		Page page2 = supply(() -> execute(p -> {
-			Page translation = (Page)p.copy();
-			translation.setLanguage(getLanguage("en"));
-			translation.setName("Page 1");
-			translation.save();
-			return translation.reload();
-		}, page1));
-
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(IMAGE_NAME), out);
-		ImageFile image1 = (ImageFile) supply(() -> createImage(node.getFolder(), IMAGE_NAME, out.toByteArray()));
-
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				f.setData(mapper.readValue(String.format(
-						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|FILE:" + node.getId() + ":" + image1.getId() + "|Blume herunterladen|_self }}", 
-						"{{ LINK|PAGE:" + node.getId() + ":" + page2.getId() + ":en|English version }}",
-						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + ":de|Deutsche Version }}"
-					), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		consume(Form::publish, form);
-
-		// publish
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-	}
+//	@Test
+//	@Ignore
+//	public void testMultipleTextLinksPublishing() throws Exception {
+//
+//		Integer noNodeConstructId = supply(() -> createConstruct(null, ShortTextPartType.class, "nonode", "text"));
+//		Template template = supply(() -> createTemplate(node.getFolder(), "Template"));
+//
+//		Page page1 = supply(() -> create(Page.class, p -> {
+//			p.setFolderId(node.getFolder().getId());
+//			p.setTemplateId(template.getId());
+//			p.setName("Seite 1");
+//
+//			p.getContent().addContentTag(noNodeConstructId);
+//			p.setLanguage(getLanguage("de"));
+//		}));
+//		Page page2 = supply(() -> execute(p -> {
+//			Page translation = (Page)p.copy();
+//			translation.setLanguage(getLanguage("en"));
+//			translation.setName("Page 1");
+//			translation.save();
+//			return translation.reload();
+//		}, page1));
+//
+//		ByteArrayOutputStream out = new ByteArrayOutputStream();
+//		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(IMAGE_NAME), out);
+//		ImageFile image1 = (ImageFile) supply(() -> createImage(node.getFolder(), IMAGE_NAME, out.toByteArray()));
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(String.format(
+//						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
+//						"{{ LINK|FILE:" + node.getId() + ":" + image1.getId() + "|Blume herunterladen|_self }}", 
+//						"{{ LINK|PAGE:" + node.getId() + ":" + page2.getId() + ":en|English version }}",
+//						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + ":de|Deutsche Version }}"
+//					), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		consume(Form::publish, form);
+//
+//		// publish
+//		try (Trx trx = new Trx()) {
+//			context.publish(false);
+//			trx.success();
+//		}
+//	}
 
 	/**
 	 * Test whether the forms plugin is activated for the project
@@ -1092,208 +1092,208 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		});
 	}
 
-	/**
-	 * Test rendering a form
-	 * @throws Exception
-	 */
-	@Test
-	@Ignore
-	public void testRenderForm() throws Exception {
-		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
-		ContentNodeRESTUtils.assertResponseOK(response);
-		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//	/**
+//	 * Test rendering a form
+//	 * @throws Exception
+//	 */
+//	@Test
+//	@Ignore
+//	public void testRenderForm() throws Exception {
+//		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+//		ContentNodeRESTUtils.assertResponseOK(response);
+//		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			StringWriter writer = new StringWriter();
+//			IOUtils.copy(getClass().getResourceAsStream(String.format("form_rendered_%s.html", language)), writer);
+//			String expected = String.format(writer.toString(), meshUuid, "");
+//			String renderedForm = supply(() -> getFormResource().preview(formId, language, null));
+//			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
+//		}
+//	}
 
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
+//	/**
+//	 * Test rendering the preview of a form (before saving it)
+//	 * @throws Exception
+//	 */
+//	@Test
+//	@Ignore
+//	public void testRenderPreview() throws Exception {
+//		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+//		ContentNodeRESTUtils.assertResponseOK(response);
+//		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+//
+//		FormModel previewModel = new FormModel();
+//		previewModel.setData(mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class));
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			StringWriter writer = new StringWriter();
+//			IOUtils.copy(getClass().getResourceAsStream(String.format("form_preview_%s.html", language)), writer);
+//			String expected = String.format(writer.toString(), meshUuid, "");
+//			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
+//			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
+//		}
+//	}
 
-			try {
-				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+//	/**
+//	 * Test that rendering a form without assigned Mesh Content.Repository is not possible
+//	 * @throws Exception
+//	 */
+//	@Test
+//	@Ignore
+//	@Expected(ex = RestMappedException.class, message = "Das Formular Test Form kann nicht gerendert werden, weil der Node Node kein Mesh Content.Repository zugewiesen hat.")
+//	public void testRenderFormNoCr() throws Exception {
+//		node = update(node, n -> {
+//			n.setContentrepositoryId(0);
+//		});
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			supply(() -> getFormResource().preview(formId, language, null, null));
+//		}
+//	}
 
-		for (String language : Arrays.asList("de", "en")) {
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(getClass().getResourceAsStream(String.format("form_rendered_%s.html", language)), writer);
-			String expected = String.format(writer.toString(), meshUuid, "");
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, null));
-			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
-		}
-	}
+//	/**
+//	 * Test that rendering a form preview without assigned Mesh Content.Repository is not possible
+//	 * @throws Exception
+//	 */
+//	@Test
+//	@Ignore
+//	@Expected(ex = RestMappedException.class, message = "Das Formular Test Form kann nicht gerendert werden, weil der Node Node kein Mesh Content.Repository zugewiesen hat.")
+//	public void testRenderPreviewNoCr() throws Exception {
+//		node = update(node, n -> {
+//			n.setContentrepositoryId(0);
+//		});
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//
+//		FormModel previewModel = new FormModel();
+//		previewModel.setData(mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class));
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			supply(() -> getFormResource().preview(formId, language, null, previewModel));
+//		}
+//	}
 
-	/**
-	 * Test rendering the preview of a form (before saving it)
-	 * @throws Exception
-	 */
-	@Test
-	@Ignore
-	public void testRenderPreview() throws Exception {
-		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
-		ContentNodeRESTUtils.assertResponseOK(response);
-		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//	/**
+//	 * Test that rendering a form is not possible, if the assigned CR is no Mesh CR
+//	 * @throws Exception
+//	 */
+//	@Test
+//	@Ignore
+//	@Expected(ex = RestMappedException.class, message = "Das Formular Test Form kann nicht gerendert werden, weil das Content.Repository Other CR kein Mesh Content.Repository ist.")
+//	public void testRenderFormOtherCr() throws Exception {
+//		node = update(node, n -> {
+//			n.setContentrepositoryId(otherCR.getId());
+//		});
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			supply(() -> getFormResource().preview(formId, language, null, null));
+//		}
+//	}
 
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
-
-		FormModel previewModel = new FormModel();
-		previewModel.setData(mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class));
-
-		for (String language : Arrays.asList("de", "en")) {
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(getClass().getResourceAsStream(String.format("form_preview_%s.html", language)), writer);
-			String expected = String.format(writer.toString(), meshUuid, "");
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
-			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
-		}
-	}
-
-	/**
-	 * Test that rendering a form without assigned Mesh Content.Repository is not possible
-	 * @throws Exception
-	 */
-	@Test
-	@Ignore
-	@Expected(ex = RestMappedException.class, message = "Das Formular Test Form kann nicht gerendert werden, weil der Node Node kein Mesh Content.Repository zugewiesen hat.")
-	public void testRenderFormNoCr() throws Exception {
-		node = update(node, n -> {
-			n.setContentrepositoryId(0);
-		});
-
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-
-		for (String language : Arrays.asList("de", "en")) {
-			supply(() -> getFormResource().preview(formId, language, null, null));
-		}
-	}
-
-	/**
-	 * Test that rendering a form preview without assigned Mesh Content.Repository is not possible
-	 * @throws Exception
-	 */
-	@Test
-	@Ignore
-	@Expected(ex = RestMappedException.class, message = "Das Formular Test Form kann nicht gerendert werden, weil der Node Node kein Mesh Content.Repository zugewiesen hat.")
-	public void testRenderPreviewNoCr() throws Exception {
-		node = update(node, n -> {
-			n.setContentrepositoryId(0);
-		});
-
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-
-		FormModel previewModel = new FormModel();
-		previewModel.setData(mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class));
-
-		for (String language : Arrays.asList("de", "en")) {
-			supply(() -> getFormResource().preview(formId, language, null, previewModel));
-		}
-	}
-
-	/**
-	 * Test that rendering a form is not possible, if the assigned CR is no Mesh CR
-	 * @throws Exception
-	 */
-	@Test
-	@Ignore
-	@Expected(ex = RestMappedException.class, message = "Das Formular Test Form kann nicht gerendert werden, weil das Content.Repository Other CR kein Mesh Content.Repository ist.")
-	public void testRenderFormOtherCr() throws Exception {
-		node = update(node, n -> {
-			n.setContentrepositoryId(otherCR.getId());
-		});
-
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-
-		for (String language : Arrays.asList("de", "en")) {
-			supply(() -> getFormResource().preview(formId, language, null, null));
-		}
-	}
-
-	/**
-	 * Test that rendering a form preview is not possible, if the assigned CR is no Mesh CR
-	 * @throws Exception
-	 */
-	@Test
-	@Ignore
-	@Expected(ex = RestMappedException.class, message = "Das Formular Test Form kann nicht gerendert werden, weil das Content.Repository Other CR kein Mesh Content.Repository ist.")
-	public void testRenderPreviewOtherCr() throws Exception {
-		node = update(node, n -> {
-			n.setContentrepositoryId(otherCR.getId());
-		});
-
-		Form form = supply(() -> create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}));
-		String formId = Integer.toString(form.getId());
-
-		FormModel previewModel = new FormModel();
-		previewModel.setData(mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class));
-
-		for (String language : Arrays.asList("de", "en")) {
-			supply(() -> getFormResource().preview(formId, language, null, previewModel));
-		}
-	}
+//	/**
+//	 * Test that rendering a form preview is not possible, if the assigned CR is no Mesh CR
+//	 * @throws Exception
+//	 */
+//	@Test
+//	@Ignore
+//	@Expected(ex = RestMappedException.class, message = "Das Formular Test Form kann nicht gerendert werden, weil das Content.Repository Other CR kein Mesh Content.Repository ist.")
+//	public void testRenderPreviewOtherCr() throws Exception {
+//		node = update(node, n -> {
+//			n.setContentrepositoryId(otherCR.getId());
+//		});
+//
+//		Form form = supply(() -> create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				f.setData(mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}));
+//		String formId = Integer.toString(form.getId());
+//
+//		FormModel previewModel = new FormModel();
+//		previewModel.setData(mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class));
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			supply(() -> getFormResource().preview(formId, language, null, previewModel));
+//		}
+//	}
 
 	/**
 	 * Test that publishing a form and taking offline a form will also dirt pages with references to the form

@@ -1,47 +1,12 @@
 package com.gentics.contentnode.publish.mesh;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.configuration.FormTypeConfiguration;
-import com.gentics.contentnode.etc.FormConfigProvider;
-import com.gentics.contentnode.etc.PropertyTrx;
-import com.gentics.contentnode.events.Dependency;
-import com.gentics.contentnode.factory.ChannelTrx;
-import com.gentics.contentnode.factory.PageLanguageFallbackList;
-import com.gentics.contentnode.factory.PublishCacheTrx;
-import com.gentics.contentnode.factory.RenderTypeTrx;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.object.LanguageFactory;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
-import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.forms.FormTransformer;
+import com.gentics.contentnode.forms.FormTransformer.TransformationTarget;
 import com.gentics.contentnode.jmx.MBeanRegistry;
-import com.gentics.contentnode.object.File;
-import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
-import com.gentics.contentnode.object.ImageFile;
-import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.PublishAction;
-import com.gentics.contentnode.render.RenderType;
-import com.gentics.contentnode.render.RenderUrl;
-import com.gentics.contentnode.render.RenderUrlFactory;
-import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
-import com.gentics.contentnode.rest.model.formtype.BaseSetting;
-import com.gentics.contentnode.rest.model.formtype.BlockConfig;
-import com.gentics.contentnode.rest.model.formtype.ControlConfig;
-import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
-import com.gentics.contentnode.rest.model.formtype.ReferenceType;
 
 import io.reactivex.Completable;
 import io.vertx.core.json.JsonObject;
@@ -78,7 +43,8 @@ class FormWriteTask extends AbstractWriteTask {
 		this.uuid = MeshPublisher.getMeshUuid(form);
 		this.publisher = publisher;
 
-		this.transformedFormData = FormsPublisherService.transform(form).toString();
+		this.transformedFormData = new FormTransformer().withTransformationTarget(TransformationTarget.publish)
+				.transform(form).toString();
 	}
 
 	@Override
@@ -131,15 +97,6 @@ class FormWriteTask extends AbstractWriteTask {
 	 * @throws NodeException 
 	 */
 	protected Completable publish(String data) throws NodeException {
-//		ObjectMapper objectMapper = new ObjectMapper();
-//		JsonNode form;
-//		try {
-//			form = objectMapper.readTree(data);
-//		} catch (Exception e) {
-//			throw new NodeException(e);
-//		}
-//		JsonNode renderedData = MeshPublisher.renderFormTextUrls(form, language);
-
 		String formUrl = FormsPublisherService.getFormUrl(project, pluginName, uuid);
 		String formOnlineUrl = FormsPublisherService.getFormOnlineUrl(project, pluginName, uuid);
 

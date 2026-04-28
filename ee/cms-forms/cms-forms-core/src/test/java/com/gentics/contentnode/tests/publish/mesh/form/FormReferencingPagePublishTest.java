@@ -186,48 +186,48 @@ public class FormReferencingPagePublishTest extends AbstractFormPublishTest {
 			}
 		});
 	}
-
-	/**
-	 * Test rendering the preview
-	 * @throws Exception
-	 */
-	@Test
-	public void testRenderPreview() throws Exception {
-		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
-		ContentNodeRESTUtils.assertResponseOK(response);
-		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
-
-		Form form = create(Form.class, f -> {
-			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
-			f.setName("Test Form");
-			f.setLanguages(Arrays.asList("de", "en"));
-			f.setFolderId(node.getFolder().getId());
-
-			try {
-				ObjectNode data = mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class);
-				data.put("mailsource_pageid", emailPage.getId());
-				f.setData(data);
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
-		}).build();
-		String formId = Integer.toString(form.getId());
-		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
-
-		FormModel previewModel = new FormModel();
-		ObjectNode previewData = mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class);
-		previewData.put("mailsource_pageid", emailPage.getId());
-		previewModel.setData(previewData);
-
-		for (String language : Arrays.asList("de", "en")) {
-			StringWriter writer = new StringWriter();
-			IOUtils.copy(getClass().getResourceAsStream(String.format("form_preview_%s.html", language)), writer);
-			String expectedMailsource = getExpectedMailsource(language);
-			String expected = String.format(writer.toString(), meshUuid, expectedMailsource);
-			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
-			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
-		}
-	}
+//
+//	/**
+//	 * Test rendering the preview
+//	 * @throws Exception
+//	 */
+//	@Test
+//	public void testRenderPreview() throws Exception {
+//		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+//		ContentNodeRESTUtils.assertResponseOK(response);
+//		assertThat(response.getContentRepository().getCheckStatus()).as("Check result: " + response.getContentRepository().getCheckResult()).isEqualTo(Status.ok);
+//
+//		Form form = create(Form.class, f -> {
+//			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+//			f.setName("Test Form");
+//			f.setLanguages(Arrays.asList("de", "en"));
+//			f.setFolderId(node.getFolder().getId());
+//
+//			try {
+//				ObjectNode data = mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class);
+//				data.put("mailsource_pageid", emailPage.getId());
+//				f.setData(data);
+//			} catch (IOException e) {
+//				throw new NodeException(e);
+//			}
+//		}).build();
+//		String formId = Integer.toString(form.getId());
+//		String meshUuid = execute(f -> MeshPublisher.getMeshUuid(f), form);
+//
+//		FormModel previewModel = new FormModel();
+//		ObjectNode previewData = mapper.readValue(getClass().getResource("form_preview_data.json"), ObjectNode.class);
+//		previewData.put("mailsource_pageid", emailPage.getId());
+//		previewModel.setData(previewData);
+//
+//		for (String language : Arrays.asList("de", "en")) {
+//			StringWriter writer = new StringWriter();
+//			IOUtils.copy(getClass().getResourceAsStream(String.format("form_preview_%s.html", language)), writer);
+//			String expectedMailsource = getExpectedMailsource(language);
+//			String expected = String.format(writer.toString(), meshUuid, expectedMailsource);
+//			String renderedForm = supply(() -> getFormResource().preview(formId, language, null, previewModel));
+//			assertThat(renderedForm).as(String.format("Rendered form in %s", language)).isEqualTo(expected);
+//		}
+//	}
 
 	/**
 	 * Get the expected mailsource for the form in the given language

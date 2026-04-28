@@ -33,7 +33,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 /**
@@ -288,33 +287,6 @@ public interface FormResource {
 	@PUT
 	@Path("{id}/folder/{folderId}")
 	FormResponse move(@PathParam("id") String formId, @PathParam("folderId") String folderId, @QueryParam("nodeId") String nodeId) throws Exception;
-
-	/**
-	 * Render a preview of the form in the given language
-	 * @param formId form ID
-	 * @param language language code
-	 * @param nodeId optional node ID to identify external forms
-	 * @return rendered preview
-	 * @throws Exception
-	 */
-	@GET
-	@Path("{id}/preview/{language}")
-	@Produces({ MediaType.TEXT_HTML })
-	String preview(@PathParam("id") String formId, @PathParam("language") String language, @QueryParam("nodeId") String nodeId) throws Exception;
-
-	/**
-	 * Render a preview of the form in the given language
-	 * @param formId form ID
-	 * @param language language code
-	 * @param nodeId optional node ID to identify external forms
-	 * @param formModel form model
-	 * @return rendered preview
-	 * @throws Exception
-	 */
-	@POST
-	@Path("{id}/preview/{language}")
-	@Produces({ MediaType.TEXT_HTML })
-	String preview(@PathParam("id") String formId, @PathParam("language") String language, @QueryParam("nodeId") String nodeId, FormModel formModel) throws Exception;
 
 	/**
 	 * List data entries from Mesh, which have been submitted to the form

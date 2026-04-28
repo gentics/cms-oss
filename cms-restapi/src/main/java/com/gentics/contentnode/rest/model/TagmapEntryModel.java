@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @XmlRootElement
@@ -387,6 +388,7 @@ public class TagmapEntryModel implements Serializable {
 	 * Get the JSONSchema filter (for entries of type "JSON")
 	 * @return filter
 	 */
+	@JsonProperty("jsonSchema")
 	public String getJSONSchemaFilter() {
 		return jsonSchemaFilter;
 	}
@@ -395,6 +397,7 @@ public class TagmapEntryModel implements Serializable {
 	 * Set the JSON schema filter
 	 * @param jsonSchemaFilter filter
 	 */
+	@JsonProperty("jsonSchema")
 	public void setJSONSchemaFilter(String jsonSchemaFilter) {
 		this.jsonSchemaFilter = jsonSchemaFilter;
 	}

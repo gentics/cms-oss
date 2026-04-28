@@ -5,6 +5,7 @@ import java.io.Serializable;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
@@ -372,6 +373,7 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 	 * Get the JSON schema filter (for entries of type JSON)
 	 * @return filter
 	 */
+	@JsonProperty("jsonSchemaFilter")
 	public String getJSONSchemaFilter() {
 		return jsonSchemaFilter;
 	}
@@ -380,6 +382,7 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 	 * Set the JSON schema filter
 	 * @param jsonSchemaFilter filter
 	 */
+	@JsonProperty("jsonSchemaFilter")
 	public void setJSONSchemaFilter(String jsonSchemaFilter) {
 		this.jsonSchemaFilter = jsonSchemaFilter;
 	}

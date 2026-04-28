@@ -7,6 +7,7 @@ import java.util.Map;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gentics.contentnode.rest.model.Property.Type;
 
 /**
@@ -547,6 +548,7 @@ public class Part implements Serializable {
 	 * Get the JSON schema
 	 * @return
 	 */
+	@JsonProperty("jsonSchema")
 	public String getJSONSchema() {
 		return jsonSchema;
 	}
@@ -556,6 +558,7 @@ public class Part implements Serializable {
 	 * @param jsonSchema
 	 * @return
 	 */
+	@JsonProperty("jsonSchema")
 	public Part setJSONSchema(String jsonSchema) {
 		this.jsonSchema = jsonSchema;
 		return this;

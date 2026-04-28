@@ -122,38 +122,6 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 		throw new ObjectReadOnlyException(this);
 	}
 
-	/**
-	 * Gets the success page ID of a object.
-	 * @return The success page ID of the object.
-	 * @throws NodeException
-	 */
-	int getSuccessPageId() throws NodeException;
-
-	/**
-	 * Set the success page id of the object
-	 * @param successPageId success page id
-	 * @throws NodeException
-	 */
-	default void setSuccessPageId(int successPageId) throws NodeException, ReadOnlyException {
-		throw new ObjectReadOnlyException(this);
-	}
-
-	/**
-	 * Gets the success page node ID of a object.
-	 * @return The success page node ID of the object.
-	 * @throws NodeException
-	 */
-	int getSuccessNodeId() throws NodeException;
-
-	/**
-	 * Set the success page node id of the object
-	 * @param successNodeId success page node id
-	 * @throws NodeException
-	 */
-	default void setSuccessNodeId(int successNodeId) throws NodeException, ReadOnlyException {
-		throw new ObjectReadOnlyException(this);
-	}
-
 	@FieldGetter("languages")
 	List<String> getLanguages();
 

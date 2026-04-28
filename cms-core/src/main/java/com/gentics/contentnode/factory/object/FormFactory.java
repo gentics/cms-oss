@@ -156,14 +156,6 @@ public class FormFactory extends AbstractFactory {
 		@Unversioned
 		protected int folderId;
 
-		@DataField("success_page_id")
-		@Updateable
-		protected int successPageId;
-
-		@DataField("success_node_id")
-		@Updateable
-		protected int successNodeId;
-
 		@DataField("languages")
 		@Updateable
 		protected List<String> languages;
@@ -735,16 +727,6 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
-		public int getSuccessPageId() throws NodeException {
-			return successPageId;
-		}
-
-		@Override
-		public int getSuccessNodeId() throws NodeException {
-			return successNodeId;
-		}
-
-		@Override
 		public NodeObject getParentObject() throws NodeException {
 			return getFolder();
 		}
@@ -1269,35 +1251,6 @@ public class FormFactory extends AbstractFactory {
 
 			if (ObjectTransformer.getInt(this.getFolderId(), 0) != ObjectTransformer.getInt(folderId, 0)) {
 				this.folderId = folderId;
-				modified = true;
-			}
-		}
-
-		@Override
-		public void setSuccessPageId(int successPageId) throws NodeException, ReadOnlyException {
-			if (successPageId > 0) {
-				// always set the page id of the master folder
-				Transaction t = TransactionManager.getCurrentTransaction();
-				try (NoMcTrx nmt = new NoMcTrx()){
-					Page page = t.getObject(Page.class, successPageId);
-					if (page != null) {
-						successPageId = page.getMaster().getId();
-					} else {
-						successPageId = 0;
-					}
-				}
-			}
-
-			if (this.successPageId != successPageId) {
-				this.successPageId = successPageId;
-				modified = true;
-			}
-		}
-
-		@Override
-		public void setSuccessNodeId(int successNodeId) throws NodeException, ReadOnlyException {
-			if (this.successNodeId != successNodeId) {
-				this.successNodeId = successNodeId;
 				modified = true;
 			}
 		}

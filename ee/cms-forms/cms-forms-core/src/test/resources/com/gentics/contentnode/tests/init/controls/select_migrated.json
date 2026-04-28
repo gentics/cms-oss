@@ -1,12 +1,12 @@
 {
     "adminEmailAddress": "",
-    "adminEmailSubjectI18n": {},
+    "adminEmailSubject": {},
     "adminEmailPageId": 0,
     "adminEmailNodeId": 0,
-    "adminEmailTemplateI18n": {},
+    "adminEmailTemplate": {},
     "successPageId": 4711,
     "successNodeId": 42,
-    "successUrlI18n": {},
+    "successUrl": {},
     "templateContext": "theme-red",
     "schema": {
         "properties": {
@@ -20,19 +20,19 @@
                 "formGridOptions": {
                     "selectOptions": [
                         {
-                            "key": "one",
+                            "value": "one",
                             "label": {
                                 "de": "Eins"
                             }
                         },
                         {
-                            "key": "two",
+                            "value": "two",
                             "label": {
                                 "de": "Zwei"
                             }
                         },
                         {
-                            "key": "three",
+                            "value": "three",
                             "label": {
                                 "de": "Drei"
                             }
@@ -50,19 +50,19 @@
                 "formGridOptions": {
                     "selectOptions": [
                         {
-                            "key": "four",
+                            "value": "four",
                             "label": {
                                 "de": "Vier"
                             }
                         },
                         {
-                            "key": "five",
+                            "value": "five",
                             "label": {
                                 "de": "Fünf"
                             }
                         },
                         {
-                            "key": "six",
+                            "value": "six",
                             "label": {
                                 "de": "Sechs"
                             }
@@ -80,19 +80,19 @@
                 "formGridOptions": {
                     "selectOptions": [
                         {
-                            "key": "seven",
+                            "value": "seven",
                             "label": {
                                 "de": "Sieben"
                             }
                         },
                         {
-                            "key": "eight",
+                            "value": "eight",
                             "label": {
                                 "de": "Acht"
                             }
                         },
                         {
-                            "key": "nine",
+                            "value": "nine",
                             "label": {
                                 "de": "Neun"
                             }
@@ -110,19 +110,19 @@
                 "formGridOptions": {
                     "selectOptions": [
                         {
-                            "key": "ten",
+                            "value": "ten",
                             "label": {
                                 "de": "Zehn"
                             }
                         },
                         {
-                            "key": "eleven",
+                            "value": "eleven",
                             "label": {
                                 "de": "Elf"
                             }
                         },
                         {
-                            "key": "twelve",
+                            "value": "twelve",
                             "label": {
                                 "de": "Zwölf"
                             }

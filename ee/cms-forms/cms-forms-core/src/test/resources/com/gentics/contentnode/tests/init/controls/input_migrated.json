@@ -1,12 +1,12 @@
 {
     "adminEmailAddress": "",
-    "adminEmailSubjectI18n": {},
+    "adminEmailSubject": {},
     "adminEmailPageId": 0,
     "adminEmailNodeId": 0,
-    "adminEmailTemplateI18n": {},
+    "adminEmailTemplate": {},
     "successPageId": 4711,
     "successNodeId": 42,
-    "successUrlI18n": {},
+    "successUrl": {},
     "templateContext": "theme-red",
     "schema": {
         "properties": {
@@ -15,8 +15,7 @@
                 "numberOfLines": 1,
                 "updateOnChange": false,
                 "validation": {
-                    "maxLength": 20,
-                    "minLength": 0
+                    "maxLength": 20.0
                 },
                 "mandatory": true,
                 "isList": false,
@@ -27,8 +26,7 @@
                 "numberOfLines": 1,
                 "updateOnChange": false,
                 "validation": {
-                    "maxLength": 10,
-                    "minLength": 0
+                    "maxLength": 10.0
                 },
                 "mandatory": false,
                 "isList": false,

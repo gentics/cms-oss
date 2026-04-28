@@ -1,12 +1,12 @@
 {
     "adminEmailAddress": "",
-    "adminEmailSubjectI18n": {},
+    "adminEmailSubject": {},
     "adminEmailPageId": 0,
     "adminEmailNodeId": 0,
-    "adminEmailTemplateI18n": {},
+    "adminEmailTemplate": {},
     "successPageId": 4711,
     "successNodeId": 42,
-    "successUrlI18n": {},
+    "successUrl": {},
     "templateContext": "theme-red",
     "schema": {
         "properties": {}

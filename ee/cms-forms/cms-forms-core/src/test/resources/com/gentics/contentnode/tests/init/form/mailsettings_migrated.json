@@ -1,18 +1,18 @@
 {
     "adminEmailAddress": "",
-    "adminEmailSubjectI18n": {
+    "adminEmailSubject": {
         "de": "Es sind neue Daten da",
         "en": "New data arrived"
     },
     "adminEmailPageId": 0,
     "adminEmailNodeId": 0,
-    "adminEmailTemplateI18n": {
+    "adminEmailTemplate": {
         "de": "useremail",
         "en": "useremail"
     },
     "successPageId": 4711,
     "successNodeId": 42,
-    "successUrlI18n": {},
+    "successUrl": {},
     "templateContext": "theme-red",
     "schema": {
         "properties": {}

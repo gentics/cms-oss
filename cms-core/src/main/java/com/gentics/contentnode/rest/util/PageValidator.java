@@ -137,24 +137,33 @@ public abstract class PageValidator extends RestPageProcessor {
 			}
 
 			String stringValue = tagProperty.getStringValue();
-			if (tagProperty.getStringValue() == null) {
+			if (stringValue == null) {
 				continue;
 			}
 
-			if (part.getPartTypeId() == Part.JSON && StringUtils.isNotEmpty(part.getInfoText())) {
-				JsonContent jsonSchemaContent = JsonContent.fromString(part.getInfoText());
-				JsonSchema[] allowedSchemas = null;
-				if (jsonSchemaContent.isArray()) {
-					JsonArray jsonSchemas = jsonSchemaContent.getArray();
-					allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
-				} else {
-					allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
-				}
-				if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(stringValue).getValid() == Boolean.TRUE)) {
+			if (part.getPartTypeId() == Part.JSON) {
+				JsonContent jsonContent = JsonContent.fromString(stringValue);
+				if (jsonContent == null) {
 					throw new NodeException("JSON Validation error for {"
 							+ "tag {" + tag.getId() + " " + tag.getName() + "}"
 							+ ", part {" + part.getKeyname() + "}}"
-							+ " Reason: the JSON contents does not match any of allowed schemas");
+							+ " Reason: not a JSON value");
+				}
+				if (StringUtils.isNotEmpty(part.getInfoText())) {
+					JsonContent jsonSchemaContent = JsonContent.fromString(part.getInfoText());
+					JsonSchema[] allowedSchemas = null;
+					if (jsonSchemaContent.isArray()) {
+						JsonArray jsonSchemas = jsonSchemaContent.getArray();
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
+					} else {
+						allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
+					}
+					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(stringValue).getValid() == Boolean.TRUE)) {
+						throw new NodeException("JSON Validation error for {"
+								+ "tag {" + tag.getId() + " " + tag.getName() + "}"
+								+ ", part {" + part.getKeyname() + "}}"
+								+ " Reason: the JSON contents does not match any of allowed schemas");
+					}
 				}
 			}
 

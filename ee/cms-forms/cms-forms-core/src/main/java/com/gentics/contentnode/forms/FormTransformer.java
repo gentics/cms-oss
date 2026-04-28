@@ -8,8 +8,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -132,6 +130,8 @@ public class FormTransformer {
 				() -> new NodeException("Error while transforming form %s: Could not find configuration for form type %s"
 						.formatted(name, form.getFormType())));
 
+		transformationTarget.transform(form, data);
+
 		List<String> languages = form.getLanguages();
 
 		Transaction t = TransactionManager.getCurrentTransaction();
@@ -155,11 +155,13 @@ public class FormTransformer {
 			}, null);
 
 			transformPageReference(data, "successPageId", "successNodeId", p -> {
-				transformationTarget.transform(SUCCESS_PAGE_REFERENCE, data, languages, p.getOwningNode(), p,
+				transformationTarget.transform(SUCCESS_PAGE_REFERENCE, data, languages,
+						p != null ? p.getOwningNode() : null, p,
 						Optional.of(Pair.of("successPageId", "successNodeId")));
 			});
 			transformPageReference(data, "adminEmailPageId", "adminEmailNodeId", p -> {
-				transformationTarget.transform(ADMIN_MAIL_SOURCE_REFERENCE, data, languages, p.getOwningNode(), p,
+				transformationTarget.transform(ADMIN_MAIL_SOURCE_REFERENCE, data, languages,
+						p != null ? p.getOwningNode() : null, p,
 						Optional.of(Pair.of("adminEmailPageId", "adminEmailNodeId")));
 			});
 
@@ -189,18 +191,22 @@ public class FormTransformer {
 		String pageId = data.optional(pageIdProperty).map(JsonNode::asText).orElse("");
 		String nodeId = data.optional(nodeIdProperty).map(JsonNode::asText).orElse("");
 
-		data.putNull(pageIdProperty);
-		data.putNull(nodeIdProperty);
+		data.remove(pageIdProperty);
+		data.remove(nodeIdProperty);
+
+		Page referencedPage = null;
+		int iNodeId = 0;
 
 		if (!StringUtils.isBlank(pageId) && !Strings.CI.equals(pageId, "0")) {
 			Node node = t.getObject(Node.class, nodeId);
-			int iNodeId = Optional.ofNullable(node).map(Node::getId).orElse(0);
+			iNodeId = Optional.ofNullable(node).map(Node::getId).orElse(0);
 			try (ChannelTrx cTrx = new ChannelTrx(iNodeId)) {
-				Page referencedPage = t.getObject(Page.class, pageId);
-				if (referencedPage != null) {
-					pageConsumer.accept(referencedPage);
-				}
+				referencedPage = t.getObject(Page.class, pageId);
 			}
+		}
+
+		try (ChannelTrx cTrx = new ChannelTrx(iNodeId)) {
+			pageConsumer.accept(referencedPage);
 		}
 	}
 
@@ -568,6 +574,28 @@ public class FormTransformer {
 		 * transform references to local IDs
 		 */
 		fromContentPackage;
+
+		/**
+		 * Transform the base form data
+		 * @param form form
+		 * @param data form data
+		 * @throws NodeException
+		 */
+		public void transform(Form form, ObjectNode data) throws NodeException {
+			switch (this) {
+			case publish:
+				data.put("cms_id", form.getId());
+				data.put("type", form.getFormType());
+				// schema.properties is required in the plugin
+				data.withObjectProperty("schema").withObjectProperty("properties");
+				break;
+			case fromContentPackage:
+			case toContentPackage:
+			default:
+				break;
+			
+			}
+		}
 
 		/**
 		 * Transform the reference

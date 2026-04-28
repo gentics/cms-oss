@@ -1,6 +1,9 @@
 {
-	"successurl": "http://node/Content.node/home/Page.en.html",
-	"language": "en",
-	"name": "Test Form",
-	"type": "GENERIC"
+	"successUrl": {
+		"de": "http://node/Content.node/home/Page.en.html",
+		"en": "http://node/Content.node/home/Page.en.html"
+	},
+	"schema": {
+        "properties": {}
+    }
 }

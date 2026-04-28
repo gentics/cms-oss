@@ -1,63 +1,68 @@
 {
-	"type": "GENERIC",
-	"email": "",
-	"mailsubject": "",
-	"mailtemp": "",
-	"successurl": "",
-	"elements": [
-		{
-			"type": "formpage",
-			"name": "formpage1",
-			"label_i18n": {
-				"de": "Formular Seite",
-				"en": "Form Page"
-			},
-			"info_i18n": {
-				"de": "",
-				"en": ""
-			},
-			"elements": [
-				{
-					"type": "formsection",
-					"elements": [
-						{
-							"type": "dropdown",
-							"active": true,
-							"name": "dropdown11",
-							"placeholderName": "",
-							"label_i18n": {
-								"en": "Dropdown %s"
-							},
-							"mandatory": false,
-							"info_i18n": {
-								"de": "Info %s",
-								"en": "Info %s"
-							},
-							"tooltip_i18n": {
-								"de": "",
-								"en": ""
-							},
-							"validation": "",
-							"listelements": [
-								{
-									"value": "option1",
-									"label_i18n": {
-										"de": "Option eins",
-										"en": "Option one"
-									}
-								},
-								{
-									"value": "option2",
-									"label_i18n": {
-										"de": "Option zwei"
-									}
-								}
-							],
-							"elements": []
-						}
-					]
+	"flowId": null,
+	"templateContext": null,
+	"successPageId": null,
+	"successNodeId": null,
+	"adminEmailAddress": null,
+	"adminEmailSubject": null,
+	"adminEmailPageId": null,
+	"adminEmailNodeId": null,
+	"adminEmailTemplate": null,
+	"formWidth": 12,
+	"schema": {
+		"key": "59dadad8-1984-4428-8d67-2853f228f949",
+		"version": "1.0",
+		"properties": {
+			"b0bac784-007f-4831-9098-987aa7828ff8": {
+				"type": "string",
+				"name": "Eingabefeld",
+				"formPage": 0,
+				"isList": false,
+				"validation": {
+					"maxLength": 100
+				},
+				"formGridOptions": {
+					"defaultValue": "bla",
+					"rich": ""
 				}
-			]
+			}
 		}
-	]
+	},
+	"uiSchema": {
+		"key": "59dadad8-1984-4428-8d67-2853f228f949",
+		"version": "1.0",
+		"pages": [
+			{
+				"pagename": {
+					"de": "Allgemein",
+					"en": "General"
+				},
+				"elements": [
+					{
+						"id": "b0bac784-007f-4831-9098-987aa7828ff8",
+						"type": "property",
+						"label": {
+							"de": "Gib hier was ein"
+						},
+						"formGridOptions": {
+							"type": "string",
+							"numberOfColumns": 12,
+							"value": {},
+							"valueSummary": {},
+							"inForm": true,
+							"inSummary": false,
+							"overlayOptions": {
+								"isShowOverlay": false,
+								"texts": {
+									"textPre": {},
+									"textPost": {}
+								}
+							}
+						},
+						"uiSchemaPage": 0
+					}
+				]
+			}
+		]
+	}
 }

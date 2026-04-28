@@ -12,7 +12,6 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createImage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
@@ -22,15 +21,12 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.updat
 import static com.gentics.contentnode.tests.utils.FormRESTUtils.getFormResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,7 +50,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.FormConfigProvider;
-import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -64,7 +59,6 @@ import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
-import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
@@ -82,10 +76,8 @@ import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.category.MeshTest;
-import com.gentics.contentnode.tests.rest.ImageResourceTest;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
-import com.gentics.contentnode.tests.utils.Expected;
 import com.gentics.contentnode.tests.utils.FormRESTUtils;
 import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.tests.utils.TestedType;
@@ -105,7 +97,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	@Parameters(name = "{index}: type: {0}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
-		for (String formType : Arrays.asList(/*FormTypeConfigurationModifier.GENERIC_TYPE, */
+		for (String formType : Arrays.asList(FormTypeConfigurationModifier.GENERIC_TYPE,
 				FormTypeConfigurationModifier.ANDP_TYPE)) {
 			data.add(new Object[] { formType });
 		}
@@ -170,7 +162,6 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	}
 
 	@Test
-	@Ignore
 	public void testSinglePageTextLinkPublishing() throws Exception {
 		Integer noNodeConstructId = supply(() -> createConstruct(null, ShortTextPartType.class, "nonode", "text"));
 		Template template = supply(() -> createTemplate(node.getFolder(), "Template"));
@@ -192,8 +183,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			f.setData(getFormData("form_data_textlinks.json", content -> {
 				return content.formatted(
 						"{{ LINK|PAGE:" + node.getId() + ":" + page1.getId() + "|"
-								+ MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}",
-						StringUtils.EMPTY, StringUtils.EMPTY);
+								+ MeshPublisher.UrlEscapeUtils.escapeUrl("|\"'AGB herunterladen'\"|") + "|_blank }}");
 			}));
 		}));
 		consume(Form::publish, form);
@@ -206,7 +196,6 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	}
 
 	@Test
-	@Ignore
 	public void testForeignLinkPublish() throws Exception {
 		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
 		ContentNodeRESTUtils.assertResponseOK(response);
@@ -218,16 +207,9 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node.getFolder().getId());
 
-			try {
-				f.setData(mapper.readValue(String.format(
-						IOUtils.toString(getClass().getResourceAsStream("form_data_textlinks.json"), Charset.forName("UTF-8")), 
-						"{{ LINK|URL:https://gentics.com|Blume herunterladen|_self }}", 
-						StringUtils.EMPTY, 
-						StringUtils.EMPTY
-					), ObjectNode.class));
-			} catch (IOException e) {
-				throw new NodeException(e);
-			}
+			f.setData(getFormData("form_data_textlinks.json", content -> {
+				return content.formatted("{{ LINK|URL:https://gentics.com|Blume herunterladen|_self }}");
+			}));
 		}));
 
 		consume(Form::publish, form);
@@ -1365,7 +1347,6 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	 * @throws Exception
 	 */
 	@Test
-	@Ignore
 	public void testPublishSuccessPage() throws Exception {
 		Folder folder = supply(() -> createFolder(node.getFolder(), "Folder"));
 
@@ -1384,7 +1365,9 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(folder.getId());
-			f.setSuccessPageId(pageDe.getId());
+			ObjectNode data = mapper.createObjectNode();
+			data.put("successPageId", pageDe.getId());
+			f.setData(data);
 		}));
 		consume(Form::publish, form);
 
@@ -1394,23 +1377,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			trx.success();
 		}
 
-		Map<String, ObjectNode> expected = new HashMap<>();
-		expected.put("de", mapper.readValue(getClass().getResource("form_successpage_de.json"), ObjectNode.class).put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId())));
-		expected.put("en", mapper.readValue(getClass().getResource("form_successpage_en.json"), ObjectNode.class).put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId())));
-		expected.get("de").put("cms_id", form.getId());
-		expected.get("en").put("cms_id", form.getId());
-
-		for (String language : Arrays.asList("de", "en")) {
-			operate(() -> assertObject("", mesh.client(), MeshPublisher.getMeshProjectName(node), null, form, language,
-					true, response -> {
-						try {
-							JsonNode actual = mapper.readValue(response.getFields().getStringField("json").getString(), ObjectNode.class);
-							assertThat(actual).as("Published JSON").isEqualTo(expected.get(language));
-						} catch (IOException e) {
-							throw new NodeException(e);
-						}
-					}));
-		}
+		assertPublishedForm(form, "form_successpage_de_en.json");
 
 		// take german page variant offline
 		consume(p -> update(p, Page::takeOffline), pageDe);
@@ -1421,21 +1388,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			trx.success();
 		}
 
-		// we expect the german variant of the form to change (will have the english page as successurl)
-		expected.put("de", mapper.readValue(getClass().getResource("form_successpage_de_offline.json"), ObjectNode.class).put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId())));
-		expected.get("de").put("cms_id", form.getId());
-
-		for (String language : Arrays.asList("de", "en")) {
-			operate(() -> assertObject("", mesh.client(), MeshPublisher.getMeshProjectName(node), null, form, language,
-					true, response -> {
-						try {
-							JsonNode actual = mapper.readValue(response.getFields().getStringField("json").getString(), ObjectNode.class);
-							assertThat(actual).as("Published JSON").isEqualTo(expected.get(language));
-						} catch (IOException e) {
-							throw new NodeException(e);
-						}
-					}));
-		}
+		assertPublishedForm(form, "form_successpage_en.json");
 	}
 
 	/**
@@ -1443,7 +1396,6 @@ public class FormPublishTest extends AbstractFormPublishTest {
 	 * @throws Exception
 	 */
 	@Test
-	@Ignore
 	public void testPublishSuccessPageChannel() throws Exception {
 		Node channel = supply(() -> createChannel(node, "Channel", "channel", "/"));
 
@@ -1469,8 +1421,10 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(folder.getId());
-			f.setSuccessPageId(pageDe.getId());
-			f.setSuccessNodeId(channel.getId());
+			ObjectNode data = mapper.createObjectNode()
+				.put("successPageId", pageDe.getId())
+				.put("successNodeId", channel.getId());
+			f.setData(data);
 		}));
 		consume(Form::publish, form);
 
@@ -1480,23 +1434,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			trx.success();
 		}
 
-		Map<String, ObjectNode> expected = new HashMap<>();
-		expected.put("de", mapper.readValue(getClass().getResource("form_successpage_channel_de.json"), ObjectNode.class).put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId())));
-		expected.put("en", mapper.readValue(getClass().getResource("form_successpage_channel_en.json"), ObjectNode.class).put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId())));
-		expected.get("de").put("cms_id", form.getId());
-		expected.get("en").put("cms_id", form.getId());
-
-		for (String language : Arrays.asList("de", "en")) {
-			operate(() -> assertObject("", mesh.client(), MeshPublisher.getMeshProjectName(node), null, form, language,
-					true, response -> {
-						try {
-							JsonNode actual = mapper.readValue(response.getFields().getStringField("json").getString(), ObjectNode.class);
-							assertThat(actual).as("Published JSON").isEqualTo(expected.get(language));
-						} catch (IOException e) {
-							throw new NodeException(e);
-						}
-					}));
-		}
+		assertPublishedForm(form, "form_successpage_channel_de_en.json");
 	}
 
 	/**

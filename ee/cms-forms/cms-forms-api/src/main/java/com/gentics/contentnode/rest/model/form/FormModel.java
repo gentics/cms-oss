@@ -104,16 +104,6 @@ public class FormModel extends PublishableContentItem {
 	private FormTimeManagement timeManagement;
 
 	/**
-	 * Optional ID of the success page
-	 */
-	private Integer successPageId;
-
-	/**
-	 * Optional Node ID of the success page
-	 */
-	private Integer successNodeId;
-
-	/**
 	 * Constructor used by JAXB
 	 */
 	public FormModel() {
@@ -374,37 +364,5 @@ public class FormModel extends PublishableContentItem {
 	 */
 	public void setTimeManagement(FormTimeManagement timeManagement) {
 		this.timeManagement = timeManagement;
-	}
-
-	/**
-	 * ID of the optional success page
-	 * @return page ID or null
-	 */
-	public Integer getSuccessPageId() {
-		return successPageId;
-	}
-
-	/**
-	 * Set the success page ID
-	 * @param successPageId ID
-	 */
-	public void setSuccessPageId(Integer successPageId) {
-		this.successPageId = successPageId;
-	}
-
-	/**
-	 * Node ID of the optional success page
-	 * @return node ID or null
-	 */
-	public Integer getSuccessNodeId() {
-		return successNodeId;
-	}
-
-	/**
-	 * Set the success page node ID
-	 * @param successNodeId node ID
-	 */
-	public void setSuccessNodeId(Integer successNodeId) {
-		this.successNodeId = successNodeId;
 	}
 }

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.utils;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,6 +12,7 @@ import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.StringSetting;
 import com.gentics.contentnode.testutils.ConfigModifier;
 
 /**
@@ -34,6 +36,12 @@ public class FormTypeConfigurationModifier implements ConfigModifier {
 		FormTypeConfiguration formsConfig = new FormTypeConfiguration(Map.of("de", "CMS Formular", "en", "CMS Form"),
 				"forms");
 		ControlConfig stringControl = new ControlConfig(Map.of("de", "Eingabefeld"));
+
+		StringSetting stringSetting = new StringSetting("rich", Map.of("de", "Reicher Text"));
+		stringSetting.backend = true;
+		stringSetting.richContent = true;
+		stringControl.settings = Arrays.asList(stringSetting);
+
 		formsConfig.controls = Map.of("string", stringControl);
 
 		try {

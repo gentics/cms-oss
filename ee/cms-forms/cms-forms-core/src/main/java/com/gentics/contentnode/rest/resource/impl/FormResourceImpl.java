@@ -143,8 +143,6 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		}
 
 		model.setFolderId(form.getFolderId());
-		model.setSuccessPageId(form.getSuccessPageId());
-		model.setSuccessNodeId(form.getSuccessNodeId());
 
 		model.setLanguages(form.getLanguages());
 		model.setData(form.getData());
@@ -216,14 +214,6 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		}
 		if (!StringUtils.isBlank(restModel.getDescription())) {
 			form.setDescription(restModel.getDescription());
-		}
-
-		if (restModel.getSuccessPageId() != null) {
-			form.setSuccessPageId(restModel.getSuccessPageId());
-		}
-
-		if (restModel.getSuccessNodeId() != null) {
-			form.setSuccessNodeId(restModel.getSuccessNodeId());
 		}
 
 		if (restModel.getLanguages() != null) {

@@ -388,7 +388,7 @@ public class TagmapEntryModel implements Serializable {
 	 * Get the JSONSchema filter (for entries of type "JSON")
 	 * @return filter
 	 */
-	@JsonProperty("jsonSchema")
+	@JsonProperty("jsonSchemaFilter")
 	public String getJSONSchemaFilter() {
 		return jsonSchemaFilter;
 	}
@@ -397,7 +397,7 @@ public class TagmapEntryModel implements Serializable {
 	 * Set the JSON schema filter
 	 * @param jsonSchemaFilter filter
 	 */
-	@JsonProperty("jsonSchema")
+	@JsonProperty("jsonSchemaFilter")
 	public void setJSONSchemaFilter(String jsonSchemaFilter) {
 		this.jsonSchemaFilter = jsonSchemaFilter;
 	}

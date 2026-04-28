@@ -15,12 +15,13 @@ const TYPES_WITH_ALLOW = [
     FieldType.STRING,
     FieldType.MICRONODE,
     FieldType.NODE,
+//    FieldType.JSON,
 ];
 
 /* eslint-disable @typescript-eslint/naming-convention */
-const MicroschemaFieldType = pick(FieldType, ['BINARY', 'BOOLEAN', 'DATE', 'HTML', 'LIST', 'NODE', 'NUMBER', 'STRING']);
-const ListFieldType = pick(FieldType, ['BOOLEAN', 'DATE', 'HTML', 'MICRONODE', 'NODE', 'NUMBER', 'STRING']);
-const MicroschemaListFieldType = pick(FieldType, ['BOOLEAN', 'DATE', 'HTML', 'NODE', 'NUMBER', 'STRING']);
+const MicroschemaFieldType = pick(FieldType, ['BINARY', 'BOOLEAN', 'DATE', 'HTML', 'LIST', 'NODE', 'NUMBER', 'STRING', 'JSON']);
+const ListFieldType = pick(FieldType, ['BOOLEAN', 'DATE', 'HTML', 'MICRONODE', 'NODE', 'NUMBER', 'STRING', 'JSON']);
+const MicroschemaListFieldType = pick(FieldType, ['BOOLEAN', 'DATE', 'HTML', 'NODE', 'NUMBER', 'STRING', 'JSON']);
 /* eslint-enable @typescript-eslint/naming-convention */
 
 @Component({
@@ -32,7 +33,7 @@ const MicroschemaListFieldType = pick(FieldType, ['BOOLEAN', 'DATE', 'HTML', 'NO
         generateFormProvider(SchemaFieldPropertiesComponent),
         generateValidatorProvider(SchemaFieldPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<SchemaField> implements OnChanges {
 
@@ -51,6 +52,9 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
 
     @Input()
     public microschemaNames: string[];
+
+    @Input()
+    public jsonSchemas: string[];
 
     public validTypes: FieldType[];
     public validListTypes: FieldType[];
@@ -101,6 +105,8 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
                         return [...(this.schemaNames || []), this.ownName];
                     case FieldType.MICRONODE:
                         return [...(this.microschemaNames || []), this.ownName];
+//                    case FieldType.JSON:
+//                        return [...(this.jsonSchemas || []), this.ownName];
 
                     // Disable this validator otherwise
                     default:

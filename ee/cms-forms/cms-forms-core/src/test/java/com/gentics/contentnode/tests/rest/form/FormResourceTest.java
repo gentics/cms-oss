@@ -273,7 +273,7 @@ public class FormResourceTest {
 		assertThat(response.getItem()).as("Loaded form")
 			.hasName("Test Form")
 			.hasFormType(FormTypeConfigurationModifier.GENERIC_TYPE)
-			.hasFormTypeName("CMS Formulare")
+			.hasFormTypeName("CMS Formular")
 			.isOffline()
 			.isNotModified()
 			.hasVersion("0.1")

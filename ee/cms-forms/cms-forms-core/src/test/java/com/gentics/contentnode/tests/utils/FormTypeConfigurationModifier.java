@@ -10,6 +10,7 @@ import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.etc.MapPreferences;
+import com.gentics.contentnode.rest.model.formtype.ControlConfig;
 import com.gentics.contentnode.testutils.ConfigModifier;
 
 /**
@@ -32,6 +33,9 @@ public class FormTypeConfigurationModifier implements ConfigModifier {
 		// prepare forms config
 		FormTypeConfiguration formsConfig = new FormTypeConfiguration(Map.of("de", "CMS Formular", "en", "CMS Form"),
 				"forms");
+		ControlConfig stringControl = new ControlConfig(Map.of("de", "Eingabefeld"));
+		formsConfig.controls = Map.of("string", stringControl);
+
 		try {
 			formsConfig.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);
 		} catch (JsonProcessingException e) {

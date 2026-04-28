@@ -180,14 +180,6 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	}
 
 	/**
-	 * Get language specific form data
-	 * @param language language
-	 * @return language specific form data
-	 * @throws NodeException 
-	 */
-	JsonNode getData(String language) throws NodeException;
-
-	/**
 	 * Get the indexable content
 	 * @param language language
 	 * @return list of strings to index

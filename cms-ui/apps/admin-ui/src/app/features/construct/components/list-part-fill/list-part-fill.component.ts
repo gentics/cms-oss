@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ListTagPartProperty, OrderedUnorderedListTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from'lodash-es'
+import { pick } from 'lodash-es';
 
 @Component({
     selector: 'gtx-list-part-fill',
@@ -9,7 +9,7 @@ import { pick } from'lodash-es'
     styleUrls: ['./list-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(ListPartFillComponent)],
-    standalone: false
+    standalone: false,
 })
 export class ListPartFillComponent extends BaseFormElementComponent<ListTagPartProperty | OrderedUnorderedListTagPartProperty> {
 

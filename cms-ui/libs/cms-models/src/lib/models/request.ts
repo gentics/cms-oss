@@ -2152,6 +2152,8 @@ export interface TagmapEntryCreateRequest {
     elasticsearch?: object;
     /** Get the micronode filter (for entries of type "micronode") */
     micronodeFilter?: string;
+    /** Get the JSON schema filter (for entries of type "JSON") */
+    jsonSchemaFilter?: string;
     /** Name of the CR Fragment, this entry belongs to. Null, if the entry directly belongs to the ContentRepository. */
     fragmentName?: string;
 }

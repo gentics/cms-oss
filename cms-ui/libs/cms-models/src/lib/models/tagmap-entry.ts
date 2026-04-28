@@ -1,7 +1,7 @@
 import { NormalizableEntityTypesMap } from './gcms-normalizer/gcms-normalizer-types';
 import { DefaultModelType, ModelType, Raw } from './type-util';
 
-export type TagmapEntryParentType = keyof Pick<NormalizableEntityTypesMap<DefaultModelType>, 'contentRepository' | 'contentRepositoryFragment'> ;
+export type TagmapEntryParentType = keyof Pick<NormalizableEntityTypesMap<DefaultModelType>, 'contentRepository' | 'contentRepositoryFragment'>;
 
 /** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_TagmapEntryModel.html */
 export interface TagmapEntryBase<T extends ModelType> {
@@ -45,13 +45,16 @@ export interface TagmapEntryBase<T extends ModelType> {
     elasticsearch: object;
     /** Get the micronode filter (for entries of type "micronode") */
     micronodeFilter: string;
+    /** Get the JSON schema filter (for entries of type "JSON") */
+    jsonSchemaFilter: string;
     /** Name of the CR Fragment, this entry belongs to. Null, if the entry directly belongs to the ContentRepository. */
     fragmentName: string;
 }
 
 export type EditableTagmapEntry = Pick<TagmapEntryBase<Raw>,
-'tagname' | 'mapname' | 'objType' | 'attributeType' | 'targetType' | 'multivalue' | 'optimized' | 'filesystem' | 'foreignlinkAttribute' |
-'foreignlinkAttributeRule' | 'segmentfield' | 'displayfield' | 'urlfield' | 'noIndex' | 'elasticsearch' | 'micronodeFilter' | 'category'>;
+  'tagname' | 'mapname' | 'objType' | 'attributeType' | 'targetType' | 'multivalue' | 'optimized' | 'filesystem' | 'foreignlinkAttribute'
+  | 'foreignlinkAttributeRule' | 'segmentfield' | 'displayfield' | 'urlfield' | 'noIndex' | 'elasticsearch' | 'micronodeFilter'
+  | 'jsonSchemaFilter' | 'category'>;
 
 /** Data model as defined by backend. */
 export interface TagmapEntry<T extends ModelType = DefaultModelType> extends TagmapEntryBase<T> {

@@ -337,6 +337,23 @@ public interface CrFragmentEntry extends NodeObjectWithModel<ContentRepositoryFr
 		throw new ObjectReadOnlyException(this);
 	}
 
+	/**
+	 * Get the JSON schema filter (comma separated values) for the entries of a type ({@link AttributeType#json}	 * 
+	 * @return
+	 */
+	@FieldGetter("jsonschema_filter")
+	String getJSONSchemaFilter();
+
+	/**
+	 * Set the JSON schema filter for entries of type {@link AttributeType#json}
+	 * @param jsonSchemaFilter comma separated JSON schema values
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("jsonschema_filter")
+	default void setJSONSchemaFilter(String jsonSchemaFilter) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
+
 	@Override
 	default String getName() {
 		return getMapname();

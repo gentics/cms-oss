@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -241,6 +242,7 @@ import io.reactivex.SingleSource;
 import io.reactivex.functions.BiPredicate;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response.Status;
@@ -3123,7 +3125,19 @@ public class MeshPublisher implements AutoCloseable {
 			if (entry.isMultivalue()) {
 				fieldSchema = new ListFieldSchemaImpl().setListType(FieldTypes.JSON.toString());
 			} else {
-				fieldSchema = new JsonFieldSchemaImpl().setAllowedSchemas(new JsonSchema[0]);
+				JsonSchema[] allowedSchemas;
+				if (StringUtils.isEmpty(entry.getJSONSchemaFilter())) {
+					allowedSchemas = new JsonSchema[0];
+				} else {
+					JsonContent jsonSchemaContent = JsonContent.fromString(entry.getJSONSchemaFilter());
+					if (jsonSchemaContent.isArray()) {
+						JsonArray jsonSchemas = jsonSchemaContent.getArray();
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
+					} else {
+						allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
+					}
+				}
+				fieldSchema = new JsonFieldSchemaImpl().setAllowedSchemas(allowedSchemas);
 			}
 			break;
 		case bool:

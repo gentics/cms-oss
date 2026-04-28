@@ -5,7 +5,7 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
  */
 export const GtxJsonValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
     const value = control.value;
-    control.hasError('errorIsInvalidJson')
+    control.hasError('errorIsInvalidJson');
     const validationError = { errorIsInvalidJson: true };
 
     // if input is empty, there is no error
@@ -27,4 +27,4 @@ export const GtxJsonValidator: ValidatorFn = (control: AbstractControl): Validat
 
     // if in doubt, return error
     return validationError;
-}
+};

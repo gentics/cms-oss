@@ -1109,7 +1109,6 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	protected String[] getCheckedAttributes(AttributeType attrType) throws NodeException {
 		switch (attrType) {
-		case json:
 		case binary:
 		case oldbinary:
 		case bool:
@@ -1126,6 +1125,8 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			default:
 				throw new NodeException();
 			}
+		case json:
+			return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "segmentfield", "displayfield", "urlfield", "noIndex", "elasticsearch", "jsonSchemaFilter" };
 		case micronode:
 			return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "segmentfield", "displayfield", "urlfield", "micronodeFilter", "elasticsearch" };
 		case link:

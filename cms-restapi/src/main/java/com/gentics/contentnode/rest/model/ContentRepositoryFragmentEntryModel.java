@@ -62,6 +62,8 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 
 	private String micronodeFilter;
 
+	private String jsonSchemaFilter;
+
 	/**
 	 * Local ID
 	 * @return local ID
@@ -364,5 +366,21 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 	 */
 	public void setMicronodeFilter(String micronodeFilter) {
 		this.micronodeFilter = micronodeFilter;
+	}
+
+	/**
+	 * Get the JSON schema filter (for entries of type JSON)
+	 * @return filter
+	 */
+	public String getJSONSchemaFilter() {
+		return jsonSchemaFilter;
+	}
+
+	/**
+	 * Set the JSON schema filter
+	 * @param jsonSchemaFilter filter
+	 */
+	public void setJSONSchemaFilter(String jsonSchemaFilter) {
+		this.jsonSchemaFilter = jsonSchemaFilter;
 	}
 }

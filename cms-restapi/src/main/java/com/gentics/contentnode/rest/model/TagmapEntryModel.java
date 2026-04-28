@@ -53,6 +53,8 @@ public class TagmapEntryModel implements Serializable {
 
 	protected String micronodeFilter;
 
+	protected String jsonSchemaFilter;
+
 	protected String fragmentName;
 
 	/**
@@ -379,6 +381,22 @@ public class TagmapEntryModel implements Serializable {
 	 */
 	public void setMicronodeFilter(String micronodeFilter) {
 		this.micronodeFilter = micronodeFilter;
+	}
+
+	/**
+	 * Get the JSONSchema filter (for entries of type "JSON")
+	 * @return filter
+	 */
+	public String getJSONSchemaFilter() {
+		return jsonSchemaFilter;
+	}
+
+	/**
+	 * Set the JSON schema filter
+	 * @param jsonSchemaFilter filter
+	 */
+	public void setJSONSchemaFilter(String jsonSchemaFilter) {
+		this.jsonSchemaFilter = jsonSchemaFilter;
 	}
 
 	/**

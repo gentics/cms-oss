@@ -107,7 +107,8 @@
       @if (form.controls.micronodeFilter.enabled
         || form.controls.urlfield.enabled
         || form.controls.segmentfield.enabled
-        || form.controls.displayfield.enabled) {
+        || form.controls.displayfield.enabled
+        || form.controls.jsonSchemaFilter.enabled) {
         <div class="gtx-form-section-title">{{ 'tagmap_entry.title_misc_settings' | gtxI18n }}</div>
         <!-- <gtx-input
         formControlName="category"
@@ -120,6 +121,12 @@
           formControlName="micronodeFilter"
           maxlength="200"
           [label]="'tagmap_entry.micronodefilter' | gtxI18n"
+        ></gtx-textarea>
+      }
+      @if (form.controls.jsonSchemaFilter.enabled) {
+        <gtx-textarea
+          formControlName="jsonSchemaFilter"
+          [label]="'tagmap_entry.jsonschemafilter' | gtxI18n"
         ></gtx-textarea>
       }
       @if (form.controls.urlfield.enabled) {

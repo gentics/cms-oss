@@ -640,6 +640,7 @@
         "noIndex": "Keine Indexierung",
         "elasticsearch": "Suchindex-Einstellungen",
         "micronodefilter": "Tagtyp-Filter",
+        "jsonschemafilter": "JSON-Schema-Filter",
         "fragmentname": "Fragmentname",
         "objecttype_folder": "Ordner",
         "objecttype_page": "Seite",

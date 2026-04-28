@@ -815,4 +815,6 @@
 2024-11-20  CH-1730 NOP SQL UPDATE objprop SET restricted = 1 WHERE id IN (SELECT objprop_id FROM objprop_node); ## Make object property definitions restricted, which are assigned to nodes
 2025-02-18  CH-1731 NOP SQL ALTER TABLE dependencymap2 MODIFY COLUMN dep_prop TEXT;
 2025-10-03  CH-1733 PK  SQL ALTER TABLE content ADD COLUMN partially_localized BOOLEAN NOT NULL DEFAULT 0 AFTER udate;
-2026-04-21  CH-1742 SP  SQL INSERT INTO type (id, name, description, auto, javaclass) VALUES (44, 'JSON', 'JSON content', 0, 'com.gentics.contentnode.object.parttype.JSONPartType'); ## New JSON part type
+2026-04-21  CH-1742 SP	SQL INSERT INTO type (id, name, description, auto, javaclass) VALUES (44, 'JSON', 'JSON content', 0, 'com.gentics.contentnode.object.parttype.JSONPartType'); ## New JSON part type
+2026-04-28	CH-1743	SP	SQL	ALTER TABLE tagmap ADD COLUMN jsonschema_filter MEDIUMTEXT AFTER micronode_filter;
+2026-04-28	CH-1744	SP	SQL	ALTER TABLE cr_fragment_entry ADD COLUMN jsonschema_filter MEDIUMTEXT AFTER micronode_filter;

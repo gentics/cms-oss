@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -184,14 +186,16 @@ public class FormTransformer {
 			Consumer<Page> pageConsumer) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
-		int pageId = data.optional(pageIdProperty).filter(JsonNode::isInt).map(JsonNode::asInt).orElse(0);
-		int nodeId = data.optional(nodeIdProperty).filter(JsonNode::isInt).map(JsonNode::asInt).orElse(0);
+		String pageId = data.optional(pageIdProperty).map(JsonNode::asText).orElse("");
+		String nodeId = data.optional(nodeIdProperty).map(JsonNode::asText).orElse("");
 
-		data.remove(pageIdProperty);
-		data.remove(nodeIdProperty);
+		data.putNull(pageIdProperty);
+		data.putNull(nodeIdProperty);
 
-		if (pageId > 0) {
-			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+		if (!StringUtils.isBlank(pageId) && !Strings.CI.equals(pageId, "0")) {
+			Node node = t.getObject(Node.class, nodeId);
+			int iNodeId = Optional.ofNullable(node).map(Node::getId).orElse(0);
+			try (ChannelTrx cTrx = new ChannelTrx(iNodeId)) {
 				Page referencedPage = t.getObject(Page.class, pageId);
 				if (referencedPage != null) {
 					pageConsumer.accept(referencedPage);
@@ -212,7 +216,7 @@ public class FormTransformer {
 			JsonNode propertyOrElement, List<String> languages) throws NodeException {
 		Optional<JsonNode> optFormGridOptions = propertyOrElement.optional(FormDataUtils.FORM_GRID_OPTIONS);
 
-		if (optFormGridOptions.isPresent()) {
+		if (optFormGridOptions.isPresent() && elementConfig.settings != null) {
 			for (BaseSetting setting : elementConfig.settings) {
 				if (setting instanceof ReferenceSetting referenceSetting) {
 					transformReference(referenceSetting, optFormGridOptions.get(), languages);
@@ -235,12 +239,14 @@ public class FormTransformer {
 			JsonNode referenceData = optData.get();
 			Transaction t = TransactionManager.getCurrentTransaction();
 
-			int itemId = referenceData.optional("id").filter(JsonNode::isInt).map(JsonNode::asInt).orElse(0);
-			int nodeId = referenceData.optional("nodeId").filter(JsonNode::isInt).map(JsonNode::asInt).orElse(0);
+			String itemId = referenceData.optional("id").map(JsonNode::asText).orElse("");
+			String nodeId = referenceData.optional("nodeId").map(JsonNode::asText).orElse("");
 			String refTypeString = referenceData.optional("type").filter(JsonNode::isTextual).map(JsonNode::asText)
 					.orElse("");
-			if (itemId > 0) {
-				try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			if (!StringUtils.isBlank(itemId) && !Strings.CI.equals(itemId, "0")) {
+				Node node = t.getObject(Node.class, nodeId);
+				int iNodeId = Optional.ofNullable(node).map(Node::getId).orElse(0);
+				try (ChannelTrx cTrx = new ChannelTrx(iNodeId)) {
 					ReferenceType refType = ReferenceType.valueOf(refTypeString);
 					LocalizableNodeObject<? extends NodeObject> referenced = null;
 					switch (refType) {
@@ -261,8 +267,8 @@ public class FormTransformer {
 					}
 
 					if (referenced != null) {
-						transformationTarget.transform(referenceSetting, (ObjectNode) formGridOptions, languages,
-								t.getObject(Node.class, nodeId), referenced);
+						transformationTarget.transform(referenceSetting, (ObjectNode) formGridOptions, languages, node,
+								referenced);
 					} else {
 						unknownReferenceCallback.operate();
 					}
@@ -285,7 +291,7 @@ public class FormTransformer {
 			JsonNode propertyOrElement, List<String> languages) throws NodeException {
 		Optional<JsonNode> optFormGridOptions = propertyOrElement.optional(FormDataUtils.FORM_GRID_OPTIONS);
 
-		if (optFormGridOptions.isPresent()) {
+		if (optFormGridOptions.isPresent() && elementConfig.settings != null) {
 			for (BaseSetting setting : elementConfig.settings) {
 				if (setting instanceof StringSetting stringSetting) {
 					if (stringSetting.richContent) {

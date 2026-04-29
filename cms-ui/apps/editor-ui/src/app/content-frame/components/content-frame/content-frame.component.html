@@ -79,6 +79,10 @@
                 [(pageIndex)]="formPageIndex"
                 [viewMode]="formViewMode"
 
+                [formId]="currentItem.id"
+                [formType]="currentItem.formType"
+                [formName]="currentItem.name"
+
                 [schema]="currentItem.data.schema"
                 [uiSchema]="currentItem.data.uiSchema"
                 (schemaChange)="updateFormSchema($event)"

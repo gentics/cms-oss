@@ -55,6 +55,11 @@
         "page_edit_done": "Done",
         "page_untitled": "Page {{number}}",
         "page_delete_title": "Delete page",
-        "page_delete_confirm": "This page still has elements. Delete all elements and the page?"
+        "page_delete_confirm": "This page still has elements. Delete all elements and the page?",
+        "copy_element_success": "Copied element \"{{name}}\"",
+        "paste_form_type_mismatch": "Cannot paste: the copied element originates from a different form type (\"{{sourceType}}\").",
+        "paste_element_success": "Element \"{{name}}\" inserted",
+        "resize_element_width": "Resize width of the element",
+        "fallback_element_title": "Unknown or unlabeled element"
     }
 }

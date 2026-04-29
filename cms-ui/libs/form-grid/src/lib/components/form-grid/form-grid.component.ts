@@ -3,14 +3,14 @@ import {
     ChangeDetectorRef,
     Component,
     computed,
+    HostListener,
     input,
     model,
     OnDestroy,
     OnInit,
     signal,
 } from '@angular/core';
-import { I18nService } from '@gentics/cms-components';
-import { TranslateStore } from '@ngx-translate/core';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import {
     FormElement,
     FormElementConfiguration,
@@ -22,8 +22,19 @@ import {
     I18nString,
 } from '@gentics/cms-models';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
+import { TranslateStore } from '@ngx-translate/core';
 import { v4 as uuidV4 } from 'uuid';
-import { ElementInterPageMoveEvent, ElementSelectionEvent, FormGridEditMode, FormGridViewMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
+import {
+    CLIPBOARD_MIME,
+    CLIPBOARD_STORAGE_KEY,
+    ElementInterPageMoveEvent,
+    ElementSelectionEvent,
+    FormGridClipboardData,
+    FormGridEditMode,
+    FormGridViewMode,
+    PALETTE_MIME,
+    PaletteDropTarget,
+} from '../../models';
 
 function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
     for (const el of elements) {
@@ -76,6 +87,13 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly pageIndex = model.required<number>();
     /** Which content to display */
     public readonly viewMode = input.required<FormGridViewMode>();
+
+    /** The ID of the form currently being edited */
+    public readonly formId = input<number | null>(null);
+    /** The type of the form currently being edited */
+    public readonly formType = input<string>('');
+    /** The name of the form currently being edited */
+    public readonly formName = input<string>('');
 
     /* PAGE & VIEW
      * ===================================================================== */
@@ -206,6 +224,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         changeDetector: ChangeDetectorRef,
         private i18n: I18nService,
         private translateStore: TranslateStore,
+        private notification: I18nNotificationService,
     ) {
         super(changeDetector);
     }
@@ -223,6 +242,239 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         if (this.paletteDragGhost != null) {
             this.paletteDragGhost.remove();
         }
+    }
+
+    /* CLIPBOARD
+     * ===================================================================== */
+
+    @HostListener('document:copy', ['$event'])
+    handleCopyEvent(event: ClipboardEvent): void {
+        const element = this.selectedElement();
+        if (element == null) {
+            return;
+        }
+
+        // Don't intercept copy when the user is working in an input field
+        const activeEl = document.activeElement;
+        const isEditable = activeEl instanceof HTMLInputElement
+          || activeEl instanceof HTMLTextAreaElement
+          || activeEl?.getAttribute('contenteditable') === 'true';
+
+        if (isEditable) {
+            return;
+        }
+
+        // nested child elements
+        const childSchemas: Record<string, FormSchemaProperty> = {};
+        if (Array.isArray(element.elements)) {
+            this.collectChildSchemas(element.elements, childSchemas);
+        }
+
+        const data: FormGridClipboardData = {
+            element: structuredClone(element),
+            elementSchema: this.selectedElementSchema() ? structuredClone(this.selectedElementSchema()!) : undefined,
+            childSchemas: Object.keys(childSchemas).length > 0 ? structuredClone(childSchemas) : undefined,
+            formId: this.formId(),
+            formType: this.formType(),
+            formName: this.formName(),
+        };
+
+        const json = JSON.stringify(data);
+
+        try {
+            event.clipboardData?.setData(CLIPBOARD_MIME, json);
+            event.preventDefault();
+        } catch {
+            localStorage.setItem(CLIPBOARD_STORAGE_KEY, json);
+        }
+
+        this.notification.show({
+            message: 'form_grid.copy_element_success',
+            translationParams: {
+                name: this.i18n.fromObject(element.label),
+            },
+            type: 'success',
+        });
+    }
+
+    @HostListener('document:paste', ['$event'])
+    handlePasteEvent(event: ClipboardEvent): void {
+        if (this.mode() !== FormGridEditMode.FULL) {
+            return;
+        }
+
+        const activeEl = document.activeElement;
+        const isEditable = activeEl instanceof HTMLInputElement
+          || activeEl instanceof HTMLTextAreaElement
+          || activeEl?.getAttribute('contenteditable') === 'true';
+
+        if (isEditable) {
+            return;
+        }
+
+        let json = event.clipboardData?.getData(CLIPBOARD_MIME);
+        if (!json) {
+            json = localStorage.getItem(CLIPBOARD_STORAGE_KEY) ?? '';
+        }
+
+        if (!json) {
+            return;
+        }
+
+        let clipboardData: FormGridClipboardData;
+        try {
+            clipboardData = JSON.parse(json);
+        } catch {
+            return;
+        }
+
+        if (!clipboardData?.element) {
+            return;
+        }
+
+        event.preventDefault();
+
+        // Validate matching form type
+        if (clipboardData.formType && clipboardData.formType !== this.formType()) {
+            this.notification.show({
+                message: 'form_grid.paste_form_type_mismatch',
+                translationParams: {
+                    sourceType: clipboardData.formType,
+                },
+                type: 'warning',
+            });
+            return;
+        }
+
+        const pastedElement = structuredClone(clipboardData.element);
+        const oldToNewIdMap = this.reassignElementIds(pastedElement);
+        pastedElement.uiSchemaPage = this.pageIndex();
+
+        // Insert schema properties for the pasted element and its children
+        const schemaCopy = structuredClone(this.schema());
+        let schemaChanged = false;
+
+        if (clipboardData.elementSchema) {
+            const newSchema = structuredClone(clipboardData.elementSchema);
+            newSchema.formPage = this.pageIndex();
+            schemaCopy.properties[pastedElement.id] = newSchema;
+
+            // Remap nested schema properties (inside the parent's .properties, for aggregates)
+            for (const [oldId, newId] of Object.entries(oldToNewIdMap)) {
+                if (oldId === pastedElement.id) {
+                    continue;
+                }
+                const nestedSchema = clipboardData.elementSchema.properties?.[oldId];
+                if (nestedSchema) {
+                    if (!schemaCopy.properties[pastedElement.id].properties) {
+                        schemaCopy.properties[pastedElement.id].properties = {};
+                    }
+                    schemaCopy.properties[pastedElement.id].properties![newId] = structuredClone(nestedSchema);
+                }
+            }
+
+            schemaChanged = true;
+        }
+
+        if (clipboardData.childSchemas) {
+            for (const [oldId, childSchema] of Object.entries(clipboardData.childSchemas)) {
+                const newId = oldToNewIdMap[oldId];
+                if (newId) {
+                    const newChildSchema = structuredClone(childSchema);
+                    newChildSchema.formPage = this.pageIndex();
+                    schemaCopy.properties[newId] = newChildSchema;
+                    schemaChanged = true;
+                }
+            }
+        }
+
+        if (schemaChanged) {
+            this.updateSchema(schemaCopy);
+        }
+
+        const pageElements = structuredClone(this.elements());
+        const selected = this.selectedElement();
+
+        if (selected != null) {
+            // If container, paste at the end of the container
+            if (Array.isArray(selected.elements)) {
+                const updatedSelected = structuredClone(selected);
+                updatedSelected.elements!.push(pastedElement);
+                if (this.replaceElementInTree(pageElements, updatedSelected)) {
+                    this.updatePageElements(pageElements);
+                }
+            } else {
+                // Insert after selected element of current page
+                const selectedIndex = this.findElementIndex(pageElements, selected.id);
+                if (selectedIndex !== -1) {
+                    pageElements.splice(selectedIndex + 1, 0, pastedElement);
+                } else {
+                    pageElements.push(pastedElement);
+                }
+                this.updatePageElements(pageElements);
+            }
+        } else {
+            // to end of current page
+            pageElements.push(pastedElement);
+            this.updatePageElements(pageElements);
+        }
+
+        this.setSelectedElement({
+            element: pastedElement,
+            containerId: this.selectedElementContainerId ?? this.ELEMENT_ROOT_CONTAINER_ID,
+        });
+
+        this.notification.show({
+            message: 'form_grid.paste_element_success',
+            translationParams: {
+                name: this.i18n.fromObject(pastedElement.label),
+            },
+            type: 'success',
+        });
+    }
+
+    /**
+     * Assigns new UUIDs to the element and all nested child elements.
+     * Returns a map of old ID -> new ID for schema remapping.
+     */
+    private reassignElementIds(element: FormElement): Record<string, string> {
+        const idMap: Record<string, string> = {};
+        this.reassignElementIdsRecursive(element, idMap);
+        return idMap;
+    }
+
+    private reassignElementIdsRecursive(element: FormElement, idMap: Record<string, string>): void {
+        const oldId = element.id;
+        element.id = uuidV4();
+        idMap[oldId] = element.id;
+
+        if (Array.isArray(element.elements)) {
+            for (const child of element.elements) {
+                this.reassignElementIdsRecursive(child, idMap);
+            }
+        }
+    }
+
+    private collectChildSchemas(elements: FormElement[], out: Record<string, FormSchemaProperty>): void {
+        const schemaProps = this.schema()?.properties || {};
+
+        for (const child of elements) {
+            const childSchema = schemaProps[child.id];
+            if (childSchema) {
+                out[child.id] = childSchema;
+            }
+
+            if (Array.isArray(child.elements)) {
+                this.collectChildSchemas(child.elements, out);
+            }
+        }
+    }
+
+    /**
+     * Finds the index of an element by ID in a flat list (top-level only).
+     */
+    private findElementIndex(elements: FormElement[], id: string): number {
+        return elements.findIndex((el) => el.id === id);
     }
 
     /* IMPLEMENTATION

@@ -704,21 +704,6 @@ gtx-checkbox [type='checkbox']+label:before {
     }
 }
 
-/* Selected item highlight */
-.fg-box.is-selected {}
-
-.is-selected-title {
-    color: #0096DC;
-    font-weight: 700;
-}
-
-.is-selected-card {
-    border-left: #0096DC solid 3px !important;
-    background-color: #e4f6ff !important;
-    border-top-right-radius: 10px !important;
-    border-bottom-right-radius: 10px !important;
-}
-
 .grid-between-dropzone {
     position: relative;
     flex: 0 0 0;

@@ -134,7 +134,7 @@
             background: rgba(0, 0, 0, 0.04);
         }
     }
-    
+
     &.editor-drop-container--root {
         height: 100%;
     }
@@ -157,9 +157,20 @@ gtx-contents-list-item {
 
 .form-item {
     position: relative;
+    transition: 250ms;
 
     &:hover {
         cursor: pointer;
+    }
+
+    &.is-selected-card {
+        border-left: 3px solid #0096DC;
+        background-color: #e4f6ff;
+
+        .element-title {
+            color: #0096DC;
+            font-weight: 700;
+        }
     }
 }
 
@@ -487,7 +498,7 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 }
 
 .small-1 {
-    .formtitle {
+    .element-title {
         font-size: 10px !important;
         margin-right: 0;
     }
@@ -515,7 +526,7 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 }
 
 .small-2 {
-    .formtitle {
+    .element-title {
         font-size: 12px !important;
         margin-right: 0;
     }

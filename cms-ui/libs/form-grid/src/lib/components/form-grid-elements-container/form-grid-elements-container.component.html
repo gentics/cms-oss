@@ -93,15 +93,14 @@
             >
                 <div
                     class="grid-resize-handle"
-                    aria-label="Elementbreite ändern"
-                    title="Breite ändern"
+                    [attr.aria-label]="'form_grid.resize_element_width' | gtxI18n"
+                    [attr.title]="'form_grid.resize_element_width' | gtxI18n"
                     (pointerdown)="onResizeStart($event, $index)"
                 ></div>
                 <gtx-contents-list-item
                     class="fg-box"
                     [class.empty]="!element.label"
                     [attr.data-element-id]="element.id"
-                    [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                     (click)="selectElement(element, $event)"
                 >
                     <div class="item-primary">
@@ -122,10 +121,7 @@
                             }
                         </div>
 
-                        <strong
-                            class="formtitle"
-                            [class.is-selected-title]="selectedElement() != null && element.id === selectedElement()?.id"
-                        >{{ (element.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
+                        <strong class="element-title">{{ (element.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
                     </div>
                 </gtx-contents-list-item>
             </gtx-sortable-item>
@@ -143,22 +139,20 @@
             >
                 <div
                     class="grid-resize-handle"
-                    aria-label="Elementbreite ändern"
-                    title="Breite ändern"
+                    [attr.aria-label]="'form_grid.resize_element_width' | gtxI18n"
+                    [attr.title]="'form_grid.resize_element_width' | gtxI18n"
                     (pointerdown)="onResizeStart($event, $index)"
                 ></div>
 
                 <div
                     class="fg-container-wrapper"
                     [attr.data-element-id]="element.id"
-                    [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                     [class.is-aggregate]="element.type === 'aggregate'"
                     [class.is-container]="element.type === 'container'"
                 >
                     <gtx-contents-list-item
                         class="fg-box fg-container-card"
                         [class.empty]="!element.label"
-                        [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                         (click)="selectElement(element, $event)"
                     >
                         <div class="item-primary">
@@ -179,10 +173,7 @@
                                 }
                             </div>
 
-                            <strong
-                                class="formtitle"
-                                [class.is-selected-title]="selectedElement() != null && element.id === selectedElement()?.id"
-                            >{{ (element.label | gtxI18nObject) || ('form_grid.container_label' | gtxI18n) }}</strong>
+                            <strong class="element-title">{{ (element.label | gtxI18nObject) || ('form_grid.container_label' | gtxI18n) }}</strong>
                         </div>
                     </gtx-contents-list-item>
 

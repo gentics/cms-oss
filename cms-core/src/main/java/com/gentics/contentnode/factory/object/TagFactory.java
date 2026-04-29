@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -75,9 +77,13 @@ import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
+import com.gentics.mesh.core.rest.JsonSchema;
+import com.gentics.mesh.core.rest.node.field.JsonContent;
+import com.gentics.mesh.json.JsonUtil;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
+import io.vertx.core.json.JsonArray;
 
 /**
  * An objectfactory which can create {@link ContentTag}, {@link TemplateTag}
@@ -1537,6 +1543,7 @@ public class TagFactory extends AbstractFactory {
 				// object is modified, so update it
 				try {
 					isModified = true;
+					validateObjectTagObject(this);
 					saveObjectTagObject(this);
 					modified = false;
 				} catch (SQLException e) {
@@ -1928,6 +1935,50 @@ public class TagFactory extends AbstractFactory {
 
 			// and dirt the cache for the updated object
 			t.dirtObjectCache(ContentTag.class, tag.getId());
+		}
+	}
+
+	/**
+	 * Perform the validation of a value a tag, where applicable.
+	 * 
+	 * @param tag
+	 * @throws NodeException
+	 */
+	private static void validateObjectTagObject(EditableFactoryObjectTag tag) throws NodeException {
+		for (Part part: tag.getConstruct().getParts()) {
+			if (part.getPartTypeId() == Part.JSON) {
+				Object value = tag.get(part.getKeyname());
+				if (value == null || !(value instanceof Value val)) {
+					continue;
+				}
+				String stringValue = val.getValueText();
+				if (StringUtils.isEmpty(stringValue)) {
+					continue;
+				}
+				JsonContent jsonContent = JsonContent.fromString(stringValue);
+				if (jsonContent == null) {
+					throw new NodeException("JSON Validation error for {"
+							+ "tag {" + tag.getId() + " " + tag.getName() + "}"
+							+ ", part {" + part.getKeyname() + "}}"
+							+ " Reason: not a JSON value");
+				}
+				if (!StringUtils.isEmpty(part.getInfoText())) {
+					JsonContent jsonSchemaContent = JsonContent.fromString(part.getInfoText());
+					JsonSchema[] allowedSchemas = null;
+					if (jsonSchemaContent.isArray()) {
+						JsonArray jsonSchemas = jsonSchemaContent.getArray();
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
+					} else {
+						allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
+					}
+					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(stringValue).getValid() == Boolean.TRUE)) {
+						throw new NodeException("JSON Validation error for {"
+								+ "tag {" + tag.getId() + " " + tag.getName() + "}"
+								+ ", part {" + part.getKeyname() + "}}"
+								+ " Reason: the JSON contents does not match any of allowed schemas");
+					}
+				}
+			}
 		}
 	}
 

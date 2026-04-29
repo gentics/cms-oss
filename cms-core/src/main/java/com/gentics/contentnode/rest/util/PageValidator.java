@@ -6,12 +6,8 @@
 package com.gentics.contentnode.rest.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
@@ -27,11 +23,6 @@ import com.gentics.contentnode.validation.map.inputchannels.TagPartInputChannel;
 import com.gentics.contentnode.validation.util.ValidationUtils;
 import com.gentics.contentnode.validation.validator.ValidationException;
 import com.gentics.contentnode.validation.validator.ValidationResult;
-import com.gentics.mesh.core.rest.JsonSchema;
-import com.gentics.mesh.core.rest.node.field.JsonContent;
-import com.gentics.mesh.json.JsonUtil;
-
-import io.vertx.core.json.JsonArray;
 
 /**
  * Page Validation class. Is initialized with a Node (from which it gets the
@@ -139,32 +130,6 @@ public abstract class PageValidator extends RestPageProcessor {
 			String stringValue = tagProperty.getStringValue();
 			if (stringValue == null) {
 				continue;
-			}
-
-			if (part.getPartTypeId() == Part.JSON) {
-				JsonContent jsonContent = JsonContent.fromString(stringValue);
-				if (jsonContent == null) {
-					throw new NodeException("JSON Validation error for {"
-							+ "tag {" + tag.getId() + " " + tag.getName() + "}"
-							+ ", part {" + part.getKeyname() + "}}"
-							+ " Reason: not a JSON value");
-				}
-				if (StringUtils.isNotEmpty(part.getInfoText())) {
-					JsonContent jsonSchemaContent = JsonContent.fromString(part.getInfoText());
-					JsonSchema[] allowedSchemas = null;
-					if (jsonSchemaContent.isArray()) {
-						JsonArray jsonSchemas = jsonSchemaContent.getArray();
-						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
-					} else {
-						allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
-					}
-					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(stringValue).getValid() == Boolean.TRUE)) {
-						throw new NodeException("JSON Validation error for {"
-								+ "tag {" + tag.getId() + " " + tag.getName() + "}"
-								+ ", part {" + part.getKeyname() + "}}"
-								+ " Reason: the JSON contents does not match any of allowed schemas");
-					}
-				}
 			}
 
 			ValidationResult result = null;

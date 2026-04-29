@@ -15,7 +15,7 @@ const TYPES_WITH_ALLOW = [
     FieldType.STRING,
     FieldType.MICRONODE,
     FieldType.NODE,
-//    FieldType.JSON,
+    FieldType.JSON,
 ];
 
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -105,8 +105,8 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
                         return [...(this.schemaNames || []), this.ownName];
                     case FieldType.MICRONODE:
                         return [...(this.microschemaNames || []), this.ownName];
-//                    case FieldType.JSON:
-//                        return [...(this.jsonSchemas || []), this.ownName];
+                    case FieldType.JSON:
+                        return [...(this.jsonSchemas || []), this.ownName];
 
                     // Disable this validator otherwise
                     default:

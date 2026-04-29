@@ -1070,6 +1070,7 @@
         "fieldType_node": "Node",
         "fieldType_number": "Number",
         "fieldType_string": "String",
+        "fieldType_json": "JSON",
         "user_name": "Username",
         "admin_permissions": "Administrator permissions",
         "force_password_reset": "Force user to change password on login",

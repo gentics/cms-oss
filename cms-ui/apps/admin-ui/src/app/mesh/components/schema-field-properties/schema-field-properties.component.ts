@@ -53,9 +53,6 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
     @Input()
     public microschemaNames: string[];
 
-    @Input()
-    public jsonSchemas: string[];
-
     public validTypes: FieldType[];
     public validListTypes: FieldType[];
     public effectiveType: FieldType;
@@ -105,8 +102,6 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
                         return [...(this.schemaNames || []), this.ownName];
                     case FieldType.MICRONODE:
                         return [...(this.microschemaNames || []), this.ownName];
-                    case FieldType.JSON:
-                        return [...(this.jsonSchemas || []), this.ownName];
 
                     // Disable this validator otherwise
                     default:

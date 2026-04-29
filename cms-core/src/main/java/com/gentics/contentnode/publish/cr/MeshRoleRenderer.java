@@ -1,18 +1,24 @@
 package com.gentics.contentnode.publish.cr;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueList;
+import com.gentics.contentnode.object.parttype.JSONPartType;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.object.parttype.SelectPartType;
 import com.gentics.contentnode.publish.CnMapPublisher;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.lib.content.GenticsContentAttribute;
+import com.gentics.mesh.core.rest.node.field.JsonContent;
+
+import io.vertx.core.json.JsonArray;
 
 /**
  * TagmapEntryRenderer implementation for Roles
@@ -74,8 +80,19 @@ public class MeshRoleRenderer implements TagmapEntryRenderer {
 			ValueList values = tag.getValues();
 			for (Value v : values) {
 				PartType partType = v.getPartType();
-				if (partType instanceof SelectPartType) {
-					return ((SelectPartType) partType).getSelection().stream().map(e -> e.getValue()).collect(Collectors.toList());
+				if (partType instanceof SelectPartType selectPt) {
+					return selectPt.getSelection().stream().map(e -> e.getValue()).collect(Collectors.toList());
+				}
+				if (partType instanceof JSONPartType jsonPt) {
+					JsonContent json = JsonContent.fromString(jsonPt.getText());
+					if (json != null) {
+						if (json.isArray()) {
+							JsonArray jsonArray = json.getArray();
+							return IntStream.range(0, jsonArray.size()).mapToObj(jsonArray::getString).collect(Collectors.toList());
+						} else {
+							return new ArrayList<>(json.getObject().getMap().keySet());
+						}
+					}
 				}
 			}
 		}

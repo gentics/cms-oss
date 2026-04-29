@@ -1,24 +1,3 @@
-<ng-template
-    #dropzone
-    let-size="size"
-    let-classes="classes"
-    let-label="label"
-    let-itemColumns="itemColumns"
->
-    <div
-        class="drop-placeholder"
-        [ngClass]="['small-' + size, classes]"
-        aria-hidden="true"
-    >
-        <div class="drop-placeholder__box">
-            <span class="drop-placeholder__badge">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
-                label: label
-            } }}</span>
-            <span class="drop-placeholder__cols">{{ itemColumns }}/12</span>
-        </div>
-    </div>
-</ng-template>
-
 @if (level() > 0) {
 <div
     class="resize-grid-overlay resize-grid-overlay--container"
@@ -48,47 +27,19 @@
     class="editor-drop-container"
     [attr.data-drop-container-id]="id()"
     [class.element-moving]="elementMoving() != null"
-    [class.palette-dragging]="paletteDragging() && paletteDropTarget()?.elementContainerId === id()"
-    [class.is-palette-drop-target]="paletteDragging()"
     [class.drag-blocked]="isDragBlocked()"
     [class.editor-drop-container--root]="id() === rootId()"
     [group]="sortableGroup"
+    [sort]="mode() !== FormGridEditMode.NONE"
     [fallbackOnBody]="true"
     [invertSwap]="false"
     [swapThreshold]="0.7"
-    (dragenter)="onPaletteContainerDragOver($event)"
-    (dragover)="onPaletteContainerDragOver($event)"
-    (drop)="onPaletteContainerDrop($event)"
     (dragStart)="onSortableDragStart($event)"
     (dragEnd)="sortElements($event)"
     (addItem)="onSortableAdd($event)"
 >
-    @if (!elements()?.length && paletteDragging() && paletteDropTarget()?.elementContainerId === id()) {
-        <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
-            size: paletteDropTarget()?.span || 12,
-            classes: (elements().length === 0 ? 'drop-placeholder--empty' : '') + (isPaletteContainerType() ? ' drop-placeholder--container' : ''),
-            label: paletteDragConfig()?.labelI18n | gtxI18nObject,
-            itemColumns: paletteDropTarget()?.span || 12
-        }"></ng-container>
-    }
-
     @for (displayItem of displayItems(); track displayItem.id) {
         @let element = displayItem.element;
-
-        <pre style="display: none;">{{ element | json }}</pre>
-
-        @if (
-            paletteDragging()
-            && paletteDropTarget()?.elementContainerId === id()
-            && paletteDropTarget()?.index === $index
-        ) {
-            <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
-                size: paletteDropTarget()?.span || 12,
-                classes: 'before-element' + (isPaletteContainerType() ? ' drop-placeholder--container' : ''),
-                label: paletteDragConfig()?.labelI18n | gtxI18nObject,
-                itemColumns: paletteDropTarget()?.span || 12
-            }"></ng-container>
-        }
 
         <gtx-sortable-item
             class="form-item columns"
@@ -98,7 +49,6 @@
             data-drop-item="true"
             [attr.data-element-id]="element?.id"
             [attr.data-drop-index]="$index"
-            [attr.draggable]="mode() === FormGridEditMode.FULL ? 'true' : 'false'"
         >
             <div
                 class="grid-resize-handle"
@@ -164,31 +114,11 @@
                     (moveToContainer)="moveToContainer.emit($event)"
                     [(elementMoving)]="elementMoving"
 
-                    [(paletteDragging)]="paletteDragging"
-                    [(paletteDropTarget)]="paletteDropTarget"
-                    [paletteDragType]="paletteDragType()"
-                    [paletteDragConfig]="paletteDragConfig()"
-                    (platteDragStop)="platteDragStop.emit()"
-
                     [(resizing)]="resizing"
                     [(resizeOverlayActive)]="resizeOverlayActive"
                     [(resizeOverlaySpan)]="resizeOverlaySpan"
                 ></gtx-form-grid-elements-container>
             }
         </gtx-sortable-item>
-    }
-
-    @if (
-        elements()?.length
-        && paletteDragging()
-        && paletteDropTarget()?.elementContainerId === id()
-        && paletteDropTarget()?.index === elements().length
-    ) {
-        <ng-container [ngTemplateOutlet]="dropzone" [ngTemplateOutletContext]="{
-            size: paletteDropTarget()?.span || 12,
-            classes: 'after-element' + (isPaletteContainerType() ? ' drop-placeholder--container' : ''),
-            label: paletteDragConfig()?.labelI18n | gtxI18nObject,
-            itemColumns: paletteDropTarget()?.span || 12
-        }"></ng-container>
     }
 </gtx-sortable-list>

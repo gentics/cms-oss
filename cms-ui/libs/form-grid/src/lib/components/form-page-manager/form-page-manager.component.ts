@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input, model, output } from '@angul
 import { I18nService } from '@gentics/cms-components';
 import { FormElement, FormSchema, FormUISchema } from '@gentics/cms-models';
 import { ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
-import { ATTR_ELEMENT_ID, ElementInterPageMoveEvent, FormGridEditMode } from '../../models';
+import { ATTR_ELEMENT_ID, ElementInterPageMoveEvent, ElementMoveData, FormGridEditMode } from '../../models';
 
 function collectElementIds(elements: FormElement[]): string[] {
     const ids: string[] = [];
@@ -31,7 +31,7 @@ export class FormPageManagerComponent {
     /** Optional: required for schema cleanup when deleting pages. */
     public readonly schema = model<FormSchema | null>(null);
     public readonly mode = input<FormGridEditMode>(FormGridEditMode.NONE);
-    public readonly elementDragging = input<boolean>(false);
+    public readonly elementMoving = input<ElementMoveData | null>(null);
 
     public readonly elementInterPageMove = output<ElementInterPageMoveEvent>();
     public readonly editPage = output<number>();
@@ -40,8 +40,14 @@ export class FormPageManagerComponent {
     public readonly sortableGroup: SortableGroup = {
         name: 'form-pages',
         pull: false,
-        put: (to) => {
+        put: (to, from) => {
             if (this.mode() !== FormGridEditMode.FULL) {
+                return false;
+            }
+            if (from.option('group') === 'form-palette') {
+                return false;
+            }
+            if (this.elementMoving()?.inserting) {
                 return false;
             }
 

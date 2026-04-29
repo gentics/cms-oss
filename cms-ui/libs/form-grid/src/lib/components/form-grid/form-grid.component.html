@@ -1,7 +1,6 @@
 <div
     class="editor-shell"
     [ngClass]="'mode-' + mode()"
-    [class.palette-dragging]="isPaletteDragging"
     [class.left-panel-expanded]="viewMode() === FormGridViewMode.EDITOR && leftSidebarExpanded()"
     [class.right-panel-wide]="(editingPage() != null || (selectedElement() != null && selectedElementConfiguration() != null)) && rightSidebarExpanded()"
     [class.no-left-panel]="viewMode() === FormGridViewMode.PREVIEW"
@@ -35,27 +34,39 @@
                     <div class="panel-section">
                         <div class="panel-segment-title">{{ 'form_grid.section_controls' | gtxI18n }}</div>
 
-                        <div class="palette" [attr.aria-label]="'form_grid.section_controls' | gtxI18n">
+                        <gtx-sortable-list
+                            class="palette"
+                            [group]="paletteGroup"
+                            [sort]="false"
+                            [attr.aria-label]="'form_grid.section_controls' | gtxI18n"
+                            (dragStart)="onPaletteStart($event)"
+                            (dragEnd)="onPaletteEnd($event)"
+                        >
                             @for (ctlEntry of (config().controls | gtxEntries); track ctlEntry.key) {
                                 @let label = ctlEntry.value.labelI18n | gtxI18nObject;
                                 @let description = ctlEntry.value.descriptionI18n | gtxI18nObject:null;
 
-                                <button
+                                <gtx-sortable-item
                                     type="button"
                                     class="palette-item"
-                                    draggable="true"
-                                    [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
-                                    [attr.title]="label"
-                                    (dragstart)="paletteDragStart($event, ctlEntry.key, ctlEntry.value)"
-                                    (dragend)="paletteDragEnd()"
+                                    data-is-control="true"
+                                    [class.container-element]="ctlEntry.value.aggregate"
+                                    [attr.data-container-type]="ctlEntry.value.aggregate ? 'aggregate' : null"
+                                    [attr.data-element-type]="ctlEntry.key"
                                 >
-                                    <span class="palette-item--label">{{ label }}</span>
-                                    @if (description) {
-                                        <div class="palette-item--description">{{ description }}</div>
-                                    }
-                                </button>
+                                    <div
+                                        class="palette-item--content"
+                                        [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ label: label }"
+                                        [attr.title]="description"
+                                    >
+                                        <span class="palette-item--label">{{ label }}</span>
+                                        <span class="palette-item--insert">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
+                                            label: label
+                                        } }}</span>
+                                    </div>
+                                </gtx-sortable-item>
                             }
-                        </div>
+                        </gtx-sortable-list>
                     </div>
                 }
 
@@ -63,27 +74,39 @@
                     <div class="panel-section">
                         <div class="panel-segment-title">{{ 'form_grid.section_blocks' | gtxI18n }}</div>
 
-                        <div class="palette" [attr.aria-label]="'form_grid.section_blocks' | gtxI18n">
-                            @for (blockEntry of (config().blocks | gtxEntries); track blockEntry.key) {
-                                @let label = blockEntry.value.labelI18n | gtxI18nObject;
-                                @let description = blockEntry.value.descriptionI18n | gtxI18nObject:null;
+                        <gtx-sortable-list
+                            class="palette"
+                            [group]="paletteGroup"
+                            [sort]="false"
+                            [attr.aria-label]="'form_grid.section_controls' | gtxI18n"
+                            (dragStart)="onPaletteStart($event)"
+                            (dragEnd)="onPaletteEnd($event)"
+                        >
+                            @for (ctlEntry of (config().blocks | gtxEntries); track ctlEntry.key) {
+                                @let label = ctlEntry.value.labelI18n | gtxI18nObject;
+                                @let description = ctlEntry.value.descriptionI18n | gtxI18nObject:null;
 
-                                <button
+                                <gtx-sortable-item
                                     type="button"
                                     class="palette-item"
-                                    draggable="true"
-                                    [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ name: label }"
-                                    [attr.title]="label"
-                                    (dragstart)="paletteDragStart($event, blockEntry.key, blockEntry.value)"
-                                    (dragend)="paletteDragEnd()"
+                                    data-is-control="false"
+                                    [class.container-element]="ctlEntry.value.container"
+                                    [attr.data-container-type]="ctlEntry.value.container ? 'container' : null"
+                                    [attr.data-element-type]="ctlEntry.key"
                                 >
-                                    <span class="palette-item--label">{{ label }}</span>
-                                    @if (description) {
-                                        <div class="palette-item--description">{{ description }}</div>
-                                    }
-                                </button>
+                                    <div
+                                        class="palette-item--content"
+                                        [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ label: label }"
+                                        [attr.title]="description"
+                                    >
+                                        <span class="palette-item--label">{{ label }}</span>
+                                        <span class="palette-item--insert">{{ 'form_grid.insert_element_placeholder' | gtxI18n:{
+                                            label: label
+                                        } }}</span>
+                                    </div>
+                                </gtx-sortable-item>
                             }
-                        </div>
+                        </gtx-sortable-list>
                     </div>
                 }
             </div>
@@ -99,71 +122,61 @@
                     [schema]="schema()"
                     (schemaChange)="$event && updateSchema($event)"
                     [mode]="mode()"
-                    [elementDragging]="elementMoving() != null"
+                    [elementMoving]="elementMoving()"
                     (elementInterPageMove)="moveElementBetweenPages($event)"
                     (editPage)="startEditPage($event)"
                 ></gtx-form-page-manager>
 
-                <div
-                    #gridSurface
-                    class="list-container"
-                    (dragover)="editorDragOver($event)"
-                >
-                <div
-                    class="resize-grid-overlay"
-                    aria-hidden="true"
-                    [class.active]="resizeOverlayActive"
-                    [style.--active-cols]="resizeOverlaySpan"
-                >
-                    <div class="resize-grid-overlay__rail">
-                        <div class="resize-grid-overlay__fill"></div>
-                        <div class="resize-grid-overlay__marker"></div>
+                <div #gridSurface class="list-container">
+                    <div
+                        class="resize-grid-overlay"
+                        aria-hidden="true"
+                        [class.active]="resizeOverlayActive"
+                        [style.--active-cols]="resizeOverlaySpan"
+                    >
+                        <div class="resize-grid-overlay__rail">
+                            <div class="resize-grid-overlay__fill"></div>
+                            <div class="resize-grid-overlay__marker"></div>
+                        </div>
+
+                        <div class="resize-grid-overlay__ticks">
+                            @for (n of (1 | gtxRange:12); track n) {
+                                <div
+                                    class="resize-grid-overlay__tick"
+                                    [class.is-active]="n === resizeOverlaySpan"
+                                >
+                                    <span class="resize-grid-overlay__num">{{ n }}</span>
+                                </div>
+                            }
+                        </div>
                     </div>
 
-                    <div class="resize-grid-overlay__ticks">
-                        @for (n of (1 | gtxRange:12); track n) {
-                            <div
-                                class="resize-grid-overlay__tick"
-                                [class.is-active]="n === resizeOverlaySpan"
-                            >
-                                <span class="resize-grid-overlay__num">{{ n }}</span>
-                            </div>
-                        }
-                    </div>
-                </div>
+                    <gtx-form-grid-elements-container
+                        class="root-container"
 
-                <gtx-form-grid-elements-container
-                    class="root-container"
+                        [config]="config()"
+                        [rootId]="ELEMENT_ROOT_CONTAINER_ID"
+                        [id]="ELEMENT_ROOT_CONTAINER_ID"
+                        [level]="0"
+                        [pageIndex]="pageIndex()"
+                        [languages]="languages()"
+                        [mode]="mode()"
+                        [gridSurface]="gridSurface"
 
-                    [config]="config()"
-                    [rootId]="ELEMENT_ROOT_CONTAINER_ID"
-                    [id]="ELEMENT_ROOT_CONTAINER_ID"
-                    [level]="0"
-                    [pageIndex]="pageIndex()"
-                    [languages]="languages()"
-                    [mode]="mode()"
-                    [gridSurface]="gridSurface"
+                        [elements]="elements()"
+                        (elementsChange)="updatePageElements($event)"
+                        [selectedElement]="selectedElement()"
+                        [selectedElementContainerId]="selectedElementContainerId"
+                        (elementSelect)="setSelectedElement($event)"
+                        [schema]="schema()"
+                        (schemaChange)="updateSchema($event)"
+                        (moveToContainer)="moveElementToContainer($event)"
+                        [(elementMoving)]="elementMoving"
 
-                    [elements]="elements()"
-                    (elementsChange)="updatePageElements($event)"
-                    [selectedElement]="selectedElement()"
-                    [selectedElementContainerId]="selectedElementContainerId"
-                    (elementSelect)="setSelectedElement($event)"
-                    [schema]="schema()"
-                    (schemaChange)="updateSchema($event)"
-                    (moveToContainer)="moveElementToContainer($event)"
-                    [(elementMoving)]="elementMoving"
-
-                    [(paletteDragging)]="isPaletteDragging"
-                    [(paletteDropTarget)]="paletteDropTarget"
-                    [paletteDragType]="paletteDragType"
-                    [paletteDragConfig]="paletteDragConfig"
-                    (platteDragStop)="paletteDragEnd()"
-
-                    [(resizing)]="resizeActive"
-                    [(resizeOverlayActive)]="resizeOverlayActive"
-                    [(resizeOverlaySpan)]="resizeOverlaySpan"
-                ></gtx-form-grid-elements-container>
+                        [(resizing)]="resizeActive"
+                        [(resizeOverlayActive)]="resizeOverlayActive"
+                        [(resizeOverlaySpan)]="resizeOverlaySpan"
+                    ></gtx-form-grid-elements-container>
                 </div>
             </div>
         </main>

@@ -13,7 +13,6 @@ import {
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import {
     FormElement,
-    FormElementConfiguration,
     FormPage,
     FormSchema,
     FormSchemaProperty,
@@ -21,7 +20,7 @@ import {
     FormUISchema,
     I18nString,
 } from '@gentics/cms-models';
-import { BaseComponent, cancelEvent } from '@gentics/ui-core';
+import { BaseComponent, cancelEvent, ISortableEvent, SortableGroup } from '@gentics/ui-core';
 import { TranslateStore } from '@ngx-translate/core';
 import { v4 as uuidV4 } from 'uuid';
 import {
@@ -29,12 +28,11 @@ import {
     CLIPBOARD_STORAGE_KEY,
     ElementContainerMoveEvent,
     ElementInterPageMoveEvent,
+    ElementMoveData,
     ElementSelectionEvent,
     FormGridClipboardData,
     FormGridEditMode,
     FormGridViewMode,
-    PALETTE_MIME,
-    PaletteDropTarget,
 } from '../../models';
 
 function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
@@ -110,6 +108,12 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly FormGridEditMode = FormGridEditMode;
     public readonly FormGridViewMode = FormGridViewMode;
 
+    public readonly paletteGroup: SortableGroup = {
+        name: 'form-palette',
+        pull: 'clone',
+        put: false,
+    };
+
     /* INPUTS / OUTPUTS
      * ===================================================================== */
 
@@ -160,7 +164,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     /** Whether the selected element has any missing translations across all form languages */
     public hasMissingTranslations = signal(false);
     /** The type of the current element which is being dragged. If null, then nothing is being dragged right now. */
-    public elementMoving = signal<string | null>(null);
+    public elementMoving = signal<ElementMoveData | null>(null);
 
     /* PAGE EDITING
      * ===================================================================== */
@@ -225,20 +229,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             : this.config().controls[schema.type];
     });
 
-    /* PALETTE
-     * ===================================================================== */
-
-    /** If an element from the palette is currently being dragged (i.E. new element is getting added) */
-    public isPaletteDragging = false;
-    /** The control/block type which is being dragged */
-    public paletteDragType: string | null = null;
-    /** The configuration of the element that is being dragged */
-    public paletteDragConfig: FormElementConfiguration | null = null;
-    /** The currently active drop location/target */
-    public paletteDropTarget: PaletteDropTarget | null = null;
-    /** Ghost element which is shown during dragging (from palette to editor) */
-    private paletteDragGhost: HTMLElement | null = null;
-
     /* PREVIEW
      * ===================================================================== */
 
@@ -280,10 +270,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     public override ngOnDestroy(): void {
         super.ngOnDestroy();
-
-        if (this.paletteDragGhost != null) {
-            this.paletteDragGhost.remove();
-        }
     }
 
     /* CLIPBOARD
@@ -475,6 +461,21 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         });
     }
 
+    public onPaletteStart(event: ISortableEvent): void {
+        const type = event.item.getAttribute('data-element-type');
+        if (type == null) {
+            return;
+        }
+        this.elementMoving.set({
+            elementType: type,
+            inserting: true,
+        });
+    }
+
+    public onPaletteEnd(_event: ISortableEvent): void {
+        this.elementMoving.set(null);
+    }
+
     /**
      * Assigns new UUIDs to the element and all nested child elements.
      * Returns a map of old ID -> new ID for schema remapping.
@@ -532,56 +533,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     public toggleRightSidebar(): void {
         this.rightSidebarExpanded.update((val) => !val);
-    }
-
-    public paletteDragStart(event: DragEvent, id: string, element: FormElementConfiguration): void {
-        this.isPaletteDragging = true;
-        this.paletteDragType = id;
-        this.paletteDragConfig = element;
-        this.paletteDropTarget = null;
-
-        const transfer = event?.dataTransfer;
-
-        if (!transfer) {
-            return;
-        }
-
-        transfer.effectAllowed = 'copy';
-        transfer.dropEffect = 'copy';
-        transfer.setData(PALETTE_MIME, id);
-        transfer.setData('text/plain', id);
-
-        const ghost = this.buildPaletteDragGhost(this.i18n.fromObject(element.labelI18n));
-
-        if (ghost) {
-            this.paletteDragGhost = ghost;
-            document.body.appendChild(ghost);
-            transfer.setDragImage(ghost, 24, 24);
-        }
-    }
-
-    public paletteDragEnd(): void {
-        this.isPaletteDragging = false;
-        this.paletteDragType = null;
-        this.paletteDragConfig = null;
-        this.paletteDropTarget = null;
-
-        if (this.paletteDragGhost) {
-            this.paletteDragGhost.remove();
-            this.paletteDragGhost = null;
-        }
-    }
-
-    public editorDragOver(event: DragEvent): void {
-        if (!this.isPaletteDragging) {
-            return;
-        }
-
-        event.preventDefault();
-
-        if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = 'copy';
-        }
     }
 
     public updatePageElements(elements: FormElement[]): void {
@@ -809,36 +760,5 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.selectedElementId.set(null);
         this.selectedElementContainerId = null;
         this.editingPageIndex.set(null);
-    }
-
-    // TODO: Do it more angular like, as creating a new untracked HTMLElement is not a great idea
-    private buildPaletteDragGhost(label: string): HTMLElement {
-        const ghost = document.createElement('div');
-        ghost.className = 'andp-palette-drag-ghost';
-        ghost.innerHTML = `
-            <span class="material-icons" aria-hidden="true"></span>
-            <span>${label}</span>
-        `;
-
-        Object.assign(ghost.style, {
-            position: 'fixed',
-            top: '-9999px',
-            left: '-9999px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '10px 14px',
-            borderRadius: '14px',
-            border: '1px solid rgba(0, 150, 220, 0.22)',
-            background: 'rgba(255, 255, 255, 0.98)',
-            boxShadow: '0 18px 40px rgba(0, 0, 0, 0.16)',
-            color: '#0f172a',
-            fontSize: '13px',
-            fontWeight: '800',
-            pointerEvents: 'none',
-            zIndex: '99999',
-        } as Partial<CSSStyleDeclaration>);
-
-        return ghost;
     }
 }

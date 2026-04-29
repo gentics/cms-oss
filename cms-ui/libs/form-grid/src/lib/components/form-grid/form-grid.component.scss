@@ -345,6 +345,10 @@
         color: #111;
     }
 
+    .palette-item--insert {
+        display: none;
+    }
+
     .palette-item--description {
         font-size: 0.8rem;
         color: #111;
@@ -360,8 +364,21 @@
     }
 }
 
-h1 {
-    font-size: 30px;
+:host::ng-deep gtx-form-grid-elements-container .palette-item.sortable-ghost {
+    flex: 0 1 calc(50% - var(--drag-gap-compensation, 0px));
+
+    .palette-item--label {
+        display: none;
+    }
+
+    .palette-item--insert {
+        display: block;
+        visibility: visible;
+    }
+
+    &.container-element {
+        flex: 0 1 calc(100% - var(--drag-gap-compensation, 0px));
+    }
 }
 
 .list-container {

@@ -1,10 +1,4 @@
-.row {
-    background: repeating-linear-gradient(45deg,
-            #fafafa,
-            #fafafa 10px,
-            #eee 10px,
-            #eee 20px);
-}
+@import 'ui-core/src/styles/variables';
 
 .columns {
     min-height: 100px;
@@ -104,7 +98,7 @@
 .columns>gtx-contents-list-item,
 .columns>.fg-box {
     flex: 1 1 auto;
-    min-height: 100%;
+    min-height: 1px;
 }
 
 .editor-drop-container {
@@ -113,14 +107,10 @@
     flex-wrap: wrap;
     align-content: flex-start;
     width: 100%;
+    height: 100%;
     border-radius: 4px;
-    transition:
-        background 180ms ease,
-        box-shadow 180ms ease,
-        transform 180ms ease,
-        row-gap 180ms ease,
-        padding-top 180ms ease,
-        padding-bottom 180ms ease;
+    transition: 180ms ease;
+    border: 1px solid transparent;
 
     &.is-palette-drop-target {
         padding-top: 24px;
@@ -129,9 +119,21 @@
         background: rgba(0, 150, 220, 0.08);
     }
 
-    &.drag-blocked {
-        &.is-palette-drop-target {
-            background: rgba(0, 0, 0, 0.04);
+    .nested {
+        display: block;
+        width: 100%;
+        border-radius: 3px;
+    }
+
+    &.element-moving {
+        border-color: $gtx-color-primary;
+        background-color: rgba($gtx-color-primary, 0.05);
+        min-height: 80px;
+
+        &.drag-blocked {
+            cursor: not-allowed;
+            border-color: $gtx-color-dark-gray !important;
+            background-color: $gtx-color-very-light-gray !important;
         }
     }
 
@@ -158,6 +160,7 @@ gtx-contents-list-item {
 .form-item {
     position: relative;
     transition: 250ms;
+    flex-wrap: wrap;
 
     &:hover {
         cursor: pointer;
@@ -182,79 +185,6 @@ gtx-sortable-item.form-item {
 gtx-sortable-item.form-item>gtx-contents-list-item {
     flex: 1 1 auto;
     min-height: 100%;
-}
-
-.delete-button .material-icons {
-    font-size: 25px !important;
-}
-
-
-.edit-button .material-icons {
-    font-size: 25px !important;
-}
-
-.row {
-    width: 100%;
-    display: flex !important;
-    flex-wrap: wrap;
-    box-sizing: border-box;
-    --drag-gap-compensation: 0px;
-}
-
-.row>* {
-    box-sizing: border-box;
-}
-
-.row>.row {
-    margin: 0;
-}
-
-.fg-container-wrapper {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-
-    &:hover .grid-resize-handle,
-    &:focus-within .grid-resize-handle {
-        opacity: 1;
-    }
-}
-
-.fg-container-card {
-    flex: 0 0 auto;
-    min-height: auto !important;
-}
-
-.fg-container-body {
-    position: relative;
-    padding: 8px;
-    min-height: 80px;
-    display: flex;
-    border: 1px solid rgba(0, 150, 220, 0.16);
-    border-radius: 4px;
-    background: rgba(0, 150, 220, 0.08);
-    transition: border-color 160ms ease, background 160ms ease;
-
-    &.drag-blocked {
-        border-color: rgba(0, 0, 0, 0.18);
-        background: rgba(0, 0, 0, 0.05);
-    }
-
-    > gtx-form-grid-elements-container {
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 auto;
-        min-width: 0;
-        min-height: 64px;
-
-        > .editor-drop-container,
-        > gtx-sortable-list.editor-drop-container {
-            flex: 1 1 auto;
-            min-height: 64px;
-            align-content: flex-start;
-        }
-    }
 }
 
 // --- Resize overlay scoped to a nested container ---
@@ -404,31 +334,11 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
 }
 
 .tag-type {
-    background-color: #0096DC;
+    background-color: $gtx-color-primary;
 }
 
 .tag-text {
     vertical-align: middle;
-}
-
-
-.fg-form {
-    max-width: 30rem;
-}
-
-.fg-field {
-    display: flex;
-    align-items: center;
-    gap: 0.30rem;
-    margin-bottom: 0.7rem;
-}
-
-.fg-field>label {
-    min-width: 8rem;
-}
-
-.fg-select {
-    font-size: 1rem;
 }
 
 .drop-placeholder {
@@ -622,10 +532,8 @@ gtx-sortable-item.has-condition-warning .fg-box {
 
 /* --- SortableJS drag visual feedback --- */
 :host ::ng-deep .sortable-ghost {
-    opacity: 0.35;
-    background: rgba(0, 150, 220, 0.06);
-    border: 2px dashed rgba(0, 150, 220, 0.4) !important;
-    border-radius: 10px;
+    background: rgba($gtx-color-primary, 0.1);
+    border: 2px dashed rgba($gtx-color-primary, 0.4) !important;
     box-shadow: none !important;
 
     > * {

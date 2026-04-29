@@ -27,6 +27,7 @@ import { v4 as uuidV4 } from 'uuid';
 import {
     CLIPBOARD_MIME,
     CLIPBOARD_STORAGE_KEY,
+    ElementContainerMoveEvent,
     ElementInterPageMoveEvent,
     ElementSelectionEvent,
     FormGridClipboardData,
@@ -47,6 +48,46 @@ function addElementsToMap(data: Record<string, FormElement>, elements: FormEleme
             addElementsToMap(data, el.elements);
         }
     }
+}
+
+function moveNestedElement(
+    currentContainerId: null | string,
+    entries: FormElement[],
+    element: FormElement,
+    fromId: string,
+    toId: string,
+    targetIndex: number,
+): { removed: boolean; added: boolean } {
+    let removed = false;
+    let added = false;
+
+    if (currentContainerId === fromId) {
+        const idx = entries.findIndex((inner) => inner.id === element.id);
+        if (idx !== -1) {
+            entries.splice(idx, 1);
+            removed = true;
+        }
+    }
+    if (currentContainerId === toId) {
+        entries.splice(targetIndex, 0, element);
+        added = true;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
+    for (let i = 0; i < entries.length; i++) {
+        if (removed && added) {
+            break;
+        }
+        const cur = entries[i];
+        if (!cur.elements) {
+            continue;
+        }
+        const res = moveNestedElement(cur.id, cur.elements, element, fromId, toId, targetIndex);
+        removed = removed || res.removed;
+        added = added || res.added;
+    }
+
+    return { removed, added };
 }
 
 enum EditTabs {
@@ -118,7 +159,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     /** Whether the selected element has any missing translations across all form languages */
     public hasMissingTranslations = signal(false);
-    public isElementDragging = signal(false);
+    /** The type of the current element which is being dragged. If null, then nothing is being dragged right now. */
+    public elementMoving = signal<string | null>(null);
 
     /* PAGE EDITING
      * ===================================================================== */
@@ -553,6 +595,41 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.schema.set(schema);
     }
 
+    public moveElementToContainer(event: ElementContainerMoveEvent): void {
+        const element = this.elementMap()[event.elementId];
+
+        // If the elements couldn't be properly determined
+        if (!element) {
+            return;
+        }
+
+        const copy = structuredClone(this.uiSchema());
+
+        // Moving between containers can only be done within the same page, therefore safe
+        const page = copy.pages[event.pageIndex];
+
+        // Go through all elements (and nested ones), to find the from/to container elements in the page,
+        // then update the elements within that.
+        const { removed, added } = moveNestedElement(
+            this.ELEMENT_ROOT_CONTAINER_ID,
+            page.elements,
+            element,
+            event.fromContainerId,
+            event.toContainerId,
+            event.targetIndex,
+        );
+
+        if (!removed) {
+            console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be removed from the source container`);
+        }
+        if (!added) {
+            console.warn(`While moving element ${element.id} from ${event.fromContainerId} to ${event.toContainerId}, it could not be added from the target container`);
+        }
+
+        // After all has been updated, push it as one change
+        this.uiSchema.set(copy);
+    }
+
     public moveElementBetweenPages(event: ElementInterPageMoveEvent): void {
         const copy = structuredClone(this.uiSchema());
         const fromElements = copy.pages[event.fromPage]?.elements;
@@ -567,9 +644,15 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         element.uiSchemaPage = event.toPage;
         copy.pages[event.toPage].elements.push(element);
         this.uiSchema.set(copy);
-        this.pageIndex.set(event.toPage);
-        this.isElementDragging.set(false);
+        this.elementMoving.set(null);
         this.clearSelectedElement();
+
+        // Hacky workaround, as updating the ui-schema and the page at the same time,
+        // doesn't properly refresh the computed value correctly, and makes the element not
+        // appear in the new page.
+        setTimeout(() => {
+            this.pageIndex.set(event.toPage);
+        });
     }
 
     public upsetElementChanges(data: FormElement): void {

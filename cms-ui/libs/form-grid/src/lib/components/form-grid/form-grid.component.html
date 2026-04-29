@@ -99,7 +99,7 @@
                     [schema]="schema()"
                     (schemaChange)="$event && updateSchema($event)"
                     [mode]="mode()"
-                    [elementDragging]="isElementDragging()"
+                    [elementDragging]="elementMoving() != null"
                     (elementInterPageMove)="moveElementBetweenPages($event)"
                     (editPage)="startEditPage($event)"
                 ></gtx-form-page-manager>
@@ -151,13 +151,14 @@
                     (elementSelect)="setSelectedElement($event)"
                     [schema]="schema()"
                     (schemaChange)="updateSchema($event)"
+                    (moveToContainer)="moveElementToContainer($event)"
+                    [(elementMoving)]="elementMoving"
 
                     [(paletteDragging)]="isPaletteDragging"
                     [(paletteDropTarget)]="paletteDropTarget"
                     [paletteDragType]="paletteDragType"
                     [paletteDragConfig]="paletteDragConfig"
                     (platteDragStop)="paletteDragEnd()"
-                    (elementDraggingChange)="isElementDragging.set($event)"
 
                     [(resizing)]="resizeActive"
                     [(resizeOverlayActive)]="resizeOverlayActive"

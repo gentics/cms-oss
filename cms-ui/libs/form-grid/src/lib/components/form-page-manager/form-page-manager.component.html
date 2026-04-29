@@ -1,19 +1,19 @@
 <div class="page-manager">
     @for (page of uiSchema().pages; track $index) {
-        <div
+        <gtx-sortable-list
             class="page-tab"
+            [group]="sortableGroup"
+            [sort]="false"
+            [filter]="'.page-tab-label, gtx-button'"
+            [attr.data-page-index]="$index"
             [class.active]="pageIndex() === $index"
             [class.droppable]="mode() === FormGridEditMode.FULL"
             [class.drop-target-hint]="elementDragging() && pageIndex() !== $index"
             (click)="pageIndex.set($index)"
-            (dragover)="onPageTabDragOver($event, $index)"
-            (drop)="onPageTabDrop($event, $index)"
+            (addItem)="moveElementToPage($event, $index)"
         >
             <span class="page-tab-label">
-                {{ page.pagename | gtxI18nObject }}
-                @if (!(page.pagename | gtxI18nObject)) {
-                    {{ 'form_grid.page_untitled' | gtxI18n:{number: $index + 1} }}
-                }
+                {{ (page.pagename | gtxI18nObject) || ('form_grid.page_untitled' | gtxI18n:{number: $index + 1}) }}
             </span>
 
             @if (mode() === FormGridEditMode.FULL) {
@@ -33,7 +33,7 @@
                     <icon>delete_outline</icon>
                 </gtx-button>
             }
-        </div>
+        </gtx-sortable-list>
     }
 
     @if (mode() === FormGridEditMode.FULL) {

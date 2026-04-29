@@ -14,6 +14,8 @@ export interface FormGridClipboardData {
     formType: string;
     formName: string;
 }
+export const ATTR_CONTAINER_ID = 'data-drop-container-id';
+export const ATTR_ELEMENT_ID = 'data-element-id';
 
 export interface PaletteDropTarget {
     /** The ID of the element-container, to determine where to place the item in. */
@@ -43,6 +45,14 @@ export interface DropRow {
 export interface ElementSelectionEvent {
     element: FormElement;
     containerId: string;
+}
+
+export interface ElementContainerMoveEvent {
+    pageIndex: number;
+    elementId: string;
+    fromContainerId: string;
+    toContainerId: string;
+    targetIndex: number;
 }
 
 export interface ElementInterPageMoveEvent {

@@ -15,7 +15,7 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import { distinctUntilChanged } from 'rxjs/operators';
-import Sortable from 'sortablejs/modular/sortable.core.esm.js';
+import Sortable from 'sortablejs';
 import { ISortableEvent, ISortableMoveEvent, SortFunction, SortableGroup } from '../../common';
 import { BaseComponent } from '../base-component/base.component';
 import { SortableListDragHandleComponent } from '../drag-handle/drag-handle.component';
@@ -97,9 +97,12 @@ export function sortFactory(e: ISortableEvent): SortFunction<any> {
     templateUrl: './sortable-list.component.html',
     styleUrls: ['./sortable-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class SortableListComponent extends BaseComponent implements OnChanges, OnInit, AfterContentInit {
+
+    @Input()
+    public sort = true;
 
     /**
      * Specify a group to allow dragging items between SortableLists. See
@@ -122,6 +125,18 @@ export class SortableListComponent extends BaseComponent implements OnChanges, O
      */
     @Input()
     public onMove: (e: ISortableMoveEvent) => boolean;
+
+    @Input()
+    public filter: string;
+
+    @Input()
+    public fallbackOnBody = false;
+
+    @Input()
+    public invertSwap = false;
+
+    @Input()
+    public swapThreshold = 1.0;
 
     /**
      * Fired when an item drag is started.
@@ -172,6 +187,11 @@ export class SortableListComponent extends BaseComponent implements OnChanges, O
     ngOnInit(): void {
         this.sortable = Sortable.create(this.elementRef.nativeElement, {
             animation: 150,
+            sort: this.sort,
+            filter: this.filter,
+            fallbackOnBody: this.fallbackOnBody,
+            invertSwap: this.invertSwap,
+            swapThreshold: this.swapThreshold,
             setData: (dataTransfer: any, dragEl: Element): void => { },
             // dragging started
             onStart: (e: ISortableEvent): void => {
@@ -230,6 +250,23 @@ export class SortableListComponent extends BaseComponent implements OnChanges, O
         }
         if (changes.handle && !changes.handle.firstChange) {
             this.updateHandleOption();
+        }
+        if (this.sortable) {
+            if (changes.fallbackOnBody) {
+                this.sortable.option('fallbackOnBody', this.fallbackOnBody);
+            }
+            if (changes.invertSwap) {
+                this.sortable.option('invertSwap', this.invertSwap);
+            }
+            if (changes.swapThreshold) {
+                this.sortable.option('swapThreshold', this.swapThreshold);
+            }
+            if (changes.sort) {
+                this.sortable.option('sort', this.sort);
+            }
+            if (changes.filter) {
+                this.sortable.option('filter', this.filter);
+            }
         }
     }
 

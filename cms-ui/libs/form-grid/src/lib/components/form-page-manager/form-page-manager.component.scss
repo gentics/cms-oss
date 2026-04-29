@@ -1,5 +1,10 @@
 :host {
     display: block;
+
+    &::ng-deep .sortable-ghost,
+    &::ng-deep .form-item {
+        display: none !important;
+    }
 }
 
 .page-manager {

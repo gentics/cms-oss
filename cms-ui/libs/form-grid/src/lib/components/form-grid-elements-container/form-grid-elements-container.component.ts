@@ -24,7 +24,16 @@ import {
 } from '@gentics/cms-models';
 import { cancelEvent, ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
-import { DropRow, ELEMENT_MIME, ElementSelectionEvent, FormGridEditMode, PALETTE_MIME, PaletteDropTarget } from '../../models';
+import {
+    ATTR_CONTAINER_ID,
+    ATTR_ELEMENT_ID,
+    DropRow,
+    ElementContainerMoveEvent,
+    ElementSelectionEvent,
+    FormGridEditMode,
+    PALETTE_MIME,
+    PaletteDropTarget,
+} from '../../models';
 
 interface DisplayItem {
     id: string;
@@ -64,21 +73,43 @@ export class FormGridElementsContainerComponent implements OnChanges {
     /* BASIC INPUT/OUTPUT
      * ===================================================================== */
 
+    /** Root element ID */
     public readonly rootId = input.required<string>();
+    /** ID of this elements-container. */
     public readonly id = input.required<string>();
+
+    /** The configuration for this form. */
     public readonly config = input.required<FormTypeConfiguration>();
+    /** How many levels deep this container is. */
     public readonly level = input.required<number>();
+    /** The mode in which the form-grid operates in. */
     public readonly mode = input.required<FormGridEditMode>();
+    /** The current page index that is being displayed. */
     public readonly pageIndex = input.required<number>();
+    /** All languages the form is available in. */
     public readonly languages = input.required<string[]>();
+
+    /** The schema of the form */
+    public readonly schema = model.required<FormSchema>();
+    /** The elements of this container */
+    public readonly elements = model.required<FormElement[]>();
+
+    /** HTML element which indicates the resizing. */
     public readonly gridSurface = input.required<HTMLElement>();
+    /** The whitelist of this container. */
     public readonly whitelist = input<string[] | null>(null);
 
-    public readonly schema = model.required<FormSchema>();
-    public readonly elements = model.required<FormElement[]>();
+    /** The currently selected element to be edited */
     public readonly selectedElement = input<FormElement | null>();
+    /** The container in which the selected element is in */
     public readonly selectedElementContainerId = input<string | null>();
+    /** The type of the element that is being moved/dragged/re-ordererd around. */
+    public readonly elementMoving = model<string | null>();
+
+    /** Event to select a element. */
     public readonly elementSelect = output<ElementSelectionEvent | null>();
+    /** Event to move an element to another elements-container component */
+    public readonly moveToContainer = output<ElementContainerMoveEvent>();
 
     /* PALETTE
      * ===================================================================== */
@@ -88,7 +119,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly paletteDragType = input<string | null>();
     public readonly paletteDragConfig = input<FormElementConfiguration | null>();
     public readonly platteDragStop = output<void>();
-    public readonly elementDraggingChange = output<boolean>();
 
     /** How many spans/columns the currently dragged element would use if dropped */
     public pendingPaletteDropSpan: number | null;
@@ -126,12 +156,19 @@ export class FormGridElementsContainerComponent implements OnChanges {
     /** Shared group configuration so elements can be dragged between containers */
     public readonly sortableGroup: SortableGroup = {
         name: 'formgrid-elements',
-        pull: true,
-        put: true,
-    };
+        pull: () => this.mode() === FormGridEditMode.FULL,
+        // Check for the whitelist in the new group we want to drop into, if available
+        put: (to) => {
+            const targetId = to.el.getAttribute(ATTR_CONTAINER_ID);
 
-    /** Key used to stash the element data on the dragged DOM node during cross-list moves */
-    private static readonly TRANSFER_KEY = '__formGridElement';
+            // Always allow elements to be pulled to the root
+            if (targetId === this.rootId()) {
+                return true;
+            }
+
+            return !to.el.classList.contains('drag-blocked');
+        },
+    };
 
     /* MISC
      * ===================================================================== */
@@ -140,11 +177,18 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
     /** True when palette-dragging is active and this container's whitelist rejects the dragged type. */
     public isDragBlocked = computed(() => {
-        if (!this.paletteDragging()) {
+        const wl = this.whitelist();
+        if (!Array.isArray(wl)) {
             return false;
         }
-        const wl = this.whitelist();
-        if (!wl || wl.length === 0) {
+
+        const elType = this.elementMoving();
+
+        if (elType) {
+            return !wl.includes(elType);
+        }
+
+        if (!this.paletteDragging()) {
             return false;
         }
         const type = this.paletteDragType();
@@ -239,7 +283,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         // Use elementFromPoint for 100% reliable read of cursor target, immune to fast hit-testing loops
         const realTarget = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
         const isHoveringPlaceholder = realTarget && realTarget.closest('.drop-placeholder') !== null;
-        const hoveredElementId = realTarget?.closest('gtx-contents-list-item')?.getAttribute('data-element-id');
+        const hoveredElementId = realTarget?.closest('gtx-contents-list-item')?.getAttribute(ATTR_ELEMENT_ID);
 
         if (this.paletteDragOverFrame) {
             cancelAnimationFrame(this.paletteDragOverFrame);
@@ -589,14 +633,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
     /**
      * Called when SortableJS begins dragging an item from this list.
-     * Stashes the element data on the DOM node so that the target list's
-     * `onSortableAdd` can retrieve it — `onAdd` fires *before* `onRemove` in SortableJS.
      */
     public onSortableDragStart(event: ISortableEvent): void {
-        const idx = event.oldIndex;
-        if (idx != null && idx >= 0 && idx < this.elements().length) {
-            (event.item as any)[FormGridElementsContainerComponent.TRANSFER_KEY] = this.elements()[idx];
+        const elId = event.item.getAttribute(ATTR_ELEMENT_ID);
+        const el = this.elements().find((tmp) => tmp.id === elId);
+        if (!el || !el.formGridOptions?.type) {
+            return;
         }
+        this.elementMoving.set(el?.formGridOptions.type);
     }
 
     public sortElements(event: ISortableEvent): void {
@@ -606,62 +650,42 @@ export class FormGridElementsContainerComponent implements OnChanges {
         }
 
         // Sort the visible list
-        const newElements = [...this.elements()];
+        const newElements = this.elements().slice(0);
         const sorted = event.sort(newElements);
 
         // Persist back into the current page (this.pages is usually a reference to uiSchema.pages,
         // but we also explicitly write to uiSchema to be safe)
         this.elements.set(sorted);
         this.updateDisplayItems();
+        this.elementMoving.set(null);
     }
 
     /**
      * Called when SortableJS drops an element INTO this container from another container.
-     * Fires *before* `onSortableRemove` in SortableJS's event order.
      */
     public onSortableAdd(event: ISortableEvent): void {
-        const key = FormGridElementsContainerComponent.TRANSFER_KEY;
-        const element: FormElement | undefined = (event.item as any)[key];
-        delete (event.item as any)[key];
-
         // Revert the DOM insertion SortableJS made — Angular will re-render from the data model.
         if (event.item?.parentNode) {
             event.item.parentNode.removeChild(event.item);
         }
 
-        if (!element) {
+        const fromId = event.from.getAttribute(ATTR_CONTAINER_ID);
+        const toId = event.to.getAttribute(ATTR_CONTAINER_ID);
+        const elId = (event.item).getAttribute(ATTR_ELEMENT_ID);
+
+        if (!fromId || !toId || !elId) {
             return;
         }
 
-        const newIndex = event.newIndex ?? this.elements().length;
-        const newElements = [...this.elements()];
-        newElements.splice(newIndex, 0, element);
-        this.elements.set(newElements);
-        this.updateDisplayItems();
-    }
+        this.moveToContainer.emit({
+            pageIndex: this.pageIndex(),
+            elementId: elId,
+            fromContainerId: fromId,
+            toContainerId: toId,
+            targetIndex: Math.max(0, event.newIndex! - 1),
+        });
 
-    /**
-     * Called when SortableJS removes an element FROM this container to another container.
-     * Fires *after* `onSortableAdd` in SortableJS's event order.
-     */
-    public onSortableRemove(event: ISortableEvent): void {
-        const oldIndex = event.oldIndex;
-        if (oldIndex == null || oldIndex < 0 || oldIndex >= this.elements().length) {
-            return;
-        }
-
-        // Revert the DOM removal — put the item back so Angular can properly destroy the view.
-        const itemEl = event.item;
-        const fromEl = event.from;
-        if (itemEl && fromEl && !fromEl.contains(itemEl)) {
-            const refNode = fromEl.children[oldIndex] || null;
-            fromEl.insertBefore(itemEl, refNode);
-        }
-
-        const newElements = [...this.elements()];
-        newElements.splice(oldIndex, 1);
-        this.elements.set(newElements);
-        this.updateDisplayItems();
+        this.elementMoving.set(null);
     }
 
     /* INTERNALS
@@ -673,22 +697,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
             return true;
         }
         return type != null && wl.includes(type);
-    }
-
-    public onElementDragStart(event: DragEvent, element: FormElement): void {
-        if (this.mode() !== FormGridEditMode.FULL) {
-            event.preventDefault();
-            return;
-        }
-        event.dataTransfer?.setData(ELEMENT_MIME, element.id);
-        if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = 'move';
-        }
-        this.elementDraggingChange.emit(true);
-    }
-
-    public onElementDragEnd(): void {
-        this.elementDraggingChange.emit(false);
     }
 
     private updateDisplayItems(): void {

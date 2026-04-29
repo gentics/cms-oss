@@ -56,6 +56,10 @@
         "page_untitled": "Seite {{number}}",
         "page_delete_title": "Seite löschen",
         "page_delete_confirm": "Diese Seite hat noch Elemente. Alle Elemente und die Seite löschen?",
-        "paste_form_type_mismatch": "Einfügen nicht möglich: Das kopierte Element stammt aus einem anderen Formulartyp (\"{{sourceType}}\")."
+        "copy_element_success": "Element \"{{name}}\" wurde kopiert",
+        "paste_form_type_mismatch": "Einfügen nicht möglich: Das kopierte Element stammt aus einem anderen Formulartyp (\"{{sourceType}}\").",
+        "paste_element_success": "Element \"{{name}}\" eingefügt",
+        "resize_element_width": "Breite des Elements anpassen",
+        "fallback_element_title": "Unbekanntes oder Unbenanntes element"
     }
 }

@@ -10,8 +10,7 @@ import {
     OnInit,
     signal,
 } from '@angular/core';
-import { I18nService } from '@gentics/cms-components';
-import { TranslateStore } from '@ngx-translate/core';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import {
     FormElement,
     FormElementConfiguration,
@@ -22,7 +21,8 @@ import {
     FormUISchema,
     I18nString,
 } from '@gentics/cms-models';
-import { BaseComponent, cancelEvent, NotificationService } from '@gentics/ui-core';
+import { BaseComponent, cancelEvent } from '@gentics/ui-core';
+import { TranslateStore } from '@ngx-translate/core';
 import { v4 as uuidV4 } from 'uuid';
 import {
     CLIPBOARD_MIME,
@@ -224,7 +224,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         changeDetector: ChangeDetectorRef,
         private i18n: I18nService,
         private translateStore: TranslateStore,
-        private notification: NotificationService,
+        private notification: I18nNotificationService,
     ) {
         super(changeDetector);
     }
@@ -287,6 +287,14 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         } catch {
             localStorage.setItem(CLIPBOARD_STORAGE_KEY, json);
         }
+
+        this.notification.show({
+            message: 'form_grid.copy_element_success',
+            translationParams: {
+                name: this.i18n.fromObject(element.label),
+            },
+            type: 'success',
+        });
     }
 
     @HostListener('document:paste', ['$event'])
@@ -329,9 +337,10 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         // Validate matching form type
         if (clipboardData.formType && clipboardData.formType !== this.formType()) {
             this.notification.show({
-                message: this.i18n.instant('form_grid.paste_form_type_mismatch', {
+                message: 'form_grid.paste_form_type_mismatch',
+                translationParams: {
                     sourceType: clipboardData.formType,
-                }),
+                },
                 type: 'warning',
             });
             return;
@@ -413,6 +422,14 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.setSelectedElement({
             element: pastedElement,
             containerId: this.selectedElementContainerId ?? this.ELEMENT_ROOT_CONTAINER_ID,
+        });
+
+        this.notification.show({
+            message: 'form_grid.paste_element_success',
+            translationParams: {
+                name: this.i18n.fromObject(pastedElement.label),
+            },
+            type: 'success',
         });
     }
 

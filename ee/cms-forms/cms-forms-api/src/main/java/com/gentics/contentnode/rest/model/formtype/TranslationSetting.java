@@ -22,6 +22,12 @@ public class TranslationSetting extends BaseSetting {
 	public boolean richContent;
 
 	/**
+     * If it should render a multiline input (textarea) for editing instead.
+     */
+	@JsonProperty
+	public boolean multiline;
+
+	/**
 	 * Creator
 	 * @param id ID
 	 * @param labelI18n label

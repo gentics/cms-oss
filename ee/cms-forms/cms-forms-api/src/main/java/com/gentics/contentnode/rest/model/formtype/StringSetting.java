@@ -22,6 +22,18 @@ public class StringSetting extends BaseSetting {
 	public boolean richContent;
 
 	/**
+     * If it should render a multiline input (textarea) for editing instead.
+     */
+	@JsonProperty
+	public boolean multiline;
+
+	/**
+	 * If the editor should be able to enter multiple values.
+	 */
+	@JsonProperty
+	public boolean multiple;
+
+	/**
 	 * Creator
 	 * @param id ID
 	 * @param labelI18n label

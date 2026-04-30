@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, model, output, signal } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import { FormElement, FormSchema, FormUISchema } from '@gentics/cms-models';
 import { ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
@@ -13,6 +13,18 @@ function collectElementIds(elements: FormElement[]): string[] {
         }
     }
     return ids;
+}
+
+function getParentElement(source: HTMLElement, parentNodeType: string): HTMLElement | null {
+    let tmp: HTMLElement | null = source;
+    while (tmp != null && tmp !== tmp.ownerDocument.body) {
+        if (tmp.nodeName === parentNodeType) {
+            return tmp;
+        }
+        tmp = tmp.parentElement;
+    }
+
+    return null;
 }
 
 @Component({
@@ -36,6 +48,8 @@ export class FormPageManagerComponent {
     public readonly elementInterPageMove = output<ElementInterPageMoveEvent>();
     public readonly editPage = output<number>();
 
+    public readonly hoveringIndex = signal<number | null>(null);
+
     /** Shared configuration for all page entries */
     public readonly sortableGroup: SortableGroup = {
         name: 'form-pages',
@@ -54,7 +68,10 @@ export class FormPageManagerComponent {
             // Moving to the current page should not be allowed
             try {
                 const toPageIdx = parseInt(to.el.getAttribute('data-page-index') ?? '', 10);
-                return Number.isInteger(toPageIdx) && toPageIdx !== this.pageIndex();
+                if (!Number.isInteger(toPageIdx)) {
+                    return false;
+                }
+                return toPageIdx !== this.pageIndex();
             } catch (err) {
                 return false;
             }
@@ -120,6 +137,21 @@ export class FormPageManagerComponent {
         this.elementInterPageMove.emit({ elementId, fromPage, toPage: targetPageIndex });
         // Remove the item from the DOM, as we don't need it in the page entry and it'll be rendered by the elements-container
         event.item.remove();
+    }
+
+    public enterDrag(index: number): void {
+        if (this.hoveringIndex() === index) {
+            return;
+        }
+        this.hoveringIndex.set(index);
+    }
+
+    public leaveDrag(event: DragEvent, index: number): void {
+        if (getParentElement(event.relatedTarget as any, 'GTX-SORTABLE-LIST') !== getParentElement(event.target as any, 'GTX-SORTABLE-LIST')) {
+            if (this.hoveringIndex() === index) {
+                this.hoveringIndex.set(null);
+            }
+        }
     }
 
     private removePageAndCleanup(index: number): void {

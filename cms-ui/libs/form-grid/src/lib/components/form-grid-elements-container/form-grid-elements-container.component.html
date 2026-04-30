@@ -32,7 +32,7 @@
     [group]="sortableGroup"
     [sort]="mode() !== FormGridEditMode.NONE"
     [fallbackOnBody]="true"
-    [invertSwap]="true"
+    [invertSwap]="false"
     [swapThreshold]="0.7"
     (dragStart)="onSortableDragStart($event)"
     (dragEnd)="sortElements($event)"

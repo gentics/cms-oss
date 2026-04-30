@@ -4,6 +4,7 @@ import {
     FormElement,
     FormSchema,
     FormSchemaProperty,
+    FormSettingType,
     FormTypeConfiguration,
 } from '@gentics/cms-models';
 import { FormGridEditMode } from '../../models';
@@ -33,7 +34,7 @@ export class FormElementDefinitionComponent {
 
     public visibleSettings = computed(() => {
         const all = this.elementConfig().settings || [];
-        return all.filter((setting) => setting.backend);
+        return all.filter((setting) => setting.type !== FormSettingType.TRANSLATION && setting.backend);
     });
 
     public updateElementSchema(patch?: Partial<FormSchemaProperty>): void {

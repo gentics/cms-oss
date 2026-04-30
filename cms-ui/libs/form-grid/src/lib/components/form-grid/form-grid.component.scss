@@ -326,3 +326,7 @@
         text-align: center;
     }
 }
+
+.element-tabs.missing-translations::ng-deep .tab-links .tab-link[data-id="translations"] icon {
+    color: $gtx-color-warning;
+}

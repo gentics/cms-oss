@@ -1,5 +1,6 @@
 <div class="translation-section">
     <gtx-select
+        class="language-select"
         [label]="'form_grid.translation_language' | gtxI18n"
         [value]="selectedLanguage()"
         (valueChange)="updateSelectedLanguage($event)"
@@ -58,8 +59,6 @@
 
     @if (elementSettings().length > 0) {
         <div class="translation-settings">
-            <span class="translation-section-title">{{ 'form_grid.translation_section_settings' | gtxI18n }}</span>
-
             <gtx-dynamic-form-translations
                 [settings]="elementSettings()"
                 [element]="element()"
@@ -71,6 +70,8 @@
                 (elementChange)="element.set($event)"
                 (elementSchemaChange)="elementSchema.set($event)"
             />
+
+            <span class="translation-section-title">{{ 'form_grid.translation_section_settings' | gtxI18n }}</span>
         </div>
     }
 </div>

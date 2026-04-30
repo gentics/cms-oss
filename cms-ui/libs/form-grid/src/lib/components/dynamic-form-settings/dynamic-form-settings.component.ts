@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, HostBinding, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, HostBinding, input, model } from '@angular/core';
 import {
     FormElement,
     FormElementConfiguration,
@@ -39,7 +39,14 @@ export class DynamicFormSettingsComponent {
     });
 
     @HostBinding('class.has-settings')
-    public readonly hasVisibleSettings = computed(() => this.visibleSettings().length > 0);
+    public hasVisibleSettings = false;
+
+    constructor() {
+        // Ugly workaround, as HostBindings don't work with signals
+        effect(() => {
+            this.hasVisibleSettings = this.visibleSettings().length > 0;
+        });
+    }
 
     public updateData(setting: FormSettingConfiguration, value: unknown): void {
         const path = setting.propertyPath

@@ -12,9 +12,9 @@
         @if (selectAllType != null && selectAllType !== TableSelectAllType.NONE) {
           <gtx-checkbox
             class="selection-checkbox"
-            [checked]="!(rows?.length < 1 && totalCount < 1) && allSelected"
+            [value]="!(rows?.length < 1 && totalCount < 1) && allSelected"
             [disabled]="disabled || rows?.length < 1 && totalCount < 1"
-            (click)="toggleAllSelections($event)"
+            (valueChange)="toggleAllSelections($event)"
           ></gtx-checkbox>
         }
       </div>
@@ -120,10 +120,10 @@
           >
           <gtx-checkbox
             class="selection-checkbox"
-            [checked]="selected[row.id] === true"
+            [value]="selected[row.id] === true"
             [indeterminate]="selected[row.id] === CHECKBOX_STATE_INDETERMINATE"
             [disabled]="disabled"
-            (click)="updateRowSelection(row, $event)"
+            (valueChange)="updateRowSelection(row, $event)"
           ></gtx-checkbox>
         </div>
       }

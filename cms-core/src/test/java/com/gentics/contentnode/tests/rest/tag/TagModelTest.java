@@ -426,8 +426,8 @@ public class TagModelTest {
 		HTMLPartType(HTMLPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
 		LongHTMLTextPartType(LongHTMLTextPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
 		LongHTMLPartType(LongHTMLPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
-		JavaEditorPartType(JavaEditorPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_JSON), jsonTextAsserter),
-		JSONEditorPartType(JSONPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
+		JavaEditorPartType(JavaEditorPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
+		JSONEditorPartType(JSONPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_JSON), jsonTextAsserter),
 		DHTMLPartType(DHTMLPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
 		PageURLPartTypeInternal(PageURLPartType.class, (Consumer<PageURLPartType>) partType -> {
 			partType.setTargetPage(targetPage);

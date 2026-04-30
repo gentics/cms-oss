@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Value;
-import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 import com.gentics.mesh.core.rest.node.field.JsonContent;
@@ -38,13 +37,12 @@ public class JSONPartType extends TextPartType {
 		Value value = getValueObject();
 		if (value != null) {
 			String stringValue = value.getValueText();
-			if (StringUtils.isNotBlank(stringValue)) {
-				if (stringValue.trim().startsWith("[")) {
-					JsonArray array = new JsonArray(stringValue);
-					IntStream.range(0, array.size()).forEach(i -> resolvableKeys.add(Integer.toString(i)));
+			Object current = JsonContent.fromString(stringValue);
+			if (current instanceof JsonContent jc) {
+				if (jc.isArray()) {
+					IntStream.range(0, jc.getArray().size()).forEach(i -> resolvableKeys.add(Integer.toString(i)));
 				} else {
-					JsonObject object = new JsonObject(stringValue);
-					resolvableKeys.addAll(object.fieldNames());
+					resolvableKeys.addAll(jc.getObject().fieldNames());
 				}
 			}
 		}

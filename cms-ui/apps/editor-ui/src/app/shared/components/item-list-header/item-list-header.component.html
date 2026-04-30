@@ -153,10 +153,10 @@
                             (click)="toggleDisplayAllLanguages($event)"
                         >
                             <gtx-checkbox
+                                [label]="'editor.display_all_languages_label' | gtxI18n"
                                 [value]="showAllLanguages"
                                 (valueChange)="toggleDisplayAllLanguages()"
                             ></gtx-checkbox>
-                            {{ 'editor.display_all_languages_label' | gtxI18n }}
                         </gtx-dropdown-item>
                     }
 
@@ -169,10 +169,10 @@
                                 (click)="toggleDisplayStatusIcons()"
                             >
                                 <gtx-checkbox
+                                    [label]="'editor.display_status_icons_label' | gtxI18n"
                                     [value]="showStatusIcons"
                                     (valueChange)="toggleDisplayStatusIcons()"
                                 ></gtx-checkbox>
-                                {{ 'editor.display_status_icons_label' | gtxI18n }}
                             </gtx-dropdown-item>
                         }
 
@@ -184,10 +184,10 @@
                                 (click)="toggleDisplayDeleted()"
                             >
                                 <gtx-checkbox
+                                    [label]="'editor.display_deleted_label' | gtxI18n"
                                     [value]="showDeleted"
                                     (valueChange)="toggleDisplayDeleted()"
                                 ></gtx-checkbox>
-                                {{ 'editor.display_deleted_label' | gtxI18n }}
                             </gtx-dropdown-item>
                         }
                     }

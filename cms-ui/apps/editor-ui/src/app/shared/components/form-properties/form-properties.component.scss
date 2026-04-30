@@ -60,8 +60,14 @@ gtx-browse-box {
     padding-bottom: 0.75rem;
 }
 
+.radio-select-container {
+    gtx-radio-button::ng-deep label {
+        gap: 35px;
+    }
+}
+
 .confirmation-page-setting {
-    margin-left: 35px;
+    margin-left: calc(1rem + 35px);
     margin-bottom: 0.5rem;
     transition:
         opacity .28s ease;

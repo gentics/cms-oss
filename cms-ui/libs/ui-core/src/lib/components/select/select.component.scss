@@ -76,9 +76,10 @@ label {
         text-align: left;
         text-transform: none;
         color: $gtx-color-primary;
-        font-size: 16px;
-        padding: math.div(($dropdown-item-height - 22), 2) 16px;
+        font-size: 1rem;
+        padding: math.div(($dropdown-item-height - 22), 2) 1rem;
         user-select: none;
+        gap: 1rem;
 
         > * {
             user-select: text; // IE11

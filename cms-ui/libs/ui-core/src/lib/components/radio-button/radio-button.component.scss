@@ -14,12 +14,13 @@
         flex-wrap: nowrap;
         align-content: center;
         align-items: center;
-        gap: 35px;
+        gap: 1rem;
         padding: 0.2em 0;
 
         .label-content {
             font-size: 1em;
             line-height: 1;
+            padding-top: 1px;
         }
     }
 

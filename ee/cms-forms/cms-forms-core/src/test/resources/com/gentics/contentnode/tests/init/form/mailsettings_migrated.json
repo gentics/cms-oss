@@ -17,7 +17,7 @@
     "schema": {
         "properties": {}
     },
-    "uiSchema": {
+    "ui-schema": {
         "formname": {
             "de": "Test Form",
             "en": "Test Form"

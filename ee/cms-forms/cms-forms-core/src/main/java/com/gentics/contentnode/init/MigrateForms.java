@@ -36,6 +36,7 @@ import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
 import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.FormDataUtils;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.forms.Migration;
@@ -230,7 +231,7 @@ public class MigrateForms extends InitJob {
 	};
 
 	/**
-	 * Migrator for catalog uiSchema properties
+	 * Migrator for catalog ui-schema properties
 	 */
 	private BiConsumer<ObjectNode, ObjectNode> CATALOG_UI_PROPERTY_MIGRATOR = (elementNode, property) -> {
 		String selectType = elementNode.optional("select_type_i18n")
@@ -465,7 +466,7 @@ public class MigrateForms extends InitJob {
 
 		ObjectNode schema = mapper.createObjectNode();
 		ObjectNode schemaProperties = mapper.createObjectNode();
-		schema.set("properties", schemaProperties);
+		schema.set(FormDataUtils.PROPERTIES, schemaProperties);
 
 		ObjectNode uiSchema = mapper.createObjectNode();
 
@@ -474,7 +475,7 @@ public class MigrateForms extends InitJob {
 		ObjectNode description = mapper.createObjectNode();
 		uiSchema.set("formdescription", description);
 
-		ArrayNode pages = uiSchema.withArrayProperty("pages");
+		ArrayNode pages = uiSchema.withArrayProperty(FormDataUtils.PAGES);
 		ObjectNode firstPage = pages.addObject();
 
 		for (String language : toMigrate.languages()) {
@@ -496,8 +497,8 @@ public class MigrateForms extends InitJob {
 			pages.removeIf(page -> page.isEmpty());
 		}
 
-		migrated.set("schema", schema);
-		migrated.set("uiSchema", uiSchema);
+		migrated.set(FormDataUtils.SCHEMA, schema);
+		migrated.set(FormDataUtils.UI_SCHEMA, uiSchema);
 
 		return migrated;
 	}
@@ -574,7 +575,7 @@ public class MigrateForms extends InitJob {
 	 * @param config form type configuration
 	 * @param elementNode element node
 	 * @param schemaProperties root node collecting the schema properties
-	 * @param uiSchemaPages root node collecing the uiSchema pages
+	 * @param uiSchemaPages root node collecing the ui-schema pages
 	 * @param currentPage current page
 	 * @param migratedType migrated type
 	 * @param propertyMigrator property migrator
@@ -710,7 +711,7 @@ public class MigrateForms extends InitJob {
 	 * Migrate a single setting
 	 * @param setting setting to migrate
 	 * @param elementNode element node
-	 * @param propertyOrUiProperty either the schema property or the uiSchema property
+	 * @param propertyOrUiProperty either the schema property or the ui-schema property
 	 */
 	protected void migrateSetting(BaseSetting setting, ObjectNode elementNode, ObjectNode propertyOrUiProperty) {
 		String oldName = "%s_i18n".formatted(INVERTED_PROPERTY_MIGRATION_MAP.getOrDefault(setting.id, setting.id));

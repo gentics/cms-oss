@@ -1,6 +1,7 @@
 package com.gentics.contentnode.forms;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
@@ -17,8 +18,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
-import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.etc.FormDataUtils;
 import com.gentics.contentnode.etc.Operator;
@@ -31,7 +31,6 @@ import com.gentics.contentnode.factory.PublishCacheTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.LanguageFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -44,7 +43,6 @@ import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.publish.cr.MeshURLRenderer;
 import com.gentics.contentnode.publish.mesh.MeshPublisher.UrlEscapeUtils;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUrl;
@@ -130,8 +128,6 @@ public class FormTransformer {
 				() -> new NodeException("Error while transforming form %s: Could not find configuration for form type %s"
 						.formatted(name, form.getFormType())));
 
-		transformationTarget.transform(form, data);
-
 		List<String> languages = form.getLanguages();
 
 		Transaction t = TransactionManager.getCurrentTransaction();
@@ -154,16 +150,22 @@ public class FormTransformer {
 				handleLinks(typeConfig, elementConfig, element, languages);
 			}, null);
 
-			transformPageReference(data, "successPageId", "successNodeId", p -> {
-				transformationTarget.transform(SUCCESS_PAGE_REFERENCE, data, languages,
-						p != null ? p.getOwningNode() : null, p,
-						Optional.of(Pair.of("successPageId", "successNodeId")));
-			});
-			transformPageReference(data, "adminEmailPageId", "adminEmailNodeId", p -> {
-				transformationTarget.transform(ADMIN_MAIL_SOURCE_REFERENCE, data, languages,
-						p != null ? p.getOwningNode() : null, p,
-						Optional.of(Pair.of("adminEmailPageId", "adminEmailNodeId")));
-			});
+			if (!typeConfig.external) {
+				transformPageReference(data, "successPageId", "successNodeId", (n, p) -> {
+					if (p != null) {
+						transformationTarget.transform(SUCCESS_PAGE_REFERENCE, data, languages, n, p,
+								Optional.of(Pair.of("successPageId", "successNodeId")));
+					}
+				});
+				transformPageReference(data, "adminEmailPageId", "adminEmailNodeId", (n, p) -> {
+					if (p != null) {
+						transformationTarget.transform(ADMIN_MAIL_SOURCE_REFERENCE, data, languages, n,
+								p, Optional.of(Pair.of("adminEmailPageId", "adminEmailNodeId")));
+					}
+				});
+			}
+
+			transformationTarget.transform(typeConfig, form, data);
 
 			// take over the collected dependencies
 			if (handleDependencies && storeDependencies) {
@@ -185,7 +187,7 @@ public class FormTransformer {
 	 * @throws NodeException
 	 */
 	protected void transformPageReference(ObjectNode data, String pageIdProperty, String nodeIdProperty,
-			Consumer<Page> pageConsumer) throws NodeException {
+			BiConsumer<Node, Page> pageConsumer) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		String pageId = data.optional(pageIdProperty).map(JsonNode::asText).orElse("");
@@ -197,8 +199,8 @@ public class FormTransformer {
 		Page referencedPage = null;
 		int iNodeId = 0;
 
+		Node node = t.getObject(Node.class, nodeId);
 		if (!StringUtils.isBlank(pageId) && !Strings.CI.equals(pageId, "0")) {
-			Node node = t.getObject(Node.class, nodeId);
 			iNodeId = Optional.ofNullable(node).map(Node::getId).orElse(0);
 			try (ChannelTrx cTrx = new ChannelTrx(iNodeId)) {
 				referencedPage = t.getObject(Page.class, pageId);
@@ -206,7 +208,7 @@ public class FormTransformer {
 		}
 
 		try (ChannelTrx cTrx = new ChannelTrx(iNodeId)) {
-			pageConsumer.accept(referencedPage);
+			pageConsumer.accept(node, referencedPage);
 		}
 	}
 
@@ -350,19 +352,6 @@ public class FormTransformer {
 	}
 
 	/**
-	 * Render the given object as meshlink and store as translated property in the node with given name
-	 * @param node node where to store the mesh links
-	 * @param name property name
-	 * @param object object to be linked
-	 * @param languages form languages
-	 * @throws NodeException
-	 */
-	protected static void renderMeshlink(JsonNode node, String name, NodeObject object,
-			List<String> languages) throws NodeException {
-		// TODO
-	}
-
-	/**
 	 * Render the URL to the given object and store as translated property in the node with given name
 	 * @param node node where to store the URLs
 	 * @param name property name
@@ -370,12 +359,12 @@ public class FormTransformer {
 	 * @param languages form languages
 	 * @throws NodeException
 	 */
-	protected static void renderUrl(JsonNode node, String name, NodeObject object, List<String> languages)
+	protected static void renderUrl(JsonNode node, String name, NodeObject object, List<String> languages, int linkWay)
 			throws NodeException {
 		ObjectNode translatedUrls = node.withObjectProperty(name).removeAll();
 
 		// generate the url factory with a static host link
-		StaticUrlFactory urlFactory = new StaticUrlFactory(RenderUrl.LINK_HOST, RenderUrl.LINK_HOST, null);
+		StaticUrlFactory urlFactory = new StaticUrlFactory(linkWay, linkWay, null);
 
 		// we don't want the linkway to be changed
 		urlFactory.setAllowAutoDetection(false);
@@ -384,17 +373,24 @@ public class FormTransformer {
 		urlFactory.setLinkManagement(LinkManagement.OFF);
 
 		for (String language : languages) {
-			NodeObject langObject = languageFallback(object, language);
-			if (langObject != null) {
-				try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, langObject, false, false,
-						false)) {
-					// Render the URL and set it as live URL
-					RenderUrl renderUrl = urlFactory.createRenderUrl(langObject.getObjectInfo().getObjectClass(),
-							langObject.getId());
-					translatedUrls.put(language, renderUrl.toString());
-				}
+			Optional.ofNullable(renderUrl(urlFactory, object, language))
+					.ifPresent(url -> translatedUrls.put(language, url));
+		}
+	}
+
+	protected static String renderUrl(StaticUrlFactory urlFactory, NodeObject object, String language)
+			throws NodeException {
+		NodeObject langObject = languageFallback(object, language);
+		if (langObject != null) {
+			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, langObject, false, false,
+					false)) {
+				RenderUrl renderUrl = urlFactory.createRenderUrl(langObject.getObjectInfo().getObjectClass(),
+						langObject.getId());
+				return renderUrl.toString();
 			}
 		}
+
+		return null;
 	}
 
 	/**
@@ -466,6 +462,16 @@ public class FormTransformer {
 			// TODO check allow_links if possible
 			return text;
 		}
+
+		// generate the url factory with a static host link
+		StaticUrlFactory urlFactory = new StaticUrlFactory(RenderUrl.LINK_HOST, RenderUrl.LINK_HOST, null);
+
+		// we don't want the linkway to be changed
+		urlFactory.setAllowAutoDetection(false);
+
+		// disable link management
+		urlFactory.setLinkManagement(LinkManagement.OFF);
+
 		String linkPattern = "\\{\\{"
 				+ "[\\s]*(LINK)[\\s]*"
 				+ "[|]"
@@ -482,9 +488,9 @@ public class FormTransformer {
 				+ "\\}\\}";
 		Pattern pattern = Pattern.compile(linkPattern);
 		Matcher matcher = pattern.matcher(text);
-		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+		try (AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Deque<String> matches = new ArrayDeque<>(1);
-			Transaction t = trx.getTransaction();
+			Transaction t = TransactionManager.getCurrentTransaction();
 			while (matcher.find()) {
 				String linkType = matcher.group("linkType");
 				String nodeId = matcher.group("nodeId");
@@ -502,28 +508,6 @@ public class FormTransformer {
 					}
 				} else if ("PAGE".equals(linkType)) {
 					maybeRenderedObject = Optional.ofNullable(t.getObject(Page.class, itemId));
-//					if (maybeLangCode.isPresent()) {
-//						try {
-//							Optional<Disinheritable<?>> maybeLocPage = maybeRenderedObject.map(Page.class::cast).flatMap(page -> {
-//								try {
-//									return Optional.ofNullable(page.getLanguageVariant(maybeLangCode.get(), channelOrNode.getId()));
-//								} catch (NodeException e) {
-//									throw new IllegalStateException(e);
-//								}
-//							});
-//							if (maybeLocPage.isPresent()) {
-//								maybeRenderedObject = maybeLocPage;
-//							} else {
-//								logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), maybeRenderedObject));
-//							}
-//						} catch (Throwable e) {
-//							if (e.getCause() instanceof NodeException) {
-//								throw (NodeException) e.getCause();
-//							} else {
-//								throw e;
-//							}
-//						}
-//					}
 				} else if ("URL".equals(linkType) && maybeUrl.isEmpty()) {
 					throw new NodeException("No URL provided for " + matcher.toString());
 				}
@@ -531,13 +515,9 @@ public class FormTransformer {
 				if ("URL".equals(linkType)) {
 					url = maybeUrl.get();
 				} else {
-					Disinheritable<?> renderedObject = maybeRenderedObject.get();
-//					if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
-//							&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
-//						// TODO more meaningful error / logging
-//						throw new NodeException("Wrong node / channel for " + matcher.toString());
-//					}
-					url = MeshURLRenderer.renderDisinheritableUrl(renderedObject);
+					try (ChannelTrx cTrx = new ChannelTrx(maybeChannelOrNode.orElse(null))) {
+						url = Optional.ofNullable(renderUrl(urlFactory, maybeRenderedObject.orElse(null), maybeLangCode.orElse(null))).orElse("#");
+					}
 				}
 				matches.addLast(String.format("<a href='%s' %s>%s</a>", 
 						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(url)), 
@@ -577,23 +557,40 @@ public class FormTransformer {
 
 		/**
 		 * Transform the base form data
+		 * @param typeConfig type configuration
 		 * @param form form
 		 * @param data form data
 		 * @throws NodeException
 		 */
-		public void transform(Form form, ObjectNode data) throws NodeException {
+		public void transform(FormTypeConfiguration typeConfig, Form form, ObjectNode data) throws NodeException {
 			switch (this) {
 			case publish:
 				data.put("cms_id", form.getId());
-				data.put("type", form.getFormType());
+				data.put(FormDataUtils.TYPE, form.getFormType());
 				// schema.properties is required in the plugin
-				data.withObjectProperty("schema").withObjectProperty("properties");
+				data.withObjectProperty(FormDataUtils.SCHEMA).withObjectProperty(FormDataUtils.PROPERTIES);
+				// ui-schema.formname is required
+				ObjectNode formName = data.withObjectProperty(FormDataUtils.UI_SCHEMA)
+						.withObjectProperty(FormDataUtils.FORMNAME);
+				if (formName.isEmpty()) {
+					for (String language : form.getLanguages()) {
+						formName.put(language, form.getName());
+					}
+				}
 				break;
 			case fromContentPackage:
 			case toContentPackage:
+				if (!typeConfig.external) {
+					for (String property : Arrays.asList("successPageId", "successNodeId", "adminEmailPageId",
+							"adminEmailNodeId")) {
+						if (!data.has(property)) {
+							data.putNull(property);
+						}
+					}
+				}
+				break;
 			default:
 				break;
-			
 			}
 		}
 
@@ -639,10 +636,10 @@ public class FormTransformer {
 					}
 					break;
 				case meshlink:
-					renderMeshlink(referenceNode, referenceSetting.id, referenced, languages);
+					renderUrl(referenceNode, referenceSetting.id, referenced, languages, RenderUrl.LINK_PORTAL);
 					break;
 				case url:
-					renderUrl(referenceNode, referenceSetting.id, referenced, languages);
+					renderUrl(referenceNode, referenceSetting.id, referenced, languages, RenderUrl.LINK_HOST);
 					break;
 				}
 				break;
@@ -651,6 +648,13 @@ public class FormTransformer {
 			}
 		}
 
+		/**
+		 * Transform URLs embedded in the string setting
+		 * @param stringSetting
+		 * @param node
+		 * @param languages
+		 * @throws NodeException
+		 */
 		public void transform(StringSetting stringSetting, ObjectNode node, List<String> languages)
 				throws NodeException {
 			switch(this) {
@@ -659,13 +663,25 @@ public class FormTransformer {
 			case fromContentPackage:
 				break;
 			case publish:
+				String text = node.path(stringSetting.id).asText("");
+				if (!StringUtils.isBlank(text)) {
+					text = renderUrls(text, null);
+					node.put(stringSetting.id, text);
+				}
 				break;
 			default:
 				break;
 			}
 		}
 
-		public void transform(TranslationSetting stringSetting, ObjectNode node, List<String> languages)
+		/**
+		 * Transform URLs embedded in the translation setting
+		 * @param translationSetting
+		 * @param node
+		 * @param languages
+		 * @throws NodeException
+		 */
+		public void transform(TranslationSetting translationSetting, ObjectNode node, List<String> languages)
 				throws NodeException {
 			switch(this) {
 			case toContentPackage:
@@ -673,7 +689,7 @@ public class FormTransformer {
 			case fromContentPackage:
 				break;
 			case publish:
-				for (Entry<String, JsonNode> entry : node.optional(stringSetting.id).filter(JsonNode::isObject)
+				for (Entry<String, JsonNode> entry : node.optional(translationSetting.id).filter(JsonNode::isObject)
 						.map(JsonNode::properties).orElse(Collections.emptySet())) {
 					String language = entry.getKey();
 					if (languages.contains(language)) {

@@ -794,9 +794,9 @@ public class FormResourceTest {
 		JsonMapper mapper = JsonMapper.builder().build();
 
 		JsonNode initialData = mapper.readTree("{\"schema\": {\"properties\": {}}}");
-		JsonNode updateData = mapper.readTree("{\"uiSchema\": {\"formname\": {\"de\": \"Test Form\", \"en\": \"Test Form\"}}}");
+		JsonNode updateData = mapper.readTree("{\"ui-schema\": {\"formname\": {\"de\": \"Test Form\", \"en\": \"Test Form\"}}}");
 
-		JsonNode finalData = mapper.readTree("{\"schema\": {\"properties\": {}}, \"uiSchema\": {\"formname\": {\"de\": \"Test Form\", \"en\": \"Test Form\"}}}");
+		JsonNode finalData = mapper.readTree("{\"schema\": {\"properties\": {}}, \"ui-schema\": {\"formname\": {\"de\": \"Test Form\", \"en\": \"Test Form\"}}}");
 
 		Form form = supply(() -> create(Form.class, f -> {
 			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);

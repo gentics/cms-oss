@@ -21,7 +21,42 @@ public class FormDataUtils {
 	public final static String FORM_GRID_OPTIONS = "formGridOptions";
 
 	/**
-	 * Handle elements found in the schema or uiSchema of the given data by calling the given handler
+	 * Name of the schema property
+	 */
+	public final static String SCHEMA = "schema";
+
+	/**
+	 * Name of the ui-schema property
+	 */
+	public final static String UI_SCHEMA = "ui-schema";
+
+	/**
+	 * Name of the formname property
+	 */
+	public final static String FORMNAME = "formname";
+
+	/**
+	 * Name of the pages property
+	 */
+	public final static String PAGES = "pages";
+
+	/**
+	 * Name of the elements property
+	 */
+	public final static String ELEMENTS = "elements";
+
+	/**
+	 * Name of the properties property
+	 */
+	public final static String PROPERTIES = "properties";
+
+	/**
+	 * Name of the type property
+	 */
+	public final static String TYPE = "type";
+
+	/**
+	 * Handle elements found in the schema or ui-schema of the given data by calling the given handler
 	 * @param typeConfig type config
 	 * @param data form data
 	 * @param handler optional handler for handling found elements with known element types
@@ -33,7 +68,7 @@ public class FormDataUtils {
 		// iterate over the schema.properties
 		for (Iterator<JsonNode> propertyIt = schemaProperties(data); propertyIt.hasNext();) {
 			JsonNode property = propertyIt.next();
-			String elementType = property.optional("type").map(JsonNode::asText).orElse("<unknown>");
+			String elementType = property.optional(TYPE).map(JsonNode::asText).orElse("<unknown>");
 
 			Optional<ControlConfig> optControlConfig = Optional.ofNullable(typeConfig.controls).map(c -> c.get(elementType));
 			Optional<BlockConfig> optBlockConfig = Optional.ofNullable(typeConfig.blocks).map(b -> b.get(elementType));
@@ -58,7 +93,7 @@ public class FormDataUtils {
 			JsonNode page = pagesIt.next();
 			for (Iterator<JsonNode> elementsIt = pageElements(page); elementsIt.hasNext();) {
 				JsonNode element = elementsIt.next();
-				String elementType = element.optional(FORM_GRID_OPTIONS).flatMap(formGridOptions -> formGridOptions.optional("type"))
+				String elementType = element.optional(FORM_GRID_OPTIONS).flatMap(formGridOptions -> formGridOptions.optional(TYPE))
 					.map(JsonNode::asText).orElse("<unknown>");
 
 				Optional<ControlConfig> optControlConfig = Optional.ofNullable(typeConfig.controls).map(c -> c.get(elementType));
@@ -88,21 +123,21 @@ public class FormDataUtils {
 	 */
 	public static Iterator<JsonNode> schemaProperties(JsonNode data) {
 		return data
-			.optional("schema")
-			.flatMap(schema -> schema.optional("properties"))
+			.optional(SCHEMA)
+			.flatMap(schema -> schema.optional(PROPERTIES))
 			.map(properties -> properties.values())
 			.orElse(Collections.emptyIterator());
 	}
 
 	/**
-	 * Get an iterator over the uiSchema.pages
+	 * Get an iterator over the ui-schema.pages
 	 * @param data form data
 	 * @return iterator
 	 */
 	public static Iterator<JsonNode> uiSchemaPages(JsonNode data) {
 		return data
-			.optional("uiSchema")
-			.flatMap(uiSchema -> uiSchema.optional("pages"))
+			.optional(UI_SCHEMA)
+			.flatMap(uiSchema -> uiSchema.optional(PAGES))
 			.map(pages -> pages.values()).orElse(Collections.emptyIterator());
 	}
 
@@ -113,7 +148,7 @@ public class FormDataUtils {
 	 */
 	public static Iterator<JsonNode> pageElements(JsonNode page) {
 		return page
-			.optional("elements")
+			.optional(ELEMENTS)
 			.map(elements -> elements.values()).orElse(Collections.emptyIterator());
 	}
 }

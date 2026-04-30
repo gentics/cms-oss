@@ -8,7 +8,10 @@
             [attr.data-page-index]="$index"
             [class.active]="pageIndex() === $index"
             [class.drop-target-hint]="elementMoving() && !elementMoving()?.inserting"
+            [class.hovering]="hoveringIndex() === $index"
             (click)="pageIndex.set($index)"
+            (dragover)="enterDrag($index)"
+            (dragleave)="leaveDrag($event, $index)"
             (addItem)="moveElementToPage($event, $index)"
         >
             <span class="page-tab-label">

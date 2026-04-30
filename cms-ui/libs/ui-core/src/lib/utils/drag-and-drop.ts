@@ -21,6 +21,9 @@ export function getEventTarget(event: any): HTMLElement {
  * See https://github.com/Microsoft/TypeScript/issues/12069
  */
 export function transferHasFiles(transfer: DataTransfer): boolean {
+    if (transfer == null) {
+        return false;
+    }
     const types = transfer.types as any as string[] & DOMStringList;
     if (!transfer || !transfer.types) {
         return false;

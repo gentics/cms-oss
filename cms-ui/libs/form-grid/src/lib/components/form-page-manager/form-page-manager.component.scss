@@ -1,3 +1,5 @@
+@import 'ui-core/src/styles/variables';
+
 :host {
     display: block;
 
@@ -24,40 +26,62 @@
     padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid transparent;
-    background: #f9f9f9;
+    background: $gtx-color-off-white;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 200ms;
     user-select: none;
-    color: #999;
+    color: $gtx-color-dark-gray;
 
-    &.active {
+    gtx-button {
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+
+    &:hover gtx-button,
+    &.active gtx-button {
+        opacity: 1;
+    }
+
+    &.active,
+    &:hover {
         background: #ffffff;
-        border: 1px solid #d0d0d0;
-        color: #1976d2;
-        font-weight: 500;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     }
 
-    &.droppable:not(.active) {
-        &.dragover,
-        &:hover {
-            background: #fafafa;
-            border-color: #d0d0d0;
-            color: #333;
-        }
+    &:hover {
+        border-color: $gtx-color-mid-gray;
+        color: $gtx-color-off-black;
+    }
+
+    &.active {
+        border-color: $gtx-color-primary;
+        color: $gtx-color-primary;
+        font-weight: 500;
     }
 
     &.drop-target-hint {
-        border-color: #1976d2;
-        background: #e3f2fd;
-        color: #1565c0;
-        animation: pulse-border 1s ease-in-out infinite alternate;
-    }
+        gtx-button {
+            opacity: 0;
+        }
 
-    &.drop-target-hint:hover,
-    &.drop-target-hint.dragover {
-        background: #bbdefb;
-        border-color: #1565c0;
+        &.active {
+            background-color: $gtx-color-very-light-gray;
+            color: $gtx-color-dark-gray;
+            border-color: $gtx-color-dark-gray;
+        }
+
+        &:not(.active) {
+            border-color: $gtx-color-primary;
+            background: rgba($gtx-color-primary, 0.05);
+            color: $gtx-color-primary;
+            animation: pulse-border 1s ease-in-out infinite alternate;
+
+            &:hover,
+            &.hovering {
+                background: rgba($gtx-color-primary, 0.08);
+                border-style: dashed;
+            }
+        }
     }
 
     .page-tab-label {
@@ -73,16 +97,6 @@
     .page-name-input {
         flex: 1;
         min-width: 120px;
-    }
-
-    gtx-button {
-        opacity: 0;
-        transition: opacity 0.15s;
-    }
-
-    &:hover gtx-button,
-    &.active gtx-button {
-        opacity: 1;
     }
 }
 

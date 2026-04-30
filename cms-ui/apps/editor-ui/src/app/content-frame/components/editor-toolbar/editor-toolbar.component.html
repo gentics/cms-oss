@@ -132,12 +132,12 @@
                         class="primary-action device-preview-button"
                         data-action="device-preview"
                         data-context-id="device-preview"
+                        [class.is-active]="!!(devicePreviewActive$ | async)"
                     >
                         <gtx-dropdown-trigger>
                             <gtx-button
                                 size="small"
                                 flat
-                                [type]="(devicePreviewActive$ | async) ? 'primary' : 'secondary'"
                                 [title]="'editor.device_preview_tooltip' | gtxI18n"
                                 data-context-trigger
                             >
@@ -149,7 +149,7 @@
                                         {{ 'editor.device_preview_label' | gtxI18n }}
                                     }
                                 </span>
-                                <icon class="device-preview-caret">arrow_drop_down</icon>
+                                <icon right class="device-preview-caret">arrow_drop_down</icon>
                             </gtx-button>
                         </gtx-dropdown-trigger>
                         <gtx-dropdown-content>
@@ -261,16 +261,19 @@
                                 </gtx-dropdown-item>
                             }
 
-                            @if (buttons.previewPage) {
+                            <!--
+                                The legacy `previewPage` dropdown item used to live here. It
+                                navigated to a separate EditMode.PREVIEW view and is now
+                                superseded by the responsive device-preview button next to the
+                                "Bearbeiten" button. The view-current-version preview is still
+                                accessible via the version history (Versionen) dropdown item.
+                            -->
+                            @if (buttons.previewPage && editorState.version) {
                                 <gtx-dropdown-item
-                                    data-action="preview"
+                                    data-action="preview-current-version"
                                     (click)="previewPage()"
                                 >
-                                    @if (!editorState.version) {
-                                        <icon left>pageview</icon> {{ 'editor.preview_label' | gtxI18n }}
-                                    } @else {
-                                        <icon left>update</icon> {{ 'editor.preview_current_version_label' | gtxI18n }}
-                                    }
+                                    <icon left>update</icon> {{ 'editor.preview_current_version_label' | gtxI18n }}
                                 </gtx-dropdown-item>
                             }
 

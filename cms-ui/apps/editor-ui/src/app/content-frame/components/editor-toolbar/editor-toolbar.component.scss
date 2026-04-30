@@ -38,18 +38,41 @@
     }
 
     .device-preview-button {
-        display: inline-flex;
-        align-items: center;
+        // The `<gtx-button>` inside handles its own flex layout; we only
+        // tweak the caret + label cosmetics here. Vertical centering is
+        // achieved via inline-flex on the inner spans/icons so that the
+        // mixed content (material icon + plain text + drop-down caret)
+        // shares one baseline regardless of icon line-height differences.
+        gtx-button {
+            .device-preview-button-label {
+                display: inline-flex;
+                align-items: center;
+                line-height: 1;
+                margin: 0 0.25rem;
+                font-weight: 500;
+            }
 
-        .device-preview-button-label {
-            margin: 0 0.25rem 0 0.25rem;
-            font-weight: 500;
+            .device-preview-caret {
+                display: inline-flex;
+                align-items: center;
+                opacity: 0.7;
+                font-size: 1.25rem;
+            }
         }
 
-        .device-preview-caret {
-            margin-left: 0.1rem;
-            opacity: 0.7;
-            font-size: 1.25rem;
+        // Highlight the trigger when device-preview is currently constraining
+        // the iframe — gives the user a clear "preview is active" signal.
+        &.is-active {
+            gtx-button .button-event-wrapper button,
+            gtx-button button {
+                background-color: rgba(25, 118, 210, 0.1);
+                color: #1565c0;
+            }
+
+            .device-preview-caret {
+                opacity: 1;
+                color: #1565c0;
+            }
         }
     }
 

@@ -89,7 +89,14 @@
         }
     }
 
-    <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE || currentItem?.type === 'form'">
+    <div
+        class="frame-wrapper"
+        [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE || currentItem?.type === 'form'"
+        [class.device-preview-active]="!!(devicePreviewActive$ | async)"
+        [attr.data-active-preset]="(devicePreviewActive$ | async)?.id"
+        [style.--device-w.px]="(devicePreviewActive$ | async)?.width"
+        [style.--device-h.px]="(devicePreviewActive$ | async)?.height"
+    >
         <gtx-progress-bar
             class="frame-requesting"
             [active]="!windowLoaded
@@ -111,54 +118,42 @@
             [longerMessage]="'editor.loading_takes_more_time' | gtxI18n"
         ></gtx-loading-spinner>
 
-        <div
-            class="device-preview-stage"
-            [class.device-mode]="!!(devicePreviewActive$ | async)"
-            [attr.data-active-preset]="(devicePreviewActive$ | async)?.id"
-        >
-            <div
-                class="device-frame"
-                [style.--device-w.px]="(devicePreviewActive$ | async)?.width"
-                [style.--device-h.px]="(devicePreviewActive$ | async)?.height"
-            >
-                <div class="frame-language-container" [class.hidden]="!comparePageId">
-                    <iframe
-                        #diffFrame
-                        class="frame diff-frame"
-                        name="diff-frame"
-                    ></iframe>
-                    <div class="frame-language-indicator">{{ pageComparisonLanguage?.name }}</div>
-                </div>
-
-                <div class="frame-language-container">
-                    <iframe
-                        #iframe
-                        class="frame master-frame"
-                        [class.hidden]="editMode === EditMode.EDIT_INHERITANCE"
-                        [attr.data-item-type]="currentItem?.type"
-                        [attr.data-edit-mode]="editMode"
-                        [attr.loaded]="windowLoaded
-                            && !(
-                                (editMode === EditMode.EDIT)
-                                && pageComparisonLanguage == null
-                                && !alohaWindowLoaded
-                            )"
-                        name="master-frame"
-                        aria-hidden="false"
-                    ></iframe>
-
-                    <div class="frame-language-indicator" [class.hidden]="!comparePageId">{{ itemLanguage?.name }}</div>
-                </div>
-            </div>
-
-            @if (devicePreviewActive$ | async; as activePreset) {
-                <div class="device-preview-info">
-                    <icon class="device-preview-info-icon">{{ activePreset.icon }}</icon>
-                    <span class="device-preview-info-label">{{ activePreset.labelKey | gtxI18n }}</span>
-                    <span class="device-preview-info-size">{{ activePreset.width }} × {{ activePreset.height }}</span>
-                </div>
-            }
+        <div class="frame-language-container" [class.hidden]="!comparePageId">
+            <iframe
+                #diffFrame
+                class="frame diff-frame"
+                name="diff-frame"
+            ></iframe>
+            <div class="frame-language-indicator">{{ pageComparisonLanguage?.name }}</div>
         </div>
+
+        <div class="frame-language-container">
+            <iframe
+                #iframe
+                class="frame master-frame"
+                [class.hidden]="editMode === EditMode.EDIT_INHERITANCE"
+                [attr.data-item-type]="currentItem?.type"
+                [attr.data-edit-mode]="editMode"
+                [attr.loaded]="windowLoaded
+                    && !(
+                        (editMode === EditMode.EDIT)
+                        && pageComparisonLanguage == null
+                        && !alohaWindowLoaded
+                    )"
+                name="master-frame"
+                aria-hidden="false"
+            ></iframe>
+
+            <div class="frame-language-indicator" [class.hidden]="!comparePageId">{{ itemLanguage?.name }}</div>
+        </div>
+
+        @if (devicePreviewActive$ | async; as activePreset) {
+            <div class="device-preview-info">
+                <icon class="device-preview-info-icon">{{ activePreset.icon }}</icon>
+                <span class="device-preview-info-label">{{ activePreset.labelKey | gtxI18n }}</span>
+                <span class="device-preview-info-size">{{ activePreset.width }} × {{ activePreset.height }}</span>
+            </div>
+        }
     </div>
 
     <div class="hidden-file-picker" #filePickerWrapper>

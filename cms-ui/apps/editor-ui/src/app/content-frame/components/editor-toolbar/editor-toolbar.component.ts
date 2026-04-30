@@ -197,6 +197,15 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             this.changeDetector.markForCheck();
         }));
 
+        // Auto-deactivate device-preview when the user leaves PREVIEW mode
+        // (e.g. clicks "Bearbeiten" to start editing). Without this the user
+        // would end up editing in a 375px frame with Aloha toolbars cropped.
+        this.subscriptions.push(this.appState.select((state) => state.editor.editMode).subscribe((editMode) => {
+            if (editMode !== EditMode.PREVIEW && this.devicePreview.currentState.active) {
+                this.devicePreview.deactivate();
+            }
+        }));
+
         this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
         this.checkIfInQueue();
         this.buttons = this.determineVisibleButtons();
@@ -369,17 +378,42 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     /**
+     * Switches the editor from EDIT to PREVIEW mode if currently editing.
+     * Both `selectDevicePreset` and `clearDevicePreset` route through this so
+     * any interaction with the Vorschau dropdown lands the user in PREVIEW.
+     */
+    private ensurePreviewMode(): void {
+        const editMode = this.editorState?.editMode;
+        if (editMode === EditMode.EDIT && this.currentNode && this.currentItem) {
+            this.navigationService
+                .detailOrModal(this.currentNode.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
+                .navigate();
+        }
+    }
+
+    /**
      * Activate device-preview mode for the given preset (mobile / tablet / …).
      * The content-frame iframe will be visually constrained to this size.
+     *
+     * If the editor is currently in EDIT mode, this also switches to PREVIEW —
+     * editing inside a 375px viewport with Aloha toolbars overflowing is
+     * disorienting, and device-preview is conceptually a "view as end-user"
+     * mode. Return to editing via the BEARBEITEN button (which auto-
+     * deactivates the device preset, see ngOnInit).
      */
     public selectDevicePreset(preset: DevicePreset): void {
+        this.ensurePreviewMode();
         this.devicePreview.activate(preset.id);
     }
 
     /**
      * Deactivate device-preview mode and return to full-width rendering.
+     * If the user picks "Volle Breite" while still in EDIT mode, this also
+     * switches to PREVIEW so the behaviour is consistent across all
+     * dropdown entries — every Vorschau interaction lands in PREVIEW.
      */
     public clearDevicePreset(): void {
+        this.ensurePreviewMode();
         this.devicePreview.deactivate();
     }
 

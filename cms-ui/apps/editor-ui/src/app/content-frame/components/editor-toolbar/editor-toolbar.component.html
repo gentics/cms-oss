@@ -127,6 +127,42 @@
                     </gtx-button>
                 }
 
+                @if (buttons.devicePreview) {
+                    <gtx-dropdown-list
+                        class="primary-action device-preview-button"
+                        data-action="device-preview"
+                        data-context-id="device-preview"
+                    >
+                        <gtx-dropdown-trigger>
+                            <gtx-button
+                                size="small"
+                                flat
+                                [type]="(devicePreviewActive$ | async) ? 'primary' : 'secondary'"
+                                [title]="'editor.device_preview_tooltip' | gtxI18n"
+                                data-context-trigger
+                            >
+                                <icon left>{{ (devicePreviewActive$ | async)?.icon || 'devices' }}</icon>
+                                <span class="device-preview-button-label">
+                                    @if (devicePreviewActive$ | async; as activePreset) {
+                                        {{ activePreset.labelKey | gtxI18n }}
+                                    } @else {
+                                        {{ 'editor.device_preview_label' | gtxI18n }}
+                                    }
+                                </span>
+                                <icon class="device-preview-caret">arrow_drop_down</icon>
+                            </gtx-button>
+                        </gtx-dropdown-trigger>
+                        <gtx-dropdown-content>
+                            <gtx-device-preview-menu
+                                [presets]="devicePreviewPresets$ | async"
+                                [activePresetId]="(devicePreviewState$ | async)?.presetId"
+                                (select)="selectDevicePreset($event)"
+                                (clear)="clearDevicePreset()"
+                            ></gtx-device-preview-menu>
+                        </gtx-dropdown-content>
+                    </gtx-dropdown-list>
+                }
+
                 @if (buttons.lockedEdit) {
                     <gtx-button
                         class="primary-action"

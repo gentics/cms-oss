@@ -41,12 +41,14 @@ import { PageVersionsModal } from '../../../shared/components';
 import { BreadcrumbsService } from '../../../shared/providers';
 import { PublishableStateUtil } from '../../../shared/util/entity-states';
 import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '../../../state';
-import { AlohaIntegrationService } from '../../providers';
+import { DevicePreset, DevicePreviewState } from '../../models/device-preset';
+import { AlohaIntegrationService, DevicePreviewService } from '../../providers';
 
 /** Used to define which buttons are visible at a certain moment. */
 interface AvailableButtons {
     compareContents?: boolean;
     compareSources?: boolean;
+    devicePreview?: boolean;
     editItem?: boolean;
     edit?: boolean;
     editInheritance?: boolean;
@@ -116,6 +118,11 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public uploadInProgress$: Observable<boolean>;
     public alohaReady: boolean;
 
+    /** Streams from the DevicePreviewService — wired in ngOnInit. */
+    public devicePreviewState$: Observable<DevicePreviewState>;
+    public devicePreviewActive$: Observable<DevicePreset | null>;
+    public devicePreviewPresets$: Observable<DevicePreset[]>;
+
     public breadcrumbs: (IBreadcrumbLink | IBreadcrumbRouterLink)[] = [];
     public multilineExpanded: boolean;
     public buttons: AvailableButtons = {};
@@ -141,9 +148,14 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         protected folderActions: FolderActionsService,
         protected permissions: PermissionService,
         protected aloha: AlohaIntegrationService,
+        protected devicePreview: DevicePreviewService,
     ) {}
 
     ngOnInit(): void {
+        this.devicePreviewState$ = this.devicePreview.state$;
+        this.devicePreviewActive$ = this.devicePreview.activePreset$;
+        this.devicePreviewPresets$ = this.devicePreview.presets$;
+
         this.uploadInProgress$ = this.appState.select((state) => state.editor).pipe(
             map((editorState) => editorState.uploadInProgress),
             publishReplay(1),
@@ -356,6 +368,21 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             .navigate();
     }
 
+    /**
+     * Activate device-preview mode for the given preset (mobile / tablet / …).
+     * The content-frame iframe will be visually constrained to this size.
+     */
+    public selectDevicePreset(preset: DevicePreset): void {
+        this.devicePreview.activate(preset.id);
+    }
+
+    /**
+     * Deactivate device-preview mode and return to full-width rendering.
+     */
+    public clearDevicePreset(): void {
+        this.devicePreview.deactivate();
+    }
+
     editInheritance(): void {
         this.navigationService
             .detailOrModal(this.currentNode?.id, this.currentItem.type, this.currentItem.id, EditMode.EDIT_INHERITANCE)
@@ -411,9 +438,14 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         const userCan = this.itemPermissions || { edit: false, view: false };
         const canPublish = !!(isPage || (isForm && (this.itemPermissions as FormPermissions)?.publish));
 
+        // Device-preview is meaningful while we're looking at the rendered
+        // iframe (preview or edit mode) of a page or form.
+        const showDevicePreview = (isPage || isForm) && (previewing || editing) && userCan.view;
+
         return {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
             compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
+            devicePreview: showDevicePreview,
             editItem: (editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE)
               && (isPage || isForm)
               && userCan.edit

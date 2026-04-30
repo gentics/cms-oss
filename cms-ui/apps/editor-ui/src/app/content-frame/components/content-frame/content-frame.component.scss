@@ -45,6 +45,77 @@
         display: flex;
         flex-direction: column;
 
+        // ── Device-Preview ───────────────────────────────────────────────
+        // Wrapper that lets the user constrain the iframe to a specific
+        // viewport size (mobile / tablet / desktop). Without device-mode it
+        // is a transparent flex container so the original layout is unaffected.
+        .device-preview-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+
+            .device-frame {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            &.device-mode {
+                background:
+                    linear-gradient(45deg, rgba(0,0,0,0.04) 25%, transparent 25%) 0 0 / 20px 20px,
+                    linear-gradient(-45deg, rgba(0,0,0,0.04) 25%, transparent 25%) 0 10px / 20px 20px,
+                    linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.04) 75%) 10px -10px / 20px 20px,
+                    linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.04) 75%) 10px 0 / 20px 20px,
+                    $gtx-color-very-light-gray;
+                padding: 16px;
+                overflow: auto;
+                align-items: center;
+                position: relative;
+
+                .device-frame {
+                    flex: 0 0 auto;
+                    width: var(--device-w, 100%);
+                    height: var(--device-h, 100%);
+                    max-width: 100%;
+                    background: white;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+                    border-radius: 6px;
+                    overflow: hidden;
+                    transition: width 0.25s ease, height 0.25s ease;
+                }
+
+                .device-preview-info {
+                    position: absolute;
+                    top: 8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: $gtx-color-primary;
+                    color: white;
+                    padding: 4px 12px;
+                    border-radius: 999px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+                    z-index: 5;
+                    pointer-events: none;
+
+                    .device-preview-info-icon {
+                        font-size: 16px;
+                    }
+
+                    .device-preview-info-size {
+                        opacity: 0.85;
+                        font-variant-numeric: tabular-nums;
+                    }
+                }
+            }
+        }
+
         .frame-language-container {
             flex: 1 1 50%;
             display: flex;

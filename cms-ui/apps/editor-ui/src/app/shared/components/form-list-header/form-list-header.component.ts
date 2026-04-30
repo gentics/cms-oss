@@ -140,6 +140,23 @@ export class FormListHeaderComponent extends BaseItemListHeaderComponent {
     }
 
     /**
+     * Delete the selected items and clear the selection.
+     */
+    deleteSelected(): void {
+        const itemsToBeDeleted = this.getNotDeletedItems();
+        if (itemsToBeDeleted.length === 0) {
+            return;
+        }
+
+        this.contextMenuOperations.deleteItems('form', itemsToBeDeleted, this.node().id).then((ids) => {
+            if (ids?.length > 0) {
+                this.toggleAllSelection.emit(false);
+                this.requestReload.emit();
+            }
+        });
+    }
+
+    /**
      * Helper method to filter out deleted items and which shows a notification if
      * no regular/not deleted item has been selected yet.
      */

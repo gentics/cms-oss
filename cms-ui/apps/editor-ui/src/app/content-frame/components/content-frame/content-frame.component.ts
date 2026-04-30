@@ -353,8 +353,8 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                                 properties: {},
                             };
                         }
-                        if ((item as Form).data.uiSchema == null) {
-                            (item as Form).data.uiSchema = {
+                        if ((item as Form).data['ui-schema'] == null) {
+                            (item as Form).data['ui-schema'] = {
                                 key: '',
                                 version: '',
                                 pages: [{
@@ -912,7 +912,7 @@ span.diff-html-added {
     }
 
     public updateFormUiSchema(changes: FormUISchema): void {
-        (this.currentItem as Form).data.uiSchema = changes;
+        (this.currentItem as Form).data['ui-schema'] = changes;
         this.markContentAsModifiedInState(true);
     }
 

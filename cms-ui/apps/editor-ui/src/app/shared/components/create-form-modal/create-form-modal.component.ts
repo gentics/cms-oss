@@ -93,13 +93,15 @@ export class CreateFormModalComponent
             languages: this.control.value.languages || [],
             data: {
                 ...this.control.value.data,
+                /* eslint-disable @stylistic/quote-props */
                 formWidth: 12,
                 schema: {
                     key: id,
                     version: '1.0',
                     properties: {},
                 },
-                uiSchema: {
+                /* eslint-enable @stylistic/quote-props */
+                'ui-schema': {
                     key: id,
                     version: '1.0',
                     pages: [{

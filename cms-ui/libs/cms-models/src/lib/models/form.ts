@@ -34,6 +34,7 @@ export interface EditableFormProperties {
     data: Partial<EditableFormData>;
 }
 
+/* eslint-disable @stylistic/quote-props */
 export interface EditableFormData {
     /**
      * How many columns the form should span.
@@ -55,7 +56,7 @@ export interface EditableFormData {
     /**
      * The ui-schema definition of the form
      */
-    uiSchema: FormUISchema;
+    'ui-schema': FormUISchema;
 
     /* INTERNAL FORMS
      * ===================================================================== */
@@ -105,6 +106,7 @@ export interface EditableFormData {
      */
     adminEmailSubject: I18nString;
 }
+/* eslint-enable @stylistic/quote-props */
 
 export interface Form extends InheritableItem, EditableFormProperties {
     /**

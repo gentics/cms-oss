@@ -15,7 +15,7 @@
 
             [(formPageIndex)]="formPageIndex"
             [(formViewMode)]="formViewMode"
-            [formUiSchema]="currentItem?.type === 'form' ? currentItem.data.uiSchema : null"
+            [formUiSchema]="currentItem?.type === 'form' ? currentItem.data['ui-schema'] : null"
             (formUiSchemaChange)="updateFormUiSchema($event)"
 
             (close)="closeEditor()"
@@ -84,7 +84,7 @@
                 [formName]="currentItem.name"
 
                 [schema]="currentItem.data.schema"
-                [uiSchema]="currentItem.data.uiSchema"
+                [uiSchema]="currentItem.data['ui-schema']"
                 (schemaChange)="updateFormSchema($event)"
                 (uiSchemaChange)="updateFormUiSchema($event)"
             ></gtx-form-grid>

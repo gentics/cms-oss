@@ -8,3 +8,4 @@ export * from './form-grid-elements-container/form-grid-elements-container.compo
 export * from './form-grid/form-grid.component';
 export * from './form-options-input/form-options-input.component';
 export * from './form-page-manager/form-page-manager.component';
+export * from './preview-form/preview-form.component';

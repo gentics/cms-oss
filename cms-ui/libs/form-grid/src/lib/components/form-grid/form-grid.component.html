@@ -168,7 +168,16 @@
         </main>
 
         <main class="preview-main">
-            Welcome to preview!
+            @if (viewMode() === FormGridViewMode.PREVIEW && previewFormJson()) {
+                <andp-preview-form
+                    [formJson]="previewFormJson()"
+                    [language]="previewLanguage ?? ''"
+                    [currentPage]="pageIndex()"
+                    [selectedElementId]="selectedElementId()"
+                    [remountToken]="previewRemountToken"
+                    (selectedElementIdChange)="onPreviewElementSelected($event)"
+                ></andp-preview-form>
+            }
         </main>
 
         @if (editingPage()) {

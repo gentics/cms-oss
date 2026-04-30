@@ -3,6 +3,7 @@ import {
     ChangeDetectorRef,
     Component,
     computed,
+    effect,
     input,
     model,
     OnDestroy,
@@ -182,7 +183,18 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     /* PREVIEW
      * ===================================================================== */
 
-    public previewFormJson = '';
+    /** JSON serialization of the current form for the FormGen preview bundle. */
+    public readonly previewFormJson = computed(() => {
+        try {
+            return JSON.stringify({
+                schema: this.schema(),
+                uiSchema: this.uiSchema(),
+            });
+        } catch {
+            return '';
+        }
+    });
+
     public previewRemountToken = 0;
     public previewLanguage: string | null = null;
 
@@ -208,6 +220,14 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         private translateStore: TranslateStore,
     ) {
         super(changeDetector);
+
+        // Force a fresh remount of the FormGen preview whenever the user switches
+        // to preview mode so it picks up the latest schema/ui-schema state.
+        effect(() => {
+            if (this.viewMode() === FormGridViewMode.PREVIEW) {
+                this.previewRemountToken++;
+            }
+        });
     }
 
     /* HOOKS
@@ -384,17 +404,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
     }
 
-    private ensurePreviewBootstrapData(): void {
-        try {
-            this.previewFormJson = JSON.stringify({
-                schema: this.schema(),
-                uiSchema: this.uiSchema(),
-            });
-        } catch {
-            this.previewFormJson = '';
-        }
-    }
-
     setSelectedElement(data?: ElementSelectionEvent | null, event?: Event): void {
         cancelEvent(event);
 
@@ -470,10 +479,58 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.uiSchema.set(copy);
     }
 
+    /**
+     * Called when the user selects an element in the FormGen preview.
+     * Synchronizes the selection back to the editor so the right sidebar opens.
+     */
+    public onPreviewElementSelected(elementId: string | null): void {
+        if (elementId == null) {
+            this.clearSelectedElement();
+            return;
+        }
+
+        const element = this.elementMap()[elementId];
+        if (!element) {
+            this.clearSelectedElement();
+            return;
+        }
+
+        // Find which container holds this element
+        const containerId = this.findContainerForElement(elementId) ?? this.ELEMENT_ROOT_CONTAINER_ID;
+
+        this.setSelectedElement({
+            element,
+            containerId,
+        });
+    }
+
     public clearSelectedElement(): void {
         this.selectedElementId.set(null);
         this.selectedElementContainerId = null;
         this.editingPageIndex.set(null);
+    }
+
+    /**
+     * Finds the parent container ID for a given element ID.
+     * Returns null if the element is at the root level.
+     */
+    private findContainerForElement(elementId: string, elements?: FormElement[], containerId?: string): string | null {
+        const els = elements ?? this.elements();
+        const cId = containerId ?? this.ELEMENT_ROOT_CONTAINER_ID;
+
+        for (const el of els) {
+            if (el.id === elementId) {
+                return cId;
+            }
+            if (Array.isArray(el.elements)) {
+                const found = this.findContainerForElement(elementId, el.elements, el.id);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+
+        return null;
     }
 
     // TODO: Do it more angular like, as creating a new untracked HTMLElement is not a great idea

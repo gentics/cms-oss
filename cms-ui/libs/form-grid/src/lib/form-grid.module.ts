@@ -17,6 +17,7 @@ import {
     FormGridElementsContainerComponent,
     FormOptionsInputComponent,
     FormPageManagerComponent,
+    PreviewFormComponent,
 } from './components';
 
 const COMPONENTS = [
@@ -30,6 +31,7 @@ const COMPONENTS = [
     FormGridElementsContainerComponent,
     FormOptionsInputComponent,
     FormPageManagerComponent,
+    PreviewFormComponent,
 ];
 
 @NgModule({

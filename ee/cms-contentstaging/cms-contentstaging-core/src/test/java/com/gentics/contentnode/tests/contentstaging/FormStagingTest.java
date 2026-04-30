@@ -75,7 +75,9 @@ public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> i
 	public FormStagingTest() throws IOException {
 		super(Form.class, "form");
 		this.originalData = mapper.readValue(FormPublishTest.class.getResource("generic_form_data.json"), ObjectNode.class);
-		this.modifiedData = mapper.readValue(FormPublishTest.class.getResource("form_preview_data.json"), ObjectNode.class);
+		this.modifiedData = mapper.readValue(FormPublishTest.class.getResource("generic_form_data.json"), ObjectNode.class);
+		this.modifiedData.withObjectProperty("schema").withObjectProperty("properties")
+				.withObjectProperty("b0bac784-007f-4831-9098-987aa7828ff8").put("name", "Modifiziert");
 	}
 
 	@Override

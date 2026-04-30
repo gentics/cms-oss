@@ -98,8 +98,7 @@ import {
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
 import { BLANK_PAGE, CNParentWindow, CNWindow } from '../../models/content-frame';
-import { DevicePreset } from '../../models/device-preset';
-import { AlohaIntegrationService, DevicePreviewService } from '../../providers';
+import { AlohaIntegrationService } from '../../providers';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
@@ -195,13 +194,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     /** If has permission to publish and state is planned return true */
     isInQueue$: Observable<boolean> = undefined;
 
-    /**
-     * Stream of the currently active device-preview preset (or null when off).
-     * Bound directly in the template to constrain the iframe to mobile / tablet
-     * / desktop viewport sizes via CSS custom properties.
-     */
-    public devicePreviewActive$: Observable<DevicePreset | null>;
-
     private onLoadListener: EventListener;
     public itemPermissions: ItemPermissions = noItemPermissions;
     private subscriptions: Subscription[] = [];
@@ -241,10 +233,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private tagEditorService: TagEditorService,
         private aloha: AlohaIntegrationService,
         private urlBuilder: ResourceUrlBuilder,
-        private devicePreview: DevicePreviewService,
-    ) {
-        this.devicePreviewActive$ = this.devicePreview.activePreset$;
-    }
+    ) { }
 
     ngOnInit(): void {
         this.customScriptHostService.initialize(this);

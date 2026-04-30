@@ -89,14 +89,7 @@
         }
     }
 
-    <div
-        class="frame-wrapper"
-        [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE || currentItem?.type === 'form'"
-        [class.device-preview-active]="!!(devicePreviewActive$ | async)"
-        [attr.data-active-preset]="(devicePreviewActive$ | async)?.id"
-        [style.--device-w.px]="(devicePreviewActive$ | async)?.width"
-        [style.--device-h.px]="(devicePreviewActive$ | async)?.height"
-    >
+    <div class="frame-wrapper" [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE || currentItem?.type === 'form'">
         <gtx-progress-bar
             class="frame-requesting"
             [active]="!windowLoaded
@@ -146,14 +139,6 @@
 
             <div class="frame-language-indicator" [class.hidden]="!comparePageId">{{ itemLanguage?.name }}</div>
         </div>
-
-        @if (devicePreviewActive$ | async; as activePreset) {
-            <div class="device-preview-info">
-                <icon class="device-preview-info-icon">{{ activePreset.icon }}</icon>
-                <span class="device-preview-info-label">{{ activePreset.labelKey | gtxI18n }}</span>
-                <span class="device-preview-info-size">{{ activePreset.width }} × {{ activePreset.height }}</span>
-            </div>
-        }
     </div>
 
     <div class="hidden-file-picker" #filePickerWrapper>

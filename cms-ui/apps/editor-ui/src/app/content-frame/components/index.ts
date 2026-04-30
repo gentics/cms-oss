@@ -24,7 +24,6 @@ export * from './confirm-navigation-modal/confirm-navigation-modal.component';
 export * from './construct-controls/construct-controls.component';
 export * from './content-frame/content-frame.component';
 export * from './description-tooltip/description-tooltip.component';
-export * from './device-preview-menu/device-preview-menu.component';
 export * from './dynamic-dropdown/dynamic-dropdown.component';
 export * from './dynamic-form-modal/dynamic-form-modal.component';
 export * from './editor-toolbar/editor-toolbar.component';

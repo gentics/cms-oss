@@ -2332,8 +2332,8 @@ public class MeshPublisher implements AutoCloseable {
 
 			Map<Integer, Set<String>> deleteOfflineMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.OFFLINE, Action.HIDE);
 			Map<Integer, Set<String>> removeMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.REMOVE);
-			// toDelete maps uuids to sets of pairs of optiona language and additional data maps
-			Map<String, Set<Pair<String, Map<String, String>>>> toDelete = new HashMap<>();
+			// toDelete maps uuids to sets of objects to be deleted
+			Map<String, Set<ObjectToDelete>> toDelete = new HashMap<>();
 
 			if (checkedNode != null) {
 				Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, deleteOfflineMap.keySet()), checkedNode.getId());
@@ -2364,12 +2364,6 @@ public class MeshPublisher implements AutoCloseable {
 					if (!cr.mustContain(form, checkedNode)) {
 						String meshUuid = getMeshUuid(form);
 						remove(project, branch, objectType, 0, meshUuid, null, Map.of("formType", form.getFormType()), true);
-//						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
-//							for (String lang : languages) {
-//								remove(project, branch, objectType, 0, meshUuid, lang);
-//							}
-//							return Completable.complete();
-//						}).blockingAwait();
 					}
 				}
 			}
@@ -2387,8 +2381,9 @@ public class MeshPublisher implements AutoCloseable {
 						return Pair.of(parts[0], parts[1]);
 					}).collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
 					String meshUuid = additionalData.get("uuid");
+					String meshLanguage = additionalData.get("language");
 					if (meshUuid != null) {
-						toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(Pair.of(null, additionalData));
+						toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(new ObjectToDelete(meshLanguage, additionalData));
 					}
 				}
 			}
@@ -2409,7 +2404,7 @@ public class MeshPublisher implements AutoCloseable {
 							if (object instanceof Page page) {
 								String meshLanguage = getMeshLanguage(page);
 								toDelete.getOrDefault(meshUuid, Collections.emptySet())
-										.removeIf(p -> Strings.CI.equals(p.getLeft(), meshLanguage));
+										.removeIf(o -> Strings.CI.equals(o.language, meshLanguage));
 							} else {
 								toDelete.remove(meshUuid);
 							}
@@ -2418,18 +2413,16 @@ public class MeshPublisher implements AutoCloseable {
 				}
 			}
 
-			for (Entry<String, Set<Pair<String, Map<String, String>>>> entry : toDelete.entrySet()) {
+			for (Entry<String, Set<ObjectToDelete>> entry : toDelete.entrySet()) {
 				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
 					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 					return false;
 				}
 
 				String meshUuid = entry.getKey();
-				Set<Pair<String, Map<String, String>>> pairs = entry.getValue();
-				for (Pair<String, Map<String, String>> pair : pairs) {
-					String language = pair.getLeft();
-					Map<String, String> additionalData = pair.getRight();
-					remove(project, checkedNode, objectType, 0, meshUuid, language, additionalData, true);
+				Set<ObjectToDelete> toDeleteSet = entry.getValue();
+				for (ObjectToDelete o : toDeleteSet) {
+					remove(project, checkedNode, objectType, 0, meshUuid, o.language, o.additionalData, true);
 				}
 			}
 		}
@@ -5430,4 +5423,9 @@ public class MeshPublisher implements AutoCloseable {
 			return UNESCAPE_URL.translate(input);
 		}
 	}
+
+	/**
+	 * Record for objects, which have to be deleted
+	 */
+	protected record ObjectToDelete(String language, Map<String, String> additionalData) {}
 }

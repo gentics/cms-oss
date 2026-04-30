@@ -1,5 +1,9 @@
 {
     "form_grid": {
+        "panel_left_label": "Linkes Panel",
+        "panel_left_toggle_collapse": "Linkes Panel ein/ausklappen",
+        "panel_right_label": "Rechtes Panel",
+        "panel_right_toggle_collapse": "Rechtes Panel ein/ausklappen",
         "new_element_title": "Neue Elemente einfügen",
         "edit_element_title": "Element \"{{label}}\" bearbeiten",
         "insert_element_placeholder": "Element \"{{label}}\" einfügen",

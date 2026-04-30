@@ -103,8 +103,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
      * ===================================================================== */
 
     public readonly resizing = model<boolean>();
-    public readonly resizeOverlayActive = model<boolean>();
-    public readonly resizeOverlaySpan = model<number>();
 
     /** Local overlay state — used when this is a nested container (level > 0). */
     public resizeOverlayActiveLocal = signal(false);
@@ -251,13 +249,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
         this.resizeStartSpan = initialSpan;
         const initialOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + this.resizeStartSpan));
-        if (this.level() > 0) {
-            this.resizeOverlayActiveLocal.set(true);
-            this.resizeOverlaySpanLocal.set(initialOverlaySpan);
-        } else {
-            this.resizeOverlayActive.set(true);
-            this.resizeOverlaySpan.set(initialOverlaySpan);
-        }
+        this.resizeOverlayActiveLocal.set(true);
+        this.resizeOverlaySpanLocal.set(initialOverlaySpan);
 
         try {
             (event.target as HTMLElement)?.setPointerCapture?.(event.pointerId);
@@ -287,11 +280,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 this.zone.run(() => {
                     this.setSpan(this.resizeTarget, nextSpan);
                     const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + nextSpan));
-                    if (this.level() > 0) {
-                        this.resizeOverlaySpanLocal.set(nextOverlaySpan);
-                    } else {
-                        this.resizeOverlaySpan.set(nextOverlaySpan);
-                    }
+                    this.resizeOverlaySpanLocal.set(nextOverlaySpan);
                     this.changeDetector.markForCheck();
                 });
             };
@@ -312,7 +301,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 this.resizeSurfaceEl = null;
                 this.resizeRowBaseCols = 0;
                 this.resizeRowMaxSpan = 12;
-                this.resizeOverlayActive.set(false);
                 this.resizeOverlayActiveLocal.set(false);
 
                 // Hacky way to prevent an accidental "click"/selection to occur during resizing of an element
@@ -444,24 +432,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
             const isControl = event.item.getAttribute('data-is-control') === 'true';
             const containerType = event.item.getAttribute('data-container-type');
 
-            const createdEl = this.createNewElement(elType, isControl, containerType as any);
-
-            if (isControl) {
-                this.schema.update((data) => {
-                    const copy = structuredClone(data);
-                    copy.properties[createdEl.id] = {
-                        type: elType,
-                    };
-                    return copy;
-                });
-            }
-            this.elements.update((data) => {
-                const copy = structuredClone(data);
-                copy.splice(event.newDraggableIndex || event.newIndex!, 0, createdEl);
-                return copy;
-            });
-
-            this.elementMoving.set(null);
+            this.addNewElement(elType, event.newDraggableIndex || event.newIndex!, isControl, containerType as any);
             return;
         }
 
@@ -486,6 +457,37 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
     /* INTERNALS
      * ===================================================================== */
+
+    private addNewElement(type: string, index: number, isControl: boolean, containerType: 'aggregate' | 'container' | null): void {
+        const createdEl = this.createNewElement(type, isControl, containerType);
+
+        if (isControl) {
+            this.schema.update((data) => {
+                const copy = structuredClone(data);
+
+                copy.properties[createdEl.id] = {
+                    type: type,
+                    name: createdEl.id,
+                    formPage: this.pageIndex(),
+                };
+                if (containerType === 'aggregate') {
+                    copy.properties[createdEl.id].isList = true;
+                    copy.properties[createdEl.id].properties = {};
+                }
+
+                return copy;
+            });
+        }
+        this.elements.update((data) => {
+            const copy = structuredClone(data);
+            copy.splice(index, 0, createdEl);
+            return copy;
+        });
+
+        this.elementMoving.set(null);
+        this.selectElement(createdEl);
+        this.updateDisplayItems();
+    }
 
     private updateDisplayItems(): void {
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
@@ -554,14 +556,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
     private createNewElement(
         type: string,
         isControl: boolean,
-        containerType?: 'container' | 'aggregate' | null,
+        containerType: 'container' | 'aggregate' | null,
     ): FormElement {
         const elConf = isControl
             ? this.config().controls[type]
             : (this.config().blocks || {})[type];
 
         const el: FormElement = {
-            id: uuidV4(),
+            id: `${type}_${uuidV4().replaceAll('-', '')}`,
             type: containerType || 'property',
             label: {},
             formGridOptions: {

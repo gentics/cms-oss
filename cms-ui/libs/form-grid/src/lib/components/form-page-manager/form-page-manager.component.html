@@ -7,7 +7,7 @@
             [filter]="'.page-tab-label, gtx-button'"
             [attr.data-page-index]="$index"
             [class.active]="pageIndex() === $index"
-            [class.drop-target-hint]="elementMoving() && !elementMoving().inserting"
+            [class.drop-target-hint]="elementMoving() && !elementMoving()?.inserting"
             (click)="pageIndex.set($index)"
             (addItem)="moveElementToPage($event, $index)"
         >

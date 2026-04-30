@@ -1,26 +1,26 @@
-@if (level() > 0) {
-<div
-    class="resize-grid-overlay resize-grid-overlay--container"
-    aria-hidden="true"
-    [class.active]="resizeOverlayActiveLocal()"
-    [style.--active-cols]="resizeOverlaySpanLocal()"
->
-    <div class="resize-grid-overlay__rail">
-        <div class="resize-grid-overlay__fill"></div>
-        <div class="resize-grid-overlay__marker"></div>
-    </div>
-
-    <div class="resize-grid-overlay__ticks">
-        @for (n of (1 | gtxRange:12); track n) {
-        <div
-            class="resize-grid-overlay__tick"
-            [class.is-active]="n === resizeOverlaySpanLocal()"
-        >
-            <span class="resize-grid-overlay__num">{{ n }}</span>
+@if (true) {
+    <div
+        class="resize-grid-overlay resize-grid-overlay--container"
+        aria-hidden="true"
+        [class.active]="resizeOverlayActiveLocal()"
+        [style.--active-cols]="resizeOverlaySpanLocal()"
+    >
+        <div class="resize-grid-overlay__rail">
+            <div class="resize-grid-overlay__fill"></div>
+            <div class="resize-grid-overlay__marker"></div>
         </div>
-        }
+
+        <div class="resize-grid-overlay__ticks">
+            @for (n of (1 | gtxRange:12); track n) {
+            <div
+                class="resize-grid-overlay__tick"
+                [class.is-active]="n === resizeOverlaySpanLocal()"
+            >
+                <span class="resize-grid-overlay__num">{{ n }}</span>
+            </div>
+            }
+        </div>
     </div>
-</div>
 }
 
 <gtx-sortable-list
@@ -32,7 +32,7 @@
     [group]="sortableGroup"
     [sort]="mode() !== FormGridEditMode.NONE"
     [fallbackOnBody]="true"
-    [invertSwap]="false"
+    [invertSwap]="true"
     [swapThreshold]="0.7"
     (dragStart)="onSortableDragStart($event)"
     (dragEnd)="sortElements($event)"
@@ -115,8 +115,6 @@
                     [(elementMoving)]="elementMoving"
 
                     [(resizing)]="resizing"
-                    [(resizeOverlayActive)]="resizeOverlayActive"
-                    [(resizeOverlaySpan)]="resizeOverlaySpan"
                 ></gtx-form-grid-elements-container>
             }
         </gtx-sortable-item>

@@ -241,13 +241,6 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     /** If the editor is currently resizing an element */
     public resizeActive = false;
-    /** If the resize-overlay should be displayed */
-    public resizeOverlayActive = false;
-    /**
-     * How many column-spans the current element has.
-     * Indicates how many bars are filled in the resize overlay.
-     */
-    public resizeOverlaySpan = 12;
 
     /* CONSTRUCTOR
      * ===================================================================== */

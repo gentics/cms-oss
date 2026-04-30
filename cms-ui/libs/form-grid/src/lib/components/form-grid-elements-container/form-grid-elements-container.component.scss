@@ -130,6 +130,10 @@
         background-color: rgba($gtx-color-primary, 0.05);
         min-height: 80px;
 
+        &:not(.editor-drop-container--root) {
+            padding: 0.5rem;
+        }
+
         &.drag-blocked {
             cursor: not-allowed;
             border-color: $gtx-color-dark-gray !important;
@@ -139,6 +143,8 @@
 
     &.editor-drop-container--root {
         height: 100%;
+        padding-right: 16px;
+        overflow: auto;
     }
 }
 

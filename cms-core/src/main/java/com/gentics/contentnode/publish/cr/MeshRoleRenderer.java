@@ -84,24 +84,39 @@ public class MeshRoleRenderer implements TagmapEntryRenderer {
 					return selectPt.getSelection().stream().map(e -> e.getValue()).collect(Collectors.toList());
 				}
 				if (partType instanceof JSONPartType jsonPt) {
-					JsonContent json = JsonContent.fromString(jsonPt.getText());
-					if (json != null) {
-						if (json.isArray()) {
-							JsonArray jsonArray = json.getArray();
-							return IntStream.range(0, jsonArray.size()).mapToObj(jsonArray::getString).collect(Collectors.toList());
-						} else {
-							return new ArrayList<>(json.getObject().getMap().keySet());
-						}
-					}
+					return tryTransformJSON(jsonPt.getText());
 				}
 			}
 		}
-		return TagmapEntryRenderer.super.getRenderedTransformedValue(renderType, renderResult, linkTransformer);
+		Object transformedValue = TagmapEntryRenderer.super.getRenderedTransformedValue(renderType, renderResult, linkTransformer);
+		if (transformedValue instanceof String stringTransformedValue) {
+			transformedValue = tryTransformJSON(stringTransformedValue);
+		}
+		return transformedValue;
 	}
 
 	@Override
 	public boolean canSkip() {
 		// the MeshRoleRenderer must not be skipped. Otherwise the MeshPublisher would set the default permissions.
 		return false;
+	}
+
+	/**
+	 * Try getting a JSON content out of string value.
+	 * 
+	 * @param string
+	 * @return
+	 */
+	protected Object tryTransformJSON(String string) {
+		JsonContent json = JsonContent.fromString(string);
+		if (json != null) {
+			if (json.isArray()) {
+				JsonArray jsonArray = json.getArray();
+				return IntStream.range(0, jsonArray.size()).mapToObj(jsonArray::getString).collect(Collectors.toList());
+			} else {
+				return new ArrayList<>(json.getObject().getMap().keySet());
+			}
+		}
+		return string;
 	}
 }

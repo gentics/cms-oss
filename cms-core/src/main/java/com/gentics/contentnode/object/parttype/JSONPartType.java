@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 import com.gentics.mesh.core.rest.node.field.JsonContent;
@@ -57,26 +58,28 @@ public class JSONPartType extends TextPartType {
 			String stringValue = value.getValueText();
 			if (StringUtils.isNotBlank(stringValue)) {
 				Object current = JsonContent.fromString(stringValue);
-				if (current instanceof JsonContent jc) {
-					if (jc.isArray()) {
-						try {
-							int i = Integer.parseInt(key);
-							JsonArray ja = jc.getArray();
-							if (ja.size() > i) {
-								current = ja.getValue(i);
-							} else {
+				if (StringUtils.isNotBlank(key)) {
+					if (current instanceof JsonContent jc) {
+						if (jc.isArray()) {
+							try {
+								int i = Integer.parseInt(key);
+								JsonArray ja = jc.getArray();
+								if (ja.size() > i) {
+									current = ja.getValue(i);
+								} else {
+									return null;
+								}
+							} catch (NumberFormatException e) {
 								return null;
 							}
-						} catch (NumberFormatException e) {
-							return null;
+						} else {
+							current = jc.getObject().getValue(key);
 						}
+					} else if (current instanceof JsonObject jo) {
+						current = jo.getValue(key);
 					} else {
-						current = jc.getObject().getValue(key);
+						return null;
 					}
-				} else if (current instanceof JsonObject jo) {
-					current = jo.getValue(key);
-				} else {
-					return null;
 				}
 				return current;
 			}

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import { FormElement, FormSchema, FormUISchema } from '@gentics/cms-models';
-import { ModalService } from '@gentics/ui-core';
-import { ELEMENT_MIME, ElementInterPageMoveEvent, FormGridEditMode } from '../../models';
+import { ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
+import { ATTR_ELEMENT_ID, ElementInterPageMoveEvent, ElementMoveData, FormGridEditMode } from '../../models';
 
 function collectElementIds(elements: FormElement[]): string[] {
     const ids: string[] = [];
@@ -31,10 +31,35 @@ export class FormPageManagerComponent {
     /** Optional: required for schema cleanup when deleting pages. */
     public readonly schema = model<FormSchema | null>(null);
     public readonly mode = input<FormGridEditMode>(FormGridEditMode.NONE);
-    public readonly elementDragging = input<boolean>(false);
+    public readonly elementMoving = input<ElementMoveData | null>(null);
 
     public readonly elementInterPageMove = output<ElementInterPageMoveEvent>();
     public readonly editPage = output<number>();
+
+    /** Shared configuration for all page entries */
+    public readonly sortableGroup: SortableGroup = {
+        name: 'form-pages',
+        pull: false,
+        put: (to, from) => {
+            if (this.mode() !== FormGridEditMode.FULL) {
+                return false;
+            }
+            if (from.option('group') === 'form-palette') {
+                return false;
+            }
+            if (this.elementMoving()?.inserting) {
+                return false;
+            }
+
+            // Moving to the current page should not be allowed
+            try {
+                const toPageIdx = parseInt(to.el.getAttribute('data-page-index') ?? '', 10);
+                return Number.isInteger(toPageIdx) && toPageIdx !== this.pageIndex();
+            } catch (err) {
+                return false;
+            }
+        },
+    };
 
     constructor(
         private modals: ModalService,
@@ -80,21 +105,11 @@ export class FormPageManagerComponent {
         }
     }
 
-    public onPageTabDragOver(event: DragEvent, targetPageIndex: number): void {
+    public moveElementToPage(event: ISortableEvent, targetPageIndex: number): void {
         if (this.mode() !== FormGridEditMode.FULL) {
             return;
         }
-        if (event.dataTransfer?.types.includes(ELEMENT_MIME)) {
-            event.preventDefault();
-            event.dataTransfer.dropEffect = 'move';
-        }
-    }
-
-    public onPageTabDrop(event: DragEvent, targetPageIndex: number): void {
-        if (this.mode() !== FormGridEditMode.FULL) {
-            return;
-        }
-        const elementId = event.dataTransfer?.getData(ELEMENT_MIME);
+        const elementId = event.item.getAttribute(ATTR_ELEMENT_ID);
         if (!elementId) {
             return;
         }
@@ -103,6 +118,8 @@ export class FormPageManagerComponent {
             return;
         }
         this.elementInterPageMove.emit({ elementId, fromPage, toPage: targetPageIndex });
+        // Remove the item from the DOM, as we don't need it in the page entry and it'll be rendered by the elements-container
+        event.item.remove();
     }
 
     private removePageAndCleanup(index: number): void {

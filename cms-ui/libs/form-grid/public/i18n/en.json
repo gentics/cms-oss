@@ -1,5 +1,9 @@
 {
     "form_grid": {
+        "panel_left_label": "Left panel",
+        "panel_left_toggle_collapse": "Toggle left panel",
+        "panel_right_label": "Right panel",
+        "panel_right_toggle_collapse": "Toggle right panel",
         "new_element_title": "Insert new element",
         "edit_element_title": "Edit element \"{{label}}\"",
         "insert_element_placeholder": "Insert element \"{{label}}\"",

@@ -1,6 +1,12 @@
 export function getDataTransfer(event: any): DataTransfer {
+    if (event == null) {
+        return null;
+    }
     // if jQuery wrapped the event which contains the dropped file, unwrap it
-    let ev: DragEvent = event.dataTransfer ? event : event.originalEvent;
+    const ev: DragEvent = event.dataTransfer ? event : event.originalEvent;
+    if (ev == null) {
+        return null;
+    }
     return ev.dataTransfer;
 }
 
@@ -15,7 +21,7 @@ export function getEventTarget(event: any): HTMLElement {
  * See https://github.com/Microsoft/TypeScript/issues/12069
  */
 export function transferHasFiles(transfer: DataTransfer): boolean {
-    let types: any = transfer.types;
+    const types = transfer.types as any as string[] & DOMStringList;
     if (!transfer || !transfer.types) {
         return false;
     } else if (typeof types.contains === 'function') {
@@ -32,12 +38,12 @@ export function transferHasFiles(transfer: DataTransfer): boolean {
     return false;
 }
 
-let _mimeTypeSupport: boolean;
+let mimeTypeSupport: boolean;
 export function clientReportsMimeTypesOnDrag(): boolean {
-    if (_mimeTypeSupport === undefined) {
-        _mimeTypeSupport = 'items' in DataTransfer.prototype;
+    if (mimeTypeSupport === undefined) {
+        mimeTypeSupport = 'items' in DataTransfer.prototype;
     }
-    return _mimeTypeSupport;
+    return mimeTypeSupport;
 }
 
 /**
@@ -58,8 +64,8 @@ export function getTransferMimeTypes(transfer: DataTransfer): string[] {
         return [];
     } else if (transfer.items && transfer.items.length > 0) {
         return Array.from(transfer.items)
-            .filter(item => item.kind === 'file')
-            .map(item => item.type || FALLBACK_MIME_TYPE);
+            .filter((item) => item.kind === 'file')
+            .map((item) => item.type || FALLBACK_MIME_TYPE);
     } else if ('mozItemCount' in transfer) {
         return new Array((<any> transfer).mozItemCount).fill(FALLBACK_MIME_TYPE);
     } else if (!transfer.items && transfer.types.length === 1 && transfer.types[0] === 'Files') {

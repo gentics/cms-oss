@@ -1,5 +1,10 @@
 :host {
     display: block;
+
+    &::ng-deep .sortable-ghost,
+    &::ng-deep .form-item {
+        display: none !important;
+    }
 }
 
 .page-manager {
@@ -7,7 +12,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     gap: 4px;
-    padding: 8px 12px;
+    padding: 8px 16px;
     align-items: center;
 }
 

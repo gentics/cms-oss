@@ -62,12 +62,15 @@ import com.gentics.contentnode.testutils.DBTestContext;
  */
 @RunWith(value = Parameterized.class)
 public class HandlebarsPartTypeResolvingTest {
+
+	protected static final String HANDLEBARS_CONTENT_ITERATE_KEYS = "{{#each cms.tag.parts.otherpart}}{{@key}}{{#unless @last}}, {{/unless}}{{/each}}";
+
 	public final static String TAG_NAME = "testtag";
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 
-	private static Node node;
+	protected static Node node;
 
 	@Parameters(name = "{index}: template {0}")
 	public static Collection<Object[]> data() {
@@ -153,7 +156,7 @@ public class HandlebarsPartTypeResolvingTest {
 		}).build();
 
 		construct = update(construct, c -> {
-			getPartType(HandlebarsPartType.class, c, "hb").setText("{{#each cms.tag.parts.otherpart}}{{@key}}{{#unless @last}}, {{/unless}}{{/each}}");
+			getPartType(HandlebarsPartType.class, c, "hb").setText(HANDLEBARS_CONTENT_ITERATE_KEYS);
 		}).build();
 
 		template = create(Template.class, t -> {

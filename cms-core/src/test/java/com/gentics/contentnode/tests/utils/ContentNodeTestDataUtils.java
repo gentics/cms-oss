@@ -1,6 +1,8 @@
 package com.gentics.contentnode.tests.utils;
 
+import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getTemplateResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -102,6 +104,7 @@ import com.gentics.contentnode.object.parttype.SelectPartType;
 import com.gentics.contentnode.object.parttype.TemplateTagPartType;
 import com.gentics.contentnode.object.parttype.TextPartType;
 import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.perm.PermissionStore;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
@@ -288,6 +291,39 @@ public class ContentNodeTestDataUtils {
 		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
 		t.createObject(Value.class).setPart(templatePart);
 		construct.getParts().add(templatePart);
+
+		construct.save();
+		t.commit(false);
+
+		return ObjectTransformer.getInt(construct.getId(), 0);
+	}
+
+	/**
+	 * Create a construct containing a Handlebars part
+	 * @param node node
+	 * @param constructKeyword construct keyword
+	 * @param partKeyword part keyword for the velocity part
+	 * @return construct id
+	 * @throws NodeException
+	 */
+	public static int createHandlebarsConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Construct construct = t.createObject(Construct.class);
+		construct.setAutoEnable(true);
+		construct.setKeyword(constructKeyword);
+		construct.setName(constructKeyword, 1);
+		if (node != null) {
+			construct.getNodes().add(node);
+		}
+
+		Part hbsPart = t.createObject(Part.class);
+		hbsPart.setEditable(1);
+		hbsPart.setHidden(false);
+		hbsPart.setKeyname(partKeyword);
+		hbsPart.setName(partKeyword, 1);
+		hbsPart.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
+		t.createObject(Value.class).setPart(hbsPart);
+		construct.getParts().add(hbsPart);
 
 		construct.save();
 		t.commit(false);

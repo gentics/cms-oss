@@ -128,7 +128,7 @@ public abstract class PageValidator extends RestPageProcessor {
 			}
 
 			String stringValue = tagProperty.getStringValue();
-			if (tagProperty.getStringValue() == null) {
+			if (stringValue == null) {
 				continue;
 			}
 

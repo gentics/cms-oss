@@ -61,6 +61,7 @@ import com.gentics.contentnode.object.parttype.HTMLTextPartType;
 import com.gentics.contentnode.object.parttype.ImageHeightPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.ImageWidthPartType;
+import com.gentics.contentnode.object.parttype.JSONPartType;
 import com.gentics.contentnode.object.parttype.JavaEditorPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLTextPartType;
@@ -116,6 +117,8 @@ public class TagModelTest {
 
 	private final static String TEST_TEXT = "This is the test text";
 
+	private final static String TEST_JSON = "{\"testKey\": \"testValue\",\"whatever\":\"wherever\"}";
+
 	private final static String formUuid = UUID.randomUUID().toString();
 
 	private static Map<Class<? extends PartType>, Integer> constructMap = new HashMap<>();
@@ -135,6 +138,13 @@ public class TagModelTest {
 		assertThat(property).as("Property")
 			.hasFieldOrPropertyWithValue("type", Type.RICHTEXT)
 			.hasFieldOrPropertyWithValue("stringValue", TEST_TEXT);
+		assertAllElseNull(property, "stringValue");
+	};
+
+	private final static Consumer<Property> jsonTextAsserter = property -> {
+		assertThat(property).as("Property")
+			.hasFieldOrPropertyWithValue("type", Type.RICHTEXT)
+			.hasFieldOrPropertyWithValue("stringValue", TEST_JSON);
 		assertAllElseNull(property, "stringValue");
 	};
 
@@ -417,6 +427,7 @@ public class TagModelTest {
 		LongHTMLTextPartType(LongHTMLTextPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
 		LongHTMLPartType(LongHTMLPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
 		JavaEditorPartType(JavaEditorPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
+		JSONEditorPartType(JSONPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_JSON), jsonTextAsserter),
 		DHTMLPartType(DHTMLPartType.class, (Consumer<TextPartType>) partType -> partType.setText(TEST_TEXT), richTextAsserter),
 		PageURLPartTypeInternal(PageURLPartType.class, (Consumer<PageURLPartType>) partType -> {
 			partType.setTargetPage(targetPage);

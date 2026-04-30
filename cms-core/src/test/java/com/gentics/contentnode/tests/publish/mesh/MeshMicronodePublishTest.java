@@ -76,6 +76,7 @@ import com.gentics.contentnode.object.parttype.FolderURLPartType;
 import com.gentics.contentnode.object.parttype.ImageHeightPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.ImageWidthPartType;
+import com.gentics.contentnode.object.parttype.JSONPartType;
 import com.gentics.contentnode.object.parttype.MultiSelectPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.OrderedListPartType;
@@ -117,12 +118,12 @@ public class MeshMicronodePublishTest {
 	/**
 	 * Maximum typeId
 	 */
-	public final static int MAX_TYPE_ID = 40;
+	public final static int MAX_TYPE_ID = 44;
 
 	/**
 	 * Unused typeIds
 	 */
-	public final static List<Integer> UNUSED_TYPE_IDS = Arrays.asList(5, 7, 12, 14, 28);
+	public final static List<Integer> UNUSED_TYPE_IDS = Arrays.asList(5, 7, 12, 14, 28, 41, 42, 43);
 
 	/**
 	 * Valueless typeIds
@@ -269,6 +270,9 @@ public class MeshMicronodePublishTest {
 		TAG_CONSUMER.put(39, folder);
 		TAG_CONSUMER.put(40, tag -> {
 			getPartType(NodePartType.class, tag, PART_NAME).setNode(node);
+		});
+		TAG_CONSUMER.put(44, json -> {
+			getPartType(JSONPartType.class, json, PART_NAME).setText("{\"whatever\":\"wherever\"}");
 		});
 	}
 
@@ -560,6 +564,8 @@ public class MeshMicronodePublishTest {
 		case 30: // Select (multiple)
 		case 32: // Datasource
 			return Arrays.asList(new ListFieldSchemaImpl().setListType(FieldTypes.STRING.toString()).setName("part").setLabel("Test Part"));
+		case 44: // JSON
+			return Arrays.asList(new ListFieldSchemaImpl().setListType(FieldTypes.JSON.toString()).setName("part").setLabel("Test Part"));
 		default:
 			return Arrays.asList(new StringFieldSchemaImpl().setName("part").setLabel("Test Part"));
 		}

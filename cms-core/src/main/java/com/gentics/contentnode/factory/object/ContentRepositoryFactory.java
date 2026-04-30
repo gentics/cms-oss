@@ -1532,6 +1532,10 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected String micronodeFilter;
 
+		@DataField("jsonschema_filter")
+		@Updateable
+		protected String jsonSchemaFilter;
+
 		/**
 		 * Create an empty instance
 		 * @param info info
@@ -1676,6 +1680,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Override
 		public String getMicronodeFilter() {
 			return micronodeFilter;
+		}
+
+		@Override
+		public String getJSONSchemaFilter() {
+			return jsonSchemaFilter;
 		}
 
 		@Override
@@ -1883,6 +1892,14 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public void setMicronodeFilter(String micronodeFilter) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.micronodeFilter, micronodeFilter)) {
 				this.micronodeFilter = micronodeFilter;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setJSONSchemaFilter(String jsonSchemaFilter) throws ReadOnlyException {
+			if (!StringUtils.isEqual(this.jsonSchemaFilter, jsonSchemaFilter)) {
+				this.jsonSchemaFilter = jsonSchemaFilter;
 				this.modified = true;
 			}
 		}
@@ -2224,7 +2241,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		protected int crFragmentId;
 
 		@RestModel(update = { "tagname", "mapname", "obj_type", "attribute_type", "multivalue", "optimized", "filesystem", "target_type",
-				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "no_index", "elasticsearch", "micronode_filter" })
+				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "no_index", "elasticsearch", "micronode_filter", "jsonschema_filter" })
 		protected ContentRepositoryFragmentEntryModel model;
 
 		protected AttributeType attributeType;
@@ -2386,6 +2403,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
+		public String getJSONSchemaFilter() {
+			return model.getJSONSchemaFilter();
+		}
+
+		@Override
 		public ContentRepositoryFragmentEntryModel getModel() {
 			return model;
 		}
@@ -2496,6 +2518,14 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public void setMicronodeFilter(String micronodeFilter) throws ReadOnlyException {
 			if (!StringUtils.isEqual(model.getMicronodeFilter(), micronodeFilter)) {
 				model.setMicronodeFilter(micronodeFilter);
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setJSONSchemaFilter(String jsonSchemaFilter) throws ReadOnlyException {
+			if (!StringUtils.isEqual(model.getJSONSchemaFilter(), jsonSchemaFilter)) {
+				model.setJSONSchemaFilter(jsonSchemaFilter);
 				this.modified = true;
 			}
 		}

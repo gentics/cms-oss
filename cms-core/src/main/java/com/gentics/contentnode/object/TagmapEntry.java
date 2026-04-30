@@ -65,6 +65,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 				}
 			}
 			entry.setMicronodeFilter(nodeEntry.getMicronodeFilter());
+			entry.setJSONSchemaFilter(nodeEntry.getJSONSchemaFilter());
 		}
 		CrFragment fragment = nodeEntry.getContentRepositoryFragment();
 		if (fragment != null) {
@@ -128,6 +129,9 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		if (entry.getMicronodeFilter() != null) {
 			nodeEntry.setMicronodeFilter(entry.getMicronodeFilter());
 		}
+		if (entry.getJSONSchemaFilter() != null) {
+			nodeEntry.setJSONSchemaFilter(entry.getJSONSchemaFilter());
+		}
 		if (entry.getNoIndex() != null) {
 			nodeEntry.setNoIndex(entry.getNoIndex());
 		}
@@ -166,6 +170,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		resolvableProperties.put("urlfield", new NodeObjectProperty<>((o, key) -> o.isUrlfield()));
 		resolvableProperties.put("fragmentName", new NodeObjectProperty<>((o, key) -> o.getContentRepositoryFragmentName()));
 		resolvableProperties.put("micronodeFilter", new NodeObjectProperty<>((o, key) -> o.getMicronodeFilter()));
+		resolvableProperties.put("jsonSchemaFilter", new NodeObjectProperty<>((o, key) -> o.getJSONSchemaFilter()));
 		resolvableProperties.put("elasticsearch", new NodeObjectProperty<>((o, key) -> o.getElasticsearch()));
 		resolvableProperties.put("noIndex", new NodeObjectProperty<>((o, key) -> o.isNoIndex()));
 	}
@@ -549,6 +554,23 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		failReadOnly();
 	}
 
+	/**
+	 * Get the JSON schema filter for entries of type {@link AttributeType#json}
+	 * @return filter
+	 */
+	@FieldGetter("jsonschema_filter")
+	public abstract String getJSONSchemaFilter();
+
+	/**
+	 * Set the JSON schema filter for entries of type {@link AttributeType#json}
+	 * @param jsonSchemaFilter filter
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("jsonschema_filter")
+	public void setJSONSchemaFilter(String jsonSchemaFilter) throws ReadOnlyException {
+		failReadOnly();
+	}
+
 	@Override
 	public String getName() {
 		return getMapname();
@@ -563,6 +585,9 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		case foreignlink:
 			return String.format("%d: %s -> %s (%s from %d.%s, mul: %b, stat: %b, opt: %b, fs: %b, cat: %s)", getObject(), getTagname(), getMapname(),
 					getAttributetype(), getTargetType(), getForeignlinkAttribute(), isMultivalue(), isStatic(), isOptimized(), isFilesystem(), getCategory());
+		case json:
+			return String.format("%d: %s -> %s (mul: %b, stat: %b, opt: %b, fs: %b, cat: %s, schema: %s)", getObject(), getTagname(), getMapname(),
+					isMultivalue(), isStatic(), isOptimized(), isFilesystem(), getCategory(), getJSONSchemaFilter());
 		default:
 			return String.format("%d: %s -> %s (%s, mul: %b, stat: %b, opt: %b, fs: %b, cat: %s)", getObject(), getTagname(), getMapname(), getAttributetype(),
 					isMultivalue(), isStatic(), isOptimized(), isFilesystem(), getCategory());
@@ -621,7 +646,12 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		/**
 		 * Micronode
 		 */
-		micronode(12, ContentRepositoryModel.Type.mesh);
+		micronode(12, ContentRepositoryModel.Type.mesh),
+
+		/**
+		 * JSON
+		 */
+		json(13, ContentRepositoryModel.Type.mesh);
 
 		/**
 		 * numerical type

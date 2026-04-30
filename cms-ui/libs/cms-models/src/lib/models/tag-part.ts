@@ -7,23 +7,22 @@ import { DefaultModelType, ModelType } from './type-util';
 /** Possible Tagpart types
  * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Property.html
  */
-export type TagPartProperty =
-    | StringTagPartProperty
-    | BooleanTagPartProperty
-    | FileTagPartProperty
-    | FolderTagPartProperty
-    | FormTagPartProperty
-    | CmsFormTagPartProperty
-    | ImageTagPartProperty
-    | PageTagPartProperty
-    | ListTagPartProperty
-    | OrderedUnorderedListTagPartProperty
-    | NodeTagPartProperty
-    | PageTagTagPartProperty
-    | TemplateTagTagPartProperty
-    | SelectTagPartProperty
-    | OverviewTagPartProperty
-    | DataSourceTagPartProperty
+export type TagPartProperty = StringTagPartProperty
+  | BooleanTagPartProperty
+  | FileTagPartProperty
+  | FolderTagPartProperty
+  | FormTagPartProperty
+  | CmsFormTagPartProperty
+  | ImageTagPartProperty
+  | PageTagPartProperty
+  | ListTagPartProperty
+  | OrderedUnorderedListTagPartProperty
+  | NodeTagPartProperty
+  | PageTagTagPartProperty
+  | TemplateTagTagPartProperty
+  | SelectTagPartProperty
+  | OverviewTagPartProperty
+  | DataSourceTagPartProperty
     ;
 
 export interface BaseTagPartProperty {
@@ -238,12 +237,14 @@ export interface TagPart<T extends ModelType = DefaultModelType> {
     hideInEditor: boolean;
     /** External editor URL */
     externalEditorUrl?: string;
-    /** of SelectOption	Possible options */
+    /** Possible options of SelectOption */
     options?: SelectOption[];
     /** Overview settings (if type is OVERVIEW) */
     overviewSettings?: OverviewSetting;
     /** Selection settings (if type is SELECT or MULTISELECT) */
     selectSettings?: SelectSetting;
+    /** JSON schema filter (for type JSON) */
+    jsonSchema?: string;
 }
 
 export interface PartType {

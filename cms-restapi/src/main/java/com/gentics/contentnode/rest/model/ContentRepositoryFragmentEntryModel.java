@@ -5,6 +5,7 @@ import java.io.Serializable;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
@@ -61,6 +62,8 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 	private JsonNode elasticsearch;
 
 	private String micronodeFilter;
+
+	private String jsonSchemaFilter;
 
 	/**
 	 * Local ID
@@ -364,5 +367,23 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 	 */
 	public void setMicronodeFilter(String micronodeFilter) {
 		this.micronodeFilter = micronodeFilter;
+	}
+
+	/**
+	 * Get the JSON schema filter (for entries of type JSON)
+	 * @return filter
+	 */
+	@JsonProperty("jsonSchemaFilter")
+	public String getJSONSchemaFilter() {
+		return jsonSchemaFilter;
+	}
+
+	/**
+	 * Set the JSON schema filter
+	 * @param jsonSchemaFilter filter
+	 */
+	@JsonProperty("jsonSchemaFilter")
+	public void setJSONSchemaFilter(String jsonSchemaFilter) {
+		this.jsonSchemaFilter = jsonSchemaFilter;
 	}
 }

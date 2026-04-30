@@ -152,7 +152,7 @@
                                 <icon right class="device-preview-caret">arrow_drop_down</icon>
                             </gtx-button>
                         </gtx-dropdown-trigger>
-                        <gtx-dropdown-content>
+                        <gtx-dropdown-content data-context-id="device-preview">
                             <gtx-device-preview-menu
                                 [presets]="devicePreviewPresets$ | async"
                                 [activePresetId]="(devicePreviewState$ | async)?.presetId"

@@ -52,6 +52,7 @@ public class MeshPublishJSONRolesTest extends AbstractMeshPublishRoleTest {
 				part.setName("roles", 1);
 				part.setPartTypeId(getPartTypeId(JSONPartType.class));
 				part.setDefaultValue(create(Value.class, value -> {}, false));
+				part.setInfoText("{\"type\":\"array\",\"items\":{\"type\":\"string\"}}");
 			}, false));
 		}));
 		rolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, rolesConstruct.getId(), "Roles", "roles");

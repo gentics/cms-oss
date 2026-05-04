@@ -1,0 +1,1003 @@
+import { Platform } from 'react-native';
+import { colors } from './variables';
+import {
+  IBaseStylesTheme,
+  IButtonsTheme,
+  ICustomComponentsTheme,
+  IDropdownInputTheme,
+  IErrorBoxTheme,
+  IBinaryInputTheme,
+  IFormElementWrapperTheme,
+  IFormGridImageElementTheme,
+  IOverlayTheme,
+  IPaginationTheme,
+  ITheme,
+  IBooleanElementTheme,
+  IInputElementTheme,
+  IStandardElement,
+  IDateTimeElementTheme,
+  IExpertSearchTableTheme,
+  IAggregateElementTheme,
+  ISummaryTheme,
+  IRenderHTMLTheme
+} from '../types/interfaces';
+import { DefaultTheme } from '@react-navigation/native';
+
+export const theme: ITheme = {
+  ...DefaultTheme,
+  colors: {
+    textPrimary: colors.black_0,
+    textMuted: colors.gray_1,
+    textAccent: colors.blue_0,
+    textOnGray: colors.gray_0,
+    textOnColor: colors.white,
+    backgroundPrimary: colors.white,
+    backgroundAccent: colors.blue_2,
+    backgroundGray: colors.gray_3,
+    colorAccent: colors.blue_1,
+    colorDeleteRed: colors.red_0,
+    lightRed: colors.red_2,
+    warningColor: colors.yellow_0,
+    successGreen: colors.green_0
+  },
+  fontFamily: {
+    thin: 'Inter-Thin',
+    thinItalic: 'Inter-ThinItalic',
+    extraLight: 'Inter-ExtraLight',
+    extraLightItalic: 'Inter-ExtraLightItalic',
+    light: 'Inter-Light',
+    lightItalic: 'Inter-LightItalic',
+    regular: 'Inter-Regular',
+    italic: 'Inter-Italic',
+    medium: 'Inter-Medium',
+    mediumItalic: 'Inter-MediumItalic',
+    semiBold: 'Inter-SemiBold',
+    semiBoldItalic: 'Inter-SemiBoldItalic',
+    bold: 'Inter-Bold',
+    boldItalic: 'Inter-BoldItalic',
+    extraBold: 'Inter-ExtraBold',
+    extraBoldItalic: 'Inter-ExtraBoldItalic',
+    black: 'Inter-Black',
+    blackItalic: 'Inter-BlackItalic',
+  },
+  fontWeight: {
+    light: 300,
+    regular: 400,
+    bold: 700,
+    black: 800,
+  },
+  fontSize: {
+    extraSmall: 10,
+    small: 12,
+    regular: 14,
+    large: 16,
+    extraLarge: 18,
+  },
+  border: {
+    width: {
+      regular: 1,
+    },
+    color: {
+      gray: colors.gray_3,
+      darkGray: colors.gray_2,
+    },
+    borderRadius: {
+      small: 4,
+      regular: 6,
+      large: 8,
+      extraLarge: 14,
+    },
+  },
+  space: {
+    extraSmall: 4,
+    small: 8,
+    regular: 10,
+    large: 15,
+    extraLarge: 20,
+  },
+  shadow: {
+    color: {
+      primary: colors.black_0,
+    },
+    opacity: {
+      regular: 0.1,
+    },
+    radius: {
+      regular: 10,
+      small: 5,
+    },
+  },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginVertical: 15,
+  },
+  container: {
+    backgroundColor: colors.white,
+    flex: 1,
+    justifyContent: 'center',
+    paddingTop: Platform.OS === 'android' ? 45 : 0,
+  },
+};
+
+export const loaderTheme = {
+  spinnerColor: theme.colors.colorAccent,
+  spinnerSize: 60,
+  fontColor: theme.colors.textPrimary,
+  fontFamily: theme.fontFamily.regular,
+  fontSize: theme.fontSize.extraLarge,
+};
+
+export const standardElement: IStandardElement = {
+  fontSize: 17,
+  fontFamily: theme.fontFamily.regular,
+  fontColor: theme.colors.textPrimary,
+  labelFontSize: theme.fontSize.large,
+  labelFontColor: theme.colors.textMuted,
+  labelFontFamily: theme.fontFamily.regular,
+  borderColor: theme.border.color.darkGray,
+  borderWidth: theme.border.width.regular,
+  backgroundColor: theme.colors.backgroundPrimary,
+  borderRadius: theme.border.borderRadius.regular,
+  standardElementHeight: 55,
+  paddingLeft: 15,
+  paddingRight: 50,
+  paddingBottom: 8,
+  verticalElementGap: 8,
+  validationError: {
+    color: theme.colors.colorDeleteRed,
+    fontSize: theme.fontSize.regular,
+    fontFamily: theme.fontFamily.regular,
+  },
+  actaNovaError: {
+    color: colors.yellow_0,
+    fontSize: theme.fontSize.regular,
+    fontFamily: theme.fontFamily.regular,
+  },
+  elementLoader: {
+    color: theme.colors.colorAccent,
+    size: 25,
+  },
+};
+
+export const errorBoxTheme: IErrorBoxTheme = {
+  marginBottom: theme.space.large,
+  descriptionContainer: {
+    backgroundColor: theme.colors.colorDeleteRed,
+    fontColor: theme.colors.textOnColor,
+    fontFamily: theme.fontFamily.bold,
+    fontSize: theme.fontSize.extraLarge,
+    paddingVertical: theme.space.extraLarge,
+  },
+  listContainer: {
+    paddingVertical: theme.space.extraLarge,
+    backgroundColor: colors.red_2,
+    fontColor: theme.colors.colorDeleteRed,
+    iconSize: 12,
+    fontFamily: theme.fontFamily.semiBold,
+    fontSize: theme.fontSize.regular,
+    gap: theme.space.regular,
+    textIconSpacing: theme.space.small,
+  },
+};
+
+export const navigationTheme: any = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme,
+    background: theme.colors.backgroundPrimary,
+  },
+};
+
+export const baseStylesTheme: IBaseStylesTheme = {
+  formContainerWidth: '80%',
+  formElementHeight: 55,
+  formElementCheckboxHeight: 30,
+  formElementHorizontalPadding: theme.space.large,
+};
+
+export const inputElementTheme: IInputElementTheme = {
+  height: standardElement.standardElementHeight,
+  backgroundColor: standardElement.backgroundColor,
+  borderColor: standardElement.borderColor,
+  borderWidth: standardElement.borderWidth,
+  borderRadius: standardElement.borderRadius,
+  lineHeight: 20,
+  fontSize: standardElement.fontSize,
+  fontColor: standardElement.fontColor,
+  fontFamily: standardElement.fontFamily,
+  placeholderColor: standardElement.labelFontColor,
+  placeholderFontSize: standardElement.labelFontSize,
+  placeholderFontFamily: standardElement.labelFontFamily,
+  placeholderTopPosition: 18,
+  paddingLeft: standardElement.paddingLeft,
+  paddingRight: standardElement.paddingRight,
+  paddingBottom: standardElement.paddingBottom,
+  paddingTop: 21,
+  error: {
+    backgroundColor: theme.colors.lightRed,
+    borderColor: theme.colors.colorDeleteRed,
+    fontColor: theme.colors.colorDeleteRed,
+  },
+  focused: {
+    borderColor: colors.black_0,
+    borderWidth: 3,
+    borderStyle: 'dashed',
+    placeholderTopPosition: 4,
+    placeholderFontSize: 12,
+  },
+  disabled: {
+    backgroundColor: colors.gray_3,
+    fontColor: colors.black_1,
+  },
+  numberButtons: {
+    width: 24,
+    verticalPadding: 2,
+    dividerWidth: theme.border.width.regular,
+    dividerColor: theme.border.color.darkGray,
+    iconColor: theme.colors.textPrimary,
+    iconSize: 12,
+  },
+};
+
+export const formElementWrapperTheme: IFormElementWrapperTheme = {
+  tooltip: {
+    tooltipIconSpacing: 8,
+    tooltipContentFontColor: theme.colors.textOnColor,
+    tooltipContentFontSize: theme.fontSize.regular,
+    tooltipContentMaxWidth: 300,
+    tooltipContentBackgroundColor: colors.black_transparent_0,
+    tooltipContentBorderRadius: theme.border.borderRadius.small,
+    tooltipContentVerticalPadding: theme.space.small,
+    tooltipContentHorizontalPadding: theme.space.regular,
+    tooltipContentShadow: {
+      color: theme.shadow.color.primary,
+      offset: { width: 0, height: 2 },
+      opacity: theme.shadow.opacity.regular,
+      radius: theme.shadow.radius.regular,
+    },
+    tooltipIconSize: theme.fontSize.large,
+    tooltipIconColor: theme.colors.textOnGray,
+  },
+  toolTipCaret: {
+    size: 8,
+  },
+  bottomMessageSpacing: theme.space.extraSmall,
+  bottomMessageRightSpacing: 0,
+  rightIconsSpacing: theme.space.regular,
+  validationInputIcon: {
+    size: 21,
+    color: theme.colors.textOnGray,
+  },
+  deleteContentBtnIcon: {
+    size: 21,
+    color: theme.colors.colorDeleteRed,
+  },
+  anFieldLoadErrorIcon: {
+    size: 21,
+    color: theme.colors.warningColor,
+  },
+  loaderIcon: {
+    size: 21,
+    color: theme.colors.colorAccent,
+  },
+  dropdownIcon: {
+    size: 19,
+    color: theme.colors.textOnGray,
+    colorError: theme.colors.colorDeleteRed,
+  },
+  focusedBorder: {
+    borderColor: theme.colors.textPrimary,
+    borderWidth: 3,
+    borderStyle: 'dashed',
+  },
+};
+
+export const booleanElementTheme: IBooleanElementTheme = {
+  size: 28,
+  selectedColor: theme.colors.colorAccent,
+  borderWidth: 2,
+  borderColor: theme.border.color.darkGray,
+  disabledBooleanElementOpacity: 0.5,
+  iconLabelSpacing: theme.space.small,
+  labelFontSize: standardElement.labelFontSize,
+  labelFontColor: standardElement.fontColor,
+  labelFontFamily: standardElement.fontFamily,
+  labelPadding: 2,
+  selectedLabelFontColor: theme.colors.textPrimary,
+  selectedLabelFontFamily: theme.fontFamily.bold,
+  checkbox: {
+    borderRadius: theme.border.borderRadius.regular,
+    iconColor: theme.colors.textOnColor,
+    iconFontSize: theme.fontSize.extraLarge
+  },
+  radioButton: {
+    groupLabelSpacing: theme.space.small,
+    groupLabelFontSize: theme.fontSize.large,
+    groupLabelFontColor: theme.colors.textPrimary,
+    dotSize: 12,
+    dotColor: theme.colors.backgroundPrimary,
+    optionsSpacing: theme.space.extraSmall,
+    groupMarginVertical: theme.space.small
+  },
+  button: {
+    borderRadius: theme.border.borderRadius.regular,
+    fontSize: theme.fontSize.large,
+    disabledBackgroundColor: theme.colors.backgroundGray,
+    disabledBorderColor: theme.border.color.darkGray,
+    disabledFontColor: theme.colors.textMuted,
+  },
+  error: {
+    labelFontColor: theme.colors.colorDeleteRed,
+    accentColor: theme.colors.colorDeleteRed,
+    lightColor: theme.colors.lightRed,
+  },
+};
+
+export const buttonsTheme: IButtonsTheme = {
+  width: '25%',
+  height: {
+    normalView: 50,
+    smallView: 45,
+  },
+  paddingHorizontal: theme.space.regular,
+  marginHorizontal: 5,
+  borderRadius: theme.border.borderRadius.small,
+  fontWeight: theme.fontWeight.bold,
+  fontSize: {
+    normalView: theme.fontSize.regular,
+    smallView: theme.fontSize.small,
+  },
+  textAlign: 'center',
+  primary: {
+    backgroundColor: theme.colors.colorAccent,
+    backgroundColorOnHover: colors.blue_0,
+    fontColor: theme.colors.textOnColor,
+    fontColorOnHover: colors.gray_3,
+  },
+  secondary: {
+    backgroundColor: theme.colors.backgroundPrimary,
+    backgroundColorOnHover: colors.gray_3,
+    fontColor: theme.colors.textPrimary,
+    fontColorOnHover: theme.colors.textPrimary,
+  },
+  primaryDisabled: {
+    backgroundColor: theme.colors.textAccent,
+    backgroundColorOnHover: theme.colors.textAccent,
+    fontColor: theme.colors.textOnColor,
+    fontColorOnHover: theme.colors.textOnColor
+  },
+  secondaryDisabled: {
+    backgroundColor: colors.gray_3,
+    backgroundColorOnHover: colors.gray_3,
+    fontColor: theme.colors.textPrimary,
+    fontColorOnHover: theme.colors.textPrimary
+  }
+}
+
+export const overlaysTheme: IOverlayTheme = {
+  backdrop: {
+    color: colors.black_transparent_1,
+  },
+  closeButton: {
+    margin: 10,
+    size: 10,
+    iconSize: 24,
+  },
+  header: {
+    iconColor: theme.colors.colorAccent,
+    iconSize: 48,
+    titleFontSize: theme.fontSize.extraLarge,
+    titleFontWeight: theme.fontWeight.bold,
+  },
+  modal: {
+    backgroundColor: theme.colors.backgroundPrimary,
+    borderRadius: theme.border.borderRadius.large,
+    padding: 48,
+    maxHeight: '90%',
+    itemsSpacing: 32,
+    textAlign: 'center',
+  },
+  buttonRow: {
+    spacing: buttonsTheme.marginHorizontal,
+  },
+  footer: {
+    borderWidth: theme.border.width.regular,
+    borderColor: theme.border.color.darkGray,
+    padding: theme.space.extraLarge,
+    fontSize: theme.fontSize.small,
+    color: theme.colors.textMuted,
+  },
+  breakpoints: {
+    modalWidth: {
+      maximumSm: '100%',
+      maximumMd: '100%',
+      maximumLg: '70%',
+      default: '50%',
+    },
+    modalHeight: {
+      default: '90%',
+      maximumSm: '100%',
+      maximumMd: '90%',
+      maximumLg: '90%',
+    },
+  },
+};
+
+export const paginationTheme: IPaginationTheme = {
+  pageItems: {
+    size: 36,
+    backgroundColor: {
+      default: theme.colors.backgroundPrimary,
+      current: colors.black_1,
+      disabled: colors.gray_3,
+      hasError: theme.colors.lightRed,
+    },
+    borderWidth: 1,
+    borderRadius: theme.border.borderRadius.small,
+    borderColor: {
+      default: colors.black_1,
+      current: colors.black_1,
+      disabled: colors.gray_1,
+      hasError: theme.colors.colorDeleteRed,
+    },
+    contentColor: {
+      default: theme.colors.textPrimary,
+      current: theme.colors.textOnColor,
+      disabled: theme.colors.textPrimary,
+      hasError: theme.colors.colorDeleteRed,
+    },
+    contentFontFamily: {
+      default: theme.fontFamily.regular,
+      current: theme.fontFamily.bold,
+      disabled: theme.fontFamily.regular,
+      hasError: theme.fontFamily.bold,
+    },
+  },
+};
+
+
+export const renderHTMLTheme: IRenderHTMLTheme = {
+  error: {
+    color: theme.colors.colorDeleteRed,
+  },
+};
+
+export const dropdownInputTheme: IDropdownInputTheme = {
+  elementHeight: standardElement.standardElementHeight,
+  input: {
+    backgroundColor: standardElement.backgroundColor,
+    backgroundColorDisabled: colors.gray_3,
+    borderColor: standardElement.borderColor,
+    borderWidth: standardElement.borderWidth,
+    borderRadius: standardElement.borderRadius,
+    fontSize: standardElement.fontSize,
+    fontFamily: standardElement.fontFamily,
+    fontColor: standardElement.fontColor,
+    labelFontColor: standardElement.labelFontColor,
+    labelFontSize: standardElement.labelFontSize,
+    labelTopPosition: inputElementTheme.placeholderTopPosition,
+    activeLabelFontSize: theme.fontSize.small,
+    activeLabelTopPosition: inputElementTheme.focused.placeholderTopPosition,
+    fontColorDisabled: colors.gray_0,
+  },
+  dropdownList: {
+    showScrollbar: false,
+    heightLimit: 300,
+    backgroundColor: theme.colors.backgroundPrimary,
+    borderColor: theme.border.color.darkGray,
+    borderWidth: theme.border.width.regular,
+    borderRadius: theme.border.borderRadius.regular,
+    shadowColor: theme.shadow.color.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: theme.shadow.opacity.regular,
+    shadowRadius: theme.shadow.radius.regular,
+    separatorColor: theme.border.color.gray,
+    separatorWidth: 1,
+    checkMarkIconSize: 18,
+    checkMarkIconColor: theme.colors.textOnGray,
+    checkMarkIconColorError: theme.colors.colorDeleteRed,
+    item: {
+      padding: 12,
+      backgroundOnHover: colors.gray_3,
+      backgroundErrorOnHover: colors.red_1,
+      fontSize: 17,
+      fontColor: theme.colors.textPrimary,
+    },
+    multiSelectItem: {
+      backgroundColor: theme.border.color.gray,
+      borderRadius: theme.border.borderRadius.small,
+      paddingVertical: theme.space.regular,
+      paddingHorizontal: theme.space.regular,
+      fontSize: theme.fontSize.small,
+      fontColor: theme.colors.textOnGray,
+      backgroundColorError: colors.red_1,
+      gap: theme.space.small,
+      iconSize: 15,
+      iconColor: theme.colors.colorDeleteRed,
+    },
+    activityText: {
+      padding: 12,
+      fontSize: 17,
+      fontColor: theme.colors.textMuted,
+      fontFamily: theme.fontFamily.regular,
+    },
+  },
+  errorFontColor: theme.colors.colorDeleteRed,
+  errorBackgroundColor: theme.colors.lightRed,
+};
+
+export const binaryInputTheme: IBinaryInputTheme = {
+  height: 120,
+  backgroundColor: colors.blue_2,
+  backgroundColorError: theme.colors.lightRed,
+  backgroundColorDragOver: colors.gray_3,
+  backgroundColorDisabled: colors.gray_3,
+  borderColor: standardElement.borderColor,
+  borderColorError: theme.colors.colorDeleteRed,
+  borderWidth: standardElement.borderWidth,
+  borderRadius: standardElement.borderRadius,
+  borderStyle: 'dashed',
+  padding: theme.space.extraLarge,
+  fileListSpacing: theme.space.large,
+  fileListItemLinkFontColor: theme.colors.colorAccent,
+  fileListItemTextFontColor: theme.colors.textPrimary,
+  fileListItemFontSize: theme.fontSize.large,
+  fileListItemTextDecoration: 'underline',
+  fileListItemsSpacing: theme.space.regular,
+  fileIconColor: theme.colors.colorAccent,
+  fileIconSize: 20,
+  deleteFileIconColor: theme.colors.colorDeleteRed,
+  deleteFileIconSize: 20,
+  labelFontSize: standardElement.labelFontSize,
+  labelFontColor: standardElement.labelFontColor,
+  labelFontFamily: standardElement.labelFontFamily,
+  errorLabelFontColor: theme.colors.colorDeleteRed,
+};
+
+export const dateTimeElementTheme: IDateTimeElementTheme = {
+  input: {
+    fontSize: standardElement.fontSize,
+    fontFamily: standardElement.fontFamily,
+    fontColor: standardElement.fontColor,
+    labelFontSize: standardElement.labelFontSize,
+    labelFontFamily: standardElement.labelFontFamily,
+    labelFontColor: standardElement.labelFontColor,
+    paddingLeft: standardElement.paddingLeft,
+    paddingRight: standardElement.paddingRight,
+    paddingBottom: standardElement.paddingBottom,
+    paddingTop: 22,
+    labelPaddingTop: 17,
+    backgroundColor: standardElement.backgroundColor,
+    borderWidth: standardElement.borderWidth,
+    borderColor: standardElement.borderColor,
+    borderRadius: standardElement.borderRadius,
+  },
+  focused: {
+    labelFontSize: 12,
+    labelPaddingTop: 4,
+    borderWidth: 3,
+    borderColor: colors.black_0,
+    borderStyle: 'dashed',
+  },
+  error: {
+    labelFontColor: theme.colors.colorDeleteRed,
+    borderColor: theme.colors.colorDeleteRed,
+    backgroundColor: theme.colors.lightRed,
+  },
+  disabled: {
+    backgroundColor: colors.gray_3,
+    fontColor: colors.gray_0,
+  },
+};
+
+export const expertSearchTableTheme: IExpertSearchTableTheme = {
+  noResultText: {
+    fontSize: theme.fontSize.large,
+    fontFamily: theme.fontFamily.regular,
+    fontColor: theme.colors.textMuted,
+    textAlign: 'center',
+    marginVertical: theme.space.large,
+  },
+  table: {
+    scrollable: true,
+    headerRow: {
+      borderColor: theme.border.color.darkGray,
+      borderBottomWidth: 3,
+    },
+    headerCell: {
+      padding: theme.space.small,
+      gap: theme.space.small,
+      justifyContent: 'flex-start',
+      borderColor: theme.border.color.gray,
+      borderWidth: 2,
+      backgroundColor: theme.colors.backgroundPrimary,
+      backgroundColorOnHover: theme.colors.backgroundGray,
+      hoverTransitionDuration: 100, // milliseconds
+      fontFamily: theme.fontFamily.bold,
+      fontSize: theme.fontSize.regular,
+      fontColor: theme.colors.textPrimary,
+      iconSize: 12,
+      iconColor: theme.colors.textPrimary,
+      checkboxCell: {
+        checkedColor: theme.colors.colorAccent,
+        uncheckedColor: theme.colors.textMuted,
+      },
+    },
+    row: {
+      backgroundColor: theme.colors.backgroundPrimary,
+      backgroundColorOnHover: theme.colors.backgroundGray,
+      hoverTransitionDuration: 100,
+    },
+    cell: {
+      justifyContent: 'flex-start',
+      padding: theme.space.small,
+      borderColor: theme.border.color.gray,
+      borderWidth: 2,
+      fontFamily: theme.fontFamily.regular,
+      fontSize: theme.fontSize.regular,
+      fontColor: theme.colors.textPrimary,
+    },
+    buttonCell: {
+      textDecoration: 'none',
+      fontColor: theme.colors.textAccent,
+      fontFamily: theme.fontFamily.regular,
+      hover: {
+        textDecoration: 'underline',
+        transitionDuration: 0,
+      },
+    },
+  },
+  cardView: {
+    gapBetweenCards: 10,
+    viewHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      checkboxLabelGap: 10,
+      checkboxLabelFontSize: theme.fontSize.regular,
+      checkboxLabelFontFamily: theme.fontFamily.regular,
+      checkboxLabelFontColor: theme.colors.textPrimary,
+      titleFontSize: 24,
+      titleFontFamily: theme.fontFamily.semiBold,
+      titleFontColor: theme.colors.textPrimary,
+    },
+    card: {
+      backgroundColor: theme.colors.backgroundGray,
+      padding: theme.space.extraLarge,
+      borderRadius: theme.border.borderRadius.extraLarge,
+      borderColor: theme.border.color.darkGray,
+      borderWidth: 1,
+      fontColor: theme.colors.textOnGray,
+      fontFamily: theme.fontFamily.regular,
+      fontSize: theme.fontSize.regular,
+      row: {
+        padding: theme.space.regular,
+      },
+      header: {
+        fontSize: theme.fontSize.extraLarge,
+        fontFamily: theme.fontFamily.semiBold,
+        dividerColor: theme.border.color.darkGray,
+        dividerWidth: 2,
+      },
+      button: {
+        backgroundColor: colors.gray_3,
+        fontColor: theme.colors.textOnGray,
+        fontSize: theme.fontSize.regular,
+        fontFamily: theme.fontFamily.bold,
+        padding: theme.space.regular,
+        borderRadius: theme.border.borderRadius.regular,
+        hover: {
+          backgroundColor: colors.gray_1,
+          transitionDuration: 100,
+        },
+      },
+    },
+  },
+};
+
+export const aggregateElementTheme: IAggregateElementTheme = {
+  generalSpacing: theme.space.regular,
+  tableView: {
+    header: {
+      borderColor: theme.colors.textPrimary,
+      borderWidth: 2,
+      fontFamily: theme.fontFamily.bold,
+      color: theme.colors.textPrimary,
+      horizontalSpacing: theme.space.regular,
+      fontSize: theme.fontSize.regular,
+      textAlign: 'left',
+      alignItems: 'center',
+    },
+    actionButtons: {
+      fontFamily: theme.fontFamily.semiBold,
+      fontSize: theme.fontSize.regular,
+      actionColor: theme.colors.successGreen,
+      actionBackgroundColor: colors.green_1,
+      deleteColor: theme.colors.colorDeleteRed,
+      deleteBackgroundColor: theme.colors.lightRed,
+      iconTextGap: theme.space.extraSmall,
+      borderRadius: theme.border.borderRadius.small,
+      paddingVertical: theme.space.regular,
+    },
+    cellOnHover: {
+      backgroundColor: colors.gray_3,
+    },
+    smallView: {
+      cardsGap: theme.space.regular,
+      card: {
+        backgroundColor: theme.colors.backgroundPrimary,
+        borderRadius: theme.border.borderRadius.regular,
+        padding: theme.space.large,
+        borderWidth: theme.border.width.regular,
+        borderColor: theme.border.color.darkGray,
+        dividerWidth: theme.border.width.regular,
+        dividerColor: theme.border.color.gray,
+        fontFamily: theme.fontFamily.regular,
+        fontSize: theme.fontSize.regular,
+        color: theme.colors.textPrimary,
+      },
+    },
+  },
+  noEntry: {
+    fontSize: theme.fontSize.regular,
+    fontColor: theme.colors.textMuted,
+  },
+  functionButtons: {
+    gap: theme.space.regular,
+    padding: theme.space.extraSmall,
+    paddingSmallView: theme.space.regular,
+    add: {
+      fontColor: theme.colors.successGreen,
+      fontSize: theme.fontSize.regular,
+      fontFamily: undefined,
+      backgroundColor: undefined,
+      borderWidth: undefined,
+      borderColor: undefined,
+      borderRadius: theme.border.borderRadius.small,
+      onHover: {
+        fontColor: undefined,
+        fontSize: undefined,
+        fontFamily: undefined,
+        backgroundColor: colors.green_1,
+        borderWidth: undefined,
+        borderColor: undefined,
+        borderRadius: theme.border.borderRadius.small,
+      },
+      smallView: {
+        fontColor: undefined,
+        fontSize: theme.fontSize.large,
+        fontFamily: undefined,
+        backgroundColor: colors.green_1,
+        borderWidth: undefined,
+        borderColor: undefined,
+        borderRadius: theme.border.borderRadius.small,
+        size: 35,
+      },
+    },
+    delete: {
+      fontColor: theme.colors.colorDeleteRed,
+      fontSize: theme.fontSize.regular,
+      fontFamily: undefined,
+      backgroundColor: undefined,
+      borderWidth: undefined,
+      borderColor: undefined,
+      borderRadius: theme.border.borderRadius.small,
+      onHover: {
+        fontColor: undefined,
+        fontSize: undefined,
+        fontFamily: undefined,
+        backgroundColor: theme.colors.lightRed,
+        borderWidth: undefined,
+        borderColor: undefined,
+        borderRadius: theme.border.borderRadius.small,
+      },
+      smallView: {
+        fontColor: undefined,
+        fontSize: theme.fontSize.large,
+        fontFamily: undefined,
+        backgroundColor: theme.colors.lightRed,
+        borderWidth: undefined,
+        borderColor: undefined,
+        borderRadius: undefined,
+      },
+    },
+    toggle: {
+      fontColor: theme.colors.colorAccent,
+      fontSize: theme.fontSize.regular,
+      fontFamily: theme.fontFamily.semiBold,
+      iconTextGap: theme.space.small,
+      textDecoration: 'none',
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      borderColor: 'transparent',
+      borderRadius: 0,
+      onHover: {
+        fontColor: undefined,
+        fontSize: undefined,
+        fontFamily: undefined,
+        iconTextGap: undefined,
+        textDecoration: 'underline',
+        backgroundColor: undefined,
+        borderWidth: undefined,
+        borderColor: undefined,
+        borderRadius: undefined,
+      },
+      onActive: {
+        fontColor: undefined,
+        fontSize: undefined,
+        fontFamily: undefined,
+        iconTextGap: undefined,
+        textDecoration: undefined,
+        backgroundColor: undefined,
+        borderWidth: undefined,
+        borderColor: undefined,
+        borderRadius: undefined,
+      },
+      smallView: {
+        fontColor: undefined,
+        fontSize: undefined,
+        fontFamily: theme.fontFamily.bold,
+        textDecoration: undefined,
+        backgroundColor: colors.blue_2,
+        borderWidth: undefined,
+        borderColor: undefined,
+        borderRadius: theme.border.borderRadius.regular,
+      },
+    },
+    uploadButton: {
+      backgroundColor: theme.colors.backgroundPrimary,
+      fontSize: theme.fontSize.regular,
+      fontFamily: theme.fontFamily.bold,
+      fontColor: theme.colors.textPrimary,
+      borderColor: theme.colors.textPrimary,
+      borderWidth: theme.border.width.regular,
+      borderRadius: theme.border.borderRadius.small,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      onHover: {
+        backgroundColor: theme.colors.textPrimary,
+        fontColor: theme.colors.textOnColor,
+        fontSize: theme.fontSize.regular,
+        fontFamily: theme.fontFamily.bold,
+        borderColor: theme.colors.textAccent,
+        transitionDuration: 100, // milliseconds
+      },
+    },
+  },
+  filter: {
+    filterSettingsAlignment: 'flex-end',
+    filterSettingsFlexDirection: 'row',
+    appliedFilter: {
+      alignment: 'flex-start',
+      backgroundColor: theme.colors.backgroundGray,
+      borderRadius: theme.border.borderRadius.regular,
+      borderWidth: 0,
+      borderColor: colors.black_0,
+      padding: theme.space.regular,
+      iconTextGap: theme.space.small,
+      fontSize: theme.fontSize.regular,
+      fontColor: theme.colors.textOnGray,
+      fontFamily: theme.fontFamily.regular,
+      labelFontFamily: theme.fontFamily.semiBold,
+      iconColor: theme.colors.colorDeleteRed,
+      iconSize: theme.fontSize.regular,
+    },
+    filterInput: {
+      placeholderTopPosition: inputElementTheme.placeholderTopPosition,
+      placeholderFontSize: inputElementTheme.placeholderFontSize,
+      focused: {
+        placeholderTopPosition:
+          inputElementTheme.focused.placeholderTopPosition,
+        borderColor: inputElementTheme.focused.borderColor,
+        borderWidth: inputElementTheme.focused.borderWidth,
+        borderStyle: inputElementTheme.focused.borderStyle,
+        placeholderFontSize: inputElementTheme.focused.placeholderFontSize,
+      },
+    },
+    divider: {
+      color: theme.colors.textMuted,
+      width: theme.border.width.regular,
+    },
+    addFilterButton: {
+      backgroundColor: theme.colors.backgroundGray,
+      borderRadius: theme.border.borderRadius.regular,
+      iconColor: theme.colors.textOnGray,
+      iconSize: 21,
+      active: {
+        backgroundColor: colors.green_1,
+        iconColor: theme.colors.successGreen,
+      },
+      onHover: {
+        backgroundColor: colors.green_1,
+        iconColor: theme.colors.successGreen,
+        transitionDuration: 100,
+      },
+    },
+  },
+  pagination: {
+    gap: 4,
+    marginVertical: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: theme.border.width.regular,
+    borderRadius: theme.border.borderRadius.small,
+    fontSize: theme.fontSize.regular,
+
+    defaultButton: {
+      backgroundColor: theme.colors.backgroundPrimary,
+      borderColor: theme.colors.textAccent,
+      fontFamily: theme.fontFamily.regular,
+      fontColor: theme.colors.textAccent,
+    },
+    activeButton: {
+      backgroundColor: theme.colors.colorAccent,
+      borderColor: theme.colors.colorAccent,
+      fontFamily: theme.fontFamily.bold,
+      fontColor: theme.colors.textOnColor,
+    },
+    disabledButton: {
+      backgroundColor: theme.colors.backgroundPrimary,
+      borderColor: theme.border.color.darkGray,
+      fontFamily: theme.fontFamily.regular,
+      fontColor: theme.colors.textPrimary,
+    },
+  },
+};
+
+export const summaryTheme: ISummaryTheme = {
+  elements: {
+    label: {
+      fontSize: theme.fontSize.large,
+      fontColor: theme.colors.textPrimary,
+      fontFamily: theme.fontFamily.bold,
+    },
+    value: {
+      fontSize: theme.fontSize.regular,
+      fontFamily: theme.fontFamily.regular,
+      fontColor: theme.colors.textOnGray,
+    },
+  },
+};
+
+export const formGridImageElementTheme: IFormGridImageElementTheme = {
+  caption: {
+    marginTop: 4,
+    fontSize: theme.fontSize.small,
+    fontFamily: theme.fontFamily.regular,
+    color: theme.colors.textMuted,
+    opacity: 0.8,
+  },
+};
+
+export const customComponentsTheme: ICustomComponentsTheme = {
+  modal: {
+    backdropColor: colors.black_transparent_1,
+    backdropColorSmallView: theme.colors.backgroundPrimary,
+  },
+  input: {
+    backgroundColor: theme.colors.backgroundGray,
+    borderRadius: theme.border.borderRadius.regular,
+    padding: theme.space.small,
+    heightForDesktop: 32,
+    horizontalPaddingForDesktop: theme.space.large,
+    iconTextInputGap: theme.space.regular,
+    fontSize: theme.fontSize.large,
+    fontColor: theme.colors.textPrimary,
+    placeholderTextColor: theme.colors.textMuted,
+  },
+  dropdown: {
+    textColor: theme.colors.textOnGray,
+    backgroundColor: theme.colors.backgroundPrimary,
+    shadowColor: theme.shadow.color.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: theme.border.borderRadius.small,
+    elevation: 4,
+    menuPadding: theme.space.small,
+    optionPadding: theme.space.small,
+    borderRadius: theme.border.borderRadius.small,
+  },
+};
+
+export default theme;

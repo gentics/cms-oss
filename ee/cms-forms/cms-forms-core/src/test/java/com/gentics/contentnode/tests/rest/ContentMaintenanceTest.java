@@ -50,6 +50,7 @@ import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.QueueEntry;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
@@ -155,6 +156,11 @@ public class ContentMaintenanceTest {
 			for (Node node : Arrays.asList(nodeWithPermission, channelWithPermission, nodeWithoutPermission, channelWithoutPermission)) {
 				folderIds.computeIfAbsent(node.getId(), key -> new HashSet<>()).add(node.getFolder().getId());
 			}
+		});
+
+		operate(() -> {
+			FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, nodeWithPermission.getId());
+			FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, nodeWithoutPermission.getId());
 		});
 
 		// create content in both nodes

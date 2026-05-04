@@ -59,4 +59,5 @@ cache/*
 data/
 logs/
 packages/
+!formgen/packages/
 cms-license/keys/*

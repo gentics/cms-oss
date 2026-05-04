@@ -1,0 +1,130 @@
+
+[
+    {
+        "key": "default",
+        "name": "Standard",
+        "formFlowSteps": [
+        {
+            "buttonText": "Zum Formular",
+            "reactClass": "FormScreen",
+            "name": "form_flow_name_form",
+            "description": "form_flow_desc_form",
+            "buttonDefinition": [
+                {
+                    "btnComponent": "DetailInfoButton",
+                    "translateKey": "form_detailinfo",
+                    "mobileDisabled": true
+                },
+                {
+                    "btnComponent": "CancelButton",
+                    "translateKey": "form_cancel"
+                },
+                {
+                    "btnComponent": "PreviousPageButton",
+                    "translateKey": "form_previousPage"
+                },
+                {
+                    "btnComponent": "NextPageButton",
+                    "translateKey": "form_nextPage"
+                }
+            ],
+            "variables": [
+                
+            ]
+        },
+        {
+            "buttonText": "Zur Zusammenfassung",
+            "reactClass": "SummaryScreen",
+            "name": "form_flow_name_summary",
+            "description": "form_flow_desc_summary",
+            "buttonDefinition": [
+                {
+                    "btnComponent": "CancelButton",
+                    "translateKey": "form_cancel"
+                },
+                {
+                    "btnComponent": "PrintPdfButton",
+                    "translateKey": "form_print",
+                    "mobileDisabled": true
+                },
+                {
+                    "btnComponent": "PreviousPageButton",
+                    "translateKey": "form_previousPage"
+                },
+                {
+                    "btnComponent": "NextPageButton",
+                    "translateKey": "form_nextPage"
+                },
+                {
+                    "btnComponent": "SubmitButton",
+                    "translateKey": "form_submit"
+                }
+            ],
+            "variables": [
+                {
+                    "name": "showDetails",
+                    "value" : true
+                }
+            ]
+        },
+        {
+            "buttonText": "Successpage",
+            "reactClass": "SuccessScreen",
+            "name": "form_flow_name_success",
+            "description": "form_flow_desc_success",
+            "buttonDefinition": [],
+            "variables": [
+                
+            ]
+        }
+    ]
+    },
+    {
+        "key": "no_summary",
+        "name": "Ohne Zusammenfassung",
+        "formFlowSteps": [
+        {
+            "buttonText": "Zum Formular",
+            "reactClass": "FormScreen",
+            "name": "form_flow_name_form",
+            "description": "form_flow_desc_form",
+            "buttonDefinition": [
+                {
+                    "btnComponent": "DetailInfoButton",
+                    "translateKey": "form_detailinfo",
+                    "mobileDisabled": true
+                },
+                {
+                    "btnComponent": "CancelButton",
+                    "translateKey": "form_cancel"
+                },
+                {
+                    "btnComponent": "PreviousPageButton",
+                    "translateKey": "form_previousPage"
+                },
+                {
+                    "btnComponent": "NextPageButton",
+                    "translateKey": "form_nextPage"
+                },
+                {
+                    "btnComponent": "SubmitButton",
+                    "translateKey": "form_submit"
+                }
+            ],
+            "variables": [
+                
+            ]
+        },
+        {
+            "buttonText": "Successpage",
+            "reactClass": "SuccessScreen",
+            "name": "form_flow_name_success",
+            "description": "form_flow_desc_success",
+            "buttonDefinition": [],
+            "variables": [
+                
+            ]
+        }
+    ]
+    }
+]

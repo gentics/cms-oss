@@ -1,0 +1,10 @@
+/* 
+ +-------------------------------------------------+
+ | Example hover styling for string input elements |
+ +-------------------------------------------------+
+ .string-element:hover {
+  outline: 2px solid black;
+  border-radius: 6px;
+  outline-style: dashed;
+  box-shadow: 0 4px 12px rgba(0, 206, 209, 0.25);
+} */

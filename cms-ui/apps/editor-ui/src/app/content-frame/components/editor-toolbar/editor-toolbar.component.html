@@ -132,7 +132,7 @@
                         class="primary-action device-preview-button"
                         data-action="device-preview"
                         data-context-id="device-preview"
-                        [class.is-active]="!!(devicePreviewActive$ | async)"
+                        [class.is-active]="!!devicePreviewActivePreset"
                     >
                         <gtx-dropdown-trigger>
                             <gtx-button
@@ -141,10 +141,10 @@
                                 [title]="'editor.device_preview_tooltip' | gtxI18n"
                                 data-context-trigger
                             >
-                                <icon left>{{ (devicePreviewActive$ | async)?.icon || 'devices' }}</icon>
+                                <icon left>{{ devicePreviewActivePreset?.icon || 'devices' }}</icon>
                                 <span class="device-preview-button-label">
-                                    @if (devicePreviewActive$ | async; as activePreset) {
-                                        {{ activePreset.labelKey | gtxI18n }}
+                                    @if (devicePreviewActivePreset) {
+                                        {{ devicePreviewActivePreset.labelKey | gtxI18n }}
                                     } @else {
                                         {{ 'editor.device_preview_label' | gtxI18n }}
                                     }
@@ -154,8 +154,8 @@
                         </gtx-dropdown-trigger>
                         <gtx-dropdown-content data-context-id="device-preview">
                             <gtx-device-preview-menu
-                                [presets]="devicePreviewPresets$ | async"
-                                [activePresetId]="(devicePreviewState$ | async)?.presetId"
+                                [presets]="devicePreviewPresets"
+                                [activePresetId]="devicePreviewState.presetId"
                                 (select)="selectDevicePreset($event)"
                                 (clear)="clearDevicePreset()"
                             ></gtx-device-preview-menu>

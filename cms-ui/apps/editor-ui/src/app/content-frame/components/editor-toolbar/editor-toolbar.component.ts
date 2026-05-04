@@ -118,10 +118,15 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public uploadInProgress$: Observable<boolean>;
     public alohaReady: boolean;
 
-    /** Streams from the DevicePreviewService — wired in ngOnInit. */
-    public devicePreviewState$: Observable<DevicePreviewState>;
-    public devicePreviewActive$: Observable<DevicePreset | null>;
-    public devicePreviewPresets$: Observable<DevicePreset[]>;
+    /**
+     * Mirror of `DevicePreviewService` state, kept as plain properties so
+     * the template doesn't have to subscribe via async pipes (which would
+     * each open their own subscription on every change-detection run).
+     * Wired in `ngOnInit` and torn down via `subscriptions`.
+     */
+    public devicePreviewState: DevicePreviewState = { active: false, presetId: null };
+    public devicePreviewActivePreset: DevicePreset | null = null;
+    public devicePreviewPresets: DevicePreset[] = [];
 
     public breadcrumbs: (IBreadcrumbLink | IBreadcrumbRouterLink)[] = [];
     public multilineExpanded: boolean;
@@ -152,9 +157,18 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.devicePreviewState$ = this.devicePreview.state$;
-        this.devicePreviewActive$ = this.devicePreview.activePreset$;
-        this.devicePreviewPresets$ = this.devicePreview.presets$;
+        this.subscriptions.push(this.devicePreview.state$.subscribe((state) => {
+            this.devicePreviewState = state;
+            this.changeDetector.markForCheck();
+        }));
+        this.subscriptions.push(this.devicePreview.activePreset$.subscribe((preset) => {
+            this.devicePreviewActivePreset = preset;
+            this.changeDetector.markForCheck();
+        }));
+        this.subscriptions.push(this.devicePreview.presets$.subscribe((presets) => {
+            this.devicePreviewPresets = presets;
+            this.changeDetector.markForCheck();
+        }));
 
         this.uploadInProgress$ = this.appState.select((state) => state.editor).pipe(
             map((editorState) => editorState.uploadInProgress),

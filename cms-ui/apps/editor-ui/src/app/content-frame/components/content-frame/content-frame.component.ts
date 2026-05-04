@@ -196,11 +196,12 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     isInQueue$: Observable<boolean> = undefined;
 
     /**
-     * Stream of the currently active device-preview preset (or null when off).
-     * Bound directly in the template to constrain the iframe to mobile / tablet
-     * / desktop viewport sizes via CSS custom properties.
+     * Currently active device-preview preset (or null when off). Mirrored
+     * from `DevicePreviewService.activePreset$` via a subscription set up
+     * in `ngOnInit`, so the template can read it as a plain property
+     * instead of opening async-pipe subscriptions on every render.
      */
-    public devicePreviewActive$: Observable<DevicePreset | null>;
+    public devicePreviewActivePreset: DevicePreset | null = null;
 
     private onLoadListener: EventListener;
     public itemPermissions: ItemPermissions = noItemPermissions;
@@ -242,9 +243,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private aloha: AlohaIntegrationService,
         private urlBuilder: ResourceUrlBuilder,
         private devicePreview: DevicePreviewService,
-    ) {
-        this.devicePreviewActive$ = this.devicePreview.activePreset$;
-    }
+    ) { }
 
     ngOnInit(): void {
         this.customScriptHostService.initialize(this);
@@ -255,6 +254,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.childFrameInitialized = true;
             return this.customerScriptService.createGCMSUIObject(this.customScriptHostService, iFrameWindow, iFrameDocument);
         };
+
+        this.subscriptions.push(this.devicePreview.activePreset$.subscribe((preset) => {
+            this.devicePreviewActivePreset = preset;
+            this.changeDetector.markForCheck();
+        }));
 
         this.subscriptions.push(
             this.appState.select((state) => state.editor.contentModified).subscribe((modified) => {

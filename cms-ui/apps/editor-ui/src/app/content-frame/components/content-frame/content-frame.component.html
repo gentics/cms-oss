@@ -92,10 +92,10 @@
     <div
         class="frame-wrapper"
         [class.hidden]="editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE || currentItem?.type === 'form'"
-        [class.device-preview-active]="!!(devicePreviewActive$ | async)"
-        [attr.data-active-preset]="(devicePreviewActive$ | async)?.id"
-        [style.--device-w.px]="(devicePreviewActive$ | async)?.width"
-        [style.--device-h.px]="(devicePreviewActive$ | async)?.height"
+        [class.device-preview-active]="!!devicePreviewActivePreset"
+        [attr.data-active-preset]="devicePreviewActivePreset?.id"
+        [style.--device-w.px]="devicePreviewActivePreset?.width"
+        [style.--device-h.px]="devicePreviewActivePreset?.height"
     >
         <gtx-progress-bar
             class="frame-requesting"
@@ -118,11 +118,11 @@
             [longerMessage]="'editor.loading_takes_more_time' | gtxI18n"
         ></gtx-loading-spinner>
 
-        @if (devicePreviewActive$ | async; as activePreset) {
+        @if (devicePreviewActivePreset) {
             <div class="device-preview-info">
-                <icon class="device-preview-info-icon">{{ activePreset.icon }}</icon>
-                <span class="device-preview-info-label">{{ activePreset.labelKey | gtxI18n }}</span>
-                <span class="device-preview-info-size">{{ activePreset.width }} × {{ activePreset.height }}</span>
+                <icon class="device-preview-info-icon">{{ devicePreviewActivePreset.icon }}</icon>
+                <span class="device-preview-info-label">{{ devicePreviewActivePreset.labelKey | gtxI18n }}</span>
+                <span class="device-preview-info-size">{{ devicePreviewActivePreset.width }} × {{ devicePreviewActivePreset.height }}</span>
             </div>
         }
 

@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,27 +31,20 @@ import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.etc.PropertyTrx;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
-import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
-import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
 import com.gentics.contentnode.factory.NoMcTrx;
-import com.gentics.contentnode.factory.PageLanguageFallbackList;
-import com.gentics.contentnode.factory.PublishCacheTrx;
-import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.ContentLanguage;
@@ -59,14 +53,9 @@ import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.NodeObjectVersion;
-import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
-import com.gentics.contentnode.render.RenderType;
-import com.gentics.contentnode.render.RenderUrl;
-import com.gentics.contentnode.render.RenderUrlFactory;
-import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
@@ -996,36 +985,75 @@ public class FormFactory extends AbstractFactory {
 
 		@Override
 		public Object get(String key) {
+			Object value = null;
+			String depKey = null;
 			try {
 				switch (key) {
 				case "name":
-					return getName();
+					value = getName();
+					depKey = "name";
+					break;
 				case "description":
-					return getDescription();
+					value = getDescription();
+					depKey = "description";
+					break;
 				case "cdate":
-					return getCDate().getIntTimestamp();
+					value = getCDate().getIntTimestamp();
+					depKey = "cdate";
+					break;
 				case "edate":
-					return getEDate().getIntTimestamp();
+					value = getEDate().getIntTimestamp();
+					depKey = "edate";
+					break;
 				case "pdate":
-					return getPDate().getIntTimestamp();
+					value = getPDate().getIntTimestamp();
+					depKey = "pdate";
+					break;
 				case "creator":
-					return getCreator();
+					value = getCreator();
+					depKey = "creator";
+					break;
 				case "editor":
-					return getEditor();
+					value = getEditor();
+					depKey = "editor";
+					break;
 				case "publisher":
-					return getPublisher();
+					value = getPublisher();
+					depKey = "publisher";
+					break;
 				case "folder":
-					return getFolder();
+					value = getFolder();
+					depKey = "folder_id";
+					break;
 				case "externalId":
-					return getExternalId();
+					value = getExternalId();
+					break;
 				case "formType":
-					return getFormType();
+					value = getFormType();
+					break;
+				case "languages":
+					value = getLanguages();
+					depKey = "languages";
+					break;
 				default:
-					return super.get(key);
+					value = super.get(key);
+					break;
 				}
+
+				if (depKey != null) {
+					addDependency(depKey, value);
+				}
+
+				return value;
 			} catch (NodeException e) {
 				return null;
 			}
+		}
+
+		@Override
+		public Set<String> getResolvableKeys() {
+			return SetUtils.union(super.getResolvableKeys(), Set.of("name", "description", "cdate", "edate", "pdate",
+					"creator", "editor", "publisher", "folder", "externalId", "formType", "languages"));
 		}
 
 		@Override

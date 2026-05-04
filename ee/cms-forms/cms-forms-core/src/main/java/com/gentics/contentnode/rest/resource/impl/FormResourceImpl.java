@@ -720,8 +720,8 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			// check for uniqueness of form names in the target folder
 			if (UniquifyHelper.findConflictingValues(form.getName(),
-					"SELECT name FROM form WHERE id != ? AND folder_id = ? AND name = ?", form.getId(),
-					targetFolder.getId())) {
+					"SELECT name FROM form WHERE id != ? AND folder_id = ? AND deleted = ? AND name = ?", form.getId(),
+					targetFolder.getId(), 0)) {
 				throw new RestMappedException(
 						I18NHelper.get("form.move.name", I18NHelper.getName(form), I18NHelper.getPath(targetFolder)))
 								.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);

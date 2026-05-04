@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -132,11 +130,6 @@ public class FormRendering {
 		private boolean showResults = false;
 
 		/**
-		 * Additional path segment for handlebars templates to render a form
-		 */
-		private String templateContext = "";
-
-		/**
 		 * Render type
 		 * @return type
 		 */
@@ -199,18 +192,6 @@ public class FormRendering {
 		public void setShowResults(boolean showResults) {
 			this.showResults = showResults;
 		}
-
-		public String getTemplateContext() {
-			if (templateContext == null) {
-				templateContext = "";
-			}
-
-			return templateContext;
-		}
-
-		public void setTemplateContext(String templateContext) {
-			this.templateContext = templateContext;
-		}
 	}
 
 	/**
@@ -222,18 +203,12 @@ public class FormRendering {
 		 */
 		php((form, options) -> {
 			String showResults = options.isShowResults() ? ", 'showResults' => true" : "";
-			String templateContext = options.getTemplateContext();
-
-			if (StringUtils.isNotBlank(templateContext)) {
-				templateContext = String.format(", 'templateContext' => '%s'", templateContext);
-			}
 
 			return String.format(
-				"@%s('%s', [$formsCookie['key'] => $formsCookie['value'], 'language' => $node['language']%s%s])",
+				"@%s('%s', [$formsCookie['key'] => $formsCookie['value'], 'language' => $node['language']%s])",
 				FORMS_HELPER_NAME,
 				MeshPublisher.toMeshUuid(form.getGlobalId().toString()),
-				showResults,
-				templateContext);
+				showResults);
 		}),
 
 		/**
@@ -241,18 +216,12 @@ public class FormRendering {
 		 */
 		java((form, options) -> {
 			String showResults = options.isShowResults() ? " showResults=true" : "";
-			String templateContext = options.getTemplateContext();
-
-			if (StringUtils.isNotBlank(templateContext)) {
-				templateContext = String.format(" templateContext=\"%s\"", templateContext);
-			}
 
 			return String.format(
-				"<eval>{ %s \"%s\" language=data.node.language%s%s }</eval>",
+				"<eval>{ %s \"%s\" language=data.node.language%s }</eval>",
 				FORMS_HELPER_NAME,
 				MeshPublisher.toMeshUuid(form.getGlobalId().toString()),
-				showResults,
-				templateContext);
+				showResults);
 		});
 
 		/**

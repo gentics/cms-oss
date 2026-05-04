@@ -81,10 +81,17 @@
         }
 
         .device-preview-info {
-            position: absolute;
-            top: 8px;
-            left: 50%;
-            transform: translateX(-50%);
+            // Sticks to the top of the scrollable .frame-wrapper while the
+            // user scrolls a tall device-frame (e.g. a 1024px-tall tablet
+            // inside a 600px-tall editor panel). The pill is the FIRST
+            // child after the loading indicators in the wrapper template,
+            // so its natural position is at the top — `position: sticky`
+            // then keeps it pinned there regardless of scroll position.
+            position: sticky;
+            top: 0.5rem;
+            align-self: center;
+            flex: 0 0 auto;
+            margin-bottom: 0.5rem;
             background: $gtx-color-primary;
             color: white;
             padding: 4px 12px;

@@ -38,6 +38,11 @@
     }
 
     .device-preview-button {
+        // Spacing to whichever button comes before us in the
+        // .toolbar-actions row. Matches the existing margin convention
+        // used by other primary actions in this file.
+        margin-left: 0.5rem;
+
         // The `<gtx-button>` inside handles its own flex layout; we only
         // tweak the caret + label cosmetics here. Vertical centering is
         // achieved via inline-flex on the inner spans/icons so that the

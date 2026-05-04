@@ -9,10 +9,10 @@
         [class.is-selected]="!activePresetId"
         (click)="onClear()"
     >
-        <icon left>aspect_ratio</icon>
+        <icon left class="hollow">aspect_ratio</icon>
         <span class="device-label">{{ 'editor.device_preview_clear' | gtxI18n }}</span>
         @if (!activePresetId) {
-            <icon class="device-check" right>check</icon>
+            <icon class="device-check hollow" right>check</icon>
         }
     </gtx-dropdown-item>
 
@@ -25,11 +25,11 @@
             [class.is-selected]="activePresetId === preset.id"
             (click)="onSelect(preset)"
         >
-            <icon left>{{ preset.icon }}</icon>
+            <icon left class="hollow">{{ preset.icon }}</icon>
             <span class="device-label">{{ preset.labelKey | gtxI18n }}</span>
             <span class="device-size">{{ preset.width }} × {{ preset.height }}</span>
             @if (activePresetId === preset.id) {
-                <icon class="device-check" right>check</icon>
+                <icon class="device-check hollow" right>check</icon>
             }
         </gtx-dropdown-item>
     }

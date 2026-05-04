@@ -118,6 +118,14 @@
             [longerMessage]="'editor.loading_takes_more_time' | gtxI18n"
         ></gtx-loading-spinner>
 
+        @if (devicePreviewActive$ | async; as activePreset) {
+            <div class="device-preview-info">
+                <icon class="device-preview-info-icon">{{ activePreset.icon }}</icon>
+                <span class="device-preview-info-label">{{ activePreset.labelKey | gtxI18n }}</span>
+                <span class="device-preview-info-size">{{ activePreset.width }} × {{ activePreset.height }}</span>
+            </div>
+        }
+
         <div class="frame-language-container" [class.hidden]="!comparePageId">
             <iframe
                 #diffFrame
@@ -146,14 +154,6 @@
 
             <div class="frame-language-indicator" [class.hidden]="!comparePageId">{{ itemLanguage?.name }}</div>
         </div>
-
-        @if (devicePreviewActive$ | async; as activePreset) {
-            <div class="device-preview-info">
-                <icon class="device-preview-info-icon">{{ activePreset.icon }}</icon>
-                <span class="device-preview-info-label">{{ activePreset.labelKey | gtxI18n }}</span>
-                <span class="device-preview-info-size">{{ activePreset.width }} × {{ activePreset.height }}</span>
-            </div>
-        }
     </div>
 
     <div class="hidden-file-picker" #filePickerWrapper>

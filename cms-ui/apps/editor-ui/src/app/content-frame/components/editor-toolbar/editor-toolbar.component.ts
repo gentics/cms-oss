@@ -473,8 +473,18 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         const canPublish = !!(isPage || (isForm && (this.itemPermissions as FormPermissions)?.publish));
 
         // Device-preview is meaningful while we're looking at the rendered
-        // iframe (preview or edit mode) of a page or form.
-        const showDevicePreview = (isPage || isForm) && (previewing || editing) && userCan.view;
+        // iframe (preview or edit mode) of a page or form. It is suppressed
+        // during version- or language-comparison views, because there are
+        // two iframes side by side in those modes and the device-frame
+        // wrapper around a single one would only constrain the master
+        // iframe — confusing UX.
+        const isComparing = !!this.editorState?.compareWithId
+            || editMode === EditMode.COMPARE_VERSION_SOURCES
+            || editMode === EditMode.COMPARE_VERSION_CONTENTS;
+        const showDevicePreview = (isPage || isForm)
+            && (previewing || editing)
+            && !isComparing
+            && userCan.view;
 
         return {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,

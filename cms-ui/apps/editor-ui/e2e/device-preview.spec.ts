@@ -159,6 +159,17 @@ test.describe('Device Preview', () => {
             await expect(trigger).toBeVisible();
         });
 
+        // The compare-mode visibility hide (Vorschau button suppressed when
+        // editorState.compareWithId is set or editMode is one of the
+        // COMPARE_VERSION_* values) is implemented in
+        // EditorToolbarComponent.determineVisibleButtons() and should be
+        // covered by either a Component-level unit test or the existing
+        // language-compare e2e flows when those land. It is intentionally
+        // not asserted here — driving the editor into compare-mode purely
+        // from this spec would require multi-language test data plus a
+        // brittle reach into Angular's injector from page.evaluate(),
+        // which the rest of the test suite avoids.
+
         test('removes the legacy Vorschau entry from the kebab menu', async ({ page }) => {
             const list = findList(page, ITEM_TYPE_PAGE);
             const row = findItem(list, IMPORTER.get(PAGE_ONE).id);

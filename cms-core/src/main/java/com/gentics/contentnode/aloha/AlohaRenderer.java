@@ -60,8 +60,6 @@ import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.perm.PermHandler;
-import com.gentics.contentnode.render.FormDirective;
-import com.gentics.contentnode.render.FormRendering;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.TemplateRenderer;
@@ -86,6 +84,7 @@ import com.gentics.lib.log.NodeLogger;
  * @author floriangutmann
  */
 public class AlohaRenderer implements TemplateRenderer {
+	public final static String FORMS_PREVIEW_CLASS = "gcn-form-preview";
 
 	/**
 	 * Logger
@@ -1080,7 +1079,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * @return true iff forms feature is active and the start tag is the forms preview tag
 	 */
 	protected static boolean isFormsPreviewTag(String startTag) {
-		return getClasses(startTag).contains(FormRendering.FORMS_PREVIEW_CLASS);
+		return getClasses(startTag).contains(FORMS_PREVIEW_CLASS);
 	}
 
 	/*

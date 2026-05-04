@@ -69,6 +69,12 @@ public abstract class BaseSetting implements Serializable {
 	public String propertyPath;
 
 	/**
+	 * Which condition has to be met in order to display this setting to the editor
+	 */
+	@JsonProperty
+	public Condition condition;
+
+	/**
 	 * Creator
 	 * @param id ID
 	 * @param labelI18n label

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.etc;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,8 @@ import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.model.formtype.BlockConfig;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.log.NodeLogger;
 
@@ -99,7 +102,8 @@ public final class FormConfigProvider implements ConfigurationService {
 	}
 
 	@Override
-	public void init(NodePreferences preferences) {
+	public List<Message> init(NodePreferences preferences) {
+		List<Message> messages = new ArrayList<>();
 		ObjectMapper mapper = new ObjectMapper();
 		try {
 			configurationMap = mapper.convertValue(
@@ -112,14 +116,20 @@ public final class FormConfigProvider implements ConfigurationService {
 
 			// warn about empty configurations
 			configurationMap.entrySet().stream().filter(entry -> entry.getValue() == null).forEach(entry -> {
-				logger.warn("Ignoring empty form type configuration for '%s'".formatted(entry.getKey()));
+				String msg = "Ignoring empty form type configuration for '%s'".formatted(entry.getKey());
+				logger.warn(msg);
+				messages.add(new Message(Type.WARNING, msg));
 			});
 			// remove empty configurations
 			configurationMap.values().removeIf(c -> c == null);
 		} catch (IllegalArgumentException e) {
 			logger.error("Error while reading form type configuration", e.getCause());
+			messages.add(new Message(Type.CRITICAL,
+					"Error while reading form type configuration: %s".formatted(e.getLocalizedMessage())));
 			configurationMap = null;
 		}
+
+		return messages;
 	}
 
 	/**
@@ -131,14 +141,18 @@ public final class FormConfigProvider implements ConfigurationService {
 	 * <li>Form type configurations are inconsistent</li>
 	 * </ul>
 	 */
-	public void check() {
+	public List<Message> check() {
+		List<Message> messages = new ArrayList<>();
 		try {
 			// first check whether the migration has been done
 			boolean migrationDone = Trx.supply(() -> {
 				return DBUtils.tableExists("node_formtype") && DBUtils.columnExists("form", "formtype");
 			});
 
-			if (migrationDone) {
+			if (!migrationDone) {
+				logger.info("Formtype consistency not checked, since migration is not done");
+				messages.add(new Message(Type.INFO, "Formtype consistency not checked, since migration is not done"));
+			} else if (configurationMap != null) {
 				AtomicBoolean consistent = new AtomicBoolean(true);
 				Map<Integer, Set<String>> assignedFormTypes = Trx.supply(() -> FormFactory.getFormTypeAssignment());
 				Map<Integer, Set<String>> usedFormTypes = Trx.supply(() -> FormFactory.getFormTypeUsage());
@@ -157,16 +171,19 @@ public final class FormConfigProvider implements ConfigurationService {
 
 					entry.getValue().stream().forEach(formType -> {
 						if (!configurationMap.containsKey(formType)) {
-							logger.error("Node '%s' contains forms of unknown formtype '%s'".formatted(nodeName, formType));
+							String msg = "Node '%s' contains forms of unknown formtype '%s'".formatted(nodeName, formType);
+							logger.error(msg);
+							messages.add(new Message(Type.CRITICAL, msg));
 							consistent.set(false);
 						} else if (!assignedFormTypes.getOrDefault(nodeId, Collections.emptySet()).contains(formType)) {
-							logger.error("Node '%s' contains forms of formtype '%s', which is not assigned to the node"
-									.formatted(nodeName, formType));
+							String msg = "Node '%s' contains forms of formtype '%s', which is not assigned to the node"
+									.formatted(nodeName, formType);
+							logger.error(msg);
+							messages.add(new Message(Type.CRITICAL, msg));
 							consistent.set(false);
 						}
 					});
 				});
-
 				configurationMap.entrySet().stream().forEach(entry -> {
 					String formType = entry.getKey();
 					FormTypeConfiguration config = entry.getValue();
@@ -177,9 +194,10 @@ public final class FormConfigProvider implements ConfigurationService {
 							Optional.ofNullable(blockConfig.settings).ifPresent(settings -> {
 								settings.stream().forEach(setting -> {
 									if (setting.backend) {
-										logger.error(
-												"Formtype configuration '%s' contains block configuration '%s' with setting '%s' having backend=true, which is not allowed."
-														.formatted(formType, blockType, setting.id));
+										String msg = "Formtype configuration '%s' contains block configuration '%s' with setting '%s' having backend=true, which is not allowed."
+												.formatted(formType, blockType, setting.id);
+										logger.error(msg);
+										messages.add(new Message(Type.CRITICAL, msg));
 										consistent.set(false);
 									}
 								});
@@ -189,15 +207,19 @@ public final class FormConfigProvider implements ConfigurationService {
 				});
 
 				if (consistent.get()) {
-					logger.info("Formtype configuration is consistent");
+					String msg = "Formtype configuration is consistent";
+					messages.add(new Message(Type.INFO, msg));
+					logger.info(msg);
 				} else {
-					logger.error("Formtype configuration is not consistent (see previous errors)");
+					String msg = "Formtype configuration is not consistent (see previous errors)";
+					messages.add(new Message(Type.CRITICAL, msg));
+					logger.error(msg);
 				}
-			} else {
-				logger.info("Formtype consistency not checked, since migration is not done");
 			}
 		} catch (NodeException e) {
+			messages.add(new Message(Type.CRITICAL, "Error while checking formtype consistency: %s".formatted(e.getLocalizedMessage())));
 			logger.error("Error while checking formtype consistency", e);
 		}
+		return messages;
 	}
 }

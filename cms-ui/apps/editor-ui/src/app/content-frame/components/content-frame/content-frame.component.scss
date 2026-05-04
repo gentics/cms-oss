@@ -78,7 +78,7 @@
                 // box proportionally because of the aspect-ratio rule above.
                 max-width: 100%;
                 max-height: 100%;
-                background: $gtx-color-page-background;
+                background: $gcms-color-page-background;
                 box-shadow: 0 0.5rem 2rem rgba($gtx-color-very-dark-gray, 0.18);
                 border-radius: 0.375rem;
                 overflow: hidden;
@@ -105,7 +105,7 @@
             flex: 0 0 auto;
             margin-bottom: 0.5rem;
             background: $gtx-color-primary;
-            color: $gtx-color-page-background;
+            color: $gcms-color-page-background;
             padding: 0.25rem 0.75rem;
             border-radius: 999px;
             font-size: 0.75rem;

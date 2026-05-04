@@ -34,6 +34,8 @@ import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.jmx.SessionInfo;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.InstantCRPublishing;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.server.ServletContextHandlerService;
 import com.gentics.lib.log.NodeLogger;
 
@@ -110,9 +112,11 @@ public class NodeConfigRuntimeConfiguration {
 
 	/**
 	 * Load the configuration and initialize
+	 * @return list of messages
 	 * @throws NodeException
 	 */
-	protected final void initConfigurationProperties() throws NodeException {
+	protected final List<Message> initConfigurationProperties() throws NodeException {
+		final List<Message> messages = new ArrayList<>();
 		try {
 			// load data
 			Map<String, Object> data = loadConfiguration();
@@ -126,14 +130,16 @@ public class NodeConfigRuntimeConfiguration {
 			NodePreferences nodePreferences = nodeConfig.getDefaultPreferences();
 
 			// call all ConfigurationServices
-			configurationServiceLoader.forEach(configurationService -> configurationService.init(nodePreferences));
+			configurationServiceLoader.forEach(configurationService -> {
+				messages.addAll(configurationService.init(nodePreferences));
+			});
 
 			// check features
 			for (Feature feature : Feature.values()) {
 				if (feature.activatedButNotAvailable()) {
-					logger.error(String.format(
-							"Feature %s was activated in the configuration, but is not available. Feature will not be active.",
-							feature.getName()));
+					String msg = "Feature %s was activated in the configuration, but is not available. Feature will not be active.".formatted(feature.getName());
+					messages.add(new Message(Type.CRITICAL, msg));
+					logger.error(msg);
 					nodePreferences.setFeature(feature, false);
 				}
 			}
@@ -141,7 +147,9 @@ public class NodeConfigRuntimeConfiguration {
 			nodeConfig.init();
 
 			// call all ConfigurationServices to check the configuration
-			configurationServiceLoader.forEach(configurationService -> configurationService.check());
+			configurationServiceLoader.forEach(configurationService -> {
+				messages.addAll(configurationService.check());
+			});
 
 			// TODO move this to PopertyNodeConfig.init
 			// set configuration for the instant cr publishing disabler
@@ -155,6 +163,7 @@ public class NodeConfigRuntimeConfiguration {
 		} catch (Exception e) {
 			throw new NodeException("Error while loading Gentics Content.Node configuration", e);
 		}
+		return messages;
 	}
 
 	/**
@@ -210,13 +219,15 @@ public class NodeConfigRuntimeConfiguration {
 
 	/**
 	 * Reload the configuration
+	 * @return list of messages
 	 * @throws NodeException
 	 */
-	public void reloadConfiguration() throws NodeException {
-		initConfigurationProperties();
+	public List<Message> reloadConfiguration() throws NodeException {
+		List<Message> messages = initConfigurationProperties();
 		operate(() -> CNDictionary.ensureConsistency());
 		Optional.ofNullable(servletContextHandlerServiceLoader)
 				.ifPresent(loader -> loader.forEach(ServletContextHandlerService::onReloadConfiguration));
+		return messages;
 	}
 
 	/**

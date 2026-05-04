@@ -330,26 +330,44 @@ test.describe('Device Preview', () => {
     });
 
     /* --------------------------------------------------------------------- *
-     * Persistence
+     * URL state
      * --------------------------------------------------------------------- */
 
-    test.describe('Persistence', () => {
+    test.describe('URL state', () => {
 
-        test('persists the most recently used preset to local storage', async ({ page }) => {
+        test('writes the active preset id to the URL as `?device=` query param', async ({ page }) => {
             await openPageInPreview(page, IMPORTER.get(PAGE_ONE));
 
             await pickDevicePreset(page, PRESET_TABLET.id);
             await expect(page.locator(FRAME_WRAPPER)).toHaveAttribute('data-active-preset', PRESET_TABLET.id);
 
-            // The DevicePreviewService persists via the `LocalStorage` wrapper
-            // which prefixes its keys with `GCMSUI_`. The setting is
-            // application-wide (`getForAllUsers`), so the unprefixed key is
-            // `devicePreview.lastPresetId`.
-            const stored = await page.evaluate(() => localStorage.getItem('GCMSUI_devicePreview.lastPresetId'));
+            // URL now carries `?device=tablet`
+            await expect(page).toHaveURL(/[?&]device=tablet(&|$)/);
+        });
 
-            // LocalStorage wrapper stringifies values, so the expected
-            // shape is the JSON-encoded preset id.
-            expect(stored).toBe(JSON.stringify(PRESET_TABLET.id));
+        test('removes the query param when "Volle Breite" is picked', async ({ page }) => {
+            await openPageInPreview(page, IMPORTER.get(PAGE_ONE));
+
+            await pickDevicePreset(page, PRESET_MOBILE.id);
+            await expect(page).toHaveURL(/[?&]device=mobile(&|$)/);
+
+            await pickDevicePreset(page, 'clear');
+            await expect(page).not.toHaveURL(/[?&]device=/);
+        });
+
+        test('restores the active preset when reloading a URL with `?device=`', async ({ page }) => {
+            await openPageInPreview(page, IMPORTER.get(PAGE_ONE));
+
+            await pickDevicePreset(page, PRESET_DESKTOP.id);
+            const urlWithPreset = page.url();
+            expect(urlWithPreset).toMatch(/[?&]device=desktop(&|$)/);
+
+            // Hard-reload the URL to simulate the user opening a shared link.
+            await page.goto(urlWithPreset);
+            await page.locator('content-frame iframe.master-frame[loaded="true"]').waitFor({ timeout: 60_000 });
+
+            await expect(page.locator(FRAME_WRAPPER)).toHaveClass(/device-preview-active/);
+            await expect(page.locator(FRAME_WRAPPER)).toHaveAttribute('data-active-preset', PRESET_DESKTOP.id);
         });
     });
 });

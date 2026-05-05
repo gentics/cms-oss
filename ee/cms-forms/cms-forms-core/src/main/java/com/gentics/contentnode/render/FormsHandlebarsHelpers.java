@@ -23,7 +23,7 @@ public class FormsHandlebarsHelpers {
 		FormRendering.Options formRenderingOptions = RenderUtils.getHandlebarsHelperObject(FormRendering.Options.class, options);
 
 		if (options.tagType == TagType.SECTION) {
-			if (form != null) {
+			if (FormRendering.doRender(form)) {
 				StringWriter writer = new StringWriter();
 				FormRendering.render(form, formRenderingOptions, writer);
 				return options.fn(writer.toString());
@@ -36,5 +36,4 @@ public class FormsHandlebarsHelpers {
 			return writer.toString();
 		}
 	}
-
 }

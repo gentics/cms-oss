@@ -3,12 +3,14 @@ package com.gentics.contentnode.render;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
+import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Form;
@@ -77,6 +79,25 @@ public class FormRendering {
 	}
 
 	/**
+	 * Determine whether the form should be rendered
+	 * @param form form
+	 * @return true when the form should be rendered
+	 * @throws NodeException
+	 */
+	public static boolean doRender(Form form) throws NodeException {
+		if (form == null) {
+			return false;
+		}
+
+		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
+		if (renderType.getEditMode() == RenderType.EM_PUBLISH) {
+			return form.isOnline();
+		} else {
+			return true;
+		}
+	}
+
+	/**
 	 * Get the translation of "noForm" in the page's language (or do fallback with the node's languages)
 	 * @param noForm no form definition
 	 * @return translation
@@ -102,6 +123,19 @@ public class FormRendering {
 
 			return "";
 		}
+	}
+
+	/**
+	 * Get the plugin name for the given form or throw an exception, if plugin name not known
+	 * @param form form
+	 * @return plugin name
+	 * @throws NodeException
+	 */
+	protected static String getPluginName(Form form) throws NodeException {
+		return Optional.ofNullable(FormConfigProvider.getConfig().get(form.getFormType()))
+				.map(config -> config.pluginName)
+				.orElseThrow(() -> new NodeException("Error while getting pluginName for form %s: Unknown formType %s."
+						.formatted(form, form.getFormType())));
 	}
 
 	/**
@@ -205,9 +239,10 @@ public class FormRendering {
 			String showResults = options.isShowResults() ? ", 'showResults' => true" : "";
 
 			return String.format(
-				"@%s('%s', [$formsCookie['key'] => $formsCookie['value'], 'language' => $node['language']%s])",
+				"@%s('%s', [$formsCookie['key'] => $formsCookie['value'], 'pluginName' => '%s', 'language' => $node['language']%s])",
 				FORMS_HELPER_NAME,
 				MeshPublisher.toMeshUuid(form.getGlobalId().toString()),
+				getPluginName(form),
 				showResults);
 		}),
 
@@ -218,9 +253,10 @@ public class FormRendering {
 			String showResults = options.isShowResults() ? " showResults=true" : "";
 
 			return String.format(
-				"<eval>{ %s \"%s\" language=data.node.language%s }</eval>",
+				"<eval>{ %s \"%s\" pluginName=\"%s\" language=data.node.language%s }</eval>",
 				FORMS_HELPER_NAME,
 				MeshPublisher.toMeshUuid(form.getGlobalId().toString()),
+				getPluginName(form),
 				showResults);
 		});
 

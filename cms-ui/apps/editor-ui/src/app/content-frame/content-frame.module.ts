@@ -3,6 +3,7 @@ import { RouterModule } from '@angular/router';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { ColorAlphaModule } from 'ngx-color/alpha';
 import { ColorSliderModule } from 'ngx-color/slider';
+import { CopilotModule } from '../copilot/copilot.module';
 import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
 import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
@@ -125,6 +126,7 @@ const MODULE_INITIALIZER = provideAppInitializer(() => {
         EditorOverlayModule,
         ColorSliderModule,
         ColorAlphaModule,
+        CopilotModule,
         RouterModule.forChild(CONTENT_FRAME_ROUTES),
         GenticsUICoreModule,
     ],

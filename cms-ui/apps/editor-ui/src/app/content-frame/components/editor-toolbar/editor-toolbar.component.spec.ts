@@ -14,6 +14,8 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { NEVER, Observable, of } from 'rxjs';
+import { CopilotConfigService, CopilotStateService } from '../../../copilot';
+import { DEFAULT_COPILOT_CONFIG } from '../../../copilot/copilot.types';
 import { Api, GcmsApi } from '../../../core/providers/api';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -58,6 +60,8 @@ describe('EditorToolbarComponent', () => {
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: PermissionService, useClass: MockPermissionService },
+                { provide: CopilotConfigService, useClass: MockCopilotConfigService },
+                CopilotStateService,
                 MockCanSaveService,
                 ResourceUrlBuilder,
             ],
@@ -481,3 +485,20 @@ class MockI18nNotification {}
 class MockUserSettingsService {}
 
 class MockEditorOverlayService {}
+
+/**
+ * Lightweight stand-in for `CopilotConfigService` that always reports
+ * the feature as disabled. The toolbar tests don't exercise Copilot
+ * visibility — they only need the dependency to resolve.
+ */
+class MockCopilotConfigService {
+    public config$ = of(DEFAULT_COPILOT_CONFIG);
+    public enabled$ = of(false);
+    public actions$ = of([]);
+    public get config() {
+        return DEFAULT_COPILOT_CONFIG;
+    }
+    public load(): void {
+        // no-op
+    }
+}

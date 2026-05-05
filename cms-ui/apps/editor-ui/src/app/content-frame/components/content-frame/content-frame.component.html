@@ -144,4 +144,11 @@
     <div class="hidden-file-picker" #filePickerWrapper>
         <gtx-file-picker></gtx-file-picker>
     </div>
+
+    <!--
+        Content Copilot drawer. Always rendered so the slide-in/out
+        transition has a stable host node; visibility is controlled by
+        CopilotStateService inside the component itself.
+    -->
+    <gtx-copilot-sidebar></gtx-copilot-sidebar>
 </div>

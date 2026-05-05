@@ -140,6 +140,23 @@
                     </gtx-button>
                 }
 
+                @if (buttons.copilot) {
+                    <gtx-button
+                        class="primary-action copilot-button"
+                        size="small"
+                        flat
+                        type="secondary"
+                        data-action="copilot"
+                        [class.is-active]="copilotOpen"
+                        [attr.data-active]="copilotOpen"
+                        [title]="'copilot.button_tooltip' | gtxI18n"
+                        (click)="toggleCopilot()"
+                    >
+                        <icon left>auto_awesome</icon>
+                        <span class="copilot-button-label">{{ 'copilot.button_label' | gtxI18n }}</span>
+                    </gtx-button>
+                }
+
                 @if (showSave) {
                     <gtx-split-button
                         class="primary-action save-button"

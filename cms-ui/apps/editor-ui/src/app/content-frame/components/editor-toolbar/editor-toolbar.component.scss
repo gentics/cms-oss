@@ -42,6 +42,35 @@
         margin-left: 0.25rem;
     }
 
+    // Content Copilot toggle. Visually a secondary action like the focus
+    // / context-menu buttons, but with a subtle primary-coloured outline so
+    // it reads as the entry point into a feature that lives outside the
+    // regular save / publish flow.
+    .copilot-button {
+        margin-left: 0.5rem;
+
+        gtx-button {
+            .copilot-button-label {
+                display: inline-flex;
+                align-items: center;
+                line-height: 1;
+                margin: 0 0.25rem;
+                font-weight: 500;
+            }
+        }
+
+        // Active = sidebar is open. Mirrors the highlight pattern used by
+        // the focus-mode button and existing dropdown triggers in this
+        // toolbar so the visual language stays consistent.
+        &.is-active {
+            gtx-button .button-event-wrapper button,
+            gtx-button button {
+                background-color: rgba($gtx-color-primary, 0.1);
+                color: $gtx-color-primary;
+            }
+        }
+    }
+
     .page-editor-tabs {
         flex: 1 1 auto;
         align-self: center;

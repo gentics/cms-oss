@@ -17,8 +17,15 @@ import { parseCopilotYaml } from './copilot-yaml.parser';
  * Failure modes are deliberately silent (warn-only): if the file is
  * missing or invalid, the feature simply stays disabled. This matches
  * how the rest of the editor-ui treats optional customer config.
+ *
+ * Provided at the root level (`providedIn: 'root'`) on purpose: the
+ * `ContentFrameModule` that consumes the toolbar button is itself
+ * lazy-loaded, so a module-scoped registration would silently miss
+ * the bootstrap-only `provideAppInitializer` window. Triggering
+ * `load()` from `AppComponent.ngOnInit()` keeps the kick-off in step
+ * with the existing `UIOverridesService` pattern.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class CopilotConfigService {
 
     private readonly configSubject = new BehaviorSubject<CopilotConfig>(DEFAULT_COPILOT_CONFIG);

@@ -8,8 +8,13 @@ import { BehaviorSubject, Observable } from 'rxjs';
  * flag is purely a view concern, never persisted, and only ever toggled
  * from the toolbar button → sidebar pair. Promoting it into the global
  * editor state would add ceremony without benefit.
+ *
+ * Provided at the root level so the toolbar button (inside the lazily
+ * loaded `ContentFrameModule`) and the sidebar (rendered from the same
+ * module) share a single instance with anyone else who might want to
+ * read the state.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class CopilotStateService {
 
     private readonly openSubject = new BehaviorSubject<boolean>(false);

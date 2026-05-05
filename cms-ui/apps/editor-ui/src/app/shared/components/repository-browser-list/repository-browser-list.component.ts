@@ -1,6 +1,7 @@
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
@@ -27,7 +28,7 @@ import { ModalService } from '@gentics/ui-core';
 import { isEqual as _isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ItemsInfo } from '../../../common/models';
+import { FolderPermissionData, ItemsInfo } from '../../../common/models';
 import { ApplicationStateService } from '../../../state';
 import { RepositoryBrowserDataService } from '../../providers';
 import { DisplayFieldSelectorModal } from '../display-field-selector/display-field-selector.component';
@@ -58,6 +59,7 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     @Input() displayNodeName = false;
     @Input() itemsPerPage = 10;
     @Input() pageShowPath = true;
+    @Input() folderPermissions: FolderPermissionData;
 
     @Output() select = new EventEmitter<Item>();
     @Output() deselect = new EventEmitter<Item>();
@@ -72,6 +74,10 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     isCollapsed = false;
     showImagesGridView$: Observable<boolean>;
 
+    public activeLanguage: Language;
+    public showStatusIcons: boolean;
+    public showAllLanguages: boolean;
+
     filterTerm$: Observable<string>;
 
     private timeout: number;
@@ -82,6 +88,7 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     languages$: Observable<Language[]>;
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private modalService: ModalService,
         private dataService: RepositoryBrowserDataService,
@@ -93,6 +100,28 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
         this.filterTerm$ = this.appState.select(state => state.folder.filterTerm);
 
         this.languages$ = this.dataService.currentAvailableLanguages$;
+
+        if (this.itemType === 'form') {
+            this.dataService.currentFormLanguage$.subscribe((lang) => {
+                this.activeLanguage = lang;
+                this.changeDetector.markForCheck();
+            });
+        } else {
+            this.dataService.currentContentLanguage$.subscribe((lang) => {
+                this.activeLanguage = lang;
+                this.changeDetector.markForCheck();
+            });
+        }
+
+        this.appState.select(state => state.folder.displayStatusIcons).subscribe((show) => {
+            this.showStatusIcons = show;
+            this.changeDetector.markForCheck();
+        });
+
+        this.appState.select(state => state.folder.displayAllLanguages).subscribe((show) => {
+            this.showAllLanguages = show;
+            this.changeDetector.markForCheck();
+        });
     }
 
     ngOnChanges(changes: { [K in keyof RepositoryBrowserList]?: any }): void {

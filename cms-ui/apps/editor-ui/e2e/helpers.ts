@@ -10,7 +10,8 @@ import {
     matchRequest, onResponse,
     openContext,
     reroute,
-    selectDateInPicker
+    selectDateInPicker,
+    wait
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -302,7 +303,14 @@ export async function createInternalLink(
         await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
         const repoBrowser = page.locator('repository-browser');
         await repoHandler(repoBrowser);
-        await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+
+        // Wait a bit, as the handler could have closed the repo-browser on it's own
+        await wait(50);
+
+        // If the handler didn't confirm/close the modal, we do it now
+        if (await repoBrowser.isVisible()) {
+            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+        }
 
         // Fill out rest of the form
         await formHandler(form);

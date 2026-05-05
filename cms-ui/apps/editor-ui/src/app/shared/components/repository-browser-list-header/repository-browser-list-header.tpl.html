@@ -16,7 +16,7 @@
     <language-context-selector
         *ngIf="(nodeLanguages$ | async)?.length > 1 && itemType !=='file' && itemType !=='folder' && itemType !== 'image'"
         [availableLanguages]="nodeLanguages$ | async"
-        [activeLanguage]="activeLanguage$ | async"
+        [activeLanguage]="activeLanguage"
         (languageChange)="languageChanged($event)"
     ></language-context-selector>
     <gtx-dropdown-list align="right">
@@ -41,7 +41,7 @@
                 class="page-language-toggle"
                 *ngIf="itemType === 'page' && 1 < (nodeLanguages$ | async)?.length">
                 <gtx-checkbox
-                    [checked]="showAllLanguages$ | async"
+                    [checked]="showAllLanguages"
                     (change)="toggleDisplayAllLanguages()"
                 ></gtx-checkbox>
                 {{ 'editor.display_all_languages_label' | i18n }}
@@ -52,7 +52,7 @@
                 *ngIf="itemType === 'page'"
             >
                 <gtx-checkbox
-                    [checked]="showStatusIcons$ | async"
+                    [checked]="showStatusIcons"
                     (change)="toggleDisplayStatusIcons()"
                 ></gtx-checkbox>
                 {{ 'editor.display_status_icons_label' | i18n }}

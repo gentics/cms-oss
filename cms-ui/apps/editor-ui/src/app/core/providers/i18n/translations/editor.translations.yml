@@ -1207,3 +1207,6 @@ preview_mode_loading:
 loading_takes_more_time:
     en: This may take a while...
     de: Das kann etwas dauern...
+form_feature_not_available:
+    de: Formulare sind für diesen Node nicht verfügbar
+    en: Forms are not enabled for this node

@@ -33,7 +33,10 @@
             } @else {
                 <ul class="copilot-action-list">
                     @for (action of actions; track trackById($index, action)) {
-                        <li class="copilot-action-item">
+                        <li
+                            class="copilot-action-item"
+                            [attr.data-id]="action.id"
+                        >
                             @if (action.icon) {
                                 <icon class="copilot-action-icon">{{ action.icon }}</icon>
                             }

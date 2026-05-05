@@ -1408,6 +1408,46 @@ test.describe('Page Editing', () => {
             }, async ({page}) => {
                 await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE, false);
             });
+
+            test('should render the drag-handle correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19984',
+                }],
+            }, async ({ page }) => {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                await test.step('Insert new tag', async () => {
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                    const alohaBlock = mainEditable.locator('.aloha-block[data-gcn-tagname]');
+                    await expect(alohaBlock).toHaveClass(/ui-draggable/);
+                    const dragHandle = alohaBlock.locator('.aloha-block-handle .gcn-construct-drag-handle');
+                    // After inserting a tag, the drag-handle should be displayed
+                    await expect(dragHandle).toBeVisible();
+                });
+
+                await test.step('Save, and re-open the page', async () => {
+                    // Save the page, close it, open it again
+                    await editorAction(page, 'save');
+                    await editorAction(page, 'close');
+                    await openEditingPageInEditmode(page);
+
+                    // We can't reuse the locator from the other step, as it's a new iframe
+                    const alohaBlock = mainEditable.locator('.aloha-block[data-gcn-tagname]');
+                    await expect(alohaBlock).toHaveClass(/ui-draggable/);
+                    const dragHandle = alohaBlock.locator('.aloha-block-handle .gcn-construct-drag-handle');
+                    // After inserting a tag, the drag-handle should be displayed
+                    await expect(dragHandle).toBeVisible();
+                });
+            });
         });
     });
 

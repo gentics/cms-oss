@@ -19,6 +19,7 @@ import {
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
+    IMPORT_TYPE_PAGE_TRANSLATION,
     IMPORT_TYPE_USER,
     ImportPermissions,
     ITEM_TYPE_PAGE,
@@ -33,6 +34,7 @@ import {
     onRequest,
     openContext,
     PAGE_ONE,
+    PageTranslationImportData,
     pickSelectValue,
     SCHEDULE_PUBLISHER,
     TestSize,
@@ -51,7 +53,9 @@ import {
     itemAction,
     openObjectPropertyEditor,
     openTagList,
+    pageListRowLanguage,
     selectNode,
+    setListLanguage,
 } from './helpers';
 
 test.describe('Page Management', () => {
@@ -228,12 +232,10 @@ test.describe('Page Management', () => {
 
         const list = findList(page, ITEM_TYPE_PAGE);
         const header = list.locator('.header-controls');
-        const langSelector = list.locator('language-context-selector');
 
         async function testLanguage(lang: string): Promise<void> {
             await test.step(`Should pre-select language "${lang}" correctly`, async () => {
-                const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
-                await dropdown.locator(`gtx-dropdown-item[data-id="${lang}"]`).click();
+                await setListLanguage(list, lang);
                 await header.locator('[data-action="create-new-item"]').click();
                 const modal = page.locator('create-page-modal');
                 await expect(modal.locator('gtx-page-properties [formControlName="language"] .view-value')).toHaveAttribute('data-value', lang);
@@ -857,5 +859,65 @@ test.describe('Page Management', () => {
         });
 
         await expectItemPublished(pageItem);
+    });
+
+    test('should be able to preview a page language', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19770',
+        }],
+    }, async ({ page }) => {
+        const TRANSLATION_LANG = LANGUAGE_DE;
+        const TEST_TRANSLATION: PageTranslationImportData = {
+            [IMPORT_TYPE]: IMPORT_TYPE_PAGE_TRANSLATION,
+            [IMPORT_ID]: `${NAMESPACE}_${TEST_PAGE[IMPORT_ID]}_${TRANSLATION_LANG}`,
+
+            language: TRANSLATION_LANG,
+            pageId: PAGE_ONE[IMPORT_ID],
+            pageName: 'Translation Test 123',
+        };
+
+        await IMPORTER.importData([
+            TEST_TRANSLATION,
+        ]);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        // We have to make sure the language is in english as "default", otherwise we won't find it
+        await setListLanguage(list, LANGUAGE_EN);
+
+        const item = findItem(list, TEST_PAGE.id);
+        const langIndicator = pageListRowLanguage(item, TRANSLATION_LANG);
+        const contentFrame = page.locator('content-frame');
+
+        await expect(langIndicator).toBeVisible();
+        const langContext = await openContext(langIndicator);
+        const previewAction = langContext.locator('[data-action="preview"]');
+
+        // Should load the preview-mode of the translated page
+        const alohaLoadReq = waitForResponseFrom(page, 'GET', '/alohapage', {
+            params: {
+                real: 'newview',
+                realid: `${IMPORTER.get(TEST_TRANSLATION).id}`,
+                nodeid: `${IMPORTER.get(NODE_MINIMAL).id}`,
+            },
+        })
+        await expect(contentFrame).not.toBeAttached();
+        await expect(previewAction).toBeVisible();
+        await previewAction.click();
+
+        await expect(contentFrame).toBeVisible();
+        await alohaLoadReq;
     });
 });

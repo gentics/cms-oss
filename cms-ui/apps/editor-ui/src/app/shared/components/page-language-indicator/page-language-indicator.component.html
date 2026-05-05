@@ -53,7 +53,7 @@
                         <gtx-dropdown-item
                             *ngIf="variant.available && !variant.deleted"
                             data-action="preview"
-                            (click)="languageClicked(language)"
+                            (click)="languageClicked(variant)"
                         >
                             {{ 'editor.preview_in_language_label' | i18n:{ language: variant?.name } }}
                         </gtx-dropdown-item>

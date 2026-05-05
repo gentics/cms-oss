@@ -457,7 +457,14 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             // a page is being edited (not in preview / properties / form
             // edit / comparison views) and stays gated by the YAML feature
             // flag so customers can roll the feature out per environment.
-            copilot: this.copilotEnabled && isPage && editing && !this.locked,
+            // Also hidden during a language comparison (`compareWithId`):
+            // two languages are visible side-by-side and it would be
+            // ambiguous which one the Copilot is supposed to act on.
+            copilot: this.copilotEnabled
+                && isPage
+                && editing
+                && !this.locked
+                && !this.editorState?.compareWithId,
             editItem: (editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE)
               && (isPage || isForm)
               && userCan.edit

@@ -1,10 +1,10 @@
 @import "variables";
 
-// Width of the slide-in drawer. Mirrors the hard-coded value in the
-// upstream prototype while staying in absolute pixels — relative
-// (rem/%) widths look poor on the very wide editor canvases the CMS
-// is typically used on.
-$copilot-sidebar-width: 420px;
+// Width of the slide-in drawer. Expressed in `rem` so it scales with
+// the user's root font size; the original prototype value of 420px
+// translates to 26.25rem at the default 16px base. `max-width: 90vw`
+// guards against narrow viewports.
+$copilot-sidebar-width: 26.25rem;
 
 :host {
     display: contents;
@@ -23,7 +23,7 @@ $copilot-sidebar-width: 420px;
     flex-direction: column;
     background: $gcms-color-page-background;
     border-left: 1px solid $gtx-color-light-gray;
-    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+    @include gcmsDrawerBoxShadow;
 
     transform: translateX(100%);
     transition: transform 0.22s ease;

@@ -5,7 +5,7 @@ import {
     OnDestroy,
     OnInit,
 } from '@angular/core';
-import { Observable, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { CopilotAction } from '../../copilot.types';
 import { CopilotConfigService, CopilotStateService } from '../../providers';
 
@@ -32,10 +32,15 @@ import { CopilotConfigService, CopilotStateService } from '../../providers';
 })
 export class CopilotSidebarComponent implements OnInit, OnDestroy {
 
+    /**
+     * Mirror of the service streams as plain properties — the template
+     * binds against these directly. Following the project convention
+     * (cf. `editor-toolbar.component`) of avoiding async-pipe / `$`
+     * properties in templates because each binding would re-subscribe
+     * on every change-detection cycle.
+     */
     public open = false;
     public actions: CopilotAction[] = [];
-
-    public open$: Observable<boolean>;
 
     private subscriptions: Subscription[] = [];
 
@@ -46,8 +51,6 @@ export class CopilotSidebarComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.open$ = this.copilotState.open$;
-
         this.subscriptions.push(this.copilotState.open$.subscribe((isOpen) => {
             this.open = isOpen;
             this.changeDetector.markForCheck();

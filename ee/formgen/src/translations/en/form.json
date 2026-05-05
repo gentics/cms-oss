@@ -106,11 +106,6 @@
     "form_payment_overlay_failed": "Payment failed",
     "form_OverlayRedirect_text": "You are being redirected",
     "form_OverlayErrorOnSubmitContent": "An error was detected when submitting the form. Please correct your entries.",
-    "form_OverlayErrorOnSubmitTitle": "An error occurred when submitting.",
-    "form_overlay_errorOnSubmit_fileupload_failed": "One file could not be uploaded.",
-    "form_overlay_errorOnSubmit_fileupload_failed_file_too_large": "The file is too large.",
-    "form_overlay_errorOnSubmit_fileupload_failed_mime_type_not_allowed": "This file type is not allowed.",
-    "form_overlay_errorOnSubmit_fileupload_failed_mime_type_unknown": "The file type could not be recognized.",
     "form_OverlayErrorOnSubmit__first_line": "Please try again a little later.",
     "form_preconditions_overlay__leave_button": "Leave",
     "form_payment": "Pay",
@@ -177,5 +172,10 @@
     "form_fileCard_delete_btn_confirm": "Delete",
     "app_form_dropdown_search_placeholder": "Search",
     "app_form_dropdown_autocomplete_placeholder": "Enter...",
-    "app_form_success_finish": "Done"
+    "app_form_success_finish": "Done",
+
+    "form_recaptcha_no_sitekey": "reCAPTCHA could not be loaded (no site key configured).",
+    "form_recaptcha_error": "Please complete the reCAPTCHA.",
+    "form_recaptcha_open": "Open reCAPTCHA",
+    "form_recaptcha_verified": "reCAPTCHA verified"
 }

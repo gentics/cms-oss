@@ -363,9 +363,6 @@ const aggregateElementStyles = StyleSheet.create({
       aggregateElementTheme.functionButtons.delete.smallView.fontFamily,
   },
   // ------ Aggregate Add Button -----
-  aggAddButtonContainer: {
-    alignItems: 'flex-start',
-  },
   aggAddButton: {
     backgroundColor: aggregateElementTheme.functionButtons.add.backgroundColor,
     borderRadius: aggregateElementTheme.functionButtons.add.borderRadius,
@@ -682,6 +679,24 @@ const aggregateElementStyles = StyleSheet.create({
   mobileDeleteButtonContent: {
     color: aggregateElementTheme.tableView.actionButtons.deleteColor,
     fontSize: aggregateElementTheme.tableView.actionButtons.fontSize,
+  },
+  //+---------------------------------+
+  aggVarAddButtonContainer: {
+    alignItems: 'flex-start',
+  },
+  aggVarAddButtonMobile: {
+    width: aggregateElementTheme.functionButtons.add.smallView.size,
+    height: aggregateElementTheme.functionButtons.add.smallView.size,
+    backgroundColor:
+      aggregateElementTheme.functionButtons.add.smallView.backgroundColor,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius:
+      aggregateElementTheme.functionButtons.add.smallView.borderRadius,
+  },
+  aggVarAddButton: {
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
 
   // ------- Pagination Styles -------
@@ -2552,6 +2567,31 @@ const formGridImageElementStyles = StyleSheet.create({
 });
 
 //+---------------------------------+
+//|---reCAPTCHA Element Styling-----|
+//+---------------------------------+
+
+const recaptchaElementStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+  },
+  missingKeyError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space.extraSmall,
+    marginHorizontal: theme.space.extraSmall,
+  },
+  missingKeyErrorIcon: {
+    color: standardElement.validationError.color,
+    fontSize: standardElement.validationError.fontSize,
+  },
+  missingKeyErrorText: {
+    color: standardElement.validationError.color,
+    fontSize: standardElement.validationError.fontSize,
+    fontFamily: standardElement.validationError.fontFamily,
+  },
+});
+
+//+---------------------------------+
 //|--------Debug Mode Styling-------|
 //+---------------------------------+
 
@@ -2624,6 +2664,7 @@ export {
   pdfPreviewStyles,
   dateTimeElementStyles,
   aggregateElementStyles,
+  recaptchaElementStyles,
   defaultOverlayStyles,
   overlayButtonRowStyles,
   overlayFooterStyles,

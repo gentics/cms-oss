@@ -1,5 +1,6 @@
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { RestService } from '../services/RestService';
+import { RecaptchaService } from '../services/RecaptchaService';
 import { ApiResponse, FormState, IData, UIState } from '../types/interfaces';
 
 // Submit
@@ -11,7 +12,9 @@ export async function preSubmitForm(
   updateState: (state: StatesToUpdateEnum) => void,
   restService: RestService,
 ): Promise<void> {
-  // Füge hier asynchrone Logik ein, die vor dem eigentlichen Submit ausgeführt werden soll
+  if (RecaptchaService.hasExecute()) {
+    await RecaptchaService.execute();
+  }
 }
 
 export async function postSubmitForm(

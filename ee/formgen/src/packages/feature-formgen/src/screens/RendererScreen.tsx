@@ -23,7 +23,6 @@ import {
   IElementIdentifier,
   IErrorMessage,
   IFeatures,
-  IForm,
   IFormComponentAttributes,
   IFormFlowClass,
   IFormFlowData,
@@ -40,14 +39,10 @@ import { ScreenComponents } from '../custom/ScreenComponents';
 import ReadOnlyFormScreen from './ReadOnlyFormScreen';
 import {
   endANRequest,
-  getFeatureActive,
-  getI18nText,
-  isFormGridType,
   setNormalizedSchema,
   startANRequest,
 } from '../utils/Utils';
 import * as validationUtils from '../utils/ValidationUtils';
-import { elementTypes } from '../custom/ElementTypes';
 import i18n from '@andp/core/src/services/i18n';
 import * as overlayUtils from '../utils/OverlayUtils';
 import * as formEventsUtils from '../utils/FormEventsUtils';
@@ -65,14 +60,15 @@ import AndpIcon from '@andp/core/src/components/AndpIcon';
 import theme, { expertSearchTableTheme } from '@andp/core/src/styles/theme';
 import { Host } from 'react-native-portalize';
 import { useMicroAppSDK } from '@andp/core/src/sdk/MicroAppSDK';
-import { ButtonProvider } from './essentials/ButtonProvider';
+import { ButtonProvider } from "./essentials/ButtonProvider";
 import { useFormMirrorStore } from '../state/useFormMirrorState';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 
 const RendererScreen: React.FC<{
   formId: string;
   businessObjectId: string;
   config: IFormFlowData;
-  features: IFeatures;
+  features?: IFeatures;
   culture: string;
   isLoggedIn: boolean;
   apiToken: string;
@@ -86,51 +82,21 @@ const RendererScreen: React.FC<{
   userData?: ISummaryDetailsUser;
   detailUrl?: string;
   hasDetail?: boolean;
+  pluginName: PluginNameEnum;
 }> = (props) => {
   // Nutze useWindowDimensions, um die Bildschirmbreite zu ermitteln
   const { width, height } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const containerWidth = width < 770 ? '95%' : '80%';
-  const { andpNavigation, andpSharedFunctions, andpSharedProps } =
-    Platform.OS != 'web' ? useMicroAppSDK() : {};
+  const {
+    andpNavigation,
+    andpSharedFunctions,
+    andpSharedProps
+  } = Platform.OS != "web" ? useMicroAppSDK() : {};
   const isMobile = Platform.OS !== 'web';
   const scrollableExpersearchTable = expertSearchTableTheme.table.scrollable;
 
-  function getCorrectANCulture(lng: string, features: IFeatures): string {
-    // If full culture is already provided (e.g. "de-AT"), just return it
-    if (lng && lng.length > 2) return lng;
 
-    // Otherwise, resolve the best matching locale from feature_languages
-    let locales: string[] = [];
-    const lngFeature = getFeatureActive('feature_languages', features);
-
-    if (lngFeature?.languages && Array.isArray(lngFeature.languages)) {
-      locales = lngFeature.languages as string[];
-    } else {
-      // sensible defaults
-      locales = ['en-AT', 'de-AT'];
-    }
-
-    let localeLng: string | null = null;
-    for (const locale of locales) {
-      if (locale.startsWith(lng)) {
-        localeLng = locale;
-      }
-    }
-
-    if (localeLng == null) {
-      console.warn(
-        'There is no locale in the list of available languages (' +
-          locales.toString() +
-          ') for the current language (' +
-          lng +
-          ')',
-      );
-      localeLng = lng; // fallback to short language
-    }
-
-    return localeLng;
-  }
 
   // Initialer Zustand
   const initialFormState: FormState = {
@@ -148,16 +114,16 @@ const RendererScreen: React.FC<{
     businessObjectID: '',
     culture: 'de-AT',
     features: {},
-    formgridDependsOn: [],
     t: ((key: string) => key) as TFunction<'translation', undefined>,
     submitted: false,
     handleFocusError: handleFocusError,
-    expertMultipleHandler: () => {},
+    expertMultipleHandler: () => { },
     expertSearchCheckMarkCount: 0,
     errorOpenSubAggNonce: 0,
     isLoggedIn: props.isLoggedIn,
     detailUrl: props.detailUrl,
     hasDetail: props.hasDetail,
+    pluginName: props.pluginName as PluginNameEnum
   };
 
   // Initialer Zustand
@@ -178,11 +144,7 @@ const RendererScreen: React.FC<{
     isMockForm: props.mockForm,
     isDevMode: props.devMode,
     andpNavigation: andpNavigation,
-    linkCallback:
-      Platform.OS != 'web' && andpSharedFunctions != undefined
-        ? (link: string, isForm?: boolean) =>
-            andpSharedFunctions.get('services.linkCallback')?.(link, isForm)
-        : () => {},
+    linkCallback: Platform.OS != "web" && andpSharedFunctions != undefined ? (link: string, isForm?: boolean) => andpSharedFunctions.get("services.linkCallback")?.(link,isForm) : () => { }
   };
 
   //i18n.changeLanguage(props.culture.split('-')[0]);
@@ -208,14 +170,13 @@ const RendererScreen: React.FC<{
   });
 
   const currentPage = uiState.currentPage;
-  const uiSchema: IForm = formState.form;
+  const uiSchema = formState.form;
   const lastPage = uiState.lastPage;
-  const initialFullCulture = getCorrectANCulture(props.culture, props.features);
-  let restService = new RestService(
-    props.endpoint,
-    props.apiToken,
-    initialFullCulture,
-  );
+  let initialFullCulture = undefined;
+  if(props.pluginName == PluginNameEnum.ACTA_NOVA){
+    initialFullCulture = utils.getCorrectANCulture(props.culture, props.features!);
+  }
+  let restService = new RestService(props.endpoint, props.pluginName, props.apiToken, initialFullCulture);
 
   // Verwende den ComponentType-Typ für FlowPage, um sicherzustellen, dass TypeScript den Typ korrekt erkennt
   const [flowPageReactClass, setFlowPageReactClass] = useState<string>('');
@@ -224,12 +185,13 @@ const RendererScreen: React.FC<{
 
   // Mockform selection -- Set Mockformtype static HERE
   const [mockFormType, setMockFormType] = useState<IMockFormTypeEnum>(
-    IMockFormTypeEnum.DEFAULT_FORM,
+    IMockFormTypeEnum.DEFAULT_AN_FORM,
   );
 
   const [showMockModal, setShowMockModal] = useState(false);
   const mockOptions: { label: string; value: IMockFormTypeEnum }[] = [
-    { label: 'Standard Formular', value: IMockFormTypeEnum.DEFAULT_FORM },
+    { label: 'Acta-Nova Formular', value: IMockFormTypeEnum.DEFAULT_AN_FORM },
+    { label: 'CMS Formular', value: IMockFormTypeEnum.DEFAULT_CMS_FORM },
     { label: 'Extended Formular', value: IMockFormTypeEnum.EXTENDED_FORM },
     { label: 'Suchformular', value: IMockFormTypeEnum.EXPERTSEARCH_FORM },
   ];
@@ -237,7 +199,7 @@ const RendererScreen: React.FC<{
   // // ExpertSearch
   const [hasSearched, setHasSearched] = useState<boolean>(false);
 
-  /**
+    /**
    * Holds the heavy expert search result payload separately from the
    * global FormState. Keeping this data out of FormState prevents large
    * result sets from triggering unnecessary re-renders and shallow copies
@@ -257,7 +219,7 @@ const RendererScreen: React.FC<{
   const printRef = useRef(null);
   const currentScrollYRef = useRef(0);
 
-  const scrollToElement = (elementRef?: any) => {
+const scrollToElement = (elementRef?: any) => {
     if (!scrollViewRef.current) return;
 
     // Bestimme das zu scrollende Element: entweder das übergebene elementRef oder, falls nicht vorhanden, den errorBlockRef
@@ -272,72 +234,78 @@ const RendererScreen: React.FC<{
     if (refToScrollTo) {
       // Check if measureLayout is a function before calling it.
       // Check if measureLayout is a function before calling it.
-      if (Platform.OS === 'web') {
-        if (typeof refToScrollTo.current.measureLayout === 'function') {
-          // Web specific fallback or standard behavior
-          // On web, getInnerViewNode might be required or just the ref
-          const relativeNode = scrollViewRef.current.getInnerViewNode
-            ? scrollViewRef.current.getInnerViewNode()
-            : scrollViewRef.current;
-          refToScrollTo.current.measureLayout(
-            relativeNode,
-            (x: number, y: number) => {
-              const offset = height * 0.1;
-              const scrollToY = y - offset < 0 ? 0 : y - offset;
-              scrollViewRef.current?.scrollTo({
-                x: 0,
-                y: scrollToY,
-                animated: true,
-              });
-            },
-            (error: any) => {
-              console.error('Error measuring layout on web:', error);
-            },
-          );
-        }
-      } else {
-        try {
-          const targetHandle = findNodeHandle(refToScrollTo.current);
-          const scrollViewHandle = findNodeHandle(scrollViewRef.current);
-          if (targetHandle && scrollViewHandle) {
-            UIManager.measureLayout(
-              targetHandle,
-              scrollViewHandle,
-              (error: any) => {
-                console.error('Error measuring layout:', error);
-              },
-              (x: number, y: number, width: number, height: number) => {
-                const offset = height * 0.1; // 10% of the screen height
-                const scrollToY = y - offset < 0 ? 0 : y - offset;
-                scrollViewRef.current?.scrollTo({
-                  x: 0,
-                  y: scrollToY,
-                  animated: true,
-                });
-              },
-            );
-          } else {
-            // Fallback
-            scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+        if (Platform.OS === 'web') {
+           if (typeof refToScrollTo.current.measureLayout === 'function') {
+             // Web specific fallback or standard behavior
+             // On web, getInnerViewNode might be required or just the ref
+             const relativeNode = scrollViewRef.current.getInnerViewNode ? scrollViewRef.current.getInnerViewNode() : scrollViewRef.current;
+             refToScrollTo.current.measureLayout(
+               relativeNode,
+               (x: number, y: number) => {
+                 const offset = height * 0.1; 
+                 const scrollToY = y - offset < 0 ? 0 : y - offset;
+                 scrollViewRef.current?.scrollTo({
+                   x: 0,
+                   y: scrollToY,
+                   animated: true,
+                 });
+               },
+               (error: any) => {
+                 console.error('Error measuring layout on web:', error);
+               }
+             );
+           }
+        } else {
+          try {
+            const targetHandle = findNodeHandle(refToScrollTo.current);
+            const scrollViewHandle = findNodeHandle(scrollViewRef.current);
+            if (targetHandle && scrollViewHandle) {
+              UIManager.measureLayout(
+                targetHandle,
+                scrollViewHandle,
+                (error: any) => {
+                  console.error('Error measuring layout:', error);
+                },
+                (x: number, y: number, width: number, height: number) => {
+                  const offset = height * 0.1; // 10% of the screen height
+                  const scrollToY = y - offset < 0 ? 0 : y - offset;
+                  scrollViewRef.current?.scrollTo({
+                    x: 0,
+                    y: scrollToY,
+                    animated: true,
+                  });
+                }
+              );
+            } else {
+               // Fallback
+               scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+            }
+          } catch (e) {
+             console.error("Error in native measureLayout", e);
+             scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
           }
-        } catch (e) {
-          console.error('Error in native measureLayout', e);
-          scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
         }
-      }
     } else {
-      // Fallback: if measureLayout is not available, scroll to top
-      scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
-    }
+        // Fallback: if measureLayout is not available, scroll to top
+        scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+      }
+
   };
+
 
   let FlowPage = ScreenComponents[flowPageReactClass];
   let OverlayComponent;
   //if mock => mockType
   if (props.mockForm) {
     useEffect(() => {
+      const selectedPluginName = formState.pluginName;
+
       Object.assign(formState, initialFormState);
       Object.assign(uiState, initialUIState);
+
+      // Preserve the plugin selection made in the mock selector.
+      formState.pluginName = selectedPluginName;
+
       handleInitFormHooks(uiState, formState);
       updateState(StatesToUpdateEnum.ALL);
     }, [mockFormType]);
@@ -369,24 +337,24 @@ const RendererScreen: React.FC<{
         setFlowPageObj(uiState.flowList.find((x) => x.reactClass === newComp));
       }
     }
-  }, [uiState.initDone, uiState.flowPageIndex, currentPage]);
+  }, [uiState.initDone, uiState.flowPageIndex, uiState.currentPage]);
 
   if (!isWeb) {
     // Is used for android back-button (digital or hardware) -> it should trigger leaveOverlay
     useEffect(() => {
       const onBackPress = () => {
-        triggerLeaveOverlay({ link: '' });
+        triggerLeaveOverlay({link: ''});
         return true;
-      };
+      }
 
       const subscription = BackHandler.addEventListener(
         'hardwareBackPress',
-        onBackPress,
+        onBackPress
       );
-
+  
       return () => subscription.remove();
     }, []);
-  } else {
+  }else{
     useEffect(() => {
       if (clickedLinkOutside.clicked == true) {
         triggerLeaveOverlay(clickedLinkOutside.overlayLeaveExtraProps);
@@ -394,35 +362,7 @@ const RendererScreen: React.FC<{
     }, [clickedLinkOutside]);
   }
 
-  /**
-   * Scrolls the form back to the top whenever the user navigates to a new page.
-   *
-   * Why the platform split?
-   * - On **web**, using ScrollView's `scrollTo()` with `animated: false` can still
-   *   trigger a visible scroll animation because the browser respects the CSS
-   *   `scroll-behavior: smooth` property. To bypass this, we directly set
-   *   `scrollTop = 0` on the underlying DOM node — which is always instant.
-   * - On **native** (iOS/Android), `scrollTo()` with `animated: false` works as
-   *   expected and jumps to the top immediately without any transition.
-   */
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      try {
-        // getInnerViewNode() returns the inner content wrapper of the ScrollView.
-        // Its parentNode is the actual scrollable DOM element.
-        const scrollNode = (scrollViewRef.current as any)?.getInnerViewNode?.()?.parentNode;
-        if (scrollNode && scrollNode.scrollTop > 0) scrollNode.scrollTop = 0;
-        else window.scrollTo({top: 0, left: 0, behavior: 'instant'});
-      } catch (e) {
-        // Fallback: if DOM access fails for any reason, use the standard RN method.
-        // This may animate on web depending on CSS scroll-behavior, but is better than nothing.
-        console.warn('RendererScreen: Could not access ScrollView DOM node for instant scroll reset. Falling back to animated scroll.', e);
-        scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: false });
-      }
-    } else {
-      scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: false });
-    }
-  }, [uiState.flowPageIndex, currentPage]);
+
 
   useEffect(() => {
     if (
@@ -439,6 +379,7 @@ const RendererScreen: React.FC<{
       );
     }
   }, [uiState.overlayState, formState.data.preconditions]);
+
 
   /**
    * Ziel: Full-Screen-Loading-Overlay nur anzeigen, wenn die normalen Inhalte (FlowPage) noch nicht geladen bzw. angezeigt werden können.
@@ -492,6 +433,7 @@ const RendererScreen: React.FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
   const _updateFormState = () => {
     // Always clone the current local formState so React can detect the change
     // and then push the same snapshot into the global mirror store.
@@ -523,12 +465,7 @@ const RendererScreen: React.FC<{
     }
   };
 
-  const handleInitFormHooks = async (
-    uiState: UIState,
-    formState: FormState,
-    data?: any,
-    newFormId?: string,
-  ) => {
+  const handleInitFormHooks = async (uiState: UIState, formState: FormState , data?: any, newFormId?: string) => {
     await preInitForm(uiState, formState, newFormId);
     const response: ApiResponse = await initForm(data, newFormId);
     await postInitForm(uiState, formState, response, newFormId);
@@ -568,11 +505,11 @@ const RendererScreen: React.FC<{
     if (Platform.OS !== 'web') {
       return data;
     }
-    if (
-      (Platform.OS === 'web' &&
+    if (Platform.OS === 'web' &&
+      (
         utils.isFeatureActive('feature_prefill', formState.features)) ||
       new URLSearchParams(window.location.search).get('feature_prefill') !==
-        null
+      null
     ) {
       const prefillText = props.prefillContent;
       if (prefillText) {
@@ -627,16 +564,16 @@ const RendererScreen: React.FC<{
                       // multi select?
                       isMultiSelect
                         ? // get all possible values with matching identifiers
-                          possibleValues.filter((possibleValue) =>
-                            (value as IPossibleValue[]).some(
-                              (v) => v.identifier === possibleValue.identifier,
-                            ),
-                          )
+                        possibleValues.filter((possibleValue) =>
+                          (value as IPossibleValue[]).some(
+                            (v) => v.identifier === possibleValue.identifier,
+                          ),
+                        )
                         : // get first matching value by identifier
-                          possibleValues.find(
-                            (possibleValue) =>
-                              possibleValue.identifier === value,
-                          );
+                        possibleValues.find(
+                          (possibleValue) =>
+                            possibleValue.identifier === value,
+                        );
                     if (catalogValueToPrefill) {
                       // multi select fields expect the property `values`, while single select fields expect the property `value`
                       if (isMultiSelect) {
@@ -663,11 +600,28 @@ const RendererScreen: React.FC<{
     return data;
   }
 
+  const handleMissingFormFlow = (): ApiResponse => {
+    const missingFormFlowResponse = {
+      success: false,
+      responseData: undefined,
+    } as ApiResponse;
+
+    overlayUtils.setOverlay(
+      uiState,
+      formState,
+      OverlayTypeEnum.LOAD_FORM,
+      updateState,
+      { response: missingFormFlowResponse },
+    );
+
+    console.warn("FormFlow-Config missing.");
+    
+
+    return missingFormFlowResponse;
+  };
+
   // TODO v8.2 ist setNormalizedSchema notwendig ?????
-  const initForm = async (
-    data?: any,
-    newFormId?: string,
-  ): Promise<ApiResponse> => {
+  const initForm = async (data?: any, newFormId?: string): Promise<ApiResponse> => {
     if (newFormId) {
       //redirect to new form
       //revert all state to initial state
@@ -678,36 +632,24 @@ const RendererScreen: React.FC<{
       setHasSearched(false);
     }
 
-    //parse config
-    const FlowStepsList = JSON.parse(
-      props.features['feature_form_flow'].formFlows,
-    ) as IFormFlowSteps[];
-
-    const formId = newFormId
-      ? newFormId
-      : data && data.data && data.data.formID
-        ? data.data.formID
-        : props.formId;
+    const formId = newFormId ? newFormId : data && data.data && data.data.formID ? data.data.formID : props.formId;
     const features = props.features;
     const culture = props.culture;
     const isLoggedIn = props.isLoggedIn;
     const businessObjectId = props.businessObjectId;
     let requestInitializeData = undefined;
 
-    if (Platform.OS == 'web') {
+    if (Platform.OS == "web") {
       const localStorageFormId = localStorage.getItem('formID');
-      const localStorageInitializedData =
-        localStorage.getItem('initializeData');
+      const localStorageInitializedData = localStorage.getItem('initializeData');
       if (localStorageInitializedData && formId === localStorageFormId) {
         requestInitializeData = localStorageInitializedData;
         localStorage.removeItem('initializeData');
         localStorage.removeItem('formID');
       }
-    } else {
+    }else{
       const localStorageFormId = andpSharedProps?.get('formgen.formID');
-      const localStorageInitializedData = andpSharedProps?.get(
-        'formgen.initializeData',
-      );
+      const localStorageInitializedData = andpSharedProps?.get('formgen.initializeData');
       if (localStorageInitializedData && formId === localStorageFormId) {
         requestInitializeData = localStorageInitializedData;
         andpSharedProps?.removeItem?.('formgen.initializeData');
@@ -740,7 +682,7 @@ const RendererScreen: React.FC<{
     formState.businessObjectID = businessObjectId;
     updateState(StatesToUpdateEnum.ALL);
 
-    let formFlowStepsTemplateKey = FlowStepsList[0].key;
+    
 
     if (isLoggedIn) {
       // intercept clicks on links away from the form and present the overlayLeave
@@ -778,9 +720,22 @@ const RendererScreen: React.FC<{
     // 1) Data provided directly
     if (data) {
       formState.form = data.uiSchema;
+      const FlowStepsList = data?.uiSchema?.formFlow;
+      if (!FlowStepsList || FlowStepsList.length === 0) {
+        return handleMissingFormFlow();
+      }
       formState.data = getPrefillData(data.data);
       formState.schema = data.schema;
       uiState.lastPage = data.uiSchema.pages.length;
+      const formFlowStepsTemplateKey = data.uiSchema.formFlowKey
+        ? data.uiSchema.formFlowKey
+        : FlowStepsList[0].key;
+      const findElementWithKey = FlowStepsList.find(
+        (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
+      );
+      uiState.flowList = findElementWithKey
+        ? findElementWithKey.formFlowSteps
+        : [];
 
       if (data.schema.formType) {
         uiState.isReadOnlyForm = data.schema.formType === 'readonlyform';
@@ -790,7 +745,6 @@ const RendererScreen: React.FC<{
       }
 
       setNormalizedSchema(formState, formState.schema, updateState);
-      LoadFormgridDependsOn();
       uiState.initDone = true;
       updateState(StatesToUpdateEnum.ALL);
 
@@ -799,19 +753,9 @@ const RendererScreen: React.FC<{
 
     // 2) Real API load
     if (!loadMockForm) {
-      const apiResponse = await restService.loadFormAsync(
-        formId,
-        businessObjectId,
-        requestInitializeData,
-      );
+      const apiResponse = await restService.loadFormAsync(formId, businessObjectId, requestInitializeData);
       if (!apiResponse.success) {
-        overlayUtils.setOverlay(
-          uiState,
-          formState,
-          OverlayTypeEnum.LOAD_FORM,
-          updateState,
-          { response: apiResponse },
-        );
+        overlayUtils.setOverlay(uiState, formState, OverlayTypeEnum.LOAD_FORM, updateState, { response: apiResponse });
         return apiResponse;
       }
 
@@ -820,11 +764,15 @@ const RendererScreen: React.FC<{
       formState.data = getPrefillData(responseBody.data);
       formState.schema = responseBody.schema;
       uiState.lastPage = responseBody.uiSchema.pages.length;
-      formFlowStepsTemplateKey = formState.form.formFlowTemplateKey
-        ? formState.form.formFlowTemplateKey
+      const FlowStepsList = responseBody.uiSchema?.formFlow;
+      if (!FlowStepsList || FlowStepsList.length === 0) {
+        return handleMissingFormFlow();
+      }
+      let formFlowStepsTemplateKey = formState.form.formFlowKey
+        ? formState.form.formFlowKey
         : FlowStepsList[0].key;
       const findElementWithKey = FlowStepsList.find(
-        (x) => x.key == formFlowStepsTemplateKey,
+        (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
       );
       uiState.flowList = findElementWithKey
         ? findElementWithKey.formFlowSteps
@@ -848,7 +796,10 @@ const RendererScreen: React.FC<{
 
       // delete initial ErrorMessages
       formState.data.hasValidationErrors = false;
-      Object.entries(formState.data.properties || {}).map(function ([k, v]) {
+      Object.entries(formState.data.properties || {}).map(function ([
+        k,
+        v,
+      ]) {
         if (v?.validationMessage && v.validationMessage !== '') {
           v.validationMessage = '';
         }
@@ -876,7 +827,6 @@ const RendererScreen: React.FC<{
       }
 
       setNormalizedSchema(formState, formState.schema, updateState);
-      LoadFormgridDependsOn();
       uiState.initDone = true;
       if (apiResponse.responseData.deleted) {
         formState.deleted = true;
@@ -899,31 +849,35 @@ const RendererScreen: React.FC<{
     }
 
     // 3) Mock load
-    const mockResponseBody =
-      await mockFormularUtils.fetchMockDefaultFormular(mockFormType);
+    const mockResponseBody = await mockFormularUtils.fetchMockDefaultFormular(mockFormType);
     const responseBody = mockResponseBody;
     formState.form = responseBody.uiSchema;
     formState.data = responseBody.data;
     formState.schema = responseBody.schema;
     uiState.lastPage = responseBody.uiSchema.pages.length;
-    formFlowStepsTemplateKey = formState.form.formFlowTemplateKey
-      ? formState.form.formFlowTemplateKey
+    const FlowStepsList = responseBody.uiSchema?.formFlow;
+    if (!FlowStepsList || FlowStepsList.length === 0) {
+      return handleMissingFormFlow();
+    }
+
+    let formFlowStepsTemplateKey = formState.form.formFlowKey
+      ? formState.form.formFlowKey
       : FlowStepsList[0].key;
 
     const findElementWithKey = FlowStepsList.find(
-      (x) => x.key == formFlowStepsTemplateKey,
+      (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
     );
     uiState.flowList = findElementWithKey
       ? findElementWithKey.formFlowSteps
       : [];
     if (responseBody.schema.formType) {
-      uiState.isReadOnlyForm = responseBody.schema.formType === 'readonlyform';
+      uiState.isReadOnlyForm =
+        responseBody.schema.formType === 'readonlyform';
       uiState.isExpertSearch =
         responseBody.schema.formType === 'searchform' ||
         responseBody.schema.formType === 'report'; // Not sure yet TODO
     }
     setNormalizedSchema(formState, formState.schema, updateState);
-    LoadFormgridDependsOn();
     uiState.initDone = true;
     overlayUtils.hideOverlay(uiState, updateState);
     redirectFormCheck(formState);
@@ -938,11 +892,8 @@ const RendererScreen: React.FC<{
   const redirectFormCheck = (formState: FormState) => {
     //check if it's a redirectForm and a redirect should be done immediately
     if (
-      formState.schema.formType === 'redirectForm' &&
-      formState.data &&
-      formState.data.formControls &&
-      formState.data.formControls.button &&
-      formState.data.formControls?.button?.targetUrl !== ''
+      formState.schema.formType === "redirectForm" && formState.data && formState.data.formControls && formState.data.formControls.button &&
+      formState.data.formControls?.button?.targetUrl !== ""
     ) {
       overlayUtils.setOverlay(
         uiState,
@@ -950,13 +901,14 @@ const RendererScreen: React.FC<{
         OverlayTypeEnum.FULL_SCREEN_LOADING,
         updateState,
         {
-          loadingText: IOverlayFullScreenTextEnum.Redirect,
+          loadingText:
+            IOverlayFullScreenTextEnum.Redirect,
         },
       );
 
       utils.redirectFormRedirect(formState.data);
     }
-  };
+  }
 
   const triggerLeaveOverlay = (
     overlayLeaveExtraProps: IOverlayLeaveExtraProps,
@@ -969,6 +921,8 @@ const RendererScreen: React.FC<{
       overlayLeaveExtraProps,
     );
   };
+
+  
 
   useEffect(() => {
     if (
@@ -1006,9 +960,11 @@ const RendererScreen: React.FC<{
       formState.culture = lng;
       restService.setFullCulture(lng);
     } else {
-      const resolved = getCorrectANCulture(lng, formState.features);
-      formState.culture = resolved;
-      restService.setFullCulture(resolved);
+      if (props.pluginName == PluginNameEnum.ACTA_NOVA) {
+        const resolved = utils.getCorrectANCulture(lng, formState.features);
+        formState.culture = resolved;
+        restService.setFullCulture(resolved);
+      }      
     }
     updateState(StatesToUpdateEnum.ALL);
   }
@@ -1085,7 +1041,7 @@ const RendererScreen: React.FC<{
           createAfterIndex,
           props.mockForm,
         ),
-      () => {},
+      () => { },
       showError,
     );
   };
@@ -1169,7 +1125,7 @@ const RendererScreen: React.FC<{
         formState,
         OverlayTypeEnum.DEFAULT_ERRORS,
         updateState,
-        { response: errorResponse },
+        { response: errorResponse }
       );
     };
     if (isRedirect) {
@@ -1179,7 +1135,8 @@ const RendererScreen: React.FC<{
         OverlayTypeEnum.FULL_SCREEN_LOADING,
         updateState,
         {
-          loadingText: IOverlayFullScreenTextEnum.Redirect,
+          loadingText:
+            IOverlayFullScreenTextEnum.Redirect,
         },
       );
     } else {
@@ -1194,7 +1151,7 @@ const RendererScreen: React.FC<{
     }
 
     if (!uiState.isMockForm) {
-      let apiResponse = await restService.cancelFormANRequest(formState);
+      let apiResponse = await restService.ANCancelFormANRequest(formState);
 
       if (!apiResponse.success) {
         endANRequest(uiState, updateState);
@@ -1206,8 +1163,9 @@ const RendererScreen: React.FC<{
       setTimeout(() => {
         if (!isRedirect) endANRequest(uiState, updateState);
         callback();
-      }, 1000); // MockTimeout
+      }, 1000) // MockTimeout
     }
+
   };
 
   // Dropdowns - ANDP-420
@@ -1221,7 +1179,7 @@ const RendererScreen: React.FC<{
       const element = utils.getElementByJsonPath(localData, jsonPath);
       if (!element) return;
       element.searchValue = searchTerm;
-      restService.loadSearch(
+      restService.ANLoadSearch(
         searchTerm,
         localData,
         (json: any) => {
@@ -1232,15 +1190,11 @@ const RendererScreen: React.FC<{
             );
             const returnedElement = utils.getElementByJsonPath(json, jsonPath);
             //const possibleValues = utils.getPossibleValues(json, jsonPath);
-            let possibleValues: IPossibleValue[] = returnedElement
-              ? returnedElement.possibleValues!
-              : [];
+            let possibleValues: IPossibleValue[] = returnedElement ? returnedElement.possibleValues! : [];
 
             if (returnedElement?.possibleValueSetID) {
               json.possibleValueSets.forEach((x: any) => {
-                if (
-                  returnedElement.possibleValueSetID === x.possibleValueSetID
-                ) {
+                if (returnedElement.possibleValueSetID === x.possibleValueSetID) {
                   possibleValues = x.possibleValues;
                 }
               });
@@ -1303,7 +1257,7 @@ const RendererScreen: React.FC<{
       const element = utils.getElementByJsonPath(localData, jsonPath);
       if (!element) return;
       element.searchValue = '*';
-      restService.loadLazyCatalog(
+      restService.ANLoadLazyCatalog(
         searchTerm,
         localData,
         (json: any) => {
@@ -1397,7 +1351,7 @@ const RendererScreen: React.FC<{
       // we set both `value` and `autoCompleteSearchValue` because otherwise AN does not return the correct results
       element.autoCompleteSearchValue = autocompleteTerm;
       element.value = autocompleteTerm;
-      restService.loadAutocomplete(
+      restService.ANLoadAutocomplete(
         localData,
         (json: any) => {
           if (typeof json.properties !== 'undefined') {
@@ -1423,7 +1377,7 @@ const RendererScreen: React.FC<{
         },
         formState,
         jsonPath,
-        uiState.isMockForm,
+        uiState.isMockForm
       );
     }
   }
@@ -1527,16 +1481,16 @@ const RendererScreen: React.FC<{
       true,
     ); // disableThreshold for ExpertSearch
     updateState(StatesToUpdateEnum.UIState);
-
-    if (!uiSchema.pages?.length || isPageValid(formState, true, uiState.currentPage, props.mockForm)) {
+    
+    if (isPageValid(formState, true, uiState.currentPage, props.mockForm)) {
       if (!props.mockForm) {
-        restService.callExpertSearch(
+        restService.ANcallExpertSearch(
           formState,
           function (jsonData: IData) {
             if (!hasSearched) setHasSearched(true);
             if (jsonData.formID) {
               const data: IData = jsonData;
-
+      
               // Detach the potentially large expert search result from the
               // form data and store it in a dedicated state slice. This keeps
               // the global FormState lightweight and avoids unnecessary
@@ -1544,7 +1498,7 @@ const RendererScreen: React.FC<{
               const nextReportResult = data.reportResult;
               data.reportResult = undefined;
               setReportResult(nextReportResult ?? null);
-
+      
               formState.data = data;
               //disableLoadingState();
               utils.endANRequest(uiState, updateState);
@@ -1566,7 +1520,7 @@ const RendererScreen: React.FC<{
             if (!hasSearched) setHasSearched(true);
             if (jsonData.formID) {
               const data: IData = jsonData;
-
+      
               // Detach the potentially large expert search result from the
               // form data and store it in a dedicated state slice. This keeps
               // the global FormState lightweight and avoids unnecessary
@@ -1574,7 +1528,7 @@ const RendererScreen: React.FC<{
               const nextReportResult = data.reportResult;
               data.reportResult = undefined;
               setReportResult(nextReportResult ?? null);
-
+      
               formState.data = data;
               //disableLoadingState();
               utils.endANRequest(uiState, updateState);
@@ -1599,6 +1553,7 @@ const RendererScreen: React.FC<{
       //errorFunc(null);
       //callbackOverlay();
     }
+
   }
 
   function handleExpertExcelDownload() {
@@ -1623,27 +1578,22 @@ const RendererScreen: React.FC<{
         //disableLoadingState();
         utils.endANRequest(uiState, updateState);
       };
-      restService.callExpertExcelDownload(
-        formState,
-        ok,
-        (data: IData) => {
-          // if validationError true
-          utils.endANRequest(uiState, updateState);
-          formState.data = data;
-          uiState.showErrorBlockOnInvalid = true;
-          updateState(StatesToUpdateEnum.ALL);
-        },
-        (request: ApiResponse) => {
-          // on exception
-          overlayUtils.setOverlay(
-            uiState,
-            formState,
-            OverlayTypeEnum.EXPERT_SEARCH_TRIGGER_ENDPOINT,
-            updateState,
-            { response: request },
-          );
-        },
-      );
+      restService.ANCallExpertExcelDownload(formState, ok, (data: IData) => {
+        // if validationError true
+        utils.endANRequest(uiState, updateState);
+        formState.data = data;
+        uiState.showErrorBlockOnInvalid = true;
+        updateState(StatesToUpdateEnum.ALL);
+      }, (request: ApiResponse) => {
+        // on exception
+        overlayUtils.setOverlay(
+          uiState,
+          formState,
+          OverlayTypeEnum.EXPERT_SEARCH_TRIGGER_ENDPOINT,
+          updateState,
+          { response: request }
+        );
+      });
     } else {
       formState.data.hasValidationErrors = true;
       uiState.showErrorBlockOnInvalid = true;
@@ -1662,7 +1612,7 @@ const RendererScreen: React.FC<{
       );
     }
     return errorMessages;
-  };
+  }
 
   const getErrorMessages = () => {
     let errorMessages: IErrorMessage[] = getRawErrorMessages();
@@ -1679,64 +1629,11 @@ const RendererScreen: React.FC<{
     return uniqueErrorMessages;
   };
 
-  const LoadFormgridDependsOn = () => {
-    //we collect FormGridElements because BooleanElements sometimes hide their label if a FormGridText with a description is available
-    //a form-element does not know about other form-elements, so we built this information on Init
-    let formgridDependsOn = [];
-    if (typeof formState.form.pages != 'undefined') {
-      //collect for all pages
-      for (const page of Object.values(formState.form.pages)) {
-        //check for elems of a page
-        if (typeof page.elements != 'undefined') {
-          for (const elem of Object.values(page.elements)) {
-            let elemTyp = null;
-            let schemaElemType = elem.formGridOptions?.type;
-            if (schemaElemType) {
-              elemTyp = elementTypes[schemaElemType.toLowerCase()];
-            }
-            //check elem formgrid, depends on...
-            if (
-              elemTyp &&
-              isFormGridType(elemTyp) &&
-              elem.formGridOptions?.dependsOn
-            ) {
-              formgridDependsOn.push(elem.formGridOptions?.dependsOn);
-            }
-            //check for aggregate elems
-            if (elem.elements) {
-              for (const elemtmp of Object.values(elem.elements)) {
-                let elem = elemtmp;
-                let elemTyp = null;
-                let schemaElemType = elem.formGridOptions?.type;
-                if (schemaElemType) {
-                  elemTyp = elementTypes[schemaElemType.toLowerCase()];
-                }
-                //check elem formgrid, depends on...
-                if (
-                  elemTyp &&
-                  utils.isFormGridType(elemTyp) &&
-                  elem.formGridOptions?.dependsOn
-                ) {
-                  formState.formgridDependsOn.push(
-                    elem.formGridOptions?.dependsOn,
-                  );
-                }
-              }
-            }
-
-            formState.formgridDependsOn = formgridDependsOn;
-          }
-        }
-      }
-    }
-    formState.formgridDependsOn = formgridDependsOn;
-    //TODO maybe update the state here
-  };
   const updateFirstErrorElementRef = (
     elementProps: IFormComponentAttributes,
     elementRef: React.RefObject<any>,
   ): void => {
-    // 0) Fokus aufheben wenn dieses Element kein  fFehler mehr hat
+    // 0) Fokus aufheben wenn dieses Element kein Fehler mehr hat
     if (
       elementBeingFocused.current &&
       elementBeingFocused.current.elementID === elementProps.id &&
@@ -1781,6 +1678,8 @@ const RendererScreen: React.FC<{
 
     const currentFocus = elementBeingFocused.current;
 
+
+
     // b) Sub-Feld darf Aggregat-Container-Fokus ersetzen oder ersten Fokus setzen
     if (isTargetSubField && hasError && elementRef?.current) {
       const extractSubAggSortIndex = (p?: string | null): number => {
@@ -1794,8 +1693,7 @@ const RendererScreen: React.FC<{
         currentFocus &&
         currentFocus.isSubAggregateElement === true &&
         currentFocus.parentAggregateID === info.aggregateID &&
-        currentFocus.insideSubaggregatIndex <
-          elementProps.insideSubaggregatIndex!
+        currentFocus.insideSubaggregatIndex < elementProps.insideSubaggregatIndex!
       ) {
         return;
       }
@@ -1805,7 +1703,7 @@ const RendererScreen: React.FC<{
         isSubAggregateElement: true,
         parentAggregateID: info.aggregateID,
         jsonPath: elementProps.jsonpath,
-        insideSubaggregatIndex: elementProps.insideSubaggregatIndex,
+        insideSubaggregatIndex: elementProps.insideSubaggregatIndex
       });
       // }
       return;
@@ -1825,6 +1723,8 @@ const RendererScreen: React.FC<{
       });
     }
   };
+
+  
 
   useEffect(() => {
     if (
@@ -1866,7 +1766,7 @@ const RendererScreen: React.FC<{
       const intervalId = setInterval(autoSave, 1000);
       return () => clearInterval(intervalId);
     }
-  }, [formState.data, currentPage, uiState.overlayState]);
+  }, [formState.data, uiState.currentPage, uiState.overlayState]);
   /**
    * Attempts to scroll to the first error element and set focus on it.
    *
@@ -1916,11 +1816,10 @@ const RendererScreen: React.FC<{
 
   const rawErrorMsgs = useMemo(() => getRawErrorMessages(), [formState]);
 
+
   if (rawErrorMsgs && rawErrorMsgs.length > 0) {
-    firstErrorElementInfo.current = utils.findVisuallyFirstErrorElement(
-      rawErrorMsgs,
-      formState.form,
-    );
+    firstErrorElementInfo.current = utils.findVisuallyFirstErrorElement(rawErrorMsgs, formState.form);
+
   } else {
     firstErrorElementInfo.current = null;
   }
@@ -1929,7 +1828,7 @@ const RendererScreen: React.FC<{
   if (FlowPage && uiState.isReadOnlyForm) {
     renderScreen = (
       <View style={{ flex: 1 }}>
-        {Platform.OS != 'web' ? (
+        {Platform.OS != "web" ? (
           <FormProgressScreenPart
             updateState={updateState}
             restService={restService}
@@ -1965,12 +1864,12 @@ const RendererScreen: React.FC<{
     FlowPage &&
     uiSchema !== undefined &&
     uiSchema !== null &&
+    uiSchema.pages?.length! > 0 &&
     !uiState.isReadOnlyForm
   ) {
-    const hasPages = !!uiSchema.pages?.length;
     renderScreen = (
       <>
-        {Platform.OS != 'web' ? (
+        {Platform.OS != "web" ? (
           <FormProgressScreenPart
             updateState={updateState}
             restService={restService}
@@ -1986,31 +1885,27 @@ const RendererScreen: React.FC<{
           style={[
             localStyles.scrollView,
             // @ts-ignore
-            Platform.OS == 'web' && !scrollableExpersearchTable
-              ? { overflow: 'auto' }
-              : null,
+            Platform.OS == "web" && !scrollableExpersearchTable ? { overflow: 'auto' } : null,
           ]}
           scrollEnabled={true}
+
           ref={scrollViewRef}
           scrollEventThrottle={16}
           contentContainerStyle={{ flexGrow: 1 }}
         >
-          {Platform.OS == 'web' &&
-          flowPageReactClass !== 'SuccessScreen' &&
-          uiSchema.pages?.length! > 0 &&
-          hasPages ? (
-            <FormProgressScreenPart
-              updateState={updateState}
-              restService={restService}
-              handlePageChange={handlePageChange}
-              currentPage={currentPage}
-              formState={formState}
-              uiState={uiState}
-              handleFormCancel={handleFormCancel}
-              errorMsgs={uniqueErrorMsgs}
-            />
-          ) : null}
-          {Platform.OS === 'web' &&
+          {Platform.OS == "web" && flowPageReactClass !== 'SuccessScreen' ? (
+          <FormProgressScreenPart
+            updateState={updateState}
+            restService={restService}
+            handlePageChange={handlePageChange}
+            currentPage={currentPage}
+            formState={formState}
+            uiState={uiState}
+            handleFormCancel={handleFormCancel}
+            errorMsgs={uniqueErrorMsgs}
+          />
+        ) : null}
+          {Platform.OS === "web" &&
             formState.data.hasValidationErrors &&
             uiState.showErrorBlockOnInvalid && (
               <View ref={errorBlockRef}>
@@ -2058,6 +1953,7 @@ const RendererScreen: React.FC<{
           flowObj={flowPageObj}
           formState={formState}
           uiState={uiState}
+          handlePageChange={handlePageChange}
           t={t}
           screenType={flowPageReactClass}
           restService={restService}
@@ -2101,12 +1997,7 @@ const RendererScreen: React.FC<{
       )}
       {props.mockForm && (
         <>
-          <View
-            style={[
-              !isMobile && localStyles.overlayButtonContainer,
-              isMobile && localStyles.mobileOverlayButtonContainer,
-            ]}
-          >
+          <View style={[!isMobile && localStyles.overlayButtonContainer, isMobile && localStyles.mobileOverlayButtonContainer]}>
             <TouchableOpacity
               onPress={() => {
                 overlayUtils.setOverlay(
@@ -2162,6 +2053,15 @@ const RendererScreen: React.FC<{
                   <TouchableOpacity
                     key={opt.value}
                     onPress={() => {
+                      switch (opt.value) {
+                        case IMockFormTypeEnum.DEFAULT_AN_FORM:
+                          formState.pluginName = PluginNameEnum.ACTA_NOVA;
+                          break;
+                        case IMockFormTypeEnum.DEFAULT_CMS_FORM:
+                          formState.pluginName = PluginNameEnum.CMS_FORMS;
+                          break;
+                      }
+
                       setMockFormType(opt.value);
                       setShowMockModal(false);
                     }}
@@ -2190,7 +2090,7 @@ const RendererScreen: React.FC<{
         </>
       )}
       <ButtonProvider definitions={flowPageObj?.buttonDefinition}>
-        {Platform.OS == 'web' ? <Host>{renderScreen}</Host> : renderScreen}
+        {Platform.OS == "web" ? <Host>{renderScreen}</Host> : renderScreen}
       </ButtonProvider>
     </>
   );
@@ -2287,3 +2187,4 @@ const localStyles = StyleSheet.create({
 });
 
 export default RendererScreen;
+

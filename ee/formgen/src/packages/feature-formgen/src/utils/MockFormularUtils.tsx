@@ -3,6 +3,84 @@ import * as interfaces from '../types/interfaces'
 import * as validationUtils from '../utils/ValidationUtils'
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum'
 import { IMockFormTypeEnum } from '../constants/enums/IMockFormTypeEnum'
+import { IFormFlowSteps } from '../types/interfaces'
+export function getDefaultFormFlow(): IFormFlowSteps[] {
+  const tempSolution = `[
+  {
+    "key": "default",
+    "name": "Standard",
+    "formFlowSteps": [
+      {
+        "buttonText": "form_flow_btn_form",
+        "reactClass": "FormScreen",
+        "name": "form_flow_name_form",
+        "description": "form_flow_desc_form",
+        "buttonDefinition": [
+          { "btnComponent": "DetailInfoButton",  "translateKey": "form_detailinfo",  "mobileDisabled": true },
+          { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
+          { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
+          { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" }
+        ],
+        "variables": []
+      },
+      {
+        "buttonText": "form_flow_btn_summary",
+        "reactClass": "SummaryScreen",
+        "name": "form_flow_name_summary",
+        "description": "form_flow_desc_summary",
+        "buttonDefinition": [
+          { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
+          { "btnComponent": "PrintPdfButton",    "translateKey": "form_print",       "mobileDisabled": true },
+          { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
+          { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" },
+          { "btnComponent": "SubmitButton",      "translateKey": "form_submit" }
+        ],
+        "variables": [
+          { "name": "showDetails", "value": true }
+        ]
+      },
+      {
+        "buttonText": "form_flow_btn_success",
+        "reactClass": "SuccessScreen",
+        "name": "form_flow_name_success",
+        "description": "form_flow_desc_success",
+        "buttonDefinition": [],
+        "variables": []
+      }
+    ]
+  },
+  {
+    "key": "no_summary",
+    "name": "Ohne Zusammenfassung",
+    "formFlowSteps": [
+      {
+        "buttonText": "form_flow_btn_form",
+        "reactClass": "FormScreen",
+        "name": "form_flow_name_form",
+        "description": "form_flow_desc_form",
+        "buttonDefinition": [
+          { "btnComponent": "DetailInfoButton",  "translateKey": "form_detailinfo",  "mobileDisabled": true },
+          { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
+          { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
+          { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" },
+          { "btnComponent": "SubmitButton",    "translateKey": "form_submit" }
+        ],
+        "variables": []
+      },
+      {
+        "buttonText": "form_flow_btn_success",
+        "reactClass": "SuccessScreen",
+        "name": "form_flow_name_success",
+        "description": "form_flow_desc_success",
+        "buttonDefinition": [],
+        "variables": []
+      }
+    ]
+  }
+]`;
+
+  return JSON.parse(tempSolution) as IFormFlowSteps[];
+}
 
 export function fetchMockDefaultFormular(
   mockFormType: IMockFormTypeEnum
@@ -11,8 +89,11 @@ export function fetchMockDefaultFormular(
   if (Platform.OS === 'web') {
     let url = ''
     switch (mockFormType) {
-      case IMockFormTypeEnum.DEFAULT_FORM:
-        url = '/mock-files/defaultFormular.json'
+      case IMockFormTypeEnum.DEFAULT_AN_FORM:
+        url = '/mock-files/defaultANFormular.json'
+        break
+      case IMockFormTypeEnum.DEFAULT_CMS_FORM:
+        url = '/mock-files/defaultCMSFormular.json'
         break
       case IMockFormTypeEnum.EXTENDED_FORM:
         url = '/mock-files/extendedFormular.json'
@@ -30,8 +111,11 @@ export function fetchMockDefaultFormular(
   } else {
     let data: any = null
     switch (mockFormType) {
-      case IMockFormTypeEnum.DEFAULT_FORM:
-        data = require('../mock-files/defaultFormular.json')
+      case IMockFormTypeEnum.DEFAULT_AN_FORM:
+        data = require('../mock-files/defaultANFormular.json')
+        break
+      case IMockFormTypeEnum.DEFAULT_CMS_FORM:
+        data = require('../mock-files/defaultCMSFormular.json')
         break
       case IMockFormTypeEnum.EXTENDED_FORM:
         data = require('../mock-files/extendedFormular.json')
@@ -107,7 +191,7 @@ export function fetchDefaultFormularData(path: string, callback: any): void {
         return res.json()
       })
       .then(content => callback(content))
-      .catch(() => {})
+      .catch(() => { })
   } else {
     // Map web paths to static requires for React‑Native bundler
     let data: any = null
@@ -115,8 +199,11 @@ export function fetchDefaultFormularData(path: string, callback: any): void {
       case '/mock-files/defaultFeatures.json':
         data = require('../mock-files/defaultFeatures.json')
         break
-      case '/mock-files/defaultFormular.json':
-        data = require('../mock-files/defaultFormular.json')
+      case '/mock-files/defaultANFormular.json':
+        data = require('../mock-files/defaultANFormular.json')
+        break
+      case '/mock-files/defaultCMSFormular.json':
+        data = require('../mock-files/defaultCMSFormular.json')
         break
       case '../mock-files/subformular.json':
         data = require('../mock-files/subformular.json')
@@ -132,7 +219,7 @@ export function fetchDefaultFormularData(path: string, callback: any): void {
         break
       case '/mock-files/updateOnChangeTriggerPreviousPageError.json':
         data = require('../mock-files/updateOnChangeTriggerPreviousPageError.json')
-      break
+        break
       default:
         data = null
     }
@@ -145,7 +232,7 @@ export function fetchDefaultFeatures(callback: any): void {
 }
 
 export function fetchDefaultFormular(callback: any): void {
-  fetchDefaultFormularData('/mock-files/defaultFormular.json', callback)
+  fetchDefaultFormularData('/mock-files/defaultANFormular.json', callback)
 }
 
 export function fetchSubFormular(callback: any): void {

@@ -47,6 +47,41 @@ export function getFeatureActive(
   return stateFeatures?.[featureName] ?? {};
 }
 
+export function getCorrectANCulture(lng: string, features: IFeatures): string {
+    // If full culture is already provided (e.g. "de-AT"), just return it
+    if (lng && lng.length > 2) return lng;
+
+    // Otherwise, resolve the best matching locale from feature_languages
+    let locales: string[] = [];
+    const lngFeature = getFeatureActive('feature_languages', features);
+
+    if (lngFeature?.languages && Array.isArray(lngFeature.languages)) {
+      locales = lngFeature.languages as string[];
+    } else {
+      // sensible defaults
+      locales = ['en-AT', 'de-AT'];
+    }
+
+    let localeLng: string | null = null;
+    for (const locale of locales) {
+      if (locale.startsWith(lng)) {
+        localeLng = locale;
+      }
+    }
+
+    if (localeLng == null) {
+      console.warn(
+        'There is no locale in the list of available languages (' +
+          locales.toString() +
+          ') for the current language (' +
+          lng +
+          ')',
+      );
+      localeLng = lng; // fallback to short language
+    }
+
+    return localeLng;
+  }
 
 export function getI18nTextStr(
   culture: string,
@@ -56,7 +91,10 @@ export function getI18nTextStr(
   if (!culture) culture = 'de-CH';
   if (elem[culture]) return elem[culture];
   if (culture.length > 2) culture = culture.substring(0, 2);
-  return elem[culture] || '';
+  if (elem[culture]) return elem[culture];
+  // Fallback: find first key that starts with the base language (e.g. 'de' → 'de-AT')
+  const fallbackKey = Object.keys(elem).find((k) => k.startsWith(culture + '-'));
+  return (fallbackKey ? elem[fallbackKey] : '') || '';
 }
 
 export function getI18nText(state: FormState, elem: ITranslationSet): string {
@@ -290,7 +328,8 @@ export function getValue(formState: FormState, jsonpath: string, id?: string) {
     if (elemState.values) {
       return elemState.values;
     }
-    if (elemState.value) {
+    // Do not use if(elemState.value) because 0 and false are falsy values 
+    if (elemState.value !== undefined && elemState.value !== null) {
       return elemState.value;
     }
   }

@@ -3,9 +3,16 @@
   "name": "andp-cpa",
   "version": "1.0.0",
   "scripts": {
+    "start:mobile": "cd apps/andp-mobile && npm start",
+    "start:ma-messages": "cd apps/andp-ma-messages && expo start -c",
+    "start:ma-ts": "cd apps/andp-ma-tasks && expo start -c",
+    "start:ma-bc": "cd apps/andp-ma-business-cases && cross-env DEV_MODE=false expo start -c",
+    "start:dev:ma-bc": "cd apps/andp-ma-business-cases && cross-env DEV_MODE=true expo start -c",
     "start:formgen": "cd apps/andp-ma-formgen && cross-env DEV_MODE=false MOCK_FORM=false expo start -c",
     "start:dev:formgen": "cd apps/andp-ma-formgen && cross-env DEV_MODE=true expo start -c",
     "start:mock:formgen": "cd apps/andp-ma-formgen && cross-env DEV_MODE=true MOCK_FORM=true expo start -c",
+    "start:dev:ma-ms": "cd apps/andp-ma-messages && cross-env DEV_MODE=true expo start -c",
+    "start:dev:ma-ts": "cd apps/andp-ma-tasks && cross-env DEV_MODE=true expo start -c",
     "prestart:formgen": "npm run copy:pdfworker",
     "prestart:dev:formgen": "npm run copy:pdfworker",
     "prestart:mock:formgen": "npm run copy:pdfworker",
@@ -28,8 +35,7 @@
     "patch-package": "^8.0.0",
     "prettier": "^3.6.2",
     "sass": "^1.92.1",
-    "typescript": "^5.9.2",
-    "jsonpath": "^1.3.0"
+    "typescript": "^5.9.2"
   },
   "workspaces": [
     "apps/*",
@@ -47,9 +53,6 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "@react-native-community/datetimepicker": "8.4.4",
-    "semver": "7.6.3",
-    "jsonpath": {
-      "underscore": "^1.13.8"
-    }
+    "semver": "7.6.3"
   }
 }

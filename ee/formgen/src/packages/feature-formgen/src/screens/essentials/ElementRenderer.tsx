@@ -4,16 +4,17 @@ import {
   IFormElement,
   SummaryOptions,
 } from '../../types/interfaces';
-import { elementTypes } from '../../custom/ElementTypes';
-import FormGridTextElement from '../../components/elements/FormGridTextElement';
+import { getElementTypeByPlugin } from '../../custom/ElementTypes';
+import FormGridTextElement from '../../components/elements/shared/FormGridTextElement';
 import {
-  AggregateElement,
+  ANAggregateElement,
   BinaryElement,
+  CmsContainerElement,
 } from '../../custom/ElementDefinitions';
-import { FormElementWrapper } from '../../components/elements/helper/FormElementWrapper';
 import { SummaryElement } from '../../components/elements/helper/SummaryElement';
 import { Row } from '../../components/elements/helper/Row';
 import * as utils from '../../utils/Utils';
+import { PluginNameEnum } from '../../constants/enums/PluginNameEnum';
 
 export function ElementRenderer(props: IFormComponentBaseAttributes) {
   const { formState, uiState } = props;
@@ -24,7 +25,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
     return null;
   }
 
-  const elements: (JSX.Element | null)[] = props.elements.map(
+  const elements: (any | null)[] = props.elements.map(
     (obj: IFormElement, index: number) => {
       let jsonpath = `$.properties["${obj.id || index}"]`;
       const jsonpathParent = `${props.jsonpath ? props.jsonpath : ''}`;
@@ -35,7 +36,12 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       //Get schema for Element
       const schemaElem = schemas[obj.id] ?? { type: 'property' };
       let lowerCaseSchemaElementType = schemaElem.type.toLowerCase();
-      let ElemTyp = elementTypes[lowerCaseSchemaElementType];
+      let ElemTyp;
+      if(lowerCaseSchemaElementType == "property" && obj && obj.formGridOptions && obj.formGridOptions?.type){
+        ElemTyp = getElementTypeByPlugin(obj.formGridOptions?.type.toLowerCase(), formState.pluginName)
+      }else {
+        ElemTyp = getElementTypeByPlugin(lowerCaseSchemaElementType, formState.pluginName)
+      }
 
       if (ElemTyp) {
         // UVEK-651: if the value of a non editable, string property contains "<a " (an html link) it should be rendered as text
@@ -51,7 +57,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
             typeof elementFormObj.value === 'string' &&
             elementFormObj.value.indexOf('<a ') !== -1 //TODO v8.2 we cannot do it on phone devices.
           ) {
-            ElemTyp = elementTypes['text'];
+            ElemTyp = getElementTypeByPlugin('text', formState.pluginName);
           }
         }
 
@@ -63,17 +69,17 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
             obj.id,
           );
           if (elementFormObj?.renderingType === 'reference') {
-            ElemTyp = elementTypes['reference'];
+            ElemTyp = getElementTypeByPlugin('reference', formState.pluginName);
           }
         }
 
         // Check for FormGrid Fields (existing formGridOptionsType...)
-        if (
-          lowerCaseSchemaElementType === 'property' &&
-          obj.formGridOptions?.type
-        ) {
-          ElemTyp = elementTypes[obj.formGridOptions?.type.toLowerCase()];
-        }
+        // if (
+        //   lowerCaseSchemaElementType === 'property' &&
+        //   obj.formGridOptions?.type
+        // ) {
+        //   ElemTyp = getElementTypeByPlugin(obj.formGridOptions?.type.toLowerCase(), formState.pluginName);
+        // }
 
         if (ElemTyp === FormGridTextElement) {
           if (obj.formGridOptions?.dependsOn) {
@@ -111,7 +117,14 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         // performance optimization to fetch elements on the first level directly, not using jsonpath
         let isVisible = formState.data.properties?.[obj.id]?.visible;
         if (typeof isVisible === 'undefined') {
-          isVisible = utils.getVisible(formState, jsonpath);
+          // CMS only: if visible is not set in data, evaluate schema condition as fallback
+          if (formState.pluginName === PluginNameEnum.CMS_FORMS && schemaElem.condition) {
+            const condition = schemaElem.condition;
+            const referencedValue = formState.data.properties?.[condition.source.control]?.value;
+            isVisible = referencedValue === condition.equals;
+          } else { // visible is set in AN forms by default
+            isVisible = utils.getVisible(formState, jsonpath);
+          }
         }
         const isCreatable = formState.data.properties?.[obj.id]?.createable
           ? formState.data.properties?.[obj.id]?.createable
@@ -126,8 +139,8 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
             props.summary === SummaryOptions.ReadOnly ||
             props.summary === SummaryOptions.SummaryText
           ) {
-            if (ElemTyp === AggregateElement) {
-              //Aggregates are not handled directly by ReadOnly/Summary Element, instead we use normal Aggregate Component to initialize sub elements - old comment
+            if (ElemTyp === ANAggregateElement || ElemTyp === CmsContainerElement) {
+              //Aggregates/containers are not handled directly by ReadOnly/Summary Element, instead we use normal Aggregate/Container Component to initialize sub elements - old comment
             } else {
               value = ElemTyp.getSummaryValue(
                 formState,

@@ -15,8 +15,7 @@ const SubmitOverlay: React.FC<ICommonOverlayProps> = (
   const additionalProps: IOverlaySubmitExtraProps = uiState.overlayState
     .additionalProps as IOverlaySubmitExtraProps;
   const errorMsgs: IErrorMessage[] | undefined = additionalProps?.errorMsgs;
-  
-
+  errorMsgs;
 
   return (
     <DefaultOverlay

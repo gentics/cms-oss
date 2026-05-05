@@ -6,6 +6,7 @@ import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { OverlayTypeEnum } from '../custom/OverlayTypes';
 import { IDebugSectionProps } from '../components/overlays/DebugSection';
 import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 
 //SummaryDetails
 export interface ISummaryDetailsUser {
@@ -135,6 +136,10 @@ export enum SummaryOptions {
 
 export interface IElementTypes {
   [name: string]: IElementType;
+}
+
+export interface IPluginElements {
+  [name: string]: IElementTypes;
 }
 
 // TODO! SOME VARIABLES MIGHT NOT BE NEEDED
@@ -333,7 +338,6 @@ export interface FormState {
   paymentActive?: boolean;
   paymentState?: PaymentStateTypes;
   transactionId?: string;
-  formgridDependsOn: string[];
   anRoundTrip?: boolean; //TODO v8.2
   t: TFunction;
   fileUploads?: any;
@@ -347,6 +351,7 @@ export interface FormState {
   isLoggedIn: boolean;
   detailUrl?: string;
   hasDetail?: boolean;
+  pluginName: PluginNameEnum;
 }
 //TODO Method uncomment "?""
 export interface IFormPageComponent {
@@ -466,7 +471,8 @@ export interface IForm {
   pages?: IFormPage[];
   formwidth?: number;
   formwidthOptimized?: boolean;
-  formFlowTemplateKey?: string;
+  formFlowKey: string;
+  formFlow: IFormFlowSteps[];
 }
 
 /**
@@ -539,6 +545,8 @@ export interface IFormGridOptions {
   inSummary?: boolean;
 
   image?: IFormGridImageOptions;
+  siteKey?: string;
+  mode?: 'checkbox' | 'invisible';
 }
 export interface IOverlayInfoOptions {
   isShowOverlay: boolean;
@@ -580,12 +588,18 @@ export interface ISchemaFieldProperties {
   formPage?: number;
   autoCompleteMinLength?: number;
   isRaw?: boolean;
+  condition?: ICmsCondition;
 }
 
 export interface IValidation {
   formID?: string;
   hasValidationErrors?: boolean;
   [key: string]: any;
+}
+
+export interface ICmsCondition {
+  source: { control: string };       // ID of the referenced field
+  equals: string | boolean | number | null; // Expected value (Phase 1: equals only)
 }
 // TODO!
 /**
@@ -886,13 +900,6 @@ export interface LoadingOverlayScreenProps {
 
 export interface IOverlayFooterProps {
   footerMessages?: (string | undefined)[];
-}
-
-export interface IAggregateAddButtonProps {
-  id?: string;
-  className?: string;
-  onPress: () => any;
-  showButtonText?: boolean;
 }
 
 type formEditModeValues = keyof typeof editModeMap;

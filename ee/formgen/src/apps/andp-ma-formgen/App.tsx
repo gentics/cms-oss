@@ -25,6 +25,7 @@ export default function App() {
   const [prefillContent, setPrefillContent] = useState<string>('');
   const [userData, setUserData] = useState<ISummaryDetailsUser>();
   const [translationUrl, setTranslationUrl] = useState<string>('');
+  const [pluginName, setPluginName] = useState<string>('');
 
   if (Platform.OS !== 'web' || isDevMode || isMockForm) {
     if (customFontFamilies && Object.keys(customFontFamilies).length > 0) {
@@ -56,6 +57,9 @@ export default function App() {
         const userNameElement = document.getElementById("egov-template--user-data--username");
         const translationUrlFromId = rootElement?.getAttribute('data-translation-url');
 
+        // TODO GPU-2306 GPU-2305 später acta-nova entfernen hier. 
+        const pluginNameAttr = rootElement?.getAttribute('data-plugin-name') ?? "acta-nova";
+
         const userEmail = emailElement && emailElement.innerText != null ? emailElement.innerText : "";
         const userName = nameElement && nameElement.innerText != null ? nameElement.innerText : "";
         const userUsername = userNameElement && userNameElement.innerText != null ? userNameElement.innerText : "";
@@ -76,6 +80,8 @@ export default function App() {
         setSuccessContent(successMessage);
         setPrefillContent(prefillContent);
         setTranslationUrl(translationUrlFromId ?? '');
+        setPluginName(pluginNameAttr ?? '');
+
         if (formid) {
           setFormId(formid);
         }
@@ -95,8 +101,6 @@ export default function App() {
     setInit(true);
   }, []);
 
-  //console.log(initialInit, language, Endpoint);
-
   return (
     <View style={theme.container}>
       {initialInit && language && Endpoint ? (
@@ -114,6 +118,7 @@ export default function App() {
           successContent={successContent}
           userData={userData}
           translationUrl={translationUrl}
+          pluginName={pluginName}
         />
       ) : (
         <Text>Fehler</Text>

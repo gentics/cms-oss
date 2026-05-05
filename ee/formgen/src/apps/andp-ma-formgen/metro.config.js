@@ -12,10 +12,9 @@ const hasTranslations = fs.existsSync(translationsPath);
 
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [monorepoRoot];
-if (hasTranslations) {
-  config.watchFolders.push(translationsPath);
-}
+config.watchFolders = [
+  monorepoRoot,
+];
 
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
@@ -44,22 +43,7 @@ config.resolver.extraNodeModules = {
 
 config.resolver.disableHierarchicalLookup = true;
 
-// In Production-Builds (oder wenn der translations/-Ordner fehlt) wird das
-// devTranslations-Modul auf einen leeren Stub umgemappt, damit die statischen
-// JSON-Imports nicht aufgelöst werden müssen.
-const devTranslationsStub = path.resolve(
-  monorepoRoot,
-  "packages/core/src/services/devTranslations.stub.ts"
-);
-const shouldStubTranslations = isProduction || !hasTranslations;
-
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (
-    shouldStubTranslations &&
-    (moduleName === "./devTranslations" || moduleName.endsWith("/devTranslations"))
-  ) {
-    return { type: "sourceFile", filePath: devTranslationsStub };
-  }
   if (moduleName === "pdfjs-dist/build/pdf.mjs") {
     return resolve(context, "pdfjs-dist/legacy/build/pdf.js", platform);
   }

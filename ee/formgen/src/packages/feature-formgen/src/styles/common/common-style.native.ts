@@ -355,9 +355,6 @@ const aggregateElementStyles = StyleSheet.create({
   },
 
   // ------ Aggregate Add Button -----
-  aggAddButtonContainer: {
-    alignItems: 'flex-start',
-  },
   aggAddButton: {
     backgroundColor: aggregateElementTheme.functionButtons.add.backgroundColor,
     borderRadius: aggregateElementTheme.functionButtons.add.borderRadius,
@@ -659,6 +656,25 @@ const aggregateElementStyles = StyleSheet.create({
   mobileDeleteButtonContent: {
     color: aggregateElementTheme.tableView.actionButtons.deleteColor,
     fontSize: aggregateElementTheme.tableView.actionButtons.fontSize,
+  },
+  //+---------------------------------+
+
+  aggVarAddButtonContainer: {
+    alignItems: 'flex-start',
+  },
+  aggVarAddButtonMobile: {
+    width: aggregateElementTheme.functionButtons.add.smallView.size,
+    height: aggregateElementTheme.functionButtons.add.smallView.size,
+    backgroundColor:
+      aggregateElementTheme.functionButtons.add.smallView.backgroundColor,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius:
+      aggregateElementTheme.functionButtons.add.smallView.borderRadius,
+  },
+  aggVarAddButton: {
+    justifyContent: 'center',
+    alignItems: 'flex-start',
   },
 
   // ------- Pagination Styles -------
@@ -2413,6 +2429,30 @@ const formGridImageElementStyles = StyleSheet.create({
 });
 
 //+---------------------------------+
+//|---reCAPTCHA Element Styling-----|
+//+---------------------------------+
+
+const recaptchaElementStyles = StyleSheet.create({
+  button: {
+    borderWidth: theme.border.width.regular,
+    borderColor: theme.border.color.darkGray,
+    borderRadius: theme.border.borderRadius.regular,
+    backgroundColor: theme.colors.backgroundGray,
+    height: standardElement.standardElementHeight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonVerified: {
+    borderColor: '#4caf50',
+    backgroundColor: '#f1f8f1',
+  },
+  buttonText: {
+    fontSize: theme.fontSize.regular,
+    fontWeight: theme.fontWeight.regular,
+  }
+});
+
+//+---------------------------------+
 //|--------Debug Mode Styling-------|
 //+---------------------------------+
 
@@ -2485,6 +2525,7 @@ export {
   pdfPreviewStyles,
   dateTimeElementStyles,
   aggregateElementStyles,
+  recaptchaElementStyles,
   defaultOverlayStyles,
   overlayButtonRowStyles,
   overlayFooterStyles,

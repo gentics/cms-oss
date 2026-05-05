@@ -11,6 +11,7 @@ import {
 import { initI18n } from '@andp/core/src/services/i18n';
 import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
 import FormgenScreenErrorOverlay from '../components/overlays/childOverlays/FormgenScreenErrorOverlay';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 import { TFunction } from 'i18next';
 import theme from '@andp/core/src/styles/theme';
 import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
@@ -33,6 +34,7 @@ const FormgenScreen: React.FC<{
   t?: TFunction;
   detailUrl?: string;
   hasDetail?: boolean;
+  pluginName: string;
 }> = (props) => {
   const [features, setFeatures] = useState<IFeatures>();
   const [loadFeatureError, setLoadFeatureError] = useState<boolean>(false);
@@ -40,23 +42,25 @@ const FormgenScreen: React.FC<{
   const [t, setT] = useState<any>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pluginName = props.pluginName as PluginNameEnum;
 
-  const restService = new RestService(props.endpoint, props.apiToken);
+  const restService = new RestService(props.endpoint, pluginName, props.apiToken);
 
 
   useEffect(() => {
-    const fetchFeatures = async () => {
-      const response = await restService.loadFeaturesAsync();
-      if (response.success) {
-        const features = response.responseData;
-        if (features != null) {
-          setFeatures(features);
-        } else {
-          setLoadFeatureError(true);
-          setError("Server not responding: Features not available");
+    if(pluginName == PluginNameEnum.ACTA_NOVA){
+      const fetchFeatures = async () => {
+        const response = await restService.ANLoadFeaturesAsync();
+        if (response.success) {
+          const features = response.responseData;
+          if (features != null) {
+            setFeatures(features);
+          } else {
+            setLoadFeatureError(true);
+            setError('Server not responding: Features not available');
+          }
         }
-      }
-    };
+      };
     const fetchMockFeatures = async () => {
       if (__DEV__) {
         const response = await fetchMockDefaultFeatures();
@@ -76,6 +80,7 @@ const FormgenScreen: React.FC<{
       fetchMockFeatures();
     } else {
       fetchFeatures();
+    }
     }
   }, []);
 
@@ -161,8 +166,18 @@ const FormgenScreen: React.FC<{
       />
     );
   }
+
+  const showRenderScreen = () => {
+    if(pluginName == PluginNameEnum.ACTA_NOVA && features && props.config && t){
+      return true; 
+    }
+    if(pluginName == PluginNameEnum.CMS_FORMS && props.config && t){
+        return true;
+    }
+    return false;
+  }
   
-  if (features && props.config && t) {
+  if (showRenderScreen()) {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <RendererScreen
@@ -182,12 +197,14 @@ const FormgenScreen: React.FC<{
           userData={props.userData}
           detailUrl={props.detailUrl}
           hasDetail={props.hasDetail}
-          successContent={props.successContent}
+          pluginName={pluginName}
         />
         {Platform.OS === "web" && <span dangerouslySetInnerHTML={{ __html: styleHtml }} />}
       </Suspense>
     );
   }
+
+  return <LoadingScreen />;
 };
 
 export default FormgenScreen;

@@ -1,9 +1,12 @@
 import React, { useMemo } from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 import {
+  FormState,
+  IData,
   IFormPage,
   IFormPageComponent,
   SummaryOptions,
+  UIState,
 } from '../types/interfaces';
 import { ElementRenderer } from './essentials/ElementRenderer';
 import { ExpertSearchTable } from './screen-parts/ExpertSearchTable';
@@ -19,12 +22,9 @@ const FormScreen: React.FC<IFormPageComponent> = (
   const restService = props.restService;
 
   const currentFormPageUiSchema: IFormPage | undefined =
-    formState.form?.pages?.[uiState.currentPage];
-  const elements = currentFormPageUiSchema?.elements;
-  if (!currentFormPageUiSchema && !uiState.isExpertSearch) {
-    // Transition → nichts anzeigen. Sonst wird beim Wechseln 
-    // zwischen Formularen immer kurz "No page found..." angezeigt
-    if (!uiState.initDone || uiState.loading) return null; 
+    formState.form?.pages![uiState.currentPage];
+  const elements = currentFormPageUiSchema.elements;
+  if (!currentFormPageUiSchema) {
     return (
       <View>
         <AndpText>No page found for the current index.</AndpText>
@@ -66,7 +66,7 @@ const FormScreen: React.FC<IFormPageComponent> = (
 
   const ExpertSearchRendererMemo = useMemo(() => {
     // Only render the expert search table when the corresponding mode is active.
-    if (!uiState.isExpertSearch || uiState.loading != false) {
+    if (!uiState.isExpertSearch || uiState.loading != false || (uiState.overlayState.overlayType != OverlayTypeEnum.NONE && uiState.overlayState.overlayType != undefined)) {
       return null;
     }
 
@@ -85,7 +85,8 @@ const FormScreen: React.FC<IFormPageComponent> = (
     );
   }, [
     props.reportResult,
-    uiState.loading
+    uiState.loading,
+    uiState.overlayState.overlayType
   ]);
   
 

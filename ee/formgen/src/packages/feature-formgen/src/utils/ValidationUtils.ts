@@ -11,7 +11,7 @@ import {
   IFormGridOptions,
   UIState,
 } from '../types/interfaces';
-import { elementTypes } from '../custom/ElementTypes';
+import { getElementTypeByPlugin } from '../custom/ElementTypes';
 import i18n from '@andp/core/src/services/i18n';
 import * as utils from '../utils/Utils';
 import * as overlayUtils from '../utils/OverlayUtils';
@@ -41,10 +41,16 @@ export function commonValidate(
   const schemaState = utils.getSchemaForElement(formState.schema, id);
   const validations = utils.getValidation(formState.schema, id);
 
+  /**
+   * Konvertiert einen lokalisierten Zahlenstring (z.B. "1.234,56" oder "1,234.56") in eine JS-Zahl.
+   * Ist `value` bereits eine `number`, wird sie direkt zurückgegeben.
+   * Leerer String → `NaN`. Entfernt Tausendertrennzeichen und normalisiert das Dezimalkomma zu `.`.
+   */
   function parseNumber(
-    value: string = '',
+    value: string | number = '',
     locale = navigator.language,
   ): number {
+    if (typeof value === 'number') return value;
     // skip on empty value
     if (value === '') {
       return NaN;
@@ -81,7 +87,7 @@ export function commonValidate(
     if (isBooleanType) {
       // Default-Checkbox: mandatory only true/'True' valid
       if (isDefaultCheckbox) {
-        if (value !== true && value !== 'True') {
+        if (value !== true && value !== 'True' && value !== 'true') {
           const errorMsg = i18n.t('form_notFilledError');
           if (updateErrorMessages) {
             if (localValue == null) {
@@ -148,8 +154,9 @@ export function commonValidate(
     }
   }
 
-  if (schemaState.type === 'number' && value != null && value.length > 0) {
-    if (value != null && value.length > 0) {
+  const hasNumberValue = value !== null && value !== undefined && value !== '';
+  if (schemaState.type === 'number' && hasNumberValue) {
+    if (hasNumberValue) {
       // check that the value is a multiple of the number step
       if (formGridOptions?.numberStep && formGridOptions?.numberStep > 0) {
         // the number field should only accept numbers and period
@@ -341,7 +348,7 @@ export function validateField(
     formGridOptions.type !== 'formgridText' &&
     formGridOptions.type !== 'formgridSpacer'
   ) {
-    return elementTypes[formGridOptions.type.toLowerCase()].validate(
+    return getElementTypeByPlugin(formGridOptions.type.toLowerCase(), formState.pluginName).validate(
       formState,
       jsonpath,
       id,
@@ -380,8 +387,8 @@ export function validateField(
 
   const elementType = schemaState.type.toLowerCase();
   let result: CommonValidation = { isValid: true, errorMessage: '' };
-  if (elementTypes[elementType]) {
-    result = elementTypes[schemaState.type.toLowerCase()].validate(
+  if (getElementTypeByPlugin(elementType, formState.pluginName)) {
+    result = getElementTypeByPlugin(schemaState.type.toLowerCase(), formState.pluginName).validate(
       formState,
       jsonpath,
       id,
@@ -675,7 +682,7 @@ const loadValidation = async (
     // Pause for 1 second (simulate network latency)
     await new Promise((resolve) => setTimeout(resolve, 1000));
   } else {
-    apiResponse = await restService.validationANRequest(formState.data);
+    apiResponse = await restService.validationRequest(formState.data);
   }
   utils.endANRequest(uiState, updateState);
 

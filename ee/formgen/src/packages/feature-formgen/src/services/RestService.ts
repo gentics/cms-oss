@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import {
   FormState,
   IData,
@@ -6,10 +6,11 @@ import {
   UIState,
   IDialogFormInitBody,
 } from '../types/interfaces';
+import { RecaptchaService } from './RecaptchaService';
 import * as gzip from 'gzip-js';
 import createAxiosClient from '@andp/core/src/services/AxiosClient';
 import axios from 'axios';
-import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 import {
   fetchMockLazyCatalog,
   fetchMockSearch,
@@ -20,12 +21,14 @@ import { Platform, Linking } from 'react-native';
 
 export class RestService {
   anBasePath: string;
-  apiToken: string;
+  apiToken?: string;
   axiosClient: AxiosInstance;
   initUrl: string;
   fullCulture: string | null; // something like de-AT, en-CH, etc.
+  pluginName: PluginNameEnum;
 
-  constructor(meshPath: string, apiToken: string, cultureParam?: string) {
+  constructor(meshPath: string, pluginName: PluginNameEnum, apiToken?: string, cultureParam?: string) {
+    this.pluginName = pluginName;
     this.anBasePath = this.initBasePath(meshPath);
     this.apiToken = apiToken;
     this.axiosClient = createAxiosClient(this.anBasePath);
@@ -49,9 +52,8 @@ export class RestService {
     }
   }
 
-  //@TODO remove later
   initBasePath(meshHost: string): string {
-    return meshHost + '/api/acta-nova/';
+    return meshHost + '/api/' + this.pluginName + '/';
   }
 
   async post(
@@ -75,7 +77,7 @@ export class RestService {
       this.cleanUp(bodyClone);
       delete bodyClone.possibleValueSets;
       bodyForRequest = bodyClone;
-      if(Platform.OS == "web"){
+      if(Platform.OS == "web" && this.pluginName == PluginNameEnum.ACTA_NOVA){
         if (
           url.indexOf('/csvupload') === -1 &&
           formState != null &&
@@ -107,11 +109,13 @@ export class RestService {
       bodyForRequest = body;
     }
     let headers = { ...requestHeader }; // if requestHeader -> headers with empty object
-    const context = {
-      culture: this.fullCulture,
-      formID: formId,
-    };
-    headers['X-User-Context'] = JSON.stringify(context);
+    if (this.pluginName === PluginNameEnum.ACTA_NOVA) {
+      const context = {
+        culture: this.fullCulture,
+        formID: formId,
+      };
+      headers['X-User-Context'] = JSON.stringify(context);
+    }
     // Check if manual content type is given --> content type application/json
     if (!headers['Content-Type']) {
       headers['Content-Type'] = 'application/json';
@@ -123,10 +127,9 @@ export class RestService {
     if (__DEV__ && this.apiToken != undefined && this.apiToken != '') {
       headers['Authorization'] = 'Bearer ' + this.apiToken;
     }
-    //TODO v8.2: x-recaptcha-token ??
-    if (__DEV__ && (global as any).recaptchaJWT !== null) {
-      //local only, because sometimes there are issues with saving a cookie
-      headers['x-recaptcha-token'] = (global as any).recaptchaJWT;
+    const recaptchaToken = RecaptchaService.getToken();
+    if (recaptchaToken != null) {
+      headers['x-recaptcha-token'] = recaptchaToken;
     }
 
     let requestConfig: AxiosRequestConfig = {
@@ -186,7 +189,7 @@ export class RestService {
   ): Promise<ApiResponse> {
     let headers = { ...requestHeader }; // if requestHeader -> headers with empty object
 
-    if (formId && this.fullCulture) {
+    if (formId && this.fullCulture && this.pluginName === PluginNameEnum.ACTA_NOVA) {
       const context = {
         culture: this.fullCulture,
         formID: formId,
@@ -203,9 +206,9 @@ export class RestService {
       headers['Authorization'] = 'Bearer ' + this.apiToken;
     }
 
-    if (__DEV__ && (global as any).recaptchaJWT !== null) {
-      //local only, because sometimes there are issues with saving a cookie
-      headers['x-recaptcha-token'] = (global as any).recaptchaJWT;
+    const recaptchaToken = RecaptchaService.getToken();
+    if (recaptchaToken != null) {
+      headers['x-recaptcha-token'] = recaptchaToken;
     }
 
     let requestConfig: AxiosRequestConfig = {
@@ -271,15 +274,42 @@ export class RestService {
     }
   }
 
-  /**
-   * gets json response from features endpoint
-   * see config in /mesh/plugins/acta-nova-plugin/features.yml
+   /**
+   * object which should be cleaned before sent to ActaNova (it's called recursively)
+   *
+   * @param obj data
    */
-  loadFeaturesAsync = async (): Promise<ApiResponse> => {
-    let url = 'features';
-    const response: ApiResponse = await this.get(url);
-    return response;
-  };
+  cleanUp(obj: any) {
+    var that = this;
+    if (Array.isArray(obj)) {
+      Object.entries(obj).map(function ([k, v]) {
+        that.cleanUp(v);
+        // eslint-disable-next-line
+        return;
+      });
+    } else if (obj && typeof obj === 'object') {
+      if (obj.hasOwnProperty('editable')) {
+        delete obj.editable;
+      }
+      if (obj.hasOwnProperty('visible')) {
+        delete obj.visible;
+      }
+      if (obj.hasOwnProperty('autoCompleteResults')) {
+        delete obj.autoCompleteResults;
+      }
+      if (obj.hasOwnProperty('possibleValues')) {
+        delete obj.possibleValues;
+      }
+      if (obj.hasOwnProperty('possibleAggregateValues')) {
+        delete obj.possibleAggregateValues;
+      }
+      Object.entries(obj).map(function ([key, value]) {
+        that.cleanUp(value);
+        // eslint-disable-next-line
+        return;
+      });
+    }
+  }
 
   loadFormAsync = async (
     formId: string,
@@ -288,6 +318,7 @@ export class RestService {
   ): Promise<ApiResponse> => {
     let url = `form/${encodeURIComponent(formId)}`;
     let requestData: IData = { formID: formId };
+    // Exsiting only in acta-nova plugin
     if (
       typeof businessObjectID !== 'undefined' &&
       businessObjectID !== null &&
@@ -296,6 +327,7 @@ export class RestService {
       url = url + '/businessObject/' + encodeURIComponent(businessObjectID);
       requestData.businessObjectID = businessObjectID;
     }
+    url += '/load';
     if (
       initializeData &&
       initializeData != null &&
@@ -316,7 +348,108 @@ export class RestService {
     return response;
   };
 
-  async loadDialogForm(
+  /**
+   * Only send a http post validation request, no handlers for handling diverse situation
+   * @param formData
+   * @param jsonpath
+   * @param pageIndex
+   * @returns
+   */
+  async validationRequest(formData: IData): Promise<ApiResponse> {
+    let url = `form/${encodeURIComponent(formData.formID)}/validate`;
+    const requestBody = JSON.stringify(formData);
+    const response = await this.post(
+      formData.formID,
+      url,
+      requestBody,
+    );
+    return response;
+  }
+
+  async loadSaveFormRequest(data: FormData, formState: FormState) {
+    if (RecaptchaService.isRequired() && RecaptchaService.getToken() == null) {
+      return {
+        success: false,
+        responseCode: 400,
+        responseData: 'recaptcha token missing',
+      } as ApiResponse;
+    }
+    let url = 'form/' + encodeURIComponent(formState.formid);
+    if (
+      typeof formState.businessObjectID !== 'undefined' &&
+      formState.businessObjectID !== null &&
+      formState.businessObjectID !== ''
+    ) {
+      url +=
+        '/businessObject/' + encodeURIComponent(formState.businessObjectID);
+    }
+    url += '/save';
+    const header = { 'Content-Type': 'multipart/form-data' };
+    const response = await this.post(
+      formState.formid,
+      url,
+      data,
+      header,
+      formState,
+    );
+    return response;
+  }
+
+
+  async submitRequest(
+    dataToSend: FormData,
+    formState: FormState,
+  ): Promise<ApiResponse> {
+    if (RecaptchaService.isRequired() && RecaptchaService.getToken() == null) {
+      return {
+        success: false,
+        responseCode: 400,
+        responseData: 'recaptcha token missing',
+      } as ApiResponse;
+    }
+    let url = 'form/' + encodeURIComponent(formState.data.formID);
+    if (
+      typeof formState.businessObjectID !== 'undefined' &&
+      formState.businessObjectID !== null &&
+      formState.businessObjectID !== ''
+    ) {
+      url =
+        url +
+        '/businessObject/' +
+        encodeURIComponent(formState.businessObjectID);
+    }
+    url = url + '/submit';
+
+    if (formState.paymentState) {
+      url = url + '?payment=true';
+    }
+    const apiResponse: ApiResponse = await this.post(
+      formState.data.formID,
+      url,
+      dataToSend,
+      { 'Content-Type': 'multipart/form-data' },
+      formState,
+    );
+
+    return apiResponse;
+  }
+
+  async keepAlive() {
+    let url = this.anBasePath + 'keepalive';
+    return await axios.get(url);
+  }
+  /**
+   * gets json response from features endpoint
+   * see config in /mesh/plugins/acta-nova-plugin/features.yml
+   */
+  ANLoadFeaturesAsync = async (): Promise<ApiResponse> => {
+    let url = 'features';
+    const response: ApiResponse = await this.get(url);
+    return response;
+  };
+
+    /** @ANOnly */
+  async ANLoadDialogForm(
     formState: FormState,
     editModeDialogFormID: string,
     parentDialogPortalFormHostObjectID: string,
@@ -355,66 +488,12 @@ export class RestService {
     return response;
   }
 
-  /**
-   * object which should be cleaned before sent to ActaNova (it's called recursively)
-   *
-   * @param obj data
-   */
-  cleanUp(obj: any) {
-    var that = this;
-    if (Array.isArray(obj)) {
-      Object.entries(obj).map(function ([k, v]) {
-        that.cleanUp(v);
-        // eslint-disable-next-line
-        return;
-      });
-    } else if (obj && typeof obj === 'object') {
-      if (obj.hasOwnProperty('editable')) {
-        delete obj.editable;
-      }
-      if (obj.hasOwnProperty('visible')) {
-        delete obj.visible;
-      }
-      if (obj.hasOwnProperty('autoCompleteResults')) {
-        delete obj.autoCompleteResults;
-      }
-      if (obj.hasOwnProperty('possibleValues')) {
-        delete obj.possibleValues;
-      }
-      if (obj.hasOwnProperty('possibleAggregateValues')) {
-        delete obj.possibleAggregateValues;
-      }
-      Object.entries(obj).map(function ([key, value]) {
-        that.cleanUp(value);
-        // eslint-disable-next-line
-        return;
-      });
-    }
-  }
-
-  /**
-   * Only send a http post validation request, no handlers for handling diverse situation
-   * @param formData
-   * @param jsonpath
-   * @param pageIndex
-   * @returns
-   */
-  async validationANRequest(formData: IData): Promise<ApiResponse> {
-    let url = this.anBasePath + 'form/validate';
-    const requestBody = JSON.stringify(formData);
-    const response = await this.post(
-      formData.formID,
-      url,
-      requestBody,
-    );
-    return response;
-  }
-
-  /**
+ /**
    * Sendet einen Multipart-Form-Upload an den CSV-Endpoint.
    * Liefert das rohe Response-Objekt zurück, ohne direkt zu parsen oder Validierung zu triggern.
+   * @ANOnly
    */
-  public async csvUploadRequest(
+  public async ANCsvUploadRequest(
     formState: FormState,
     formData: FormData,
   ): Promise<ApiResponse> {
@@ -430,8 +509,8 @@ export class RestService {
     return response;
   }
 
-  //TODO v8.2 - Overlay
-  async cancelFormANRequest(formState: FormState): Promise<ApiResponse> {
+  /** @ANOnly */
+  async ANCancelFormANRequest(formState: FormState): Promise<ApiResponse> {
     let data = new FormData();
 
     let url = 'form/' + encodeURIComponent(formState.formid);
@@ -451,11 +530,9 @@ export class RestService {
     );
     return response;
   }
-  /*
-   * ExpertSearch
-   */
 
-  callExpertSearch(state: FormState, callback: any, error: any) {
+  /** @ANOnly */
+  ANcallExpertSearch(state: FormState, callback: any, error: any) {
     let callbackFunc = function (res: ApiResponse) {
       try {
         // Falls responseData bereits ein String ist, parsen wir ihn;
@@ -487,7 +564,8 @@ export class RestService {
     });
   }
 
-  callExpertExcelDownload(state: FormState, callback: any, validationError: any, exceptionError: any) {
+  /** @ANOnly */
+  ANCallExpertExcelDownload(state: FormState, callback: any, validationError: any, exceptionError: any) {
     const that = this;
     let callbackFunc = function (res: ApiResponse) {
       try {
@@ -623,37 +701,8 @@ export class RestService {
     });
   }
 
-  getExpertExcelDownload(state: FormState, callback: any, error: any) {
-    let callbackFunc = function (res: ApiResponse) {
-      try {
-        const responseText =
-          typeof res.responseData === 'string'
-            ? res.responseData
-            : JSON.stringify(res.responseData);
-        const data = JSON.parse(responseText);
-        callback(data);
-      } catch (err) {
-        console.error('failed to parse json', err);
-        error(err);
-      }
-    };
-
-    let localstate = state.data;
-    localstate.reportResultType = 'excel';
-    const requestHeaders: HeadersInit = new Headers();
-    requestHeaders.set('Content-Type', 'application/json');
-
-    this.post(
-      state.formid,
-      'reportResult',
-      localstate,
-      requestHeaders,
-    ).then((response) => {
-      callbackFunc(response);
-    });
-  }
-
-  async triggerForm(
+  /** @ANOnly */
+  async ANTriggerForm(
     state: FormState,
     buttonId: string,
     parameters: string[],
@@ -698,65 +747,8 @@ export class RestService {
       });
   }
 
-  async saveFormANRequest(data: FormData, formState: FormState) {
-    let url = 'form/' + encodeURIComponent(formState.formid);
-    if (
-      typeof formState.businessObjectID !== 'undefined' &&
-      formState.businessObjectID !== null &&
-      formState.businessObjectID !== ''
-    ) {
-      url +=
-        '/businessObject/' + encodeURIComponent(formState.businessObjectID);
-    }
-    url += '/save';
-    const header = { 'Content-Type': 'multipart/form-data' };
-    const response = await this.post(
-      formState.formid,
-      url,
-      data,
-      header,
-      formState,
-    );
-    return response;
-  }
-
-  async keepAlive() {
-    let url = this.anBasePath + 'keepalive';
-    return await axios.get(url);
-  }
-
-  async submitANRequest(
-    dataToSend: FormData,
-    formState: FormState,
-  ): Promise<ApiResponse> {
-    let url = 'form/' + encodeURIComponent(formState.data.formID);
-    if (
-      typeof formState.businessObjectID !== 'undefined' &&
-      formState.businessObjectID !== null &&
-      formState.businessObjectID !== ''
-    ) {
-      url =
-        url +
-        '/businessObject/' +
-        encodeURIComponent(formState.businessObjectID);
-    }
-    url = url + '/submit';
-
-    if (formState.paymentState) {
-      url = url + '?payment=true';
-    }
-    const apiResponse: ApiResponse = await this.post(
-      formState.data.formID,
-      url,
-      dataToSend,
-      { 'Content-Type': 'multipart/form-data' },
-      formState,
-    );
-
-    return apiResponse;
-  }
-
-  async refreshFormANRequest(
+  /** @ANOnly */
+  async ANRefreshFormRequest(
     formState: FormState,
     formId: string,
     dialogPortalFormHostObjectID: string,
@@ -794,8 +786,8 @@ export class RestService {
   }
 
   // Dropdowns - ANDP-420
-
-  loadSearch(
+  /** @ANOnly */
+  ANLoadSearch(
     searchTerm: string,
     data: IData,
     callback: (result: any) => void,
@@ -823,7 +815,8 @@ export class RestService {
       });
   }
 
-  loadLazyCatalog(
+  /** @ANOnly */
+  ANLoadLazyCatalog(
     searchTerm: string,
     data: IData,
     callback: (result: any) => void,
@@ -854,7 +847,8 @@ export class RestService {
       });
   }
 
-  loadAutocomplete(
+  /** @ANOnly */
+  ANLoadAutocomplete(
     data: IData,
     callback: (result: any) => void,
     errorFunc: (error: any) => void,
@@ -879,7 +873,8 @@ export class RestService {
     }
   }
 
-  getBinaryURL(formid: string, binaryValue: string, businessObjectID?: string, width?: number, height?: number) {
+  /** @ANOnly */
+  ANGetBinaryURL(formid: string, binaryValue: string, businessObjectID?: string, width?: number, height?: number) {
     let url = this.anBasePath + 'form/' + encodeURIComponent(formid);
     if (businessObjectID !== null && businessObjectID !== '') {
       if (typeof businessObjectID === 'undefined') {
@@ -893,4 +888,5 @@ export class RestService {
     }
     return url;
   }
+
 }

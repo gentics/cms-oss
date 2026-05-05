@@ -120,7 +120,6 @@ const aggregateElementStyles = StyleSheet.create({
   aggDeleteButtonMobileContent: {},
   // -----------------------------
   // ------ Aggregate Add Button -----
-  aggAddButtonContainer: {},
   aggAddButton: {},
   aggAddButtonOnHover: {},
   aggAddButtonContent: {},
@@ -189,6 +188,10 @@ const aggregateElementStyles = StyleSheet.create({
   //+---------------------------------+
   //| /////////////////////////////// |
   //+---------------------------------+
+
+  aggVarAddButtonContainer: {},
+  aggVarAddButtonMobile: {},
+  aggVarAddButton: {},
 
   // ------- Pagination Styles -------
   paginationContainer: {},
@@ -559,6 +562,10 @@ const formGridImageElementStyles = StyleSheet.create({
   caption: {},
 });
 
+const recaptchaElementStyles = StyleSheet.create({
+  container: {},
+});
+
 export {
   summaryStyles,
   baseStyles,
@@ -580,6 +587,7 @@ export {
   customPdfPreviewStyles,
   dateTimeElementStyles,
   aggregateElementStyles,
+  recaptchaElementStyles,
   defaultOverlayStyles,
   overlayButtonRowStyles,
   overlayFooterStyles,

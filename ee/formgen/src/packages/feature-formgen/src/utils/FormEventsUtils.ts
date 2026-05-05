@@ -18,10 +18,10 @@ import * as validationUtils from './ValidationUtils';
 import * as mockFormularUtils from './MockFormularUtils';
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { RestService } from '../services/RestService';
+import { RecaptchaService } from '../services/RecaptchaService';
 import * as overlayUtils from './OverlayUtils';
 import { OverlayTypeEnum } from '../custom/OverlayTypes';
 import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
-import { FileUploadErrorTypeEnum } from '../constants/enums/FileUploadErrorTypeEnum';
 import * as hookUtils from '../custom/HooksUtils';
 import * as DocumentPicker from 'expo-document-picker';
 import 'react-native-get-random-values';
@@ -96,7 +96,7 @@ export const submitCSVUpload = async (
         updateState,
       );
     });
-    let apiResponse: ApiResponse = await restService.csvUploadRequest(
+    let apiResponse: ApiResponse = await restService.ANCsvUploadRequest(
       formState,
       data,
     );
@@ -351,62 +351,6 @@ export const cancelUpdateOnChange = () => {
   }
 };
 
-
-/**
- * Verarbeitet Validierungsfehler beim Dateiupload (HTTP 422). submit und save
- * Ermittelt anhand des `errorType` die passende Fehlermeldung und weist diese
- * dem entsprechenden Formular-Element zu.
- *
- * @param responseData Die Fehlerantwort vom Backend, die `filename`, `jsonPath` und `errorType` enthalten kann.
- * @param formState Der aktuelle Zustand des Formulars (FormState), der aktualisiert wird.
- * @param jsonPath Ein optionaler Fallback-JSON-Pfad, falls dieser in `responseData` fehlt. wenn nicht gesetzt -> submit (anonym user)
- * @returns Die übersetzte Validierungs-Fehlermeldung.
- */
-export const handleFileUploadValidationError = ( 
-  responseData: any,
-  formState: FormState,
-  jsonPath?: string,
-): string => {
-  const filename = responseData?.filename as string | undefined;
-  const jsonPathFinal = responseData?.jsonPath ? responseData.jsonPath : jsonPath;
-  const errorType = responseData?.errorType as FileUploadErrorTypeEnum | undefined;
-  
-  let i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed';
-  
-  if (errorType) {
-    switch(errorType) {
-      case FileUploadErrorTypeEnum.FILE_TOO_LARGE:
-        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed_file_too_large';
-        break;
-      case FileUploadErrorTypeEnum.MIME_TYPE_NOT_ALLOWED:
-        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed_mime_type_not_allowed'; 
-        break;
-      case FileUploadErrorTypeEnum.MIME_TYPE_UNKNOWN:
-        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed_mime_type_unknown'; 
-        break;
-      case FileUploadErrorTypeEnum.FILE_UPLOAD_FAILED:
-        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed';
-        break;
-      default:
-        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed';
-        break;
-    }
-  }
-  const fileUploadError = i18n.t(i18nKey);
-  const validationMessage = filename ? `${fileUploadError} (${filename})` : fileUploadError;
-  // Entfernt ".value", ".values", ".value[index]" oder ".values[index]" am Ende des Pfades, um das Eltern-Element zu erhalten
-  const jsonPathBinary = jsonPathFinal ? jsonPathFinal.replace(/\.values?(\[\d+\])?$/, '') : jsonPathFinal;
-  let datafieldUploadElement = utils.getElementByJsonPath(formState.data, jsonPathBinary);
-
-  if (datafieldUploadElement) {
-      datafieldUploadElement.validationMessage = validationMessage;
-      formState.data.hasValidationErrors = true;
-      utils.setStateElementByJsonpath(formState.data, jsonPathBinary, datafieldUploadElement);
-  }
-
-  return validationMessage;
-};
-
 //if a binary element changes, it leads to a possible binary upload if the user is signed in
 //and all uploads are (client side) valid
 export async function possibleBinaryUpload(
@@ -449,23 +393,25 @@ export async function possibleBinaryUpload(
         await afterChange(formState, uiState, restService, jsonpath, id, true, updateState, formGridOptions, editable);
       };
 
-      const actionAfterError = (res?: ApiResponse) => {
+      const actionAfterError = () => {
         onBinaryChangeFinished();
-
-        const responseData = res?.responseData;
-        
-        if (res?.responseCode === 422 && responseData) {
-          handleFileUploadValidationError(responseData, formState, jsonpath);
-        } else {
-          // something went wrong (most probably backend file-check), we set a generic error message
-          const binaryElem = utils.getElementByJsonPath(formState.data, jsonpath);
-          if (binaryElem) {
-            binaryElem.validationMessage = i18n.t('form_binary_upload_failed');
-          }
-        }        
-        updateState(StatesToUpdateEnum.ALL);
+        //something went wrong (most probably backend file-check), we remove uploads, reset field and set an error message
+        if (utils.isListElement(formState.schema, id)) {
+          utils.setValue(formState, jsonpath, []);
+        }
+        else{
+          utils.setValue(formState, jsonpath, {});
+        }
+        formState.fileUploads = {};
+        const binaryElem = utils.getElementByJsonPath(formState.data, jsonpath);
+        if (binaryElem) {
+          binaryElem.validationMessage = i18n.t('form_binary_upload_failed');
+          updateState(StatesToUpdateEnum.ALL);
+        }
       };
+
       try {      
+
         onBinaryChangeFinished();
 
         console.log('handleBinaryFormSave');
@@ -707,8 +653,11 @@ export const saveForm = async (
     );
     }
   }, true);
+  if (RecaptchaService.hasExecute()) {
+    await RecaptchaService.execute();
+  }
   let data = utils.prepareDataForSave(formState, uploadBinaries);
-  let apiResponse: ApiResponse = await restService.saveFormANRequest(
+  let apiResponse: ApiResponse = await restService.loadSaveFormRequest(
     data,
     formState,
   );
@@ -816,10 +765,10 @@ export const saveFormBinary = async (
     }
   };
 
-  const errorFunc = async (res?: ApiResponse) => {
+  const errorFunc = async () => {
     overlayUtils.hideOverlay(uiState, updateState);
     if (actionAfterError) {
-      await actionAfterError(res);
+      await actionAfterError();
     }
   };
 
@@ -920,7 +869,7 @@ export const loadDialogForm = async (
       { loadingText: IOverlayFullScreenTextEnum.DialogForm },
     ),
   );
-  const apiResponse: ApiResponse = await restService.loadDialogForm(
+  const apiResponse: ApiResponse = await restService.ANLoadDialogForm(
     formState,
     editModeDialogFormID,
     parentDialogPortalFormHostObjectID,
@@ -1118,24 +1067,6 @@ export const submitForm = async (
     uiState.loading = false;
     const responseData = res.responseData;
 
-     if (res.responseCode === 422 && responseData) {
-      const validationMessage = handleFileUploadValidationError(responseData, formState);
-      const errorMsg: IErrorMessage = {
-          validationMessage,
-          pageNumber: uiState.currentPage,
-          elementInfo: { elementID: "random-dump" },
-        };
-      overlayUtils.setOverlay(
-        uiState,
-        formState,
-        OverlayTypeEnum.SUBMIT_USER_INPUT_FAILURE,
-        undefined,
-        { errorMsgs: [errorMsg], response: res },
-      );
-      updateState(StatesToUpdateEnum.ALL);
-      return;
-    }
-
     // Kombiniert: Exception/kein JSON ODER HTTP 400 -> LOAD_SUBMIT Overlay
     const showLoadSubmit =
       res.exception || !responseData || res.responseCode === 400;
@@ -1196,7 +1127,7 @@ export const submitForm = async (
       { loadingText: IOverlayFullScreenTextEnum.Submit },
     ),
   );
-  const apiResponse: ApiResponse = await restService.submitANRequest(
+  const apiResponse: ApiResponse = await restService.submitRequest(
     dataToSend,
     formState,
   );
@@ -1204,6 +1135,7 @@ export const submitForm = async (
   if (!apiResponse.success) {
     handleError(apiResponse);
   } else {
+    RecaptchaService.reset();
     handleSuccess(apiResponse);
   }
   await hookUtils.postSubmitForm(
@@ -1270,7 +1202,7 @@ export const revertToMainFormFromDialogForm = async (
       updateState,
     ),
   );
-  const apiResponse: ApiResponse = await restService.refreshFormANRequest(
+  const apiResponse: ApiResponse = await restService.ANRefreshFormRequest(
     formState,
     mainState.formState.formid,
     mainState.formState.data.DialogPortalFormHostObjectID!,

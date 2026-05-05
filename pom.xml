@@ -38,6 +38,7 @@
 		<module>cms-changelog</module>
 		<module>cms-doc</module>
 		<module>cms-translation</module>
+		<module>formgen</module>
   </modules>
 
 	<properties>

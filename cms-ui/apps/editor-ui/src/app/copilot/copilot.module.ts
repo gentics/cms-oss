@@ -11,13 +11,14 @@ const COMPONENTS: Array<Type<any>> = [
  * toolbar button itself lives inside the existing `EditorToolbarComponent`
  * because that template already owns the surrounding action group.
  *
- * Note: the configuration loader (`CopilotConfigService`) and the
- * sidebar's open/close state (`CopilotStateService`) are deliberately
- * NOT registered here. Both use `providedIn: 'root'` so they survive
- * the fact that this module is reached only via the lazy-loaded
- * `ContentFrameModule` — a module-level `provideAppInitializer` would
- * silently miss the bootstrap window. The fetch is kicked off from
+ * Note: the configuration loader (`CopilotConfigService`) is deliberately
+ * NOT registered here — it uses `providedIn: 'root'` so it survives the
+ * fact that this module is reached only via the lazy-loaded
+ * `ContentFrameModule`. The fetch is kicked off from
  * `AppComponent.ngOnInit()` instead, mirroring `UIOverridesService`.
+ *
+ * The sidebar's open/close flag lives in the NGXS UI state slice
+ * (`state.ui.copilotOpen`) — see `SetCopilotOpenAction`.
  */
 @NgModule({
     imports: [

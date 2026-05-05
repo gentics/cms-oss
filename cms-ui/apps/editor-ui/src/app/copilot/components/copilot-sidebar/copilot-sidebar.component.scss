@@ -159,26 +159,10 @@ $copilot-sidebar-width: 26.25rem;
     align-items: flex-end;
 }
 
+// `gtx-textarea` brings its own field/label styling — we only constrain
+// the flex behaviour here so it shares the row with the send button.
 .copilot-chat-textarea {
     flex: 1 1 auto;
-    resize: none;
-    border: 1px solid $gtx-color-light-gray;
-    border-radius: 4px;
-    padding: 0.5rem 0.625rem;
-    font-family: inherit;
-    font-size: 0.875rem;
-    color: $gtx-color-dark-gray;
-    background: $gcms-color-page-background;
-
-    &:focus {
-        outline: none;
-        border-color: $gtx-color-primary;
-    }
-
-    &:disabled {
-        background: $gcms-color-editor-background;
-        cursor: not-allowed;
-    }
 }
 
 .copilot-chat-send {

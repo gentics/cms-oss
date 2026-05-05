@@ -40,8 +40,8 @@ import { UserSettingsService } from '../../../core/providers/user-settings/user-
 import { PageVersionsModal } from '../../../shared/components';
 import { BreadcrumbsService } from '../../../shared/providers';
 import { PublishableStateUtil } from '../../../shared/util/entity-states';
-import { CopilotConfigService, CopilotStateService } from '../../../copilot';
-import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '../../../state';
+import { CopilotConfigService } from '../../../copilot';
+import { ApplicationStateService, FocusListAction, FolderActionsService, SetCopilotOpenAction, SetFocusModeAction } from '../../../state';
 import { AlohaIntegrationService } from '../../providers';
 
 /** Used to define which buttons are visible at a certain moment. */
@@ -132,9 +132,9 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public brokenLinkCount = 0;
 
     /**
-     * Mirror of `CopilotConfigService.enabled$` and `CopilotStateService.open$`,
-     * kept as plain properties so the template doesn't need async pipes (each
-     * of which would re-subscribe on every change-detection run).
+     * Mirror of `CopilotConfigService.enabled$` and the NGXS `state.ui.copilotOpen`
+     * slice, kept as plain properties so the template doesn't need async pipes
+     * (each of which would re-subscribe on every change-detection run).
      */
     public copilotEnabled = false;
     public copilotOpen = false;
@@ -156,7 +156,6 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         protected permissions: PermissionService,
         protected aloha: AlohaIntegrationService,
         protected copilotConfig: CopilotConfigService,
-        protected copilotState: CopilotStateService,
     ) {}
 
     ngOnInit(): void {
@@ -202,7 +201,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         }));
 
         // Wire up Content Copilot: the toolbar button only appears when
-        // the customer's copilot.yml has `enabled: true`, and it must
+        // the customer's copilot.json has `enabled: true`, and it must
         // visually reflect the open/closed state of the sidebar so
         // re-clicking it acts as a toggle indicator.
         this.subscriptions.push(this.copilotConfig.enabled$.subscribe((enabled) => {
@@ -210,7 +209,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
         }));
-        this.subscriptions.push(this.copilotState.open$.subscribe((isOpen) => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.copilotOpen).subscribe((isOpen) => {
             this.copilotOpen = isOpen;
             this.changeDetector.markForCheck();
         }));
@@ -407,12 +406,13 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     /**
-     * Toggle the Content Copilot sidebar. The actual open/close state
-     * is owned by `CopilotStateService` so the sidebar component (which
-     * renders elsewhere in the layout tree) stays in sync.
+     * Toggle the Content Copilot sidebar. The actual open/close flag is
+     * stored in the NGXS UI state slice (`state.ui.copilotOpen`) so the
+     * sidebar component — which renders elsewhere in the layout tree —
+     * stays in sync without requiring a dedicated singleton service.
      */
     toggleCopilot(): void {
-        this.copilotState.toggle();
+        this.appState.dispatch(new SetCopilotOpenAction(!this.copilotOpen));
     }
 
     saveChanges(behaviour: SaveBehaviour): void {

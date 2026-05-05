@@ -12,9 +12,9 @@ import { AUTH } from './common';
 import { openPageForEditing, selectNode } from './helpers';
 
 /*
- * The Content Copilot is feature-flagged via a YAML file the customer drops
- * into `{ui-conf}/config/copilot.yml`. The CI image obviously does not ship
- * one, so every test here intercepts the request and serves a tailored YAML
+ * The Content Copilot is feature-flagged via a JSON file the customer drops
+ * into `{ui-conf}/copilot.json`. The CI image obviously does not ship one,
+ * so every test here intercepts the request and serves a tailored payload
  * (or a 404 when the test wants the disabled state).
  *
  * Crucial: the route MUST be installed BEFORE `navigateToApp`, because the
@@ -22,46 +22,57 @@ import { openPageForEditing, selectNode } from './helpers';
  * That is why the navigation/login/select-node trio is wrapped in
  * `openEditorWithCopilot()` rather than living in a generic `beforeEach`
  * the way other suites (e.g. page-editing.spec.ts) handle it.
+ *
+ * We deliberately do NOT assert on translated UI strings — UI language is
+ * initially derived from the browser/system, so the actual text could be
+ * either German or English. Tests assert against stable hooks instead:
+ * `data-action`, `data-id`, structural classes.
  */
 
-const COPILOT_CONFIG_URL_PATTERN = /\/ui-conf\/config\/copilot\.yml/;
+const COPILOT_CONFIG_URL_PATTERN = /\/ui-conf\/copilot\.json/;
 
-const YAML_DISABLED = 'enabled: false\nactions: []\n';
-const YAML_ENABLED_NO_ACTIONS = 'enabled: true\nactions: []\n';
-const YAML_ENABLED_WITH_ACTIONS = `enabled: true
-actions:
-    - id: summarize
-      label: Zusammenfassen
-      icon: summarize
-      description: Eine kurze Zusammenfassung der Seite erstellen
-    - id: rewrite-tone
-      label: Tonalität anpassen
-      icon: edit_note
-`;
+const JSON_DISABLED = JSON.stringify({ enabled: false, actions: [] });
+const JSON_ENABLED_NO_ACTIONS = JSON.stringify({ enabled: true, actions: [] });
+const JSON_ENABLED_WITH_ACTIONS = JSON.stringify({
+    enabled: true,
+    actions: [
+        {
+            id: 'summarize',
+            labelI18n: { de: 'Zusammenfassen', en: 'Summarise' },
+            icon: 'lightbulb',
+            descriptionI18n: { de: 'Eine kurze Zusammenfassung', en: 'A short summary' },
+        },
+        {
+            id: 'rewrite-tone',
+            labelI18n: { de: 'Tonalität anpassen', en: 'Adjust tone' },
+            icon: 'edit_note',
+        },
+    ],
+});
 
-/** Stubs the customer copilot.yml endpoint for the lifetime of the page. */
-async function stubCopilotConfig(page: Page, yaml: string | null): Promise<void> {
+/** Stubs the customer copilot.json endpoint for the lifetime of the page. */
+async function stubCopilotConfig(page: Page, body: string | null): Promise<void> {
     await page.route(COPILOT_CONFIG_URL_PATTERN, (route) => {
-        if (yaml === null) {
+        if (body === null) {
             return route.fulfill({ status: 404, body: 'Not Found' });
         }
         return route.fulfill({
             status: 200,
-            contentType: 'text/yaml',
-            body: yaml,
+            contentType: 'application/json',
+            body,
         });
     });
 }
 
 /** Navigation + login + node selection — all the steps that other suites do
- *  in `beforeEach`, but invoked AFTER the YAML stub so the Copilot bootstrap
+ *  in `beforeEach`, but invoked AFTER the JSON stub so the Copilot bootstrap
  *  fetch sees the per-test response. */
 async function openEditorWithCopilot(
     page: Page,
     importer: EntityImporter,
-    yaml: string | null,
+    body: string | null,
 ): Promise<void> {
-    await stubCopilotConfig(page, yaml);
+    await stubCopilotConfig(page, body);
     await navigateToApp(page);
     await loginWithForm(page, AUTH.admin);
     await selectNode(page, importer.get(NODE_MINIMAL).id);
@@ -114,43 +125,43 @@ test.describe('Content Copilot', () => {
 
     test.describe('Toolbar button visibility', () => {
 
-        test('button stays hidden when copilot.yml is missing (404)', async ({ page }) => {
+        test('button stays hidden when copilot.json is missing (404)', async ({ page }) => {
             await openEditorWithCopilot(page, IMPORTER, null);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
-            // Wait for the toolbar to be present so we don't race against the
-            // initial render — toBeHidden / toHaveCount(0) are the defining
-            // assertions.
             await expect(page.locator('content-frame gtx-editor-toolbar')).toBeVisible();
             await expect(copilotButton(page)).toHaveCount(0);
         });
 
-        test('button stays hidden when copilot.yml has enabled: false', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_DISABLED);
+        test('button stays hidden when copilot.json has enabled: false', async ({ page }) => {
+            await openEditorWithCopilot(page, IMPORTER, JSON_DISABLED);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
             await expect(page.locator('content-frame gtx-editor-toolbar')).toBeVisible();
             await expect(copilotButton(page)).toHaveCount(0);
         });
 
-        test('button appears when copilot.yml has enabled: true and a page is in edit mode', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_ENABLED_NO_ACTIONS);
+        test('button appears when copilot.json has enabled: true and a page is in edit mode', async ({ page }) => {
+            await openEditorWithCopilot(page, IMPORTER, JSON_ENABLED_NO_ACTIONS);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
             await expect(copilotButton(page)).toBeVisible();
         });
 
         test('button stays hidden as long as no page is opened in edit mode', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_ENABLED_NO_ACTIONS);
+            await openEditorWithCopilot(page, IMPORTER, JSON_ENABLED_NO_ACTIONS);
             // Deliberately NOT opening a page — we should still be on the
             // folder list, where there is no editor toolbar at all.
             await expect(copilotButton(page)).toHaveCount(0);
         });
 
-        test('button stays hidden when an invalid copilot.yml is served', async ({ page }) => {
-            // Missing required `id` on the action — the parser falls back to
+        test('button stays hidden when invalid JSON is served', async ({ page }) => {
+            // Missing required `id` on the action — the loader falls back to
             // the disabled default, so the button must NOT appear.
-            const invalid = 'enabled: true\nactions:\n    - label: incomplete\n';
+            const invalid = JSON.stringify({
+                enabled: true,
+                actions: [{ labelI18n: { en: 'incomplete' } }],
+            });
             await openEditorWithCopilot(page, IMPORTER, invalid);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
@@ -161,14 +172,8 @@ test.describe('Content Copilot', () => {
 
     test.describe('Sidebar interaction', () => {
 
-        test.beforeEach(async ({ page }) => {
-            // Default scenario for every interaction test: feature enabled,
-            // no actions configured. Tests that need actions install their
-            // own stub before this navigation by overriding via the helper.
-        });
-
         test('clicking the toolbar button opens the sidebar', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_ENABLED_NO_ACTIONS);
+            await openEditorWithCopilot(page, IMPORTER, JSON_ENABLED_NO_ACTIONS);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
             // Closed by default — verifying the precondition guards us against
@@ -181,7 +186,7 @@ test.describe('Content Copilot', () => {
         });
 
         test('clicking the close icon collapses the sidebar again', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_ENABLED_NO_ACTIONS);
+            await openEditorWithCopilot(page, IMPORTER, JSON_ENABLED_NO_ACTIONS);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
             await copilotButton(page).click();
@@ -193,7 +198,7 @@ test.describe('Content Copilot', () => {
         });
 
         test('clicking the toolbar button a second time toggles the sidebar closed', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_ENABLED_NO_ACTIONS);
+            await openEditorWithCopilot(page, IMPORTER, JSON_ENABLED_NO_ACTIONS);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
             await copilotButton(page).click();
@@ -208,7 +213,7 @@ test.describe('Content Copilot', () => {
     test.describe('Sidebar contents', () => {
 
         test('shows the empty-state when actions: []', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_ENABLED_NO_ACTIONS);
+            await openEditorWithCopilot(page, IMPORTER, JSON_ENABLED_NO_ACTIONS);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
             await copilotButton(page).click();
@@ -217,8 +222,8 @@ test.describe('Content Copilot', () => {
             await expect(copilotSidebar(page).locator('.copilot-action-item')).toHaveCount(0);
         });
 
-        test('renders one card per configured action with id, label, icon, description', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_ENABLED_WITH_ACTIONS);
+        test('renders one card per configured action with correct id and label slot', async ({ page }) => {
+            await openEditorWithCopilot(page, IMPORTER, JSON_ENABLED_WITH_ACTIONS);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
             await copilotButton(page).click();
@@ -229,26 +234,35 @@ test.describe('Content Copilot', () => {
             const items = copilotSidebar(page).locator('.copilot-action-item');
             await expect(items).toHaveCount(2);
 
+            // Identify cards by their stable `data-id` and assert the
+            // label-container is rendered with non-empty content. We do
+            // NOT assert on the literal text — the actual UI language
+            // depends on the browser locale of the runner, which would
+            // make tests flaky in CI.
             const summarize = copilotActionItem(page, 'summarize');
             await expect(summarize).toBeVisible();
-            await expect(summarize.locator('.copilot-action-label')).toHaveText('Zusammenfassen');
-            await expect(summarize.locator('.copilot-action-description'))
-                .toHaveText('Eine kurze Zusammenfassung der Seite erstellen');
+            await expect(summarize.locator('.copilot-action-label')).not.toBeEmpty();
+            await expect(summarize.locator('.copilot-action-description')).not.toBeEmpty();
 
             const rewrite = copilotActionItem(page, 'rewrite-tone');
             await expect(rewrite).toBeVisible();
-            await expect(rewrite.locator('.copilot-action-label')).toHaveText('Tonalität anpassen');
+            await expect(rewrite.locator('.copilot-action-label')).not.toBeEmpty();
+            // No descriptionI18n on this one — the description span must
+            // therefore not be rendered at all.
+            await expect(rewrite.locator('.copilot-action-description')).toHaveCount(0);
         });
 
         test('chat input is rendered but disabled in this UI iteration', async ({ page }) => {
-            await openEditorWithCopilot(page, IMPORTER, YAML_ENABLED_NO_ACTIONS);
+            await openEditorWithCopilot(page, IMPORTER, JSON_ENABLED_NO_ACTIONS);
             await openPageForEditing(page, IMPORTER.get(PAGE_ONE) as CmsPage);
 
             await copilotButton(page).click();
 
-            const textarea = copilotSidebar(page).locator('.copilot-chat-textarea');
+            const textarea = copilotSidebar(page).locator('gtx-textarea.copilot-chat-textarea');
             await expect(textarea).toBeVisible();
-            await expect(textarea).toBeDisabled();
+            // gtx-textarea wraps a native <textarea> — the `disabled` attribute
+            // ends up on that inner element, hence the descendant lookup.
+            await expect(textarea.locator('textarea')).toBeDisabled();
         });
     });
 });

@@ -1,3 +1,3 @@
 export { CopilotModule } from './copilot.module';
-export { CopilotConfigService, CopilotStateService } from './providers';
-export type { CopilotAction, CopilotConfig } from './copilot.types';
+export { CopilotConfigService } from './providers';
+export type { CopilotAction, CopilotConfig, I18nString } from './copilot.types';

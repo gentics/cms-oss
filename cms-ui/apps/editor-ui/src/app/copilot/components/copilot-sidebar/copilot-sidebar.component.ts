@@ -6,8 +6,9 @@ import {
     OnInit,
 } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { ApplicationStateService, SetCopilotOpenAction } from '../../../state';
 import { CopilotAction } from '../../copilot.types';
-import { CopilotConfigService, CopilotStateService } from '../../providers';
+import { CopilotConfigService } from '../../providers';
 
 /**
  * Right-hand drawer that hosts the Content Copilot interface.
@@ -15,7 +16,7 @@ import { CopilotConfigService, CopilotStateService } from '../../providers';
  * For this UI iteration the body is intentionally empty — only the
  * scaffolding (header, action container, chat input) is present so the
  * full visual integration can be reviewed before any action wiring is
- * added. Once a customer drops a `copilot.yml` with a non-empty
+ * added. Once a customer drops a `copilot.json` with a non-empty
  * `actions:` list, those entries will appear inside `.copilot-actions`
  * automatically; nothing in this component changes.
  *
@@ -46,12 +47,12 @@ export class CopilotSidebarComponent implements OnInit, OnDestroy {
 
     constructor(
         private changeDetector: ChangeDetectorRef,
-        private copilotState: CopilotStateService,
+        private appState: ApplicationStateService,
         private copilotConfig: CopilotConfigService,
     ) {}
 
     ngOnInit(): void {
-        this.subscriptions.push(this.copilotState.open$.subscribe((isOpen) => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.copilotOpen).subscribe((isOpen) => {
             this.open = isOpen;
             this.changeDetector.markForCheck();
         }));
@@ -67,7 +68,7 @@ export class CopilotSidebarComponent implements OnInit, OnDestroy {
     }
 
     public close(): void {
-        this.copilotState.close();
+        this.appState.dispatch(new SetCopilotOpenAction(false));
     }
 
     public trackById = (_: number, action: CopilotAction): string => action.id;

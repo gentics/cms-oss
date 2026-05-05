@@ -14,7 +14,7 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { NEVER, Observable, of } from 'rxjs';
-import { CopilotConfigService, CopilotStateService } from '../../../copilot';
+import { CopilotConfigService } from '../../../copilot';
 import { DEFAULT_COPILOT_CONFIG } from '../../../copilot/copilot.types';
 import { Api, GcmsApi } from '../../../core/providers/api';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
@@ -61,7 +61,6 @@ describe('EditorToolbarComponent', () => {
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: CopilotConfigService, useClass: MockCopilotConfigService },
-                CopilotStateService,
                 MockCanSaveService,
                 ResourceUrlBuilder,
             ],

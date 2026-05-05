@@ -20,8 +20,8 @@ describe('CopilotConfigService', () => {
         httpMock.verify();
     });
 
-    function expectAndFlushYamlRequest(body: string, status = 200, statusText = 'OK'): void {
-        const req = httpMock.expectOne((r) => r.url.startsWith(`${CUSTOMER_CONFIG_PATH}config/copilot.yml`));
+    function expectAndFlushJsonRequest(body: string, status = 200, statusText = 'OK'): void {
+        const req = httpMock.expectOne((r) => r.url.startsWith(`${CUSTOMER_CONFIG_PATH}copilot.json`));
         expect(req.request.method).toBe('GET');
         if (status >= 200 && status < 300) {
             req.flush(body);
@@ -38,10 +38,10 @@ describe('CopilotConfigService', () => {
         });
     });
 
-    it('loads and parses the YAML file', (done) => {
+    it('loads and parses the JSON file', (done) => {
         service.load();
 
-        expectAndFlushYamlRequest('enabled: true\nactions: []\n');
+        expectAndFlushJsonRequest(JSON.stringify({ enabled: true, actions: [] }));
 
         service.config$.pipe(take(1)).subscribe((cfg) => {
             expect(cfg.enabled).toBe(true);
@@ -50,10 +50,38 @@ describe('CopilotConfigService', () => {
         });
     });
 
-    it('keeps the feature disabled on a 404 (no copilot.yml present)', (done) => {
+    it('parses an action with labelI18n and descriptionI18n', (done) => {
         service.load();
 
-        expectAndFlushYamlRequest('', 404, 'Not Found');
+        const payload = {
+            enabled: true,
+            actions: [
+                {
+                    id: 'summarize',
+                    labelI18n: { de: 'Zusammenfassen', en: 'Summarise' },
+                    icon: 'lightbulb',
+                    descriptionI18n: { de: 'Kurz', en: 'Short' },
+                },
+            ],
+        };
+        expectAndFlushJsonRequest(JSON.stringify(payload));
+
+        service.config$.pipe(take(1)).subscribe((cfg) => {
+            expect(cfg.actions.length).toBe(1);
+            expect(cfg.actions[0]).toEqual({
+                id: 'summarize',
+                labelI18n: { de: 'Zusammenfassen', en: 'Summarise' },
+                icon: 'lightbulb',
+                descriptionI18n: { de: 'Kurz', en: 'Short' },
+            });
+            done();
+        });
+    });
+
+    it('keeps the feature disabled on a 404 (no copilot.json present)', (done) => {
+        service.load();
+
+        expectAndFlushJsonRequest('', 404, 'Not Found');
 
         service.config$.pipe(take(1)).subscribe((cfg) => {
             expect(cfg.enabled).toBe(false);
@@ -62,11 +90,40 @@ describe('CopilotConfigService', () => {
         });
     });
 
-    it('keeps the feature disabled when the YAML is invalid', (done) => {
+    it('keeps the feature disabled when the JSON is malformed', (done) => {
         service.load();
 
-        // Missing required `id` — parser falls back to default.
-        expectAndFlushYamlRequest('enabled: true\nactions:\n    - label: incomplete\n');
+        expectAndFlushJsonRequest('{ not valid json');
+
+        service.config$.pipe(take(1)).subscribe((cfg) => {
+            expect(cfg.enabled).toBe(false);
+            done();
+        });
+    });
+
+    it('keeps the feature disabled when an action is missing required id', (done) => {
+        service.load();
+
+        const payload = {
+            enabled: true,
+            actions: [{ labelI18n: { en: 'No id' } }],
+        };
+        expectAndFlushJsonRequest(JSON.stringify(payload));
+
+        service.config$.pipe(take(1)).subscribe((cfg) => {
+            expect(cfg.enabled).toBe(false);
+            done();
+        });
+    });
+
+    it('keeps the feature disabled when labelI18n is missing or empty', (done) => {
+        service.load();
+
+        const payload = {
+            enabled: true,
+            actions: [{ id: 'summarize', labelI18n: {} }],
+        };
+        expectAndFlushJsonRequest(JSON.stringify(payload));
 
         service.config$.pipe(take(1)).subscribe((cfg) => {
             expect(cfg.enabled).toBe(false);
@@ -78,7 +135,7 @@ describe('CopilotConfigService', () => {
         expect(service.config.enabled).toBe(false);
 
         service.load();
-        expectAndFlushYamlRequest('enabled: true\nactions: []\n');
+        expectAndFlushJsonRequest(JSON.stringify({ enabled: true, actions: [] }));
 
         expect(service.config.enabled).toBe(true);
     });

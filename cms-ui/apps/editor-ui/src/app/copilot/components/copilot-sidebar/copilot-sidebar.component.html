@@ -6,7 +6,7 @@
 >
     <header class="copilot-sidebar-header">
         <div class="copilot-sidebar-title">
-            <icon class="copilot-sidebar-title-icon">auto_awesome</icon>
+            <icon class="copilot-sidebar-title-icon">lightbulb</icon>
             <span>{{ 'copilot.sidebar_title' | gtxI18n }}</span>
         </div>
         <gtx-button
@@ -25,7 +25,7 @@
         <div class="copilot-actions" data-testid="copilot-actions">
             @if (actions.length === 0) {
                 <div class="copilot-empty-state">
-                    <icon class="copilot-empty-state-icon">auto_awesome</icon>
+                    <icon class="copilot-empty-state-icon">lightbulb</icon>
                     <p class="copilot-empty-state-message">
                         {{ 'copilot.empty_state_message' | gtxI18n }}
                     </p>
@@ -41,9 +41,9 @@
                                 <icon class="copilot-action-icon">{{ action.icon }}</icon>
                             }
                             <div class="copilot-action-text">
-                                <span class="copilot-action-label">{{ action.label }}</span>
-                                @if (action.description) {
-                                    <span class="copilot-action-description">{{ action.description }}</span>
+                                <span class="copilot-action-label">{{ action.labelI18n | gtxI18nObject }}</span>
+                                @if (action.descriptionI18n) {
+                                    <span class="copilot-action-description">{{ action.descriptionI18n | gtxI18nObject }}</span>
                                 }
                             </div>
                         </li>
@@ -55,13 +55,11 @@
 
     <footer class="copilot-sidebar-footer">
         <div class="copilot-chat-input">
-            <textarea
+            <gtx-textarea
                 class="copilot-chat-textarea"
-                rows="2"
-                disabled
-                [attr.aria-label]="'copilot.input_placeholder' | gtxI18n"
-                [placeholder]="'copilot.input_placeholder' | gtxI18n"
-            ></textarea>
+                [label]="'copilot.input_placeholder' | gtxI18n"
+                [disabled]="true"
+            ></gtx-textarea>
             <gtx-button
                 class="copilot-chat-send"
                 icon

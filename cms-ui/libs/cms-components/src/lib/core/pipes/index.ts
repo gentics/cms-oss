@@ -3,6 +3,7 @@ export * from './filter/filter.pipe';
 export * from './i18n-date/i18n-date.pipe';
 export * from './i18n-duration/i18n-duration.pipe';
 export * from './i18n-number/i18n-number.pipe';
+export * from './i18n-object/i18n-object.pipe';
 export * from './i18n-relative-date/i18n-relative-date.pipe';
 export * from './i18n/i18n.pipe';
 export * from './safe/safe.pipe';

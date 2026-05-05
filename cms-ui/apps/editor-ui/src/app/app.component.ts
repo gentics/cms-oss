@@ -50,6 +50,7 @@ import { NavigationService } from './core/providers/navigation/navigation.servic
 import { PermissionService } from './core/providers/permissions/permission.service';
 import { UserSettingsService } from './core/providers/user-settings/user-settings.service';
 import { UsersnapService } from './core/providers/usersnap/usersnap.service';
+import { CopilotConfigService } from './copilot';
 import { EmbeddedToolsService } from './embedded-tools/providers/embedded-tools/embedded-tools.service';
 import { ChipSearchBarConfigService } from './shared/providers/chip-search-bar-config/chip-search-bar-config.service';
 import { UIOverridesService } from './shared/providers/ui-overrides/ui-overrides.service';
@@ -148,6 +149,7 @@ export class AppComponent implements OnInit {
         private router: Router,
         private uiActions: UIActionsService,
         private uiOverrides: UIOverridesService,
+        private copilotConfig: CopilotConfigService,
         private userSettings: UserSettingsService,
         private contentRepositoryActions: ContentRepositoryActionsService,
         private usersnapService: UsersnapService,
@@ -171,6 +173,12 @@ export class AppComponent implements OnInit {
 
         // Load customer-specific UI overrides
         this.uiOverrides.loadCustomerConfiguration();
+
+        // Load Content Copilot configuration. Same lifecycle as the
+        // UI-overrides above — must run at app bootstrap (not from a
+        // lazy-loaded module) so the toolbar button is correctly
+        // gated by the customer's `copilot.yml` from the first paint.
+        this.copilotConfig.load();
 
         this.maintenanceMode.refreshPeriodically(30000);
         this.maintenanceMode.refreshOnLogout();

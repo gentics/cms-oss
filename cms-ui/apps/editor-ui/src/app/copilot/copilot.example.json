@@ -1,0 +1,17 @@
+{
+    "//": "Drop this file at `{ui-conf}/copilot.json` (the same ui-conf folder that already serves `ui-overrides.json`). When the file is missing or `enabled` is false, the toolbar button stays hidden and the sidebar never mounts. Actions are intentionally empty in this initial UI scaffolding — populate the array to make the entries appear in the sidebar; no UI rebuild required.",
+
+    "enabled": true,
+
+    "actions": [
+
+        {
+            "//": "Example action — uncomment to render a card in the sidebar.",
+            "//id": "summarize",
+            "//labelI18n": { "de": "Zusammenfassen", "en": "Summarise" },
+            "//icon": "lightbulb",
+            "//descriptionI18n": { "de": "Kurze Zusammenfassung der Seite", "en": "Brief summary of the page" }
+        }
+
+    ]
+}

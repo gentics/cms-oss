@@ -1,0 +1,177 @@
+@import "variables";
+
+// Width of the slide-in drawer. Expressed in `rem` so it scales with
+// the user's root font size; the original prototype value of 420px
+// translates to 26.25rem at the default 16px base. `max-width: 90vw`
+// guards against narrow viewports.
+$copilot-sidebar-width: 26.25rem;
+
+:host {
+    display: contents;
+}
+
+.copilot-sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: $copilot-sidebar-width;
+    max-width: 90vw;
+    z-index: 50;
+
+    display: flex;
+    flex-direction: column;
+    background: $gcms-color-page-background;
+    border-left: 1px solid $gtx-color-light-gray;
+    @include gcmsDrawerBoxShadow;
+
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    pointer-events: none;
+
+    &.is-open {
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+}
+
+.copilot-sidebar-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid $gtx-color-light-gray;
+    background: $gcms-color-page-background;
+}
+
+.copilot-sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: $gtx-color-very-dark-gray;
+    font-size: 0.95rem;
+}
+
+.copilot-sidebar-title-icon {
+    color: $gtx-color-primary;
+}
+
+.copilot-sidebar-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1rem;
+    background: $gcms-color-editor-background;
+}
+
+.copilot-actions {
+    min-height: 100%;
+}
+
+// Empty state shown until a customer drops actions into copilot.yml
+.copilot-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: $gtx-color-mid-gray;
+    gap: 0.75rem;
+}
+
+.copilot-empty-state-icon {
+    font-size: 2.25rem;
+    opacity: 0.45;
+    color: $gtx-color-primary;
+}
+
+.copilot-empty-state-message {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    max-width: 28ch;
+    margin: 0;
+}
+
+.copilot-action-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.copilot-action-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    background: $gcms-color-page-background;
+    border: 1px solid $gtx-color-light-gray;
+    border-radius: 4px;
+    transition: border-color 0.15s, background-color 0.15s;
+
+    &:hover {
+        border-color: $gtx-color-primary;
+        background: transparentize($gtx-color-primary, 0.96);
+    }
+}
+
+.copilot-action-icon {
+    color: $gtx-color-primary;
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+
+.copilot-action-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.copilot-action-label {
+    font-weight: 600;
+    color: $gtx-color-very-dark-gray;
+    font-size: 0.9rem;
+}
+
+.copilot-action-description {
+    color: $gtx-color-mid-gray;
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+.copilot-sidebar-footer {
+    flex: 0 0 auto;
+    border-top: 1px solid $gtx-color-light-gray;
+    background: $gcms-color-page-background;
+    padding: 0.75rem 1rem 0.875rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.copilot-chat-input {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+// `gtx-textarea` brings its own field/label styling — we only constrain
+// the flex behaviour here so it shares the row with the send button.
+.copilot-chat-textarea {
+    flex: 1 1 auto;
+}
+
+.copilot-chat-send {
+    flex: 0 0 auto;
+}
+
+.copilot-chat-hint {
+    font-size: 0.75rem;
+    color: $gtx-color-mid-gray;
+    text-align: right;
+    line-height: 1.3;
+}

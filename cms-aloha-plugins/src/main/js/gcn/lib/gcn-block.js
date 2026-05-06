@@ -462,12 +462,21 @@ define([
 		 * @param {String} name Name of the tag
 		 */
 		confirmedDestroy: function (destroyFn, name) {
+			if (this._dialogOpen) {
+				return;
+			}
+			this._dialogOpen = true;
+			var that = this;
+
 			Dialog.confirm({
 				title: 'Gentics CMS',
 				text: i18n.t('delete.confirm')
 					.replace('$1', typeof name !== 'string' || name.trim().length < 1 ? '' : ' "' + name + '"'),
 				yes: function () {
 					destroyFn();
+				},
+				close: function() {
+					that._dialogOpen = false;
 				}
 			});
 		},

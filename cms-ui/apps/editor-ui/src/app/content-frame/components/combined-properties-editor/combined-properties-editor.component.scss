@@ -40,6 +40,9 @@
 
     .property-tab {
         display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
 
         .property-tab-icon {
             margin: auto 0;

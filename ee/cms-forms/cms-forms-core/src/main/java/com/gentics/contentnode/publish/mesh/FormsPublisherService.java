@@ -4,7 +4,9 @@ import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.ifNotFound;
 import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,6 +28,7 @@ import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshProject;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 
 import io.reactivex.Completable;
@@ -86,8 +89,11 @@ public class FormsPublisherService implements MeshPublisherService {
 				}
 			}
 
+			FormGenTranslationsModel translations = getFormGenTranslations(activeFormTypes);
+
 			for (Map.Entry<String, ObjectNode> entry : configurationPerPlugin.entrySet()) {
-				checkPluginActivation(publisher, currentProjectName, entry.getKey(), entry.getValue(), repair, success);
+				checkPluginActivation(publisher, currentProjectName, entry.getKey(), entry.getValue(), translations,
+						repair, success);
 			}
 		}
 	}
@@ -161,17 +167,19 @@ public class FormsPublisherService implements MeshPublisherService {
 	 * @param currentProjectName current project name
 	 * @param pluginName plugin name
 	 * @param configuration configuration to be written to the plugin
+	 * @param translations translations to be written to the plugin
 	 * @param repair true to repair
 	 * @param success success collector
 	 * @throws NodeException
 	 */
 	protected void checkPluginActivation(MeshPublisher publisher, String currentProjectName, String pluginName,
-			JsonNode configuration, boolean repair, AtomicBoolean success) throws NodeException {
+			JsonNode configuration, FormGenTranslationsModel translations, boolean repair, AtomicBoolean success) throws NodeException {
 		publisher.info("Checking %s plugin for project %s", pluginName, currentProjectName);
 
 		String pluginUrl = "/%s/plugins/%s".formatted(encodeSegment(currentProjectName), encodeSegment(pluginName));
 		String activationUrl = "%s/active".formatted(pluginUrl);
 		String formtypeConfigUrl = "%s/formtypeconfigs".formatted(pluginUrl);
+		String translationsUrl = "%s/translations".formatted(pluginUrl);
 
 		FormsPluginStatusResponse formsStatus = publisher.client.get(activationUrl, FormsPluginStatusResponse.class)
 				.toSingle().onErrorReturn(t -> {
@@ -186,8 +194,9 @@ public class FormsPublisherService implements MeshPublisherService {
 		if (formsStatus.getActive() == Boolean.TRUE) {
 			publisher.info("%s plugin is active for project %s", pluginName, currentProjectName);
 
-			publisher.info("Writing form type configurations to %s plugin for project %s", pluginName, currentProjectName);
+			publisher.info("Writing form type configurations and translations to %s plugin for project %s", pluginName, currentProjectName);
 			publisher.client.post(formtypeConfigUrl, new JsonObject(configuration.toString())).blockingAwait();
+			publisher.client.post(translationsUrl, translations, JsonObject.class).blockingAwait();
 		} else {
 			if (repair) {
 				publisher.info("Activating %s plugin for project %s", pluginName, currentProjectName);
@@ -195,9 +204,10 @@ public class FormsPublisherService implements MeshPublisherService {
 				if (formsStatus.getActive() == Boolean.TRUE) {
 					publisher.info("Activated %s plugin for project %s", pluginName, currentProjectName);
 
-					publisher.info("Writing form type configurations to %s plugin for project %s", pluginName, currentProjectName);
+					publisher.info("Writing form type configurations and translations to %s plugin for project %s", pluginName, currentProjectName);
 					publisher.client.post(formtypeConfigUrl, new JsonObject(configuration.toString()))
 							.blockingAwait();
+					publisher.client.post(translationsUrl, translations, JsonObject.class).blockingAwait();
 				} else {
 					publisher.error("Could not activate %s plugin for project %s", pluginName, currentProjectName);
 					success.set(false);
@@ -231,5 +241,42 @@ public class FormsPublisherService implements MeshPublisherService {
 				() -> new NodeException("Could not find form type configuration for form type %s".formatted(formType)));
 	}
 
+	/**
+	 * Get the formGen translations model for the given set of active form types
+	 * @param activeFormTypes set of active form types
+	 * @return formGen translations model
+	 */
+	protected FormGenTranslationsModel getFormGenTranslations(Set<String> activeFormTypes) {
+		FormGenTranslationsModel model = new FormGenTranslationsModel();
+		model._default = transform(FormConfigProvider.getFormGenTranslations());
+		model.types = new LinkedHashMap<>();
 
+		for (String formType : activeFormTypes) {
+			model.types.put(formType, transform(FormConfigProvider.getFormGenTranslations(formType)));
+		}
+
+		return model;
+	}
+
+	/**
+	 * Transform the formGen translations from the config into the model sent to the plugin
+	 * @param formGenTranslations configuration
+	 * @return model
+	 */
+	protected TranslationsModel transform(FormGenTranslations formGenTranslations) {
+		TranslationsModel transformed = new TranslationsModel();
+
+		for (Entry<String, Map<String, String>> entry : formGenTranslations.entrySet()) {
+			String key = entry.getKey();
+
+			for (Entry<String, String> entry2 : entry.getValue().entrySet()) {
+				String language = entry2.getKey();
+				String translation = entry2.getValue();
+
+				transformed.computeIfAbsent(language, k -> new LinkedHashMap<>()).put(key, translation);
+			}
+		}
+
+		return transformed;
+	}
 }

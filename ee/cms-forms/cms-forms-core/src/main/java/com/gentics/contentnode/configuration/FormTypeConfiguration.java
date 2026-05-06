@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
 
 /**
@@ -20,6 +21,12 @@ public class FormTypeConfiguration extends FormTypeConfigurationModel {
 	 */
 	@JsonProperty
 	public ObjectNode pluginConfiguration;
+
+	/**
+	 * Form Type Configuration specific Translations for FormGen
+	 */
+	@JsonProperty
+	public FormGenTranslations formGenTranslations;
 
 	/**
 	 * Creator

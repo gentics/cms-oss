@@ -3,6 +3,7 @@ package com.gentics.contentnode.forms;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +40,7 @@ import com.gentics.contentnode.rest.model.formtype.BlockConfig;
 import com.gentics.contentnode.rest.model.formtype.BooleanSetting;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
 import com.gentics.contentnode.rest.model.formtype.ElementConfig;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.rest.model.formtype.NumberSetting;
 import com.gentics.contentnode.rest.model.formtype.OptionsSetting;
 import com.gentics.contentnode.rest.model.formtype.PublishAsType;
@@ -59,6 +61,11 @@ import groovy.lang.Script;
  * Migration tool for form type configurations
  */
 public class Migration {
+	/**
+	 * Name of the file containing the formgen translations, that are added to the migrated form types
+	 */
+	public final static String FORMGEN_TRANSLATIONS_FILENAME = "formgen_translations.yml";
+
 	/**
 	 * Known types
 	 */
@@ -203,6 +210,11 @@ public class Migration {
 	protected YAMLMapper yamlMapper = new YAMLMapper().disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID);
 
 	/**
+	 * FormGen translations
+	 */
+	protected FormGenTranslations formGenTranslations;
+
+	/**
 	 * Main method
 	 * @param args arguments
 	 * @throws IOException
@@ -327,6 +339,11 @@ public class Migration {
 		String uiConfPath = getUiConfPath(line);
 		FormTypeConfigurationMap configMap = new FormTypeConfigurationMap();
 
+		// read formgen translations
+		try (InputStream in = getClass().getResourceAsStream(FORMGEN_TRANSLATIONS_FILENAME)) {
+			formGenTranslations = yamlMapper.readValue(in, FormGenTranslations.class);
+		}
+
 		for (String formType : FORM_TYPES) {
 			String fileName = CONFIG_FILENAMES.get(formType);
 			File configFile = new File(uiConfPath, fileName);
@@ -336,7 +353,7 @@ public class Migration {
 		}
 
 		try (FileOutputStream fileOut = new FileOutputStream(out)) {
-			yamlMapper.writeValue(fileOut, Map.of("forms", Map.of("types", configMap)));
+			yamlMapper.writeValue(fileOut, Map.of("forms", Map.of("types", configMap, "formGenTranslations", formGenTranslations)));
 		}
 	}
 

@@ -23,6 +23,7 @@ import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.model.formtype.BlockConfig;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
@@ -41,9 +42,19 @@ public final class FormConfigProvider implements ConfigurationService {
 	public static final String TYPES_CONFIG_PATH = "forms.types";
 
 	/**
+	 * Configuration path to the type configurations
+	 */
+	public static final String TRANSLATIONS_CONFIG_PATH = "forms.formGenTranslations";
+
+	/**
 	 * Form type configuration map
 	 */
 	private static FormTypeConfigurationMap configurationMap;
+
+	/**
+	 * Default formGen translations
+	 */
+	private static FormGenTranslations formGenTranslations = new FormGenTranslations();
 
 	/**
 	 * Transform the given entry of {@link FormTypeConfigurationMap} to an instance of {@link FormTypeConfigurationModel}
@@ -101,6 +112,25 @@ public final class FormConfigProvider implements ConfigurationService {
 		}
 	}
 
+	/**
+	 * Get the default formGet translations
+	 * @return translations
+	 */
+	public final static FormGenTranslations getFormGenTranslations() {
+		return formGenTranslations;
+	}
+
+	/**
+	 * Get the formGen translations for the given form type
+	 * @param formType form type
+	 * @return translations
+	 */
+	public final static FormGenTranslations getFormGenTranslations(String formType) {
+		FormGenTranslations custom = Optional.ofNullable(configurationMap).map(m -> m.get(formType))
+				.map(c -> c.formGenTranslations).orElse(null);
+		return formGenTranslations.overwrite(custom);
+	}
+
 	@Override
 	public List<Message> init(NodePreferences preferences) {
 		List<Message> messages = new ArrayList<>();
@@ -127,6 +157,17 @@ public final class FormConfigProvider implements ConfigurationService {
 			messages.add(new Message(Type.CRITICAL,
 					"Error while reading form type configuration: %s".formatted(e.getLocalizedMessage())));
 			configurationMap = null;
+		}
+
+		try {
+			formGenTranslations = mapper.convertValue(
+					NodeConfigRuntimeConfiguration.getPreferences().getPropertyObject(TRANSLATIONS_CONFIG_PATH),
+					FormGenTranslations.class);
+		} catch (IllegalArgumentException e) {
+			logger.error("Error while reading form gen translations", e.getCause());
+			messages.add(new Message(Type.CRITICAL,
+					"Error while reading form gen translations: %s".formatted(e.getLocalizedMessage())));
+			formGenTranslations = new FormGenTranslations();
 		}
 
 		return messages;

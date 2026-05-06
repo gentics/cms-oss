@@ -56,6 +56,11 @@ public class FormDataUtils {
 	public final static String TYPE = "type";
 
 	/**
+	 * Name of the submitOnce property
+	 */
+	public final static String SUBMIT_ONCE = "submitOnce";
+
+	/**
 	 * Handle elements found in the schema or ui-schema of the given data by calling the given handler
 	 * @param typeConfig type config
 	 * @param data form data

@@ -163,7 +163,6 @@
 								<artifactItem>
 									<groupId>com.gentics.mesh.plugin.commercial</groupId>
 									<artifactId>mesh-forms-plugin</artifactId>
-									<version>3.1.11-SNAPSHOT</version>
 									<type>jar</type>
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.build.directory}/plugins</outputDirectory>

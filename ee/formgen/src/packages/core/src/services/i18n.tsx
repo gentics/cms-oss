@@ -10,12 +10,16 @@ import { mergedDe, mergedEn } from './devTranslations';
 import { Platform } from 'react-native';
 /**
  * Initialisiert i18n.
+ * @param formId - formId of current form
+ * @param pluginName - name of plugin to use correct endpoint
  * @param translationUrl Wenn vorhanden => wird im Backend-LoadPath verwendet
  * @param isDev Wenn true => Lokale Datei statt http-Backend
  * @param culture Der zu verwendende Sprachcode (z.B. 'en' oder 'de')
  */
 export async function initI18n(
   meshEndpoint: string,
+  formId: string,
+  pluginName: string,
   translationUrl?: string,
   isDev = false,
   culture: string = 'de', // Standard: 'de'
@@ -51,7 +55,7 @@ export async function initI18n(
         backend: {
           loadPath: translationUrl
             ? `${translationUrl}/{{lng}}/form.json`
-            : `${meshEndpoint}/api/andp/translate/{{lng}}`,
+            : `${meshEndpoint}/api/${pluginName}/translations/${formId}/{{lng}}`,
         },
         interpolation: { escapeValue: false },
         react: { useSuspense: false },

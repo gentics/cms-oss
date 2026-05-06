@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -5039,12 +5040,13 @@ public class MeshPublisher implements AutoCloseable {
 
 				// if feature forms is activated, check whether plugin is active for node
 				if (node != null && NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS, node)) {
+					String encodedProjectSegment = encodeSegment(currentProjectName);
 					List<String> expectedLanguages = node.getLanguages().stream().map(ContentLanguage::getCode).collect(Collectors.toList());
-					String languagesUrl = String.format("/%s/plugins/forms/languages", encodeSegment(currentProjectName));
+					String languagesUrl = String.format("/%s/plugins/forms/languages", encodedProjectSegment);
 
 					info("Checking forms plugin for project %s", currentProjectName);
 					FormsPluginStatusResponse formsStatus = client
-							.get(String.format("/%s/plugins/forms/active", encodeSegment(currentProjectName)),
+							.get(String.format("/%s/plugins/forms/active", encodedProjectSegment),
 									FormsPluginStatusResponse.class)
 							.toSingle().onErrorReturn(t -> {
 								return ifNotFound(t, () -> {
@@ -5054,6 +5056,23 @@ public class MeshPublisher implements AutoCloseable {
 									return response;
 								});
 							}).blockingGet();
+
+					Boolean noIndex = Boolean.valueOf(cr.isNoFormsIndex());
+					Runnable setNoIndex = () -> {
+						MeshRequest<FormsPluginStatusResponse> update = cr.isNoFormsIndex()
+								? client.post(String.format("/%s/plugins/forms/noindex", encodedProjectSegment), FormsPluginStatusResponse.class)
+								: client.delete(String.format("/%s/plugins/forms/noindex", encodedProjectSegment), FormsPluginStatusResponse.class);
+						update.toSingle().doOnSuccess(response -> {
+							info("noIndex setting %b has been successfully updated for %s", cr.isNoFormsIndex(), encodedProjectSegment);
+						}).onErrorReturn(t -> {
+							return ifNotFound(t, () -> {
+								error("Could not update noIndex forms plugin status. Maybe plugin is not deployed or incompatible.");
+								FormsPluginStatusResponse response = new FormsPluginStatusResponse();
+								response.setNoIndex(noIndex);
+								return response;
+							});
+						}).blockingGet();
+					};
 					if (formsStatus.getActive() == Boolean.TRUE) {
 						info("Forms plugin is active for project %s", currentProjectName);
 
@@ -5070,11 +5089,20 @@ public class MeshPublisher implements AutoCloseable {
 								success.set(false);
 							}
 						}
+						if (!Objects.equals(noIndex, formsStatus.getNoIndex())) {
+							if (repair) {
+								setNoIndex.run();
+							} else {
+								error("Forms plugin noIndex status for project %s should be %s, but is %s",
+										currentProjectName, noIndex.toString(), formsStatus.getNoIndex());
+								success.set(false);
+							}
+						}
 					} else {
 						if (repair) {
 							info("Activating forms plugin for project %s", currentProjectName);
 							formsStatus = client
-									.put(String.format("/%s/plugins/forms/active", encodeSegment(currentProjectName)),
+									.put(String.format("/%s/plugins/forms/active", encodedProjectSegment),
 											FormsPluginStatusResponse.class)
 									.blockingGet();
 							if (formsStatus.getActive() == Boolean.TRUE) {
@@ -5083,6 +5111,7 @@ public class MeshPublisher implements AutoCloseable {
 								info("Setting forms plugin languages to %s for project %s", expectedLanguages, currentProjectName);
 								FormsPluginLanguages formsPluginLanguages = new FormsPluginLanguages().setLanguages(expectedLanguages);
 								client.put(languagesUrl, formsPluginLanguages, FormsPluginLanguages.class).blockingAwait();
+								setNoIndex.run();
 							} else {
 								error("Could not activate forms plugin for project %s", currentProjectName);
 								success.set(false);

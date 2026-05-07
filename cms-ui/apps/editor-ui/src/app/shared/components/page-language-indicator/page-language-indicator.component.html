@@ -6,7 +6,31 @@
     [class.show-deleted]="displayDeleted"
 >
     @for (variant of variants; track variant.id) {
+        <ng-template #variantState>
+            <gtx-language-state
+                data-context-trigger
+                class="selectable"
+                [language]="variant"
+                [activeLanguage]="activeLanguage"
+                [state]="variant"
+                [mode]="uiMode"
+                [showIndicators]="displayStatusInfo"
+                [showDeleted]="displayDeleted"
+                (click)="onIconClicked(variant)"
+            ></gtx-language-state>
+        </ng-template>
+
         @if ((permissions | gtxMapPermissions:variant.code)?.page?.view) {
+            @if (mode == ItemListRowMode.SELECT) {
+                <div class="language-container" data-action="page-language" [attr.data-id]="variant?.code">
+                    <ng-container [ngTemplateOutlet]="variantState" />
+                </div>
+            } @else {
+                <ng-container [ngTemplateOutlet]="variantwithOptions" />
+            }
+        }
+
+        <ng-template #variantwithOptions>
             <gtx-dropdown-list
                 width="contents"
                 data-action="page-language"
@@ -15,17 +39,7 @@
                 [disabled]="mode === ItemListRowMode.SELECT"
             >
                 <gtx-dropdown-trigger @animNgForChild>
-                    <gtx-language-state
-                        data-context-trigger
-                        class="selectable"
-                        [language]="variant"
-                        [activeLanguage]="activeLanguage"
-                        [state]="variant"
-                        [mode]="uiMode"
-                        [showIndicators]="displayStatusInfo"
-                        [showDeleted]="displayDeleted"
-                        (click)="onIconClicked(variant)"
-                    ></gtx-language-state>
+                    <ng-container [ngTemplateOutlet]="variantState" />
                 </gtx-dropdown-trigger>
 
                 <gtx-dropdown-content data-context-id="page-language" class="page-language-context">
@@ -42,7 +56,7 @@
                         @if (variant.available && !variant.deleted) {
                             <gtx-dropdown-item
                                 data-action="preview"
-                                (click)="languageClicked(language)"
+                                (click)="languageClicked(variant)"
                             >
                                 {{ 'editor.preview_in_language_label' | gtxI18n:{ language: variant?.name } }}
                             </gtx-dropdown-item>
@@ -102,7 +116,7 @@
                     }
                 </gtx-dropdown-content>
             </gtx-dropdown-list>
-        }
+        </ng-template>
     }
 
     @if (hasUntranslated) {

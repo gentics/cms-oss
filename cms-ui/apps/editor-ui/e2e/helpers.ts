@@ -12,6 +12,7 @@ import {
     openContext,
     reroute,
     selectDateInPicker,
+    wait
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -311,7 +312,14 @@ export async function createInternalLink(
         await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
         const repoBrowser = page.locator('repository-browser');
         await repoHandler(repoBrowser);
+
+        // Wait a bit, as the handler could have closed the repo-browser on it's own
+        await wait(50);
+
+        // If the handler didn't confirm/close the modal, we do it now
+        if (await repoBrowser.isVisible()) {
         await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+        }
 
         // Fill out rest of the form
         await formHandler(form);
@@ -517,6 +525,16 @@ export async function expectItemPublished(item: Locator): Promise<void> {
 
 export async function expectItemLanguageCode(item: Locator, languageCode: string): Promise<void> {
     await expect(item.locator('>gtx-language-state .language-code')).toHaveText(languageCode);
+}
+
+export function pageListRowLanguage(item: Locator, lang: string): Locator {
+    return item.locator(`page-language-indicator [data-action="page-language"][data-id="${lang}"]`);
+}
+
+export async function setListLanguage(list: Locator, lang: string): Promise<void> {
+    const langSelector = list.locator('language-context-selector');
+    const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+    await dropdown.locator(`gtx-dropdown-item[data-id="${lang}"]`).click();
 }
 
 export async function openToolOrAction(page: Page, id: string): Promise<void> {

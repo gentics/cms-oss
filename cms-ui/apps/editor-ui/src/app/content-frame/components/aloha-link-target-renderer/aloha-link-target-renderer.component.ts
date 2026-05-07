@@ -77,6 +77,7 @@ export class AlohaLinkTargetRendererComponent
         if (!title) {
             title = this.i18n.instant('aloha.linktarget_pick_target');
         }
+        const lang = this.loadedTargetElement?.type === 'page' ? this.loadedTargetElement.language : null;
 
         this.repositoryBrowserClient.openRepositoryBrowser({
             allowedSelection: ['page', 'file', 'image'],
@@ -86,6 +87,7 @@ export class AlohaLinkTargetRendererComponent
             startNode: this.loadedTargetElement?.nodeId
                 // channelId is always set, but may be 0
                 ?? (this.loadedTargetElement?.channelId || this.loadedTargetElement?.masterNodeId),
+            contentLanguage: lang,
         }).then(pickedItem => {
             // The user aborted the select
             if (pickedItem == null) {

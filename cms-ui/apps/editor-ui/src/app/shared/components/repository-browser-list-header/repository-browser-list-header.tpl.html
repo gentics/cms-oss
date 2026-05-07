@@ -26,7 +26,7 @@
   @if ((nodeLanguages$ | async)?.length > 1 && itemType !=='file' && itemType !=='folder' && itemType !== 'image') {
     <language-context-selector
       [availableLanguages]="nodeLanguages$ | async"
-      [activeLanguage]="activeLanguage$ | async"
+        [activeLanguage]="activeLanguage"
       (languageChange)="languageChanged($event)"
     ></language-context-selector>
   }
@@ -63,7 +63,7 @@
           class="page-language-toggle"
           >
           <gtx-checkbox
-            [checked]="showAllLanguages$ | async"
+                    [checked]="showAllLanguages"
             (change)="toggleDisplayAllLanguages()"
           ></gtx-checkbox>
           {{ 'editor.display_all_languages_label' | gtxI18n }}
@@ -75,7 +75,7 @@
           class="page-language-toggle"
           >
           <gtx-checkbox
-            [checked]="showStatusIcons$ | async"
+                    [checked]="showStatusIcons"
             (change)="toggleDisplayStatusIcons()"
           ></gtx-checkbox>
           {{ 'editor.display_status_icons_label' | gtxI18n }}

@@ -1,5 +1,6 @@
 import { AlohaCoreComponentNames } from '@gentics/aloha-models';
 import type { createRange, selectRange, selectText, updateAlohaRange } from '@gentics/e2e-utils';
+
 export interface HelperWindow extends Window {
     createRange: typeof createRange;
     selectRange: typeof selectRange;

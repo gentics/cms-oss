@@ -749,10 +749,13 @@ public class AdminResourceImpl implements AdminResource {
 			GenericResponse response;
 			if (containsCriticalError) {
 				response = new GenericResponse(null, new ResponseInfo(ResponseCode.FAILURE, "There were errors while reloading the configuration"));
+				messages.add(new Message(Message.Type.CRITICAL, I18NHelper.get("reload.configuration.failed")));
 			} else if (containsWarning) {
 				response = new GenericResponse(null, ResponseInfo.ok("Successfully reloaded configuration with warnings"));
+				messages.add(new Message(Message.Type.SUCCESS, I18NHelper.get("reload.configuration.successful")));
 			} else {
 				response = new GenericResponse(null, ResponseInfo.ok("Successfully reloaded configuration"));
+				messages.add(new Message(Message.Type.SUCCESS, I18NHelper.get("reload.configuration.successful")));
 			}
 			response.setMessages(messages);
 			return response;

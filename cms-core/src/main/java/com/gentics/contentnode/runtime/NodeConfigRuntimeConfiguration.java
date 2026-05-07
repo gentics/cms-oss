@@ -30,6 +30,7 @@ import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.PropertyNodeConfig;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.i18n.CNDictionary;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.jmx.SessionInfo;
 import com.gentics.contentnode.object.Node;
@@ -137,7 +138,7 @@ public class NodeConfigRuntimeConfiguration {
 			// check features
 			for (Feature feature : Feature.values()) {
 				if (feature.activatedButNotAvailable()) {
-					String msg = "Feature %s was activated in the configuration, but is not available. Feature will not be active.".formatted(feature.getName());
+					String msg = I18NHelper.get("init.feature.unavailable", feature.getName()).toString();
 					messages.add(new Message(Type.CRITICAL, msg));
 					logger.error(msg);
 					nodePreferences.setFeature(feature, false);

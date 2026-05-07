@@ -504,7 +504,8 @@
         "dropdown_abort": "Abort",
         "edit_mode_loading": "Loading editor ...",
         "preview_mode_loading": "Loading preview ...",
-        "loading_takes_more_time": "This may take a while..."
+        "loading_takes_more_time": "This may take a while...",
+        "form_feature_not_available": "Forms are not enabled for this node"
     },
     "tag_inheritance": {
         "edit_settings": "Edit localization settings",

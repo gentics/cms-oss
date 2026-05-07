@@ -121,18 +121,24 @@ export interface GcmsUiServices {
      * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
      * The endpoint should not include the base URL of the REST API, but just the endpoint as per
      * the documentation, e.g. `/folder/create`.
+     *
+     * @deprecated Use the `restClient` property with the GCMSRestClient implementation instead.
      */
     restRequestGET: (endpoint: string, params?: object) => Promise<object>;
     /**
      * Makes a POST request to an endpoint of the GCMS REST API and returns the parsed JSON object.
      * The endpoint should not include the base URL of the REST API, but just the endpoint as per
      * the documentation, e.g. `/folder/create`.
+     *
+     * @deprecated Use the `restClient` property with the GCMSRestClient implementation instead.
      */
     restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
     /**
      * Makes a DELETE request to an endpoint of the GCMS REST API and returns the parsed JSON object (if present).
      * The endpoint should not include the base URL of the REST API, but just the endpoint as per
      * the documentation, e.g. `/folder/create`.
+     *
+     * @deprecated Use the `restClient` property with the GCMSRestClient implementation instead.
      */
     restRequestDELETE: (endpoint: string, params?: object) => Promise<void | object>;
 

@@ -197,7 +197,8 @@
                     transition:
                         visibility 0s ease 0.15s,
                         opacity 0.10s ease-out 0.05s,
-                        max-height 0.15s ease-out;
+                        max-height 0.15s ease-out,
+                        background 300ms;
                     padding: 0;
                     border: none;
                     z-index: 0;
@@ -258,7 +259,8 @@
                         transition:
                             visibility 0s,
                             opacity 0.15s ease-in 0.10s,
-                            max-height 0.25s ease-in;
+                            max-height 0.25s ease-in,
+                            background 300ms;
                     }
                 }
             }

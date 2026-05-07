@@ -381,7 +381,7 @@ export class AlohaIntegrationService {
         let range: Range;
 
         const selection = this.currentWindow.document.getSelection();
-        if (selection.rangeCount > 0) {
+        if (selection != null && selection.rangeCount > 0) {
             range = selection.getRangeAt(0);
         } else if (this.currentWindow.Aloha?.Selection) {
             // Aloha selection fallback, which usually keeps the selection alive when clicking out of the iframe

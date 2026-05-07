@@ -504,7 +504,8 @@
         "dropdown_abort": "Abbrechen",
         "edit_mode_loading": "Lade Bearbeitungsmodus ...",
         "preview_mode_loading": "Lade Vorschaumodus ...",
-        "loading_takes_more_time": "Das kann etwas dauern..."
+        "loading_takes_more_time": "Das kann etwas dauern...",
+        "form_feature_not_available": "Formulare sind für diesen Node nicht verfügbar"
     },
     "tag_inheritance": {
         "edit_settings": "Lokalisierungseinstellungen bearbeiten",

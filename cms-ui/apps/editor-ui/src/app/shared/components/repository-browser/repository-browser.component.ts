@@ -19,7 +19,7 @@ import {
 import { IModalDialog } from '@gentics/ui-core';
 import { Observable, Subject, combineLatest } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '../../../common/models';
+import { FolderPermissionData, RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '../../../common/models';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { ApplicationStateService, SetListDisplayFieldsAction } from '../../../state';
 import { RepositoryBrowserDataService } from '../../providers';
@@ -86,6 +86,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
     showFavourites$: Observable<boolean>;
     startPageId$: Observable<number | undefined>;
     pageShowPath$: Observable<boolean>;
+    folderPermissions$: Observable<FolderPermissionData>;
 
     /** Observable for each type that emits the display fields. */
     displayFieldsForType: { [key: string]: Observable<string[]> };
@@ -287,6 +288,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
         this.sortOrder$ = dataService.sortOrder$;
         this.startPageId$ = dataService.startPageId$;
         this.pageShowPath$ = this.appState.select(state => state.folder.pages.showPath);
+        this.folderPermissions$ = dataService.folderPermissions$;
 
         this.observableForType = {
             folder: dataService.folders$,

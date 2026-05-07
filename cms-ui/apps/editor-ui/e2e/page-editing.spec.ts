@@ -9,13 +9,21 @@ import {
     CONSTRUCT_TEST_SELECT_COLOR_HIDDEN,
     CONSTRUCT_TEST_SELECT_COLOR_INLINE,
     CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE,
+    copyText,
     EntityImporter,
+    findNotification,
     FIXTURE_IMAGE_JPEG1,
+    hexToRGB,
     IMAGE_ONE,
     IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_PAGE_TRANSLATION,
     ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
+    LANGUAGE_DE,
+    LANGUAGE_EN,
     loginWithForm,
+    matchesPath,
     matchesUrl,
     matchRequest,
     navigateToApp,
@@ -23,20 +31,12 @@ import {
     onRequest,
     openContext,
     PAGE_ONE,
+    PageImportData,
+    PageTranslationImportData,
     pickSelectValue,
     TestSize,
     wait,
     waitForResponseFrom,
-    findNotification,
-    matchesPath,
-    copyText,
-    hexToRGB,
-    PageImportData,
-    IMPORT_TYPE,
-    LANGUAGE_DE,
-    PageTranslationImportData,
-    IMPORT_TYPE_PAGE_TRANSLATION,
-    LANGUAGE_EN,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -50,7 +50,6 @@ import {
 import {
     createExternalLink,
     createInternalLink,
-    upsertLink,
     editorAction,
     findAlohaComponent,
     findDynamicDropdown,
@@ -61,21 +60,20 @@ import {
     getAlohaIFrame,
     itemAction,
     openPageForEditing,
+    overwriteAlohaConfigWith,
+    pickPaletteColor,
     rereouteAlohaConfig,
     selectEditorTab,
     selectNode,
     selectRangeIn,
     selectTextIn,
     setupHelperWindowFunctions,
-    pickPaletteColor,
-    overwriteAlohaConfigWith,
+    upsertLink,
 } from './helpers';
 
 const CLASS_ACTIVE = 'active';
 
 test.describe('Page Editing', () => {
-    // Mark this suite as slow - Because it is
-    // test.slow();
 
     const IMPORTER = new EntityImporter();
 
@@ -1447,6 +1445,94 @@ test.describe('Page Editing', () => {
                     // After inserting a tag, the drag-handle should be displayed
                     await expect(dragHandle).toBeVisible();
                 });
+            });
+
+            test('should show delete dialogs correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19595',
+                }],
+            }, async ({ page }) => {
+                // Mark as slow, since we have a lot of timeouts/waits since we hold down a key for prolonged time.
+                test.slow();
+
+                await mainEditable.click();
+                await mainEditable.fill('text before');
+                expect(await selectRangeIn(mainEditable, 11, 11)).toEqual(true);
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                await test.step('Add first tag', async () => {
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                });
+
+                const alohaBlock = mainEditable.locator('.aloha-block[data-gcn-tagname]');
+                // Wait for the attribute to be there
+                await expect(alohaBlock).toHaveAttribute('data-aloha-block-id');
+                const alohaBlockName = await alohaBlock.getAttribute('data-gcn-tagname');
+                // Check the value. We also need it later on
+                expect(alohaBlockName).toBeTruthy();
+
+                // Enter text after the tag
+                await mainEditable.pressSequentially('text after');
+
+                const dialog = page.locator('gtx-modal-dialog');
+                const pressableKeys = ['Space', 'Enter', 'a', 'Delete'];
+
+                async function checkKeys(end: number | null): Promise<void> {
+                    for (const key of pressableKeys) {
+                        await test.step(`Key "${key}" should only open one dialog`, async () => {
+                            // Select all of the content
+                            await mainEditable.click();
+                            expect(await selectRangeIn(mainEditable, 0, end)).toEqual(true);
+                            // Single press
+                            await mainEditable.press(key);
+
+                            // Check the dialog
+                            await expect(dialog).toBeVisible();
+                            await expect(dialog).toHaveCount(1);
+                            await expect(dialog.locator('.modal-content')).toContainText(alohaBlockName);
+
+                            // Dismiss the dialog
+                            await dialog.locator('.modal-footer gtx-button').first().click();
+                            await expect(dialog).not.toBeAttached();
+
+                            // Select again, since it lost focus due to dismissing
+                            await mainEditable.click();
+                            expect(await selectRangeIn(mainEditable, 0, end)).toEqual(true);
+
+                            // Holding down the key for 2sec
+                            await page.keyboard.down(key);
+                            await page.waitForTimeout(2_000);
+                            await page.keyboard.up(key);
+
+                            // Check the dialog
+                            await expect(dialog).toBeVisible();
+                            await expect(dialog).toHaveCount(1);
+                            await expect(dialog.locator('.modal-content')).toContainText(alohaBlockName);
+
+                            // Dismiss the dialog
+                            await dialog.locator('.modal-footer gtx-button').first().click();
+                            await expect(dialog).not.toBeAttached();
+                        });
+                    }
+                }
+
+                await checkKeys(null);
+
+                await test.step('Add another tag', async () => {
+                    // Any large number will do, to get to the end
+                    expect(await selectRangeIn(mainEditable, 10_000, 10_000)).toEqual(true);
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                });
+
+                // Check again now
+                await checkKeys(14);
             });
         });
     });

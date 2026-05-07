@@ -379,7 +379,16 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
          * @returns The range if it was possible to create, otherwise `null`.
          */
         function createRange(element: HTMLElement, start: number, end: number | null = null): Range | null {
+            if (!element || !element.textContent) {
+                return null;
+            }
+
             const size = element.textContent.length;
+
+            // Clip the start inbounds
+            if (start > size) {
+                start = size;
+            }
 
             // When a positive end is provided, it has to be greater than the start position.
             if (end != null && end > -1 && end < start) {

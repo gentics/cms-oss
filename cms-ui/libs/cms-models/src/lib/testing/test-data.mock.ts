@@ -341,7 +341,7 @@ export function getExamplePageDataNormalized(
 /** Returns actual form data from the ContentNode API for "GCN5 Demo" */
 export function getExampleFormData(
     { id, userId }: { id: number; userId?: number } = { id: 95, userId: 3 },
-): Form<Raw> {
+): Form {
     userId = userId || 3;
     return {
         id: id,
@@ -487,13 +487,7 @@ export function getExampleFormData(
     };
 }
 
-export function getExampleFormDataNormalized(
-    { id, userId }: { id: number; userId?: number } = { id: 95, userId: 3 },
-): Form<Normalized> {
-    const rawForm = getExampleFormData({ id, userId });
-    const normalized = normalize(rawForm, schemas.form);
-    return normalized.entities.form[normalized.result] as Form<Normalized>;
-}
+export const getExampleFormDataNormalized = getExampleFormData;
 
 /** Returns actual folder data from the ContentNode API for "GCN5 Demo" */
 export function getExampleFolderData({ id, userId, publishDir }: { id: number; userId?: number; publishDir?: string }

@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
 import { GcmsUiBridge } from '@gentics/cms-integration-api-models';
-import { Page } from '@gentics/cms-models';
+import { I18nString, Page } from '@gentics/cms-models';
+
+export function createDefaultFormPageName(): I18nString {
+    return {
+        de: 'Allgemein',
+        en: 'General',
+    };
+}
 
 /** Requests that can be sent via `Aloha.GCN.performRESTRequest()` */
 export interface GCNRestRequestArgs {
@@ -75,7 +82,7 @@ export interface CNWindow extends CNParentWindow {
     GCMSUI?: GcmsUiBridge;
 
     GCNREST?: {
-        performRESTRequest: GCNPerformRESTRequestFunction
+        performRESTRequest: GCNPerformRESTRequestFunction;
     };
 
     /** Called inside the editor frame when a page is loading / being saved */
@@ -151,10 +158,10 @@ export interface LinkBrowser {
     close(): void;
 
     /** Called when an item is selected */
-    onSelect(item: Object): void;
+    onSelect(item: object): void;
 
     /** Copies the attributes specified in Links.settings.sidebar from the original item to the rendition. */
-    extendRendition(item: Object, rendition: any): any;
+    extendRendition(item: object, rendition: any): any;
 
     /** Updates the object type filter option */
     setObjectTypeFilter(filter: string | string[]): void;

@@ -93,7 +93,7 @@
             [label]="'tag_editor.overview_recursive' | gtxI18n"
             [disabled]="context.readOnly"
             [(ngModel)]="tagProperty.overview.recursive"
-            (change)="onUserChange()"
+            (valueChange)="onUserChange()"
           ></gtx-checkbox>
         }
       </div>

@@ -1,10 +1,15 @@
-import { createWhitelistValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { FieldExtractOptions, FieldType, SchemaField } from '@gentics/mesh-models';
-import { FormProperties, createJsonValidator, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import {
+    BaseFormPropertiesComponent,
+    FormProperties,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+} from '@gentics/ui-core';
 import { pick } from 'lodash-es';
+import { createWhitelistValidator } from '../../../common';
 
 export enum SchemaFieldPropertiesType {
     SCHEMA = 'schema',
@@ -32,9 +37,9 @@ const MicroschemaListFieldType = pick(FieldType, ['BOOLEAN', 'DATE', 'HTML', 'NO
         generateFormProvider(SchemaFieldPropertiesComponent),
         generateValidatorProvider(SchemaFieldPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<SchemaField> implements OnChanges {
+export class SchemaFieldPropertiesComponent extends BaseFormPropertiesComponent<SchemaField> implements OnChanges {
 
     public readonly SchemaFieldPropertiesType = SchemaFieldPropertiesType;
 
@@ -107,7 +112,7 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
                         return null;
                 }
             })),
-            elasticsearch: new FormControl(this.safeValue('elasticsearch') || {}, createJsonValidator()),
+            elasticsearch: new FormControl(this.safeValue('elasticsearch') || {}),
             checkServiceUrl: new FormControl(this.safeValue('checkServiceUrl') || ''),
             extract: new FormGroup<FormProperties<FieldExtractOptions>>({
                 content: new FormControl(this.safeValue('extract')?.content ?? true),

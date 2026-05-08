@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { AbstractControl, ValidationErrors, Validator } from '@angular/forms';
-import { JSON_VALUE_INVALID } from '../../common';
-import { createJsonValidator, generateFormProvider, generateValidatorProvider } from '../../utils';
+import { JsonValidationErrorModel, VALIDATOR_JSON_ERROR_PROPERTY } from '../../common';
+import { generateFormProvider, generateValidatorProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
-const VALIDATOR_FN = createJsonValidator();
+type JsonValue = null | string | Record<string, any> | number | boolean;
 
 /**
  * Simple wrapper component around the `TextareaComponent`, which handles JSON inputs.
@@ -25,10 +25,10 @@ const VALIDATOR_FN = createJsonValidator();
         generateFormProvider(JsonInputComponent),
         generateValidatorProvider(JsonInputComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class JsonInputComponent
-    extends BaseFormElementComponent<typeof JSON_VALUE_INVALID | string | Record<string, any> | any[]>
+    extends BaseFormElementComponent<JsonValue | JsonValue[]>
     implements Validator {
 
     /** If this input should convert the value to a JSON Object/Array when emitting values. */
@@ -71,11 +71,6 @@ export class JsonInputComponent
     protected boundControl: AbstractControl<any, any>;
 
     protected onValueChange(): void {
-        // Nothing to update
-        if (this.value === JSON_VALUE_INVALID) {
-            return;
-        }
-
         if ((this.value == null) || (typeof this.value === 'string')) {
             this.rawValue = this.value as string ?? null;
             return;
@@ -111,14 +106,43 @@ export class JsonInputComponent
             const parsed = JSON.parse(this.rawValue);
             this.triggerChange(parsed);
         } catch (err) {
-            this.triggerChange(JSON_VALUE_INVALID);
+            this.triggerChange(this.rawValue);
         }
     }
 
     /** Validation implementation to validate itself */
     public validate(control: AbstractControl<any, any>): ValidationErrors {
         this.boundControl = control;
+        const value = control.value;
+        const validationError: JsonValidationErrorModel = {
+            [VALIDATOR_JSON_ERROR_PROPERTY]: {
+                actualValue: value,
+            },
+        };
 
-        return VALIDATOR_FN(control);
+        if (typeof value === 'string') {
+            // if input is empty, there is no error
+            if (!value) {
+                return null;
+            }
+            let parsed: object;
+            try {
+                parsed = JSON.parse(value);
+                if (parsed != null && typeof parsed === 'object') {
+                    return null;
+                }
+            } catch (error) {
+                return validationError;
+            }
+        } else if (value == null) {
+            // null values are valid
+            return null;
+        } else if (typeof value === 'object') {
+            // object value set, therefore valid
+            return null;
+        }
+
+        // if in doubt, return error
+        return validationError;
     }
 }

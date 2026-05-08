@@ -1,20 +1,20 @@
 @if (tagProperty) {
-  <div class="tag-part-editor">
-    <gtx-select
-      [label]="tagPart | tagPropLabel"
-      [required]="tagPart?.mandatory"
-      [disabled]="readOnly"
-      [(ngModel)]="tagProperty.nodeId"
-      [placeholder]="placeholder"
-      clearable
-      (valueCahnge)="onNodeChange($event)"
-      >
-      @for (item of nodes$ | async; track item.id) {
-        <gtx-option
-          [value]="item.id"
-          [icon]="item.type == 'channel' ? 'input' : ''"
-        >{{ item.name }}</gtx-option>
-      }
-    </gtx-select>
-  </div>
+    <div class="tag-part-editor">
+        <gtx-select
+            [label]="tagPart | tagPropLabel"
+            [required]="tagPart?.mandatory"
+            [disabled]="readOnly"
+            [(ngModel)]="tagProperty.nodeId"
+            [placeholder]="placeholder"
+            clearable
+            (valueChange)="onNodeChange($event)"
+        >
+            @for (item of nodes$ | async; track item.id) {
+                <gtx-option
+                    [value]="item.id"
+                    [icon]="item.type == 'channel' ? 'input' : ''"
+                >{{ item.name }}</gtx-option>
+            }
+        </gtx-select>
+    </div>
 }

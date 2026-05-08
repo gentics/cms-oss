@@ -1,12 +1,17 @@
 import { ContentChildren, Directive, Input, QueryList } from '@angular/core';
-import { coerceToBoolean } from '../../utils';
+import { coerceToBoolean, randomId } from '../../utils';
 import { SelectOptionDirective } from '../select-option/option.directive';
 
 @Directive({
     selector: 'gtx-optgroup',
-    standalone: false
+    standalone: false,
 })
 export class SelectOptionGroupDirective {
+
+    public readonly UNIQUE_ID = `gtx-optgroup-${randomId()}`;
+
+    @Input()
+    public id: string = this.UNIQUE_ID;
 
     @Input()
     label: string;
@@ -15,6 +20,7 @@ export class SelectOptionGroupDirective {
     set disabled(value: boolean) {
         this._disabled = coerceToBoolean(value);
     }
+
     get disabled(): boolean {
         return this._disabled;
     }

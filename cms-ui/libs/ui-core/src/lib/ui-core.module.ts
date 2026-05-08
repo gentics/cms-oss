@@ -22,6 +22,7 @@ import {
     DropdownListComponent,
     DynamicModal,
     FilePickerComponent,
+    FormElementContainerComponent,
     GroupedTabsComponent,
     InputComponent,
     JsonInputComponent,
@@ -30,6 +31,7 @@ import {
     ModalDialogComponent,
     OverlayHostComponent,
     PaginationComponent,
+    PickListComponent,
     ProgressBarComponent,
     RadioButtonComponent,
     RangeComponent,
@@ -110,6 +112,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     DropdownItemComponent,
     DynamicModal,
     FilePickerComponent,
+    FormElementContainerComponent,
     GroupedTabsComponent,
     InputComponent,
     JsonInputComponent,
@@ -142,6 +145,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     TooltipContentWrapperComponent,
     TopBarComponent,
     TrableComponent,
+    PickListComponent,
 ];
 
 export const UI_CORE_DIRECTIVES: Type<any>[] = [

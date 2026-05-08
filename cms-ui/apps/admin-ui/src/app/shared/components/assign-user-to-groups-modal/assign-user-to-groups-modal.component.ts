@@ -1,8 +1,5 @@
-import { GroupBO } from '@admin-ui/common';
-import { ErrorHandler, GroupOperations, UserOperations } from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { Feature, Group, Raw, User } from '@gentics/cms-models';
 import {
@@ -13,10 +10,13 @@ import {
     TableActionClickEvent,
     TableSelection,
     toSelectionArray,
+    toValidNumber,
 } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { GroupBO } from '../../../common';
+import { ErrorHandler, GroupOperations, UserOperations } from '../../../core';
+import { AppStateService } from '../../../state';
 import {
     AssignNodeRestrictionsToUsersModalComponent,
 } from '../assign-node-restriction-to-users-modal/assign-node-restriction-to-users-modal.component';
@@ -185,8 +185,8 @@ export class AssignUserToGroupsModal extends BaseModal<boolean> implements OnIni
         let didChange = false;
 
         for (const userId of this.userIds) {
-            const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
-            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
+            const toAdd = new Set<number>(toSelectionArray(this.selected).map(toValidNumber));
+            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(toValidNumber));
 
             for (const groupToAdd of toAdd) {
                 if (this.currentAssignment[groupToAdd]?.has?.(userId)) {

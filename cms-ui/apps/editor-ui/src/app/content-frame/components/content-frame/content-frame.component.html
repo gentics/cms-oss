@@ -12,6 +12,12 @@
             [locked]="isLocked"
             [itemPermissions]="itemPermissions"
             [itemLanguage]="itemLanguage"
+
+            [(formPageIndex)]="formPageIndex"
+            [(formViewMode)]="formViewMode"
+            [formUiSchema]="currentItem?.type === 'form' ? currentItem.data['ui-schema'] : null"
+            (formUiSchemaChange)="updateFormUiSchema($event)"
+
             (close)="closeEditor()"
             (save)="handleItemSave($event)"
             (timeManagement)="showTimeManagement($event)"
@@ -62,17 +68,26 @@
         </div>
     }
 
-    @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form') {
+    @if ((editMode === EditMode.PREVIEW || editMode === EditMode.EDIT) && currentItem?.type === 'form' && currentFormConfig) {
         <div class="form-editor">
-            <gtx-form-editor
-                class="form-editor"
-                [form]="currentItem"
-                [activeUiLanguageCode]="activeUiLanguageCode$ | async"
-                [activeContentLanguageCode]="itemLanguage?.code"
-                [readonly]="editMode !== EditMode.EDIT"
-                (formModified)="formChange($event)"
-                (validityChange)="setItemValidity($event)"
-            ></gtx-form-editor>
+            <gtx-form-grid
+                [config]="currentFormConfig"
+                [mode]="editMode === EditMode.PREVIEW
+                    ? FormGridEditMode.NONE
+                    : (currentFormConfig?.external ? FormGridEditMode.RESTRICTED : FormGridEditMode.FULL)"
+                [languages]="currentItem.languages"
+                [(pageIndex)]="formPageIndex"
+                [viewMode]="formViewMode"
+
+                [formId]="currentItem.id"
+                [formType]="currentItem.formType"
+                [formName]="currentItem.name"
+
+                [schema]="currentItem.data.schema"
+                [uiSchema]="currentItem.data['ui-schema']"
+                (schemaChange)="updateFormSchema($event)"
+                (uiSchemaChange)="updateFormUiSchema($event)"
+            ></gtx-form-grid>
         </div>
     }
 

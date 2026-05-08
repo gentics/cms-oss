@@ -3,7 +3,7 @@
  * Importing them via JSON would work as well, but here we have proper type
  * checks to all entities without having to jump through hoops.
  */
-import { AccessControlledType, CmsFormType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     FileImportData,
@@ -501,9 +501,7 @@ export const FORM_ONE: FormImportData = {
 
     name: 'Form One',
     description: 'Test Form one',
-    data: {
-        type: CmsFormType.GENERIC,
-    },
+    formType: 'generic',
 };
 
 export const FORM_TWO: FormImportData = {

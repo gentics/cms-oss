@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import {
-    RepositoryBrowserOptions,
     TagEditorContext,
     TagEditorError,
     TagPropertiesChangedFn,
@@ -24,11 +23,8 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
-import { Observable, Subscription, merge } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
-import { RepositoryBrowserClient } from '../../../../shared/providers';
 import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper/selected-item-helper';
 import { ApplicationStateService } from '../../../../state';
 import { UploadWithPropertiesModalComponent } from '../../shared/upload-with-properties-modal/upload-with-properties-modal.component';
@@ -56,9 +52,6 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
 
     /** The current TagEditorContext. */
     context: TagEditorContext;
-
-    /** The string that should be displayed in the input field. */
-    displayValue$: Observable<string>;
 
     /** The destination folder for a file/image upload. */
     uploadDestination: Folder<Raw>;
@@ -91,8 +84,6 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
         private client: GCMSRestClientService,
         private appState: ApplicationStateService,
         private editorOverlayService: EditorOverlayService,
-        private repositoryBrowserClient: RepositoryBrowserClient,
-        private i18n: I18nService,
         private modalService: ModalService,
     ) { }
 
@@ -118,62 +109,6 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
         }
 
         this.selectedItem = new SelectedItemHelper(this.itemType, context.node.id, this.client);
-
-        this.displayValue$ = merge(
-            this.selectedItem.selectedItem$.pipe(
-                map((selectedItem: FileOrImage<Raw>) => {
-                    this.selectedItemPath = this.generateBreadcrumbsPath(selectedItem);
-                    if (selectedItem) {
-                        return selectedItem.name;
-                    } else {
-                        /**
-                         * null is emitted, when nothing is selected.
-                         *
-                         * Notice, that the following only holds for images, not for folders:
-                         * Also, null is emitted in case a referenced image got deleted and the tag property data was refetched.
-                         * (Since the imageId in tagProperty gets removed).
-                         */
-                        switch (tagProperty.type) {
-                            case TagPropertyType.FILE:
-                                return this.i18n.instant('editor.file_no_selection');
-                            case TagPropertyType.IMAGE:
-                                return this.i18n.instant('editor.image_no_selection');
-                            default:
-                                return '';
-                        }
-                    }
-                }),
-            ),
-            this.selectedItem.loadingError$.pipe(
-                map((error: { error: any; item: { itemId: number; nodeId?: number } }) => {
-                    /**
-                     * When a file or an image that is referenced gets deleted, the fileId or imageId is kept in tagProperty.
-                     * When we try to fetch the file or image information we get an error message.
-                     * In that case we want to inform the user that the file or image got deleted
-                     * (and thus avoid suggesting that a valid file or image is still selected).
-                     */
-                    if (this.tagProperty) {
-                        /**
-                         * additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
-                         * This could trigger an emission before this.tagProperty is set in updateTagProperty
-                         */
-                        switch (this.tagProperty.type) {
-                            case TagPropertyType.FILE:
-                                return this.i18n.instant('editor.file_not_found', { id: this.tagProperty.fileId });
-                            case TagPropertyType.IMAGE:
-                                return this.i18n.instant('editor.image_not_found', { id: this.tagProperty.imageId });
-                            default:
-                                return '';
-                        }
-                    } else {
-                        return '';
-                    }
-                }),
-            ),
-        ).pipe(
-            tap(() => this.changeDetector.markForCheck()),
-        );
-
         this.tagPart = tagPart;
         this.context = context;
         this.page = context.page;
@@ -218,25 +153,6 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
             this.onChangeFn(changes);
         }
         this.selectedItem.setSelectedItem(newSelectedItem);
-    }
-
-    /**
-     * Opens the repository browser to allow the user to select an item.
-     */
-    browseForItem(): void {
-        let contentLanguage: string;
-        if (this.page) {
-            contentLanguage = this.page.language;
-        }
-        const options: RepositoryBrowserOptions = {
-            allowedSelection: this.itemType,
-            selectMultiple: false,
-            contentLanguage,
-            startFolder: this.uploadDestination ? this.uploadDestination.id : undefined,
-        };
-
-        this.repositoryBrowserClient.openRepositoryBrowser(options)
-            .then((selectedItem: ItemInNode<FileOrImage<Raw>>) => this.changeSelectedItem(selectedItem));
     }
 
     /**

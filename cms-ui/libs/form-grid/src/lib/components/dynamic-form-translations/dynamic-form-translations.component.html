@@ -1,0 +1,54 @@
+<div class="dynamic-settings-list">
+    @for (setting of (visibleSettings()); track setting.id) {
+        @let settingSourceData = setting.backend
+            ? $any(this.elementSchema())
+            : $any(this.element());
+        @let settingData = setting.propertyPath
+            ? (settingSourceData | gtxValuePath:setting.propertyPath)
+            : (settingSourceData | gtxValuePath:['formGridOptions', setting.id]);
+
+        @switch (setting.type) {
+            @case ("translation") {
+                <gtx-i18n-input
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="setting.labelI18n | gtxI18nObject"
+                    [value]="settingData"
+                    [language]="selectedLanguage()"
+                    [availableLanguages]="languages()"
+                    [disabled]="disabled()"
+                    [useRichEditor]="setting.richContent ?? false"
+                    [useTextArea]="setting.multiline ?? false"
+                    (valueChange)="updateTranslationSetting(setting, $event)"
+                ></gtx-i18n-input>
+            }
+
+            @case ("options") {
+                <div class="settings-entry option-translation">
+                    <span class="option-translation-title">{{ setting.labelI18n | gtxI18nObject }}</span>
+
+                    @if (settingData) {
+                        <div class="option-translation-entries">
+                            @for (opt of settingData; track opt.value) {
+                                <gtx-i18n-input
+                                    class="option-translation-input"
+                                    [attr.data-control]="setting.id"
+                                    [attr.data-control-type]="setting.type"
+                                    [label]="opt.value"
+                                    [value]="opt.label"
+                                    [language]="selectedLanguage()"
+                                    [availableLanguages]="languages()"
+                                    [disabled]="disabled()"
+                                    (valueChange)="updateOptionLabel(setting, $index, $event)"
+                                ></gtx-i18n-input>
+                            }
+                        </div>
+                    } @else {
+                        <span class="no-options">{{ 'form_grid.translation_no_options_defined' | gtxI18n }}</span>
+                    }
+                </div>
+            }
+        }
+    }
+</div>

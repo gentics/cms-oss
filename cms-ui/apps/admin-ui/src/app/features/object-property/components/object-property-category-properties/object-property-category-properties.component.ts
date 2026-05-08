@@ -1,20 +1,19 @@
-import { createI18nRequiredValidator } from '@admin-ui/common';
-import { LanguageHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
-    CmsI18nValue,
+    I18nString,
     Language,
     ModelType,
     Normalized,
     ObjectPropertyCategoryBO,
 } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { createI18nRequiredValidator } from '../../../../common';
+import { LanguageHandlerService } from '../../../../core';
 
 export interface ObjectPropertyCategoryPropertiesFormData {
-    nameI18n?: CmsI18nValue;
+    nameI18n?: I18nString;
 }
 
 export enum ObjectPropertyCategoryPropertiesMode {
@@ -37,10 +36,10 @@ export enum ObjectPropertyCategoryPropertiesMode {
         generateFormProvider(ObjectPropertyCategoryPropertiesComponent),
         generateValidatorProvider(ObjectPropertyCategoryPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class ObjectPropertyCategoryPropertiesComponent
-    extends BasePropertiesComponent<ObjectPropertyCategoryBO<Normalized>>
+    extends BaseFormPropertiesComponent<ObjectPropertyCategoryBO<Normalized>>
     implements OnInit {
 
     @Input()
@@ -64,7 +63,7 @@ export class ObjectPropertyCategoryPropertiesComponent
 
         this.languages$ = this.languageHandler.getSupportedLanguages();
 
-        this.subscriptions.push(this.languages$.subscribe(languages => {
+        this.subscriptions.push(this.languages$.subscribe((languages) => {
             this.languages = languages;
             const defaultLanguage = languages[0];
             if (defaultLanguage) {
@@ -100,7 +99,7 @@ export class ObjectPropertyCategoryPropertiesComponent
     }
 
     protected createNameValidator(): ValidatorFn {
-        const validator = createI18nRequiredValidator((this.languages || []).map(lang => lang.code), langs => {
+        const validator = createI18nRequiredValidator((this.languages || []).map((lang) => lang.code), (langs) => {
             this.invalidLanguages = langs;
             this.changeDetector.markForCheck();
         });
@@ -109,6 +108,6 @@ export class ObjectPropertyCategoryPropertiesComponent
     }
 
     public setActiveI18nTab(languageId: number): void {
-        this.activeTabI18nLanguage = this.languages.find(l => l.id === languageId);
+        this.activeTabI18nLanguage = this.languages.find((l) => l.id === languageId);
     }
 }

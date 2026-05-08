@@ -7,6 +7,7 @@ import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
+import { FormGridModule } from '@gentics/form-grid';
 import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
@@ -156,6 +157,7 @@ const PROVIDERS = [
             dropDownPageMargin: 20,
         }),
         CmsComponentsModule.forRoot(),
+        FormGridModule.forRoot(),
         TagEditorModule,
         TranslateModule.forRoot({
             fallbackLang: FALLBACK_LANGUAGE,

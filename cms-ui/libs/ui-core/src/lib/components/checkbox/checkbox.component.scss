@@ -1,109 +1,93 @@
 @import '../../../styles/base-import';
 
 :host {
+    font-size: 1rem;
+    --gtx-active-color: #{$gtx-color-primary};
 
-    [type="checkbox"]+label::before,
-    [type="checkbox"]:not(.filled-in)+label::after {
-        will-change: transform;
+    input {
+        display: none !important;
+    }
+
+    label {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.2em 0;
+
+        .label-content {
+            font-size: 1em;
+            line-height: 1;
+            padding-top: 1px;
+        }
+    }
+
+    .indicator {
+        width: 1em;
+        height: 1em;
+        position: relative;
+        cursor: pointer;
+        transition: 300ms ease;
+
+        &::after {
+            border: 2px solid #5a5a5a;
+            border-radius: 1px;
+            transform: rotate(0);
+            content: '';
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            z-index: 1;
+            transition: 300ms ease;
+        }
+
+        &.state-true::after {
+            border-bottom-color: var(--gtx-active-color);
+            border-right-color: var(--gtx-active-color);
+            border-top-color: transparent;
+            border-left-color: transparent;
+            transform: rotate(40deg);
+            width: 70%;
+            height: 130%;
+            top: -40%;
+            left: 25%;
+        }
+
+        &.state-indeterminate::after {
+            border-right-color: var(--gtx-active-color);
+            border-bottom-color: transparent;
+            border-top-color: transparent;
+            border-left-color: transparent;
+            transform: rotate(90deg);
+            height: 130%;
+            top: -50%;
+        }
     }
 
     &.ng-touched.ng-invalid {
-        label::before {
-            border-color: $gtx-color-alert;
-        }
+        --gtx-active-color: #{$gtx-color-alert};
 
-        label {
-            color: $gtx-color-alert;
+        .label-content {
+            color: var(--gtx-active-color);
         }
     }
 
-    [type="checkbox"]+label::before,
-    [type="checkbox"]:not(.filled-in)+label::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 18px;
-        height: 18px;
-        z-index: 0;
-        border: 2px solid #5a5a5a;
-        border-radius: 1px;
-        margin-top: 2px;
-        transition: .2s;
-    }
+    label.disabled {
+        --gtx-active-color: #{$gtx-color-mid-gray};
+        cursor: not-allowed;
 
-    [type="checkbox"]:not(.filled-in)+label::after {
-        border: 0;
-        -webkit-transform: scale(0);
-        transform: scale(0);
-    }
-
-    [type="checkbox"]+label {
-        position: relative;
-        padding-left: 35px;
-        cursor: pointer;
-        display: inline-block;
-        height: 25px;
-        line-height: 25px;
-        font-size: 1rem;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -khtml-user-select: none;
-        -ms-user-select: none;
-    }
-
-    [type="checkbox"]:checked+label::before {
-        top: -4px;
-        left: -5px;
-        width: 12px;
-        height: 22px;
-        border-top: 2px solid transparent;
-        border-left: 2px solid transparent;
-        border-right: 2px solid #0096DC;
-        border-bottom: 2px solid #0096DC;
-        -webkit-transform: rotate(40deg);
-        transform: rotate(40deg);
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        -webkit-transform-origin: 100% 100%;
-        transform-origin: 100% 100%;
-    }
-
-    [type="checkbox"]:indeterminate+label::before {
-        top: -11px;
-        left: -12px;
-        width: 10px;
-        height: 22px;
-        border-top: none;
-        border-left: none;
-        border-right: 2px solid #0096DC;
-        border-bottom: none;
-        -webkit-transform: rotate(90deg);
-        transform: rotate(90deg);
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        -webkit-transform-origin: 100% 100%;
-        transform-origin: 100% 100%;
-    }
-
-    [type="checkbox"][disabled] {
-        +label {
-            cursor: not-allowed;
-
-            &::before {
-                border-color: $gtx-color-dark-gray;
-                background: rgba(0, 0, 0, 0.1);
-            }
+        .indicator.state-false {
+            background-color: $gtx-color-light-gray;
         }
 
-        &:checked+label::before {
-            background: transparent;
-            border-top-color: transparent;
-            border-left-color: transparent;
-            border-bottom-color: $gtx-color-dark-gray;
-            border-right-color: $gtx-color-dark-gray;
+        .label-content {
+            color: $gtx-color-dark-gray;
         }
     }
-
-
 }

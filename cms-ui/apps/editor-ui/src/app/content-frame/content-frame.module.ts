@@ -1,5 +1,6 @@
 import { NgModule, inject, provideAppInitializer } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { FormGridModule } from '@gentics/form-grid';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { ColorAlphaModule } from 'ngx-color/alpha';
 import { ColorSliderModule } from 'ngx-color/slider';
@@ -125,6 +126,7 @@ const MODULE_INITIALIZER = provideAppInitializer(() => {
         EditorOverlayModule,
         ColorSliderModule,
         ColorAlphaModule,
+        FormGridModule,
         RouterModule.forChild(CONTENT_FRAME_ROUTES),
         GenticsUICoreModule,
     ],

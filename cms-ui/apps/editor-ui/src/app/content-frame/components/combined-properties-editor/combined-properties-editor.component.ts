@@ -20,14 +20,13 @@ import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     EditableFileProps,
     EditableFolderProps,
-    EditableFormProps,
+    EditableFormProperties,
     EditableImageProps,
     EditableObjectTag,
     EditablePageProps,
     EditableTag,
     Feature,
     Folder,
-    FolderItemOrTemplateType,
     FolderSaveRequestOptions,
     Form,
     ItemPermissions,
@@ -104,7 +103,6 @@ import {
     RemoveExpandedTabGroupAction,
     SaveErrorAction,
     SaveSuccessAction,
-    StartSavingAction,
 } from '../../../state';
 import {
     TagEditorHostComponent,
@@ -344,11 +342,11 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 return typeof (item as any).language === 'string'
                     ? this.permissionService.forItemInLanguage(itemType, itemId, nodeId, (item as any).language)
                     : this.permissionService.forItem(itemId, itemType, nodeId);
-            })
+            }),
         ).subscribe((perms) => {
             this.itemPermissions = perms;
             this.changeDetector.markForCheck();
-        }))
+        }));
 
         this.itemWithObjectProperties$ = this.item$.pipe(
             switchMap((item) => this.loadFolderWithTags(item)),
@@ -433,11 +431,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             distinctUntilChanged(isEqual),
             switchMap((item) => this.loadItemFolder(item)),
             switchMap((itemAndFolder) => this.loadLanguagesAndTemplates(itemAndFolder.item, itemAndFolder.folder)),
-            startWith({
-                item: null,
-                languages: [],
-                templates: [],
-            }),
             publishReplay(1),
             refCount(),
         );
@@ -908,7 +901,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 updatePromise = this.folderActions.updateFolderProperties(itemId, formValue as EditableFolderProps, postUpdateBehavior);
                 break;
             case 'form':{
-                const props = formValue as EditableFormProps;
+                const props = formValue as EditableFormProperties;
                 /*
                  * A bit ugly to do so here, but other places don't work that well for this case.
                  * When the selection for a internal page is not enabled (can only choose either),
@@ -919,14 +912,12 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                  */
                 updatePromise = this.folderActions.updateFormProperties(itemId, {
                     ...props,
-                    successNodeId: props.successNodeId ?? 0,
-                    successPageId: props.successPageId ?? 0,
                     data: {
                         ...props.data,
-                        // eslint-disable-next-line @typescript-eslint/naming-convention
-                        mailsource_nodeid: props.data?.mailsource_nodeid ?? 0,
-                        // eslint-disable-next-line @typescript-eslint/naming-convention
-                        mailsource_pageid: props.data?.mailsource_pageid ?? 0,
+                        successNodeId: props.data.successNodeId ?? 0,
+                        successPageId: props.data.successPageId ?? 0,
+                        adminEmailPageId: props.data.adminEmailPageId ?? 0,
+                        adminEmailNodeId: props.data.adminEmailNodeId ?? 0,
                     },
                 }, postUpdateBehavior);
                 break;
@@ -991,7 +982,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                     this.itemChange.emit(this.item);
                     this.changeDetector.markForCheck();
                 })
-                .catch(error => {
+                .catch((error) => {
                     this.appState.dispatch(new SaveErrorAction(error.message));
                     this.errorHandler.catch(error, { notification: true });
                     throw error;
@@ -1085,7 +1076,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (node.id === folderState.activeNode && !folderState.activeNodeLanguages.fetching && folderState.activeNodeLanguages.total) {
             const languageIds = folderState.activeNodeLanguages.list;
             const languages = languageIds.map((id) => this.entityResolver.getLanguage(id));
-            return of(languages);
+            if (languageIds.length === languages.length) {
+                return of(languages);
+            }
         }
 
         return this.client.node.listLanguages(node.id).pipe(

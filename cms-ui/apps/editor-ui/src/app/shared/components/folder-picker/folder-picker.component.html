@@ -1,34 +1,32 @@
-@if (label) {
-  <label class="label">{{ label }}</label>
-}
+<gtx-form-element-container [disabled]="disabled">
+    @if (label) {
+      <label class="label">{{ label }}</label>
+    }
 
-<div class="wrapper" [class.disabled]="disabled">
-  <div class="picker-value">
     @if (loadedFolder) {
       <span class="name">{{ loadedFolder?.name }}</span>
     } @else {
       <span class="placeholder">{{ placeholder }}</span>
     }
-  </div>
 
-  <gtx-button
-    class="addon-button picker-button"
-    icon
-    [disabled]="disabled"
-    (click)="pickNewFolder()"
+    <button
+        class="addon-button"
+        data-action="pick-folder"
+        [disabled]="disabled"
+        (click)="pickNewFolder()"
     >
-    <icon>edit</icon>
-  </gtx-button>
+        <icon>folder_open</icon>
+    </button>
 
-  @if (clearable && !required) {
-    <gtx-button
-      class="addon-button clear-button"
-      icon
-      type="alert"
-      [disabled]="disabled"
-      (click)="clearValue()"
-      >
-      <icon>close</icon>
-    </gtx-button>
-  }
-</div>
+    @if (clearable && !required) {
+        <button
+            class="addon-button icon-alert"
+            data-action="clear"
+            [disabled]="disabled"
+            (click)="clearValue()"
+        >
+            <icon>close</icon>
+        </button>
+    }
+</gtx-form-element-container>
+

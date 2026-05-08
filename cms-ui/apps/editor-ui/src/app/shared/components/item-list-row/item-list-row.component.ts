@@ -38,10 +38,11 @@ import {
 } from '../../../state';
 import { TranslatePageModal, TranslatePageModalActions, TranslateResult } from '../translate-page-modal/translate-page-modal.component';
 import { UsageModalComponent } from '../usage-modal/usage-modal.component';
+import { FormListLoaderService } from '../../providers';
 
 type AllowedItemType
     = | Folder<Raw | Normalized>
-      | Form<Raw | Normalized>
+      | Form
       | Page<Raw | Normalized>
       | File<Raw | Normalized>
       | Image<Raw | Normalized>
@@ -66,7 +67,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
     public nodeId: number;
 
     @Input()
-    public itemInEditor: any;
+    public activeItemId: number;
 
     @Input()
     public icon: string;
@@ -76,6 +77,9 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
     @Input()
     public itemType: FolderItemType;
+
+    @Input()
+    public external = false;
 
     @Input()
     public permissions: FolderPermissionData;
@@ -146,7 +150,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
     /** Emits if a form language icon is clicked */
     @Output()
-    public formLanguageIconClick = new EventEmitter<{ form: Form<Raw>; language: Language }>();
+    public formLanguageIconClick = new EventEmitter<{ form: Form; language: Language }>();
 
     public languageState: LanguageState;
     public itemIdDeleted = false;
@@ -161,6 +165,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         private decisionModals: DecisionModalsService,
         private folderActions: FolderActionsService,
         private wastebinActions: WastebinActionsService,
+        private formListLoader: FormListLoaderService,
     ) {
         super(changeDetector);
     }
@@ -254,7 +259,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.activeLanguage.id;
+        const currentLanguageId = this.activeLanguage?.id;
         this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
             .then((modal) => modal.open())
             .catch(this.errorHandler.catch);
@@ -356,7 +361,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
         await this.folderActions.updateFormLanguage(item, language);
         await this.folderActions.setActiveFormLanguage(language.id);
-        await this.folderActions.refreshList('form');
+        this.formListLoader.reload();
         this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, EditMode.EDIT).navigate();
     }
 
@@ -373,7 +378,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         this.pageLanguageIconClick.emit({ page: pageRaw, language: data.language });
     }
 
-    onFormLanguageIconClicked(data: { item: Form<Raw> | Form<Normalized>; language: Language }): void {
+    onFormLanguageIconClicked(data: { item: Form; language: Language }): void {
         const formRaw = this.entityResolver.denormalizeEntity('form', data.item);
         this.formLanguageIconClick.emit({ form: formRaw, language: data.language });
     }

@@ -55,7 +55,7 @@ export class DateTimePickerComponent
 
     /** If true the clear button is displayed, which allows the user to clear the selected date. */
     @Input()
-    public clearable = false;
+    public clearable: boolean = null;
 
     /** Value to set on the ngModel when the DatePicker is cleared. */
     @Input()

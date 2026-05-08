@@ -1,11 +1,10 @@
-import { ConstructHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormGroup, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
-import { Raw, TagType, TemplateTag } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { TagEditorChange } from '@gentics/cms-integration-api-models';
+import { Raw, TagType, TemplateTag } from '@gentics/cms-models';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { environment } from '../../../../../environments/environment';
+import { ConstructHandlerService } from '../../../../core';
 
 export enum TemplateTagPropertiesMode {
     CREATE = 'create',
@@ -21,9 +20,9 @@ export enum TemplateTagPropertiesMode {
         generateFormProvider(TemplateTagPropertiesComponent),
         generateValidatorProvider(TemplateTagPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class TemplateTagPropertiesComponent extends BasePropertiesComponent<TemplateTag> implements OnInit {
+export class TemplateTagPropertiesComponent extends BaseFormPropertiesComponent<TemplateTag> implements OnInit {
 
     readonly TemplateTagPropertiesMode = TemplateTagPropertiesMode;
 
@@ -55,7 +54,7 @@ export class TemplateTagPropertiesComponent extends BasePropertiesComponent<Temp
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.constructHandler.listMapped().subscribe(constructs => {
+        this.subscriptions.push(this.constructHandler.listMapped().subscribe((constructs) => {
             this.constructs = constructs.items;
             this.changeDetector.markForCheck();
         }));
@@ -94,9 +93,9 @@ export class TemplateTagPropertiesComponent extends BasePropertiesComponent<Temp
     onTagEditorChange(change: TagEditorChange): void {
         // Seems to be a change for a different tag
         if (change.tagName !== this.tagName
-            || change.entityId !== this.templateId
-            || change.entityType !== 'template'
-            || change.nodeId !== this.nodeId
+          || change.entityId !== this.templateId
+          || change.entityType !== 'template'
+          || change.nodeId !== this.nodeId
         ) {
             return;
         }

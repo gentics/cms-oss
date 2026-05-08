@@ -1,48 +1,53 @@
-<div class="wrapper">
-  <input
-    #inputElement
-
-    class="input-element"
-    [ngModel]="value || ''"
-    [attr.autocomplete]="autocomplete || null"
-    [attr.id]="id"
-    [attr.max]="max"
-    [attr.maxlength]="maxlength"
-    [attr.min]="min"
-    [attr.name]="name"
-    [attr.pattern]="pattern"
-    [attr.placeholder]="placeholder"
-    [attr.step]="step"
-    [class.clearable]="clearable"
-    [class.has-addon]="clearable"
-
+<gtx-form-element-container
     [disabled]="disabled"
     [readonly]="readonly"
-    [required]="required"
-    [type]="type"
+    [class.active]="focused"
+>
+    @if (label) {
+        <label
+            [attr.for]="id"
+            (click)="inputElement.focus()"
+        >{{ label }}</label>
+    }
 
-    (keydown)="handleKeyDown($event)"
-    (blur)="onBlur($event)"
-    (focus)="onFocus($event)"
-    (input)="handleInputChange($event)"
+    <input
+        #inputElement
+
+        class="input-element"
+        [ngModel]="value || ''"
+        [attr.autocomplete]="autocomplete || null"
+        [attr.id]="id"
+        [attr.max]="max"
+        [attr.maxlength]="maxlength"
+        [attr.min]="min"
+        [attr.name]="name"
+        [attr.pattern]="pattern"
+        [attr.placeholder]="placeholder"
+        [attr.step]="step"
+
+        [disabled]="disabled"
+        [readonly]="readonly"
+        [required]="required"
+        [type]="type"
+
+        (keydown)="handleKeyDown($event)"
+        (blur)="onBlur($event)"
+        (focus)="onFocus($event)"
+        (input)="handleInputChange($event)"
     />
 
-  @if (clearable) {
-    <gtx-button
-      icon
-      class="addon-button clear-button"
-      type="secondary"
-      [disabled]="disabled"
-      (click)="clear()"
-      >
-      <icon class="clear-icon">clear</icon>
-    </gtx-button>
-  }
-</div>
+    <div class="projected-addon-buttons addon-button">
+        <ng-content select=".addon-button" />
+    </div>
 
-@if (label) {
-  <label
-    [attr.for]="id"
-    (click)="inputElement.focus()"
-  >{{ label }}</label>
-}
+    @if (clearable == null ? !required : clearable) {
+        <button
+            class="addon-button clear-button icon-alert"
+            data-action="clear"
+            [disabled]="disabled"
+            (click)="clear()"
+        >
+            <icon>clear</icon>
+        </button>
+    }
+</gtx-form-element-container>

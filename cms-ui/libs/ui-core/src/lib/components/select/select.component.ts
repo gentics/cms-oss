@@ -17,12 +17,13 @@ import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
 import { SelectOptionGroupDirective } from '../../directives/select-option-group/option-group.directive';
 import { SelectOptionDirective } from '../../directives/select-option/option.directive';
-import { generateFormProvider, getValueByPath } from '../../utils';
+import { cancelEvent, generateFormProvider, getValueByPath } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
 import { DropdownListComponent } from '../dropdown-list/dropdown-list.component';
 
 export interface NormalizedOptionGroup {
+    id: string;
     options: SelectOptionDirective[];
     label: string;
     disabled: boolean;
@@ -375,7 +376,8 @@ export class SelectComponent
     }
 
     /** Clears the selected value and emits `null` with the `change` event. */
-    clearSelection(): void {
+    clearSelection(event?: Event): void {
+        cancelEvent(event);
         if (this.disabled) {
             return;
         }
@@ -383,7 +385,8 @@ export class SelectComponent
         this.triggerChange(this.multiple ? [] : null);
     }
 
-    selectAllOptions(): void {
+    selectAllOptions(event?: Event): void {
+        cancelEvent(event);
         this.triggerChange(this.selectOptions.map((option) => option.value));
     }
 
@@ -419,6 +422,7 @@ export class SelectComponent
     private buildOptionGroups(): NormalizedOptionGroup[] {
         const groups = this.selectOptionGroups.map((g) => {
             return {
+                get id(): string { return g.id; },
                 get options(): SelectOptionDirective[] { return g.options; },
                 get label(): string { return g.label; },
                 get disabled(): boolean { return g.disabled; },
@@ -428,6 +432,7 @@ export class SelectComponent
 
         if (this.selectOptions.length) {
             groups.unshift({
+                id: '_default_',
                 options: this.selectOptions.toArray(),
                 label: '',
                 isDefaultGroup: true,

@@ -1,7 +1,7 @@
-import { Form } from './cms-form';
 import { NodeFeature } from './feature';
 import { File } from './file';
 import { Folder } from './folder';
+import { Form } from './form';
 import { Image } from './image';
 import { Node } from './node';
 import { Page } from './page';
@@ -86,7 +86,6 @@ export interface StagedError {
     kind: StagingErrorKind;
 }
 
-
 export interface ContentPackageImportError {
     path: string;
     error: string;
@@ -130,12 +129,12 @@ export interface StagedNodeIdObjectId {
 }
 
 export interface StagedOverview extends StagingBase, Pick<Overview,
-| 'listType'
-| 'selectType'
-| 'orderDirection'
-| 'orderBy'
-| 'maxItems'
-| 'recursive'
+  | 'listType'
+  | 'selectType'
+  | 'orderDirection'
+  | 'orderBy'
+  | 'maxItems'
+  | 'recursive'
 > {
     selectedNodeItemIds: StagedNodeIdObjectId[];
 }
@@ -162,8 +161,8 @@ export interface StagedProperty extends
 }
 
 export interface StagedTag extends StagingBase, Pick<Tag,
-| 'active'
-| 'type'
+  | 'active'
+  | 'type'
 > {
     construct: StagedReference;
     properties: Record<string, StagedProperty>;
@@ -176,7 +175,7 @@ export interface StagedObjectTag extends StagedTag {
 export enum StagedObjectVersionType {
     PUBLISHED = 'published',
     SCHEDULED = 'scheduled',
-    CURRENT = 'current'
+    CURRENT = 'current',
 }
 
 export interface StagedObjectVersion {
@@ -189,20 +188,20 @@ export interface StagedObjectVersion {
 }
 
 export interface StagedNode extends StagingBase, Pick<Node,
-| 'publishDir'
-| 'binaryPublishDir'
-| 'pubDirSegment'
-| 'publishImageVariants'
-| 'publishFs'
-| 'publishFsPages'
-| 'publishFsFiles'
-| 'publishContentMap'
-| 'publishContentMapPages'
-| 'publishContentMapFiles'
-| 'publishContentMapFolders'
-| 'omitPageExtension'
-| 'pageLanguageCode'
-| 'meshPreviewUrlProperty'
+  | 'publishDir'
+  | 'binaryPublishDir'
+  | 'pubDirSegment'
+  | 'publishImageVariants'
+  | 'publishFs'
+  | 'publishFsPages'
+  | 'publishFsFiles'
+  | 'publishContentMap'
+  | 'publishContentMapPages'
+  | 'publishContentMapFiles'
+  | 'publishContentMapFolders'
+  | 'omitPageExtension'
+  | 'pageLanguageCode'
+  | 'meshPreviewUrlProperty'
 > {
     // Use global IDs instead of local ones
     /** Global/UUID of the content-repository */
@@ -243,11 +242,11 @@ export interface StagedChannel extends StagedNode {
 export type ContentPackageChannel = ContentPackageFolderObject & StagedChannel;
 
 export interface StagedFolder extends StagedLocalizableObject, Pick<Folder,
-| 'publishDir'
-| 'description'
-| 'nameI18n'
-| 'descriptionI18n'
-| 'publishDirI18n'
+  | 'publishDir'
+  | 'description'
+  | 'nameI18n'
+  | 'descriptionI18n'
+  | 'publishDirI18n'
 > {
     objectTags: Record<string, StagedObjectTag>;
     templateIds: string[];
@@ -256,14 +255,14 @@ export interface StagedFolder extends StagedLocalizableObject, Pick<Folder,
 export type ContentPackageFolder = ContentPackageFolderObject & StagedFolder;
 
 export interface StagedFile extends StagedLocalizableObject, Pick<File,
-| 'fileType'
-| 'description'
-| 'fileSize'
-| 'niceUrl'
-| 'alternateUrls'
-| 'forceOnline'
-| 'customCdate'
-| 'customEdate'
+  | 'fileType'
+  | 'description'
+  | 'fileSize'
+  | 'niceUrl'
+  | 'alternateUrls'
+  | 'forceOnline'
+  | 'customCdate'
+  | 'customEdate'
 > {
     objectTags: Record<string, StagedObjectTag>;
 }
@@ -271,27 +270,27 @@ export interface StagedFile extends StagedLocalizableObject, Pick<File,
 export type ContentPackageFile = ContentPackageFolderObject & StagedFile;
 
 export interface StagedImage extends StagedFile, Pick<Image,
-| 'sizeX'
-| 'sizeY'
-| 'dpiX'
-| 'dpiY'
-| 'fpX'
-| 'fpY'
-| 'gisResizable'
+  | 'sizeX'
+  | 'sizeY'
+  | 'dpiX'
+  | 'dpiY'
+  | 'fpX'
+  | 'fpY'
+  | 'gisResizable'
 > { }
 
 export type ContentPackageImage = ContentPackageFolderObject & StagedImage;
 
 export interface StagedPage extends StagedLocalizableObject, Pick<Page,
-| 'niceUrl'
-| 'alternateUrls'
-| 'fileName'
-| 'description'
-| 'priority'
-| 'language'
-| 'contentId'
-| 'customCdate'
-| 'customEdate'
+  | 'niceUrl'
+  | 'alternateUrls'
+  | 'fileName'
+  | 'description'
+  | 'priority'
+  | 'language'
+  | 'contentId'
+  | 'customCdate'
+  | 'customEdate'
 > {
     version: StagedObjectVersion;
     template: StagedReference;
@@ -303,13 +302,11 @@ export interface StagedPage extends StagedLocalizableObject, Pick<Page,
 export type ContentPackagePage = ContentPackageFolderObject & StagedPage;
 
 export interface StagedForm extends StagingBase, Pick<Form,
-| 'description'
-| 'languages'
-| 'data'
+  | 'description'
+  | 'languages'
+  | 'data'
 > {
     version: StagedObjectVersion;
-    successPageId: string;
-    successNodeId: string;
 }
 
 export type ContentPackageForm = ContentPackageFolderObject & StagedForm;

@@ -407,6 +407,11 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 	}
 
 	@Override
+	public void setDefaultFormFolder(Folder folder) throws ReadOnlyException, NodeException {
+		failReadOnly();
+	}
+
+	@Override
 	public void setUrlRenderWayPages(int value) throws ReadOnlyException {
 		failReadOnly();
 	}

@@ -1,6 +1,6 @@
-import { Form } from './cms-form';
 import { File } from './file';
 import { Folder } from './folder';
+import { Form, FormInNode } from './form';
 import { Image } from './image';
 import { Item } from './item';
 import { Page } from './page';
@@ -16,6 +16,8 @@ export type ItemInNode<T extends Item<Raw> = Item<Raw>> = T & {
     nodeId: number;
 };
 
+export type ItemRef<T extends Item<Raw> = Item<Raw>> = Pick<ItemInNode<T>, 'id' | 'nodeId' | 'type' | 'name'>;
+
 /** Represents an Tag inside a container, as returned by the RepositoryBrowser. */
 export type TagInContainer<T extends Page<Raw> | Template<Raw> = Page<Raw> | Template<Raw>> = Tag & {
     /** The parent container (reference added by the RepositoryBrowser). */
@@ -23,7 +25,7 @@ export type TagInContainer<T extends Page<Raw> | Template<Raw> = Page<Raw> | Tem
     __parent__: T;
 };
 
-export type RepoItem = Folder<Raw> | Form<Raw> | Page<Raw> | File<Raw> | Image<Raw> | Template<Raw> | Tag;
+export type RepoItem = Folder<Raw> | Form | Page<Raw> | File<Raw> | Image<Raw> | Template<Raw> | Tag;
 
 export interface AllowedSelection {
     page?: boolean;
@@ -65,7 +67,7 @@ export interface SerializableRepositoryBrowserOptions {
 
 export interface AllowedSelectionTypeMap {
     folder: ItemInNode<Folder<Raw>>;
-    form: ItemInNode<Form<Raw>>;
+    form: FormInNode;
     page: ItemInNode<Page<Raw>>;
     file: ItemInNode<File<Raw>>;
     image: ItemInNode<Image<Raw>>;

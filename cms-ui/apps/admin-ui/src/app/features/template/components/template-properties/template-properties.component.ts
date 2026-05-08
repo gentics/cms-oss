@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { TagEditorChange } from '@gentics/cms-integration-api-models';
 import { IndexById, MarkupLanguage, Node, Raw, TemplateBO } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { MarkupLanguageDataService } from '../../../../shared';
 
 export enum TemplatePropertiesMode {
@@ -22,7 +21,7 @@ export enum TemplatePropertiesMode {
     ],
     standalone: false,
 })
-export class TemplatePropertiesComponent extends BasePropertiesComponent<TemplateBO> implements OnInit {
+export class TemplatePropertiesComponent extends BaseFormPropertiesComponent<TemplateBO> implements OnInit {
 
     public readonly GENERAL_TAB = 'general';
     public readonly TemplatePropertiesMode = TemplatePropertiesMode;

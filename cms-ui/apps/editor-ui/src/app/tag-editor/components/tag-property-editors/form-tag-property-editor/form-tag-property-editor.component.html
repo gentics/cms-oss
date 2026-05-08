@@ -1,11 +1,13 @@
 @if (tagProperty) {
-  <div class="tag-part-editor">
-    <browse-box
+    <div class="tag-part-editor">
+        <gtx-browse-box
             [label]="tagPart | tagPropLabel"
-            [displayValue]="!formFeatureActive ? ('editor.form_feature_not_available' | gtxI18n) : (internalFormDisplayValue$ | async)"
-            [disabled]="!formFeatureActive || readOnly"
-      (clear)="changeSelectedForm(null)"
-      (browse)="browseForForm()"
-    ></browse-box>
-  </div>
+            [placeholder]="formFeatureActive ? ('editor.form_no_selection' | gtxI18n) : ('editor.form_feature_not_available' | gtxI18n)"
+            [disabled]="readOnly || !formFeatureActive"
+            [allowedSelection]="'form'"
+            [selectMultiple]="false"
+            [value]="formFeatureActive ? (selectedInternalForm.selectedItem$ | async) : null"
+            (valueChange)="changeSelectedForm($event)"
+        ></gtx-browse-box>
+    </div>
 }

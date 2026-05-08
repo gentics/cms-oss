@@ -1,0 +1,122 @@
+@if (true) {
+    <div
+        class="resize-grid-overlay resize-grid-overlay--container"
+        aria-hidden="true"
+        [class.active]="resizeOverlayActiveLocal()"
+        [style.--active-cols]="resizeOverlaySpanLocal()"
+    >
+        <div class="resize-grid-overlay__rail">
+            <div class="resize-grid-overlay__fill"></div>
+            <div class="resize-grid-overlay__marker"></div>
+        </div>
+
+        <div class="resize-grid-overlay__ticks">
+            @for (n of (1 | gtxRange:12); track n) {
+            <div
+                class="resize-grid-overlay__tick"
+                [class.is-active]="n === resizeOverlaySpanLocal()"
+            >
+                <span class="resize-grid-overlay__num">{{ n }}</span>
+            </div>
+            }
+        </div>
+    </div>
+}
+
+<gtx-sortable-list
+    class="editor-drop-container"
+    [attr.data-drop-container-id]="id()"
+    [class.element-moving]="elementMoving() != null"
+    [class.drag-blocked]="isDragBlocked()"
+    [class.editor-drop-container--root]="id() === rootId()"
+    [group]="sortableGroup"
+    [sort]="mode() !== FormGridEditMode.NONE"
+    [fallbackOnBody]="true"
+    [invertSwap]="false"
+    [swapThreshold]="0.7"
+    (dragStart)="onSortableDragStart($event)"
+    (dragEnd)="sortElements($event)"
+    (addItem)="onSortableAdd($event)"
+>
+    @for (displayItem of displayItems(); track displayItem.id) {
+        @let element = displayItem.element;
+
+        <gtx-sortable-item
+            class="form-item columns"
+            [class.is-selected-card]="selectedElement() != null && element?.id === selectedElement()?.id"
+            [class.container-element]="displayItem.isAggregate || displayItem.isContainer"
+            [ngClass]="'small-' + getDisplaySpan(element, $index)"
+            data-drop-item="true"
+            [attr.data-element-id]="element?.id"
+            [attr.data-drop-index]="$index"
+        >
+            <div
+                class="grid-resize-handle"
+                [attr.aria-label]="'form_grid.resize_element_width' | gtxI18n"
+                [attr.title]="'form_grid.resize_element_width' | gtxI18n"
+                (pointerdown)="onResizeStart($event, $index)"
+            ></div>
+
+            <gtx-contents-list-item
+                class="fg-box"
+                [class.empty]="!element.label"
+                [attr.data-element-id]="element.id"
+                [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
+                (click)="selectElement(element, $event)"
+            >
+                <div class="item-primary">
+                    <div class="actions-container">
+                        <span class="tag tag-type">
+                            <span class="tag-text">{{ displayItem.config.labelI18n | gtxI18nObject }}</span>
+                        </span>
+
+                        @if (!displayItem.isControl || mode() === FormGridEditMode.FULL) {
+                            <gtx-button
+                                type="alert"
+                                class="delete-button"
+                                [icon]="true"
+                                (click)="deleteElement($event, element, $index)"
+                            >
+                                <icon>delete_outline</icon>
+                            </gtx-button>
+                        }
+                    </div>
+
+                    <strong
+                        class="formtitle"
+                        [class.is-selected-title]="selectedElement() != null && element.id === selectedElement()?.id"
+                    >{{ (element.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
+                </div>
+            </gtx-contents-list-item>
+
+            @if (displayItem.isAggregate || displayItem.isContainer) {
+                <gtx-form-grid-elements-container
+                    class="nested"
+                    [class.no-elements]="element.elements?.length === 0"
+
+                    [config]="config()"
+                    [rootId]="rootId()"
+                    [id]="element.id"
+                    [level]="level() + 1"
+                    [pageIndex]="pageIndex()"
+                    [languages]="languages()"
+                    [mode]="mode()"
+                    [gridSurface]="gridSurface()"
+                    [whitelist]="displayItem.whitelist"
+
+                    [elements]="element.elements || []"
+                    (elementsChange)="updateChildElements(element, $event)"
+                    [(schema)]="schema"
+
+                    [selectedElement]="selectedElement()"
+                    [selectedElementContainerId]="selectedElementContainerId()"
+                    (elementSelect)="elementSelect.emit($event)"
+                    (moveToContainer)="moveToContainer.emit($event)"
+                    [(elementMoving)]="elementMoving"
+
+                    [(resizing)]="resizing"
+                ></gtx-form-grid-elements-container>
+            }
+        </gtx-sortable-item>
+    }
+</gtx-sortable-list>

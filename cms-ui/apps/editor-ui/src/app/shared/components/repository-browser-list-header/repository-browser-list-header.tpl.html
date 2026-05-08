@@ -63,8 +63,8 @@
           class="page-language-toggle"
           >
           <gtx-checkbox
-                    [checked]="showAllLanguages"
-            (change)="toggleDisplayAllLanguages()"
+            [value]="showAllLanguages"
+            (valueChange)="toggleDisplayAllLanguages()"
           ></gtx-checkbox>
           {{ 'editor.display_all_languages_label' | gtxI18n }}
         </gtx-dropdown-item>
@@ -75,8 +75,8 @@
           class="page-language-toggle"
           >
           <gtx-checkbox
-                    [checked]="showStatusIcons"
-            (change)="toggleDisplayStatusIcons()"
+            [value]="showStatusIcons"
+            (valueChange)="toggleDisplayStatusIcons()"
           ></gtx-checkbox>
           {{ 'editor.display_status_icons_label' | gtxI18n }}
         </gtx-dropdown-item>

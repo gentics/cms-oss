@@ -3,35 +3,30 @@
 }
 
 <div class="properties-editor-i18n">
-  <gtx-grouped-tabs
-    class="properties-tabs"
-    pure
-    wrap
-    statusIcons
-    [activeId]="activeLanguage?.id"
-    (tabChange)="setActiveLanguage($event)"
+    <gtx-grouped-tabs
+        class="properties-tabs"
+        pure
+        wrap
+        statusIcons
+        [activeId]="activeLanguage?.id"
+        (tabChange)="setActiveLanguage($event)"
     >
-    @for (language of languages; track language.id) {
-      <gtx-tab-pane
-        [id]="language?.id"
-        [readonly]="disabled"
-        >
-        <ng-template gtx-tab-label>
-          <div
-            class="language-pane-label"
-            [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
-          >{{ language?.name }}</div>
-        </ng-template>
-      </gtx-tab-pane>
-    }
-  </gtx-grouped-tabs>
+        @for (language of languages; track language.id) {
+            <gtx-tab-pane [id]="language?.id" [readonly]="disabled">
+                <ng-template gtx-tab-label>
+                    <div
+                        class="language-pane-label"
+                        [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
+                    >{{ language?.name }}</div>
+                </ng-template>
+            </gtx-tab-pane>
+        }
+    </gtx-grouped-tabs>
 
-  @if (activeLanguage?.code) {
-    <div
-      class="tab-content"
-      >
-      <h3>{{ activeLanguage?.name }}</h3>
-      <ng-content></ng-content>
-    </div>
-  }
+    @if (activeLanguage?.code) {
+        <div class="tab-content">
+            <h3>{{ activeLanguage?.name }}</h3>
+            <ng-content></ng-content>
+        </div>
+    }
 </div>

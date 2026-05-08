@@ -1,10 +1,8 @@
-
-import { createI18nRequiredValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormGroup, UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { AnyModelType, ConstructCategoryBO, Language } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { createI18nRequiredValidator } from '../../../../common';
 
 export enum ConstructCategoryPropertiesMode {
     CREATE = 'create',
@@ -20,10 +18,10 @@ export enum ConstructCategoryPropertiesMode {
         generateFormProvider(ConstructCategoryPropertiesComponent),
         generateValidatorProvider(ConstructCategoryPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class ConstructCategoryPropertiesComponent
-    extends BasePropertiesComponent<ConstructCategoryBO>
+    extends BaseFormPropertiesComponent<ConstructCategoryBO>
     implements OnChanges {
 
     @Input()
@@ -62,7 +60,7 @@ export class ConstructCategoryPropertiesComponent
     }
 
     createNameValidator(): ValidatorFn {
-        const validator = createI18nRequiredValidator(() => (this.supportedLanguages || []).map(l => l.code), langs => {
+        const validator = createI18nRequiredValidator(() => (this.supportedLanguages || []).map((l) => l.code), (langs) => {
             this.invalidLanguages = langs;
             this.changeDetector.markForCheck();
         });

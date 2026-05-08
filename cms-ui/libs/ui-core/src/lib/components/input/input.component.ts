@@ -169,6 +169,9 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
     @Output()
     public valueCleared = new EventEmitter<void>();
 
+    /** If the input is currently focused */
+    public focused = false;
+
     constructor(
         changeDetector: ChangeDetectorRef,
     ) {
@@ -252,12 +255,16 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
 
     public onBlur(e: Event): void {
         cancelEvent(e);
+        this.focused = false;
         this.triggerTouch();
         this.blur.emit(this.value);
+        this.changeDetector.markForCheck();
     }
 
     public onFocus(e: Event): void {
+        this.focused = true;
         this.focus.emit(this.value);
+        this.changeDetector.markForCheck();
     }
 
     public clear(): void {

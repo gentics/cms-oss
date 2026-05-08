@@ -12,9 +12,8 @@ import {
     ValidationErrors,
     Validator,
 } from '@angular/forms';
-import { CmsFormElementI18nValue } from '@gentics/cms-models';
+import { I18nString } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
-import { cloneDeep } from 'lodash-es';
 
 @Component({
     selector: 'gtx-i18n-input',
@@ -26,10 +25,10 @@ import { cloneDeep } from 'lodash-es';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
-    standalone: false
+    standalone: false,
 })
 export class I18nInputComponent
-    extends BaseFormElementComponent<CmsFormElementI18nValue<string | number | null>>
+    extends BaseFormElementComponent<I18nString>
     implements Validator, OnChanges {
 
     @Input()
@@ -47,10 +46,13 @@ export class I18nInputComponent
     @Input()
     public useRichEditor = false;
 
+    @Input()
+    public useTextArea = false;
+
     private validatorChange: () => void = () => { /* no op until assigned */ };
 
     public isTranslated = true;
-    public translationSuggestions: { language: string, value: string | number | null }[] = [];
+    public translationSuggestions: { language: string; value: string | number | null }[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -71,12 +73,12 @@ export class I18nInputComponent
         /* No op */
     }
 
-    public handleInputChange(changeValue: string | number | null): void {
+    public handleInputChange(changeValue: string | null): void {
         if (this.value && this.language) {
             // Has to be a clone. Since the value is passed as ref, we'd edit it
             // in here and the change detection above would not detect any changes,
             // since the value is already present/updated.
-            const tmp = cloneDeep(this.value || {});
+            const tmp = structuredClone(this.value || {});
             tmp[this.language] = changeValue;
             this.triggerChange(tmp);
             this.validatorChange();
@@ -166,11 +168,11 @@ export class I18nInputComponent
          * if any other language has this value set (and the current one does not),
          * then there is translation error
          */
-        const notCurrentLanguages = this.availableLanguages.filter(language => language !== this.language);
-        const languagesOfAvailableTranslations = notCurrentLanguages.filter(language => this.valuePresent(language));
+        const notCurrentLanguages = this.availableLanguages.filter((language) => language !== this.language);
+        const languagesOfAvailableTranslations = notCurrentLanguages.filter((language) => this.valuePresent(language));
         if (languagesOfAvailableTranslations.length > 0) {
             this.isTranslated = false;
-            this.translationSuggestions = languagesOfAvailableTranslations.map(language => ({
+            this.translationSuggestions = languagesOfAvailableTranslations.map((language) => ({
                 language: language,
                 value: this.value[language],
             }));

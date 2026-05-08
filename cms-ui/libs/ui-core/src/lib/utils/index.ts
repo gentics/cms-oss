@@ -9,8 +9,8 @@ export * from './generate-form-provider';
 export * from './matches-mime-type';
 export * from './random-id';
 export * from './routing';
+export * from './set-by-path';
 export * from './to-number';
 export * from './to-selection-array';
 export * from './value-by-path';
 export * from './wait-take.operator';
-

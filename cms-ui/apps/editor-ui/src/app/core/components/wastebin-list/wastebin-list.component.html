@@ -12,8 +12,8 @@
       @if (listSize < filteredItems.length) {
         <gtx-checkbox
           [label]="'modal.show_all' | gtxI18n"
-          [checked]="listSize !== itemsPerPage"
-          (change)="toggleShowAll()"
+          [value]="listSize !== itemsPerPage"
+          (valueChange)="toggleShowAll()"
         ></gtx-checkbox>
       }
     </div>
@@ -23,8 +23,8 @@
           <gtx-contents-list-item>
             <gtx-checkbox
               class="type-icon"
-              [checked]="isSelected(item)"
-              (change)="toggleSelection(item, $event)"
+              [value]="isSelected(item)"
+              (valueChange)="toggleSelection(item, $event)"
             ></gtx-checkbox>
             <div class="item-primary">
               <span class="item-name">{{ item.name }}</span>
@@ -55,9 +55,9 @@
                   @for (variant of getVariants(item); track variant.id) {
                     <div class="variant">
                       <gtx-checkbox
-                        [checked]="selected[variant.id]"
+                        [value]="selected[variant.id]"
                         [disabled]="!isDeleted(variant)"
-                        (change)="toggleVariantSelection(variant, $event)"
+                        (valueChange)="toggleVariantSelection(variant, $event)"
                       ></gtx-checkbox>
                       <span class="language">{{ 'lang.' + variant.language | gtxI18n }}</span>
                       {{ variant.name }}

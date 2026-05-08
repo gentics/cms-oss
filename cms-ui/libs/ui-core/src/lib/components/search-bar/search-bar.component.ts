@@ -140,8 +140,15 @@ export class SearchBarComponent implements ControlValueAccessor, OnChanges {
         }
     }
 
-    onInputChange(event: string): void {
-        this.query = event;
+    onInputChange(event: InputEvent): void {
+        cancelEvent(event);
+
+        if (typeof this.cvaTouch === 'function') {
+            this.cvaTouch();
+        }
+
+        this.query = (event.target as HTMLInputElement).value || '';
+
         if (typeof event === 'string') {
             this.cvaChange(event);
             this.change.emit(event);

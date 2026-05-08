@@ -13,7 +13,7 @@ export function getValueByPath(value: any, path: PathSegment | PathSegment[]): a
     }
 
     if (Array.isArray(value) && path.length > 0) {
-        return value.map(arrValue => getValueByPath(arrValue, path));
+        return value.map((arrValue) => getValueByPath(arrValue, path));
     }
 
     for (const segment of path) {

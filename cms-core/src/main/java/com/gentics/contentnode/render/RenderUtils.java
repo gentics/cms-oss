@@ -5,7 +5,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -30,22 +32,34 @@ import org.apache.velocity.context.InternalContextAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.RenderTypeTrx;
+import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.Tag;
+import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.parttype.PartType;
+import com.gentics.contentnode.parser.ContentRenderer;
+import com.gentics.contentnode.parser.tag.ParserTag;
+import com.gentics.contentnode.parser.tag.struct.ParseStructRenderer;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
+import com.gentics.lib.render.Renderable;
+import com.gentics.lib.resolving.ResolvableMapWrapper;
 import com.gentics.mesh.core.rest.node.FieldMapImpl;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.schema.impl.SchemaReferenceImpl;
@@ -241,6 +255,151 @@ public class RenderUtils {
 		}
 
 		return codes;
+	}
+
+	/**
+	 * Get the rendered resolved key from the resolvable or null if the resolvable is null.
+	 * If the resolved value is a {@link Renderable}, it will be rendered.
+	 * @param resolvable resolvable object (may be null)
+	 * @param key resolved key (not null)
+	 * @return rendered resolved value
+	 */
+	public static String getRenderedResolved(Resolvable resolvable, String key) {
+		if (resolvable == null) {
+			return null;
+		}
+
+		Object resolvedValue = resolvable.get(key);
+		if (resolvedValue instanceof Renderable) {
+			try {
+				return Renderable.class.cast(resolvedValue).render();
+			} catch (NodeException e) {
+				return null;
+			}
+		} else {
+			return ObjectTransformer.getString(resolvedValue, null);
+		}
+	}
+
+	/**
+	 * Get the given parameters from the options as map
+	 * @param options options
+	 * @param names names to get
+	 * @return map of values
+	 */
+	public static Map<Object, Object> getParameters(Options options, String...names) {
+		Map<Object, Object> map = new HashMap<>();
+
+		for (String name : names) {
+			Object value = options.hash(name);
+			if (value != null) {
+				map.put(name, value);
+			}
+		}
+
+		return map;
+	}
+
+	/**
+	 * Get the given parameters from the options as map. The prefix is prepended to each name before getting from options (but will not be prepended to returned keys)
+	 * @param options options
+	 * @param prefix prefix
+	 * @param names names to get
+	 * @return map of values
+	 */
+	public static Map<Object, Object> getParametersWithPrefix(Options options, String prefix, String...names) {
+		Map<Object, Object> map = new HashMap<>();
+
+		for (String name : names) {
+			Object value = options.hash(prefix + name);
+			if (value != null) {
+				map.put(name, value);
+			}
+		}
+
+		return map;
+	}
+
+	/**
+	 * Get the value as object of given class.
+	 * The given value may be an instance of the class (optionally wrapped into a {@link ResolvableMapWrapper}) or the global or local ID
+	 * @param <T> type of the requested class
+	 * @param object value to transform
+	 * @param classOfT requested class
+	 * @return instance of requested class or null
+	 * @throws NodeException
+	 */
+	public static <T extends NodeObject> T getObject(Object object, Class<T> classOfT) throws NodeException {
+		return getObject(object, classOfT, null, null);
+	}
+
+	/**
+	 * Get the value as object of given class.
+	 * The given value may be an instance of the class (optionally wrapped into a {@link ResolvableMapWrapper}), the global or local ID or a value using the given PartType. In the latter case, the valueExtractor is used to get the instance.
+	 * @param <T> type of requested class
+	 * @param <P> type of optional PartType
+	 * @param object value to transform
+	 * @param classOfT requested class
+	 * @param classOfP optional class of PartType if the value is a Value
+	 * @param valueExtractor value extractor to get the instance from the PartType
+	 * @return instance of requested class or null
+	 * @throws NodeException
+	 */
+	public static <T extends NodeObject, P extends PartType> T getObject(Object object, Class<T> classOfT,
+			Class<P> classOfP, Function<P, T> valueExtractor) throws NodeException {
+		Object unwrapped = unwrapResolvableMapWrapper(object);
+
+		if (classOfT.isInstance(unwrapped)) {
+			return classOfT.cast(unwrapped);
+		} else if (classOfP != null && valueExtractor != null && unwrapped instanceof Value) {
+			PartType partType = Value.class.cast(unwrapped).getPartType();
+			if (classOfP.isInstance(partType)) {
+				return valueExtractor.apply(classOfP.cast(partType));
+			}
+		} else if (object != null) {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			return t.getObject(classOfT, ObjectTransformer.getString(object, "0"));
+		}
+
+		return null;
+	}
+
+	/**
+	 * Unwrap instances of {@link ResolvableMapWrapper} (recursively)
+	 * @param object object to unwrap
+	 * @return unwrapped object
+	 */
+	public static Object unwrapResolvableMapWrapper(Object object) {
+		if (object instanceof ResolvableMapWrapper) {
+			return unwrapResolvableMapWrapper(((ResolvableMapWrapper)object).getWrapped());
+		} else {
+			return object;
+		}
+	}
+
+	/**
+	 * Render the given tag in the current edit mode
+	 * @param tag tag to render
+	 * @param renderType rendertype
+	 * @param result render result
+	 * @return rendered tag
+	 * @throws NodeException
+	 */
+	public static String renderTag(Tag tag, RenderType renderType, RenderResult result) throws NodeException {
+		int editMode = renderType.getEditMode();
+
+		if ((editMode == RenderType.EM_ALOHA) && tag.isEditable()) {
+			StringBuffer source = new StringBuffer();
+			List<ParserTag> omitTags = new ArrayList<ParserTag>();
+			List<ParserTag> omitTagsEdit = new ArrayList<ParserTag>();
+			ParseStructRenderer.renderEditableTag(source, tag.render(result), tag, omitTags, omitTagsEdit, result);
+			return source.toString();
+		} else if (editMode == RenderType.EM_ALOHA_READONLY) {
+			AlohaRenderer alohaRenderer = (AlohaRenderer) RendererFactory.getRenderer(ContentRenderer.RENDERER_ALOHA);
+			return alohaRenderer.block(tag.render(result), tag, result);
+		} else {
+			return tag.render(result);
+		}
 	}
 
 	/**

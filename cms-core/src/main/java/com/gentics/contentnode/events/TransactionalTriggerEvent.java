@@ -14,6 +14,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Transactional;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
@@ -42,9 +43,15 @@ public class TransactionalTriggerEvent extends AbstractTransactional {
 	 * @throws NodeException
 	 */
 	public static TransactionalTriggerEvent deleteIntoWastebin(Node node, NodeObject object) throws NodeException {
-		return new TransactionalTriggerEvent(object, new String[] { ObjectTransformer.getString(node.getId(), ""),
-				MeshPublisher.getMeshUuid(object), MeshPublisher.getMeshLanguage(object) },
-				Events.DELETE | Events.WASTEBIN);
+		if (object instanceof Form form) {
+			return new TransactionalTriggerEvent(form, new String[] { ObjectTransformer.getString(node.getId(), ""),
+					MeshPublisher.getMeshUuid(form), MeshPublisher.getMeshLanguage(form), form.getFormType() },
+					Events.DELETE | Events.WASTEBIN);
+		} else {
+			return new TransactionalTriggerEvent(object, new String[] { ObjectTransformer.getString(node.getId(), ""),
+					MeshPublisher.getMeshUuid(object), MeshPublisher.getMeshLanguage(object) },
+					Events.DELETE | Events.WASTEBIN);
+		}
 	}
 
 	/**

@@ -216,7 +216,7 @@ export class FolderStateModule {
             })
             .map(item => {
                 // Update the name of all recent items, e.g. when a page was renamed
-                let entity: File<Normalized> | Folder<Normalized> | Form<Normalized> | Image<Normalized> | Page<Normalized>;
+                let entity: File<Normalized> | Folder<Normalized> | Form | Image<Normalized> | Page<Normalized>;
 
                 if (entityState && entityState[item.type]) {
                     entity = entityState[item.type][item.id];

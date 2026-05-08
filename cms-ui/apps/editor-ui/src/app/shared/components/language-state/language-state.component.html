@@ -1,6 +1,6 @@
 <button
     class="language-button"
-    [class.current]="activeLanguage.id === language.id"
+    [class.current]="activeLanguage != null && activeLanguage.id === language.id"
     [class.published]="state.published"
     [class.available]="state.available && !state.deleted"
     [class.show-indicators]="showIndicators"

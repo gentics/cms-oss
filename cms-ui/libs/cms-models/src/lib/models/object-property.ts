@@ -1,4 +1,4 @@
-import { CmsI18nValue } from './cms-i18n-value';
+import { I18nString } from './common';
 import { ObjectPropertyCategory } from './object-property-category';
 import { TagType } from './tag';
 import { DefaultModelType, ModelType, Normalizable, Raw } from './type-util';
@@ -11,7 +11,8 @@ export enum ObjectPropertiesObjectType {
     TEMPLATE = 10006,
 };
 
-/** DevTools Package
+/**
+ * DevTools Package
  * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Package.html
  */
 export interface ObjectPropertyBase<T extends ModelType> {
@@ -20,9 +21,9 @@ export interface ObjectPropertyBase<T extends ModelType> {
     /** Name in the current language */
     name?: string;
     /** Name in all available languages */
-    nameI18n?: CmsI18nValue;
+    nameI18n?: I18nString;
     /** Description in the current language */
-    descriptionI18n?: CmsI18nValue;
+    descriptionI18n?: I18nString;
     /** Keyword */
     keyword: string;
     /** Type of objects, this object property definition is for */
@@ -55,7 +56,7 @@ export interface ObjectProperty<T extends ModelType = DefaultModelType> extends 
     id: number;
 }
 
-export type EditableObjectProperty = Omit<ObjectProperty, 'id' | 'globalId' | 'name' | 'construct'| 'category'>;
+export type EditableObjectProperty = Omit<ObjectProperty, 'id' | 'globalId' | 'name' | 'construct' | 'category'>;
 
 /**
  * Data model as defined by frontend.

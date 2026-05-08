@@ -1,12 +1,12 @@
-import { TemplateBO } from '@admin-ui/common';
-import { NodeOperations, TemplateOperations } from '@admin-ui/core';
-import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { IndexById, Node, Raw } from '@gentics/cms-models';
-import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray, toValidNumber } from '@gentics/ui-core';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { TemplateBO } from '../../../../common';
+import { NodeOperations, TemplateOperations } from '../../../../core';
+import { NodeDataService } from '../../../../shared';
 
 @Component({
     selector: 'gtx-assign-templates-to-nodes-modal',
@@ -112,8 +112,8 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> imp
         let didChange = false;
 
         for (const template of this.templates) {
-            const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
-            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
+            const toAdd = new Set<number>(toSelectionArray(this.selected).map(toValidNumber));
+            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(toValidNumber));
 
             for (const nodeToAdd of toAdd) {
                 if (this.currentAssignment[nodeToAdd]?.has?.(template.id)) {

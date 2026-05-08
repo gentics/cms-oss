@@ -1,70 +1,66 @@
 @import '../../../styles/base-import';
 
 :host {
-    [type="radio"]:not(:checked) + label:before, [type="radio"]:not(:checked) + label:after {
+    font-size: 1rem;
+    --gtx-active-color: #{$gtx-color-primary};
+
+    input {
+        display: none !important;
+    }
+
+    label {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.2em 0;
+
+        .label-content {
+            font-size: 1em;
+            line-height: 1;
+            padding-top: 1px;
+        }
+    }
+
+    .indicator {
         border: 2px solid #5a5a5a;
-    }
-
-    [type="radio"]:not(:checked) + label:before, [type="radio"]:not(:checked) + label:after, [type="radio"]:checked + label:before, [type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:before, [type="radio"].with-gap:checked + label:after {
         border-radius: 50%;
-    }
-
-    [type="radio"]:not(:checked) + label:after {
-        -webkit-transform: scale(0);
-        transform: scale(0);
-    }
-
-    [type="radio"] + label:before, [type="radio"] + label:after {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        margin: 4px;
-        width: 16px;
-        height: 16px;
-        z-index: 0;
-        transition: .28s ease;
-    }
-
-    [type="radio"]:not(:checked) + label, [type="radio"]:checked + label {
+        width: 1em;
+        height: 1em;
+        transition: 300ms ease;
         position: relative;
-        padding-left: 35px;
-        cursor: pointer;
-        display: inline-block;
-        height: 25px;
-        line-height: 25px;
-        font-size: 1rem;
-        transition: .28s ease;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
+
+        &::after {
+            content: '';
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            transform: scale(0);
+            background-color: var(--gtx-active-color);
+            z-index: 1;
+            transition: 300ms ease;
+        }
     }
 
-    [type="radio"]:checked + label:after {
-        -webkit-transform: scale(1.02);
-        transform: scale(1.02);
-    }
-    [type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:after {
-        background-color: #0096DC;
-    }
-    [type="radio"]:checked + label:after, [type="radio"].with-gap:checked + label:before, [type="radio"].with-gap:checked + label:after {
-        border: 2px solid #0096DC;
+    input:checked + label .indicator {
+        border-color: var(--gtx-active-color);
+
+        &::after {
+            transform: scale(1.02);
+        }
     }
 
     &.ng-touched.ng-invalid {
-        > label::before {
-            // Border when selected / not selected
-            border-color: $gtx-color-alert;
-        }
+        --gtx-active-color: #{$gtx-color-alert};
 
-        > label::after {
-            // Fill color when selected
-            background-color: $gtx-color-alert;
-        }
-
-        > label {
-            color: $gtx-color-alert;
+        .label-content {
+            color: var(--gtx-active-color);
         }
     }
 }

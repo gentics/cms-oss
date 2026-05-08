@@ -65,7 +65,7 @@
                             </div>
                         }
 
-                        @if (currentItem?.type === 'form' || (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId)) {
+                        @if (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId) {
                             <div class="item-language">
                                 @if (itemLanguage) {
                                     <div>{{ itemLanguage?.code | gtxI18n }}</div>
@@ -81,10 +81,27 @@
 
                         @if (currentItem && currentItem?.type === 'form') {
                             <div class="form-type">
-                                {{ 'editor.item_type_label' | gtxI18n }}: {{ 'form_generator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | gtxI18n }}
+                                {{ 'editor.item_type_label' | gtxI18n }}: {{ currentItem?.formType }}
                             </div>
                         }
                     </div>
+                </div>
+            }
+
+            @if (editorState?.editMode === EditMode.EDIT && currentItem && currentItem?.type === 'form') {
+                <div class="form-editing-actions">
+                    <gtx-tabs class="form-view-modes" pure [activeId]="formViewMode">
+                        <gtx-tab
+                            [id]="FormGridViewMode.EDITOR"
+                            [title]="'form_grid.view_mode_tab_editor' | gtxI18n"
+                            (select)="updateFormViewMode(FormGridViewMode.EDITOR)"
+                        ></gtx-tab>
+                        <gtx-tab
+                            [id]="FormGridViewMode.PREVIEW"
+                            [title]="'form_grid.view_mode_tab_preview' | gtxI18n"
+                            (select)="updateFormViewMode(FormGridViewMode.PREVIEW)"
+                        ></gtx-tab>
+                    </gtx-tabs>
                 </div>
             }
 

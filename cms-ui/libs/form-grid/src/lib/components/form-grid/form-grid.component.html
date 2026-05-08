@@ -1,0 +1,262 @@
+<div
+    class="editor-shell"
+    [ngClass]="'mode-' + mode()"
+    [class.left-panel-expanded]="viewMode() === FormGridViewMode.EDITOR && leftSidebarExpanded()"
+    [class.right-panel-wide]="(editingPage() != null || (selectedElement() != null && selectedElementConfiguration() != null)) && rightSidebarExpanded()"
+    [class.no-left-panel]="viewMode() === FormGridViewMode.PREVIEW"
+    [class.no-right-panel]="editingPage() == null && (selectedElement() == null || selectedElementConfiguration() == null)"
+    [class.editor-active]="viewMode() === FormGridViewMode.EDITOR"
+    [class.preview-active]="viewMode() === FormGridViewMode.PREVIEW"
+>
+    <div class="editor-body">
+        <aside
+            class="editor-panel editor-panel--left"
+            [attr.aria-label]="'form_grid.panel_left_label' | gtxI18n"
+            [class.expanded]="leftSidebarExpanded()"
+        >
+            <div class="panel-header">
+                <div class="panel-header-title">{{ 'form_grid.new_element_title' | gtxI18n }}</div>
+
+                <gtx-button
+                    class="panel-toggle-btn"
+                    [attr.title]="'form_grid.panel_left_toggle_collapse' | gtxI18n"
+                    [attr.aria-label]="'form_grid.panel_left_toggle_collapse' | gtxI18n"
+                    type="secondary"
+                    [icon]="true"
+                    (click)="toggleLeftSidebar()"
+                >
+                    <icon>chevron_right</icon>
+                </gtx-button>
+            </div>
+
+            <div class="panel-content">
+
+                <ng-template
+                    #paletteList
+                    let-title="title"
+                    let-entries="entries"
+                    let-controls="controls"
+                    let-container="container"
+                >
+                    <div class="panel-segment-title">{{ title }}</div>
+
+                    <gtx-sortable-list
+                        class="palette"
+                        [group]="paletteGroup"
+                        [sort]="false"
+                        [attr.aria-label]="title"
+                        (dragStart)="onPaletteStart($event)"
+                        (dragEnd)="onPaletteEnd($event)"
+                    >
+                        @for (ctlEntry of entries; track ctlEntry.key) {
+                            @let label = ctlEntry.value.labelI18n | gtxI18nObject;
+                            @let description = ctlEntry.value.descriptionI18n | gtxI18nObject:null;
+
+                            <gtx-sortable-item
+                                type="button"
+                                class="palette-item"
+                                [attr.data-is-control]="controls"
+                                [class.container-element]="$any(ctlEntry.value)[container]"
+                                [attr.data-container-type]="$any(ctlEntry.value)[container] ? container : null"
+                                [attr.data-element-type]="ctlEntry.key"
+                            >
+                                <div
+                                    class="palette-item--content"
+                                    [attr.aria-label]="'form_grid.drag_element' | gtxI18n:{ label: label }"
+                                    [attr.title]="description"
+                                >
+                                    <span class="palette-item--label">{{ label }}</span>
+                                    <div class="palette-item--insert insert-item">
+                                        <div class="insert-item--top">
+                                            <span class="tag tag-type">
+                                                <span class="tag-text">{{ label }}</span>
+                                            </span>
+                                        </div>
+                                        <div class="insert-item--text">
+                                            {{ 'form_grid.insert_element_placeholder' | gtxI18n:{
+                                                label: label
+                                            } }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </gtx-sortable-item>
+                        }
+                    </gtx-sortable-list>
+                </ng-template>
+
+                @if (mode() === FormGridEditMode.FULL && config().controls != null) {
+                    <div class="panel-section">
+                        <ng-container [ngTemplateOutlet]="paletteList" [ngTemplateOutletContext]="{
+                            title: 'form_grid.section_controls' | gtxI18n,
+                            entries: (config().controls | gtxEntries),
+                            controls: 'true',
+                            container: 'aggregate'
+                        }"></ng-container>
+                    </div>
+                }
+
+                @if (config().blocks != null) {
+                    <div class="panel-section">
+                        <ng-container [ngTemplateOutlet]="paletteList" [ngTemplateOutletContext]="{
+                            title: 'form_grid.section_blocks' | gtxI18n,
+                            entries: (config().blocks | gtxEntries),
+                            controls: 'false',
+                            container: 'container'
+                        }"></ng-container>
+                    </div>
+                }
+            </div>
+        </aside>
+
+        <main class="editor-main" (click)="clearSelectedElement()">
+            <div class="page-container">
+                <gtx-form-page-manager
+                    [uiSchema]="uiSchema()"
+                    (uiSchemaChange)="uiSchema.set($event)"
+                    [pageIndex]="pageIndex()"
+                    (pageIndexChange)="pageIndex.set($event)"
+                    [schema]="schema()"
+                    (schemaChange)="$event && updateSchema($event)"
+                    [mode]="mode()"
+                    [elementMoving]="elementMoving()"
+                    (elementInterPageMove)="moveElementBetweenPages($event)"
+                    (editPage)="startEditPage($event)"
+                ></gtx-form-page-manager>
+
+                <div #gridSurface class="list-container">
+                    <gtx-form-grid-elements-container
+                        class="root-container"
+
+                        [config]="config()"
+                        [rootId]="ELEMENT_ROOT_CONTAINER_ID"
+                        [id]="ELEMENT_ROOT_CONTAINER_ID"
+                        [level]="0"
+                        [pageIndex]="pageIndex()"
+                        [languages]="languages()"
+                        [mode]="mode()"
+                        [gridSurface]="gridSurface"
+
+                        [elements]="elements()"
+                        (elementsChange)="updatePageElements($event)"
+                        [selectedElement]="selectedElement()"
+                        [selectedElementContainerId]="selectedElementContainerId"
+                        (elementSelect)="setSelectedElement($event)"
+                        [schema]="schema()"
+                        (schemaChange)="updateSchema($event)"
+                        (moveToContainer)="moveElementToContainer($event)"
+                        [(elementMoving)]="elementMoving"
+
+                        [(resizing)]="resizeActive"
+                    ></gtx-form-grid-elements-container>
+                </div>
+            </div>
+        </main>
+
+        <main class="preview-main">
+            Welcome to preview!
+        </main>
+
+        @if (editingPage() || (selectedElement() && selectedElementConfiguration())) {
+            <aside
+                class="editor-panel editor-panel--right"
+                [attr.aria-label]="'form_grid.panel_right_label' | gtxI18n"
+                [class.expanded]="rightSidebarExpanded()"
+            >
+                <div class="panel-header">
+                    <gtx-button
+                        class="panel-toggle-btn"
+                        [attr.title]="'form_grid.panel_right_toggle_collapse' | gtxI18n"
+                        [attr.aria-label]="'form_grid.panel_right_toggle_collapse' | gtxI18n"
+                        type="secondary"
+                        [icon]="true"
+                        (click)="toggleRightSidebar()"
+                    >
+                        <icon>chevron_left</icon>
+                    </gtx-button>
+
+                    @if (editingPage()) {
+                        <div class="panel-header-title">{{ 'form_grid.page_edit_title' | gtxI18n }}</div>
+                    } @else {
+                        <div class="panel-header-title">{{ 'form_grid.edit_element_title' | gtxI18n:{
+                            label: selectedElement()?.label | gtxI18nObject
+                        } }}</div>
+                    }
+                </div>
+
+                <div class="panel-content">
+                    @if (editingPage()) {
+                        <div class="page-edit-form">
+                            @if (languages().length > 1) {
+                                <gtx-select
+                                    [label]="'form_grid.translation_language' | gtxI18n"
+                                    [value]="selectedPageLanguage()"
+                                    (valueChange)="selectedPageLanguage.set($any($event))"
+                                >
+                                    @for (lang of languages(); track lang) {
+                                        <gtx-option [value]="lang">{{ lang }}</gtx-option>
+                                    }
+                                </gtx-select>
+                            }
+
+                            <gtx-i18n-input
+                                [label]="'form_grid.page_name_label' | gtxI18n"
+                                [value]="editingPage()!.pagename"
+                                [language]="selectedPageLanguage()"
+                                [availableLanguages]="languages()"
+                                [disabled]="mode() !== FormGridEditMode.FULL"
+                                (valueChange)="updateEditingPageName($event)"
+                            ></gtx-i18n-input>
+                        </div>
+                    } @else {
+                        <gtx-tabs class="element-tabs">
+                            @if (selectedElementSchema() != null) {
+                                <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
+                                    <gtx-form-element-definition
+                                        [config]="config()"
+                                        [schema]="schema()"
+                                        [element]="selectedElement()!"
+                                        [elementConfig]="selectedElementConfiguration()!"
+                                        [elementSchema]="selectedElementSchema()!"
+                                        [mode]="mode()"
+                                        (elementChange)="upsetElementChanges($event)"
+                                        (elementSchemaChange)="updateElementSchema($event)"
+                                    ></gtx-form-element-definition>
+                                </gtx-tab>
+                            }
+
+                            <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
+                                <gtx-form-element-settings
+                                    [config]="config()"
+                                    [schema]="schema()"
+                                    [elementMap]="elementMap()"
+                                    [element]="selectedElement()!"
+                                    [elementConfig]="selectedElementConfiguration()!"
+                                    [elementSchema]="selectedElementSchema()"
+                                    [disabled]="mode() !== FormGridEditMode.FULL"
+                                    (elementChange)="upsetElementChanges($event)"
+                                ></gtx-form-element-settings>
+                            </gtx-tab>
+
+                            <gtx-tab
+                                [id]="EditTabs.TRANSLATIONS"
+                                [icon]="hasMissingTranslations() ? 'warning' : ''"
+                                [title]="'form_grid.edit_tab_translations' | gtxI18n"
+                            >
+                                <gtx-form-element-translation
+                                    [element]="selectedElement()!"
+                                    (elementChange)="upsetElementChanges($event)"
+                                    [elementConfig]="selectedElementConfiguration()!"
+                                    [elementSchema]="selectedElementSchema()!"
+                                    (elementSchemaChange)="updateElementSchema($event)"
+                                    [mode]="mode()"
+                                    [languages]="languages()"
+                                    (hasMissingTranslationsChange)="hasMissingTranslations.set($event)"
+                                ></gtx-form-element-translation>
+                            </gtx-tab>
+                        </gtx-tabs>
+                    }
+                </div>
+            </aside>
+        }
+    </div>
+</div>

@@ -1,0 +1,77 @@
+<div class="translation-section">
+    <gtx-select
+        class="language-select"
+        [label]="'form_grid.translation_language' | gtxI18n"
+        [value]="selectedLanguage()"
+        (valueChange)="updateSelectedLanguage($event)"
+    >
+        @for (lang of languages(); track lang) {
+            <gtx-option [value]="lang" [icon]="missingByLanguage()[lang] ? 'warning' : ''">
+                {{ lang }}
+            </gtx-option>
+        }
+    </gtx-select>
+
+    <div class="translation-definition">
+        <span class="translation-section-title">{{ 'form_grid.translation_section_definition' | gtxI18n }}</span>
+
+        <gtx-i18n-input
+            [label]="'form_grid.translation_label' | gtxI18n"
+            [value]="element().label"
+            [disabled]="mode() === FormGridEditMode.NONE"
+            [language]="selectedLanguage()"
+            [availableLanguages]="languages()"
+            (valueChange)="updateLabel($event)"
+        ></gtx-i18n-input>
+
+        <gtx-i18n-input
+            [label]="'form_grid.translation_description' | gtxI18n"
+            [value]="element().description ?? null"
+            [disabled]="mode() === FormGridEditMode.NONE"
+            [language]="selectedLanguage()"
+            [availableLanguages]="languages()"
+            (valueChange)="updateDescription($event)"
+        ></gtx-i18n-input>
+
+        <gtx-i18n-input
+            [label]="'form_grid.translation_summary' | gtxI18n"
+            [value]="element().formGridOptions?.valueSummary ?? null"
+            [disabled]="mode() === FormGridEditMode.NONE"
+            [language]="selectedLanguage()"
+            [availableLanguages]="languages()"
+            (valueChange)="updateSummary($event)"
+        ></gtx-i18n-input>
+
+        @if (elementSchema()) {
+            <gtx-dynamic-form-translations
+                [settings]="schemaSettings()"
+                [element]="element()"
+                [elementConfig]="elementConfig()"
+                [elementSchema]="elementSchema()"
+                [languages]="languages()"
+                [selectedLanguage]="selectedLanguage()"
+                [disabled]="mode() !== FormGridEditMode.FULL"
+                (elementChange)="element.set($event)"
+                (elementSchemaChange)="elementSchema.set($event)"
+            />
+        }
+    </div>
+
+    @if (elementSettings().length > 0) {
+        <div class="translation-settings">
+            <gtx-dynamic-form-translations
+                [settings]="elementSettings()"
+                [element]="element()"
+                [elementConfig]="elementConfig()"
+                [elementSchema]="elementSchema()"
+                [languages]="languages()"
+                [selectedLanguage]="selectedLanguage()"
+                [disabled]="mode() !== FormGridEditMode.FULL"
+                (elementChange)="element.set($event)"
+                (elementSchemaChange)="elementSchema.set($event)"
+            />
+
+            <span class="translation-section-title">{{ 'form_grid.translation_section_settings' | gtxI18n }}</span>
+        </div>
+    }
+</div>

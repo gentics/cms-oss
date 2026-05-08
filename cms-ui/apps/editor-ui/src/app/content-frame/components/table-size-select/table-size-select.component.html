@@ -4,9 +4,9 @@
   [style.--gtx-grid-rows]="maxRows"
   (mouseleave)="setActivePosition(-1, -1)"
   >
-  @for (row of (maxRows | gtxRange); track row) {
+  @for (row of (maxRows | gtxRange:false); track row) {
     <div class="grid-row">
-      @for (col of (maxColumns | gtxRange); track col) {
+      @for (col of (maxColumns | gtxRange:false); track col) {
         <div
           class="cell"
           [class.active]="col <= activeColumn && row <= activeRow"

@@ -37,6 +37,9 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUtils;
 import com.gentics.contentnode.render.RenderableResolvable;
 import com.gentics.contentnode.render.RenderableResolvable.Scope;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
+import com.gentics.contentnode.resolving.ResolvableMapWrapper;
+import com.gentics.contentnode.resolving.ResolvableMapWrapper.RenderContext;
 import com.gentics.lib.render.Renderable;
 import com.github.jknack.handlebars.Options;
 
@@ -72,15 +75,15 @@ public class HelperSource {
 		if (value instanceof RenderableResolvable renderable) {
 			if (renderable.getWrappedObject() instanceof Tag tag) {
 				try (Scope scope = renderable.scope()) {
-					return RenderUtils.renderTag((Tag)renderable.getWrappedObject(), renderType, renderResult);
+					return RenderUtils.renderTag(tag, renderType, renderResult);
 				}
 			} else {
 				return renderable.toString();
 			}
-		} else if (value instanceof Tag) {
-			return RenderUtils.renderTag((Tag)value, renderType, renderResult);
-		} else if (value instanceof Renderable) {
-			return ((Renderable) value).render();
+		} else if (value instanceof Tag tag) {
+			return RenderUtils.renderTag(tag, renderType, renderResult);
+		} else if (value instanceof Renderable renderable) {
+			return renderable.render();
 		} else if (value != null) {
 			return value.toString();
 		}

@@ -386,7 +386,7 @@ export class AlohaIntegrationService {
         } else if (this.currentWindow.Aloha?.Selection) {
             // Aloha selection fallback, which usually keeps the selection alive when clicking out of the iframe
             const alohaRange = this.currentWindow.Aloha.Selection.getRangeObject();
-            if (alohaRange) {
+            if (alohaRange && alohaRange.startContainer) { // startContainer defines the whole object being fullfilled
                 range = this.currentWindow.document.createRange();
                 range.setStart(alohaRange.startContainer, alohaRange.startOffset);
                 range.setEnd(alohaRange.endContainer, alohaRange.endOffset);

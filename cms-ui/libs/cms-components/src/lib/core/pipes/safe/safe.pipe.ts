@@ -1,17 +1,17 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 
 /**
  * Use this Pipe with great CAUTION only for sources you can verify to be secure.
  * @example
  * ```
- * <iframe width="100%" height="300" [src]="url | safe"></iframe>
+ * <iframe width="100%" height="300" [src]="url | safe"></iframe>
  * ```
  * @see https://angular.io/guide/security#xss
  */
 @Pipe({
     name: 'safe',
-    standalone: false
+    standalone: false,
 })
 export class SafePipe implements PipeTransform {
 
@@ -19,7 +19,13 @@ export class SafePipe implements PipeTransform {
         private sanitizer: DomSanitizer,
     ) {}
 
-    transform(url: string): SafeResourceUrl {
-        return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    transform(content: string, type: 'url' | 'html' = 'url'): SafeResourceUrl | SafeHtml {
+        switch (type) {
+            case 'html':
+                return this.sanitizer.bypassSecurityTrustHtml(content);
+            default:
+            case 'url':
+                return this.sanitizer.bypassSecurityTrustResourceUrl(content);
+        }
     }
 }

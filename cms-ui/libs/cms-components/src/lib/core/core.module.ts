@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
 import {
+    AlohaTextEditorComponent,
     AppVersionLabelComponent,
     BrowseBoxComponent,
     I18nInputComponent,
@@ -44,6 +45,7 @@ import {
 } from './providers';
 
 const COMPONENTS: any[] = [
+    AlohaTextEditorComponent,
     AppVersionLabelComponent,
     BrowseBoxComponent,
     I18nInputComponent,

@@ -253,6 +253,43 @@ test.describe('Page Management', () => {
         await testLanguage(LANGUAGE_EN);
     });
 
+    test('should display the active language in the language selector immediately on page load', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19610',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const langSelectorButton = list.locator('language-context-selector [data-context-trigger]');
+
+        await test.step('Language selector should be visible and show the active language immediately without any interaction', async () => {
+            await expect(langSelectorButton).toBeVisible();
+            await expect(langSelectorButton).toHaveAttribute('data-id', /.+/);
+        });
+
+        await test.step('Language selector should still reflect the correct language after switching and reloading', async () => {
+            await setListLanguage(list, LANGUAGE_DE);
+            await expect(langSelectorButton).toHaveAttribute('data-id', LANGUAGE_DE);
+
+            await page.reload();
+
+            await expect(langSelectorButton).toBeVisible();
+            await expect(langSelectorButton).toHaveAttribute('data-id', LANGUAGE_DE);
+        });
+    });
+
     test('should be possible to edit the page properties', async ({ page }) => {
         await setupWithPermissions(page, [
             {

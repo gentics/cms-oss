@@ -11,7 +11,8 @@ import {
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
-import { EditMode } from '@gentics/cms-integration-api-models';
+import { AlohaIntegrationService } from '@gentics/cms-components/aloha';
+import { CNParentWindow, CNWindow, EditMode } from '@gentics/cms-integration-api-models';
 import {
     File as FileModel,
     Folder,
@@ -79,6 +80,7 @@ import { PermissionService } from '../../../core/providers/permissions/permissio
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { PublishTimeManagedPagesModal } from '../../../shared/components/publish-time-managed-pages-modal/publish-time-managed-pages-modal.component';
 import { TimeManagementModal } from '../../../shared/components/time-management-modal/time-management-modal.component';
+import { FormListLoaderService } from '../../../shared/providers';
 import { PublishableStateUtil } from '../../../shared/util/entity-states';
 import {
     AddEditedEntityToRecentItemsAction,
@@ -99,14 +101,12 @@ import {
     StartSavingAction,
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
-import { BLANK_PAGE, CNParentWindow, CNWindow, createDefaultFormPageName } from '../../models/content-frame';
-import { AlohaIntegrationService } from '../../providers';
+import { BLANK_PAGE, createDefaultFormPageName } from '../../models/content-frame';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
-import { FormListLoaderService } from '../../../shared/providers';
 
 /**
  * This component wraps the GCMS content in an iframe, and provides the means for interacting with
@@ -412,6 +412,8 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isInherited$ = this.activeNode$.pipe(
             map((activeNode) => activeNode && activeNode.inheritedFromId !== activeNode.id),
         );
+
+        this.aloha.loadRessources();
 
         this.subscriptions.push(this.aloha.ready$.subscribe((ready) => {
             this.alohaReady = ready;

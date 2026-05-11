@@ -1,9 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 import { ALOHAPAGE_URL, API_BASE_URL, typeIdsToName } from '@gentics/cms-components';
-import { EditMode } from '@gentics/cms-integration-api-models';
+import { AlohaIntegrationService } from '@gentics/cms-components/aloha';
+import { CNIFrameDocument, CNWindow, EditMode, GCNJsLibRequestOptions } from '@gentics/cms-integration-api-models';
 import { Page } from '@gentics/cms-models';
-import { AlohaIntegrationService } from '../../../../content-frame/providers';
-import { CNIFrameDocument, CNWindow, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 
 const ATTR_OBJECT_ID = 'data-gentics-aloha-object-id';

@@ -1,4 +1,3 @@
-export * from './aloha-text-editor/aloha-text-editor.component';
 export * from './app-version-label/app-version-label.component';
 export * from './browse-box/browse-box.component';
 export * from './i18n-input/i18n-input.component';

@@ -1,7 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
 import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '@gentics/cms-components';
+import { AlohaIntegrationService, AlohaOverlayService } from '@gentics/cms-components/aloha';
 import {
+    CNIFrameDocument,
+    CNParentWindow,
+    CNWindow,
     ExposedPartialState,
     GcmsUiBridge,
     ModalCloseError,
@@ -37,11 +41,7 @@ import {
 } from '../../../tag-editor/components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
-import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';
-import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
-import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
-
 
 type ZoneType = any;
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -77,7 +77,7 @@ export class CustomerScriptService implements OnDestroy {
         private errorHandlerService: ErrorHandler,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private aloha: AlohaIntegrationService,
-        private overlays: DynamicOverlayService,
+        private overlays: AlohaOverlayService,
         private modals: ModalService,
     ) {
         // Create a new Zone to be able to track async errors originating from the customer script.
@@ -114,16 +114,16 @@ export class CustomerScriptService implements OnDestroy {
         return new Promise<void>((resolve) => {
             this.http.get(customerScriptPath, { responseType: 'text' }).pipe(
                 catchError(() => of(null) /* script not found, don't throw error */),
-                map(script => {
+                map((script) => {
                     if (script) {
                         // We don't catch parsing errors here, because we want them to be thrown by loadCustomerScript().
-                        // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/restrict-template-expressions
+                        // eslint-disable-next-line @typescript-eslint/no-implied-eval
                         return new Function('module', 'exports', 'window', 'document', `${script}; ${sourceMapComment}`);
                     } else {
                         return null;
                     }
                 }),
-            ).subscribe(script => {
+            ).subscribe((script) => {
                 this.customerScript = script;
                 resolve();
             });
@@ -176,7 +176,7 @@ export class CustomerScriptService implements OnDestroy {
 
         const executePreLoadScript = () => {
             if (!preLoadScriptExecuted) {
-                this.runPreLoadScript(iFrameWindow, document);
+                this.runPreLoadScript(iFrameWindow);
                 preLoadScriptExecuted = true;
             }
         };
@@ -216,9 +216,9 @@ export class CustomerScriptService implements OnDestroy {
         };
         iFrameWindow.addEventListener('unload', onUnload);
 
-        subscription = this.state.select(state => this.mapToPartialState(state)).pipe(
+        subscription = this.state.select((state) => this.mapToPartialState(state)).pipe(
             distinctUntilChanged(deepEqual),
-        ).subscribe(state => {
+        ).subscribe((state) => {
             if (typeof stateChangedHandler === 'function') {
                 stateChangedHandler(state);
             }
@@ -230,13 +230,13 @@ export class CustomerScriptService implements OnDestroy {
             this.aloha.constructs$.subscribe({
                 next(value) {
                     const dict: Record<string, Construct> = {};
-                    (value || []).forEach(c => {
+                    (value || []).forEach((c) => {
                         dict[c.keyword] = c;
                     });
                     resolve(dict);
                 },
                 error(err) {
-                    reject(err)
+                    reject(err);
                 },
             });
         });
@@ -299,7 +299,7 @@ export class CustomerScriptService implements OnDestroy {
                         allowFolderSelection: allowFolderSelection ?? true,
                         destinationFolder,
                     },
-                ).then(dialog => dialog.open());
+                ).then((dialog) => dialog.open());
             },
         };
 
@@ -331,9 +331,9 @@ export class CustomerScriptService implements OnDestroy {
     }
 
     /** Runs the pre-load script */
-    private runPreLoadScript(window: CNWindow, document: CNIFrameDocument): void {
+    private runPreLoadScript(window: CNWindow): void {
         try {
-            const script = new PreLoadScript(window, document);
+            const script = new PreLoadScript(window);
             script.run();
         } catch (error) {
             this.errorHandlerService.catch(error, { notification: false });

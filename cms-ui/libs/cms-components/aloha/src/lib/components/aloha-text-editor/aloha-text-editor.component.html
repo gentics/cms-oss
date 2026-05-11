@@ -1,0 +1,20 @@
+<gtx-form-element-container [disabled]="disabled" [class.active]="state === IFrameState.INITIALIZED && isFocused">
+    @if (label) {
+        <label (click)="focusAloha()">{{ label }}</label>
+    }
+
+    <div class="toolbar">
+
+    </div>
+
+    <div class="aloha-container" [ngClass]="'state-' + state">
+        <iframe #host class="aloha-frame"></iframe>
+    </div>
+
+    <div
+        class="content"
+        [ngClass]="'state-' + state"
+        [innerHTML]="value | safe:'html'"
+        (click)="focusAloha()"
+    ></div>
+</gtx-form-element-container>

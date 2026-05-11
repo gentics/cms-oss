@@ -633,6 +633,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public info: GCMSInfoAPI = {
         getMaintenanceMode: () => this.executeMappedJsonRequest(GET, '/info/maintenance'),
+        getAlohaRessources: () => this.executeMappedJsonRequest(GET, '/info/aloha'),
     };
 
     public language: GCMSLanguageAPI = {

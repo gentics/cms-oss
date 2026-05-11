@@ -36,6 +36,9 @@
             "@gentics/cms-components/auth": [
                 "libs/cms-components/auth/src/public-api.ts"
             ],
+            "@gentics/cms-components/aloha": [
+                "libs/cms-components/aloha/src/public-api.ts"
+            ],
             "@gentics/cms-components/testing": [
                 "libs/cms-components/src/testing"
             ],

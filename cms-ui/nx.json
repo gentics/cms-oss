@@ -135,7 +135,8 @@
             "{projectRoot}/project.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.app.json",
-            "{projectRoot}/tsconfig.lib.json"
+            "{projectRoot}/tsconfig.lib.json",
+            "{projectRoot}/public/i18n/*.json"
         ],
         "building": [
             "default",

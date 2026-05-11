@@ -1,5 +1,6 @@
 import {
     AccessControlledType,
+    AlohaRessourceInformationResponse,
     AssignEntityToContentPackageOptions,
     BackgroundJobResponse,
     BaseListOptionsWithPaging,
@@ -806,6 +807,7 @@ export interface AbstractImageAPI extends BasicAPI {
 
 export interface AbstractInfoAPI extends BasicAPI {
     getMaintenanceMode: () => MaintenanceModeResponse;
+    getAlohaRessources: () => AlohaRessourceInformationResponse;
 }
 
 export interface AbstractLanguageAPI extends BasicAPI {

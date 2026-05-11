@@ -9,6 +9,7 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
+import { AlohaIntegrationService } from '@gentics/cms-components/aloha';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File,
@@ -41,7 +42,6 @@ import { PageVersionsModal } from '../../../shared/components';
 import { BreadcrumbsService } from '../../../shared/providers';
 import { PublishableStateUtil } from '../../../shared/util/entity-states';
 import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '../../../state';
-import { AlohaIntegrationService } from '../../providers';
 
 /** Used to define which buttons are visible at a certain moment. */
 interface AvailableButtons {

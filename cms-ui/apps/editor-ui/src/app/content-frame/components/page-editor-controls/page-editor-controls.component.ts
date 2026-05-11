@@ -5,7 +5,6 @@ import {
     Component,
     EventEmitter,
     Input,
-    OnChanges,
     OnDestroy,
     OnInit,
     Output,
@@ -14,6 +13,14 @@ import {
 } from '@angular/core';
 import { AlohaComponent, AlohaEditable, AlohaLinkChangeEvent, AlohaLinkInsertEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
 import {
+    AlohaIntegrationService,
+    NormalizedComponentGroup,
+    NormalizedSlotDisplay,
+    NormalizedTabsSettings,
+    NormalizedToolbarSizeSettings,
+} from '@gentics/cms-components/aloha';
+import {
+    AlohaGlobal,
     GCNAlohaPlugin,
     GCNLinkCheckerAlohaPluigin,
     GCNLinkCheckerPluginSettings,
@@ -22,22 +29,13 @@ import {
 } from '@gentics/cms-integration-api-models';
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ChangesOf } from '@gentics/ui-core';
 import { Subscription, combineLatest, merge, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '../../../state';
-import { AlohaGlobal } from '../../models/content-frame';
-import {
-    AlohaIntegrationService,
-    NormalizedComponentGroup,
-    NormalizedSlotDisplay,
-    NormalizedTabsSettings,
-    NormalizedToolbarSizeSettings,
-} from '../../providers/aloha-integration/aloha-integration.service';
 import { MobileMenu } from '../../utils';
 
-const ATTR_ALOHA_REPO = 'data-gentics-aloha-repository'
+const ATTR_ALOHA_REPO = 'data-gentics-aloha-repository';
 const ATTR_QUEUED_LINK_CHECK = 'gcmsui-queued-link-check';
 const DEFAULT_DELAY = 500;
 
@@ -86,9 +84,9 @@ const ATTR_LINK_CHECKER_HREF = 'data-gcnlinkchecker-href';
     templateUrl: './page-editor-controls.component.html',
     styleUrls: ['./page-editor-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
-export class PageEditorControlsComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDestroy {
 
     public readonly TAB_ID_CONSTRUCTS = TAB_ID_CONSTRUCTS;
     public readonly TAB_ID_LINK_CHECKER = TAB_ID_LINK_CHECKER;
@@ -144,7 +142,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         this.subscriptions.push(combineLatest([
             this.aloha.constructs$.asObservable(),
             this.aloha.activeEditable$.pipe(
-                tap(editable => {
+                tap((editable) => {
                     this.editable = editable;
                     this.changeDetector.markForCheck();
                 }),
@@ -167,72 +165,72 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
                     return raw;
                 }
 
-                return raw.filter(construct => whitelist.includes(construct.keyword));
+                return raw.filter((construct) => whitelist.includes(construct.keyword));
             }),
-        ).subscribe(constructs => {
+        ).subscribe((constructs) => {
             this.constructs = structuredClone(constructs) || [];
             // extract the categories from the constructs
             this.constructCategories = Array.from(
                 new Map(
                     this.constructs
-                        .filter(item => item.category)
-                        .map(item => [item.category.id, item.category]),
+                        .filter((item) => item.category)
+                        .map((item) => [item.category.id, item.category]),
                 ).values(),
             ).sort((a, b) => a.sortOrder - b.sortOrder);
 
             // add the constructs to their categories
-            this.constructs.filter(construct => construct.category).forEach(construct => {
-                this.constructCategories.filter(cat => cat.id === construct.categoryId).forEach(cat => cat.constructs[construct.keyword] = construct);
+            this.constructs.filter((construct) => construct.category).forEach((construct) => {
+                this.constructCategories.filter((cat) => cat.id === construct.categoryId).forEach((cat) => cat.constructs[construct.keyword] = construct);
             });
 
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.ui.overlayCount).subscribe(count => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.overlayCount).subscribe((count) => {
             this.overlayActive = count > 0;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.ui.tagEditorOpen).subscribe(open => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.tagEditorOpen).subscribe((open) => {
             this.tagEditorOpen = open;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.editorTab$.subscribe(activeTab => {
+        this.subscriptions.push(this.aloha.editorTab$.subscribe((activeTab) => {
             this.activeTab = activeTab;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.activeToolbarSettings$.subscribe(settings => {
+        this.subscriptions.push(this.aloha.activeToolbarSettings$.subscribe((settings) => {
             this.settings = settings;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.components$.subscribe(components => {
+        this.subscriptions.push(this.aloha.components$.subscribe((components) => {
             this.components = components;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.gcnPlugin$.subscribe(gcnPlugin => {
+        this.subscriptions.push(this.aloha.gcnPlugin$.subscribe((gcnPlugin) => {
             this.gcnPlugin = gcnPlugin;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.ui.constructFavourites).subscribe(favourites => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.constructFavourites).subscribe((favourites) => {
             this.constructFavourites = favourites;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.reference$.subscribe(ref => {
+        this.subscriptions.push(this.aloha.reference$.subscribe((ref) => {
             this.alohaRef = ref;
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(combineLatest([
             this.aloha.reference$.asObservable(),
-            this.appState.select(state => state.editor.nodeId).pipe(
-                switchMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
-                map(features => (features || []).includes(NodeFeature.LINK_CHECKER)),
+            this.appState.select((state) => state.editor.nodeId).pipe(
+                switchMap((nodeId) => this.appState.select((state) => state.features.nodeFeatures[nodeId])),
+                map((features) => (features || []).includes(NodeFeature.LINK_CHECKER)),
             ),
         ]).pipe(
             switchMap(([ref, enabled]) => {
@@ -244,19 +242,19 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
                 }
 
                 return this.client.linkChecker.pageLinks(this.appState.now.editor.itemId).pipe(
-                    map(res => [true, res.items]),
+                    map((res) => [true, res.items]),
                 );
             }),
         ).subscribe(([enabled, links]: [boolean, ExternalLink[]]) => {
             this.initialBrokenLinks = links;
-            this.brokenLinkCountChange.emit(this.initialBrokenLinks.filter(link => link.lastStatus === 'invalid').length);
+            this.brokenLinkCountChange.emit(this.initialBrokenLinks.filter((link) => link.lastStatus === 'invalid').length);
             this.changeDetector.markForCheck();
 
             if (!enabled) {
                 return;
             }
 
-            this.subscriptions.push(this.aloha.require('gcnlinkchecker/gcnlinkchecker-plugin').subscribe(plugin => {
+            this.subscriptions.push(this.aloha.require('gcnlinkchecker/gcnlinkchecker-plugin').subscribe((plugin) => {
                 if (plugin == null) {
                     this.linkCheckerPlugin = null;
                     return;
@@ -269,7 +267,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
 
                 // Check each link "live"
                 if (this.linkCheckerPlugin?.settings?.livecheck) {
-                    this.linkCheckerPlugin.uncheckedLinks.forEach(element => this.checkWithDelay(element));
+                    this.linkCheckerPlugin.uncheckedLinks.forEach((element) => this.checkWithDelay(element));
                 }
             }));
         }));
@@ -277,7 +275,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         this.subscriptions.push(merge(
             this.aloha.on<AlohaLinkChangeEvent>('aloha.link.changed'),
             this.aloha.on<AlohaLinkChangeEvent>('gcn.link.changed'),
-        ).subscribe(event => {
+        ).subscribe((event) => {
             if (!this.linkCheckerPlugin) {
                 return;
             }
@@ -294,7 +292,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
             }
         }));
 
-        this.subscriptions.push(this.aloha.on<AlohaLinkInsertEvent>('aloha.link.insert').subscribe(event => {
+        this.subscriptions.push(this.aloha.on<AlohaLinkInsertEvent>('aloha.link.insert').subscribe((event) => {
             if (!this.linkCheckerPlugin || !this.linkCheckerPlugin?.settings?.livecheck) {
                 return;
             }
@@ -303,7 +301,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
                 return;
             }
 
-            Array.from(event.elements).forEach(linkElement => {
+            Array.from(event.elements).forEach((linkElement) => {
                 if (isInternalLink(linkElement)) {
                     this.removeCheckedDelay(linkElement);
                     this.linkCheckerPlugin.removeLink(linkElement);
@@ -329,14 +327,11 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         }));
     }
 
-    public ngOnChanges(_changes: ChangesOf<this>): void {
-    }
-
     public ngAfterViewInit(): void {
-        this.subscriptions.push(this.menus.changes.subscribe(changeObj => {
-            this.currentMenus.forEach(s => s.destroy());
+        this.subscriptions.push(this.menus.changes.subscribe((changeObj) => {
+            this.currentMenus.forEach((s) => s.destroy());
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call, no-underscore-dangle
-            (changeObj._results || []).forEach(elem => {
+            (changeObj._results || []).forEach((elem) => {
                 const menu = new MobileMenu(elem.nativeElement);
                 menu.init();
                 this.currentMenus.push(menu);
@@ -345,8 +340,8 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
     }
 
     public ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
-        this.currentMenus.forEach(s => s.destroy());
+        this.subscriptions.forEach((s) => s.unsubscribe());
+        this.currentMenus.forEach((s) => s.destroy());
     }
 
     public updateFavourites(favourites: string[]): void {
@@ -363,7 +358,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
     }
 
     public identifyComponentGroup(_idx: number, group: NormalizedComponentGroup): string {
-        return group.slots.map(s => s.name).join(',');
+        return group.slots.map((s) => s.name).join(',');
     }
 
     public identifySlot(_idx: number, slot: NormalizedSlotDisplay): string {
@@ -392,8 +387,8 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
         this.linkCheckerPlugin.updateLinkStatus(element);
 
         timerId = window.setTimeout(() => {
-            (element as HTMLElement).removeAttribute(ATTR_QUEUED_LINK_CHECK);
-            this.checkLink(url, element as HTMLElement);
+            (element).removeAttribute(ATTR_QUEUED_LINK_CHECK);
+            this.checkLink(url, element);
         }, this.linkCheckerPlugin.settings.delay ?? DEFAULT_DELAY);
         element.setAttribute(ATTR_QUEUED_LINK_CHECK, `${timerId}`);
     }
@@ -417,7 +412,7 @@ export class PageEditorControlsComponent implements OnInit, OnChanges, AfterView
     protected checkLink(url: string, element: HTMLElement): void {
         this.subscriptions.push(this.client.linkChecker.check({
             url: normalizeURL(url, this.linkCheckerPlugin.settings),
-        }).subscribe(res => {
+        }).subscribe((res) => {
             res.url = url;
             this.linkCheckerPlugin.updateLinkStatus(element, res);
             this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();

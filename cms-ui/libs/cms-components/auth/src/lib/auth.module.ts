@@ -1,7 +1,7 @@
-import { ModuleWithProviders, NgModule } from "@angular/core";
-import { provideStates } from "@ngxs/store";
-import { KeycloakService } from "./providers";
-import { AuthStateModule } from "./state/auth.state";
+import { ModuleWithProviders, NgModule } from '@angular/core';
+import { provideStates } from '@ngxs/store';
+import { KeycloakService } from './providers';
+import { AuthStateModule } from './state/auth.state';
 
 @NgModule({
     providers: [
@@ -15,7 +15,6 @@ export class AuthenticationModule {
             providers: [
                 provideStates([AuthStateModule]),
             ],
-        }
+        };
     }
 }
-

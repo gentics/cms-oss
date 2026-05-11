@@ -33,9 +33,6 @@ const COMPONENTS = [
 ];
 
 @NgModule({
-    declarations: [
-        ...COMPONENTS,
-    ],
     imports: [
         CommonModule,
         FormsModule,
@@ -44,9 +41,9 @@ const COMPONENTS = [
         CmsComponentsModule,
         TranslateModule,
     ],
-    exports: [
-        ...COMPONENTS,
-    ],
+    declarations: [...COMPONENTS],
+    providers: [],
+    exports: [...COMPONENTS],
 })
 export class FormGridModule {
     static forRoot(): ModuleWithProviders<FormGridModule> {

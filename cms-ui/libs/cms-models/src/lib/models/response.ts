@@ -802,7 +802,7 @@ export interface ValidateSidResponse extends Response {
     user: User<Raw>;
 }
 
-// MAINTENANCE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// INFO //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /** Response from the `info/maintenance` endpoint. */
 export interface MaintenanceModeResponse extends Response {
@@ -812,6 +812,11 @@ export interface MaintenanceModeResponse extends Response {
     banner: boolean;
     /** The message to display to the user, set when enabling maintenance mode. */
     message: string;
+}
+
+export interface AlohaRessourceInformationResponse extends Response {
+    jsFiles: string[];
+    cssFiles: string[];
 }
 
 // SYNC //////////////////////////////////////////////////////////////////////////////////////////////////////////////

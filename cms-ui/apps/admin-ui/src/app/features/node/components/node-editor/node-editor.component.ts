@@ -240,6 +240,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             insecurePreviewUrl: this.entity?.insecurePreviewUrl,
             meshPreviewUrl: this.entity?.meshPreviewUrl,
             meshPreviewUrlProperty: this.entity?.meshPreviewUrlProperty,
+            meshProjectName: this.entity?.meshProjectName,
             previewType: this.entity?.meshPreviewUrlProperty
                 ? NodePreviewurlType.PROPERTY
                 : NodePreviewurlType.VALUE,

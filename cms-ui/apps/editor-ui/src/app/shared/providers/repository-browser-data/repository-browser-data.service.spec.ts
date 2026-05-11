@@ -1,4 +1,5 @@
 import { fakeAsync, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import {
     BaseListResponse,
     Folder,
@@ -173,7 +174,10 @@ describe('RepositoryBrowserDataService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                HttpClientTestingModule,
+                NgxsModule.forRoot(STATE_MODULES)
+            ],
             providers: [
                 RepositoryBrowserDataService,
                 { provide: Api, useClass: MockApi },

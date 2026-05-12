@@ -9,22 +9,14 @@ import {
     ExposedPartialState,
     GcmsUiBridge,
     ModalCloseError,
-    RepositoryBrowserOptions,
     StateChangedHandler,
-    TagEditorOptions,
 } from '@gentics/cms-integration-api-models';
 import {
     Construct,
-    ItemInNode,
-    Page,
-    Raw,
-    Tag,
-    TagType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ModalService } from '@gentics/ui-core';
 import { Subscription, of } from 'rxjs';
-import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, endWith, map } from 'rxjs/operators';
 import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
 import { AppState } from '../../../common/models/app-state';
 import { deepEqual } from '../../../common/utils/deep-equal';
@@ -32,13 +24,8 @@ import { stripLeadingSlash } from '../../../common/utils/strip';
 import { ApiBase } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
-import { RepositoryBrowserClient } from '../../../shared/providers';
+import { GcmsUiServicesProvider } from '../../../core/providers/gcms-ui-services/gcms-ui-services.service';
 import { ApplicationStateService } from '../../../state';
-import { TagEditorService } from '../../../tag-editor';
-import {
-    UploadWithPropertiesModalComponent,
-} from '../../../tag-editor/components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
@@ -72,13 +59,10 @@ export class CustomerScriptService implements OnDestroy {
         private apiBase: ApiBase,
         private client: GCMSRestClientService,
         private entityResolver: EntityResolver,
-        private tagEditorService: TagEditorService,
-        private editorOverlayService: EditorOverlayService,
         private errorHandlerService: ErrorHandler,
-        private repositoryBrowserClient: RepositoryBrowserClient,
         private aloha: AlohaIntegrationService,
         private overlays: AlohaOverlayService,
-        private modals: ModalService,
+        private services: GcmsUiServicesProvider,
     ) {
         // Create a new Zone to be able to track async errors originating from the customer script.
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -193,10 +177,6 @@ export class CustomerScriptService implements OnDestroy {
             this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise();
         const restRequestDELETE = (endpoint: string, params?: object): Promise<void | object> =>
             this.apiBase.delete(stripLeadingSlash(endpoint), params).toPromise();
-        const openTagEditor = (tag: Tag, tagType: TagType, page: Page<Raw>, options?: TagEditorOptions) =>
-            this.tagEditorService.openTagEditor(tag, tagType, page, options);
-        const openRepositoryBrowser = (options: RepositoryBrowserOptions): Promise<ItemInNode | ItemInNode[]> =>
-            this.repositoryBrowserClient.openRepositoryBrowser(options);
 
         let subscription: Subscription;
         let stateChangedHandler: StateChangedHandler;
@@ -244,7 +224,9 @@ export class CustomerScriptService implements OnDestroy {
         const gcmsUi: GcmsUiBridge = {
             runPreLoadScript: executePreLoadScript,
             runPostLoadScript: executePostLoadScript,
-            openRepositoryBrowser,
+            openRepositoryBrowser: (options) => {
+                return this.services.openRepositoryBrowser(options) as any;
+            },
             gcmsUiStylesUrl: this.gcmsUiStylesForIFrameBlobUrl,
             appState: this.mapToPartialState(this.state.now),
             onStateChange: (handler) => stateChangedHandler = handler,
@@ -254,10 +236,7 @@ export class CustomerScriptService implements OnDestroy {
                 alohapageUrl: ALOHAPAGE_URL,
                 imagestoreUrl: IMAGESTORE_URL,
             },
-            restRequestGET,
-            restRequestPOST,
-            restRequestDELETE,
-            restClient: this.client.getClient(),
+            restClient: this.services.restClient,
 
             setContentModified(modified: any): void {
                 if (typeof modified !== 'boolean') {
@@ -267,10 +246,15 @@ export class CustomerScriptService implements OnDestroy {
                 scriptHost.setContentModified(!!modified);
             },
             editImage: (nodeId: number, imageId: number) => {
-                return this.editorOverlayService.editImage({ nodeId: nodeId, itemId: imageId });
+                return this.services.openImageEditor({ nodeId, imageId });
             },
-            callDebugTool: gcmsui_debugTool,
-            openTagEditor,
+            openImageEditor: (options) => {
+                return this.services.openImageEditor(options);
+            },
+            callDebugTool: () => { /* noop */ },
+            openTagEditor: (tag, tagType, page, options) => {
+                return this.services.openTagEditor(tag, tagType, page, options);
+            },
             openDynamicDropdown: (configuration, slot) => {
                 return this.overlays.openDynamicDropdown(configuration, slot);
             },
@@ -291,15 +275,7 @@ export class CustomerScriptService implements OnDestroy {
                 this.aloha.changeActivePageEditorTab(tabId);
             },
             openUploadModal: (uploadType, destinationFolder, allowFolderSelection) => {
-                return this.modals.fromComponent(
-                    UploadWithPropertiesModalComponent,
-                    { padding: true, width: '1000px' },
-                    {
-                        itemType: uploadType,
-                        allowFolderSelection: allowFolderSelection ?? true,
-                        destinationFolder,
-                    },
-                ).then((dialog) => dialog.open());
+                return this.services.openUploadModal(uploadType, destinationFolder, allowFolderSelection);
             },
         };
 

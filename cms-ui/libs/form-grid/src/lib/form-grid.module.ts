@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { inject, ModuleWithProviders, NgModule, provideAppInitializer } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CmsComponentsModule } from '@gentics/cms-components';
+import { AlohaModule } from '@gentics/cms-components/aloha';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
@@ -40,6 +41,7 @@ const COMPONENTS = [
         GenticsUICoreModule,
         CmsComponentsModule,
         TranslateModule,
+        AlohaModule,
     ],
     declarations: [...COMPONENTS],
     providers: [],

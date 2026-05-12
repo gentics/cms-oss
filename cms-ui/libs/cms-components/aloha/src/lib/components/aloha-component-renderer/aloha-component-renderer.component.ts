@@ -12,7 +12,6 @@ import {
     OnDestroy,
     Output,
     SimpleChanges,
-    Type,
     ViewChild,
     ViewContainerRef,
 } from '@angular/core';
@@ -20,53 +19,17 @@ import { ControlValueAccessor } from '@angular/forms';
 import { AlohaComponent, AlohaCoreComponentNames } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { AlohaAttributeButtonRendererComponent } from '../aloha-attribute-button-renderer/aloha-attribute-button-renderer.component';
-import { AlohaAttributeToggleButtonRendererComponent } from '../aloha-attribute-toggle-button-renderer/aloha-attribute-toggle-button-renderer.component';
-import { AlohaButtonRendererComponent } from '../aloha-button-renderer/aloha-button-renderer.component';
-import { AlohaCheckboxRendererComponent } from '../aloha-checkbox-renderer/aloha-checkbox-renderer.component';
-import { AlohaColorPickerRendererComponent } from '../aloha-color-picker-renderer/aloha-color-picker-renderer.component';
-import { AlohaContextButtonRendererComponent } from '../aloha-context-button-renderer/aloha-context-button-renderer.component';
-import { AlohaContextToggleButtonRendererComponent } from '../aloha-context-toggle-button-renderer/aloha-context-toggle-button-renderer.component';
-import { AlohaDateTimePickerRendererComponent } from '../aloha-date-time-picker-renderer/aloha-date-time-picker-renderer.component';
-import { AlohaIFrameRendererComponent } from '../aloha-iframe-renderer/aloha-iframe-renderer.component';
-import { AlohaInputRendererComponent } from '../aloha-input-renderer/aloha-input-renderer.component';
-import { AlohaLinkTargetRendererComponent } from '../aloha-link-target-renderer/aloha-link-target-renderer.component';
-import { AlohaSelectMenuRendererComponent } from '../aloha-select-menu-renderer/aloha-select-menu-renderer.component';
-import { AlohaSelectRendererComponent } from '../aloha-select-renderer/aloha-select-renderer.component';
-import { AlohaSplitButtonRendererComponent } from '../aloha-split-button-renderer/aloha-split-button-renderer.component';
-import { AlohaSymbolGridRendererComponent } from '../aloha-symbol-grid-renderer/aloha-symbol-grid-renderer.component';
-import { AlohaSymbolSearchGridRendererComponent } from '../aloha-symbol-search-grid-renderer/aloha-symbol-search-grid-renderer.component';
-import { AlohaTableSizeSelectRendererComponent } from '../aloha-table-size-select-renderer/aloha-table-size-select-renderer.component';
-import { AlohaToggleButtonRendererComponent } from '../aloha-toggle-button-renderer/aloha-toggle-button-renderer.component';
-import { AlohaToggleSplitButtonRendererComponent } from '../aloha-toggle-split-button-renderer/aloha-toggle-split-button-renderer.component';
-import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
+import { RenderedAlohaComponent } from '../../models/internal';
+import { AlohaComponentResolverService } from '../../providers/aloha-component-resolver/aloha-component-resolver.service';
 
-const RENDER_COMPONENTS: Record<string, Type<BaseAlohaRendererComponent<any, any>>> = {
-    [AlohaCoreComponentNames.ATTRIBUTE_BUTTON]: AlohaAttributeButtonRendererComponent,
-    [AlohaCoreComponentNames.ATTRIBUTE_TOGGLE_BUTTON]: AlohaAttributeToggleButtonRendererComponent,
-    [AlohaCoreComponentNames.BUTTON]: AlohaButtonRendererComponent,
-    [AlohaCoreComponentNames.CHECKBOX]: AlohaCheckboxRendererComponent,
-    [AlohaCoreComponentNames.COLOR_PICKER]: AlohaColorPickerRendererComponent,
-    [AlohaCoreComponentNames.CONTEXT_BUTTON]: AlohaContextButtonRendererComponent,
-    [AlohaCoreComponentNames.CONTEXT_TOGGLE_BUTTON]: AlohaContextToggleButtonRendererComponent,
-    [AlohaCoreComponentNames.DATE_TIME_PICKER]: AlohaDateTimePickerRendererComponent,
-    [AlohaCoreComponentNames.IFRAME]: AlohaIFrameRendererComponent,
-    [AlohaCoreComponentNames.INPUT]: AlohaInputRendererComponent,
-    [AlohaCoreComponentNames.LINK_TARGET]: AlohaLinkTargetRendererComponent,
-    [AlohaCoreComponentNames.SELECT]: AlohaSelectRendererComponent,
-    [AlohaCoreComponentNames.SELECT_MENU]: AlohaSelectMenuRendererComponent,
-    [AlohaCoreComponentNames.SPLIT_BUTTON]: AlohaSplitButtonRendererComponent,
-    [AlohaCoreComponentNames.SYMBOL_GRID]: AlohaSymbolGridRendererComponent,
-    [AlohaCoreComponentNames.SYMBOL_SEARCH_GRID]: AlohaSymbolSearchGridRendererComponent,
-    [AlohaCoreComponentNames.TABLE_SIZE_SELECT]: AlohaTableSizeSelectRendererComponent,
-    [AlohaCoreComponentNames.TOGGLE_BUTTON]: AlohaToggleButtonRendererComponent,
-    [AlohaCoreComponentNames.TOGGLE_SPLIT_BUTTON]: AlohaToggleSplitButtonRendererComponent,
-} as any;
-
-/**
- * While this is the implementation of the Component, the component definition is done in `AlohaComponentRendererComponent` to prevent cylic imports.
- */
-@Component({ template: '' })
+@Component({
+    selector: 'gtx-aloha-component-renderer',
+    templateUrl: './aloha-component-renderer.component.html',
+    styleUrls: ['./aloha-component-renderer.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(AlohaComponentRendererComponent)],
+    standalone: false,
+})
 export class AlohaComponentRendererComponent implements ControlValueAccessor, AfterViewInit, OnChanges, OnDestroy {
 
     @Input()
@@ -116,7 +79,7 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
 
     protected isInitalized = false;
     protected createInstanceType: string = null;
-    protected instanceRef: ComponentRef<BaseAlohaRendererComponent<any, any>>;
+    protected instanceRef: ComponentRef<RenderedAlohaComponent<any, any>>;
 
     private cvaValueReceived = false;
     /** Internal values for control-value accessor impl */
@@ -131,6 +94,7 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
         protected changeDetector: ChangeDetectorRef,
         protected injector: Injector,
         protected envInjector: EnvironmentInjector,
+        protected resolver: AlohaComponentResolverService,
     ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -179,8 +143,9 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
         }
 
         this.createInstanceType = this.type || this.component?.type;
-        const componentType = RENDER_COMPONENTS[this.createInstanceType];
+        const componentType = this.resolver.resolveComponent(this.createInstanceType);
         if (componentType == null) {
+            console.warn(`Could not render unknown aloha component from type "${this.createInstanceType}"`);
             this.createInstanceType = null;
             return;
         }
@@ -231,7 +196,8 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
         }));
 
         if (this.createInstanceType === AlohaCoreComponentNames.SELECT_MENU) {
-            this.subscriptions.push((this.instanceRef.instance as AlohaSelectMenuRendererComponent).multiStepActivation.subscribe((stepId) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.subscriptions.push((this.instanceRef.instance as any).multiStepActivation.subscribe((stepId) => {
                 this.hideHeader.emit(stepId != null);
             }));
         }

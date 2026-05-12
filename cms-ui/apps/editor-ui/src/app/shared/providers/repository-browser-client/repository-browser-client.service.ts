@@ -47,22 +47,21 @@ export class RepositoryBrowserClient {
      *     submitLabel: 'Add to article' // optional, default text will be displayed
      * }
      * ```
-     *
      * @returns A Promise, which resolves to `ItemInNode | TagInContainer` if `selectMultiple` is false and
      * to `(ItemInNode | TagInContainer)[]` if `selectMultiple` is true.
      * If user clicks on the cancel button, the promise resolves with `null`.
      */
     openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
-        options: RepositoryBrowserOptions & { allowedSelection: T, selectMultiple: false }
+        options: RepositoryBrowserOptions & { allowedSelection: T; selectMultiple: false }
     ): Promise<R | null>;
     openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
-        options: RepositoryBrowserOptions & { allowedSelection: T, selectMultiple: true }
+        options: RepositoryBrowserOptions & { allowedSelection: T; selectMultiple: true }
     ): Promise<R[] | null>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(
-        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: false }
+        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[]; selectMultiple: false }
     ): Promise<R | null>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(
-        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: true }
+        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[]; selectMultiple: true }
     ): Promise<R[] | null>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[] | null>;
     async openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[] | null> {

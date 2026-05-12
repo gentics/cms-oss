@@ -1,15 +1,20 @@
-import { Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { AlohaSelectMenuComponent, MultiStepSelectMenuOption, SelectMenuOption, SelectMenuSelectEvent } from '@gentics/aloha-models';
+import { generateFormProvider } from '@gentics/ui-core';
 import { Subscription, combineLatest } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { applyControl, patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
-/**
- * While this is the implementation of the Component, the component definition is done in `AlohaSelectMenuRendererComponent` to prevent cylic imports.
- */
-@Component({ template: '' })
+@Component({
+    selector: 'gtx-aloha-select-menu-renderer',
+    templateUrl: './aloha-select-menu-renderer.component.html',
+    styleUrls: ['./aloha-select-menu-renderer.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(AlohaSelectMenuRendererComponent)],
+    standalone: false,
+})
 export class AlohaSelectMenuRendererComponent
     extends BaseAlohaRendererComponent<AlohaSelectMenuComponent, SelectMenuSelectEvent<any>>
     implements OnInit, OnDestroy {

@@ -142,7 +142,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         this.changeDetector.markForCheck();
 
         this.overlay.editImage({
-            itemId: this.file.id,
+            imageId: this.file.id,
             nodeId: this.nodeId,
         }).then((updatedImage) => {
             if (!updatedImage) {

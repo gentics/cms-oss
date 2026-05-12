@@ -18,14 +18,14 @@ import {
 } from '@gentics/aloha-models';
 import { AlohaGlobal, CNWindow, GCNAlohaPlugin, TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER } from '@gentics/cms-integration-api-models';
 import { Construct } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { Store } from '@ngxs/store';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
-import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
-import { overrideFunction, revertKeyedFunctionOverrides } from '../../utils';
-import { Store } from '@ngxs/store';
 import { AlohaStateModel, SetAlohaRessources } from '../../models';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { overrideFunction, revertKeyedFunctionOverrides } from '../../utils';
+import { RenderedAlohaComponent } from '../../models/internal';
 
 export interface NormalizedSlotDisplay {
     name: string;
@@ -209,7 +209,7 @@ export class AlohaIntegrationService {
 
     public activeTab: string;
     public registeredComponents: Record<string, AlohaComponent> = {};
-    public renderedComponents: Record<string, BaseAlohaRendererComponent<any, any>> = {};
+    public renderedComponents: Record<string, RenderedAlohaComponent<any, any>> = {};
     public iframeElement: HTMLIFrameElement | null = null;
 
     constructor(
@@ -448,6 +448,10 @@ export class AlohaIntegrationService {
         if (this.iframeElement != null) {
             this.iframeElement.focus({ preventScroll: true });
         }
+    }
+
+    public setComponents(map: Record<string, AlohaComponent>): void {
+        this.componentsSub.next(map);
     }
 
     public registerComponent(slot: string, component: AlohaComponent): void {

@@ -27,6 +27,17 @@ export interface AlohaSettings {
     readonly?: boolean;
     sanitizeCharacters?: Record<string, string>;
     toolbar?: any;
+    requireConfig?: {
+        baseUrl?: string;
+        config?: {
+            i18n?: {
+                locale?: string;
+            };
+        };
+        context?: string;
+        map?: Record<string, Record<string, string>>;
+        paths?: Record<string, string>;
+    };
 }
 
 export type AlohaToolbarSettings = {

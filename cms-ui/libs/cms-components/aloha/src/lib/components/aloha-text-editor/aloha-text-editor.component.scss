@@ -11,6 +11,10 @@ gtx-form-element-container::ng-deep .box-wrapper .box-content {
     transition: 200ms;
     border-bottom: 2px solid $gtx-color-warning;
     display: none;
+    min-height: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.25em;
+    padding: 0.25em;
 }
 
 .aloha-container {
@@ -68,5 +72,5 @@ gtx-form-element-container::ng-deep .box-wrapper .box-content {
 }
 
 gtx-form-element-container.active .toolbar {
-    display: block;
+    display: flex;
 }

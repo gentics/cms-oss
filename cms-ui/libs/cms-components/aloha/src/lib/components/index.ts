@@ -19,7 +19,6 @@ export * from './aloha-table-size-select-renderer/aloha-table-size-select-render
 export * from './aloha-text-editor/aloha-text-editor.component';
 export * from './aloha-toggle-button-renderer/aloha-toggle-button-renderer.component';
 export * from './aloha-toggle-split-button-renderer/aloha-toggle-split-button-renderer.component';
-export * from './dynamic-components';
 export * from './dynamic-dropdown/dynamic-dropdown.component';
 export * from './dynamic-form-modal/dynamic-form-modal.component';
 export * from './symbol-grid/symbol-grid.component';

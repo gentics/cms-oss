@@ -9,11 +9,10 @@ import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-ap
 import { ModalService, OverlayHostService } from '@gentics/ui-core';
 import { DynamicDropdownComponent } from '../../components/dynamic-dropdown/dynamic-dropdown.component';
 import { DynamicFormModal } from '../../components/dynamic-form-modal/dynamic-form-modal.component';
-import { AlohaOverlayHandler } from '../../models';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 
 @Injectable()
-export class AlohaOverlayService implements AlohaOverlayHandler {
+export class AlohaOverlayService {
 
     private openOverlays: OverlayElementControl<any>[] = [];
 

@@ -5,8 +5,9 @@ import {
     DynamicFormModalConfiguration,
     OverlayElementControl,
 } from '@gentics/aloha-models';
-import { EditMode, GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
+    AllowedSelectionType,
+    AllowedSelectionTypeMap,
     Construct,
     File,
     FileOrImage,
@@ -24,6 +25,7 @@ import {
     TagType,
 } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
+import { EditMode, GcmsUiLanguage } from './editor-ui';
 import { RepositoryBrowserOptions } from './repository-browser';
 import { TagEditorOptions, TagEditorResult } from './tag-editor/custom-editor';
 
@@ -106,6 +108,11 @@ export function wasClosedByUser(error: any): error is ModalCloseError {
     return error != null && error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR;
 }
 
+export interface ImageEditorOptions {
+    imageId: number;
+    nodeId: number;
+}
+
 /**
  * Used to interact with the GCMS UI from editor IFrames.
  *
@@ -169,61 +176,6 @@ export interface GcmsUiBridge {
     // --------------------------------------------
 
     /**
-     * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
-     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.
-     *
-     * @deprecated Use the {@link restClient} for all requests instead.
-     * ```ts     *
-     * // Old way - Should not be used anymore
-     * GCMSUI.restRequestGET('/page/load/123')
-     * // Recommended: Use the dedicated functions of the resources
-     * GCMSUI.restClient.page.get(123).send()
-     * // In case there's no function or it's a endpoint for something different,
-     * // you can call it manually.
-     * GCMSUI.restClient.executeMappedJsonRequest('GET', '/page/load/123').send()
-     * ```
-     */
-    restRequestGET: (endpoint: string, params?: object) => Promise<object>;
-    /**
-     * Makes a POST request to an endpoint of the GCMS REST API and returns the parsed JSON object.
-     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.
-     *
-     * @deprecated Use the {@link restClient} for all requests instead.
-     * ```ts
-     * const pageToCreate = {
-     *      // Page content
-     * };
-     *
-     * // Old way - Should not be used anymore
-     * GCMSUI.restRequestPOST('/page/create', pageToCreate)
-     * // Recommended: Use the dedicated functions of the resources
-     * GCMSUI.restClient.page.create(pageToCreate).send()
-     * // In case there's no function or it's a endpoint for something different,
-     * // you can call it manually.
-     * GCMSUI.restClient.executeMappedJsonRequest('POST', '/page/create', pageToCreate).send()
-     * ```
-     */
-    restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
-    /**
-     * Makes a DELETE request to an endpoint of the GCMS REST API and returns the parsed JSON object.
-     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.]
-     *
-     * @deprecated Use the {@link restClient} for all requests instead.
-     * ```ts
-     * // Old way - Should not be used anymore
-     * GCMSUI.restRequestDELETE('/page/delete/123')
-     * // Recommended: Use the dedicated functions of the resources
-     * GCMSUI.restClient.page.delete(123).send()
-     * // In case there's no function or it's a endpoint for something different,
-     * // you can call it manually.
-     * GCMSUI.restClient.executeMappedJsonRequest('DELETE', '/page/delete/123').send()
-     * ```
-     */
-    restRequestDELETE: (endpoint: string, params?: object) => Promise<object | void>;
-    /**
      * Client for interacting with all the GCMS APIs.
      */
     restClient: GCMSRestClient;
@@ -236,20 +188,40 @@ export interface GcmsUiBridge {
      * @returns a promise, which will resolve to either the edited image
      * (this may be a copy of the original image as well) or to void if the
      * user canceled the edit or an error occurred.
+     * @deprecated Use `openImageEditor` instead.
      */
     editImage: (nodeId: number, imageId: number) => Promise<Image<Raw> | void>;
+    /**
+     * Opens the image editor for the specified image.
+     * @returns a promise, which will resolve to either the edited image
+     * (this may be a copy of the original image as well) or to void if the
+     * user canceled the edit or an error occurred.
+     */
+    openImageEditor: (options: ImageEditorOptions) => Promise<Image<Raw> | void>;
+
     /**
      * Opens the repository browser window.
      * Returns Promise which resolves to `ItemInNode | TagInContainer` if `selectMultiple` is false and
      * to `(ItemInNode | TagInContainer)[]` if `selectMultiple` is true.
      * The Promise resolves to null if user clicks on cancel button.
      */
-    openRepositoryBrowser: (options: RepositoryBrowserOptions) => Promise<(ItemInNode | TagInContainer) | (ItemInNode | TagInContainer)[]>;
+    openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
+        options: RepositoryBrowserOptions & { allowedSelection: T; selectMultiple: false }
+    ): Promise<R | null>;
+    openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
+        options: RepositoryBrowserOptions & { allowedSelection: T; selectMultiple: true }
+    ): Promise<R[] | null>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(
+        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[]; selectMultiple: false }
+    ): Promise<R | null>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(
+        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[]; selectMultiple: true }
+    ): Promise<R[] | null>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[] | null>;
     /**
      * Opens a tag editor for the specified tag.
      * Based on the configuration of the TagType, either the GenticsTagEditor or
      * a custom tag editor is used.
-     *
      * @param tag The tag to be edited - the property tag.tagType must be set.
      * @param context The current context.
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
@@ -258,7 +230,6 @@ export interface GcmsUiBridge {
     openTagEditor: (tag: Tag, tagType: TagType, page: Page<Raw>, options?: TagEditorOptions) => Promise<TagEditorResult>;
     /**
      * Opens an the upload modal to allow the user to upload files/images to a specified folder.
-     *
      * @param uploadType The type the user should be allowed to upload. Either 'image' or 'file'.
      * @param destinationFolder The folder to where the file/image should be uploaded to.
      * @param allowFolderSelection If the user should be allowed to change the destination folder.
@@ -302,14 +273,12 @@ export interface GcmsUiBridge {
     /**
      * Registers/Binds a component to the specified slot.
      * Will override any component previously bound to it.
-     *
      * @param slot The slot where the component should be registered as
      * @param component The component definition
      */
     registerComponent: (slot: string, component: AlohaComponent) => void;
     /**
      * Unregisters a component from the given slot.
-     *
      * @param slot The slot which has been registered
      */
     unregisterComponent: (slot: string) => void;

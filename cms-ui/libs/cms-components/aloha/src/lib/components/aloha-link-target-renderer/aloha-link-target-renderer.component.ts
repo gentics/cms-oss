@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Inject, OnDestroy, OnInit } from '@angular/core';
 import { AlohaLinkTargetComponent, ExtendedLinkTarget } from '@gentics/aloha-models';
-import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices, I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { GCMS_UI_SERVICES_PROVIDER, I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { GcmsUiServices } from '@gentics/cms-integration-api-models';
 import { File, Image, ItemRequestOptions, Page } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { generateFormProvider } from '@gentics/ui-core';

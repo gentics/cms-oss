@@ -4,17 +4,23 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    Inject,
     Input,
     OnDestroy,
     OnInit,
     ViewChild,
 } from '@angular/core';
-import { AlohaSettings } from '@gentics/aloha-models';
+import { AlohaComponent, AlohaSettings } from '@gentics/aloha-models';
+import { GCMS_UI_SERVICES_PROVIDER, I18nService } from '@gentics/cms-components';
+import { CNWindow, GcmsUiBridge, GcmsUiServices, ModalCloseError } from '@gentics/cms-integration-api-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseFormElementComponent, cancelEvent } from '@gentics/ui-core';
 import { Store } from '@ngxs/store';
 import { isEqual } from 'lodash-es';
-import { distinctUntilChanged } from 'rxjs';
+import { distinctUntilChanged, filter } from 'rxjs';
 import { AlohaStateModel } from '../../models';
+import { AlohaIntegrationService, NormalizedToolbarSizeSettings } from '../../providers/aloha-integration/aloha-integration.service';
+import { AlohaOverlayService } from '../../providers/aloha-overlay/aloha-overlay.service';
 
 enum IFrameState {
     NONE = 'none',
@@ -31,6 +37,12 @@ const DEFAULT_SETTINGS: Partial<AlohaSettings & Record<string, any>> = {
         initEditable: ['blockelement'],
         getContents: ['blockelement', 'basic'],
         insertHtml: ['word', 'generic', 'block', 'formatless'],
+    },
+    // Config so the gcn ressources load properly
+    requireConfig: {
+        paths: {
+            gcn: '../plugins/gcn/gcn/lib',
+        },
     },
 };
 
@@ -59,15 +71,27 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     public isFocused = false;
     public state = IFrameState.NONE;
     public contentHeight: number;
+    public toolbarSettings: NormalizedToolbarSizeSettings;
+
+    public components: Record<string, AlohaComponent> = {};
 
     private focusAfterInit = false;
+    private markWithin = false;
+    private openOverlayCount = 0;
     private jsFiles: string[];
     private cssFiles: string[];
-    private observer: ResizeObserver;
+    private sizeObserver: ResizeObserver;
+    private changeObserver: MutationObserver;
 
     constructor(
         changeDetector: ChangeDetectorRef,
         private store: Store,
+        private i18n: I18nService,
+        private client: GCMSRestClientService,
+        private aloha: AlohaIntegrationService,
+        private overlay: AlohaOverlayService,
+        @Inject(GCMS_UI_SERVICES_PROVIDER)
+        private uiService: GcmsUiServices,
     ) {
         super(changeDetector);
     }
@@ -81,6 +105,13 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             this.initializeIframe();
             this.changeDetector.markForCheck();
         }));
+
+        this.subscriptions.push(this.aloha.activeToolbarSettings$.pipe(
+            filter(() => this.isFocused),
+        ).subscribe((settings) => {
+            this.toolbarSettings = settings;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     public ngAfterViewInit(): void {
@@ -89,7 +120,15 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
 
     public override ngOnDestroy(): void {
         super.ngOnDestroy();
-        this.observer.disconnect();
+        if (this.sizeObserver) {
+            this.sizeObserver.disconnect();
+        }
+        if (this.changeObserver) {
+            this.changeObserver.disconnect();
+        }
+        if (this.isFocused) {
+            this.aloha.clearReferences();
+        }
     }
 
     public focusAloha(event?: Event): void {
@@ -107,6 +146,10 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         if (editable) {
             editable.focus();
         }
+    }
+
+    public clickedWithin(): void {
+        this.markWithin = true;
     }
 
     protected onValueChange(): void {
@@ -143,9 +186,16 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                 if (editable) {
                     editable.addEventListener('focusin', this.focusInHandler);
                     editable.addEventListener('focusout', this.focusOutHandler);
-                    editable.addEventListener('input', this.inputHandler);
-                    this.observer = new ResizeObserver(this.resizeHandler);
-                    this.observer.observe(editable);
+
+                    this.changeObserver = new MutationObserver(this.inputHandler);
+                    this.changeObserver.observe(editable, {
+                        childList: true,
+                        subtree: true,
+                        characterData: true,
+                    });
+
+                    this.sizeObserver = new ResizeObserver(this.resizeHandler);
+                    this.sizeObserver.observe(editable);
                 }
 
                 this.state = IFrameState.INITIALIZED;
@@ -158,13 +208,83 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
 
         // First wait for the iframe to load, as it replaces the `contentWindow`
         this.iframe.nativeElement.addEventListener('load', () => {
+            const cw: CNWindow = this.iframe.nativeElement.contentWindow as any;
+            const wrapOverlayHandle: <T>(cb: () => Promise<any>) => Promise<T> = (cb) => {
+                this.openOverlayCount++;
+                return cb().finally(() => {
+                    this.openOverlayCount--;
+                    if (this.openOverlayCount === 0) {
+                        this.focusAloha();
+                    }
+                });
+            };
+            cw.GCMSUI = {
+                runPreLoadScript: () => {},
+                runPostLoadScript: () => {},
+
+                gcmsUiStylesUrl: '',
+                appState: {},
+                paths: {
+                    alohapageUrl: '',
+                    apiBaseUrl: '',
+                    imagestoreUrl: '',
+                },
+                onStateChange: (_state) => {},
+                setContentModified: (_modified) => {},
+                callDebugTool: () => {},
+                getConstructs: () => Promise.resolve({}),
+                restClient: this.client.getClient(),
+
+                openImageEditor: (options) => {
+                    return wrapOverlayHandle(() => this.uiService.openImageEditor(options));
+                },
+                openRepositoryBrowser: (options) => {
+                    return wrapOverlayHandle(() => this.uiService.openRepositoryBrowser(options));
+                },
+                openTagEditor: (tag, tagType, page, options) => {
+                    return wrapOverlayHandle(() => this.uiService.openTagEditor(tag, tagType, page, options));
+                },
+                openUploadModal: (config) => {
+                    return wrapOverlayHandle(() => this.uiService.openUploadModal(config));
+                },
+
+                openDynamicModal: (config) => {
+                    return wrapOverlayHandle(() => this.overlay.openDynamicModal(config));
+                },
+                openDynamicDropdown: (config, slot) => {
+                    return wrapOverlayHandle(() => this.overlay.openDynamicDropdown(config, slot));
+                },
+                openDialog: (config) => {
+                    return wrapOverlayHandle(() => this.overlay.openDialog(config));
+                },
+                focusEditorTab: (tabId) => {
+                    this.aloha.changeActivePageEditorTab(tabId);
+                },
+                closeErrorClass: ModalCloseError,
+
+                registerComponent: (slot, component) => {
+                    this.components[slot] = component;
+                    this.aloha.registerComponent(slot, component);
+                },
+                unregisterComponent: (slot) => {
+                    delete this.components[slot];
+                    this.aloha.unregisterComponent(slot);
+                },
+            } as Partial<GcmsUiBridge> as any;
             // Now we can attach the message listener
-            this.iframe.nativeElement.contentWindow.addEventListener('message', handler);
+            cw.addEventListener('message', handler);
+
+            cw.Aloha.require(['gcn/texteditor-plugin'], () => {});
+            cw.Aloha.trigger('gcmsui.ready', {});
         });
 
-        const settings = {
+        const settings: Partial<AlohaSettings & Record<string, any>> = {
             ...DEFAULT_SETTINGS,
             ...this.settings,
+            locale: this.i18n.getCurrentLanguage(),
+            i18n: {
+                current: this.i18n.getCurrentLanguage(),
+            },
         };
         const cssHtml = this.cssFiles.map((file) => `<link rel="stylesheet" href="${file}" />`).join('\n');
         const jsHtml = this.jsFiles
@@ -261,21 +381,48 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         return this.iframe.nativeElement.contentDocument.querySelector('[contenteditable]');
     }
 
-    private focusInHandler = () => {
+    public focusInHandler = () => {
+        if (this.isFocused) {
+            return;
+        }
+
         this.isFocused = true;
+
+        if (this.iframe?.nativeElement) {
+            const cw: CNWindow = this.iframe.nativeElement.contentWindow as any;
+            this.aloha.setWindow(cw);
+            this.aloha.reference$.next(cw.Aloha);
+            this.aloha.settings$.next(cw.Aloha.settings);
+            this.aloha.setComponents(this.components);
+            cw.Aloha.ready(() => {
+                this.aloha.ready$.next(true);
+                this.aloha.windowLoaded$.next(true);
+            });
+        }
+
         this.changeDetector.markForCheck();
     };
 
-    private focusOutHandler = () => {
-        this.isFocused = false;
+    public focusOutHandler = () => {
+        if (this.markWithin) {
+            this.markWithin = false;
+            return;
+        }
+
+        // this.isFocused = false;
+        // this.aloha.clearReferences();
         this.changeDetector.markForCheck();
     };
 
-    private inputHandler = (event: InputEvent) => {
+    private inputHandler = () => {
         if (!this.isFocused) {
             return;
         }
-        this.triggerChange((event.target as HTMLElement).innerHTML);
+        const editable = this.getEditable();
+        if (!editable) {
+            return;
+        }
+        this.triggerChange(editable.innerHTML);
         this.resizeHandler();
     };
 

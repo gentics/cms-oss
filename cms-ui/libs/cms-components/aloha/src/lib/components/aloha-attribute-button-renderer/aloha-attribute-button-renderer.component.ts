@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Inject, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy } from '@angular/core';
 import { AlohaAttributeButtonComponent, OverlayElementControl } from '@gentics/aloha-models';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { ALOHA_OVERLAY_TOKEN, AlohaOverlayHandler } from '../../models';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
+import { AlohaOverlayService } from '../../providers/aloha-overlay/aloha-overlay.service';
 import { patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
@@ -25,8 +25,7 @@ export class AlohaAttributeButtonRendererComponent
         changeDetector: ChangeDetectorRef,
         element: ElementRef<HTMLElement>,
         aloha: AlohaIntegrationService,
-        @Inject(ALOHA_OVERLAY_TOKEN)
-        protected overlay: AlohaOverlayHandler,
+        protected overlay: AlohaOverlayService,
     ) {
         super(changeDetector, element, aloha);
     }

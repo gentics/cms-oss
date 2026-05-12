@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { AlohaComponent } from '@gentics/aloha-models';
 import { BaseFormElementComponent } from '@gentics/ui-core';
+import { RenderedAlohaComponent } from '../../models/internal';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { patchMultipleAlohaFunctions, unpatchAllAlohaFunctions } from '../../utils';
 
@@ -21,7 +22,7 @@ import { patchMultipleAlohaFunctions, unpatchAllAlohaFunctions } from '../../uti
 })
 export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
     extends BaseFormElementComponent<T>
-    implements OnInit, OnChanges, OnDestroy {
+    implements OnInit, OnChanges, OnDestroy, RenderedAlohaComponent<C, T> {
 
     @Input()
     public slot?: string;

@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { PRIMARY_OUTLET, Router } from '@angular/router';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     CropResizeParameters,
@@ -13,7 +13,6 @@ import {
     Node,
     Page,
 } from '@gentics/cms-models';
-import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map, publishReplay, refCount, take } from 'rxjs/operators';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -48,7 +47,7 @@ export class CustomScriptHostService {
 
     private contentFrameInstance: ContentFrameComponent;
     private saveObjectPropertyHandler: () => Promise<any>;
-    private getFocalPointHandler: () => { fpX: number, fpY: number };
+    private getFocalPointHandler: () => { fpX: number; fpY: number };
     private getCropResizeParamsHandler: () => CropResizeParameters;
     private pageSavedHandler = (): void => {};
     private pageStartsSavingHandler = (): void => {};
@@ -155,8 +154,8 @@ export class CustomScriptHostService {
         const uploadFolder = defaultFolder || (currentItem as Page).folderId || (currentItem as Folder).motherId;
 
         return this.folderActions.uploadFiles(type, files, uploadFolder).pipe(
-            map(responses => {
-                const fileModels: FileModel[] = responses.map(r => r.response.file);
+            map((responses) => {
+                const fileModels: FileModel[] = responses.map((r) => r.response.file);
                 return fileModels;
             }),
         );
@@ -173,7 +172,7 @@ export class CustomScriptHostService {
                         callback(selected);
                     });
                 },
-                error => this.errorHandler.catch(error));
+                (error) => this.errorHandler.catch(error));
         });
     }
 
@@ -246,14 +245,14 @@ export class CustomScriptHostService {
     /**
      * Register a handler function which will be invoked when an image is saved without resizing/cropping.
      */
-    onGetFocalPoint(handler: () => { fpX: number, fpY: number }): void {
+    onGetFocalPoint(handler: () => { fpX: number; fpY: number }): void {
         this.getFocalPointHandler = handler;
     }
 
     /**
      * Invoke the handler registered by onGetFocalPoint()
      */
-    getFocalPoint(): { fpX: number, fpY: number } | undefined {
+    getFocalPoint(): { fpX: number; fpY: number } | undefined {
         if (typeof this.getFocalPointHandler === 'function') {
             return this.getFocalPointHandler();
         }

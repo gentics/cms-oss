@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
+import { GcmsUiServices } from '@gentics/cms-integration-api-models';
 import { AllowedItemSelectionType, Item, ItemInNode, ItemRef, ItemRequestOptions, MarkupLanguageType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseFormElementComponent, cancelEvent } from '@gentics/ui-core';
 import { map } from 'rxjs';
-import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices } from '../../providers/gcms-ui-services/gcms-ui-services';
+import { GCMS_UI_SERVICES_PROVIDER } from '../../providers/gcms-ui-services/gcms-ui-services';
 
 /**
  * Component which wrapps the repository-browser API and allows for items to be picked.
@@ -170,14 +171,14 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
             }
 
             if (Array.isArray(result)) {
-                for (const item of result) {
+                for (const item of (result as any[])) {
                     this.cachedItems[this.getItemCacheKey(item)] = item;
                 }
             } else {
-                this.cachedItems[this.getItemCacheKey(result)] = result;
+                this.cachedItems[this.getItemCacheKey(result as any)] = result as any;
             }
 
-            this.triggerChange(result);
+            this.triggerChange(result as any);
             this.updateDisplayName();
         }).catch((error) => {
             console.error('Error while picking item from repo-browser', error);

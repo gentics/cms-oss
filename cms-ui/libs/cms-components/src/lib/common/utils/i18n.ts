@@ -43,16 +43,26 @@ export function formatI18nDate(value: Date | number, lang: string, format: Known
 }
 
 export function formatRelativeI18nDate(value: Date | number, lang: string): string {
+    let unixSeconds: number;
+
     if (value instanceof Date) {
         if (value.toString() === 'Invalid Date') {
             return '';
         }
-        value = value.getTime() / 1000;
+        unixSeconds = value.getTime() / 1000;
+    } else {
+        // The REST API delivers timestamps as Unix seconds (Java int).
+        // Threshold 300_000_000_000: as ms = Sept 1979, as seconds = year 11476 — the dead zone
+        // between the two ranges, so values below it are seconds and above are already milliseconds.
+        unixSeconds = value > 300_000_000_000 ? value / 1000 : value;
     }
+
+    // toRelativeTime expects a signed difference in seconds (negative = past, positive = future)
+    const diff = unixSeconds - Date.now() / 1000;
 
     const cached = RELATIVE_FORMAT_CACHE[lang];
     if (cached) {
-        return cached(value);
+        return cached(diff);
     } else if (typeof Intl !== 'object') {
         throw new Error('No Intl support on the current user agent and no polyfill used.');
     }
@@ -64,7 +74,7 @@ export function formatRelativeI18nDate(value: Date | number, lang: string): stri
     };
     RELATIVE_FORMAT_CACHE[lang] = formatFunction;
 
-    return formatFunction(value);
+    return formatFunction(diff);
 }
 
 function toRelativeTime(value: number): RelativeTime {

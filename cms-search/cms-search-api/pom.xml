@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-search</artifactId>
-		<version>6.3.16</version>
+		<version>6.3.17-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-search-api</artifactId>

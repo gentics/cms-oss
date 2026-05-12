@@ -920,4 +920,54 @@ test.describe('Page Management', () => {
         await expect(contentFrame).toBeVisible();
         await alohaLoadReq;
     });
+
+    test('should display a recent relative time for a locked page, not a time decades in the past', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19877',
+        }],
+    }, async ({ page }) => {
+        // Unix timestamp in seconds as returned by the REST API (Java int) — 30 seconds ago
+        const lockedSinceSeconds = Math.round(Date.now() / 1000) - 30;
+
+        // Register the route BEFORE navigation so it intercepts the initial page list load
+        // triggered by selectNode inside setupWithPermissions.
+        // This simulates the exact format the REST API returns (Java int, Unix seconds).
+        await page.route(url => matchesUrl(url, '/rest/folder/getPages/*'), async (route) => {
+            const response = await route.fetch();
+            const body = await response.json();
+            const lockedPage = body.pages?.find((p: any) => p.id === TEST_PAGE.id);
+            if (lockedPage) {
+                lockedPage.locked = true;
+                lockedPage.lockedSince = lockedSinceSeconds;
+                lockedPage.lockedBy = { id: 1, firstName: 'Admin', lastName: 'User' };
+            }
+            await route.fulfill({ json: body });
+        });
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        await test.step('Open the lock state contextmenu', async () => {
+            await item.locator('item-status-label .status-label').click();
+        });
+
+        await test.step('Verify lock time is not displayed as decades in the past', async () => {
+            const contextMenu = page.locator('item-state-contextmenu');
+            await expect(contextMenu).toBeVisible();
+            await expect(contextMenu).not.toContainText('years ago');
+            await expect(contextMenu).not.toContainText('Jahren');
+        });
+    });
 });

@@ -1,32 +1,72 @@
-.aloha-container {
+@import 'cms-components/src/styles/variables';
+
+gtx-form-element-container::ng-deep .box-wrapper .box-content {
+    padding: 0;
+    flex-direction: column;
+}
+
+.toolbar {
+    width: 100%;
+    flex: 0 0 auto;
+    transition: 200ms;
+    border-bottom: 2px solid $gtx-color-warning;
     display: none;
+}
+
+.aloha-container {
+    display: flex;
     flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0;
     width: 100%;
     height: 100%;
     position: relative;
+    padding: 0.3em;
+    min-height: max(2.2em, calc(var(--gtx-content-height) + 0.6em));
+    cursor: text;
+    overflow: hidden;
 
-    &.state-initialized {
-        display: block;
+    .content-container {
+        position: relative;
+        width: 100%;
+        min-height: 1px;
+        flex: 1 1 auto;
+
+        .aloha-frame,
+        .content {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            border: none;
+        }
+
+        .aloha-frame {
+            opacity: 0.01;
+            height: 100%;
+        }
+
+        .content {
+            height: min-content;
+        }
     }
 
-    .aloha-frame {
-        display: block !important;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        border: none;
+    &.state-initialized {
+        .content-container {
+            .aloha-frame {
+                opacity: 1;
+            }
+
+            /* This is only to be shown while aloha is loading. since it's done, we hide it */
+            .content {
+                display: none;
+            }
+        }
     }
 }
 
-.content {
-    flex: 1 1 auto;
-    height: 100%;
-    position: relative;
-
-    &.state-initialized {
-        display: none;
-    }
+gtx-form-element-container.active .toolbar {
+    display: block;
 }

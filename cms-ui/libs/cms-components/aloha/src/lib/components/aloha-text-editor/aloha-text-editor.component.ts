@@ -1,6 +1,16 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    Input,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+} from '@angular/core';
 import { AlohaSettings } from '@gentics/aloha-models';
-import { BaseFormElementComponent } from '@gentics/ui-core';
+import { BaseFormElementComponent, cancelEvent } from '@gentics/ui-core';
 import { Store } from '@ngxs/store';
 import { isEqual } from 'lodash-es';
 import { distinctUntilChanged } from 'rxjs';
@@ -48,10 +58,12 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
 
     public isFocused = false;
     public state = IFrameState.NONE;
+    public contentHeight: number;
 
     private focusAfterInit = false;
     private jsFiles: string[];
     private cssFiles: string[];
+    private observer: ResizeObserver;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -77,11 +89,17 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
 
     public override ngOnDestroy(): void {
         super.ngOnDestroy();
+        this.observer.disconnect();
     }
 
-    public focusAloha(): void {
+    public focusAloha(event?: Event): void {
         if (this.state !== IFrameState.INITIALIZED) {
             this.focusAfterInit = true;
+            return;
+        }
+        // Don't need to focus again
+        if (this.isFocused) {
+            cancelEvent(event);
             return;
         }
 
@@ -102,11 +120,12 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         if (editable) {
             editable.innerHTML = this.value;
         }
+        this.resizeHandler();
     }
 
     private initializeIframe(): void {
         if (
-            !this.iframe.nativeElement
+            !this.iframe?.nativeElement
             || this.state !== IFrameState.NONE
             || this.jsFiles == null
             || this.cssFiles == null
@@ -125,6 +144,8 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                     editable.addEventListener('focusin', this.focusInHandler);
                     editable.addEventListener('focusout', this.focusOutHandler);
                     editable.addEventListener('input', this.inputHandler);
+                    this.observer = new ResizeObserver(this.resizeHandler);
+                    this.observer.observe(editable);
                 }
 
                 this.state = IFrameState.INITIALIZED;
@@ -135,20 +156,27 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             }
         };
 
-        this.iframe.nativeElement.contentWindow.addEventListener('message', handler);
+        // First wait for the iframe to load, as it replaces the `contentWindow`
+        this.iframe.nativeElement.addEventListener('load', () => {
+            // Now we can attach the message listener
+            this.iframe.nativeElement.contentWindow.addEventListener('message', handler);
+        });
 
         const settings = {
             ...DEFAULT_SETTINGS,
             ...this.settings,
         };
         const cssHtml = this.cssFiles.map((file) => `<link rel="stylesheet" href="${file}" />`).join('\n');
-        const jsHtml = this.jsFiles.map((file) => {
-            if (file.endsWith('aloha.js')) {
-                return `<script src="${file}" data-aloha-plugins="${this.plugins.join(',')}"></script>`;
-            } else {
-                return `<script src="${file}"></script>`;
-            }
-        }).join('\n');
+        const jsHtml = this.jsFiles
+            .filter((file) => !file.endsWith('gcmsui-scripts-launcher.js'))
+            .map((file) => {
+                if (file.endsWith('aloha.js')) {
+                    return `<script src="${file}" data-aloha-plugins="${this.plugins.join(',')}"></script>`;
+                } else {
+                    return `<script src="${file}"></script>`;
+                }
+            })
+            .join('\n');
 
         this.iframe.nativeElement.srcdoc = `
 <!DOCTYPE html>
@@ -226,7 +254,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     }
 
     private getEditable(): HTMLElement | null {
-        if (this.state !== IFrameState.INITIALIZED) {
+        if (this.state === IFrameState.NONE) {
             return null;
         }
 
@@ -248,5 +276,15 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             return;
         }
         this.triggerChange((event.target as HTMLElement).innerHTML);
+        this.resizeHandler();
+    };
+
+    private resizeHandler = () => {
+        const editable = this.getEditable();
+        if (!editable) {
+            return;
+        }
+        this.contentHeight = editable.scrollHeight;
+        this.changeDetector.markForCheck();
     };
 }

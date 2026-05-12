@@ -4,17 +4,23 @@
     }
 
     <div class="toolbar">
-
-    </div>
-
-    <div class="aloha-container" [ngClass]="'state-' + state">
-        <iframe #host class="aloha-frame"></iframe>
+        hi im toolbar :)
     </div>
 
     <div
-        class="content"
+        class="aloha-container"
         [ngClass]="'state-' + state"
-        [innerHTML]="value | safe:'html'"
-        (click)="focusAloha()"
-    ></div>
+        [class.active]="state === IFrameState.INITIALIZED && isFocused"
+        [style.--gtx-content-height.px]="contentHeight"
+        (click)="focusAloha($event)"
+    >
+        <div class="content-container">
+            <iframe #host class="aloha-frame"></iframe>
+
+            <div
+                class="content"
+                [innerHTML]="value | safe:'html'"
+            ></div>
+        </div>
+    </div>
 </gtx-form-element-container>

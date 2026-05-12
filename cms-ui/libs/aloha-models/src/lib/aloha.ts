@@ -19,6 +19,8 @@ export interface AlohaSettings {
     plugins: {
         block?: BlockPluginSettings;
         format: FormatPluginSettings;
+        /** Which plugins are to be loaded */
+        load?: string[];
         [key: string]: any;
     };
     proxyUrl?: string;
@@ -27,9 +29,9 @@ export interface AlohaSettings {
     toolbar?: any;
 }
 
-export type  AlohaToolbarSettings = {
+export type AlohaToolbarSettings = {
     [size in ScreenSize]: AlohaToolbarSizeSettings;
-}
+};
 
 export interface AlohaToolbarSizeSettings {
     tabs: AlohaToolbarTabsSettings[];
@@ -223,7 +225,7 @@ export interface ActiveAlohaTable {
     cells: any[];
     clickedColumnId?: number;
     clickedRowId?: number;
-    columnsToSelect?: number[]
+    columnsToSelect?: number[];
     hasFocus: boolean;
     isActive: boolean;
     mouseDownColIdx: boolean;

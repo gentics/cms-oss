@@ -390,7 +390,7 @@ public class MiscUtils {
 			if (node != null) {
 				// try loading the form with external ID in the given node
 				List<Integer> formIds = DBUtils.select(
-						"SELECT form.id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.external_id = ? AND folder.node_id = ?",
+						"SELECT form.id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.external_id = ? AND form.deleted = 0 AND folder.node_id = ?",
 						pst -> {
 							pst.setString(1, id);
 							pst.setInt(2, node.getId());

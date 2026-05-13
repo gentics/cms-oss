@@ -146,7 +146,7 @@ public final class FormConfigProvider implements ConfigurationService {
 
 			// warn about empty configurations
 			configurationMap.entrySet().stream().filter(entry -> entry.getValue() == null).forEach(entry -> {
-				String msg = "Ignoring empty form type configuration for '%s'".formatted(entry.getKey());
+				String msg = I18NHelper.get("init.formtype.empty", entry.getKey());
 				logger.warn(msg);
 				messages.add(new Message(Type.WARNING, msg));
 			});
@@ -154,8 +154,8 @@ public final class FormConfigProvider implements ConfigurationService {
 			configurationMap.values().removeIf(c -> c == null);
 		} catch (IllegalArgumentException e) {
 			logger.error("Error while reading form type configuration", e.getCause());
-			messages.add(new Message(Type.CRITICAL,
-					"Error while reading form type configuration: %s".formatted(e.getLocalizedMessage())));
+			String msg = I18NHelper.get("init.formtype.error", e.getLocalizedMessage());
+			messages.add(new Message(Type.CRITICAL, msg));
 			configurationMap = null;
 		}
 
@@ -165,8 +165,8 @@ public final class FormConfigProvider implements ConfigurationService {
 					FormGenTranslations.class);
 		} catch (IllegalArgumentException e) {
 			logger.error("Error while reading form gen translations", e.getCause());
-			messages.add(new Message(Type.CRITICAL,
-					"Error while reading form gen translations: %s".formatted(e.getLocalizedMessage())));
+			String msg = I18NHelper.get("init.formgen.error", e.getLocalizedMessage());
+			messages.add(new Message(Type.CRITICAL, msg));
 			formGenTranslations = new FormGenTranslations();
 		}
 
@@ -192,7 +192,6 @@ public final class FormConfigProvider implements ConfigurationService {
 
 			if (!migrationDone) {
 				logger.info("Formtype consistency not checked, since migration is not done");
-				messages.add(new Message(Type.INFO, "Formtype consistency not checked, since migration is not done"));
 			} else if (configurationMap != null) {
 				AtomicBoolean consistent = new AtomicBoolean(true);
 				Map<Integer, Set<String>> assignedFormTypes = Trx.supply(() -> FormFactory.getFormTypeAssignment());
@@ -212,13 +211,12 @@ public final class FormConfigProvider implements ConfigurationService {
 
 					entry.getValue().stream().forEach(formType -> {
 						if (!configurationMap.containsKey(formType)) {
-							String msg = "Node '%s' contains forms of unknown formtype '%s'".formatted(nodeName, formType);
+							String msg = I18NHelper.get("init.formtype.unknown", nodeName, formType);
 							logger.error(msg);
 							messages.add(new Message(Type.CRITICAL, msg));
 							consistent.set(false);
 						} else if (!assignedFormTypes.getOrDefault(nodeId, Collections.emptySet()).contains(formType)) {
-							String msg = "Node '%s' contains forms of formtype '%s', which is not assigned to the node"
-									.formatted(nodeName, formType);
+							String msg = I18NHelper.get("init.formtype.unassigned", nodeName, formType);
 							logger.error(msg);
 							messages.add(new Message(Type.CRITICAL, msg));
 							consistent.set(false);
@@ -235,8 +233,7 @@ public final class FormConfigProvider implements ConfigurationService {
 							Optional.ofNullable(blockConfig.settings).ifPresent(settings -> {
 								settings.stream().forEach(setting -> {
 									if (setting.backend) {
-										String msg = "Formtype configuration '%s' contains block configuration '%s' with setting '%s' having backend=true, which is not allowed."
-												.formatted(formType, blockType, setting.id);
+										String msg = I18NHelper.get("init.formtype.block.backendsetting", formType, blockType, setting.id);
 										logger.error(msg);
 										messages.add(new Message(Type.CRITICAL, msg));
 										consistent.set(false);
@@ -248,17 +245,16 @@ public final class FormConfigProvider implements ConfigurationService {
 				});
 
 				if (consistent.get()) {
-					String msg = "Formtype configuration is consistent";
-					messages.add(new Message(Type.INFO, msg));
-					logger.info(msg);
+					logger.info("Formtype configuration is consistent");
 				} else {
-					String msg = "Formtype configuration is not consistent (see previous errors)";
+					String msg = I18NHelper.get("init.formtype.inconsistent").toString();
 					messages.add(new Message(Type.CRITICAL, msg));
 					logger.error(msg);
 				}
 			}
 		} catch (NodeException e) {
-			messages.add(new Message(Type.CRITICAL, "Error while checking formtype consistency: %s".formatted(e.getLocalizedMessage())));
+			String msg = I18NHelper.get("init.formtype.check.error", e.getLocalizedMessage());
+			messages.add(new Message(Type.CRITICAL, msg));
 			logger.error("Error while checking formtype consistency", e);
 		}
 		return messages;

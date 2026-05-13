@@ -237,13 +237,15 @@ public class FormRendering {
 		 */
 		php((form, options) -> {
 			String showResults = options.isShowResults() ? ", 'showResults' => true" : "";
+			String externalId = Optional.ofNullable(form.getExternalId()).map(id -> ", 'externalId' => '%s'".formatted(id)).orElse("");
 
 			return String.format(
-				"@%s('%s', [$formsCookie['key'] => $formsCookie['value'], 'pluginName' => '%s', 'language' => $node['language']%s])",
+				"@%s('%s', [$formsCookie['key'] => $formsCookie['value'], 'pluginName' => '%s', 'language' => $node['language']%s%s])",
 				FORMS_HELPER_NAME,
 				MeshPublisher.toMeshUuid(form.getGlobalId().toString()),
 				getPluginName(form),
-				showResults);
+				showResults,
+				externalId);
 		}),
 
 		/**
@@ -251,13 +253,15 @@ public class FormRendering {
 		 */
 		java((form, options) -> {
 			String showResults = options.isShowResults() ? " showResults=true" : "";
+			String externalId = Optional.ofNullable(form.getExternalId()).map(id -> " externalId=\"%s\"".formatted(id)).orElse("");
 
 			return String.format(
-				"<eval>{ %s \"%s\" pluginName=\"%s\" language=data.node.language%s }</eval>",
+				"<eval>{ %s \"%s\" pluginName=\"%s\" language=data.node.language%s%s }</eval>",
 				FORMS_HELPER_NAME,
 				MeshPublisher.toMeshUuid(form.getGlobalId().toString()),
 				getPluginName(form),
-				showResults);
+				showResults,
+				externalId);
 		});
 
 		/**

@@ -5,16 +5,20 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.Level;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
@@ -176,6 +180,271 @@ public class FormTransformer {
 		}
 
 		return data;
+	}
+
+	/**
+	 * Merge new UI-Schema with old FormgridSchema. Old Logic from customtool.
+	 *
+	 * @param config form type configuration
+	 * @param oldUISchema old ui schema, sent by the external system the last time
+	 * @param newUISchema new ui schema, sent by the external system
+	 * @param oldFormGridSchema old ui schema, modified by formgrid
+	 * @return mergedUI-Schema
+	 */
+	public ObjectNode mergeUiSchemaAndFormGrid(FormTypeConfiguration config, ObjectNode oldUISchema,
+			ObjectNode newUISchema, ObjectNode oldFormGridSchema) {
+		logger.debug("mergeUiSchemaAndFormGrid");
+
+		if (oldFormGridSchema == null) {
+			return null;
+		}
+
+		if (logger.isEnabled(Level.TRACE)) {
+			logger.log(Level.TRACE, "oldUISchema: %s".formatted(oldUISchema.toPrettyString()));
+			logger.log(Level.TRACE, "newUISchema: %s".formatted(newUISchema.toPrettyString()));
+			logger.log(Level.TRACE, "oldFormGridSchema: %s".formatted(oldFormGridSchema.toPrettyString()));
+		}
+
+		ArrayNode newFormGridPages = newUISchema.arrayNode();
+		ArrayNode newUISchemaPages = newUISchema.withArrayProperty("pages");
+
+		ArrayNode oldFormGridPages = oldFormGridSchema.withArrayProperty("pages");
+		ArrayNode newFormGridElements = newUISchema.arrayNode();
+
+		int index = 0;
+		for (JsonNode page : oldFormGridPages) {
+			ArrayNode formGridPageElements = page.withArrayProperty("elements");
+
+			for (JsonNode element : formGridPageElements) {
+				String elementId = element.path("id").asText();
+				JsonNode oldElement = oldUISchema.withArrayProperty("pages").valueStream()
+						.flatMap(p -> p.withArrayProperty("elements").valueStream())
+						.filter(e -> Strings.CI.equals(e.path("id").asText(), elementId)).findFirst().orElse(null);
+
+				ObjectNode mergedElement = getMergedElement(config, (ObjectNode) oldElement, (ObjectNode) element,
+						newUISchemaPages, index);
+				if (mergedElement != null) {
+					newFormGridElements.add(mergedElement);
+				}
+			}
+			index++;
+		}
+		// set up the pages according to the uiSchema
+		for (JsonNode uiSchemaPage : newUISchemaPages) {
+			ObjectNode newPage = newFormGridPages.objectNode();
+			newPage.set("pagename", uiSchemaPage.get("pagename"));
+			newPage.withArrayProperty("elements");
+			newFormGridPages.add(newPage);
+		}
+		// add the elements to the pages
+		for (JsonNode element : newFormGridElements) {
+			int uiSchemaPage = element.optional("uiSchemaPage").filter(JsonNode::isIntegralNumber).map(JsonNode::asInt)
+					.orElse(0);
+			if (uiSchemaPage <= newUISchema.withArrayProperty("pages").size()) {
+				newFormGridPages.get(uiSchemaPage).withArrayProperty("elements").add(element);
+			}
+		}
+		// add Elements that are only present in uiSchema
+		// add Elements at the end of the page
+		// if there are fewer pages in formgrid than add to the last page
+		index = 0;
+		for (JsonNode uiPage : newUISchemaPages) {
+			ArrayNode uiPageElements = uiPage.withArrayProperty("elements");
+			for (JsonNode uiElement : uiPageElements) {
+				ObjectNode foundElement = searchFormGridElement(uiElement.path("id").asText(), newFormGridPages);
+				if (foundElement == null || !foundElement.hasNonNull("element")) {
+					if (newFormGridPages.get(index) != null) {
+						newFormGridPages.get(index).withArrayProperty("elements").add(uiElement);
+					} else {
+						newFormGridPages.get(newFormGridPages.size() - 1).withArrayProperty("elements").add(uiElement);
+					}
+				}
+			}
+			index++;
+		}
+
+		newUISchema.set("pages", newFormGridPages);
+
+		// take all values from old-FormGridSchema
+		// except a blacklist, containing already merged things (pages) or attributes
+		// which should be taken from ActaNova
+		List<String> mergeBlackList = Arrays.asList("key", "version", "formname", "formdescription", "pages");
+
+		oldFormGridSchema.forEachEntry((key, value) -> {
+			// Your filter condition
+			if (!mergeBlackList.contains(key) && value != null) {
+				newUISchema.set(key, value);
+			}
+		});
+
+		if (logger.isEnabled(Level.TRACE)) {
+			logger.log(Level.TRACE, "Result UI-Schema: %s".formatted(newUISchema.toPrettyString()));
+		}
+		return newUISchema;
+	}
+
+	/**
+	 * uiElement = oldFormGridElement
+	 * gridPages = new UI SchemaPages
+	 *
+	 * @param config form type configuration
+	 * @param oldUiSchemaElement old UI schema element
+	 * @param oldFormGridElement
+	 * @param newUISchemaPages
+	 * @param pageIndex
+	 * @return
+	 */
+	private static ObjectNode getMergedElement(FormTypeConfiguration config, ObjectNode oldUiSchemaElement, ObjectNode oldFormGridElement, ArrayNode newUISchemaPages, int pageIndex) {
+		int numberOfUiSchemaPages = newUISchemaPages.size();
+		if (isBlock(config, oldFormGridElement)) {
+			// only keep text and spacer formgrid elements if they are on a page, that still
+			// exists in the uiSchema
+			if (numberOfUiSchemaPages >= (pageIndex - 1)) {
+				oldFormGridElement.put("uiSchemaPage", pageIndex);
+				return oldFormGridElement;
+			}
+
+			return null;
+		}
+
+		//
+		ObjectNode foundNewUISchemaEntry = searchFormGridElement(oldFormGridElement.path("id").asText(""), newUISchemaPages);
+		JsonNode foundNewUISchemaElement = foundNewUISchemaEntry.path("element");
+
+		if (foundNewUISchemaElement.isNull() || foundNewUISchemaElement.isMissingNode()) {
+			return null;
+		}
+
+		// use everything from found element
+		// except formGridOptions and uiSchemaPage
+		ObjectNode newElement = foundNewUISchemaEntry.path("element").deepCopy();
+		newElement.set("formGridOptions", oldFormGridElement.get("formGridOptions"));
+		newElement.put("uiSchemaPage", foundNewUISchemaEntry.path("pageInUiSchema").asInt(0));
+
+		// if label or description has been changed in formgrid, we restore this values
+		if (oldUiSchemaElement != null) {
+			overwriteModifiedTranslations("label", oldUiSchemaElement, oldFormGridElement, newElement);
+			overwriteModifiedTranslations("description", oldUiSchemaElement, oldFormGridElement, newElement);
+		}
+
+		String olfFormGridElementFormgridElementType = oldFormGridElement.path("formGridOptions").path("type").asText("");
+		if (olfFormGridElementFormgridElementType.equals("aggregate") || oldFormGridElement.path("type").asText("").equals("aggregate")) {
+			ArrayNode newAggElements = newElement.arrayNode();
+			//formgrid AggElements
+			ArrayNode oldFormGridAggElements = oldFormGridElement.optional("elements").filter(JsonNode::isArray)
+					.map(n -> (ArrayNode) n).orElseGet(() -> oldFormGridElement.arrayNode());
+			//newUI AggElements
+			ArrayNode foundNewUISchemaAggElements = foundNewUISchemaElement.withArrayProperty("elements");
+
+			for (JsonNode aggUiElement : oldFormGridAggElements) {
+				// add the element if it is a text or spacer
+				if (isBlock(config, aggUiElement)) {
+					//aggregate elements will not switch pages - they will stay with their parent
+					((ObjectNode) aggUiElement).put("uiSchemaPage", 0);
+					newAggElements.add(aggUiElement);
+				} else {
+					// find element in aggregate by id
+					JsonNode aggUiSchemaElement = foundNewUISchemaAggElements.valueStream()
+							.filter(n -> n.path("id").asText("").equals(aggUiElement.path("id").asText(""))).findFirst()
+							.orElse(null);
+
+					// add the element if it still exists in the newAggElements
+					if (aggUiSchemaElement != null) {
+						// use data from uiSchema
+						// except for formGridOptions - use formGrid data
+						ObjectNode deepCopy = aggUiSchemaElement.deepCopy();
+						deepCopy.set("formGridOptions", aggUiElement.get("formGridOptions"));
+						// aggregate elements will not switch pages - they will stay with their parent
+						deepCopy.put("uiSchemaPage", 0);
+
+						// find the aggregate element in the old UI schema element
+						if (oldUiSchemaElement != null) {
+							String elementId = deepCopy.path("id").asText();
+							JsonNode oldSchemaAggElement = oldUiSchemaElement.withArrayProperty("elements").valueStream()
+									.filter(e -> Strings.CI.equals(e.path("id").asText(), elementId)).findFirst()
+									.orElse(null);
+							if (oldSchemaAggElement instanceof ObjectNode oldSchemaAggElementObject) {
+								overwriteModifiedTranslations("label", oldSchemaAggElementObject,
+										(ObjectNode) aggUiElement, deepCopy);
+								overwriteModifiedTranslations("description", oldSchemaAggElementObject,
+										(ObjectNode) aggUiElement, deepCopy);
+							}
+						}
+
+						newAggElements.add(deepCopy);
+					}
+				}
+			}
+
+			// add Elements that are only present in newUiSchema - new Elements
+			// add Elements at the end
+			for (JsonNode newUISchemaAggElement : foundNewUISchemaAggElements) {
+				boolean found = newAggElements.valueStream().filter(aggElement -> aggElement.path("id").asText("")
+						.equals(newUISchemaAggElement.path("id").asText("")) || !newUISchemaAggElement.has("id")).findFirst().isPresent();
+				if(!found) {
+					ObjectNode deepCopy = newUISchemaAggElement.deepCopy();
+					deepCopy.put("uiSchemaPage", 0);
+					newAggElements.add(deepCopy);
+				}
+			}
+
+			newElement.set("elements", newAggElements);
+		}
+		return newElement;
+	}
+
+	private static ObjectNode searchFormGridElement(String elementId, ArrayNode gridPages) {
+		JsonNode foundElement = null;
+		// define i outside of loop scope to use later
+		int i = 0;
+		for (; i < gridPages.size(); i++) {
+			JsonNode page = gridPages.get(i);
+			for (JsonNode element : page.path("elements")) {
+				if (element.path("id").asText().equals(elementId)) {
+					foundElement = element;
+					break;
+				}
+			}
+			if (foundElement != null) {
+				break;
+			}
+		}
+
+		return gridPages.objectNode()
+			.put("pageInUiSchema", i)
+			.set("element", foundElement);
+	}
+
+	private static boolean isBlock(FormTypeConfiguration config, JsonNode element) {
+		if (element == null) {
+			return false;
+		}
+		String formGridOptionsType = element.path("formGridOptions").path("type").asText("");
+		Set<String> blockTypes = Optional.ofNullable(config.blocks).map(Map::keySet).orElse(Collections.emptySet());
+		return blockTypes.contains(formGridOptionsType);
+	}
+
+	/**
+	 * Overwrite translated entries
+	 * @param propertyName
+	 * @param oldUiSchemaElement
+	 * @param oldFormGridElement
+	 * @param newElement
+	 */
+	private static void overwriteModifiedTranslations(String propertyName, ObjectNode oldUiSchemaElement,
+			ObjectNode oldFormGridElement, ObjectNode newElement) {
+		newElement.optional(propertyName).filter(JsonNode::isObject).map(n -> (ObjectNode) n).ifPresent(prop -> {
+			prop.propertyStream().forEach(entry -> {
+				String language = entry.getKey();
+
+				String oldUiTranslation = oldUiSchemaElement.path(propertyName).path(language).asText(null);
+				String oldFormGridTranslation = oldFormGridElement.path(propertyName).path(language).asText(null);
+
+				if (StringUtils.isNotBlank(oldFormGridTranslation) && !Strings.CS.equals(oldFormGridTranslation, oldUiTranslation)) {
+					entry.setValue(newElement.textNode(oldFormGridTranslation));
+				}
+			});
+		});
 	}
 
 	/**

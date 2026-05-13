@@ -31,6 +31,11 @@ public class FormDataUtils {
 	public final static String UI_SCHEMA = "ui-schema";
 
 	/**
+	 * Name of the old-ui-schema property
+	 */
+	public final static String OLD_UI_SCHEMA = "old-ui-schema";
+
+	/**
 	 * Name of the formname property
 	 */
 	public final static String FORMNAME = "formname";

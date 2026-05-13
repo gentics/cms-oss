@@ -1,0 +1,62 @@
+{
+    "elements": [
+        {
+            "globalId": "cd32991a-ad5d-4e1e-a645-94d3593d55ed",
+            "name": "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed",
+            "type": "checkbox",
+            "active": true,
+            "elements": [],
+            "label_i18n": {
+                "de": "Klick mich",
+                "en": "Click me"
+            },
+            "mandatory_i18n": {
+                "en": true
+            },
+            "checked_i18n": {
+                "en": true
+            },
+            "value_i18n": {
+                "en": "X",
+                "de": "X",
+                "pl": "X",
+                "cs": "X",
+                "hu": "X",
+                "sl": "X",
+                "ar": "X",
+                "bg": "X",
+                "bs": "X",
+                "da": "X",
+                "es": "X",
+                "et": "X",
+                "fa": "X",
+                "fi": "X",
+                "fr": "X",
+                "hr": "X",
+                "it": "X",
+                "ja": "X",
+                "ko": "X",
+                "mk": "X",
+                "nl": "X",
+                "pt": "X",
+                "ro": "X",
+                "ru": "X",
+                "sk": "X",
+                "sq": "X",
+                "sr": "X",
+                "tr": "X",
+                "uk": "X",
+                "ar_eg": "X",
+                "en_ca": "X",
+                "fr_ca": "X"
+            }
+        }
+    ],
+    "email": "",
+    "mailsubject_i18n": {},
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {},
+    "type": "GENERIC",
+    "templateContext": "theme-red"
+}

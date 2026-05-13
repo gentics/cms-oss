@@ -27,13 +27,16 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.ConfigBy;
 
 /**
  * Test cases for pages, which are forms e-mail templates, and are therefore excluded from publishing
  */
 @GCNFeature(set = { Feature.FORMS, Feature.MCCR, Feature.MULTICHANNELLING })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormEmailTemplatePageTest {
 	@ClassRule
 	public static DBTestContext context = new DBTestContext();

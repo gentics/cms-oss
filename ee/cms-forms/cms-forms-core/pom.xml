@@ -52,6 +52,17 @@
 			<groupId>com.gentics</groupId>
 			<artifactId>license-checker</artifactId>
 		</dependency>
+		<!-- TODO: Remove the pinned version here in favor of the version from the bom -->
+		<dependency>
+			<groupId>org.apache.groovy</groupId>
+			<artifactId>groovy</artifactId>
+			<version>5.0.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.groovy</groupId>
+			<artifactId>groovy-json</artifactId>
+			<version>5.0.5</version>
+		</dependency>
 
 		<!--Test dependencies -->
 		<dependency>
@@ -167,6 +178,14 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.build.directory}/plugins</outputDirectory>
 									<destFileName>mesh-forms-plugin.jar</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.gentics.andp</groupId>
+									<artifactId>mesh-acta-nova-plugin</artifactId>
+									<type>jar</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}/plugins</outputDirectory>
+									<destFileName>mesh-andp-plugin.jar</destFileName>
 								</artifactItem>
 							</artifactItems>
 						</configuration>

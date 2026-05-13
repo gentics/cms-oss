@@ -1,0 +1,36 @@
+{
+    "elements": [
+        {
+            "globalId": "ca721ba9-8f9b-4893-b05c-1b27f27fd9d3",
+            "name": "group_ca721ba9_8f9b_4893_b05c_1b27f27fd9d3",
+            "type": "group",
+            "active": true,
+            "elements": [
+                {
+                    "globalId": "23a9b382-bd6b-42f0-a9ee-75ad4f3762f7",
+                    "name": "input_23a9b382_bd6b_42f0_a9ee_75ad4f3762f7",
+                    "type": "input",
+                    "active": true,
+                    "elements": [],
+                    "label_i18n": {
+                        "de": "Inneres Input"
+                    },
+                    "mandatory_i18n": null,
+                    "placeholder_i18n": null,
+                    "validation_i18n": null,
+                    "value_i18n": null,
+                    "minVal_i18n": null,
+                    "maxVal_i18n": null,
+                    "maxCharCount_i18n": null
+                }
+            ]
+        }
+    ],
+    "email": "",
+    "mailsubject_i18n": {},
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {},
+    "type": "GENERIC",
+    "templateContext": "theme-red"
+}

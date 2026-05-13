@@ -35,12 +35,15 @@ import com.gentics.contentnode.rest.resource.parameter.LegacySortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Test cases for staging files
  */
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.FORMS, Feature.MULTICHANNELLING, Feature.NICE_URLS, Feature.WASTEBIN })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FileStagingTest extends AbstractBaseContentStagingTest<File> {
 	/**
 	 * Create instance

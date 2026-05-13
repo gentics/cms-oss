@@ -1,0 +1,199 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubject": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplate": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrl": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {
+            "selectgroup_443f67ee_f345_4d76_a406_a5f6fd3b3fd2": {
+                "type": "catalog",
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "selectgroup_443f67ee_f345_4d76_a406_a5f6fd3b3fd2",
+                "formGridOptions": {
+                    "selectOptions": [
+                        {
+                            "value": "one",
+                            "label": {
+                                "de": "Eins"
+                            }
+                        },
+                        {
+                            "value": "two",
+                            "label": {
+                                "de": "Zwei"
+                            }
+                        },
+                        {
+                            "value": "three",
+                            "label": {
+                                "de": "Drei"
+                            }
+                        }
+                    ]
+                }
+            },
+            "selectgroup_3d9cdd7b_ddee_4fb7_a81a_7dffcf652d6e": {
+                "type": "catalog",
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "selectgroup_3d9cdd7b_ddee_4fb7_a81a_7dffcf652d6e",
+                "formGridOptions": {
+                    "selectOptions": [
+                        {
+                            "value": "four",
+                            "label": {
+                                "de": "Vier"
+                            }
+                        },
+                        {
+                            "value": "five",
+                            "label": {
+                                "de": "Fünf"
+                            }
+                        },
+                        {
+                            "value": "six",
+                            "label": {
+                                "de": "Sechs"
+                            }
+                        }
+                    ]
+                }
+            },
+            "selectgroup_72e08c42_56be_4f9a_93b2_63a949b42d7d": {
+                "type": "catalog",
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": true,
+                "name": "selectgroup_72e08c42_56be_4f9a_93b2_63a949b42d7d",
+                "formGridOptions": {
+                    "selectOptions": [
+                        {
+                            "value": "seven",
+                            "label": {
+                                "de": "Sieben"
+                            }
+                        },
+                        {
+                            "value": "eight",
+                            "label": {
+                                "de": "Acht"
+                            }
+                        },
+                        {
+                            "value": "nine",
+                            "label": {
+                                "de": "Neun"
+                            }
+                        }
+                    ]
+                }
+            },
+            "selectgroup_50aad7f6_1ff4_4900_a677_97ad79ac238c": {
+                "type": "catalog",
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": true,
+                "name": "selectgroup_50aad7f6_1ff4_4900_a677_97ad79ac238c",
+                "formGridOptions": {
+                    "selectOptions": [
+                        {
+                            "value": "ten",
+                            "label": {
+                                "de": "Zehn"
+                            }
+                        },
+                        {
+                            "value": "eleven",
+                            "label": {
+                                "de": "Elf"
+                            }
+                        },
+                        {
+                            "value": "twelve",
+                            "label": {
+                                "de": "Zwölf"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "selectgroup_443f67ee_f345_4d76_a406_a5f6fd3b3fd2",
+                        "label": {
+                            "de": "Als Radiobuttons"
+                        },
+                        "description": {},
+                        "formGridOptions": {
+                            "customOption": false,
+                            "radio": true
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "selectgroup_3d9cdd7b_ddee_4fb7_a81a_7dffcf652d6e",
+                        "label": {
+                            "de": "Also single dropdown"
+                        },
+                        "description": {},
+                        "formGridOptions": {
+                            "customOption": false,
+                            "radio": false
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "selectgroup_72e08c42_56be_4f9a_93b2_63a949b42d7d",
+                        "label": {
+                            "de": "Also multi dropdown"
+                        },
+                        "description": {},
+                        "formGridOptions": {
+                            "customOption": false,
+                            "radio": false
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "selectgroup_50aad7f6_1ff4_4900_a677_97ad79ac238c",
+                        "label": {
+                            "de": "Mit zusätzlichem Element"
+                        },
+                        "description": {},
+                        "formGridOptions": {
+                            "customOption": true,
+                            "radio": false
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

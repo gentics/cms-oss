@@ -1,0 +1,15 @@
+{
+	"successUrl": {
+		"de": "http://channel/home_in_channel/Page.de.html",
+		"en": "http://channel/home_in_channel/Page.en.html"
+	},
+	"schema": {
+        "properties": {}
+    },
+	"ui-schema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		}
+	}
+}

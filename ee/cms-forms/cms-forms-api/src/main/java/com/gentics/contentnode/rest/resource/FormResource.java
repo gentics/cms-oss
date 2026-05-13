@@ -2,6 +2,27 @@ package com.gentics.contentnode.rest.resource;
 
 import java.util.List;
 
+import com.gentics.contentnode.rest.model.form.FormListResponse;
+import com.gentics.contentnode.rest.model.form.FormModel;
+import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
+import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
+import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
+import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
+import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -12,26 +33,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import com.gentics.contentnode.rest.model.form.FormListResponse;
-import com.gentics.contentnode.rest.model.form.FormModel;
-import com.gentics.contentnode.rest.model.form.FormResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
-import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
-import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
-import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
-import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 
 /**
  * Resource for forms
@@ -53,6 +55,7 @@ public interface FormResource {
 	 * <li><code>id</code></li>
 	 * <li><code>name</code></li>
 	 * <li><code>description</code></li>
+	 * <li><code>formType</code></li>
 	 * </ul>
 	 * @param inFolder parameter bean
 	 * @param filter parameter bean
@@ -66,24 +69,26 @@ public interface FormResource {
 	 * @throws Exception
 	 */
 	@GET
-	FormListResponse list(@BeanParam InFolderParameterBean inFolder, @BeanParam FilterParameterBean filter,
+	FormListResponse list(@BeanParam InFolderParameterBean inFolder, @BeanParam FilterFormParameterBean filter,
 			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging,
 			@BeanParam WastebinParameterBean wastebin, @BeanParam PublishableParameterBean publishable) throws Exception;
 
 	/**
 	 * Create a new form in the folder
 	 * @param form form
+	 * @param nodeId optional node ID to create the form in the default folder of a node
 	 * @return response containing the created form
 	 * @HTTP 201 The form was created
 	 * @HTTP 404 The given folder does not exist
 	 * @throws Exception
 	 */
 	@POST
-	FormResponse create(FormModel form) throws Exception;
+	FormResponse create(FormModel form, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Load a form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @param stagingPackageName name of a content staging package, to check the form status in the package
 	 * @return response containing the form
 	 * @HTTP 200 The form is returned
@@ -92,11 +97,12 @@ public interface FormResource {
 	 */
 	@GET
 	@Path("{id}")
-	FormResponse get(@PathParam("id") String formId, @QueryParam("package") String stagingPackageName) throws Exception;
+	FormResponse get(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("package") String stagingPackageName) throws Exception;
 
 	/**
 	 * Update a form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @param form form data to update
 	 * @return updated form
 	 * @HTTP 200 The form was updated
@@ -105,11 +111,12 @@ public interface FormResource {
 	 */
 	@PUT
 	@Path("{id}")
-	FormResponse update(@PathParam("id") String formId, FormModel form) throws Exception;
+	FormResponse update(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, FormModel form) throws Exception;
 
 	/**
 	 * Delete a form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @param disableInstantDelete don't delete the item from the content repo immediately
 	 * @return response
 	 * @HTTP 200 The form was deleted
@@ -118,11 +125,12 @@ public interface FormResource {
 	 */
 	@DELETE
 	@Path("{id}")
-	GenericResponse delete(@PathParam("id") String formId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) throws Exception;
+	GenericResponse delete(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("disableInstantDelete") Boolean disableInstantDelete) throws Exception;
 
 	/**
 	 * Publish a form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @param at timestamp for scheduled publishing (0 for publishing immediately)
 	 * @param keepVersion true to keep the currently scheduled version (if "at" is not 0 and a form version is currently scheduled to be published)
 	 * @return response containing the form
@@ -132,11 +140,12 @@ public interface FormResource {
 	 */
 	@PUT
 	@Path("{id}/online")
-	FormResponse publish(@PathParam("id") String formId, @QueryParam("at") @DefaultValue("0") int at, @QueryParam("keepVersion") @DefaultValue("false") boolean keepVersion) throws Exception;
+	FormResponse publish(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("at") @DefaultValue("0") int at, @QueryParam("keepVersion") @DefaultValue("false") boolean keepVersion) throws Exception;
 
 	/**
 	 * Take a form offline
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @param at timestamp for scheduled taking offline (0 for taking offline immediately)
 	 * @return response containing the form
 	 * @HTTP 200 The form was taken offline
@@ -145,11 +154,12 @@ public interface FormResource {
 	 */
 	@DELETE
 	@Path("{id}/online")
-	FormResponse takeOffline(@PathParam("id") String formId, @QueryParam("at") @DefaultValue("0") int at) throws Exception;
+	FormResponse takeOffline(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @QueryParam("at") @DefaultValue("0") int at) throws Exception;
 
 	/**
 	 * Remove the time for scheduled publishing
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @return response containing the form
 	 * @HTTP 200 The time management of the form was modified
 	 * @HTTP 404 The form with given ID does not exist
@@ -157,11 +167,12 @@ public interface FormResource {
 	 */
 	@DELETE
 	@Path("{id}/publish/at")
-	FormResponse removePublishAt(@PathParam("id") String formId) throws Exception;
+	FormResponse removePublishAt(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Remove the time for scheduled taking offline
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @return response containing the form
 	 * @HTTP 200 The time management of the form was modified
 	 * @HTTP 404 The form with given ID does not exist
@@ -169,11 +180,12 @@ public interface FormResource {
 	 */
 	@DELETE
 	@Path("{id}/offline/at")
-	FormResponse removeOfflineAt(@PathParam("id") String formId) throws Exception;
+	FormResponse removeOfflineAt(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Lock the form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @return response containing the locked form
 	 * @HTTP 200 The form was locked
 	 * @HTTP 404 The form with given ID does not exist
@@ -181,11 +193,12 @@ public interface FormResource {
 	 */
 	@PUT
 	@Path("{id}/lock")
-	FormResponse lock(@PathParam("id") String formId) throws Exception;
+	FormResponse lock(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Unlock the form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @return response containing the unlocked form
 	 * @HTTP 200 The form was unlocked
 	 * @HTTP 404 The form with given ID does not exist
@@ -193,11 +206,12 @@ public interface FormResource {
 	 */
 	@DELETE
 	@Path("{id}/lock")
-	FormResponse unlock(@PathParam("id") String formId) throws Exception;
+	FormResponse unlock(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Get the versions of a form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @return response containing a list of versions
 	 * @HTTP 200 The versions are returned
 	 * @HTTP 404 The form with given ID does not exist
@@ -205,11 +219,12 @@ public interface FormResource {
 	 */
 	@GET
 	@Path("{id}/version")
-	ItemVersionListResponse listVersions(@PathParam("id") String formId) throws Exception;
+	ItemVersionListResponse listVersions(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Load a version of a form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @param version version number
 	 * @return response containing the version number
 	 * @HTTP 200 The version is returned
@@ -218,22 +233,24 @@ public interface FormResource {
 	 */
 	@GET
 	@Path("{id}/version/{version}")
-	FormResponse getVersion(@PathParam("id") String formId, @PathParam("version") String version) throws Exception;
+	FormResponse getVersion(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @PathParam("version") String version) throws Exception;
 
 	/**
 	 * Restore a version of the form
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @param version version number
 	 * @return response containing the restored form
 	 * @throws Exception
 	 */
 	@POST
 	@Path("{id}/version/{version}/restore")
-	FormResponse restoreVersion(@PathParam("id") String formId, @PathParam("version") String version) throws Exception;
+	FormResponse restoreVersion(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId, @PathParam("version") String version) throws Exception;
 
 	/**
 	 * Remove a form from the wastebin
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @return response
 	 * @HTTP 200 Form was removed from the wastebin
 	 * @HTTP 404 Form did not exist in the wastebin
@@ -241,11 +258,12 @@ public interface FormResource {
 	 */
 	@DELETE
 	@Path("wastebin/{id}")
-	GenericResponse removeFromWastebin(@PathParam("id") String formId) throws Exception;
+	GenericResponse removeFromWastebin(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Restore a form from the wastebin
 	 * @param formId form ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @return response containing the restored form
 	 * @HTTP 200 Form was restored from the wastebin
 	 * @HTTP 404 Form did not exist in the wastebin
@@ -253,12 +271,13 @@ public interface FormResource {
 	 */
 	@POST
 	@Path("wastebin/{id}/restore")
-	FormResponse restoreFromWastebin(@PathParam("id") String formId) throws Exception;
+	FormResponse restoreFromWastebin(@PathParam("id") String formId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Move the form to the given folder
 	 * @param formId form ID
 	 * @param folderId target folder ID
+	 * @param nodeId optional node ID to identify external forms
 	 * @return folder response
 	 * @HTTP 200 Form was moved to the folder
 	 * @HTTP 404 Either the form or the folder do not exist
@@ -267,32 +286,7 @@ public interface FormResource {
 	 */
 	@PUT
 	@Path("{id}/folder/{folderId}")
-	FormResponse move(@PathParam("id") String formId, @PathParam("folderId") String folderId) throws Exception;
-
-	/**
-	 * Render a preview of the form in the given language
-	 * @param formId form ID
-	 * @param language language code
-	 * @return rendered preview
-	 * @throws Exception
-	 */
-	@GET
-	@Path("{id}/preview/{language}")
-	@Produces({ MediaType.TEXT_HTML })
-	String preview(@PathParam("id") String formId, @PathParam("language") String language) throws Exception;
-
-	/**
-	 * Render a preview of the form in the given language
-	 * @param formId form ID
-	 * @param language language code
-	 * @param formModel form model
-	 * @return rendered preview
-	 * @throws Exception
-	 */
-	@POST
-	@Path("{id}/preview/{language}")
-	@Produces({ MediaType.TEXT_HTML })
-	String preview(@PathParam("id") String formId, @PathParam("language") String language, FormModel formModel) throws Exception;
+	FormResponse move(@PathParam("id") String formId, @PathParam("folderId") String folderId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * List data entries from Mesh, which have been submitted to the form
@@ -490,7 +484,7 @@ public interface FormResource {
 	 */
 	@GET
 	@Path("/usage/total")
-	TotalUsageResponse getTotalUsage(@QueryParam("id") List<Integer> formId, @QueryParam("nodeId") Integer nodeId) throws Exception;
+	TotalUsageResponse getTotalUsage(@QueryParam("id") List<Integer> formId, @QueryParam("nodeId") String nodeId) throws Exception;
 
 	/**
 	 * Get the pages using one of the given forms
@@ -517,7 +511,7 @@ public interface FormResource {
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> formId,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("pages") @DefaultValue("true") boolean returnPages,
+			@QueryParam("nodeId") String nodeId, @QueryParam("pages") @DefaultValue("true") boolean returnPages,
 			@BeanParam PageModelParameterBean pageModel) throws Exception;
 
 	/**
@@ -544,6 +538,60 @@ public interface FormResource {
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> formId,
-			@QueryParam("nodeId") Integer nodeId,
+			@QueryParam("nodeId") String nodeId,
 			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws Exception;
+
+	/**
+	 * List the form type configurations
+	 * @param filter filter parameters
+	 * @param sorting sorting parameters
+	 * @param paging paging parameters
+	 * @return response containing a list of form type configurations
+	 * @HTTP 200 The list of form type configurations is returned.
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/types")
+	FormTypeConfigurationListResponse listFormTypeConfigurations(
+			@BeanParam FilterFormTypeConfigurationsParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws Exception;
+
+	/**
+	 * Get the form type configuration for the given type
+	 * @param type type
+	 * @return form type configuration
+	 * @HTTP 200 The form type configuration is returned.
+	 * @HTTP 404 The form type configuration is not found.
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/types/{type}")
+	FormTypeConfigurationResponse getFormTypeconfiguration(@PathParam("type") String type) throws Exception;
+
+	/**
+	 * Remove the form type configuration from the node.
+	 * @param nodeId node ID (either global or local)
+	 * @param type form type key
+	 * @return generic response
+	 * @HTTP 204 Form type configuration was removed from the node
+	 * @HTTP 404 Either the node or the form type configuration was not found.
+	 * @throws Exception
+	 */
+	@DELETE
+	@Path("/nodes/{nodeId}/types/{type}")
+	GenericResponse removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws Exception;
+
+	/**
+	 * Add the form tyoe configuration to the node.
+	 * @param nodeId node ID (either global or local)
+	 * @param type form type key
+	 * @return generic response
+	 * @HTTP 201 Form type configuration was added to the node
+	 * @HTTP 404 Either the node or the form type configuration was not found.
+	 * @throws Exception
+	 */
+	@PUT
+	@Path("/nodes/{nodeId}/types/{type}")
+	GenericResponse addFormTypeConfigurationsToNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws Exception;
+
 }

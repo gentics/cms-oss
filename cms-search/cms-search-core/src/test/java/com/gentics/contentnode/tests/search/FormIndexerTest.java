@@ -42,6 +42,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
@@ -59,8 +60,10 @@ import com.gentics.contentnode.rest.model.request.SetPermsRequest;
 import com.gentics.contentnode.rest.util.PermPattern;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.tests.utils.MCTestedType;
 import com.gentics.contentnode.tests.utils.TestedType;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -68,6 +71,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
  * Test cases for indexing of forms
  */
 @GCNFeature(set = { Feature.MULTICHANNELLING, Feature.ELASTICSEARCH, Feature.WASTEBIN, Feature.FORMS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormIndexerTest extends AbstractIndexerTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext().config(map -> {
@@ -92,10 +96,12 @@ public class FormIndexerTest extends AbstractIndexerTest {
 
 		node = supply(() -> createNode("master", "Master", PublishTarget.NONE, german));
 		operate(() -> node.activateFeature(Feature.FORMS));
+		operate(() -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, node.getId()));
 		channel = supply(() -> createChannel(node, "Channel", "channel", "/"));
 
 		otherNode = supply(() -> createNode("other", "Other", PublishTarget.NONE, german));
 		operate(() -> otherNode.activateFeature(Feature.FORMS));
+		operate(() -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, otherNode.getId()));
 
 		user = supply(t -> t.getObject(SystemUser.class, 1));
 
@@ -106,8 +112,6 @@ public class FormIndexerTest extends AbstractIndexerTest {
 	public void setup() throws NodeException {
 		String esUrl = String.format("http://%s:%d/", elasticsearch.getHost(), elasticsearch.getMappedPort(9200));
 		NodeConfigRuntimeConfiguration.getPreferences().setProperty(Indexer.ELASTICSEARCH_URL_PARAM, esUrl);
-
-		System.out.printf("Elasticsearch URL: %s\n", esUrl);
 
 		Trx.operate(() -> {
 			try (WastebinFilter wbf = Wastebin.INCLUDE.set()) {
@@ -358,7 +362,7 @@ public class FormIndexerTest extends AbstractIndexerTest {
 		// move form
 		indexTest(() -> {
 			FormResponse response = supply(() -> getFormResource().move(Integer.toString(pair.getRight().getId()),
-					Integer.toString(otherNode.getFolder().getId())));
+					Integer.toString(otherNode.getFolder().getId()), null));
 			assertResponseOK(response);
 
 			return pair.getRight();
@@ -779,12 +783,13 @@ public class FormIndexerTest extends AbstractIndexerTest {
 	 */
 	protected Form createForm(Folder folder) throws NodeException {
 		return create(Form.class, form -> {
+			form.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			form.setFolderId(folder.getId());
 			form.setName("Tested");
 			form.setDescription("Test Form");
 			form.setLanguages(Arrays.asList("de"));
 			try {
-				form.setData(AbstractIndexerTest.mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class));
+				form.setData(AbstractIndexerTest.mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class));
 			} catch (IOException e) {
 				throw new NodeException(e);
 			}

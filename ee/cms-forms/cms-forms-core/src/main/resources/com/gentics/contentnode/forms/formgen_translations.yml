@@ -1,0 +1,22 @@
+form_loading:
+  de: laden...
+form_OverlayInitial_text:
+  de: Seite wird geladen...
+form_OverlayErrorTitle:
+  de: Dieser Service steht aktuell nicht zur Verfügung
+form_cancel:
+  de: Abbrechen
+form_flow_name_summary:
+  de: Zusammenfassung
+form_flow_name_form:
+  de: Formular
+form_previousPage:
+  de: Vorherige Seite
+form_nextPage:
+  de: Nächste Seite
+form_submit:
+  de: Absenden
+form_flow_btn_summary:
+  de: Zur Zusammenfassung
+form_flow_btn_form:
+  de: Zum Formular

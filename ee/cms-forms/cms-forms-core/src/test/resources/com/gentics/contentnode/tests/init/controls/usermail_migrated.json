@@ -1,0 +1,90 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubject": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplate": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrl": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {
+            "usermail_350f48a1_2176_4c69_80f8_df5357b4b15d": {
+                "type": "usermail",
+                "numberOfLines": 1,
+                "updateOnChange": false,
+                "validation": {
+                    "maxLength": 200.0
+                },
+                "mandatory": true,
+                "isList": false,
+                "name": "usermail_350f48a1_2176_4c69_80f8_df5357b4b15d",
+                "formGridOptions": {
+                    "mailsubject": {
+                        "de": "Hier kommt Ihr eMail"
+                    },
+                    "mailtemplate": "useremail"
+                }
+            },
+            "usermail_aa37bb42_5a36_46a9_bfb9_bdc934522677": {
+                "type": "usermail",
+                "numberOfLines": 1,
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "usermail_aa37bb42_5a36_46a9_bfb9_bdc934522677",
+                "formGridOptions": {
+                    "mailsource": {
+                        "id": 4712,
+                        "type": "page",
+                        "nodeId": 43
+                    }
+                }
+            }
+        }
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "usermail_350f48a1_2176_4c69_80f8_df5357b4b15d",
+                        "label": {
+                            "de": "Geben Sie hier Ihre eMail Adresse an"
+                        },
+                        "description": {
+                            "de": "eMail Adresse"
+                        },
+                        "formGridOptions": {
+                            "tooltip": {
+                                "de": "Ein Tip: nehmen Sie Ihre eMail Adresse"
+                            },
+                            "placeholder": {
+                                "de": "eMail"
+                            }
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "usermail_aa37bb42_5a36_46a9_bfb9_bdc934522677",
+                        "label": {
+                            "de": "Ein Feld mit Vorlage aus der Seite"
+                        },
+                        "description": {}
+                    }
+                ]
+            }
+        ]
+    }
+}

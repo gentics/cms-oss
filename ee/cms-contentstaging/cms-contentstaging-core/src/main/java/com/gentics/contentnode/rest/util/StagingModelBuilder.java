@@ -1,8 +1,8 @@
 package com.gentics.contentnode.rest.util;
 
-import com.gentics.contentnode.staging.StagingErrorRecommendation;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,16 +15,19 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.core.Response.Status;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.FormDataUtils;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.exception.RestMappedException;
@@ -34,6 +37,8 @@ import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.factory.object.LanguageFactory;
+import com.gentics.contentnode.forms.FormTransformer;
+import com.gentics.contentnode.forms.FormTransformer.TransformationTarget;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Content;
@@ -96,9 +101,12 @@ import com.gentics.contentnode.staging.StagedProperty;
 import com.gentics.contentnode.staging.StagedReference;
 import com.gentics.contentnode.staging.StagedTag;
 import com.gentics.contentnode.staging.StagingError;
+import com.gentics.contentnode.staging.StagingErrorException;
 import com.gentics.contentnode.staging.StagingErrorKind;
+import com.gentics.contentnode.staging.StagingErrorRecommendation;
 import com.gentics.contentnode.staging.StoredImage;
-import com.gentics.lib.etc.StringUtils;
+
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Staging specific model builder
@@ -239,7 +247,7 @@ public class StagingModelBuilder {
 	 */
 	public static com.gentics.contentnode.rest.model.Overview getOverview(Path ownerPath, String ownerId,
 			StagedOverview stagedOverview, Set<StagingError> mismatches, Operator onReferenceNotFound) throws NodeException {
-		if (stagedOverview == null || org.apache.commons.lang3.StringUtils.isBlank(stagedOverview.getId())) {
+		if (stagedOverview == null || StringUtils.isBlank(stagedOverview.getId())) {
 			return null;
 		}
 
@@ -298,7 +306,7 @@ public class StagingModelBuilder {
 			for (StagedNodeIdObjectId entry : overviewEntries) {
 				Integer localId = t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound);
 				if (localId != null) {
-					if (org.apache.commons.lang3.StringUtils.isNotBlank(entry.getNodeId())) {
+					if (StringUtils.isNotBlank(entry.getNodeId())) {
 						selectedObjects.add(new NodeIdObjectId(t.getLocalId(Node.class, entry.getNodeId()), localId));
 					} else {
 						selectedItemIds.add(localId);
@@ -911,6 +919,26 @@ public class StagingModelBuilder {
 	}
 
 	/**
+	 * Transform the form type assignment from the staged node to the node
+	 * @param stagedNode staged node
+	 * @param node node
+	 * @return node
+	 * @throws NodeException
+	 */
+	public static Node setFormTypes(StagedNode stagedNode, Node node) throws NodeException {
+		Set<String> formTypes = stagedNode.getFormTypes();
+		if (!CollectionUtils.isEmpty(formTypes)) {
+			for (String formType : formTypes) {
+				if (FormConfigProvider.getConfig().containsKey(formType)) {
+					FormFactory.addFormTypeToNode(formType, node.getId());
+				}
+			}
+		}
+
+		return node;
+	}
+
+	/**
 	 * Transform the constructs from the staged node into the node
 	 * @param stagedNode staged node
 	 * @param node node
@@ -1010,7 +1038,7 @@ public class StagingModelBuilder {
 			node.setPubDirSegment(nodeNode.isPubDirSegment());
 		}
 		node.setHttps(nodeNode.isHttps());
-		if (!org.apache.commons.lang3.StringUtils.isBlank(nodeNode.getHostnameProperty())) {
+		if (!StringUtils.isBlank(nodeNode.getHostnameProperty())) {
 			node.setHostnameProperty(nodeNode.getHostnameProperty());
 		} else {
 			node.setHostname(nodeNode.getHostname());
@@ -1029,6 +1057,9 @@ public class StagingModelBuilder {
 		node.setOmitPageExtension(nodeNode.isOmitPageExtension());
 		node.setPageLanguageCode(nodeNode.getPageLanguageCode());
 		node.setFeatures(nodeNode.getFeatures().stream().map(Feature::getName).collect(Collectors.toSet()));
+		if (NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS, nodeNode)) {
+			node.setFormTypes(FormFactory.getFormTypeAssignment(nodeNode.getId()));
+		}
 		node.setLanguages(nodeNode.getLanguages().stream().map(ContentLanguage::getCode).collect(Collectors.toList()));
 		if (!nodeNode.isChannel()) {
 			node.setConstructIds(nodeNode.getConstructs().stream().map(construct -> construct.getGlobalId().toString()).collect(Collectors.toSet()));
@@ -1268,40 +1299,65 @@ public class StagingModelBuilder {
 
 	/**
 	 * Inflate the given form from the staging form model
+	 * @param formPath path to the form
 	 * @param restModel model
 	 * @param form node object
+	 * @param mismatches
 	 * @param onReferenceNotFound optional operator, which is called when a reference was not found
 	 * @return inflated object
 	 * @throws NodeException
 	 */
-	public static Form getForm(StagedForm restModel, Form form, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		if (!org.apache.commons.lang3.StringUtils.isBlank(restModel.getName())) {
+	public static Form getForm(Path formPath, StagedForm restModel, Form form, Set<StagingError> mismatches, com.gentics.contentnode.etc.Operator onReferenceNotFound) throws NodeException {
+		if (!StringUtils.isBlank(restModel.getName())) {
 			form.setName(restModel.getName());
 		}
-		if (!org.apache.commons.lang3.StringUtils.isBlank(restModel.getDescription())) {
+
+		String formType = restModel.getFormType();
+		if (StringUtils.isBlank(formType)) {
+			String error = I18NHelper.get("exception.missing.field", "formType").toString();
+			StagingError stagingError = new StagingError(restModel.getId(), formPath.toString(), error, StagingErrorKind.INTEGRITY);
+			stagingError.setRecommendation(I18NHelper.get("content.staging.recommendation.integrity"));
+			throw new StagingErrorException(stagingError);
+		}
+		FormTypeConfiguration formTypeConfiguration = FormConfigProvider.getConfig().get(formType);
+		if (formTypeConfiguration == null) {
+			String error = I18NHelper.get("form.form_type_configuration.notfound", formType);
+			StagingError stagingError = new StagingError(restModel.getId(), formPath.toString(), error, StagingErrorKind.CONFIGURATION);
+			stagingError.setRecommendation(I18NHelper.get("content.staging.recommendation.configuration"));
+			throw new StagingErrorException(stagingError);
+		}
+
+		if (!FormFactory.getFormTypeAssignment(form.getOwningNode().getId()).contains(formType)) {
+			String error = I18NHelper.get("form.form_type_configuration.notactive",
+					I18NHelper.get(formTypeConfiguration.nameI18n), I18NHelper.getName(form.getOwningNode()));
+			StagingError stagingError = new StagingError(restModel.getId(), formPath.toString(), error,
+					StagingErrorKind.CONFIGURATION);
+			stagingError.setRecommendation(I18NHelper.get("content.staging.recommendation.configuration"));
+			throw new StagingErrorException(stagingError);
+		}
+
+		form.setFormType(restModel.getFormType());
+		if (!StringUtils.isBlank(restModel.getDescription())) {
 			form.setDescription(restModel.getDescription());
-		}
-		if (restModel.getSuccessPageId() != null) {
-			form.setSuccessPageId(ObjectTransformer.getInt(t.getLocalId(Page.class, restModel.getSuccessPageId(), onReferenceNotFound), 0));
-		}
-		if (restModel.getSuccessNodeId() != null) {
-			form.setSuccessNodeId(ObjectTransformer.getInt(t.getLocalId(Node.class, restModel.getSuccessNodeId(), onReferenceNotFound), 0));
 		}
 		if (restModel.getLanguages() != null) {
 			form.setLanguages(restModel.getLanguages());
 		}
 		if (restModel.getData() != null) {
-			JsonNode copy = restModel.getData().deepCopy();
-			ModelBuilder.recursivelyReplaceAttributes(copy, name -> {
-				if (name.endsWith(FormFactory.PAGEID_POSTFIX)) {
-					return name;
-				} else {
-					return null;
-				}
-			}, (o, n) -> o
-					.numberNode(TransactionManager.getCurrentTransaction().getLocalId(Page.class, n.asText(), onReferenceNotFound)));
+			FormDataUtils.handleElements(formTypeConfiguration, restModel.getData(), null, (element, elementType) -> {
+				String error = I18NHelper.get("form.form_type_configuration.element_type.notfound", elementType,
+						formType);
+				StagingError stagingError = new StagingError(restModel.getId(), formPath.toString(), error,
+						StagingErrorKind.CONFIGURATION);
+				stagingError.setRecommendation(I18NHelper.get("content.staging.recommendation.configuration"));
+				mismatches.add(stagingError);
+			});
+
+			ObjectNode copy = new FormTransformer()
+					.withTransformationTarget(TransformationTarget.fromContentPackage)
+					.withUnknownReferenceCallback(onReferenceNotFound)
+					.transform(form, restModel.getData().deepCopy());
+
 			form.setData(copy);
 		}
 
@@ -1319,26 +1375,16 @@ public class StagingModelBuilder {
 	 * @throws NodeException
 	 */
 	public static StagedForm getForm(Form form, StagedForm model) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		model.setId(form.getGlobalId().toString());
+		model.setFormType(form.getFormType());
 		model.setName(form.getName());
 		model.setDescription(form.getDescription());
 
-		model.setSuccessPageId(t.getGlobalId(Page.class, form.getSuccessPageId()));
-		model.setSuccessNodeId(t.getGlobalId(Node.class, form.getSuccessNodeId()));
-
 		model.setLanguages(form.getLanguages());
-		ObjectNode copy = form.getData().deepCopy();
-		ModelBuilder.recursivelyReplaceAttributes(copy, name -> {
-			if (name.endsWith(FormFactory.PAGEID_POSTFIX)) {
-				return name;
-			} else {
-				return null;
-			}
-		}, (o, n) -> {
-			return o.textNode(TransactionManager.getCurrentTransaction().getGlobalId(Page.class, n.asInt()));
-		});
+
+		ObjectNode copy = new FormTransformer()
+				.withTransformationTarget(TransformationTarget.toContentPackage)
+				.transform(form);
 		model.setData(copy);
 
 		return model;

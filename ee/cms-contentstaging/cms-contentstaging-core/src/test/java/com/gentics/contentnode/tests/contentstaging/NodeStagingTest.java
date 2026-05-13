@@ -53,6 +53,8 @@ import com.gentics.contentnode.rest.model.NodeFeature;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -60,6 +62,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
  * Tests for staging of nodes/channels
  */
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.FORMS, Feature.MULTICHANNELLING, Feature.PUB_DIR_SEGMENT, Feature.MESH_CONTENTREPOSITORY, Feature.DEVTOOLS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class NodeStagingTest implements ContentStagingMethods {
 	/**
 	 * Name of the test package

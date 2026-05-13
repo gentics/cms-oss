@@ -1,0 +1,52 @@
+h2. Forms Migration Guide
+
+This guide explains the steps to migrate forms from older CMP Versions (<= CMP 8.4).
+
+endprologue.
+
+h3. Migrating the configuration
+
+CMP Versions <= 8.4 supported only two types of forms: @"generic"@ and  @"poll"@, which were configured in separate JSON files in the @ui-conf@ folder.
+
+Those configuration files can be automatically be converted into the new format with one of the following methods.
+
+h4. Using the Enterprise Server Package
+
+After the Enterprise CMS Server Package has been downloaded follwing the "download instructions":admin_install.html#download-the-package, the migration can be done by executing the following command:
+
+<shell>
+java -cp cms-server-x.y.z.jar com.gentics.contentnode.forms.Migration -ui_conf path/to/ui-conf/ -out migrated.yml
+</shell>
+
+This will create the file @migrated.yml@ containing the migrated form type configurations.
+
+h4. Using a docker compose setup
+
+When a docker compose setup is used to run the CMS, the migration can be done with the following steps.
+
+Stop the cms service:
+
+<shell>
+docker compose stop <cms-service-name>
+</shell>
+
+Update the CMS version in the @docker-compose.yml@ file.
+
+Run the migration:
+
+<shell>
+docker compose run --rm <cms-service-name> java -cp cms-server.jar com.gentics.contentnode.forms.Migration -out path/to/migrated.yml
+</shell>
+
+The @path/to/migrated.yml@ must be the path to the file, which should be created with the migrated form type configurations.
+After the migration, the contents of the file must either be put into an existing configuration file, or the file must be made part of the configuration read by the CMS.
+
+Restart the cms service to finalize the migration:
+
+<shell>
+docker compose up -d <cms-service-name>
+</shell>
+
+The log output of the CMS should be closely watched in cases of errors.
+
+After successful migration, the files @form-editor.json@ and @form-poll-editor.json@ can be removed from the @ui-conf@ directory.

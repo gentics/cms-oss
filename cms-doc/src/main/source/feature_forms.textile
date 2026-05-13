@@ -5,7 +5,7 @@ With the feature _forms_ it is possible to manage forms in Gentics CMS.
 * Forms can be included into pages.
 * Forms can be published into Mesh ContentRepositories (Gentics Mesh Forms Plugin is required).
 
-NOTE: To view Form Generator reports in Gentics CMS the "Mesh ContentRepositories":https://www.gentics.com/Content.Node/cmp8/guides-oss/feature_mesh_contentrepository.html that contain your forms need to use Elasticsearch. Results are queried and sorted using Elasticsearch.
+NOTE: See the "Forms Migration Guide":forms_migration.html when updating from an older CMP Version (<= CMP 8.4).
 
 endprologue.
 
@@ -18,1284 +18,991 @@ feature:
 	forms: true
 </shell>
 
-A form has one of the following types:
-* @"generic"@
-* @"poll"@
-
+Each form is based on a form type, which must also be configured.
 For each of these types, a list of available form fields and their properties must be created.
-A default list has to be placed in a file called @form-editor.json@. It is used by forms of type @"generic"@.
-For all other types, the corresponding list has to be placed into @form-[FORM TYPE]-editor.json@ (e.g. @form-poll-editor.json@) respectively.
-
 
 NOTE: These are examples - you can and should adapt these configurations to your needs.
 
-<javascript filename="ui-conf/form-editor.json">
-{
-    "form_properties": {
-        "admin_mail_options": [
-            {
-                "key": "useremail",
-                "value_i18n_ui": {
-                    "en": "Default",
-                    "de": "Standard"
-                }
-            }
-        ],
-        "template_context_options": [
-            {
-                "key": "theme-red",
-                "value_i18n_ui": {
-                    "en": "Red theme",
-                    "de": "Rotes Thema"
-                }
-            },
-            {
-                "key": "theme-blue",
-                "value_i18n_ui": {
-                    "en": "Blue theme",
-                    "de": "Blaues Thema"
-                }
-            }
-        ]
-    },
-    "elements": [
-        {
-            "type": "input",
-            "type_label_i18n_ui": {
-                "en": "Input Field",
-                "de": "Eingabefeld"
-            },
-            "description_i18n_ui": {
-                "en": "Generic input field for multiple data types.",
-                "de": "Allgemeines Eingabefeld für mehrere Datentypen."
-            },
-            "label_property_ui": "label",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Label"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for this input field.",
-                        "de": "Label für dieses Eingabefeld."
-                    }
-                },
-                {
-                    "name": "mandatory",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Mandatory",
-                        "de": "Verpflichtend"
-                    },
-                    "description_i18n_ui": {
-                        "en": "This input field is mandatory.",
-                        "de": "Dieses Eingabefeld ist verpflichtend."
-                    }
-                },
-                {
-                    "name": "placeholder",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Placeholder",
-                        "de": "Platzhalter"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Placeholder for this input field.",
-                        "de": "Platzhalter für dieses Eingabefeld."
-                    }
-                },
-                {
-                    "name": "validation",
-                    "type": "SELECT",
-                    "label_i18n_ui": {
-                        "en": "Validator",
-                        "de": "Validator"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Validator type that checks user input.",
-                        "de": "Art des Validators, der BenutzerInneneingaben überprüft."
-                    },
-                    "options": [
-                        {
-                            "key": "number",
-                            "value_i18n_ui": {
-                                "en": "Number (Integer)",
-                                "de": "Zahl (Integer)"
-                            }
-                        },
-                        {
-                            "key": "telephone",
-                            "value_i18n_ui": {
-                                "en": "Telephone (only numbers, and spaces)",
-                                "de": "Telefonnummer (nur Ziffern, und Leerzeichen)"
-                            }
-                        },
-                        {
-                            "key": "socialsecurity",
-                            "value_i18n_ui": {
-                                "en": "Social Security Number (only numbers 10 digits, last 6 digits denote past date)",
-                                "de": "SV-Nr (nur Ziffern 10 Stellen, letzten 6 Stellen vergangenes Datum)"
-                            }
-                        },
-                        {
-                            "key": "date",
-                            "value_i18n_ui": {
-                                "en": "Date (format: yyyy-MM-dd)",
-                                "de": "Datum (Format: yyyy-MM-dd)"
-                            }
-                        },
-                        {
-                            "key": "datepicker",
-                            "value_i18n_ui": {
-                                "en": "Date (format: DD.MM.YYYY)",
-                                "de": "Datum (Format: DD.MM.YYYY)"
-                            }
-                        },
-                        {
-                            "key": "time",
-                            "value_i18n_ui": {
-                                "en": "Time (format: HH:MM)",
-                                "de": "Zeit (Format: HH:MM)"
-                            }
-                        },
-                        {
-                            "key": "email",
-                            "value_i18n_ui": {
-                                "en": "Mail",
-                                "de": "E-Mail"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "value",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Default Value",
-                        "de": "Standardwert"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Default value for this input field.",
-                        "de": "Standardwert für dieses Eingabefeld."
-                    }
-                },
-                {
-                    "name": "minVal",
-                    "type": "NUMBER",
-                    "label_i18n_ui": {
-                        "en": "Minimum Value",
-                        "de": "Mindestwert"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Minimum value for number inputs.",
-                        "de": "Mindestwert für Zahleneingaben."
-                    }
-                },
-                {
-                    "name": "maxVal",
-                    "type": "NUMBER",
-                    "label_i18n_ui": {
-                        "en": "Maximum Value",
-                        "de": "Maximalwert"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Maximum value for number inputs.",
-                        "de": "Maximalwert für Zahleneingaben."
-                    }
-                },
-                {
-                    "name": "maxCharCount",
-                    "type": "NUMBER",
-                    "label_i18n_ui": {
-                        "en": "Input Length",
-                        "de": "Eingabelänge"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Maximum number of allowed characters.",
-                        "de": "Anzahl der Zeichen, die eingegeben werden dürfen."
-                    }
-                }
-            ]
-        },
-        {
-            "type": "checkbox",
-            "type_label_i18n_ui": {
-                "en": "Checkbox",
-                "de": "Checkbox"
-            },
-            "description_i18n_ui": {
-                "en": "Simple checkbox.",
-                "de": "Einfache checkbox."
-            },
-            "label_property_ui": "label",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Label"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for this selection.",
-                        "de": "Label für diese Auswahl."
-                    }
-                },
-                {
-                    "name": "mandatory",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Mandatory",
-                        "de": "Verpflichtend"
-                    },
-                    "description_i18n_ui": {
-                        "en": "This checkbox is mandatory.",
-                        "de": "Dieses Checkbox ist verpflichtend."
-                    }
-                },
-                {
-                    "name": "checked",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Checked",
-                        "de": "Ausgewählt"
-                    },
-                    "description_i18n_ui": {
-                        "en": "This checkbox is checked.",
-                        "de": "Dieses Checkbox ist ausgewählt."
-                    }
-                },
-                {
-                    "name": "value",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Value",
-                        "de": "Wert"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Value that is selected by this checkbox.",
-                        "de": "Wert der durch diese Checkbox gewählt wird."
-                    },
-                    "default_value_i18n": {
-                        "en": "X",
-                        "de": "X",
-                        "pl": "X",
-                        "cs": "X",
-                        "hu": "X",
-                        "sl": "X",
-                        "ar": "X",
-                        "bg": "X",
-                        "bs": "X",
-                        "da": "X",
-                        "es": "X",
-                        "et": "X",
-                        "fa": "X",
-                        "fi": "X",
-                        "fr": "X",
-                        "hr": "X",
-                        "it": "X",
-                        "ja": "X",
-                        "ko": "X",
-                        "mk": "X",
-                        "nl": "X",
-                        "pt": "X",
-                        "ro": "X",
-                        "ru": "X",
-                        "sk": "X",
-                        "sq": "X",
-                        "sr": "X",
-                        "tr": "X",
-                        "uk": "X",
-                        "ar_eg": "X",
-                        "en_ca": "X",
-                        "fr_ca": "X"
-                    }
-                }
-            ]
-        },
-        {
-            "type": "textarea",
-            "type_label_i18n_ui": {
-                "en": "Textarea Field",
-                "de": "Mehrzeiliges Eingabefeld"
-            },
-            "description_i18n_ui": {
-                "en": "Multi-line text",
-                "de": "Mehrzeiliges Eingabefeld"
-            },
-            "label_property_ui": "label",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Label"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for this input field",
-                        "de": "Label für dieses Eingabefeld"
-                    }
-                },
-                {
-                    "name": "mandatory",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Mandatory",
-                        "de": "Verpflichtend"
-                    },
-                    "description_i18n_ui": {
-                        "en": "This input field is mandatory.",
-                        "de": "Dieses Eingabefeld ist verpflichtend."
-                    }
-                },
-                {
-                    "name": "placeholder",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Placeholder",
-                        "de": "Platzhalter"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Placeholder for this input field.",
-                        "de": "Platzhalter für dieses Eingabefeld."
-                    }
-                },
-                {
-                    "name": "maxCharCount",
-                    "type": "NUMBER",
-                    "label_i18n_ui": {
-                        "en": "Input Length",
-                        "de": "Eingabelänge"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Maximum number of allowed characters.",
-                        "de": "Anzahl der Zeichen, die eingegeben werden dürfen."
-                    }
-                }
-            ]
-        },
-        {
-            "type": "selectgroup",
-            "type_label_i18n_ui": {
-                "en": "Select",
-                "de": "Auswahl"
-            },
-            "description_i18n_ui": {
-                "en": "List of values to select from.",
-                "de": "Liste an auswählbaren Werten."
-            },
-            "label_property_ui": "label",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Label"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for this selection.",
-                        "de": "Label für diese Auswahl."
-                    }
-                },
-                {
-                    "name": "mandatory",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Mandatory",
-                        "de": "Verpflichtend"
-                    },
-                    "description_i18n_ui": {
-                        "en": "This selection is mandatory.",
-                        "de": "Diese Auswahl ist verpflichtend."
-                    }
-                },
-                {
-                    "name": "select_type",
-                    "type": "SELECT",
-                    "label_i18n_ui": {
-                        "en": "Type",
-                        "de": "Typ"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Type of this selection.",
-                        "de": "Typ dieser Auswahl."
-                    },
-                    "options": [
-                        {
-                            "key": "radiobuttons",
-                            "value_i18n_ui": {
-                                "en": "Radio Buttons",
-                                "de": "Radio Buttons"
-                            }
-                        },
-                        {
-                            "key": "singleselect",
-                            "value_i18n_ui": {
-                                "en": "Dropdown with single selection",
-                                "de": "Dropdown mit einer Auswahl"
-                            }
-                        },
-                        {
-                            "key": "multiselect",
-                            "value_i18n_ui": {
-                                "en": "Dropdown with multiple selections",
-                                "de": "Dropdown mit mehreren Auswahlen"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "options",
-                    "type": "SELECTABLE_OPTIONS",
-                    "label_i18n_ui": {
-                        "en": "Selectable Options",
-                        "de": "Auswahlmöglichkeiten"
-                    },
-                    "description_i18n_ui": {
-                        "en": "List of key value pairs to select from.",
-                        "de": "Liste an auswählbaren Schlüssel-Wert-Paaren."
-                    },
-                    "key_label_i18n_ui": {
-                        "en": "Value",
-                        "de": "Wert"
-                    },
-                    "value_label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Bezeichnung"
-                    }
-                },
-                {
-                    "name": "additional_element",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Additional Element",
-                        "de": "Zusätzliches Element"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Field to enter additional selection option.",
-                        "de": "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
-                    }
-                }
-            ]
-        },
-        {
-            "type": "file",
-            "type_label_i18n_ui": {
-                "en": "File Upload",
-                "de": "Fileupload"
-            },
-            "description_i18n_ui": {
-                "en": "Simple file upload.",
-                "de": "Einfacher Fileupload."
-            },
-            "label_property_ui": "label",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Label"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for this file upload.",
-                        "de": "Label für diesen Fileupload."
-                    }
-                },
-                {
-                    "name": "mandatory",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Mandatory",
-                        "de": "Verpflichtend"
-                    },
-                    "description_i18n_ui": {
-                        "en": "This file upload is mandatory.",
-                        "de": "Dieser Fileupload ist verpflichtend."
-                    }
-                },
-                {
-                    "name": "description",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Description",
-                        "de": "Beschreibung"
-                    },
-                    "description_i18n_ui": {
-                        "en": "The description of the upload element.",
-                        "de": "Die Beschreibung des Upload-Elements."
-                    }
-                },
-                {
-                    "name": "tooltip",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Tooltip",
-                        "de": "Tooltip"
-                    },
-                    "description_i18n_ui": {
-                        "en": "The tooltip of the upload element.",
-                        "de": "Der Tooltip des Upload-Elements."
-                    }
-                },
-                {
-                    "name": "max_filesize",
-                    "type": "NUMBER",
-                    "label_i18n_ui": {
-                        "en": "Max. Filesize (MB)",
-                        "de": "Max. Dateigröße (MB)"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Max. allowed Filesize (MB)",
-                        "de": "Max. erlaubte Dateigröße (MB)"
-                    }
-                },
-                {
-                    "name": "allowedFiletypes",
-                    "type": "SELECT",
-                    "label_i18n_ui": {
-                        "en": "Allowed filetypes",
-                        "de": "Erlaubte Dateitypen"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Allowed filetypes",
-                        "de": "Erlaubte Dateitypen"
-                    },
-                    "multiple": true,
-                    "options": [
-                        {
-                            "key": "image",
-                            "value_i18n_ui": {
-                                "en": "Images",
-                                "de": "Bilder"
-                            }
-                        },
-                        {
-                            "key": "video",
-                            "value_i18n_ui": {
-                                "en": "Videos",
-                                "de": "Videos"
-                            }
-                        },
-                        {
-                            "key": "documents",
-                            "value_i18n_ui": {
-                                "en": "Documents",
-                                "de": "Dokumente"
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "type": "usermail",
-            "type_label_i18n_ui": {
-                "en": "User EMail Field",
-                "de": "Benutzer E-Mail Feld"
-            },
-            "description_i18n_ui": {
-                "en": "Field for user eMail. When filled, the user will get an eMail after filling out the form.",
-                "de": "Feld für Benutzer eMail. Wenn ausgefüllt, bekommt der Benutzer ein eMail nach dem Absenden des Formulares."
-            },
-            "label_property_ui": "label",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Label"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for this input field.",
-                        "de": "Label für dieses Eingabefeld."
-                    }
-                },
-                {
-                    "name": "mandatory",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Mandatory",
-                        "de": "Verpflichtend"
-                    },
-                    "description_i18n_ui": {
-                        "en": "This input field is mandatory.",
-                        "de": "Dieses Eingabefeld ist verpflichtend."
-                    }
-                },
-                {
-                    "name": "placeholder",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Placeholder",
-                        "de": "Platzhalter"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Placeholder for this input field.",
-                        "de": "Platzhalter für dieses Eingabefeld."
-                    }
-                },
-                {
-                    "name": "description",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Description",
-                        "de": "Beschreibung"
-                    },
-                    "description_i18n_ui": {
-                        "en": "The description of the user mail element.",
-                        "de": "Die Beschreibung des Benutzer-E-Mail-Elements."
-                    }
-
-                },
-                {
-                    "name": "tooltip",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Tooltip",
-                        "de": "Tooltip"
-                    },
-                    "description_i18n_ui": {
-                        "en": "The tooltip of the user mail element.",
-                        "de": "Der Tooltip des Benutzer-E-Mail-Elements."
-                    }
-                },
-                {
-                    "name": "maxCharCount",
-                    "type": "NUMBER",
-                    "label_i18n_ui": {
-                        "en": "Input Length",
-                        "de": "Eingabelänge"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Maximum number of allowed characters.",
-                        "de": "Anzahl der Zeichen, die eingegeben werden dürfen."
-                    }
-                },
-                {
-                    "name": "mailsubject",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Email Subject",
-                        "de": "E-Mail Betreff"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Subject of the Email, sent to the user.",
-                        "de": "Betreff des E-Mails, das an den Benutzer geschickt wird."
-                    }
-                },
-                {
-                    "name": "mailtemplate",
-                    "type": "SELECT",
-                    "label_i18n_ui": {
-                        "en": "Email Template",
-                        "de": "E-Mail Vorlage"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Template, which is used to display the Email body.",
-                        "de": "Vorlage, die zur Darstellung des E-Mail Inhalts verwendet wird."
-                    },
-                    "options": [
-                        {
-                            "key": "useremail",
-                            "value_i18n_ui": {
-                                "en": "Default",
-                                "de": "Standard"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "mailsource",
-                    "type": "REPOSITORY_BROWSER",
-                    "label_i18n_ui": {
-                        "en": "Email Template from Page",
-                        "de": "E-Mail Vorlage als Seite"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Template from Page, which is used to display the Email body.",
-                        "de": "Vorlage als Seite, die zur Darstellung des E-Mail Inhalts verwendet wird."
-                    },
-                    "options": {
-                        "allowedSelection": "page",
-                        "includeMlId": [21],
-                        "selectMultiple": false,
-                        "title": "modal.repository_browser_title_forms_email_template_single"
-                    }
-                }
-            ]
-        },
-        {
-            "type": "recaptcha",
-            "type_label_i18n_ui": {
-                "en": "Recaptcha",
-                "de": "Recaptcha"
-            },
-            "description_i18n_ui": {
-                "en": "Recaptcha spam protection.",
-                "de": "Recaptcha Spamschutz."
-            },
-            "is_container": false,
-            "properties": []
-        },
-        {
-            "type": "buttons",
-            "type_label_i18n_ui": {
-                "en": "Button",
-                "de": "Button"
-            },
-            "description_i18n_ui": {
-                "en": "Submit and optional reset button",
-                "de": "Buttons um Formular abzuschicken und zurückzusetzen"
-            },
-            "label_property_ui": "submitlabel",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "submitlabel",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Label"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for this button.",
-                        "de": "Label für diesen Button."
-                    }
-                },
-                {
-                    "name": "showreset",
-                    "type": "BOOLEAN",
-                    "label_i18n_ui": {
-                        "en": "Show reset button",
-                        "de": "Reset Button anzeigen"
-                    },
-                    "description_i18n_ui": {
-                        "en": "If checked will show a reset button.",
-                        "de": "Wenn aktiv wird ein Reset Button angezeigt."
-                    }
-                },
-                {
-                    "name": "resetlabel",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label of reset button",
-                        "de": "Label des Reset Buttons"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for the reset button.",
-                        "de": "Label für den Reset Button."
-                    }
-                }
-            ]
-        },
-        {
-            "type": "sectionheadline",
-            "type_label_i18n_ui": {
-                "en": "Headline",
-                "de": "Überschrift"
-            },
-            "description_i18n_ui": {
-                "en": "Headline for a new section of the form.",
-                "de": "Überschrift für einen neuen Abschnitt im Formular."
-            },
-            "label_property_ui": "text",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "text",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Text",
-                        "de": "Text"
-                    }
-                }
-            ]
-        },
-        {
-            "type": "text",
-            "type_label_i18n_ui": {
-                "en": "Text",
-                "de": "Text"
-            },
-            "description_i18n_ui": {
-                "en": "Text to furher explain the form.",
-                "de": "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
-            },
-            "label_property_ui": "text",
-            "is_container": false,
-            "properties": [
-                {
-                    "name": "text",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Text",
-                        "de": "Text"
-                    }
-                }
-            ]
-        },
-        {
-            "type": "spacer",
-            "type_label_i18n_ui": {
-                "en": "Spacer",
-                "de": "Abstand"
-            },
-            "description_i18n_ui": {
-                "en": "Adds space between form elements.",
-                "de": "Vergrößert den Abstand zwischen Form-Elementen."
-            },
-            "is_container": false,
-            "properties": []
-        },
-        {
-            "type": "group",
-            "type_label_i18n_ui": {
-                "en": "Group",
-                "de": "Gruppe"
-            },
-            "description_i18n_ui": {
-                "en": "Group of form elements.",
-                "de": "Gruppe an Formularelementen."
-            },
-            "is_container": true,
-            "properties": []
-        },
-        {
-            "type": "conditionalcontainer",
-            "type_label_i18n_ui": {
-                "en": "Conditional container",
-                "de": "Wenn-Dann-Container"
-            },
-            "description_i18n_ui": {
-                "en": "Conditional container which contents is only active when the checked element has the expected value.",
-                "de": "Wenn-Dann-Container dessen Inhalt nur aktiv ist, wenn das geprüfte Element den erwarteten Wert hat."
-            },
-            "label_property_ui": "label",
-            "is_container": true,
-            "properties": [
-                {
-                    "name": "label",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Label",
-                        "de": "Label"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Label for this container.",
-                        "de": "Label für diesen Container."
-                    }
-                },
-                {
-                    "name": "element_to_check",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Element name",
-                        "de": "Elementname"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Element to check.",
-                        "de": "Zu prüfendes Element."
-                    }
-                },
-                {
-                    "name": "value_to_check",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Value",
-                        "de": "Wert"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Expected value.",
-                        "de": "Erwarteter Wert."
-                    }
-                }
-            ]
-        },
-        {
-            "type": "formpage",
-            "type_label_i18n_ui": {
-                "en": "Page",
-                "de": "Seite"
-            },
-            "description_i18n_ui": {
-                "en": "Splits the form into multiple pages.",
-                "de": "Unterteilt das Formular in mehrere Seiten."
-            },
-            "label_property_ui": "description",
-            "is_container": true,
-            "properties": [
-                {
-                    "name": "description",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Name",
-                        "de": "Name"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Name of the page.",
-                        "de": "Name der Seite."
-                    }
-                },
-                {
-                    "name": "info",
-                    "type": "STRING",
-                    "label_i18n_ui": {
-                        "en": "Description",
-                        "de": "Beschreibung"
-                    },
-                    "description_i18n_ui": {
-                        "en": "Description for this page.",
-                        "de": "Beschreibung für diese Seite."
-                    }
-                }
-            ]
-        },
-        {
-            "type": "formprogress",
-            "type_label_i18n_ui": {
-                "en": "Progress Bar",
-                "de": "Fortschrittsbalken"
-            },
-            "description_i18n_ui": {
-                "en": "Simple progress bar.",
-                "de": "Einfacher Fortschrittsbalken."
-            },
-            "is_container": false,
-            "properties": []
-        }
-    ]
-}
-</javascript>
-
-<javascript filename="ui-conf/form-poll-editor.json">
-{
-	"elements": [
-		{
-			"type": "checkbox",
-			"type_label_i18n_ui": {
-				"en": "Checkbox",
-				"de": "Checkbox"
-			},
-			"description_i18n_ui": {
-				"en": "Simple checkbox.",
-				"de": "Einfache checkbox."
-			},
-			"label_property_ui": "label",
-			"is_container": false,
-			"properties": [
-				{
-					"name": "label",
-					"type": "STRING",
-					"label_i18n_ui": {
-						"en": "Label",
-						"de": "Label"
-					},
-					"description_i18n_ui": {
-						"en": "Label for this selection.",
-						"de": "Label für diese Auswahl."
-					}
-				},
-				{
-					"name": "mandatory",
-					"type": "BOOLEAN",
-					"label_i18n_ui": {
-						"en": "Mandatory",
-						"de": "Verpflichtend"
-					},
-					"description_i18n_ui": {
-						"en": "This checkbox is mandatory.",
-						"de": "Dieses Checkbox ist verpflichtend."
-					}
-				},
-				{
-					"name": "checked",
-					"type": "BOOLEAN",
-					"label_i18n_ui": {
-						"en": "Checked",
-						"de": "Ausgewählt"
-					},
-					"description_i18n_ui": {
-						"en": "This checkbox is checked.",
-						"de": "Dieses Checkbox ist ausgewählt."
-					}
-				},
-				{
-					"name": "value",
-					"type": "STRING",
-					"label_i18n_ui": {
-						"en": "Value",
-						"de": "Wert"
-					},
-					"description_i18n_ui": {
-						"en": "Value that is selected by this checkbox.",
-						"de": "Wert der durch diese Checkbox gewählt wird."
-					},
-					"default_value_i18n": {
-						"en": "X",
-						"de": "X",
-						"pl": "X",
-						"cs": "X",
-						"hu": "X",
-						"sl": "X",
-						"ar": "X",
-						"bg": "X",
-						"bs": "X",
-						"da": "X",
-						"es": "X",
-						"et": "X",
-						"fa": "X",
-						"fi": "X",
-						"fr": "X",
-						"hr": "X",
-						"it": "X",
-						"ja": "X",
-						"ko": "X",
-						"mk": "X",
-						"nl": "X",
-						"pt": "X",
-						"ro": "X",
-						"ru": "X",
-						"sk": "X",
-						"sq": "X",
-						"sr": "X",
-						"tr": "X",
-						"uk": "X",
-						"ar_eg": "X",
-						"en_ca": "X",
-						"fr_ca": "X"
-					}
-				}
-			]
-		},
-		{
-			"type": "selectgroup",
-			"type_label_i18n_ui": {
-				"en": "Select",
-				"de": "Auswahl"
-			},
-			"description_i18n_ui": {
-				"en": "List of values to select from.",
-				"de": "Liste an auswählbaren Werten."
-			},
-			"label_property_ui": "label",
-			"is_container": false,
-			"properties": [
-				{
-					"name": "label",
-					"type": "STRING",
-					"label_i18n_ui": {
-						"en": "Label",
-						"de": "Label"
-					},
-					"description_i18n_ui": {
-						"en": "Label for this selection.",
-						"de": "Label für diese Auswahl."
-					}
-				},
-				{
-					"name": "mandatory",
-					"type": "BOOLEAN",
-					"label_i18n_ui": {
-						"en": "Mandatory",
-						"de": "Verpflichtend"
-					},
-					"description_i18n_ui": {
-						"en": "This selection is mandatory.",
-						"de": "Diese Auswahl ist verpflichtend."
-					}
-				},
-				{
-					"name": "select_type",
-					"type": "SELECT",
-					"label_i18n_ui": {
-						"en": "Type",
-						"de": "Typ"
-					},
-					"description_i18n_ui": {
-						"en": "Type of this selection.",
-						"de": "Typ dieser Auswahl."
-					},
-					"options": [
-						{
-							"key": "radiobuttons",
-							"value_i18n_ui": {
-								"en": "Radio Buttons",
-								"de": "Radio Buttons"
-							}
-						},
-						{
-							"key": "singleselect",
-							"value_i18n_ui": {
-								"en": "Dropdown with single selection",
-								"de": "Dropdown mit einer Auswahl"
-							}
-						},
-						{
-							"key": "multiselect",
-							"value_i18n_ui": {
-								"en": "Dropdown with multiple selections",
-								"de": "Dropdown mit mehreren Auswahlen"
-							}
-						}
-					]
-				},
-				{
-					"name": "options",
-					"type": "SELECTABLE_OPTIONS",
-					"label_i18n_ui": {
-						"en": "Selectable Options",
-						"de": "Auswahlmöglichkeiten"
-					},
-					"description_i18n_ui": {
-						"en": "List of key value pairs to select from.",
-						"de": "Liste an auswählbaren Schlüssel-Wert-Paaren."
-					}
-				},
-				{
-					"name": "additional_element",
-					"type": "BOOLEAN",
-					"label_i18n_ui": {
-						"en": "Additional Element",
-						"de": "Zusätzliches Element"
-					},
-					"description_i18n_ui": {
-						"en": "Field to enter additional selection option.",
-						"de": "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
-					}
-				}
-			]
-		},
-		{
-			"type": "buttons",
-			"type_label_i18n_ui": {
-				"en": "Button",
-				"de": "Button"
-			},
-			"description_i18n_ui": {
-				"en": "Submit and optional reset button",
-				"de": "Buttons um Formular abzuschicken und zurückzusetzen"
-			},
-			"label_property_ui": "submitlabel",
-			"is_container": false,
-			"properties": [
-				{
-					"name": "submitlabel",
-					"type": "STRING",
-					"label_i18n_ui": {
-						"en": "Label",
-						"de": "Label"
-					},
-					"description_i18n_ui": {
-						"en": "Label for this button.",
-						"de": "Label für diesen Button."
-					}
-				},
-				{
-					"name": "showreset",
-					"type": "BOOLEAN",
-					"label_i18n_ui": {
-						"en": "Show reset button",
-						"de": "Reset Button anzeigen"
-					},
-					"description_i18n_ui": {
-						"en": "If checked will show a reset button.",
-						"de": "Wenn aktiv wird ein Reset Button angezeigt."
-					}
-				},
-				{
-					"name": "resetlabel",
-					"type": "STRING",
-					"label_i18n_ui": {
-						"en": "Label of reset button",
-						"de": "Label des Reset Buttons"
-					},
-					"description_i18n_ui": {
-						"en": "Label for the reset button.",
-						"de": "Label für den Reset Button."
-					}
-				}
-			]
-		},
-		{
-			"type": "sectionheadline",
-			"type_label_i18n_ui": {
-				"en": "Headline",
-				"de": "Überschrift"
-			},
-			"description_i18n_ui": {
-				"en": "Headline for a new section of the form.",
-				"de": "Überschrift für einen neuen Abschnitt im Formular."
-			},
-			"label_property_ui": "text",
-			"is_container": false,
-			"properties": [
-				{
-					"name": "text",
-					"type": "STRING",
-					"label_i18n_ui": {
-						"en": "Text",
-						"de": "Text"
-					}
-				}
-			]
-		},
-		{
-			"type": "text",
-			"type_label_i18n_ui": {
-				"en": "Text",
-				"de": "Text"
-			},
-			"description_i18n_ui": {
-				"en": "Text to furher explain the form.",
-				"de": "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
-			},
-			"label_property_ui": "text",
-			"is_container": false,
-			"properties": [
-				{
-					"name": "text",
-					"type": "STRING",
-					"label_i18n_ui": {
-						"en": "Text",
-						"de": "Text"
-					}
-				}
-			]
-		},
-		{
-			"type": "spacer",
-			"type_label_i18n_ui": {
-				"en": "Spacer",
-				"de": "Abstand"
-			},
-			"description_i18n_ui": {
-				"en": "Adds space between form elements.",
-				"de": "Vergrößert den Abstand zwischen Form-Elementen."
-			},
-			"is_container": false,
-			"properties": []
-		}
-	]
-}
-</javascript>
-
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    generic:
+      nameI18n:
+        de: "Standard"
+        en: "Generic"
+      pluginName: "forms"
+      descriptionI18n: null
+      external: false
+      submitOnce: false
+      controls:
+        input:
+          labelI18n:
+            de: "Eingabefeld"
+            en: "Input Field"
+          descriptionI18n:
+            de: "Allgemeines Eingabefeld für mehrere Datentypen."
+            en: "Generic input field for multiple data types."
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für dieses Eingabefeld."
+              en: "Label for this input field."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "mandatory"
+            labelI18n:
+              de: "Verpflichtend"
+              en: "Mandatory"
+            descriptionI18n:
+              de: "Dieses Eingabefeld ist verpflichtend."
+              en: "This input field is mandatory."
+            required: false
+            backend: false
+          - type: "string"
+            id: "placeholder"
+            labelI18n:
+              de: "Platzhalter"
+              en: "Placeholder"
+            descriptionI18n:
+              de: "Platzhalter für dieses Eingabefeld."
+              en: "Placeholder for this input field."
+            required: false
+            backend: false
+            richContent: false
+          - type: "select"
+            id: "validation"
+            labelI18n:
+              de: "Validator"
+              en: "Validator"
+            options:
+            - value: "number"
+              labelI18n:
+                de: "Zahl (Integer)"
+                en: "Number (Integer)"
+            - value: "telephone"
+              labelI18n:
+                de: "Telefonnummer (nur Ziffern, und Leerzeichen)"
+                en: "Telephone (only numbers, and spaces)"
+            - value: "socialsecurity"
+              labelI18n:
+                de: "SV-Nr (nur Ziffern 10 Stellen, letzten 6 Stellen vergangenes\
+                  \ Datum)"
+                en: "Social Security Number (only numbers 10 digits, last 6 digits\
+                  \ denote past date)"
+            - value: "date"
+              labelI18n:
+                de: "Datum (Format: yyyy-MM-dd)"
+                en: "Date (format: yyyy-MM-dd)"
+            - value: "datepicker"
+              labelI18n:
+                de: "Datum (Format: DD.MM.YYYY)"
+                en: "Date (format: DD.MM.YYYY)"
+            - value: "time"
+              labelI18n:
+                de: "Zeit (Format: HH:MM)"
+                en: "Time (format: HH:MM)"
+            - value: "email"
+              labelI18n:
+                de: "E-Mail"
+                en: "Mail"
+            descriptionI18n:
+              de: "Art des Validators, der BenutzerInneneingaben überprüft."
+              en: "Validator type that checks user input."
+            required: false
+            backend: false
+            multiple: false
+          - type: "string"
+            id: "value"
+            labelI18n:
+              de: "Standardwert"
+              en: "Default Value"
+            descriptionI18n:
+              de: "Standardwert für dieses Eingabefeld."
+              en: "Default value for this input field."
+            required: false
+            backend: false
+            richContent: false
+          - type: "number"
+            id: "minVal"
+            labelI18n:
+              de: "Mindestwert"
+              en: "Minimum Value"
+            descriptionI18n:
+              de: "Mindestwert für Zahleneingaben."
+              en: "Minimum value for number inputs."
+            required: false
+            backend: false
+          - type: "number"
+            id: "maxVal"
+            labelI18n:
+              de: "Maximalwert"
+              en: "Maximum Value"
+            descriptionI18n:
+              de: "Maximalwert für Zahleneingaben."
+              en: "Maximum value for number inputs."
+            required: false
+            backend: false
+          - type: "number"
+            id: "maxCharCount"
+            labelI18n:
+              de: "Eingabelänge"
+              en: "Input Length"
+            descriptionI18n:
+              de: "Anzahl der Zeichen, die eingegeben werden dürfen."
+              en: "Maximum number of allowed characters."
+            required: false
+            backend: false
+          aggregate: false
+          whitelist: null
+        file:
+          labelI18n:
+            de: "Fileupload"
+            en: "File Upload"
+          descriptionI18n:
+            de: "Einfacher Fileupload."
+            en: "Simple file upload."
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für diesen Fileupload."
+              en: "Label for this file upload."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "mandatory"
+            labelI18n:
+              de: "Verpflichtend"
+              en: "Mandatory"
+            descriptionI18n:
+              de: "Dieser Fileupload ist verpflichtend."
+              en: "This file upload is mandatory."
+            required: false
+            backend: false
+          - type: "string"
+            id: "description"
+            labelI18n:
+              de: "Beschreibung"
+              en: "Description"
+            descriptionI18n:
+              de: "Die Beschreibung des Upload-Elements."
+              en: "The description of the upload element."
+            required: false
+            backend: false
+            richContent: false
+          - type: "string"
+            id: "tooltip"
+            labelI18n:
+              de: "Tooltip"
+              en: "Tooltip"
+            descriptionI18n:
+              de: "Der Tooltip des Upload-Elements."
+              en: "The tooltip of the upload element."
+            required: false
+            backend: false
+            richContent: false
+          - type: "number"
+            id: "max_filesize"
+            labelI18n:
+              de: "Max. Dateigröße (MB)"
+              en: "Max. Filesize (MB)"
+            descriptionI18n:
+              de: "Max. erlaubte Dateigröße (MB)"
+              en: "Max. allowed Filesize (MB)"
+            required: false
+            backend: false
+          - type: "select"
+            id: "allowedFiletypes"
+            labelI18n:
+              de: "Erlaubte Dateitypen"
+              en: "Allowed filetypes"
+            options:
+            - value: "image"
+              labelI18n:
+                de: "Bilder"
+                en: "Images"
+            - value: "video"
+              labelI18n:
+                de: "Videos"
+                en: "Videos"
+            - value: "documents"
+              labelI18n:
+                de: "Dokumente"
+                en: "Documents"
+            descriptionI18n:
+              de: "Erlaubte Dateitypen"
+              en: "Allowed filetypes"
+            required: false
+            backend: false
+            multiple: true
+          aggregate: false
+          whitelist: null
+        buttons:
+          labelI18n:
+            de: "Button"
+            en: "Button"
+          descriptionI18n:
+            de: "Buttons um Formular abzuschicken und zurückzusetzen"
+            en: "Submit and optional reset button"
+          settings:
+          - type: "string"
+            id: "submitlabel"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für diesen Button."
+              en: "Label for this button."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "showreset"
+            labelI18n:
+              de: "Reset Button anzeigen"
+              en: "Show reset button"
+            descriptionI18n:
+              de: "Wenn aktiv wird ein Reset Button angezeigt."
+              en: "If checked will show a reset button."
+            required: false
+            backend: false
+          - type: "string"
+            id: "resetlabel"
+            labelI18n:
+              de: "Label des Reset Buttons"
+              en: "Label of reset button"
+            descriptionI18n:
+              de: "Label für den Reset Button."
+              en: "Label for the reset button."
+            required: false
+            backend: false
+            richContent: false
+          aggregate: false
+          whitelist: null
+        selectgroup:
+          labelI18n:
+            de: "Auswahl"
+            en: "Select"
+          descriptionI18n:
+            de: "Liste an auswählbaren Werten."
+            en: "List of values to select from."
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für diese Auswahl."
+              en: "Label for this selection."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "mandatory"
+            labelI18n:
+              de: "Verpflichtend"
+              en: "Mandatory"
+            descriptionI18n:
+              de: "Diese Auswahl ist verpflichtend."
+              en: "This selection is mandatory."
+            required: false
+            backend: false
+          - type: "select"
+            id: "select_type"
+            labelI18n:
+              de: "Typ"
+              en: "Type"
+            options:
+            - value: "radiobuttons"
+              labelI18n:
+                de: "Radio Buttons"
+                en: "Radio Buttons"
+            - value: "singleselect"
+              labelI18n:
+                de: "Dropdown mit einer Auswahl"
+                en: "Dropdown with single selection"
+            - value: "multiselect"
+              labelI18n:
+                de: "Dropdown mit mehreren Auswahlen"
+                en: "Dropdown with multiple selections"
+            descriptionI18n:
+              de: "Typ dieser Auswahl."
+              en: "Type of this selection."
+            required: false
+            backend: false
+            multiple: false
+          - type: "options"
+            id: "options"
+            labelI18n:
+              de: "Auswahlmöglichkeiten"
+              en: "Selectable Options"
+            descriptionI18n:
+              de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
+              en: "List of key value pairs to select from."
+            required: false
+            backend: false
+            multiple: false
+          - type: "boolean"
+            id: "additional_element"
+            labelI18n:
+              de: "Zusätzliches Element"
+              en: "Additional Element"
+            descriptionI18n:
+              de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
+              en: "Field to enter additional selection option."
+            required: false
+            backend: false
+          aggregate: false
+          whitelist: null
+        checkbox:
+          labelI18n:
+            de: "Checkbox"
+            en: "Checkbox"
+          descriptionI18n:
+            de: "Einfache checkbox."
+            en: "Simple checkbox."
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für diese Auswahl."
+              en: "Label for this selection."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "mandatory"
+            labelI18n:
+              de: "Verpflichtend"
+              en: "Mandatory"
+            descriptionI18n:
+              de: "Dieses Checkbox ist verpflichtend."
+              en: "This checkbox is mandatory."
+            required: false
+            backend: false
+          - type: "boolean"
+            id: "checked"
+            labelI18n:
+              de: "Ausgewählt"
+              en: "Checked"
+            descriptionI18n:
+              de: "Dieses Checkbox ist ausgewählt."
+              en: "This checkbox is checked."
+            required: false
+            backend: false
+          - type: "string"
+            id: "value"
+            labelI18n:
+              de: "Wert"
+              en: "Value"
+            descriptionI18n:
+              de: "Wert der durch diese Checkbox gewählt wird."
+              en: "Value that is selected by this checkbox."
+            required: false
+            backend: false
+            richContent: false
+          aggregate: false
+          whitelist: null
+        recaptcha:
+          labelI18n:
+            de: "Recaptcha"
+            en: "Recaptcha"
+          descriptionI18n:
+            de: "Recaptcha Spamschutz."
+            en: "Recaptcha spam protection."
+          settings: []
+          aggregate: false
+          whitelist: null
+        textarea:
+          labelI18n:
+            de: "Mehrzeiliges Eingabefeld"
+            en: "Textarea Field"
+          descriptionI18n:
+            de: "Mehrzeiliges Eingabefeld"
+            en: "Multi-line text"
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für dieses Eingabefeld"
+              en: "Label for this input field"
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "mandatory"
+            labelI18n:
+              de: "Verpflichtend"
+              en: "Mandatory"
+            descriptionI18n:
+              de: "Dieses Eingabefeld ist verpflichtend."
+              en: "This input field is mandatory."
+            required: false
+            backend: false
+          - type: "string"
+            id: "placeholder"
+            labelI18n:
+              de: "Platzhalter"
+              en: "Placeholder"
+            descriptionI18n:
+              de: "Platzhalter für dieses Eingabefeld."
+              en: "Placeholder for this input field."
+            required: false
+            backend: false
+            richContent: false
+          - type: "number"
+            id: "maxCharCount"
+            labelI18n:
+              de: "Eingabelänge"
+              en: "Input Length"
+            descriptionI18n:
+              de: "Anzahl der Zeichen, die eingegeben werden dürfen."
+              en: "Maximum number of allowed characters."
+            required: false
+            backend: false
+          aggregate: false
+          whitelist: null
+        usermail:
+          labelI18n:
+            de: "Benutzer E-Mail Feld"
+            en: "User EMail Field"
+          descriptionI18n:
+            de: "Feld für Benutzer eMail. Wenn ausgefüllt, bekommt der Benutzer ein\
+              \ eMail nach dem Absenden des Formulares."
+            en: "Field for user eMail. When filled, the user will get an eMail after\
+              \ filling out the form."
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für dieses Eingabefeld."
+              en: "Label for this input field."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "mandatory"
+            labelI18n:
+              de: "Verpflichtend"
+              en: "Mandatory"
+            descriptionI18n:
+              de: "Dieses Eingabefeld ist verpflichtend."
+              en: "This input field is mandatory."
+            required: false
+            backend: false
+          - type: "string"
+            id: "placeholder"
+            labelI18n:
+              de: "Platzhalter"
+              en: "Placeholder"
+            descriptionI18n:
+              de: "Platzhalter für dieses Eingabefeld."
+              en: "Placeholder for this input field."
+            required: false
+            backend: false
+            richContent: false
+          - type: "string"
+            id: "description"
+            labelI18n:
+              de: "Beschreibung"
+              en: "Description"
+            descriptionI18n:
+              de: "Die Beschreibung des Benutzer-E-Mail-Elements."
+              en: "The description of the user mail element."
+            required: false
+            backend: false
+            richContent: false
+          - type: "string"
+            id: "tooltip"
+            labelI18n:
+              de: "Tooltip"
+              en: "Tooltip"
+            descriptionI18n:
+              de: "Der Tooltip des Benutzer-E-Mail-Elements."
+              en: "The tooltip of the user mail element."
+            required: false
+            backend: false
+            richContent: false
+          - type: "number"
+            id: "maxCharCount"
+            labelI18n:
+              de: "Eingabelänge"
+              en: "Input Length"
+            descriptionI18n:
+              de: "Anzahl der Zeichen, die eingegeben werden dürfen."
+              en: "Maximum number of allowed characters."
+            required: false
+            backend: false
+          - type: "string"
+            id: "mailsubject"
+            labelI18n:
+              de: "E-Mail Betreff"
+              en: "Email Subject"
+            descriptionI18n:
+              de: "Betreff des E-Mails, das an den Benutzer geschickt wird."
+              en: "Subject of the Email, sent to the user."
+            required: false
+            backend: false
+            richContent: false
+          - type: "select"
+            id: "mailtemplate"
+            labelI18n:
+              de: "E-Mail Vorlage"
+              en: "Email Template"
+            options:
+            - value: "useremail"
+              labelI18n:
+                de: "Standard"
+                en: "Default"
+            descriptionI18n:
+              de: "Vorlage, die zur Darstellung des E-Mail Inhalts verwendet wird."
+              en: "Template, which is used to display the Email body."
+            required: false
+            backend: false
+            multiple: false
+          - type: "reference"
+            id: "mailsource"
+            labelI18n:
+              de: "E-Mail Vorlage als Seite"
+              en: "Email Template from Page"
+            referenceTypes:
+            - "page"
+            descriptionI18n:
+              de: "Vorlage als Seite, die zur Darstellung des E-Mail Inhalts verwendet\
+                \ wird."
+              en: "Template from Page, which is used to display the Email body."
+            required: false
+            backend: false
+            allowedMarkupLanguageIds:
+            - 21
+            multiple: false
+            titleI18n:
+              de: "modal.repository_browser_title_forms_email_template_single"
+              en: "modal.repository_browser_title_forms_email_template_single"
+            onlyInCurrentNode: false
+          aggregate: false
+          whitelist: null
+      blocks:
+        spacer:
+          labelI18n:
+            de: "Abstand"
+            en: "Spacer"
+          descriptionI18n:
+            de: "Vergrößert den Abstand zwischen Form-Elementen."
+            en: "Adds space between form elements."
+          settings: []
+          container: false
+          whitelist: null
+        conditionalcontainer:
+          labelI18n:
+            de: "Wenn-Dann-Container"
+            en: "Conditional container"
+          descriptionI18n:
+            de: "Wenn-Dann-Container dessen Inhalt nur aktiv ist, wenn das geprüfte\
+              \ Element den erwarteten Wert hat."
+            en: "Conditional container which contents is only active when the checked\
+              \ element has the expected value."
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für diesen Container."
+              en: "Label for this container."
+            required: false
+            backend: false
+            richContent: false
+          - type: "string"
+            id: "element_to_check"
+            labelI18n:
+              de: "Elementname"
+              en: "Element name"
+            descriptionI18n:
+              de: "Zu prüfendes Element."
+              en: "Element to check."
+            required: false
+            backend: false
+            richContent: false
+          - type: "string"
+            id: "value_to_check"
+            labelI18n:
+              de: "Wert"
+              en: "Value"
+            descriptionI18n:
+              de: "Erwarteter Wert."
+              en: "Expected value."
+            required: false
+            backend: false
+            richContent: false
+          container: true
+          whitelist: null
+        sectionheadline:
+          labelI18n:
+            de: "Überschrift"
+            en: "Headline"
+          descriptionI18n:
+            de: "Überschrift für einen neuen Abschnitt im Formular."
+            en: "Headline for a new section of the form."
+          settings:
+          - type: "string"
+            id: "text"
+            labelI18n:
+              de: "Text"
+              en: "Text"
+            descriptionI18n: {}
+            required: false
+            backend: false
+            richContent: false
+          container: false
+          whitelist: null
+        text:
+          labelI18n:
+            de: "Text"
+            en: "Text"
+          descriptionI18n:
+            de: "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
+            en: "Text to furher explain the form."
+          settings:
+          - type: "string"
+            id: "text"
+            labelI18n:
+              de: "Text"
+              en: "Text"
+            descriptionI18n: {}
+            required: false
+            backend: false
+            richContent: false
+          container: false
+          whitelist: null
+        formpage:
+          labelI18n:
+            de: "Seite"
+            en: "Page"
+          descriptionI18n:
+            de: "Unterteilt das Formular in mehrere Seiten."
+            en: "Splits the form into multiple pages."
+          settings:
+          - type: "string"
+            id: "description"
+            labelI18n:
+              de: "Name"
+              en: "Name"
+            descriptionI18n:
+              de: "Name der Seite."
+              en: "Name of the page."
+            required: false
+            backend: false
+            richContent: false
+          - type: "string"
+            id: "info"
+            labelI18n:
+              de: "Beschreibung"
+              en: "Description"
+            descriptionI18n:
+              de: "Beschreibung für diese Seite."
+              en: "Description for this page."
+            required: false
+            backend: false
+            richContent: false
+          container: true
+          whitelist: null
+        formprogress:
+          labelI18n:
+            de: "Fortschrittsbalken"
+            en: "Progress Bar"
+          descriptionI18n:
+            de: "Einfacher Fortschrittsbalken."
+            en: "Simple progress bar."
+          settings: []
+          container: false
+          whitelist: null
+        group:
+          labelI18n:
+            de: "Gruppe"
+            en: "Group"
+          descriptionI18n:
+            de: "Gruppe an Formularelementen."
+            en: "Group of form elements."
+          settings: []
+          container: true
+          whitelist: null
+      userOptions: null
+      templateOptions:
+      - value: "theme-red"
+        labelI18n:
+          de: "Rotes Thema"
+          en: "Red theme"
+      - value: "theme-blue"
+        labelI18n:
+          de: "Blaues Thema"
+          en: "Blue theme"
+      userEmailTemplateOptions: null
+      adminEmailTemplateOptions:
+      - value: "useremail"
+        labelI18n:
+          de: "Standard"
+          en: "Default"
+      pluginConfiguration: null
+    poll:
+      nameI18n:
+        de: "Umfrage"
+        en: "Poll"
+      pluginName: "forms"
+      descriptionI18n: null
+      external: false
+      submitOnce: true
+      controls:
+        buttons:
+          labelI18n:
+            de: "Button"
+            en: "Button"
+          descriptionI18n:
+            de: "Buttons um Formular abzuschicken und zurückzusetzen"
+            en: "Submit and optional reset button"
+          settings:
+          - type: "string"
+            id: "submitlabel"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für diesen Button."
+              en: "Label for this button."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "showreset"
+            labelI18n:
+              de: "Reset Button anzeigen"
+              en: "Show reset button"
+            descriptionI18n:
+              de: "Wenn aktiv wird ein Reset Button angezeigt."
+              en: "If checked will show a reset button."
+            required: false
+            backend: false
+          - type: "string"
+            id: "resetlabel"
+            labelI18n:
+              de: "Label des Reset Buttons"
+              en: "Label of reset button"
+            descriptionI18n:
+              de: "Label für den Reset Button."
+              en: "Label for the reset button."
+            required: false
+            backend: false
+            richContent: false
+          aggregate: false
+          whitelist: null
+        selectgroup:
+          labelI18n:
+            de: "Auswahl"
+            en: "Select"
+          descriptionI18n:
+            de: "Liste an auswählbaren Werten."
+            en: "List of values to select from."
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für diese Auswahl."
+              en: "Label for this selection."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "mandatory"
+            labelI18n:
+              de: "Verpflichtend"
+              en: "Mandatory"
+            descriptionI18n:
+              de: "Diese Auswahl ist verpflichtend."
+              en: "This selection is mandatory."
+            required: false
+            backend: false
+          - type: "select"
+            id: "select_type"
+            labelI18n:
+              de: "Typ"
+              en: "Type"
+            options:
+            - value: "radiobuttons"
+              labelI18n:
+                de: "Radio Buttons"
+                en: "Radio Buttons"
+            - value: "singleselect"
+              labelI18n:
+                de: "Dropdown mit einer Auswahl"
+                en: "Dropdown with single selection"
+            - value: "multiselect"
+              labelI18n:
+                de: "Dropdown mit mehreren Auswahlen"
+                en: "Dropdown with multiple selections"
+            descriptionI18n:
+              de: "Typ dieser Auswahl."
+              en: "Type of this selection."
+            required: false
+            backend: false
+            multiple: false
+          - type: "options"
+            id: "options"
+            labelI18n:
+              de: "Auswahlmöglichkeiten"
+              en: "Selectable Options"
+            descriptionI18n:
+              de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
+              en: "List of key value pairs to select from."
+            required: false
+            backend: false
+            multiple: false
+          - type: "boolean"
+            id: "additional_element"
+            labelI18n:
+              de: "Zusätzliches Element"
+              en: "Additional Element"
+            descriptionI18n:
+              de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
+              en: "Field to enter additional selection option."
+            required: false
+            backend: false
+          aggregate: false
+          whitelist: null
+        checkbox:
+          labelI18n:
+            de: "Checkbox"
+            en: "Checkbox"
+          descriptionI18n:
+            de: "Einfache checkbox."
+            en: "Simple checkbox."
+          settings:
+          - type: "string"
+            id: "label"
+            labelI18n:
+              de: "Label"
+              en: "Label"
+            descriptionI18n:
+              de: "Label für diese Auswahl."
+              en: "Label for this selection."
+            required: false
+            backend: false
+            richContent: false
+          - type: "boolean"
+            id: "mandatory"
+            labelI18n:
+              de: "Verpflichtend"
+              en: "Mandatory"
+            descriptionI18n:
+              de: "Dieses Checkbox ist verpflichtend."
+              en: "This checkbox is mandatory."
+            required: false
+            backend: false
+          - type: "boolean"
+            id: "checked"
+            labelI18n:
+              de: "Ausgewählt"
+              en: "Checked"
+            descriptionI18n:
+              de: "Dieses Checkbox ist ausgewählt."
+              en: "This checkbox is checked."
+            required: false
+            backend: false
+          - type: "string"
+            id: "value"
+            labelI18n:
+              de: "Wert"
+              en: "Value"
+            descriptionI18n:
+              de: "Wert der durch diese Checkbox gewählt wird."
+              en: "Value that is selected by this checkbox."
+            required: false
+            backend: false
+            richContent: false
+          aggregate: false
+          whitelist: null
+      blocks:
+        spacer:
+          labelI18n:
+            de: "Abstand"
+            en: "Spacer"
+          descriptionI18n:
+            de: "Vergrößert den Abstand zwischen Form-Elementen."
+            en: "Adds space between form elements."
+          settings: []
+          container: false
+          whitelist: null
+        sectionheadline:
+          labelI18n:
+            de: "Überschrift"
+            en: "Headline"
+          descriptionI18n:
+            de: "Überschrift für einen neuen Abschnitt im Formular."
+            en: "Headline for a new section of the form."
+          settings:
+          - type: "string"
+            id: "text"
+            labelI18n:
+              de: "Text"
+              en: "Text"
+            descriptionI18n: {}
+            required: false
+            backend: false
+            richContent: false
+          container: false
+          whitelist: null
+        text:
+          labelI18n:
+            de: "Text"
+            en: "Text"
+          descriptionI18n:
+            de: "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
+            en: "Text to furher explain the form."
+          settings:
+          - type: "string"
+            id: "text"
+            labelI18n:
+              de: "Text"
+              en: "Text"
+            descriptionI18n: {}
+            required: false
+            backend: false
+            richContent: false
+          container: false
+          whitelist: null
+      userOptions: null
+      templateOptions: null
+      userEmailTemplateOptions: null
+      adminEmailTemplateOptions: null
+      pluginConfiguration: null
+</shell>
 
 NOTE: Assign at least one language to the node where you will be creating forms.
 
-After this, the feature must be enabled for all Nodes, that need to contain forms.
+After this, the feature must be enabled for all Nodes, that need to contain forms. Also the Nodes need to have the form types assigned, which should be available for creating forms.
 
 h3. Implementation using Handlebars
 
@@ -1347,7 +1054,6 @@ The first parameter passed to the directive is the (internal) CMS Form ID (taken
 | +type+            | Type of used portal. Must be either *java* or *php* | *java* |
 | +noForm+          | Optional replacement, when no form (or an offline form) has been selected. Can either be a single string, or a translation map (as seen in the example above) | (empty) |
 | +previewRoot+     | HTML Element, which should be rendered as root element for the preview | *div* |
-| +templateContext+ | Additional path segments for templates used to render the form. The actual path used is the +templatesPath+ (from plugin configuration) + +/templateContext+. | (empty) |
 | +showResults+     | Boolean flag to force rendering results of a poll instead of the form itself. (This has no effect on non-poll forms.) | *false* |
 
 h3. E-mail template pages

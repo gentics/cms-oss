@@ -36,11 +36,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import jakarta.ws.rs.ClientErrorException;
-import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.WebTarget;
-
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -55,6 +50,7 @@ import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.QueueEntry;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
@@ -82,15 +78,23 @@ import com.gentics.contentnode.rest.model.response.admin.ObjectCount;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.contentnode.testutils.RESTAppContext.Type;
+
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
 
 /**
  * Test cases for content maintenance using the REST API
  */
 @GCNFeature(set = { Feature.MULTICHANNELLING, Feature.PUBLISH_CACHE, Feature.FORMS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class ContentMaintenanceTest {
 	private static DBTestContext testContext = new DBTestContext();
 
@@ -152,6 +156,11 @@ public class ContentMaintenanceTest {
 			for (Node node : Arrays.asList(nodeWithPermission, channelWithPermission, nodeWithoutPermission, channelWithoutPermission)) {
 				folderIds.computeIfAbsent(node.getId(), key -> new HashSet<>()).add(node.getFolder().getId());
 			}
+		});
+
+		operate(() -> {
+			FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, nodeWithPermission.getId());
+			FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, nodeWithoutPermission.getId());
 		});
 
 		// create content in both nodes

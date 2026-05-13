@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
@@ -41,7 +42,9 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileFactory;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
@@ -65,11 +68,14 @@ import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.publish.mesh.form.FormPublishTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.tests.utils.OverviewHelper;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.contentnode.testutils.RESTAppContext.Type;
 
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class AbstractContentStagingTest {
 
 	protected static final String PACKAGE_SUBROOT = "package";
@@ -153,6 +159,8 @@ public class AbstractContentStagingTest {
 		});
 
 		node1 = supply(() -> createNode());
+		consume(n -> FormFactory.addFormTypeToNode(FormTypeConfigurationModifier.GENERIC_TYPE, n.getId()), node1);
+
 		sourceChannel = supply(() -> createChannel(node1, "Source Channel", "source", "/"));
 		node2 = supply(() -> createNode());
 		targetChannel = supply(() -> createChannel(node2, "Target Channel", "target", "/"));
@@ -222,12 +230,13 @@ public class AbstractContentStagingTest {
 		image1 = (ImageFile) supply(() -> createImage(node1.getFolder(), IMAGE_NAME, out.toByteArray()));
 		file1 = supply(() -> ContentNodeTestDataUtils.createFile(folder1, "blubb.txt", "Original content".getBytes(), node1));
 		form1 = supply(() -> create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(node1.getFolder().getId());
 
 			try {
-				f.setData(mapper.readValue(FormPublishTest.class.getResource("form_data.json"), ObjectNode.class));
+				f.setData(mapper.readValue(FormPublishTest.class.getResource("generic_form_data.json"), ObjectNode.class));
 			} catch (IOException e) {
 				throw new NodeException(e);
 			}

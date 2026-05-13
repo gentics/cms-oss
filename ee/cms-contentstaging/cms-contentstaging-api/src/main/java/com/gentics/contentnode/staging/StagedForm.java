@@ -25,6 +25,11 @@ public class StagedForm extends StagingBase {
 	private static final long serialVersionUID = 9012361259459603486L;
 
 	/**
+	 * Form type
+	 */
+	private String formType;
+
+	/**
 	 * Description of the form
 	 */
 	private String description;
@@ -35,16 +40,6 @@ public class StagedForm extends StagingBase {
 	private List<String> languages;
 
 	/**
-	 * ID of the success page
-	 */
-	private String successPageId;
-
-	/**
-	 * ID of the success form
-	 */
-	private String successNodeId;
-
-	/**
 	 * Form data
 	 */
 	private JsonNode data;
@@ -53,6 +48,22 @@ public class StagedForm extends StagingBase {
 	 * Version data
 	 */
 	private StagedObjectVersion version = new StagedObjectVersion();
+
+	/**
+	 * Form type
+	 * @return form type
+	 */
+	public String getFormType() {
+		return formType;
+	}
+
+	/**
+	 * Set the form type
+	 * @param formType form type
+	 */
+	public void setFormType(String formType) {
+		this.formType = formType;
+	}
 
 	/**
 	 * Form description
@@ -84,38 +95,6 @@ public class StagedForm extends StagingBase {
 	 */
 	public void setLanguages(List<String> languages) {
 		this.languages = languages;
-	}
-
-	/**
-	 * ID of the success page
-	 * @return success page ID
-	 */
-	public String getSuccessPageId() {
-		return successPageId;
-	}
-
-	/**
-	 * Set the success page ID
-	 * @param successPageId success page ID
-	 */
-	public void setSuccessPageId(String successPageId) {
-		this.successPageId = successPageId;
-	}
-
-	/**
-	 * ID of the success node
-	 * @return success node ID
-	 */
-	public String getSuccessNodeId() {
-		return successNodeId;
-	}
-
-	/**
-	 * Set the success node ID
-	 * @param successNodeId success node ID
-	 */
-	public void setSuccessNodeId(String successNodeId) {
-		this.successNodeId = successNodeId;
 	}
 
 	/**

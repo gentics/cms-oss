@@ -1,0 +1,72 @@
+{
+  "feature_formgrid": {
+    "enabled": true,
+    "formgridTypes": "[{\"name\":\"Text\",\"value\":\"formgridText\"},{\"name\":\"Freiraum\",\"value\":\"formgridSpacer\"}]"
+  },
+  "feature_prefill": {
+    "enabled": true
+  },
+  "feature_tos": {
+    "enabled": true
+  },
+  "feature_debug": {
+    "enabled": true
+  },
+  "feature_languages": {
+    "enabled": true,
+    "languages": [
+      "de-AT",
+      "en-AT"
+    ]
+  },
+  "feature_wizard": {
+    "enabled": true
+  },
+  "feature_formgrid_options": {
+    "enabled": true,
+    "formgridOptions": "[{\"name\":\"boolean\",\"options\":[{\"key\":\"radio\",\"name\":\"Variante Radio-Buttons\",\"type\":\"boolean\"},{\"key\":\"button\",\"name\":\"Variante Button\",\"type\":\"boolean\"},{\"key\":\"buttonIsPrimary\",\"name\":\"Button in Primärfarben anzeigen?\",\"type\":\"boolean\",\"constraint\":\"element.formGridOptions.button === true\"},{\"key\":\"dropdown\",\"name\":\"Variante Dropdown\",\"type\":\"boolean\"}]},{\"name\":\"catalog\",\"options\":[{\"key\":\"radio\",\"name\":\"Variante Checkbox\",\"type\":\"boolean\",\"constraint\":\"this.schema.isList\"},{\"key\":\"radio\",\"name\":\"Variante Radio-Buttons\",\"type\":\"boolean\",\"constraint\":\"!this.schema.isList\"},{\"key\":\"radioColumns\",\"name\":\"Anzahl Spalten mit Checkboxen/Radio-Buttons: \",\"type\":\"dropdown\",\"constraint\":\"element.formGridOptions.radio\",\"selectOptions\":[{\"key\":\"1\",\"value\":\"1\"},{\"key\":\"2\",\"value\":\"2\"},{\"key\":\"3\",\"value\":\"3\"},{\"key\":\"4\",\"value\":\"4\"}]}]},{\"name\":\"number\",\"options\":[{\"key\":\"numberPlaceholder\",\"text\":\"\u003Cb\u003EFormatierung Nummer\u003C/b\u003E\",\"name\":\"Platzhalter für Nummereingabefelder\",\"type\":\"string\",\"constraint\":\"this.schema && this.schema.type == 'number' && this.schema.isRaw\"},{\"key\":\"numberStep\",\"name\":\"Zählschritte (Ganzzahl)\",\"type\":\"string\",\"constraint\":\"this.schema && this.schema.type == 'number' && this.schema.isRaw && this.schema?.precision === 0\"},{\"key\":\"numberStep\",\"name\":\"Zählschritte (Festkomma/Fliesskomma)\",\"type\":\"string\",\"constraint\":\"this.schema && this.schema.type == 'number' && this.schema.isRaw && this.schema?.precision !== 0\"},{\"key\":\"alignment\",\"name\":\"Ausrichtung Wert: \",\"type\":\"dropdown\",\"constraint\":\"this.schema && this.schema.type == 'number' && this.schema.isRaw\",\"selectOptions\":[{\"key\":\"Links\",\"value\":\"left\"},{\"key\":\"Zentriert\",\"value\":\"center\"},{\"key\":\"Rechts\",\"value\":\"right\"}]},{\"key\":\"alignmentUnit\",\"name\":\"Ausrichtung Einheit: \",\"type\":\"dropdown\",\"constraint\":\"this.schema && this.schema.type == 'number' && this.schema.isRaw\",\"selectOptions\":[{\"key\":\"Links\",\"value\":\"left\"},{\"key\":\"Zentriert\",\"value\":\"center\"},{\"key\":\"Rechts\",\"value\":\"right\"}]}]},{\"name\":\"aggregate\",\"options\":[{\"key\":\"tableColumnWidthOptimized\",\"text\":\"\u003Cp\u003EDieses Element ist eine Aggregatsliste mit Dialogformularen. Die Einträge werden als Tabelle angezeigt.\u003C/p\u003E\",\"name\":\"Spaltenbreite auf Inhalt optimiert\",\"type\":\"boolean\",\"constraint\":\"isAggregateListDialogFormTable\"},{\"key\":\"tableRowMaxLineHeight\",\"name\":\"Maximale Zeilenanzahl\",\"type\":\"string\",\"constraint\":\"isAggregateListDialogFormTable && !element.formGridOptions.tableColumnWidthOptimized\"},{\"key\":\"buttonDisplayStyle\",\"text\":\"Darstellung der Funktionen: \",\"name\":\"Darstellung der Funktionen: \",\"type\":\"dropdown\",\"constraint\":\"this.schema && this.schema.type == 'number' && this.schema.isRaw und this.hasUnits\",\"selectOptions\":[{\"key\":\"Icon\",\"value\":\"icon\"},{\"key\":\"Text\",\"value\":\"text\"},{\"key\":\"Icon + Text\",\"value\":\"icontext\"}]}]}]"
+  },
+  "feature_servicecatalog": {
+    "enabled": true,
+    "detailPage": true,
+    "elementsTemplateName": "form-detail"
+  },
+  "feature_upload_constraints": {
+    "maxSizePerFile": 5242880,
+    "maxSizeOverall": 20971520,
+    "fileExtensionsAllowed": [
+      "docx",
+      "xlsx",
+      "pptx",
+      "pdf",
+      "jpg",
+      "jpeg",
+      "png",
+      "mpeg",
+      "mp3",
+      "wav",
+      "mp4",
+      "mk4"
+    ],
+    "fileMimeTypesAllowed": [
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/wav",
+      "audio/x-wav",
+      "audio/mp4",
+      "audio/x-matroska",
+      "video/mp4",
+      "video/quicktime",
+      "video/mpeg",
+      "video/x-msvideo",
+      "video/x-matroska"
+    ],
+    "enabled": true
+  }
+}

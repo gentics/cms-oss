@@ -1,0 +1,89 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubject": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplate": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrl": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {
+            "checkbox_21292415_2d85_49a6_ae74_d1eefc01a7d8": {
+                "type": "boolean",
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "checkbox_21292415_2d85_49a6_ae74_d1eefc01a7d8",
+                "formGridOptions": {
+                    "defaultValue": "X"
+                }
+            },
+            "input_a5ed52d4_c5a8_4dd0_a184_d441117c3a4c": {
+                "type": "string",
+                "numberOfLines": 1,
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "input_a5ed52d4_c5a8_4dd0_a184_d441117c3a4c"
+            }
+        }
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "elements": [
+                    {
+                        "id": "checkbox_21292415_2d85_49a6_ae74_d1eefc01a7d8",
+                        "type": "property",
+                        "label": {
+                            "de": "Geklicke"
+                        },
+                        "description": {},
+                        "formGridOptions": {
+                            "checked": false
+                        }
+                    },
+                    {
+                        "id": "conditionalcontainer_db21db23_b608_4591_b8fd_f76ab73711a9",
+                        "type": "property",
+                        "label": {
+                            "de": "Was auch immer"
+                        },
+                        "description": {},
+                        "formGridOptions": {
+                            "type": "conditionalcontainer",
+                            "condition": {
+                                "source": {
+                                    "schema": "checkbox_21292415_2d85_49a6_ae74_d1eefc01a7d8"
+                                },
+                                "equals": "X"
+                            }
+                        },
+                        "elements": [
+                            {
+                                "type": "property",
+                                "id": "input_a5ed52d4_c5a8_4dd0_a184_d441117c3a4c",
+                                "label": {
+                                    "de": "Innerer Input"
+                                },
+                                "description": {}
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

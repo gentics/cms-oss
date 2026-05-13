@@ -1,0 +1,75 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubject": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplate": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrl": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {
+            "input_50aeed2c_0858_4252_98bf_cc7176974b70": {
+                "type": "string",
+                "numberOfLines": 1,
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "input_50aeed2c_0858_4252_98bf_cc7176974b70"
+            },
+            "input_18832ae6_537a_493f_8ec7_352dfb598087": {
+                "type": "string",
+                "numberOfLines": 1,
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": false,
+                "isList": false,
+                "name": "input_18832ae6_537a_493f_8ec7_352dfb598087"
+            }
+        }
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "pagename": {
+                    "de": "Seite eins"
+                },
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "input_50aeed2c_0858_4252_98bf_cc7176974b70",
+                        "label": {
+                            "de": "Eingabe auf Seite eins"
+                        },
+                        "description": {}
+                    }
+                ]
+            },
+            {
+                "pagename": {
+                    "de": "Seite zwei"
+                },
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "input_18832ae6_537a_493f_8ec7_352dfb598087",
+                        "label": {
+                            "de": "Eingabe auf Seite zwei"
+                        },
+                        "description": {}
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "andp-ma-formgen",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "postinstall": "patch-package",
+    "build": "expo export --platform web",
+    "postbuild": "copyfiles -f ../../node_modules/pdfjs-dist/build/pdf.worker.min.mjs ./dist/_expo/static/js/web/"
+  },
+  "dependencies": {
+    "@andp/core": "*",
+    "@andp/feature-formgen": "*",
+    "@expo/metro-runtime": "~6.1.1",
+    "expo": "54.0.25",
+    "expo-constants": "~18.0.8",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-svg-transformer": "^1.5.1",
+    "expo-font": "~14.0.7",
+    "patch-package": "^8.0.0",
+    "react-native-get-random-values": "^2.0.0",
+    "zustand": "^5.0.8",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-svg": "^15.12.1",
+    "@expo/ui": "0.2.0-beta.8",
+    "@gorhom/bottom-sheet": "^5.2.6"
+  },
+  "devDependencies": {
+    "copyfiles": "2.4.1"
+  },
+  "private": true
+}

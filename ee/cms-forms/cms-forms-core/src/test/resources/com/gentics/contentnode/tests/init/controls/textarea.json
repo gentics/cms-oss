@@ -1,0 +1,28 @@
+{
+    "elements": [
+        {
+            "globalId": "bc335b96-bc49-4b97-9d98-efd642c074f0",
+            "name": "textarea_bc335b96_bc49_4b97_9d98_efd642c074f0",
+            "type": "textarea",
+            "active": true,
+            "elements": [],
+            "label_i18n": {
+                "de": "Mehrzeilig"
+            },
+            "mandatory_i18n": null,
+            "placeholder_i18n": {
+                "de": "Gib hier was ein"
+            },
+            "maxCharCount_i18n": {
+                "de": 200
+            }
+        }
+    ],
+    "email": "",
+    "mailsubject_i18n": {},
+    "mailsource_pageid": 0,
+    "mailsource_nodeid": 0,
+    "mailtemp_i18n": {},
+    "type": "GENERIC",
+    "templateContext": "theme-red"
+}

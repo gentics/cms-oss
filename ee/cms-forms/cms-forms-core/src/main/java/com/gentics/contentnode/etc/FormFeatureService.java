@@ -9,6 +9,11 @@ import com.gentics.license.feature.LicenseKeyFeatureDefinition;
 public class FormFeatureService implements FeatureService {
 	@Override
 	public boolean isProvided(Feature feature) {
-		return feature == Feature.FORMS && LicenseService.isLicenseSufficient(LicenseKeyFeatureDefinition.FORMS);
+		switch (feature) {
+		case FORMS:
+			return LicenseService.isLicenseSufficient(LicenseKeyFeatureDefinition.FORMS) && FormConfigProvider.isConfigValid();
+		default:
+			return false;
+		}
 	}
 }

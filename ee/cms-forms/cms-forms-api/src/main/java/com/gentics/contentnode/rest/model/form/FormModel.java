@@ -23,6 +23,21 @@ public class FormModel extends PublishableContentItem {
 	private static final long serialVersionUID = 3991275403246334702L;
 
 	/**
+	 * Optional external ID
+	 */
+	private String externalId;
+
+	/**
+	 * Form type
+	 */
+	private String formType;
+
+	/**
+	 * Form type name
+	 */
+	private String formTypeName;
+
+	/**
 	 * Description of the form
 	 */
 	private String description;
@@ -89,20 +104,58 @@ public class FormModel extends PublishableContentItem {
 	private FormTimeManagement timeManagement;
 
 	/**
-	 * Optional ID of the success page
-	 */
-	private Integer successPageId;
-
-	/**
-	 * Optional Node ID of the success page
-	 */
-	private Integer successNodeId;
-
-	/**
 	 * Constructor used by JAXB
 	 */
 	public FormModel() {
 		super(ItemType.form);
+	}
+
+	/**
+	 * Optional external ID
+	 * @return external ID
+	 */
+	public String getExternalId() {
+		return externalId;
+	}
+
+	/**
+	 * Set the external ID
+	 * @param externalId external ID
+	 */
+	public void setExternalId(String externalId) {
+		this.externalId = externalId;
+	}
+
+	/**
+	 * Form type
+	 * @return form type
+	 */
+	public String getFormType() {
+		return formType;
+	}
+
+	/**
+	 * Set the form type
+	 * @param formType form type
+	 */
+	public void setFormType(String formType) {
+		this.formType = formType;
+	}
+
+	/**
+	 * Form type name
+	 * @return form type name
+	 */
+	public String getFormTypeName() {
+		return formTypeName;
+	}
+
+	/**
+	 * Set the form type name
+	 * @param formTypeName name
+	 */
+	public void setFormTypeName(String formTypeName) {
+		this.formTypeName = formTypeName;
 	}
 
 	/**
@@ -311,37 +364,5 @@ public class FormModel extends PublishableContentItem {
 	 */
 	public void setTimeManagement(FormTimeManagement timeManagement) {
 		this.timeManagement = timeManagement;
-	}
-
-	/**
-	 * ID of the optional success page
-	 * @return page ID or null
-	 */
-	public Integer getSuccessPageId() {
-		return successPageId;
-	}
-
-	/**
-	 * Set the success page ID
-	 * @param successPageId ID
-	 */
-	public void setSuccessPageId(Integer successPageId) {
-		this.successPageId = successPageId;
-	}
-
-	/**
-	 * Node ID of the optional success page
-	 * @return node ID or null
-	 */
-	public Integer getSuccessNodeId() {
-		return successNodeId;
-	}
-
-	/**
-	 * Set the success page node ID
-	 * @param successNodeId node ID
-	 */
-	public void setSuccessNodeId(Integer successNodeId) {
-		this.successNodeId = successNodeId;
 	}
 }

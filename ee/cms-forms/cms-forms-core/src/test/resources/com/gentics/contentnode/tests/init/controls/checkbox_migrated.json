@@ -1,0 +1,54 @@
+{
+    "adminEmailAddress": "",
+    "adminEmailSubject": {},
+    "adminEmailPageId": 0,
+    "adminEmailNodeId": 0,
+    "adminEmailTemplate": {},
+    "successPageId": 4711,
+    "successNodeId": 42,
+    "successUrl": {},
+    "templateContext": "theme-red",
+    "schema": {
+        "properties": {
+            "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed": {
+                "type": "boolean",
+                "updateOnChange": false,
+                "validation": {},
+                "mandatory": true,
+                "isList": false,
+                "name": "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed",
+                "formGridOptions": {
+                    "defaultValue": "X"
+                }
+            }
+        }
+    },
+    "ui-schema": {
+        "formname": {
+            "de": "Test Form",
+            "en": "Test Form"
+        },
+        "formdescription": {
+            "de": "This is the Test Form",
+            "en": "This is the Test Form"
+        },
+        "pages": [
+            {
+                "elements": [
+                    {
+						"type": "property",
+						"id": "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed",
+						"label": {
+                            "de": "Klick mich",
+                            "en": "Click me"
+                        },
+						"description": {},
+                        "formGridOptions": {
+                            "checked": true
+                        }
+					}
+                ]
+            }
+        ]
+    }
+}

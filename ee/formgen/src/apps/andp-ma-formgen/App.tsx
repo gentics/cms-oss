@@ -50,7 +50,11 @@ export default function App() {
       if (document.getElementById('root') != undefined && document.getElementById('root') != null) {
         const rootElement = document.getElementById('root');
         const lang = document.getElementById('data-culture')?.getAttribute('data-culture');
-        const formid = rootElement?.getAttribute('data-formid');
+        //formid is the cms form uuid
+        //externalId - a possible externalFormID, e.g. a actanova form-id
+        //internally used formid is now externalId if available
+        const externalId = rootElement?.getAttribute('data-externalId');
+        const formid = externalId || rootElement?.getAttribute('data-formid');
         const isloggedin = document.getElementById("egov-template--user-data--email") != null ? true : false;
         const emailElement = document.getElementById("egov-template--user-data--email");
         const nameElement = document.getElementById("egov-template--user-data--displayname");

@@ -1,0 +1,48 @@
+{
+	"ui-schema": {
+		"pages": [
+			{
+				"pagename": {
+					"de-AT": "1. Seite",
+					"en-AT": "1st Page"
+				},
+				"elements": [
+					{
+						"type": "aggregate",
+						"id": "aggregate_element",
+						"label": {
+							"de-AT": "Aggregat",
+							"en-AT": "Aggregate"
+						},
+						"elements": [
+							{
+								"type": "property",
+								"id": "second_element",
+								"label": {
+									"de-AT": "Zweites Element",
+									"en-AT": "Second Element"
+								}
+							},
+							{
+								"type": "property",
+								"id": "third_element",
+								"label": {
+									"de-AT": "Drittes Element",
+									"en-AT": "Third Element"
+								}
+							},
+							{
+								"type": "property",
+								"id": "first_element",
+								"label": {
+									"de-AT": "Erstes Element",
+									"en-AT": "First Element"
+								}
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

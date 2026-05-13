@@ -18,10 +18,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -33,6 +36,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.FormDataUtils;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.TriFunction;
 import com.gentics.contentnode.events.Events;
@@ -145,7 +149,8 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		model.setFolderId(form.getFolderId());
 
 		model.setLanguages(form.getLanguages());
-		model.setData(form.getData());
+		ObjectNode formData = form.getData().deepCopy();
+		model.setData(formData.without(FormDataUtils.OLD_UI_SCHEMA));
 
 		model.setCdate(form.getCDate().getIntTimestamp());
 		model.setCreator(ModelBuilder.getUser(form.getCreator()));
@@ -203,9 +208,10 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	};
 
 	/**
-	 * Function that transforms the rest model into the given node model
+	 * Function that transforms the base data of the rest model into the given node model.
+	 * This will set everything but the formType and data
 	 */
-	public final static BiFunction<FormModel, Form, Form> REST2NODE = (restModel, form) -> {
+	public final static BiFunction<FormModel, Form, Form> REST2NODE_BASEDATA = (restModel, form) -> {
 		if (StringUtils.isNotBlank(restModel.getExternalId())) {
 			form.setExternalId(restModel.getExternalId());
 		}
@@ -219,6 +225,15 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		if (restModel.getLanguages() != null) {
 			form.setLanguages(restModel.getLanguages());
 		}
+		return form;
+	};
+
+	/**
+	 * Function that transforms the rest model into the given node model
+	 */
+	public final static BiFunction<FormModel, Form, Form> REST2NODE = (restModel, form) -> {
+		REST2NODE_BASEDATA.apply(restModel, form);
+
 		if (restModel.getData() != null) {
 			form.updateData(restModel.getData());
 		}
@@ -337,8 +352,8 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 					checkLanguages(node, form.getLanguages());
 				}
 
-				form.setFormType(null);
-				update = REST2NODE.apply(form, t.getObject(update, true));
+				update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
+				handleUiSchemaMerge(update, form.getData());
 				update.save();
 
 				FormResponse response = new FormResponse(TRANSFORM2REST.apply(update.reload()),
@@ -347,6 +362,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				trx.success();
 				return response;
 			} else {
+				// copy the ui-schema over to the old-ui-schema
+				JsonNode data = form.getData();
+				if (data instanceof ObjectNode dataObject) {
+					dataObject.set(FormDataUtils.OLD_UI_SCHEMA, dataObject.path(FormDataUtils.UI_SCHEMA));
+				}
+
 				// try to create the form
 				if (!t.getPermHandler().canCreate(folder, Form.class, null)) {
 					throw new InsufficientPrivilegesException(I18NHelper.get("form.nopermission"), null, null,
@@ -374,6 +395,15 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				Form nodeForm = REST2NODE.apply(form, t.createObject(Form.class));
 				nodeForm.setFolderId(folder.getId());
+
+				if (StringUtils.isNotBlank(nodeForm.getExternalId())) {
+					ObjectNode uiSchema = nodeForm.getData().path(FormDataUtils.UI_SCHEMA).deepCopy();
+					ObjectNode schema = nodeForm.getData().path(FormDataUtils.SCHEMA).deepCopy();
+
+					String currentExternalHash = DigestUtils.sha1Hex(schema.toString().concat(uiSchema.toString()));
+					nodeForm.setExternalHash(currentExternalHash);
+				}
+
 				nodeForm.save();
 
 				FormResponse response = new FormResponse(TRANSFORM2REST.apply(nodeForm.reload()),
@@ -1289,5 +1319,34 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		}
 
 		return config;
+	}
+
+	/**
+	 * Generate and set the external hash
+	 * @param form form
+	 * @param newData new data
+	 * @throws NodeException
+	 */
+	protected void handleUiSchemaMerge(Form form, JsonNode newData) throws NodeException {
+		if (newData == null) {
+			return;
+		}
+		ObjectNode uiSchema = newData.path(FormDataUtils.UI_SCHEMA).deepCopy();
+		ObjectNode schema = newData.path(FormDataUtils.SCHEMA).deepCopy();
+		ObjectNode oldData = form.getData().deepCopy();
+
+		String currentExternalHash = DigestUtils.sha1Hex(schema.toString().concat(uiSchema.toString()));
+		String previousExternalHash = form.getExternalHash();
+
+		if (!Strings.CI.equals(currentExternalHash, previousExternalHash)) {
+			ObjectNode merged = new FormTransformer().mergeUiSchemaAndFormGrid(
+					getFormTypeConfiguration(form.getFormType()), oldData.withObjectProperty(FormDataUtils.OLD_UI_SCHEMA), uiSchema,
+					oldData.withObjectProperty(FormDataUtils.UI_SCHEMA));
+
+			oldData.set(FormDataUtils.UI_SCHEMA, merged);
+			oldData.set(FormDataUtils.OLD_UI_SCHEMA, uiSchema);
+			form.setExternalHash(currentExternalHash);
+			form.setData(oldData);
+		}
 	}
 }

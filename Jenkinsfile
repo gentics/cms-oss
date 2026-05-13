@@ -210,7 +210,7 @@ spec:
 
                     // when deploying for the test systems, we only build the server
                     if (params.deployTesting) {
-                        mvnProjects = " -am -pl cms-server"
+                        mvnProjects = " -am -pl cms-server,formgen"
                     }
 
                     // Update chrome to the latest version

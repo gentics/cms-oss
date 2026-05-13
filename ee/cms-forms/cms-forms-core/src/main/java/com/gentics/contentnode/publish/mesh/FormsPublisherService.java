@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
@@ -82,7 +83,10 @@ public class FormsPublisherService implements MeshPublisherService {
 					// TODO log
 				} else {
 					ObjectNode pluginConfiguration = Optional.ofNullable(typeConfiguration.pluginConfiguration)
-							.orElseGet(() -> mapper.createObjectNode());
+							.orElseGet(() -> mapper.createObjectNode()).deepCopy();
+					Optional.ofNullable(typeConfiguration.flows).ifPresent(flows -> {
+						pluginConfiguration.set("flows", mapper.convertValue(flows, ArrayNode.class));
+					});
 					configurationPerPlugin
 							.computeIfAbsent(typeConfiguration.pluginName, key -> mapper.createObjectNode())
 							.set(formType, pluginConfiguration);

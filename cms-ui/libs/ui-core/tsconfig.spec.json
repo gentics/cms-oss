@@ -1,18 +1,9 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "types": [
-            "jasmine",
-            "node",
-            "jquery"
-        ]
+        "types": ["jasmine", "node", "jquery"],
+        "isolatedModules": true
     },
-    "files": [
-        "src/test.ts",
-        "src/polyfills.ts"
-    ],
-    "include": [
-        "**/*.spec.ts",
-        "**/*.d.ts"
-    ]
+    "files": ["src/test.ts", "src/polyfills.ts"],
+    "include": ["**/*.spec.ts", "**/*.d.ts"]
 }

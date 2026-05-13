@@ -9,7 +9,8 @@
     },
     "include": [
         "src/**/*.ts",
-        "auth/src/**/*.ts"
+        "auth/src/**/*.ts",
+        "aloha/src/**/*.ts"
     ],
     "exclude": [
         "test.ts",

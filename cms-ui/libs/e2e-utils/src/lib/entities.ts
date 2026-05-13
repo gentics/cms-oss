@@ -515,9 +515,9 @@ export const FORM_TWO: FormImportData = {
 
     name: 'Form Two',
     description: 'Test Form two',
+    formType: 'generic',
     data: {
-        type: CmsFormType.GENERIC,
-        mailsubject_i18n: {
+        adminEmailSubject: {
             de: 'Betreff',
             en: 'Subject',
         },

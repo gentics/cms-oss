@@ -29,6 +29,12 @@ public class FormTypeConfiguration extends FormTypeConfigurationModel {
 	public FormGenTranslations formGenTranslations;
 
 	/**
+	 * Form Type Configuration specific language code mapping
+	 */
+	@JsonProperty
+	public Map<String, String> languageMapping;
+
+	/**
 	 * Creator
 	 * @param nameI18n label
 	 * @param pluginName plugin name

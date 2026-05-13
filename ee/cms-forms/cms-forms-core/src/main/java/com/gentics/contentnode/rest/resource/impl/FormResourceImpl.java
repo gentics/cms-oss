@@ -234,11 +234,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	public final static BiFunction<FormModel, Form, Form> REST2NODE = (restModel, form) -> {
 		REST2NODE_BASEDATA.apply(restModel, form);
 
-		if (restModel.getData() != null) {
-			form.updateData(restModel.getData());
-		}
 		if (restModel.getFormType() != null) {
 			form.setFormType(restModel.getFormType());
+		}
+		if (restModel.getData() != null) {
+			FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+			form.updateData(FormTransformer.transformToInternalLanguageCodes(config, restModel.getData().deepCopy()));
 		}
 
 		return form;
@@ -349,11 +350,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				if (form.getLanguages() != null) {
 					// check whether the languages are all activated for the node
-					checkLanguages(node, form.getLanguages());
+					checkLanguages(node, update.getFormType(), form.getLanguages());
 				}
 
 				update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
-				handleUiSchemaMerge(update, form.getData());
+				FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+				handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
 				update.save();
 
 				FormResponse response = new FormResponse(TRANSFORM2REST.apply(update.reload()),
@@ -391,7 +393,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				checkFormType(node, form.getFormType());
 
 				// check whether the languages are all activated for the node
-				checkLanguages(node, form.getLanguages());
+				checkLanguages(node, form.getFormType(),form.getLanguages());
 
 				Form nodeForm = REST2NODE.apply(form, t.createObject(Form.class));
 				nodeForm.setFolderId(folder.getId());
@@ -443,7 +445,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			if (form.getLanguages() != null) {
 				// check whether the languages are all activated for the node
-				checkLanguages(node, form.getLanguages());
+				checkLanguages(node, update.getFormType(), form.getLanguages());
 			}
 
 			form.setFormType(null);
@@ -732,7 +734,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				}
 
 				// check whether the languages are all activated for the node
-				checkLanguages(targetNode, form.getLanguages());
+				checkLanguages(targetNode, form.getFormType(),form.getLanguages());
 
 				// check whether the form type is activated for the node
 				checkFormType(targetNode, form.getFormType());
@@ -1147,10 +1149,14 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	 * Check whether the requested languages exist and are assigned to the node
 	 *
 	 * @param node      node
+	 * @param formType form type
 	 * @param languages requested languages
 	 * @throws NodeException
 	 */
-	protected void checkLanguages(Node node, List<String> languages) throws NodeException {
+	protected void checkLanguages(Node node, String formType, List<String> languages) throws NodeException {
+		FormTypeConfiguration config = getFormTypeConfiguration(formType);
+		FormTransformer.transformToInternalLanguageCodes(config, languages);
+
 		Transaction t = TransactionManager.getCurrentTransaction();
 		List<ContentLanguage> all = t.getObjects(ContentLanguage.class,
 				DBUtils.select("SELECT id FROM contentgroup", DBUtils.IDS));
@@ -1311,7 +1317,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	 * @return configuration
 	 * @throws EntityNotFoundException
 	 */
-	protected FormTypeConfiguration getFormTypeConfiguration(String type) throws EntityNotFoundException {
+	protected static FormTypeConfiguration getFormTypeConfiguration(String type) throws EntityNotFoundException {
 		FormTypeConfiguration config = FormConfigProvider.getConfig().get(type);
 
 		if (config == null) {

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * The configuration for a single form type
  */
-@JsonIgnoreProperties({"pluginConfiguration", "formGenTranslations"})
+@JsonIgnoreProperties({"pluginConfiguration", "formGenTranslations", "languageMapping"})
 public class FormTypeConfigurationModel implements Serializable {
 	private static final long serialVersionUID = -8486198177336031697L;
 

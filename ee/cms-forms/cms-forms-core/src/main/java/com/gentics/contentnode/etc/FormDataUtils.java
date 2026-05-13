@@ -1,11 +1,11 @@
 package com.gentics.contentnode.etc;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.gentics.api.lib.exception.NodeException;
@@ -49,6 +49,11 @@ public class FormDataUtils {
 	public final static String PAGES = "pages";
 
 	/**
+	 * Name of the pagename property
+	 */
+	public final static String PAGENAME = "pagename";
+
+	/**
 	 * Name of the elements property
 	 */
 	public final static String ELEMENTS = "elements";
@@ -62,6 +67,16 @@ public class FormDataUtils {
 	 * Name of the type property
 	 */
 	public final static String TYPE = "type";
+
+	/**
+	 * Name of the type property
+	 */
+	public final static String LABEL = "label";
+
+	/**
+	 * Name of the type property
+	 */
+	public final static String DESCRIPTION = "description";
 
 	/**
 	 * Name of the submitOnce property
@@ -142,11 +157,17 @@ public class FormDataUtils {
 	 * @return iterator
 	 */
 	public static Iterator<Entry<String, JsonNode>> schemaProperties(JsonNode data) {
-		return data
-			.optional(SCHEMA)
-			.flatMap(schema -> schema.optional(PROPERTIES))
-			.map(properties -> properties.properties().iterator())
-			.orElse(Collections.emptyIterator());
+		return data.path(SCHEMA).path(PROPERTIES).propertyStream().flatMap(FormDataUtils::withSubProperties).iterator();
+	}
+
+	/**
+	 * From the given property, create a stream containing the property and all sub-properties
+	 * @param property initial property
+	 * @return stream
+	 */
+	protected static Stream<Entry<String, JsonNode>> withSubProperties(Entry<String, JsonNode> property) {
+		return Stream.concat(Stream.of(property),
+				property.getValue().path(PROPERTIES).propertyStream().flatMap(FormDataUtils::withSubProperties));
 	}
 
 	/**
@@ -155,10 +176,7 @@ public class FormDataUtils {
 	 * @return iterator
 	 */
 	public static Iterator<JsonNode> uiSchemaPages(JsonNode data) {
-		return data
-			.optional(UI_SCHEMA)
-			.flatMap(uiSchema -> uiSchema.optional(PAGES))
-			.map(pages -> pages.values()).orElse(Collections.emptyIterator());
+		return data.path(UI_SCHEMA).path(PAGES).values();
 	}
 
 	/**
@@ -167,8 +185,15 @@ public class FormDataUtils {
 	 * @return iterator
 	 */
 	public static Iterator<JsonNode> pageElements(JsonNode page) {
-		return page
-			.optional(ELEMENTS)
-			.map(elements -> elements.values()).orElse(Collections.emptyIterator());
+		return page.path(ELEMENTS).valueStream().flatMap(FormDataUtils::withSubelements).iterator();
+	}
+
+	/**
+	 * For the given element, create a stream containing the element and all sub-elements
+	 * @param element initial element
+	 * @return stream
+	 */
+	protected static Stream<JsonNode> withSubelements(JsonNode element) {
+		return Stream.concat(Stream.of(element), element.path(ELEMENTS).valueStream().flatMap(FormDataUtils::withSubelements));
 	}
 }

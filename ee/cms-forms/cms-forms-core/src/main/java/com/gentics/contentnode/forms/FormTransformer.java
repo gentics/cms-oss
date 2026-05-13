@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
@@ -281,6 +283,142 @@ public class FormTransformer {
 			logger.log(Level.TRACE, "Result UI-Schema: %s".formatted(newUISchema.toPrettyString()));
 		}
 		return newUISchema;
+	}
+
+	/**
+	 * Convert the given languages list by transforming internal language codes to external codes, if a mapping exists in the configuration
+	 * @param config configuration
+	 * @param languages languages list (will be modified)
+	 * @return transformed languages
+	 */
+	public static List<String> transformToExternalLanguageCodes(FormTypeConfiguration config, List<String> languages) {
+		if (MapUtils.isNotEmpty(config.languageMapping) && CollectionUtils.isNotEmpty(languages)) {
+			return transformLanguageCodes(languages, MapUtils.invertMap(config.languageMapping));
+		} else {
+			return languages;
+		}
+	}
+
+	/**
+	 * Convert the given languages list by transforming external language codes to internal codes, if a mapping exists in the configuration
+	 * @param config configuration
+	 * @param languages languages list (will be modified)
+	 * @return transformed languages
+	 */
+	public static List<String> transformToInternalLanguageCodes(FormTypeConfiguration config, List<String> languages) {
+		if (MapUtils.isNotEmpty(config.languageMapping) && CollectionUtils.isNotEmpty(languages)) {
+			return transformLanguageCodes(languages, config.languageMapping);
+		} else {
+			return languages;
+		}
+	}
+
+	/**
+	 * Convert the languages with the given transformation map
+	 * @param languages languages (will be modified)
+	 * @param transformationMap transformation map
+	 * @return transformed languages
+	 */
+	private static List<String> transformLanguageCodes(List<String> languages, Map<String, String> transformationMap) {
+		for (Entry<String, String> entry : transformationMap.entrySet()) {
+			String oldKey = entry.getKey();
+			String newKey = entry.getValue();
+
+			int index = languages.indexOf(oldKey);
+			if (index >= 0) {
+				languages.add(index, newKey);
+				languages.removeIf(e -> Strings.CI.equals(e, oldKey));
+			}
+		}
+		return languages;
+	}
+
+	/**
+	 * Convert the given data by transforming internal language codes to external codes, if a mapping exists in the configuration
+	 * @param config configuration
+	 * @param data data (will be modified)
+	 * @return transformed data
+	 * @throws NodeException
+	 */
+	public static JsonNode transformToExternalLanguageCodes(FormTypeConfiguration config, JsonNode data) throws NodeException {
+		if (MapUtils.isNotEmpty(config.languageMapping) && data instanceof ObjectNode dataObject) {
+			return transformLanguageCodes(config, dataObject, MapUtils.invertMap(config.languageMapping));
+		} else {
+			return data;
+		}
+	}
+
+	/**
+	 * Convert the given data by transforming external language codes to internal codes, if a mapping exists in the configuration
+	 * @param config configuration
+	 * @param data data (will be modified)
+	 * @return transformed data
+	 * @throws NodeException
+	 */
+	public static JsonNode transformToInternalLanguageCodes(FormTypeConfiguration config, JsonNode data) throws NodeException {
+		if (MapUtils.isNotEmpty(config.languageMapping) && data instanceof ObjectNode dataObject) {
+			return transformLanguageCodes(config, dataObject, config.languageMapping);
+		} else {
+			return data;
+		}
+	}
+
+	/**
+	 * Convert the given data with the transformation map
+	 * @param config configuration
+	 * @param data data (will be modified)
+	 * @param transformationMap transformation map
+	 * @return transformed data
+	 * @throws NodeException
+	 */
+	private static ObjectNode transformLanguageCodes(FormTypeConfiguration config, ObjectNode data,
+			Map<String, String> transformationMap) throws NodeException {
+		transformLanguageCodes(data.path(FormDataUtils.UI_SCHEMA).path(FormDataUtils.FORMNAME), transformationMap);
+		data.path(FormDataUtils.UI_SCHEMA).path(FormDataUtils.PAGES).valueStream().forEach(page -> {
+			transformLanguageCodes(page.path(FormDataUtils.PAGENAME), transformationMap);
+		});
+		FormDataUtils.handleElements(config, data, (element, elementType, elementConfig) -> {
+			transformLanguageCodes(element.path(FormDataUtils.LABEL), transformationMap);
+			transformLanguageCodes(element.path(FormDataUtils.DESCRIPTION), transformationMap);
+
+			if (CollectionUtils.isNotEmpty(elementConfig.settings)) {
+				for (BaseSetting setting : elementConfig.settings) {
+					if (setting instanceof TranslationSetting) {
+						if (StringUtils.isNotBlank(setting.propertyPath)) {
+							JsonNode resolved = element;
+							for (String segment : StringUtils.split(setting.propertyPath, '.')) {
+								resolved = resolved.path(segment);
+							}
+							transformLanguageCodes(resolved, transformationMap);
+						} else {
+							transformLanguageCodes(element.path(FormDataUtils.FORM_GRID_OPTIONS).path(setting.id),
+									transformationMap);
+						}
+					}
+				}
+			}
+		}, null);
+		return data;
+	}
+
+	/**
+	 * Transform the language codes in the given property
+	 * @param property property (will be modified)
+	 * @param transformationMap transformation map
+	 */
+	private static void transformLanguageCodes(JsonNode property, Map<String, String> transformationMap) {
+		if (property instanceof ObjectNode propertyObject) {
+			for (Entry<String, String> entry : transformationMap.entrySet()) {
+				String oldKey = entry.getKey();
+				String newKey = entry.getValue();
+
+				if (propertyObject.hasNonNull(oldKey)) {
+					JsonNode value = propertyObject.get(oldKey);
+					propertyObject.remove(oldKey);
+					propertyObject.set(newKey, value);
+				}
+			}
+		}
 	}
 
 	/**
@@ -847,6 +985,8 @@ public class FormTransformer {
 						formName.put(language, form.getName());
 					}
 				}
+				data.without(FormDataUtils.OLD_UI_SCHEMA);
+				transformToExternalLanguageCodes(typeConfig, data);
 				break;
 			case fromContentPackage:
 			case toContentPackage:

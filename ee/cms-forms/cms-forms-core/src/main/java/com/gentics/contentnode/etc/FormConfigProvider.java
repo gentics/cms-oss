@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections4.MapUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
@@ -104,7 +104,7 @@ public final class FormConfigProvider implements ConfigurationService {
 	 * @return true if a non-empty valid configuration was found
 	 */
 	public final static boolean isConfigValid() {
-		if (!MapUtils.isEmpty(configurationMap)) {
+		if (MapUtils.isNotEmpty(configurationMap)) {
 			return true;
 		} else {
 			logger.error("No valid form type configuration for forms found");
@@ -242,6 +242,17 @@ public final class FormConfigProvider implements ConfigurationService {
 							});
 						}
 					});
+
+					if (MapUtils.isNotEmpty(config.languageMapping)) {
+						// if the size of the map changes when inverting, the mapping is not unique
+						if (config.languageMapping.size() != MapUtils.invertMap(config.languageMapping).size()) {
+							String msg = I18NHelper.get("init.formtype.languageMapping.error", formType,
+									config.languageMapping.values().toString());
+							logger.error(msg);
+							messages.add(new Message(Type.CRITICAL, msg));
+							consistent.set(false);
+						}
+					}
 				});
 
 				if (consistent.get()) {

@@ -1,7 +1,10 @@
 package com.gentics.contentnode.etc;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -75,10 +78,15 @@ public class FormDataUtils {
 	 */
 	public static void handleElements(FormTypeConfiguration typeConfig, JsonNode data,
 			TriConsumer<JsonNode, String, ElementConfig> handler, BiConsumer<JsonNode, String> unknownTypeHandler) throws NodeException {
+		Map<String, String> elementTypePerId = new HashMap<>();
+
 		// iterate over the schema.properties
-		for (Iterator<JsonNode> propertyIt = schemaProperties(data); propertyIt.hasNext();) {
-			JsonNode property = propertyIt.next();
+		for (Iterator<Entry<String, JsonNode>> propertyIt = schemaProperties(data); propertyIt.hasNext();) {
+			Entry<String, JsonNode> entry = propertyIt.next();
+			String propertyId = entry.getKey();
+			JsonNode property = entry.getValue();
 			String elementType = property.optional(TYPE).map(JsonNode::asText).orElse("<unknown>");
+			elementTypePerId.put(propertyId, elementType);
 
 			Optional<ControlConfig> optControlConfig = Optional.ofNullable(typeConfig.controls).map(c -> c.get(elementType));
 			Optional<BlockConfig> optBlockConfig = Optional.ofNullable(typeConfig.blocks).map(b -> b.get(elementType));
@@ -103,8 +111,10 @@ public class FormDataUtils {
 			JsonNode page = pagesIt.next();
 			for (Iterator<JsonNode> elementsIt = pageElements(page); elementsIt.hasNext();) {
 				JsonNode element = elementsIt.next();
-				String elementType = element.optional(FORM_GRID_OPTIONS).flatMap(formGridOptions -> formGridOptions.optional(TYPE))
-					.map(JsonNode::asText).orElse("<unknown>");
+				String propertyId = element.path("id").asText("<unknown>");
+				String elementType = elementTypePerId.getOrDefault(propertyId,
+						element.optional(FORM_GRID_OPTIONS).flatMap(formGridOptions -> formGridOptions.optional(TYPE))
+								.map(JsonNode::asText).orElse("<unknown>"));
 
 				Optional<ControlConfig> optControlConfig = Optional.ofNullable(typeConfig.controls).map(c -> c.get(elementType));
 				Optional<BlockConfig> optBlockConfig = Optional.ofNullable(typeConfig.blocks).map(b -> b.get(elementType));
@@ -131,11 +141,11 @@ public class FormDataUtils {
 	 * @param data form data
 	 * @return iterator
 	 */
-	public static Iterator<JsonNode> schemaProperties(JsonNode data) {
+	public static Iterator<Entry<String, JsonNode>> schemaProperties(JsonNode data) {
 		return data
 			.optional(SCHEMA)
 			.flatMap(schema -> schema.optional(PROPERTIES))
-			.map(properties -> properties.values())
+			.map(properties -> properties.properties().iterator())
 			.orElse(Collections.emptyIterator());
 	}
 

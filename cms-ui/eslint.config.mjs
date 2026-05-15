@@ -139,7 +139,7 @@ export default defineConfig([
                 }, {
                     selector: ['classProperty'],
                     modifiers: ['readonly'],
-                    format: ['UPPER_CASE', 'PascalCase'],
+                    format: ['UPPER_CASE', 'PascalCase', 'camelCase'],
                 }, {
                     selector: ['typeLike'],
                     format: ['PascalCase'],

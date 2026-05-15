@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.translate.CharSequenceTranslator;
 import org.apache.commons.text.translate.EntityArrays;
@@ -60,6 +61,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.SemaphoreMap;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.AnyChannelTrx;
@@ -506,6 +508,12 @@ public class MeshPublisher implements AutoCloseable {
 	 * Parameter "wait"="false"
 	 */
 	protected static GenericParameters doNotWaitForIdle = new GenericParametersImpl();
+
+	/**
+	 * Service loader for {@link MeshPublisherService}s
+	 */
+	private final static ServiceLoaderUtil<MeshPublisherService> meshPublisherServiceLoader = ServiceLoaderUtil
+			.load(MeshPublisherService.class);
 
 	static {
 		schemaNames.put(Folder.TYPE_FOLDER, FOLDER_SCHEMA);
@@ -2324,7 +2332,8 @@ public class MeshPublisher implements AutoCloseable {
 
 			Map<Integer, Set<String>> deleteOfflineMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.OFFLINE, Action.HIDE);
 			Map<Integer, Set<String>> removeMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.REMOVE);
-			Map<String, Set<String>> toDelete = new HashMap<>();
+			// toDelete maps uuids to sets of objects to be deleted
+			Map<String, Set<ObjectToDelete>> toDelete = new HashMap<>();
 
 			if (checkedNode != null) {
 				Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, deleteOfflineMap.keySet()), checkedNode.getId());
@@ -2342,13 +2351,7 @@ public class MeshPublisher implements AutoCloseable {
 
 					deleteOfflineMap.remove(form.getId());
 					if (!cr.mustContain(form, checkedNode)) {
-						String meshUuid = getMeshUuid(form);
-						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
-							for (String lang : languages) {
-								offline(project, branch, objectType, meshUuid, lang);
-							}
-							return Completable.complete();
-						}).blockingAwait();
+						offline(project, branch, form, null);
 					}
 				}
 				List<Form> removeForms = t.getObjects(Form.class, removeMap.keySet());
@@ -2360,12 +2363,7 @@ public class MeshPublisher implements AutoCloseable {
 					removeMap.remove(form.getId());
 					if (!cr.mustContain(form, checkedNode)) {
 						String meshUuid = getMeshUuid(form);
-						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
-							for (String lang : languages) {
-								remove(project, branch, objectType, 0, meshUuid, lang);
-							}
-							return Completable.complete();
-						}).blockingAwait();
+						remove(project, branch, objectType, 0, meshUuid, null, Map.of("formType", form.getFormType()), true);
 					}
 				}
 			}
@@ -2377,19 +2375,16 @@ public class MeshPublisher implements AutoCloseable {
 					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 					return false;
 				}
-				String meshUuid = null;
-				String meshLanguage = null;
 				if (entry.getValue() != null) {
-					for (String value : entry.getValue()) {
-						if (org.apache.commons.lang3.StringUtils.startsWith(value, "uuid:")) {
-							meshUuid = org.apache.commons.lang3.StringUtils.removeStart(value, "uuid:");
-						} else if (org.apache.commons.lang3.StringUtils.startsWith(value, "language:")) {
-							meshLanguage = org.apache.commons.lang3.StringUtils.removeStart(value, "language:");
-						}
+					Map<String, String> additionalData = entry.getValue().stream().filter(attr -> attr.contains(":")).map(attr -> {
+						String[] parts = attr.split(Pattern.quote(":"), 2);
+						return Pair.of(parts[0], parts[1]);
+					}).collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+					String meshUuid = additionalData.get("uuid");
+					String meshLanguage = additionalData.get("language");
+					if (meshUuid != null) {
+						toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(new ObjectToDelete(meshLanguage, additionalData));
 					}
-				}
-				if (meshUuid != null) {
-					toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(meshLanguage);
 				}
 			}
 
@@ -2406,8 +2401,10 @@ public class MeshPublisher implements AutoCloseable {
 					if (cr.mustContain(object, checkedNode)) {
 						String meshUuid = getMeshUuid(object);
 						if (toDelete.containsKey(meshUuid)) {
-							if (object instanceof Page) {
-								toDelete.getOrDefault(meshUuid, Collections.emptySet()).remove(getMeshLanguage(object));
+							if (object instanceof Page page) {
+								String meshLanguage = getMeshLanguage(page);
+								toDelete.getOrDefault(meshUuid, Collections.emptySet())
+										.removeIf(o -> Strings.CI.equals(o.language, meshLanguage));
 							} else {
 								toDelete.remove(meshUuid);
 							}
@@ -2416,16 +2413,16 @@ public class MeshPublisher implements AutoCloseable {
 				}
 			}
 
-			for (Entry<String, Set<String>> entry : toDelete.entrySet()) {
+			for (Entry<String, Set<ObjectToDelete>> entry : toDelete.entrySet()) {
 				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
 					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 					return false;
 				}
 
 				String meshUuid = entry.getKey();
-				Set<String> languages = entry.getValue();
-				for (String language : languages) {
-					remove(project, checkedNode, objectType, 0, meshUuid, language, true);
+				Set<ObjectToDelete> toDeleteSet = entry.getValue();
+				for (ObjectToDelete o : toDeleteSet) {
+					remove(project, checkedNode, objectType, 0, meshUuid, o.language, o.additionalData, true);
 				}
 			}
 		}
@@ -2472,10 +2469,26 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void remove(MeshProject project, Node node, int objectType, int objectId, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+		remove(project, node, objectType, objectId, meshUuid, meshLanguage, null, withSemaphore);
+	}
+
+	/**
+	 * Try to remove an object from mesh
+	 * @param project mesh project
+	 * @param node node from which to remove the object
+	 * @param objectType object type
+	 * @param objectId internal object id
+	 * @param meshUuid mesh UUID
+	 * @param meshLanguage mesh Language (null to delete all language variants)
+	 * @param additionalData optional additional data
+	 * @param withSemaphore whether the acquire a semaphore
+	 * @throws NodeException
+	 */
+	public void remove(MeshProject project, Node node, int objectType, int objectId, String meshUuid, String meshLanguage, Map<String, String> additionalData, boolean withSemaphore) throws NodeException {
 		if (cr.isProjectPerNode()) {
-			remove(project, project.enforceBranch(node.getId()), objectType, objectId, meshUuid, meshLanguage, withSemaphore);
+			remove(project, project.enforceBranch(node.getId()), objectType, objectId, meshUuid, meshLanguage, additionalData, withSemaphore);
 		} else {
-			remove(project, (VersioningParameters)null, objectType, objectId, meshUuid, meshLanguage, withSemaphore);
+			remove(project, (VersioningParameters)null, objectType, objectId, meshUuid, meshLanguage, additionalData, withSemaphore);
 		}
 	}
 
@@ -2490,7 +2503,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid, String meshLanguage) throws NodeException {
-		remove(project, branch, objectType, objectId, meshUuid, meshLanguage, true);
+		remove(project, branch, objectType, objectId, meshUuid, meshLanguage, null, true);
 	}
 
 	/**
@@ -2501,21 +2514,20 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
+	 * @param additionalData optional additional data
 	 * @param withSemaphore whether the acquire a semaphore
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid,
+			String meshLanguage, Map<String, String> additionalData, boolean withSemaphore) throws NodeException {
 		if (withSemaphore) {
 			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
 		try {
 			logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
 			if (objectType == Form.TYPE_FORM) {
-				// forms are removed via the forms plugin
-				client.deleteEmpty(String.format("/%s/plugins/forms/forms/%s", encodeSegment(project.name), meshUuid)).toCompletable()
-					.onErrorResumeNext(throwable -> {
-						return ifNotFound(throwable, () -> Completable.complete());
-					}).blockingAwait();
+				// forms are removed via the service implementation
+				meshPublisherServiceLoader.callForFirstMatching(s -> s.handles(Form.class), s -> s.delete(this, project, meshUuid, additionalData));
 			} else if (meshLanguage != null) {
 				// delete the language version
 				if (branch != null) {
@@ -2560,13 +2572,15 @@ public class MeshPublisher implements AutoCloseable {
 	 * Try to take an object offline in mesh
 	 * @param project mesh project
 	 * @param branch optional branch parameter
-	 * @param objectType object type
-	 * @param meshUuid mesh UUID
+	 * @param object object to take offline
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @throws NodeException
 	 */
-	public void offline(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage) throws NodeException {
+	public void offline(MeshProject project, VersioningParameters branch, NodeObject object, String meshLanguage) throws NodeException {
 		semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
+		int objectType = object.getTType();
+		String meshUuid = getMeshUuid(object);
+
 		try {
 			logger.debug(String.format("Start taking %d.%s offline", objectType, meshUuid));
 			if (objectType == Page.TYPE_PAGE && meshLanguage != null) {
@@ -2581,14 +2595,8 @@ public class MeshPublisher implements AutoCloseable {
 					}).blockingAwait();
 				}
 			} else if (objectType == Form.TYPE_FORM) {
-				if (meshLanguage != null) {
-					// forms are taken offline via the forms plugin
-					client.deleteEmpty(String.format("/%s/plugins/forms/forms/%s/online/%s",
-							encodeSegment(project.name), meshUuid, encodeSegment(meshLanguage))).toCompletable()
-							.onErrorResumeNext(throwable -> {
-								return ifNotFound(throwable, () -> Completable.complete());
-							}).blockingAwait();
-				}
+				meshPublisherServiceLoader.callForFirstMatching(s -> s.handles(Form.class),
+						s -> s.takeOffline(this, project, object));
 			} else {
 				// for folders and files, there is only one language version, so take the node offline
 				if (branch != null) {
@@ -2703,33 +2711,12 @@ public class MeshPublisher implements AutoCloseable {
 					controller.runRenderTask(() -> {
 						try {
 							Trx.operate(trx -> {
-								try (LangTrx lTrx = new LangTrx("en");
-										RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, form, controller.publishProcess,
-												controller.publishProcess, controller.publishProcess)) {
-
-									ObjectNode data = (ObjectNode) form.getData();
-									JsonNode downloadUrl = data == null ? null : data.get("downloadBaseUrl");
-
-									if (downloadUrl == null || !downloadUrl.isTextual() || StringUtils.isEmpty(downloadUrl.asText())) {
-										NodePreferences prefs = trx.getNodeConfig().getDefaultPreferences();
-										String downloadBaseUrl = String.format(
-											"%s/editor/#proxy%srest/form/%d/data",
-											prefs.getProperty("cn_external_server"),
-											prefs.getProperty("portletapp_prefix"),
-											form.getId());
-
-										data.put("downloadBaseUrl", downloadBaseUrl);
-									}
-
-									FormWriteTask task = new FormWriteTask(form, nodeId, this);
-									// task.project is the current project of the node, not necessarily the desired project
-									task.project = project;
-									// target project is the desired project
-									task.targetProject = project;
-									task.reportToPublishQueue = reportToPublishQueue;
-
-									logger.debug(String.format("Put task %s into queue", task));
-									controller.putWriteTask(task);
+								Optional<AbstractWriteTask> optionalTask = meshPublisherServiceLoader.execForFirstMatching(s -> s.handles(form),
+										s -> s.createWriteTask(this, project, form, nodeId, controller.publishProcess,
+												reportToPublishQueue));
+								if (optionalTask.isPresent()) {
+									logger.debug(String.format("Put task %s into queue", optionalTask.get()));
+									controller.putWriteTask(optionalTask.get());
 								}
 							});
 							controller.renderTasks.finish();
@@ -3246,170 +3233,6 @@ public class MeshPublisher implements AutoCloseable {
 		}
 
 		return renderedEntries;
-	}
-
-	/**
-	 * Render the form in the given language
-	 * @param form form
-	 * @param language language
-	 * @return rendered form
-	 * @throws NodeException
-	 */
-	public String render(Form form, String language) throws NodeException {
-		JsonNode data = renderFormTextUrls(form.getData(language), language);
-		String projectName = getMeshProjectName(form.getOwningNode());
-		String uuid = getMeshUuid(form);
-
-		RestModel dataAsModel = new RestModel() {
-			@Override
-			public String toJson(boolean minify) {
-				return data.toString();
-			}
-		};
-
-		return client.post(String.format("/%s/plugins/forms/forms/%s/preview", encodeSegment(projectName), uuid),
-				dataAsModel, FormsPluginRenderResponse.class).toSingle().doOnSubscribe(disp -> {
-					MeshPublisher.logger.debug(String.format("Rendering preview of form %s, language %s, json: %s", uuid, language, data));
-				}).blockingGet().getHtml();
-	}
-
-	/**
-	 * Render URLS in text fields of the given form.
-	 * 
-	 * @param form
-	 * @param language
-	 * @return
-	 * @throws NodeException
-	 */
-	public static final JsonNode renderFormTextUrls(JsonNode form, String language) throws NodeException {
-		if (form == null) {
-			return form;
-		}
-		for (Iterator<Entry<String, JsonNode>> i = form.fields(); i.hasNext();) {
-			Entry<String, JsonNode> entry = i.next(); 
-			if (entry.getValue() == null) {
-				continue;
-			}
-			switch (entry.getValue().getNodeType()) {
-			case STRING:
-				String newValue = renderFormTextUrls(entry.getValue().asText(), language);
-				((ObjectNode)form).put(entry.getKey(), newValue);
-				break;
-			case OBJECT:
-				JsonNode newNode = renderFormTextUrls(entry.getValue(), language);
-				((ObjectNode)form).replace(entry.getKey(), newNode);
-				break;
-			case ARRAY:
-				ArrayNode anode = ((ArrayNode)entry.getValue());
-				for (int ii = 0; ii < anode.size(); ii++) {
-					anode.set(ii, renderFormTextUrls(anode.get(ii), language));
-				}
-				break;
-			default:
-				break;
-			}
-		}
-		return form;
-	}
-
-	/**
-	 * Render URLS in text, if any.
-	 * 
-	 * @param text
-	 * @param language
-	 * @return
-	 * @throws NodeException
-	 */
-	public static final String renderFormTextUrls(String text, String language) throws NodeException {
-		if (text == null) {
-			// TODO check allow_links if possible
-			return text;
-		}
-		String linkPattern = "\\{\\{"
-				+ "[\\s]*(LINK)[\\s]*"
-				+ "[|]"
-				+ "[\\s]*(?<linkType>(PAGE|FILE|URL))"
-				+ "[:]("
-					+ "?:(?<=URL:)(?<url>[^|]*)|(?<!URL:)"
-					+ "(?<nodeId>[a-zA-Z0-9\\-\\.]+)"
-					+ "[:]"
-					+ "(?<itemId>[a-zA-Z0-9\\-\\.]+)"
-					+ "(?:[:](?<langCode>[a-zA-Z]{2}))?"
-				+ ")[\\s]*[|][\\s]*"
-				+ "(?<displayText>[^|]*)"
-				+ "[\\s]*(?:[|][\\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\\s]*"
-				+ "\\}\\}";
-		Pattern pattern = Pattern.compile(linkPattern);
-		Matcher matcher = pattern.matcher(text);
-		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Deque<String> matches = new ArrayDeque<>(1);
-			Transaction t = trx.getTransaction();
-			while (matcher.find()) {
-				String linkType = matcher.group("linkType");
-				String nodeId = matcher.group("nodeId");
-				String itemId = matcher.group("itemId");
-				String displayText = matcher.group("displayText");
-				Optional<String> maybeUrl = Optional.ofNullable(matcher.group("url"));
-				Optional<String> maybeLangCode = Optional.ofNullable(matcher.group("langCode")).or(() -> Optional.ofNullable(language));
-				Optional<String> maybeTarget = Optional.ofNullable(matcher.group("target"));
-				Node channelOrNode = t.getObject(Node.class, nodeId);
-				Optional<Disinheritable<?>> maybeRenderedObject = Optional.empty();
-				if ("FILE".equals(linkType)) {
-					maybeRenderedObject = Optional.ofNullable(t.getObject(File.class, itemId));
-					if (maybeRenderedObject.isEmpty()) {
-						maybeRenderedObject = Optional.ofNullable(t.getObject(ImageFile.class, itemId));
-					}
-				} else if ("PAGE".equals(linkType)) {
-					maybeRenderedObject = Optional.ofNullable(t.getObject(Page.class, itemId));
-					if (maybeLangCode.isPresent()) {
-						try {
-							Optional<Disinheritable<?>> maybeLocPage = maybeRenderedObject.map(Page.class::cast).flatMap(page -> {
-								try {
-									return Optional.ofNullable(page.getLanguageVariant(maybeLangCode.get(), channelOrNode.getId()));
-								} catch (NodeException e) {
-									throw new IllegalStateException(e);
-								}
-							});
-							if (maybeLocPage.isPresent()) {
-								maybeRenderedObject = maybeLocPage;
-							} else {
-								logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), maybeRenderedObject));
-							}
-						} catch (Throwable e) {
-							if (e.getCause() instanceof NodeException) {
-								throw (NodeException) e.getCause();
-							} else {
-								throw e;
-							}
-						}
-					}
-				} else if ("URL".equals(linkType) && maybeUrl.isEmpty()) {
-					throw new NodeException("No URL provided for " + matcher.toString());
-				}
-				String url;
-				if ("URL".equals(linkType)) {
-					url = maybeUrl.get();
-				} else {
-					Disinheritable<?> renderedObject = maybeRenderedObject.get();
-					if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
-							&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
-						// TODO more meaningful error / logging
-						throw new NodeException("Wrong node / channel for " + matcher.toString());
-					}
-					url = MeshURLRenderer.renderDisinheritableUrl(renderedObject);
-				}
-				matches.addLast(String.format("<a href='%s' %s>%s</a>", 
-						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(url)), 
-						maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang3.StringUtils.EMPTY), 
-						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(displayText))
-					));
-			}
-			String link;
-			while ((link = matches.poll()) != null) {
-				text = text.replaceFirst(linkPattern, link);
-			}
-		}
-		return text;
 	}
 
 	/**
@@ -5037,62 +4860,10 @@ public class MeshPublisher implements AutoCloseable {
 					}
 				}
 
-				// if feature forms is activated, check whether plugin is active for node
-				if (node != null && NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS, node)) {
-					List<String> expectedLanguages = node.getLanguages().stream().map(ContentLanguage::getCode).collect(Collectors.toList());
-					String languagesUrl = String.format("/%s/plugins/forms/languages", encodeSegment(currentProjectName));
-
-					info("Checking forms plugin for project %s", currentProjectName);
-					FormsPluginStatusResponse formsStatus = client
-							.get(String.format("/%s/plugins/forms/active", encodeSegment(currentProjectName)),
-									FormsPluginStatusResponse.class)
-							.toSingle().onErrorReturn(t -> {
-								return ifNotFound(t, () -> {
-									error("Could not check forms plugin. Maybe plugin is not deployed or incompatible.");
-									FormsPluginStatusResponse response = new FormsPluginStatusResponse();
-									response.setActive(false);
-									return response;
-								});
-							}).blockingGet();
-					if (formsStatus.getActive() == Boolean.TRUE) {
-						info("Forms plugin is active for project %s", currentProjectName);
-
-						FormsPluginLanguages formsPluginLanguages = client.get(languagesUrl, FormsPluginLanguages.class)
-								.blockingGet();
-						if (!Objects.deepEquals(expectedLanguages, formsPluginLanguages.getLanguages())) {
-							if (repair) {
-								info("Setting forms plugin languages to %s for project %s", expectedLanguages, currentProjectName);
-								formsPluginLanguages.setLanguages(expectedLanguages);
-								client.put(languagesUrl, formsPluginLanguages, FormsPluginLanguages.class).blockingAwait();
-							} else {
-								error("Forms plugin languages for project %s should be %s, but are %s",
-										currentProjectName, expectedLanguages, formsPluginLanguages.getLanguages());
-								success.set(false);
-							}
-						}
-					} else {
-						if (repair) {
-							info("Activating forms plugin for project %s", currentProjectName);
-							formsStatus = client
-									.put(String.format("/%s/plugins/forms/active", encodeSegment(currentProjectName)),
-											FormsPluginStatusResponse.class)
-									.blockingGet();
-							if (formsStatus.getActive() == Boolean.TRUE) {
-								info("Activated forms plugin for project %s", currentProjectName);
-
-								info("Setting forms plugin languages to %s for project %s", expectedLanguages, currentProjectName);
-								FormsPluginLanguages formsPluginLanguages = new FormsPluginLanguages().setLanguages(expectedLanguages);
-								client.put(languagesUrl, formsPluginLanguages, FormsPluginLanguages.class).blockingAwait();
-							} else {
-								error("Could not activate forms plugin for project %s", currentProjectName);
-								success.set(false);
-							}
-						} else {
-							error("Forms plugin is not active for project %s", currentProjectName);
-							success.set(false);
-						}
-					}
-				}
+				// let all validation services also validate
+				final String finalCurrentProjectName = currentProjectName;
+				meshPublisherServiceLoader.call(service -> service.validate(MeshPublisher.this, this,
+						finalCurrentProjectName, repair, success));
 
 				if (success.get()) {
 					info(String.format("Project %s is valid", name));
@@ -5656,4 +5427,9 @@ public class MeshPublisher implements AutoCloseable {
 			return UNESCAPE_URL.translate(input);
 		}
 	}
+
+	/**
+	 * Record for objects, which have to be deleted
+	 */
+	protected record ObjectToDelete(String language, Map<String, String> additionalData) {}
 }

@@ -1,22 +1,24 @@
-<ng-container>
-  <div class="tag-part-editor">
-    <browse-box
-      [label]="tagPart | tagPropLabel"
-      [displayValue]="tagDisplayValue$ | async"
-      [browseTooltip]="'tag_editor.browse_for_tag' | gtxI18n"
-      [disabled]="readOnly"
-      (clear)="changeSelection({ container: null, tag: null })"
-      (browse)="browseForTag()"
-    ></browse-box>
+<div class="tag-part-editor">
+    <gtx-browse-box
+        [label]="tagPart | tagPropLabel"
+        [placeholder]="'editor.tag_no_selection' | gtxI18n"
+        [browseTooltip]="'tag_editor.browse_for_tag' | gtxI18n"
+        [disabled]="readOnly"
+        [allowedSelection]="tagProperty.type === TagPropertyType.PAGETAG ? 'contenttag' : 'templatetag'"
+        [multiple]="false"
+        [contentLanguage]="page?.language"
+        [startFolder]="uploadDestination?.id"
+        [value]="selectedTag$ | async"
+        (valueChange)="changeSelection($event)"
+    ></gtx-browse-box>
 
     <div>
-      @if (selectedContainer) {
-        @if (selectedContainer.type === 'page') {
-          {{ 'common.type_page' | gtxI18n }}: {{ selectedFullPath }}
-        } @else {
-          {{ 'common.type_template' | gtxI18n }}: {{ selectedContainer.name }}
+        @if (selectedContainer) {
+            @if (selectedContainer.type === 'page') {
+                {{ 'common.type_page' | gtxI18n }}: {{ selectedFullPath }}
+            } @else {
+                {{ 'common.type_template' | gtxI18n }}: {{ selectedContainer.name }}
+            }
         }
-      }
     </div>
-  </div>
-</ng-container>
+</div>

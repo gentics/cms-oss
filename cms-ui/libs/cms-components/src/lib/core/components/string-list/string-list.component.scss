@@ -65,19 +65,8 @@
         padding-bottom: 0;
     }
 
-    .delete-button,
     gtx-drag-handle {
         margin: auto 0.5rem;
-    }
-
-    .button-wrapper {
-        display: block;
-        width: 100%;
-        flex: 0 0 auto;
-
-        .add-button {
-            margin-bottom: 1rem;
-        }
     }
 
     .list + .button-wrapper .add-button {

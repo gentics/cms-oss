@@ -33,13 +33,13 @@
 
 .properties-tabs {
     width: unset;
-    padding-top: 10px;
     padding-bottom: 10px;
     box-sizing: border-box;
     overflow: hidden;
     overflow-y: auto;
+    /* Workaround to have the side of the tabs not cut off from overflows */
     padding-left: 8px;
-    border-right: 1px solid #d6d6d6;
+    margin-left: -8px;
 
     ::ng-deep {
         .grouped-tabs {
@@ -48,17 +48,21 @@
             .collapsible {
                 border-right: none;
 
-                .tab-link > a {
-                    display: flex;
+                .tab-link {
+                    min-width: 120px;
 
-                    &::after {
-                        background: linear-gradient(to left, white 25%, rgba(255, 255, 255, 0));
-                        content: '';
-                        height: 100%;
-                        width: 20px;
-                        position: absolute;
-                        right: 0;
-                        top: 0;
+                    > a {
+                        display: flex;
+
+                        &::after {
+                            background: linear-gradient(to left, white 25%, rgba(255, 255, 255, 0));
+                            content: '';
+                            height: 100%;
+                            width: 20px;
+                            position: absolute;
+                            right: 0;
+                            top: 0;
+                        }
                     }
                 }
 
@@ -68,20 +72,11 @@
 
                 > li.tab-link:not(.is-active) {
                     border-left: 1px solid $gtx-color-light-gray;
-                    border-right: 1px solid $gtx-color-light-gray;
                 }
 
                 > li.tab-group:not(.is-active) {
                     padding-left: 1px;
                     border-left: 1px solid $gtx-color-light-gray;
-                }
-
-                > li.tab-group li.tab-link:not(.is-active), .collapsible-header {
-                    border-right: 1px solid $gtx-color-light-gray;
-                }
-
-                > li.tab-group li.tab-link.is-active {
-                    border-right: 2px solid white;
                 }
             }
         }

@@ -118,6 +118,9 @@ import {
     FormPublishRequest,
     FormResponse,
     FormSaveRequest,
+    FormTypeConfigirationListOptions,
+    FormTypeConfigurationListResponse,
+    FormTypeConfigurationResponse,
     FormUnpublishRequest,
     GcmsPermission,
     GenericItemResponse,
@@ -687,6 +690,11 @@ export interface AbstractFormAPI extends BasicAPI {
     removeScheduledPublish: (id: number | string) => FormResponse;
     removeScheduledUnpublish: (id: number | string) => FormResponse;
 
+    listConfigurations: (options?: FormTypeConfigirationListOptions) => FormTypeConfigurationListResponse;
+    getConfiguration: (type: string) => FormTypeConfigurationResponse;
+    assignConfiguration: (type: string, nodeId: number | string) => Response;
+    unassignConfiguration: (type: string, nodeId: number | string) => Response;
+
     exportStatus: (id: number | string) => FormDownloadInfoResponse;
     createExport: (id: number | string) => FormDownloadInfoResponse;
     binariesStatus: (id: number | string) => FormDownloadInfoResponse;
@@ -694,7 +702,7 @@ export interface AbstractFormAPI extends BasicAPI {
     downloadData: (id: number | string, downloadUuid: string) => Blob;
 
     previewSaved: (id: number | string, language: string) => string;
-    previewModel: (id: number | string, language: string, body: Form<Raw>) => string;
+    previewModel: (id: number | string, language: string, body: Form) => string;
 
     listVersions: (id: number | string) => FormListResponse;
     getVersion: (id: number | string, version: string) => FormResponse;
@@ -706,6 +714,10 @@ export interface AbstractFormAPI extends BasicAPI {
 
     restoreFromWastebin: (id: number | string, options?: WastebinRestoreOptions) => Response;
     deleteFromWastebin: (id: number | string, options?: WastebinDeleteOptions) => Response;
+
+    usageInPages: (options?: UsageInPagesOptions) => PageUsageResponse;
+    usageInTemplates: (options?: UsageInTemplatesOptions) => TemplateUsageResponse;
+    usageInTotal: (options?: UsageInTotalOptions) => TotalUsageResponse;
 }
 
 export interface AbstractGroupAPI extends BasicAPI {

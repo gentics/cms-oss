@@ -1,15 +1,15 @@
-import { ErrorHandler, NodeOperations, ObjectPropertyHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { IndexById, Node, Raw } from '@gentics/cms-models';
-import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray, toValidNumber } from '@gentics/ui-core';
 import { forkJoin, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ErrorHandler, NodeOperations, ObjectPropertyHandlerService } from '../../../core';
 
 @Component({
     selector: 'gtx-assign-node-restriction-to-object-properties-modal',
     templateUrl: './assign-node-restriction-to-object-properties-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 
@@ -40,8 +40,8 @@ export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends Base
     ngOnInit(): void {
         this.subscriptions.push(forkJoin([
             this.nodeOps.getAll(),
-            forkJoin(this.objectProperties.map(op => this.handler.getLinkedNodes(op).pipe(
-                map(list => [op, list]),
+            forkJoin(this.objectProperties.map((op) => this.handler.getLinkedNodes(op).pipe(
+                map((list) => [op, list]),
             ))),
         ]).subscribe(([loadedNodes, links]: [Node[], [number, Node[]][]]) => {
             const assignment: Record<number, Set<number>> = {};
@@ -85,7 +85,7 @@ export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends Base
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     /**
@@ -101,8 +101,8 @@ export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends Base
         let didChange = false;
 
         for (const opId of this.objectProperties) {
-            const toAdd = new Set<number>(toSelectionArray(this.selected).map(Number));
-            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(Number));
+            const toAdd = new Set<number>(toSelectionArray(this.selected).map(toValidNumber));
+            const toRemove = new Set<number>(toSelectionArray(this.selected, false).map(toValidNumber));
 
             for (const nodeToAdd of toAdd) {
                 if (this.currentAssignment[nodeToAdd]?.has?.(opId)) {

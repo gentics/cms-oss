@@ -1,19 +1,15 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { API_BASE_URL, I18nNotificationService, I18nService, downloadFromBlob } from '@gentics/cms-components';
-import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
     Form,
     FormDataListEntry,
     FormDataListResponse,
     FormDownloadInfo,
-    FormElementLabelPropertyI18nValues,
 } from '@gentics/cms-models';
-import { FormEditorService, FormReportService } from '@gentics/form-generator';
 import { ModalService } from '@gentics/ui-core';
 import { PaginationInstance } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, interval, throwError } from 'rxjs';
-import { catchError, finalize, map, switchMap, takeWhile } from 'rxjs/operators';
+import { catchError, finalize, switchMap, takeWhile } from 'rxjs/operators';
 import { dateToFileSystemString } from '../../../common/utils/date-to-string';
 import { Api } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -27,25 +23,9 @@ const STATUS_POLL_INTERVAL_MS = 2_000;
     templateUrl: './form-reports-list.component.html',
     styleUrls: ['./form-reports-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: [
-        trigger('fadeAnim', [
-            state('in', style({
-                opacity: 1,
-            })),
-            transition(':enter', [
-                style({
-                    opacity: 0,
-                }),
-                animate(100),
-            ]),
-            transition(':leave', animate(100, style({
-                opacity: 0,
-            }))),
-        ]),
-    ],
     standalone: false,
 })
-export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
+export class FormReportsListComponent implements OnInit, OnDestroy {
 
     @Input()
     public form: Form;
@@ -81,16 +61,12 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
     protected subscriptions: Subscription[] = [];
 
-    public formElementLabelPropertyI18nValues$: Observable<FormElementLabelPropertyI18nValues>;
-
     constructor(
         private api: Api,
         private appState: ApplicationStateService,
         private changeDetector: ChangeDetectorRef,
         private modalService: ModalService,
         private notification: I18nNotificationService,
-        private formEditorService: FormEditorService,
-        private formReportService: FormReportService,
         private entityResolver: EntityResolver,
         private translation: I18nService,
     ) { }
@@ -126,22 +102,6 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             this.changeDetector.detectChanges();
         }));
 
-        this.subscriptions.push(this.appState.select((state) => state.ui.language).subscribe((language: GcmsUiLanguage) => {
-            /**
-             * We need to set the language manually in the form editor service.
-             * (This is normally done in the form editor component. However, it is not used here).
-             */
-            this.formEditorService.activeUiLanguageCode = language;
-        }));
-
-        this.subscriptions.push(this.appState.select((state) => state.folder.activeFormLanguage).pipe(
-            map((languageId) => this.entityResolver.getLanguage(languageId)),
-        ).subscribe((language) => {
-            if (language) {
-                this.formEditorService.activeContentLanguageCode = language.code;
-            }
-        }));
-
         const statusLoader$ = new BehaviorSubject<void>(null);
 
         this.subscriptions.push(statusLoader$.pipe(
@@ -159,12 +119,6 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         statusLoader$.next();
 
         this.reload();
-    }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.form) {
-            this.formElementLabelPropertyI18nValues$ = this.formReportService.getFormElementLabelPropertyValues(this.form);
-        }
     }
 
     public ngOnDestroy(): void {
@@ -437,10 +391,5 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     private reload(): void {
-        this.subscriptions.push(this.formElementLabelPropertyI18nValues$.subscribe((formElementLabelPropertyI18nValues) => {
-            if (formElementLabelPropertyI18nValues && Object.keys(formElementLabelPropertyI18nValues).length > 0) {
-                this.reload$.next();
-            }
-        }));
     }
 }

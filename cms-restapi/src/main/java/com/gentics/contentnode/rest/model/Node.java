@@ -63,6 +63,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	private Boolean disablePublish;
 	private Integer defaultFileFolderId;
 	private Integer defaultImageFolderId;
+	private Integer defaultFormFolderId;
 	private List<Integer> languagesId;
 	private Integer editorVersion = 1;
 	private Integer urlRenderWayPages;
@@ -439,6 +440,22 @@ public class Node extends ContentNodeItem implements Serializable {
 	 */
 	public void setDefaultImageFolderId(Integer defaultImageFolderId) {
 		this.defaultImageFolderId = defaultImageFolderId;
+	}
+
+	/**
+	 * Default Form Folder ID
+	 * @return default form folder ID
+	 */
+	public Integer getDefaultFormFolderId() {
+		return defaultFormFolderId;
+	}
+
+	/**
+	 * Set the default form folder ID
+	 * @param defaultFormFolderId
+	 */
+	public void setDefaultFormFolderId(Integer defaultFormFolderId) {
+		this.defaultFormFolderId = defaultFormFolderId;
 	}
 
 	/**

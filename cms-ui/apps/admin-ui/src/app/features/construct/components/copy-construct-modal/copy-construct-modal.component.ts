@@ -1,13 +1,13 @@
-import { ConstructBO } from '@admin-ui/common';
-import { ConstructHandlerService, LanguageHandlerService } from '@admin-ui/core';
-import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
-import { CmsI18nValue, Language, TagTypeBO } from '@gentics/cms-models';
+import { I18nString, Language, TagTypeBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { ConstructBO } from '../../../../common';
+import { ConstructHandlerService, LanguageHandlerService } from '../../../../core';
+import { ConstructPropertiesMode } from '../../../construct/components';
 
 @Component({
     selector: 'gtx-copy-construct-modal',
@@ -48,7 +48,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
             this.supportedLanguages = langs;
             const fallbackLanguage = langs?.[0];
             const suffix = this.i18n.instant('common.copy_suffix');
-            const newName: CmsI18nValue = {};
+            const newName: I18nString = {};
 
             this.supportedLanguages.forEach((lang) => {
                 if ((this.construct.nameI18n || {})[lang.code]) {

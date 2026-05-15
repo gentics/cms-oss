@@ -1,17 +1,17 @@
-import { CmsI18nValue } from './cms-i18n-value';
+import { I18nString } from './common';
 import { TagType } from './tag';
 import { DefaultModelType, ModelType } from './type-util';
 
 /** Construct Category */
 export interface ConstructCategoryBase<T extends ModelType> {
     /** Name of this construct category */
-    name: string
+    name: string;
     /** Map of constructs for this category */
     constructs: Record<string, TagType<T>>;
     /** Global ID */
     globalId: string;
     /** Map of names in the different languages */
-    nameI18n: CmsI18nValue;
+    nameI18n: I18nString;
     /** The sort order of the category */
     sortOrder?: number;
 }

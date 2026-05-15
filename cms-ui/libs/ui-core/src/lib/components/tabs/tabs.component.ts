@@ -51,7 +51,7 @@ import { TabComponent } from '../tab/tab.component';
  *     <gtx-tab title="Notes" id="3" [routerLink]="['customer', 'notes']"></gtx-tab>
  * </gtx-tabs>
  * ```
- *  * ##### Vertical Tabs
+ * #### Vertical Tabs
  * A gtx-tabs can take an optional `vertical` property which allows to display tabs vertically.
  * ```html
  * <gtx-tabs vertical>
@@ -60,7 +60,7 @@ import { TabComponent } from '../tab/tab.component';
  *        <gtx-tab title="Notes"></gtx-tab>
  * </gtx-tabs>
  * ```
- *  *  * ##### Active Tabs with Icons
+ * ##### Active Tabs with Icons
  * A gtx-tabs can take an optional `hideTitle` property which allows to hide the title for non-active tabs with icons.
  * ```html
  * <gtx-tabs hideTitle>

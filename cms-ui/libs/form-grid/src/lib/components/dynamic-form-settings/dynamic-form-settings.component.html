@@ -1,0 +1,191 @@
+<div class="dynamic-settings-list">
+    @for (setting of (visibleSettings()); track setting.id) {
+        @let settingSourceData = setting.backend
+            ? $any(this.elementSchema())
+            : $any(this.element());
+        @let settingData = setting.propertyPath
+            ? (settingSourceData | gtxValuePath:setting.propertyPath)
+            : (settingSourceData | gtxValuePath:['formGridOptions', setting.id]);
+
+        @switch (setting.type) {
+            @case ("string") {
+                @if (setting.richContent) {
+                    <gtx-rich-content-editor
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [required]="setting.required ?? false"
+                        [disabled]="disabled()"
+                        [allowMultiLine]="setting.multiline ?? false"
+                        [value]="settingData"
+                        (valueChange)="updateData(setting, $event)"
+                    ></gtx-rich-content-editor>
+                } @else if (setting.multiline) {
+                    <gtx-textarea
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [required]="setting.required ?? false"
+                        [disabled]="disabled()"
+                        [value]="settingData"
+                        (valueChange)="updateData(setting, $event)"
+                    ></gtx-textarea>
+                } @else if (setting.multiple) {
+                    <gtx-string-list
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [addLabel]="'editor.add_label' | gtxI18n"
+                        [disabled]="disabled()"
+                        [value]="settingData"
+                        (valueChange)="updateData(setting, $event)"
+                    ></gtx-string-list>
+                } @else {
+                    <gtx-input
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [required]="setting.required ?? false"
+                        [disabled]="disabled()"
+                        [value]="settingData"
+                        (valueChange)="updateData(setting, $event)"
+                    ></gtx-input>
+                }
+            }
+
+            @case ("translation") {}
+
+            @case ("integer") {
+                <gtx-input
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [type]="'number'"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
+                ></gtx-input>
+            }
+
+            @case ("number") {
+                <gtx-input
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [type]="'number'"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
+                ></gtx-input>
+            }
+
+            @case ("boolean") {
+                <gtx-checkbox
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [disabled]="disabled()"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
+                ></gtx-checkbox>
+            }
+
+            @case ("date") {
+                <gtx-date-time-picker
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [displayTime]="setting.allowTime ?? false"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
+                ></gtx-date-time-picker>
+            }
+
+            @case ("select") {
+                <gtx-select
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [required]="setting.required ?? false"
+                    [multiple]="setting.multiple ?? false"
+                    [disabled]="disabled()"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
+                >
+                    @for (option of setting.options; track option.value) {
+                        <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
+                    }
+                </gtx-select>
+            }
+
+            @case ("options") {
+                <gtx-form-options-input
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [required]="setting.required ?? false"
+                    [disabled]="disabled()"
+                    [value]="settingData"
+                    (valueChange)="updateData(setting, $event)"
+                ></gtx-form-options-input>
+            }
+
+            @case ("user") {
+                @if (config().userOptions) {
+                    <gtx-select
+                        class="settings-entry"
+                        [attr.data-control]="setting.id"
+                        [attr.data-control-type]="setting.type"
+                        [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                        [required]="setting.required ?? false"
+                        [disabled]="disabled()"
+                        [multiple]="setting.multiple ?? false"
+                        [value]="settingData?.userReference"
+                        (valueChange)="updateUserValue(setting, $event)"
+                    >
+                        @for (option of (config().userOptions || []); track option.value) {
+                            <gtx-option [value]="option.value">{{ option.labelI18n | gtxI18nObject }}</gtx-option>
+                        }
+                    </gtx-select>
+                } @else {
+                    <span class="error-message">{{ 'form_grid.user_settings_missing' | gtxI18n }}</span>
+                }
+            }
+
+            @case ("reference") {
+                <gtx-browse-box
+                    class="settings-entry"
+                    [attr.data-control]="setting.id"
+                    [attr.data-control-type]="setting.type"
+                    [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
+                    [allowedSelection]="setting.referenceTypes"
+                    [onlyInCurrentNode]="setting.onlyInCurrentNode"
+                    [multiple]="setting.multiple ?? false"
+                    [disabled]="disabled()"
+                    [includeMlId]="setting.allowedMarkupLanguageIds"
+                    [browseTitle]="setting.titleI18n | gtxI18nObject"
+                    [value]="settingData"
+                    (valueChange)="updateReferenceValue(setting, $event)"
+                ></gtx-browse-box>
+            }
+
+            @default {
+                <span class="error-message">Unknown setting type {{setting.type}}</span>
+            }
+        }
+    }
+</div>

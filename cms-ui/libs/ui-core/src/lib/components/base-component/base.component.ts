@@ -8,7 +8,7 @@ import { coerceInstance, CoerceOption } from '../../utils';
  */
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
 export class BaseComponent implements OnChanges, OnDestroy {
 
@@ -21,17 +21,16 @@ export class BaseComponent implements OnChanges, OnDestroy {
     /**
      * An array of boolean inputs which will automatically coerced to proper boolean
      * values on changes, when provided via input bindings.
-     *
      * @deprecated Use the {@link Input.transform} option with the {@link transformToBoolean} transformer instead.
      * Will be removed in the next major verison.
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+
     protected readonly booleanInputs: CoerceOption<this>[] = ['disabled'];
 
     /**
      * Array of subscriptions to clean up at the end of the component life-cycle (ngOnDestroy)
      */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+
     protected readonly subscriptions: Subscription[] = [];
 
     constructor(
@@ -52,7 +51,7 @@ export class BaseComponent implements OnChanges, OnDestroy {
 
     ngOnDestroy(): void {
         if (this.subscriptions) {
-            this.subscriptions.forEach(subscription => subscription.unsubscribe());
+            this.subscriptions.forEach((subscription) => subscription.unsubscribe());
         }
     }
 

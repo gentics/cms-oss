@@ -5,17 +5,23 @@ import {
     Input,
     OnChanges,
     OnDestroy,
-    OnInit
+    OnInit,
 } from '@angular/core';
 import {
     FormControl,
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableFolderProps, Feature, Folder, GtxI18nProperty, Language } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ChangesOf, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import {
+    BaseFormPropertiesComponent,
+    ChangesOf,
+    FormProperties,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+} from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, forkJoin, of, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap } from 'rxjs/operators';
@@ -31,11 +37,11 @@ const ERROR_DIRECTORY_DUPLICATE = 'folderDirectoryIsDuplicate';
 const ERROR_DIRECTORY_PATTERN = 'pattern';
 
 /** Allowed characters for input `directory` if "pub_dir_segment" is disabled */
-const CHARS_ALLOWED_DEFAULT = [ '/', '_', '.', '-', '~' ];
+const CHARS_ALLOWED_DEFAULT = ['/', '_', '.', '-', '~'];
 /** Allowed characters for input `directory` if "pub_dir_segment" is enabled */
-const CHARS_ALLOWED_PUB_DIR_SEGMENT = [ '_', '.', '-', '~' ];
+const CHARS_ALLOWED_PUB_DIR_SEGMENT = ['_', '.', '-', '~'];
 /** Characters for the other CHARS constants which need escaping when placed into a regexp. */
-const CHARS_REQUIRE_ESCAPE = new Set([ '\\', '/', '{', '}', '[', ']', '(', ')', '.', '^', '$', '*', '+', '-', '?', '!', '=' ]);
+const CHARS_REQUIRE_ESCAPE = new Set(['\\', '/', '{', '}', '[', ']', '(', ')', '.', '^', '$', '*', '+', '-', '?', '!', '=']);
 
 const CONTROLS_I18N: (keyof EditableFolderProps)[] = ['nameI18n', 'descriptionI18n', 'publishDirI18n'];
 const CONTROLS: (keyof EditableFolderProps)[] = ['name', 'description', 'publishDir'];
@@ -52,7 +58,7 @@ const CONTROLS: (keyof EditableFolderProps)[] = ['name', 'description', 'publish
     standalone: false,
 })
 export class FolderPropertiesComponent
-    extends BasePropertiesComponent<EditableFolderProps>
+    extends BaseFormPropertiesComponent<EditableFolderProps>
     implements OnChanges, OnInit, OnDestroy {
 
     public readonly FolderPropertiesMode = FolderPropertiesMode;
@@ -115,9 +121,9 @@ export class FolderPropertiesComponent
 
         this.parentFolderId$.next(this.folderId);
         this.subscriptions.push(this.parentFolderId$.asObservable().pipe(
-            switchMap(id => id ? of(id) : this.appState.select(state => state.folder.activeFolder)),
+            switchMap((id) => id ? of(id) : this.appState.select((state) => state.folder.activeFolder)),
             distinctUntilChanged(isEqual),
-            switchMap(id => forkJoin([
+            switchMap((id) => forkJoin([
                 this.client.folder.get(id),
                 this.client.folder.folders(id),
             ])),
@@ -132,18 +138,18 @@ export class FolderPropertiesComponent
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.folder.activeNode).pipe(
-            mergeMap(nodeId => this.appState.select(state => state.entities.node[nodeId])),
-            filter(activeNode => !!activeNode),
-            map(activeNode => !!activeNode.pubDirSegment),
-        ).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeNode).pipe(
+            mergeMap((nodeId) => this.appState.select((state) => state.entities.node[nodeId])),
+            filter((activeNode) => !!activeNode),
+            map((activeNode) => !!activeNode.pubDirSegment),
+        ).subscribe((enabled) => {
             this.pubDirSegmentEnabled = enabled;
             this.updateAllowedCharacters();
             this.form.updateValueAndValidity();
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features[Feature.AUTOCOMPLETE_FOLDER_PATH]).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features[Feature.AUTOCOMPLETE_FOLDER_PATH]).subscribe((enabled) => {
             this.folderAutocompleteEnabled = enabled;
             this.autocompletePublishDirectory();
             this.changeDetector.markForCheck();
@@ -170,9 +176,11 @@ export class FolderPropertiesComponent
     protected createForm(): FormGroup {
         const form = new FormGroup<FormProperties<EditableFolderProps>>({
             name: new FormControl(this.safeValue('name'), [Validators.required, (ctrl) => {
-                return this.sibilingsHaveEqualProperty('name', ctrl.value) ? {
-                    [ERROR_DIRECTORY_DUPLICATE]: true,
-                } : null;
+                return this.sibilingsHaveEqualProperty('name', ctrl.value)
+                    ? {
+                        [ERROR_DIRECTORY_DUPLICATE]: true,
+                    }
+                    : null;
             }]),
             description: new FormControl(this.safeValue('description')),
             publishDir: new FormControl(this.safeValue('publishDir'), [Validators.required, (ctrl) => {
@@ -215,8 +223,8 @@ export class FolderPropertiesComponent
 
     protected configureForm(_value: EditableFolderProps, loud?: boolean): void {
         const options = { onlySelf: loud, emitEvent: loud };
-		setControlsEnabled(this.form, CONTROLS, !this.disabled || (this.mode === FolderPropertiesMode.CREATE), options);
-		setControlsEnabled(this.form, CONTROLS_I18N, !this.disabled || (this.mode === FolderPropertiesMode.CREATE), options);
+        setControlsEnabled(this.form, CONTROLS, !this.disabled || (this.mode === FolderPropertiesMode.CREATE), options);
+        setControlsEnabled(this.form, CONTROLS_I18N, !this.disabled || (this.mode === FolderPropertiesMode.CREATE), options);
     }
 
     protected assembleValue(value: EditableFolderProps): EditableFolderProps {
@@ -258,7 +266,7 @@ export class FolderPropertiesComponent
         const chars = this.pubDirSegmentEnabled ? CHARS_ALLOWED_PUB_DIR_SEGMENT : CHARS_ALLOWED_DEFAULT;
         this.allowedCharacters = chars.join(' ');
         const charsAllowedRegexp = chars
-            .map(c => CHARS_REQUIRE_ESCAPE.has(c) ? `\\${c}` : c)
+            .map((c) => CHARS_REQUIRE_ESCAPE.has(c) ? `\\${c}` : c)
             .join('');
         this.pubDirPattern = new RegExp(`|^[A-Za-z0-9${charsAllowedRegexp}]+$`);
     }
@@ -291,7 +299,7 @@ export class FolderPropertiesComponent
         const dirName = this.form.value.name || '';
 
         if (this.pubDirSegmentEnabled) {
-            publishDirProposal = dirName
+            publishDirProposal = dirName;
         } else if (typeof this.parentFolder?.publishDir === 'string') {
             const parentPubDir = this.parentFolder?.publishDir;
             publishDirProposal = `${parentPubDir.endsWith('/') ? parentPubDir : `${parentPubDir}/`}${dirName}`;
@@ -305,7 +313,7 @@ export class FolderPropertiesComponent
         this.autocompleteSubscription = this.client.folder.sanitizePublshDirectory({
             nodeId: nodeId,
             publishDir: publishDirProposal,
-        }).subscribe(res => {
+        }).subscribe((res) => {
             if (ctrl.pristine) {
                 ctrl.setValue(res.publishDir);
                 this.changeDetector.markForCheck();

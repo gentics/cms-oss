@@ -9,20 +9,27 @@
             display: flex;
         }
     }
+}
 
-    .noTemplates {
-        color: $gtx-color-alert;
-        margin-bottom: 1rem;
-        margin-top: 0;
+.form-section-container {
+    display: block;
+    width: 100%;
+}
+
+.type-config-row {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+
+    > * {
+        flex: 1 1 50%;
+        max-width: 100%;
+        min-width: 200px;
     }
 
-    [formcontrolname=templateId] {
-        margin: 0;
-
-        & + a {
-            display: block;
-            margin-bottom: 1rem;
-        }
+    &.half-width {
+        width: 50%;
     }
 }
 
@@ -44,39 +51,23 @@
     margin-top: -18px;
 }
 
-// Hide the button without using `display: none` or `visibility: hidden` otherwise IE does not
-// register the form submit event.
-.hidden-submit-button {
-    opacity: 0;
-    height: 0;
-    width: 0;
-    padding: 0;
-    border: 0;
-}
-
-// Hide input without using `display: none` or `visibility: hidden` otherwise IE does not
-// consider their values.
-.hidden-input {
-    display: none;
-}
-
 .localized-properties-header {
     margin-top: 1.5rem;
 }
 
-browse-box {
-    padding-bottom: 15px;
+gtx-browse-box {
+    width: 100%;
+    padding-bottom: 0.75rem;
 }
 
-.browse-box__breadcrumbs {
-    position: relative;
-    top: -15px;
-    font-size: 0.8rem;
-    color: $gtx-color-dark-gray;
+.radio-select-container {
+    gtx-radio-button::ng-deep label {
+        gap: 35px;
+    }
 }
 
 .confirmation-page-setting {
-    margin-left: 35px;
+    margin-left: calc(1rem + 35px);
     margin-bottom: 0.5rem;
     transition:
         opacity .28s ease;

@@ -17,7 +17,7 @@ import { BaseComponent } from '../base-component/base.component';
  */
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
 export abstract class BaseFormElementComponent<T>
     extends BaseComponent
@@ -45,13 +45,13 @@ export abstract class BaseFormElementComponent<T>
      * The value of the control.
      */
     @Input()
-    public value: T | null;
+    public value: T | null | undefined;
 
     /**
      * Event which triggers whenever the value is supposed to change.
      */
     @Output()
-    public valueChange = new EventEmitter<T | null>();
+    public valueChange = new EventEmitter<T | null | undefined>();
 
     /**
      * Event which triggers whenever this control has been touched/dirtied.
@@ -67,7 +67,7 @@ export abstract class BaseFormElementComponent<T>
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push('required' , 'pure');
+        this.booleanInputs.push('required', 'pure');
     }
 
     /* Life-Cycle hooks */
@@ -103,7 +103,6 @@ export abstract class BaseFormElementComponent<T>
     /**
      * Function to trigger all required external hooks and to update the
      * internal state correctly, when the value is supposed to change.
-     *
      * @param value The new value
      */
     public triggerChange(value: T | null): void {

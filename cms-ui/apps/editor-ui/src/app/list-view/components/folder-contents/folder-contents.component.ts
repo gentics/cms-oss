@@ -32,6 +32,7 @@ import {
     Observable,
     Subscription,
     combineLatest,
+    forkJoin,
     of,
 } from 'rxjs';
 import {
@@ -77,6 +78,7 @@ import {
     SetUIModeAction,
 } from '../../../state';
 import { ItemListComponent } from '../item-list/item-list.component';
+import { FormListLoaderService } from '../../../shared/providers';
 
 export interface ShowPathStatus {
     image: boolean;
@@ -96,6 +98,8 @@ export interface ShowPathStatus {
     standalone: false,
 })
 export class FolderContentsComponent implements OnInit, OnDestroy {
+
+    public readonly ITEM_TYPES: FolderItemType[] = ['folder', 'page', 'file', 'image'];
 
     /**
      * Available entity identifier string.
@@ -154,6 +158,9 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     fileUploadProgress: UploadProgressReporter;
     imageUploadProgress: UploadProgressReporter;
 
+    activeItemType: string;
+    activeItemId: number;
+
     @ViewChild('fileDropTextOverlay', { static: true })
     fileDropTextOverlay: ElementRef<HTMLElement>;
 
@@ -161,6 +168,10 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
 
     @ViewChildren(ItemListComponent, { read: ElementRef })
     itemLists: QueryList<ElementRef<HTMLElement>>;
+
+    public formsEnabled = false;
+    public hasInternalForms = false;
+    public hasExternalForms = false;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
@@ -177,6 +188,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         private modalService: ModalService,
         private i18n: I18nService,
         private client: GCMSRestClientService,
+        private formList: FormListLoaderService,
     ) {}
 
     get isModalOpen(): boolean {
@@ -258,20 +270,29 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         );
         this.stagingMap$ = this.appState.select((state) => state.contentStaging.stagingMap);
 
-        this.itemTypes$ = combineLatest([
+        this.subscriptions.push(combineLatest([
             this.appState.select((state) => state.folder.activeNode),
             this.appState.select((state) => state.features.nodeFeatures),
         ]).pipe(
-            map(([activeNodeId, nodeFeatures]) => {
-                const activeNodeFeatures = nodeFeatures[activeNodeId];
-                const isActiveFeatureForms = Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(NodeFeature.FORMS);
-                const itemTypes: FolderItemType[] = ['folder', 'page', 'file', 'image'];
-                if (isActiveFeatureForms) {
-                    itemTypes.push('form');
-                }
-                return itemTypes;
-            }),
-        );
+            filter(([nodeId, features]) => Number.isInteger(nodeId) && features != null),
+        ).subscribe(([activeNodeId, nodeFeatures]) => {
+            const activeNodeFeatures = nodeFeatures[activeNodeId];
+            const isActiveFeatureForms = Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(NodeFeature.FORMS);
+            this.formsEnabled = isActiveFeatureForms;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeNode).pipe(
+            filter((nodeId) => Number.isInteger(nodeId)),
+            mergeMap((nodeId) => forkJoin([
+                this.client.form.listConfigurations({ nodeId: nodeId, external: false, pageSize: 0 }),
+                this.client.form.listConfigurations({ nodeId: nodeId, external: true, pageSize: 0 }),
+            ])),
+        ).subscribe(([internalRes, externalRes]) => {
+            this.hasInternalForms = internalRes.numItems > 0;
+            this.hasExternalForms = externalRes.numItems > 0;
+            this.changeDetector.markForCheck();
+        }));
 
         this.initFolderContents();
         this.listService.init(this.route);
@@ -490,6 +511,15 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         );
 
         this.subscriptions.push(combineLatest([
+            this.appState.select((state) => state.editor.itemType),
+            this.appState.select((state) => state.editor.itemId),
+        ]).subscribe(([type, id]) => {
+            this.activeItemType = type;
+            this.activeItemId = id;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(combineLatest([
             this.appState.select((state) => state.folder.activeFolder),
             this.appState.select((state) => state.folder.activeNode),
         ]).pipe(
@@ -568,19 +598,14 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             }),
         );
 
-        this.subscriptions.push(combineLatest([
-            this.appState.select((state) => state.contentStaging.activePackage).pipe(
-                distinctUntilChanged(isEqual),
-            ),
-            this.itemTypes$.pipe(
-                skip(1),
-            ),
-        ]).pipe(
-            filter(([active, ununsed]) => active),
-        ).subscribe(([unused, itemTypes]) => {
-            for (const type of itemTypes) {
+        this.subscriptions.push(this.appState.select((state) => state.contentStaging.activePackage).pipe(
+            distinctUntilChanged(isEqual),
+            skip(1),
+        ).subscribe(() => {
+            for (const type of this.ITEM_TYPES) {
                 this.reloadItemType(type);
             }
+            this.formList.reload();
         }));
     }
 

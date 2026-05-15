@@ -1,0 +1,22 @@
+@import 'ui-core/src/styles/variables';
+
+.settings-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+
+    .settings-entry {
+        flex: 0 0 100%;
+        margin: 0;
+
+        &[data-control-type="boolean"] {
+            flex: 0 0 50%;
+        }
+    }
+}
+
+.error-message {
+    color: $gtx-color-alert;
+}

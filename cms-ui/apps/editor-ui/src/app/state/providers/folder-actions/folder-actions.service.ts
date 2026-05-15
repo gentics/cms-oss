@@ -14,7 +14,7 @@ import {
     DependencyItemType,
     EditableFileProps,
     EditableFolderProps,
-    EditableFormProps,
+    EditableFormProperties,
     EditableImageProps,
     EditablePageProps,
     ElasticSearchQuery,
@@ -701,12 +701,17 @@ export class FolderActionsService {
     /**
      * Fetches the root folders of each available node.
      */
-    getFolders(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
+    getFolders(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<FolderListResponse> {
         const itemInfo: ItemsInfo = this.appState.now.folder['folders' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const recursive = search !== '';
 
-        return this.getItems(parentId, 'folder', fetchAll, { maxItems, search, recursive, skipCount: this.getSkipCount(pageNumber, maxItems) });
+        return this.getItems(parentId, 'folder', fetchAll, {
+            maxItems,
+            search,
+            recursive,
+            skipCount: this.getSkipCount(pageNumber, maxItems),
+        }) as Promise<FolderListResponse>;
     }
 
     getFolder(folderId: number, options: any = { }): Promise<Folder> {
@@ -716,7 +721,7 @@ export class FolderActionsService {
     /**
      * Get pages in this folder
      */
-    getPages(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
+    getPages(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<PageListResponse> {
         const itemInfo: ItemsInfo = this.appState.now.folder['pages' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const recursive = search !== '';
@@ -750,7 +755,7 @@ export class FolderActionsService {
     /**
      * Get files in this folder
      */
-    getFiles(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
+    getFiles(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<FileListResponse> {
         const itemInfo: ItemsInfo = this.appState.now.folder['files' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const recursive = search !== '';
@@ -765,7 +770,7 @@ export class FolderActionsService {
             options.folder = true;
         }
 
-        return this.getItems(parentId, 'file', fetchAll, options);
+        return this.getItems(parentId, 'file', fetchAll, options) as Promise<FileListResponse>;
     }
 
     /**
@@ -778,7 +783,7 @@ export class FolderActionsService {
     /**
      * Get images in this folder
      */
-    getImages(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
+    getImages(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<FileListResponse> {
         const itemInfo: ItemsInfo = this.appState.now.folder['images' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const recursive = search !== '';
@@ -793,7 +798,7 @@ export class FolderActionsService {
             options.folder = true;
         }
 
-        return this.getItems(parentId, 'image', fetchAll, options);
+        return this.getItems(parentId, 'image', fetchAll, options) as Promise<FileListResponse>;
     }
 
     /**
@@ -806,7 +811,7 @@ export class FolderActionsService {
     /**
      * Get forms in this folder
      */
-    getForms(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber: number = 1): Promise<void> {
+    getForms(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber: number = 1): Promise<FormListResponse> {
         const itemInfo: ItemsInfo = this.appState.now.folder['forms' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const recursive = search !== '';
@@ -822,22 +827,32 @@ export class FolderActionsService {
             page: pageNumber,
         };
 
-        return this.getItems(parentId, 'form', fetchAll, options);
+        return this.getItems(parentId, 'form', fetchAll, options) as Promise<FormListResponse>;
     }
 
     /**
      * Get an individual form.
      */
-    getForm(formId: number, options?: FormRequestOptions): Promise<Form<Raw>> {
+    getForm(formId: number, options?: FormRequestOptions): Promise<Form> {
         return this.getItem(formId, 'form', options);
     }
 
     /**
      * Get the items of a given type which are children of the specified folder
      */
-    getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<void>;
-    getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options?: FolderListOptions): Promise<void>;
-    async getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options: any = {}): Promise<void> {
+    getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<PageListResponse>;
+    getItems(
+        parentId: number,
+        type: FolderItemType,
+        fetchAll?: boolean,
+        options?: FolderListOptions,
+    ): Promise<FolderListResponse | FormListResponse | PageListResponse | FileListResponse | TypedItemListResponse | ItemListResponse>;
+    async getItems(
+        parentId: number,
+        type: FolderItemType,
+        fetchAll?: boolean,
+        options: any = {},
+    ): Promise<FolderListResponse | FormListResponse | PageListResponse | FileListResponse | TypedItemListResponse | ItemListResponse> {
         // assign query params from state
         const nodeId = options?.nodeId ?? this.getCurrentNodeId();
         const itemInfo: ItemsInfo = this.appState.now.folder[`${type}s` as FolderItemTypePlural];
@@ -973,20 +988,22 @@ export class FolderActionsService {
                     return forkJoin([
                         this.client.folder.get(folderRef.id, options),
                         this.client.permission.getInstance(AccessControlledType.FOLDER, folderRef.id, { ...options, map: true }),
-                    ])
-                        .pipe(
-                            switchMap(([folder, perms]: [FolderResponse, PermissionResponse]) => {
-                                folder.folder.permissionsMap = perms.permissionsMap;
-                                return this.appState.dispatch(new ItemFetchingSuccessAction('folder', folder.folder));
-                            }),
-                        );
+                    ]).pipe(
+                        switchMap(([folder, perms]: [FolderResponse, PermissionResponse]) => {
+                            folder.folder.permissionsMap = perms.permissionsMap;
+                            return this.appState.dispatch(new ItemFetchingSuccessAction('folder', folder.folder));
+                        }),
+                    );
                 })).toPromise();
             }
 
             await this.appState.dispatch(new AddContentStagingMapAction(res.stagingStatus)).toPromise();
+
+            return res;
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction(type, error.message)).toPromise();
             this.errorHandler.catch(error);
+            return null;
         }
     }
 
@@ -1104,14 +1121,14 @@ export class FolderActionsService {
     private conditionalItemListRequest(
         nodeId: number,
         getRequest: Observable<FormListResponse>,
-    ): Observable<ItemListResponse> {
+    ): Observable<FormListResponse> {
         return this.nodeFeatureIsActive(nodeId, NodeFeature.FORMS).pipe(
             switchMap((isActive) => {
                 if (isActive) {
                     return getRequest;
                 }
 
-                const emptyResponse: ItemListResponse = {
+                const emptyResponse: FormListResponse = {
                     hasMoreItems: null,
                     messages: [{
                         type: null,
@@ -1218,10 +1235,16 @@ export class FolderActionsService {
     getItem(itemId: number, type: 'page', options?: PageRequestOptions, throwError?: boolean): Promise<Page<Raw>>;
     getItem(itemId: number, type: 'image', options?: ImageRequestOptions, throwError?: boolean): Promise<Image<Raw>>;
     getItem(itemId: number, type: 'file', options?: FileRequestOptions, throwError?: boolean): Promise<CMSFile<Raw>>;
-    getItem(itemId: number, type: 'form', options?: FormRequestOptions, throwError?: boolean): Promise<Form<Raw>>;
+    getItem(itemId: number, type: 'form', options?: FormRequestOptions, throwError?: boolean): Promise<Form>;
     getItem(itemId: number | string, type: 'template', options?: TemplateRequestOptions, throwError?: boolean): Promise<Template<Raw>>;
-    getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>>;
-    async getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>> {
+    getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Form | Template<Raw>>;
+    async getItem(
+        itemId: number | string,
+        type: FolderItemOrTemplateType,
+        options?: any,
+        throwError?: boolean,
+    ): Promise<InheritableItem<Raw> | Form | Template<Raw>> {
+
         this.appState.dispatch(new StartListFetchingAction(type, undefined, true));
 
         // Create a copy to not modify the original argument/object
@@ -1232,7 +1255,7 @@ export class FolderActionsService {
             options.nodeId = nodeId;
         }
 
-        let fetchPromise: Promise<InheritableItem<Raw> | Template<Raw>>;
+        let fetchPromise: Promise<InheritableItem<Raw> | Form | Template<Raw>>;
 
         switch (type as any) {
             case 'template':
@@ -1309,7 +1332,7 @@ export class FolderActionsService {
                 (entity as any).type = type;
             }
 
-            await this.appState.dispatch(new ItemFetchingSuccessAction(type, entity as any)).toPromise();
+            await this.appState.dispatch(new ItemFetchingSuccessAction(type, structuredClone(entity) as any)).toPromise();
             return entity;
         } catch (error) {
             await this.appState.dispatch(new ListFetchingErrorAction(type, error.message, true)).toPromise();
@@ -1324,7 +1347,7 @@ export class FolderActionsService {
     /**
      * Get existing items of a specified type from the provided ids in a node.
      */
-    getExistingItems(ids: number[], nodeId: number, type: ItemType, options?: any): Observable<Item<Raw>[]> {
+    getExistingItems(ids: number[], nodeId: number, type: ItemType, options?: any): Observable<Item<Raw>[] | Form[]> {
         switch (type) {
             case 'file':
                 return this.client.file.getMultiple({ ids, nodeId }).pipe(
@@ -1556,7 +1579,7 @@ export class FolderActionsService {
     /**
      * Create a new form in the currently active folder
      */
-    async createNewForm(form: FormCreateRequest): Promise<Form<Raw> | void> {
+    async createNewForm(form: FormCreateRequest): Promise<Form | void> {
         await this.appState.dispatch(new StartListCreatingAction('form')).toPromise();
 
         try {
@@ -1743,18 +1766,11 @@ export class FolderActionsService {
     /**
      * Update the editable properties of a form.
      */
-    updateFormProperties(formId: number, properties: EditableFormProps, postUpdateBehavior?: PostUpdateBehavior): Promise<Form<Raw> | void> {
-        const formProps = {
-            name: properties.name,
-            description: properties.description,
-            successPageId: properties.successPageId,
-            successNodeId: properties.successNodeId,
-            data: properties.data,
-        };
+    updateFormProperties(formId: number, properties: EditableFormProperties, postUpdateBehavior?: PostUpdateBehavior): Promise<Form | void> {
         return this.updateItem(
             'form',
             formId,
-            formProps as any,
+            properties,
             {},
             postUpdateBehavior,
         );
@@ -1797,7 +1813,7 @@ export class FolderActionsService {
     /**
      * Update language for form.
      */
-    updateFormLanguage(form: Form<Normalized>, language: Language): Promise<Form | void> {
+    updateFormLanguage(form: Form, language: Language): Promise<Form | void> {
         const formProps: Partial<Form> = {
             id: form.id,
             languages: [...form.languages, language.code],
@@ -2203,7 +2219,7 @@ export class FolderActionsService {
     /**
      * Get the inheritance information for the given item.
      */
-    async fetchItemInheritance(type: FolderItemType, itemId: number, nodeId: number): Promise<InheritableItem<Normalized>> {
+    async fetchItemInheritance(type: FolderItemType, itemId: number, nodeId: number): Promise<InheritableItem<Normalized> | Form> {
         await this.appState.dispatch(new StartListFetchingAction(type)).toPromise();
 
         let res: InheritanceResponse;
@@ -3592,7 +3608,7 @@ export class FolderActionsService {
     /**
      * Publish a form or forms.
      */
-    publishForms(forms: Form[]): Promise<{ queued: Form<Normalized>[]; published: Form<Normalized>[] }> {
+    publishForms(forms: Form[]): Promise<{ queued: Form[]; published: Form[] }> {
         this.appState.dispatch(new StartListSavingAction('form'));
         const formIds = forms.map((form) => form.id);
         const nodeId = this.getCurrentNodeId();
@@ -3618,8 +3634,8 @@ export class FolderActionsService {
                 // notify state
                 this.appState.dispatch(new ListSavingSuccessAction('form'));
 
-                const published: Form<Normalized>[] = [];
-                const queued: Form<Normalized>[] = [];
+                const published: Form[] = [];
+                const queued: Form[] = [];
                 const type = 'form';
                 let message: string;
 
@@ -3720,7 +3736,7 @@ export class FolderActionsService {
 
                 if (succeeded.length) {
                     this.appState.dispatch(new ListSavingSuccessAction('form'));
-                    const formUpdates: { [id: number]: Partial<Form<Normalized>> } = {};
+                    const formUpdates: { [id: number]: Partial<Form> } = {};
                     for (const id of succeeded) {
                         formUpdates[id] = {
                             online: false,

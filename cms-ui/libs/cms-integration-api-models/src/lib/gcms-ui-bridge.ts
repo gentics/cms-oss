@@ -31,7 +31,7 @@ import { TagEditorOptions, TagEditorResult } from './tag-editor/custom-editor';
  * The part of the AppState that is exposed to editor IFrames using the `window.GCMSUI` object.
  */
 export interface ExposedPartialState {
-    currentItem: Folder<Normalized> | Page<Normalized> | File<Normalized> | Form<Normalized> | Image<Normalized> | Node<Normalized>;
+    currentItem: Folder<Normalized> | Page<Normalized> | File<Normalized> | Form | Image<Normalized> | Node<Normalized>;
     editMode: EditMode;
     pageLanguage?: Language;
     sid: number;

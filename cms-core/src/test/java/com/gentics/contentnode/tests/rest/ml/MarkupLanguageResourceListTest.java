@@ -54,7 +54,7 @@ public class MarkupLanguageResourceListTest extends AbstractListSortAndFilterTes
 	}
 
 	@Override
-	protected void fillItemsList(List<? super Object> items) throws NodeException {
+	protected void fillItemsList(List<? super MarkupLanguage> items) throws NodeException {
 		operate(t ->  {
 			List<com.gentics.contentnode.object.MarkupLanguage> mls = t.getObjects(
 					com.gentics.contentnode.object.MarkupLanguage.class,

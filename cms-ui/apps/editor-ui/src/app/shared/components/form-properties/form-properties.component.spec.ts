@@ -8,11 +8,6 @@ import { ItemInNode, Language, Page, PageResponse, Raw, ResponseCode } from '@ge
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
-import {
-    FormEditorConfiguration,
-    FormEditorConfigurationService,
-    FormEditorService,
-} from '@gentics/form-generator';
 import { GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
@@ -38,8 +33,6 @@ describe('FormProperties', () => {
             providers: [
                 { provide: Api, useClass: MockApi },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: FormEditorConfigurationService, useClass: MockFormEditorConfigurationService },
-                { provide: FormEditorService, useClass: MockFormEditorService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],

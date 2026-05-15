@@ -1,8 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { Group, User } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider } from '@gentics/ui-core';
 import { SendMessageForm } from '../../../common/models';
 
 @Component({
@@ -10,9 +9,9 @@ import { SendMessageForm } from '../../../common/models';
     templateUrl: './message-properties.component.html',
     styleUrls: ['./message-properties.component.scss'],
     providers: [generateFormProvider(MessagePropertiesComponent)],
-    standalone: false
+    standalone: false,
 })
-export class MessagePropertiesComponent extends BasePropertiesComponent<SendMessageForm> {
+export class MessagePropertiesComponent extends BaseFormPropertiesComponent<SendMessageForm> {
 
     @Input()
     public users: User[] = [];

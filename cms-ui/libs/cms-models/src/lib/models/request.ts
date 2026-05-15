@@ -1,6 +1,6 @@
 import { BoolQuery } from 'elastic-types/queries';
 import { DirtQueueEntry, Jobs } from './admin-info';
-import { EditableFormProps, Form, FormStatus } from './cms-form';
+import { EditableFormProperties, Form, FormStatus } from './form';
 import { LocalizationType } from './common';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage, EditableContentPackage } from './content-package';
@@ -114,9 +114,7 @@ export interface FolderRequestOptions extends ItemRequestOptions {
 
 }
 
-export interface FolderDeleteOptions extends GenericDeleteOptions {
-    nodeId?: number;
-}
+export interface FolderDeleteOptions extends GenericDeleteOptions {}
 
 export interface FolderExternalLinksOptions {
     recursive?: boolean;
@@ -623,19 +621,16 @@ export interface PageListOptions extends FolderListOptions {
 }
 
 export interface GenericDeleteOptions {
+    nodeId?: number;
     /** If the `instant_publish` feature should not be applied to the current request. */
     disableInstantDelete?: boolean;
 }
 
 export interface PageDeleteOptions extends GenericDeleteOptions {}
 
-export interface FileDeleteOptions extends GenericDeleteOptions {
-    nodeId?: number;
-}
+export interface FileDeleteOptions extends GenericDeleteOptions {}
 
-export interface ImageDeleteOptions extends GenericDeleteOptions {
-    nodeId?: number;
-}
+export interface ImageDeleteOptions extends GenericDeleteOptions {}
 
 export interface MarkupLanguageListOptions {
     page?: number;
@@ -691,6 +686,21 @@ export interface FormListOptions extends BaseListOptionsWithPaging<Form> {
     /** true to restrict to online objects, false to restrict to offline objects */
     online?: boolean;
 
+    /**
+     * exclude (default) to exclude deleted objects,
+     * include to include deleted objects,
+     * only to return only deleted objects.
+     */
+    wastebin?: 'exclude' | 'include' | 'only';
+
+    package?: string;
+
+    /**
+     * If omitted, will load all forms regardless of external state.
+     * If set to true, will only load external forms.
+     * If set to false, will only load internal forms.
+     */
+    external?: boolean;
 }
 
 export interface FormLoadOptions {
@@ -712,6 +722,18 @@ export interface FormDataListOptions {
     pageSize?: number;
     publishedOnly?: boolean;
     q?: string;
+}
+
+export interface FormTypeConfigirationListOptions extends BaseListOptionsWithPaging<{
+    type: string;
+    name: string;
+    description: string;
+    external: boolean;
+    submitOnce: boolean;
+}> {
+    nodeId?: number;
+    external?: boolean;
+    submitOnce?: boolean;
 }
 
 export interface LinkCheckerOptions extends BaseListOptionsWithPaging<Page> {
@@ -1036,10 +1058,11 @@ export interface PageVariantCreateRequest extends Omit<PageCreateRequest, 'pageN
  * Request object used to configure the behaviour of the
  * `POST /form` endpoint.
  */
-export interface FormCreateRequest extends EditableFormProps {
+export interface FormCreateRequest extends Partial<EditableFormProperties> {
     nodeId?: number;
     folderId: number;
     languages: string[];
+    formType: string;
 }
 
 /**
@@ -1323,14 +1346,14 @@ export interface MultiUnlocalizeRequest extends UnlocalizeRequest {
 /**
  * Image formats which can be modified in/with the CMS via the `resize` and `rotate` endpoints.
  */
-export type ModifiableImageFormats =
- 'png'
-| 'jpg'
-| 'bmp'
-| 'gif'
-| 'tiff'
-| 'wbmp'
-| 'webp';
+export type ModifiableImageFormats
+    = 'png'
+    | 'jpg'
+    | 'bmp'
+    | 'gif'
+    | 'tiff'
+    | 'wbmp'
+    | 'webp';
 
 /**
  * This object is derived from the gcnImagePlugin when using the crop and resize. It is used in making a request to the

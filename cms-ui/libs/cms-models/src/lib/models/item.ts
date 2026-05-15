@@ -1,6 +1,6 @@
-import { Form } from './cms-form';
 import { File, File as FileModel } from './file';
 import { Folder } from './folder';
+import { Form } from './form';
 import { Image } from './image';
 import { Node } from './node';
 import { Page } from './page';
@@ -43,7 +43,7 @@ export type DependencyItemType = 'file' | 'image' | 'page' | 'form';
 export interface FolderItemTypeMap<T extends ModelType = DefaultModelType> {
     file: File<T>;
     folder: Folder<T>;
-    form: Form<T>;
+    form: Form;
     image: Image<T>;
     page: Page<T>;
 }
@@ -72,7 +72,7 @@ export interface ItemTypeMap<T extends ModelType = DefaultModelType> extends Fol
 
 export type UsageType = ItemType | 'variant' | 'tag' | 'linkedPage' | 'linkedFile' | 'linkedImage';
 
-export type ItemNormalized = Page<Normalized> | FileModel<Normalized> | Folder<Normalized> | Form<Normalized> | Image<Normalized> | Node<Normalized>;
+export type ItemNormalized = Page<Normalized> | FileModel<Normalized> | Folder<Normalized> | Form | Image<Normalized> | Node<Normalized>;
 
 /**
  * The base of the various content types.
@@ -200,6 +200,24 @@ export type ItemWithObjectTags<T extends ModelType = DefaultModelType> = File<T>
  * Note that `tags` may also contain object tags (always check if `tag.type === 'CONTENTTAG'`).
  */
 export type ItemWithContentTags<T extends ModelType = DefaultModelType> = Page<T>;
+
+/**
+ * Represents a version of a versioned item in the CMS
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_PageVersion.html
+ */
+export interface ItemVersion {
+
+    /** Version number */
+    // eslint-disable-next-line id-blacklist
+    number: string;
+
+    /** Version timestamp */
+    timestamp: number;
+
+    /** Editor of the version */
+    editor: User<Raw>;
+
+}
 
 /**
  * In many situations, we want to treat a folder and the root folder of a node the same way.

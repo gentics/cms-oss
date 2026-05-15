@@ -55,6 +55,7 @@ interface BasicActionButton extends BaseActionButton {
 export type ActionButton = ToolButton | BasicActionButton;
 
 export interface ActionButtonGroup {
+    id: string;
     i18nLabel: string;
     buttons: ActionButton[][];
 }

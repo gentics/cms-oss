@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
@@ -2403,6 +2404,12 @@ public class FolderFactory extends AbstractFactory {
 			if (search == null) {
 				search = FormSearch.create();
 			}
+
+			// shortcut for empty search
+			if (search.getFormTypes() != null && search.getFormTypes().isEmpty()) {
+				return Collections.emptyList();
+			}
+
 			final FormSearch fSearch = search;
 			int userId = TransactionManager.getCurrentTransaction().getUserId();
 
@@ -2418,8 +2425,13 @@ public class FolderFactory extends AbstractFactory {
 			sql.append(StringUtils.repeat("?", folderIds.size(), ","));
 			sql.append(")");
 
+			if (fSearch.getFormTypes() != null) {
+				sql.append(" AND formtype IN (").append(StringUtils.repeat("?", fSearch.getFormTypes().size(), ","))
+						.append(")");
+			}
+
 			if (!StringUtils.isEmpty(fSearch.getSearchString())) {
-				sql.append("AND (id = ? OR LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
+				sql.append(" AND (id = ? OR LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
 			}
 
 			if (search.isCreator()) {
@@ -2495,6 +2507,12 @@ public class FolderFactory extends AbstractFactory {
 				int pCounter = 1;
 				for (Integer fId : folderIds) {
 					st.setObject(pCounter++, fId);
+				}
+
+				if (fSearch.getFormTypes() != null) {
+					for (String formType : fSearch.getFormTypes()) {
+						st.setString(pCounter++, formType);
+					}
 				}
 
 				if (!StringUtils.isEmpty(fSearch.getSearchString())) {
@@ -4857,6 +4875,10 @@ public class FolderFactory extends AbstractFactory {
 		@Updateable
 		protected Integer defaultImageFolderId;
 
+		@DataField("default_form_folder_id")
+		@Updateable
+		protected Integer defaultFormFolderId;
+
 		@DataField("urlrenderway_pages")
 		@Updateable
 		protected int urlRenderWayPages;
@@ -5776,6 +5798,11 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public Folder getDefaultFormFolder() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(Folder.class, defaultFormFolderId);
+		}
+
+		@Override
 		public List<Feature> getFeatures() throws NodeException {
 			final Set<Feature> features = new HashSet<Feature>();
 
@@ -6423,6 +6450,20 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setDefaultFormFolder(Folder folder) throws ReadOnlyException, NodeException {
+			Integer folderId = null;
+
+			if (folder != null) {
+				folderId = folder.getMaster().getId();
+			}
+
+			if (ObjectTransformer.getInt(defaultFormFolderId, -1) != ObjectTransformer.getInt(folderId, -1)) {
+				defaultFormFolderId = folderId;
+				modified = true;
+			}
+		}
+
+		@Override
 		public void setUrlRenderWayPages(int way) throws ReadOnlyException {
 			if (this.urlRenderWayPages != way) {
 				this.urlRenderWayPages = way;
@@ -6569,6 +6610,7 @@ public class FolderFactory extends AbstractFactory {
 				// make sure default folder id's are not null
 				defaultFileFolderId = ObjectTransformer.getInteger(defaultFileFolderId, 0);
 				defaultImageFolderId = ObjectTransformer.getInteger(defaultImageFolderId, 0);
+				defaultFormFolderId = ObjectTransformer.getInteger(defaultFormFolderId, 0);
 
 				meshPreviewUrl = ObjectTransformer.getString(meshPreviewUrl, "");
 				meshPreviewUrlProperty = ObjectTransformer.getString(meshPreviewUrlProperty, "");

@@ -1,9 +1,6 @@
 import {
     AnyModelType,
     ChannelSyncRequest,
-    CmsFormElement,
-    CmsFormElementI18nValue,
-    CmsFormType,
     CropResizeParameters,
     ElasticSearchQuery,
     ElasticSearchQueryResponse,
@@ -27,18 +24,12 @@ import {
     FolderRequestOptions,
     FolderResponse,
     FolderUsageResponse,
-    Form,
-    FormCreateRequest,
-    FormCreateResponse,
-    FormListOptions,
-    FormListResponse,
     FormRequestOptions,
     FormResponse, ImageRequestOptions,
     ImageResponse,
     InheritableItem,
     InheritanceRequest,
     InheritanceResponse,
-    Item,
     ItemCopyResponse,
     ItemDeleteResponse,
     ItemListResponse,
@@ -88,10 +79,9 @@ import {
     WastebinRestoreResponse,
 } from '@gentics/cms-models';
 import { forkJoin, Observable, of as observableOf, Subject, throwError } from 'rxjs';
-import { catchError, filter, map, mergeAll, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
+import { catchError, filter, map, mergeAll, mergeMap, takeUntil } from 'rxjs/operators';
 import { ApiBase, GENERIC_REQUEST_FAILED_ERROR } from '../base/api-base.service';
 import { FileUploader } from '../util/file-uploader/file-uploader.service';
-import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
 
 /**
  * API methods related to the folder resource.
@@ -162,7 +152,7 @@ export class FolderApi {
         parentId: number,
         options?: FolderListOptions,
     ): Observable<FolderListResponse> {
-        let request = this.apiBase.createListRequest(parentId, options);
+        const request = this.apiBase.createListRequest(parentId, options);
         return this.apiBase.get(`folder/getFolders/${parentId}`, request);
     }
 
@@ -173,7 +163,7 @@ export class FolderApi {
         parentId: number,
         options?: PageListOptions,
     ): Observable<PageListResponse> {
-        let request = this.apiBase.createListRequest(parentId, options);
+        const request = this.apiBase.createListRequest(parentId, options);
         return this.apiBase.get(`folder/getPages/${parentId}`, request);
     }
 
@@ -184,7 +174,7 @@ export class FolderApi {
         parentId: number,
         options?: FolderListOptions,
     ): Observable<FileListResponse> {
-        let request = this.apiBase.createListRequest(parentId, options);
+        const request = this.apiBase.createListRequest(parentId, options);
         return this.apiBase.get(`folder/getFiles/${parentId}`, request);
     }
 
@@ -195,27 +185,8 @@ export class FolderApi {
         parentId: number,
         options?: FolderListOptions,
     ): Observable<FileListResponse> {
-        let request = this.apiBase.createListRequest(parentId, options);
+        const request = this.apiBase.createListRequest(parentId, options);
         return this.apiBase.get(`folder/getImages/${parentId}`, request);
-    }
-
-    /**
-     * Get the forms which are children of the given folder.
-     */
-    getForms(
-        parentId: number,
-        options?: FormListOptions,
-    ): Observable<FormListResponse> {
-        let request = {
-            ...this.apiBase.createListRequest(parentId, options),
-            folderId: parentId,
-        };
-        if (options?.sort) {
-            const copy: any = {...options };
-            copy.sort = stringifyPagingSortOptions(copy.sort);
-            options = copy;
-        }
-        return this.apiBase.get('form', request);
     }
 
     /**
@@ -253,7 +224,7 @@ export class FolderApi {
             map((res) => {
                 // convert the elastic search response into the same format as used by the REST API
                 const esResponse: ElasticSearchQueryResponse<
-                InheritableItem<Raw>
+                    InheritableItem<Raw>
                 > = res as any;
                 const items = esResponse.hits.hits.map((hit) => hit._object);
                 const numItems = typeof esResponse.hits.total === 'number'
@@ -298,7 +269,7 @@ export class FolderApi {
         type: ItemType | ItemType[],
         options?: FolderListOptions,
     ): Observable<TypedItemListResponse> {
-        let request = this.apiBase.createListRequest(parentId, options);
+        const request = this.apiBase.createListRequest(parentId, options);
         request.type = type;
         return this.apiBase.get(`folder/getItems/${parentId}`, request);
     }
@@ -316,14 +287,14 @@ export class FolderApi {
          * Hacky fix to add the node ID when reloading items.
          * @deprecated Do not use, unless you know what you are doing.
          */
-        _checkedNodeId: number
+        _checkedNodeId: number;
     })[]> {
         return this.apiBase
             .post(`${type}/load`, { ids: ids, nodeId: nodeId }, options)
             .pipe(
                 map((res) => {
                     // Filter for just the relevant keys from response
-                    let itemKey = Object.keys(res)
+                    const itemKey = Object.keys(res)
                         .filter(
                             (item) =>
                                 folderItemTypePlurals.indexOf(
@@ -480,11 +451,11 @@ export class FolderApi {
         type: ItemType,
         options?: any,
     ): Observable<
-    | FolderResponse
-    | PageResponse
-    | FileResponse
-    | ImageResponse
-    | TemplateResponse
+      | FolderResponse
+      | PageResponse
+      | FileResponse
+      | ImageResponse
+      | TemplateResponse
     >;
 
     getItem(id: number, type: ItemType, options?: any): Observable<Response> {
@@ -493,8 +464,8 @@ export class FolderApi {
                 map((res) => {
                     // Templates don't receive a "type" by the API, so we add it
                     if (
-                        type === 'template' &&
-                        (res as TemplateResponse).template
+                        type === 'template'
+                        && (res as TemplateResponse).template
                     ) {
                         (res as TemplateResponse).template.type = 'template';
                     }
@@ -581,59 +552,8 @@ export class FolderApi {
         description: string;
         failOnDuplicate?: boolean;
     }): Observable<FolderCreateResponse> {
-        let request: FolderCreateRequest = props;
+        const request: FolderCreateRequest = props;
         return this.apiBase.post('folder/create', request);
-    }
-
-    /**
-     * Create a new form inside a parent folder or channel
-     */
-    createForm(props: {
-        nodeId: number;
-        folderId: number;
-        name: string;
-        description?: string;
-        successPageId?: number;
-        successNodeId?: number;
-        data: {
-            email?: string;
-            successurl_i18n?: CmsFormElementI18nValue<string>;
-            mailsubject_i18n?: CmsFormElementI18nValue<string>;
-            mailtemp_i18n?: CmsFormElementI18nValue<string>;
-            templateContext: string;
-            type: CmsFormType;
-            elements: CmsFormElement[];
-        };
-        languages: string[];
-    }): Observable<FormCreateResponse> {
-        let request: FormCreateRequest = {
-            name: props.name,
-            folderId: props.folderId,
-            description: props.description,
-            languages: props.languages,
-            successPageId: props.successPageId,
-            successNodeId: props.successNodeId,
-            data: {
-                templateContext: '',
-                type: CmsFormType.GENERIC,
-                elements: [],
-            },
-        };
-        if (props.data) {
-            request.data.email = props.data.email;
-            request.data.successurl_i18n = props.data.successurl_i18n;
-            request.data.mailsubject_i18n = props.data.mailsubject_i18n;
-            request.data.mailtemp_i18n = props.data.mailtemp_i18n;
-            request.data.templateContext = props.data.templateContext;
-            request.data.type = props.data.type;
-            request.data.elements = props.data.elements
-                ? props.data.elements
-                : [];
-        }
-        return this.apiBase.post('form', request, {
-            nodeId: props.nodeId,
-            folderId: props.folderId,
-        });
     }
 
     /**
@@ -649,7 +569,7 @@ export class FolderApi {
         templateId: number;
         priority: number;
     }): Observable<PageCreateResponse> {
-        let request: PageCreateRequest = props;
+        const request: PageCreateRequest = props;
         return this.apiBase.post('page/create', request);
     }
 
@@ -713,7 +633,7 @@ export class FolderApi {
         formId: number,
         payload: QueuedActionRequestClear,
     ): Observable<void> {
-        let clearRequests: Observable<void>[] = [];
+        const clearRequests: Observable<void>[] = [];
 
         if (payload.clearPublishAt) {
             clearRequests.push(
@@ -760,7 +680,7 @@ export class FolderApi {
         id: number,
         channelId: number,
     ): Observable<Response> {
-        let options: UnlocalizeRequest = {
+        const options: UnlocalizeRequest = {
             channelId,
             recursive: false,
         };
@@ -775,7 +695,7 @@ export class FolderApi {
         ids: number[],
         channelId: number,
     ): Observable<Response> {
-        let options: MultiUnlocalizeRequest = {
+        const options: MultiUnlocalizeRequest = {
             ids,
             channelId,
             recursive: false,
@@ -832,28 +752,13 @@ export class FolderApi {
         targetFolder: number,
         targetNode: number,
     ): Observable<ItemCopyResponse> {
-        let request: PageCopyRequest = {
+        const request: PageCopyRequest = {
             createCopy: true,
             nodeId: sourceNode,
             sourcePageIds: ids,
             targetFolders: [{ id: targetFolder, channelId: targetNode }],
         };
         return this.apiBase.post('page/copy', request);
-    }
-
-    /**
-     * Copy forms to a folder in the same or a different node
-     * As there is no dedicated API to copy a form:
-     * We first get data for each form and then we create a new form based on the data.
-     */
-    copyForms(ids: number[], targetFolder: number, targetNode: number): Observable<any> {
-        return forkJoin(ids.map(id => this.apiBase.get(`form/${id}`).pipe(
-            switchMap((form: any) => {
-                form.item.folderId = targetFolder;
-                form.item.nodeId = targetNode;
-                return this.createForm(form.item);
-            }),
-        )));
     }
 
     /**
@@ -867,9 +772,9 @@ export class FolderApi {
      * Move items to a different folder in the same or a different node
      */
     moveItems(type: ItemType, ids: number[], targetFolder: number, targetNode: number): Observable<ItemMoveResponse | any> {
-        let params = { ids, folderId: targetFolder, nodeId: targetNode };
+        const params = { ids, folderId: targetFolder, nodeId: targetNode };
         if (type === 'form') {
-            return forkJoin(ids.map(id => this.apiBase.put(`form/${id}/folder/${targetFolder}`, {})));
+            return forkJoin(ids.map((id) => this.apiBase.put(`form/${id}/folder/${targetFolder}`, {})));
         } else {
             return this.apiBase.post(`${type}/move`, params);
         }
@@ -879,7 +784,7 @@ export class FolderApi {
      * Delete an item from the server
      */
     deleteItem(
-        type: 'folder' | 'page' | 'file' | 'image'  | 'form',
+        type: 'folder' | 'page' | 'file' | 'image' | 'form',
         id: number,
         nodeId: number,
         disableInstantDelete?: boolean,
@@ -897,7 +802,7 @@ export class FolderApi {
         pageId: number,
         versionTimestamp: number,
     ): Observable<PageResponse> {
-        let params = {
+        const params = {
             version: Number(versionTimestamp),
         };
         return this.apiBase.post(`page/restore/${pageId}`, {}, params);
@@ -910,7 +815,7 @@ export class FolderApi {
         type: 'folder' | 'form' | 'page' | 'file' | 'image',
         idOrIDs: number | number[],
     ): Observable<WastebinRestoreResponse | void> {
-        let ids: number[] = [].concat(idOrIDs);
+        const ids: number[] = [].concat(idOrIDs);
         if (type === 'form') {
             return forkJoin(
                 ids.map((id) =>
@@ -935,7 +840,7 @@ export class FolderApi {
         type: 'folder' | 'form' | 'page' | 'file' | 'image',
         idOrIDs: number | number[],
     ): Observable<WastebinDeleteResponse | void> {
-        let ids: number[] = [].concat(idOrIDs);
+        const ids: number[] = [].concat(idOrIDs);
         if (type === 'form') {
             return forkJoin(
                 ids.map((id) => this.apiBase.delete(`${type}/wastebin/${id}`)),
@@ -980,7 +885,6 @@ export class FolderApi {
         return this.apiBase.post('file/create', payload);
     }
 
-
     /**
      * Upload files / images to the server to replace an existing one
      */
@@ -991,7 +895,7 @@ export class FolderApi {
         params: { nodeId: number; folderId: number },
         fileName?: string,
     ): FileUploader {
-        let randomFilename = 'tmpfile' + Math.random().toString(36).substr(2);
+        const randomFilename = 'tmpfile' + Math.random().toString(36).substr(2);
         params = Object.assign({}, params, { name: randomFilename });
 
         return this.apiBase.upload(
@@ -1056,11 +960,11 @@ export class FolderApi {
      * passed, the multiple endpoint will be used, which cannot do instant publishing.
      */
     publishPages(pageIds: number[], nodeId: number): Observable<Response> {
-        const endpoint =
-            pageIds.length === 1
+        const endpoint
+            = pageIds.length === 1
                 ? `page/publish/${pageIds[0]}`
                 : 'page/publish';
-        let payload: any = { alllang: false };
+        const payload: any = { alllang: false };
         if (1 < pageIds.length) {
             payload.ids = pageIds;
         }
@@ -1129,14 +1033,13 @@ export class FolderApi {
 
     /**
      * Search pages
-     *
      * @param nodeId is optional. If not set, searches will be searched among all nodes.
      */
     searchPages(
         nodeId?: number,
         options?: SearchPagesOptions,
     ): Observable<PageResponse> {
-        let queryParams = {
+        const queryParams = {
             ...(options && { ...options }),
             folder: true,
             ...(nodeId && { nodeId }),
@@ -1151,28 +1054,5 @@ export class FolderApi {
         request: SuggestPageFileNameRequest,
     ): Observable<SuggestPageFileNameResponse> {
         return this.apiBase.post('page/suggest/filename', request);
-    }
-
-    /* FORMS ******************************************************************************************************** */
-
-    /**
-     * Publish a form.
-     */
-    publishForm(formId: number): Observable<Response> {
-        return this.apiBase.put(`form/${formId}/online`, {});
-    }
-
-    /**
-     * Publish multiple forms.
-     */
-    publishForms(formIds: number[]): Observable<Response[]> {
-        return forkJoin(formIds.map((id) => this.publishForm(id)));
-    }
-
-    /**
-     * Take a form offline (unpublished)
-     */
-    takeFormOffline(formId: number): Observable<Response> {
-        return this.apiBase.delete(`form/${formId}/online`);
     }
 }

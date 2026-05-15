@@ -4,23 +4,12 @@ import { ModalService } from '@gentics/ui-core';
 import { SharedModule } from '../shared/shared.module';
 import {
     ContentPackageSelectComponent,
-    CreateFolderModalComponent,
-    CreateFormModalComponent,
-    CreatePageModalComponent,
     FolderContentsComponent,
     FolderStartPageComponent,
     GridItemComponent,
     ItemListComponent,
-    ItemListHeaderComponent,
 } from './components';
 import { LIST_VIEW_ROUTES } from './list-view.routes';
-import {
-    AnyItemDeletedPipe,
-    AnyItemInheritedPipe,
-    AnyItemPublishedPipe,
-    AnyPageUnpublishedPipe,
-    FilterItemsPipe,
-} from './pipes';
 import { ListService } from './providers/list/list.service';
 
 const COMPONENTS = [
@@ -28,24 +17,10 @@ const COMPONENTS = [
     FolderContentsComponent,
     FolderStartPageComponent,
     ItemListComponent,
-    ItemListHeaderComponent,
     GridItemComponent,
-    ItemListHeaderComponent,
 ];
 
-const ENTRY_COMPONENTS = [
-    CreateFolderModalComponent,
-    CreateFormModalComponent,
-    CreatePageModalComponent,
-];
-
-const PIPES = [
-    AnyItemDeletedPipe,
-    AnyItemInheritedPipe,
-    AnyItemPublishedPipe,
-    AnyPageUnpublishedPipe,
-    FilterItemsPipe,
-];
+const PIPES = [];
 
 const PROVIDERS = [
     ListService,
@@ -58,7 +33,7 @@ const PROVIDERS = [
         RouterModule.forChild(LIST_VIEW_ROUTES),
     ],
     exports: [],
-    declarations: [...COMPONENTS, ...ENTRY_COMPONENTS, ...PIPES],
+    declarations: [...COMPONENTS, ...PIPES],
     providers: PROVIDERS,
 })
 export class ListViewModule {}

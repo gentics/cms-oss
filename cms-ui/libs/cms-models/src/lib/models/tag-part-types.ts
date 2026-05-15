@@ -65,9 +65,13 @@ export enum TagPartType {
     /**
      * Used for text containing HTML tags, which is entered using the tagfill dialog. Linebreaks will be transformed into <br> tags while rendering,
      * unless they occur within HTML tags or immediately follow an HTML tag.
+     * @deprecated
      */
     TextHtml = 2,
-    /** Used for text containing HTML tags, which is entered using the tagfill dialog or Aloha Editor. No conversion will be done while rendering. */
+    /**
+     * Used for text containing HTML tags, which is entered using the tagfill dialog or Aloha Editor. No conversion will be done while rendering.
+     * @deprecated
+     */
     Html = 3,
     /** The URL (page) part type provides an element to select a page within any accessible folder. */
     UrlPage = 4,
@@ -78,24 +82,43 @@ export enum TagPartType {
     /**
      * Used for short text (no linebreaks), that does not contain HTML. The tagfill dialog will contain an input field.
      * No conversion will be done while rendering.
+     * @deprecated
      */
     TextShort = 9,
-    /** Variant of the type Text/HTML with a larger textarea in the tagfill dialog. */
+    /**
+     * Variant of the type Text/HTML with a larger textarea in the tagfill dialog.
+     * @deprecated
+     */
     TextHtmlLong = 10,
-    /** Render a tag of another page. */
+    /**
+     * Render a tag of another page.
+     * @deprecated
+     */
     TagPage = 11,
     /**
      * The overview part type creates and overview which can be configured using a the provided wizard.
      * WARNING: Cannot be used together with other tag parts that are set as editable.
      */
     Overview = 13,
-    /** Users can enter values (newline separated), and can choose whether to render them as ordered or unordered list. */
+    /**
+     * Users can enter values (newline separated), and can choose whether to render them as ordered or unordered list.
+     * @deprecated
+     */
     List = 15,
-    /** Users can enter values (newline separated), which will be rendered as unordered list. */
+    /**
+     * Users can enter values (newline separated), which will be rendered as unordered list.
+     * @deprecated
+     */
     ListUnordered = 16,
-    /** Users can enter values (newline separated), which will be rendered as ordered list. */
+    /**
+     * Users can enter values (newline separated), which will be rendered as ordered list.
+     * @deprecated
+     */
     ListOrdered = 17,
-    /**	Render a tag of another template */
+    /**
+     * Render a tag of another template.
+     * @deprecated
+     */
     TagTemplate = 20,
     /**	Variant of HTML with a larger textarea in the tagfill dialog. */
     HtmlLong = 21,
@@ -111,17 +134,35 @@ export enum TagPartType {
     DataSource = 32,
     /** The velocity part type can be used to evaluate all previously generated text using the velocity markup parser. */
     Velocity = 33,
-    /** This part type can be used to generate breadcrumbs */
+    /**
+     * This part type can be used to generate breadcrumbs.
+     * @deprecated
+     */
     Breadcrumb = 34,
-    /** The navigation part type can be used to create a custom navigation using a velocity template. */
+    /**
+     * The navigation part type can be used to create a custom navigation using a velocity template.
+     * @deprecated
+     */
     Navigation = 35,
-    /** The custom form part type can be used to create custom form elements. */
+    /**
+     * The custom form part type can be used to create custom form elements.
+     * @deprecated
+     */
     HTMLCustomForm = 36,
-    /** The custom form part type can be used to create custom form elements. */
+    /**
+     * The custom form part type can be used to create custom form elements.
+     * @deprecated
+     */
     TextCustomForm = 37,
-    /** The file upload part type is a URL (file) part type which has an additional file upload button. */
+    /**
+     * The file upload part type is a URL (file) part type which has an additional file upload button.
+     * @deprecated
+     */
     FileUpload = 38,
-    /** The folder upload part type is a URL (folder) part type which has an additional file upload button. */
+    /**
+     * The folder upload part type is a URL (folder) part type which has an additional file upload button.
+     * @deprecated
+     */
     FolderUpload = 39,
     /** The node part is a drop-down menu with the nodes available to the user. */
     Node = 40,

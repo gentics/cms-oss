@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableContentPackage } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum ContentPackagePropertiesMode {
     UPDATE = 'update',
@@ -18,9 +17,9 @@ export enum ContentPackagePropertiesMode {
         generateFormProvider(ContentPackagePropertiesComponent),
         generateValidatorProvider(ContentPackagePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class ContentPackagePropertiesComponent extends BasePropertiesComponent<EditableContentPackage> {
+export class ContentPackagePropertiesComponent extends BaseFormPropertiesComponent<EditableContentPackage> {
 
     @Input()
     public mode: ContentPackagePropertiesMode = ContentPackagePropertiesMode.UPDATE;

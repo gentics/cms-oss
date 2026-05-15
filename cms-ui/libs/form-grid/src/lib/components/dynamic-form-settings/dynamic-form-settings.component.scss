@@ -1,0 +1,28 @@
+@import 'ui-core/src/styles/variables';
+
+.dynamic-settings-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    .settings-entry {
+        flex: 0 0 100%;
+        margin: 0;
+
+        &[data-control-type="boolean"] {
+            flex: 0 0 50%;
+            /* flex gaps are stupid and cause elements to overflow/wrap, even tho then shouldn't */
+            max-width: calc(50% - 0.5rem);
+        }
+
+        &:not([data-control-type="boolean"]) + [data-control-type="boolean"],
+        &:not([data-control-type="boolean"]) + [data-control-type="boolean"] + [data-control-type="boolean"] {
+            padding-top: 0.5rem;
+        }
+    }
+}
+
+.error-message {
+    color: $gtx-color-alert;
+}

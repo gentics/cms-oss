@@ -1,16 +1,21 @@
 @import '../../../styles/base-import';
 
 :host {
-    position: relative;
-    display: block;
+    .input-element {
+        width: 100%;
+        height: 100%;
+        border: none;
+        padding: 0;
+        margin: 0;
+        outline: none;
+        box-shadow: none;
+        font-size: inherit;
 
-    .wrapper {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
+        &:focus {
+            border: none;
+            box-shadow: none;
+        }
     }
-
-    @include input-label-styles('> label');
 
     .input-element[type=text],
     .input-element[type=number],
@@ -18,53 +23,18 @@
     .input-element[type=email],
     .input-element[type=tel],
     .input-element[type=url] {
-        @include input-base;
-
         &::-ms-clear {
             display: none;
             width: 0;
             height: 0;
         }
-
-        &.has-addon {
-            border-top-right-radius: 0px;
-            border-bottom-right-radius: 0px;
-            border-right-width: 1px;
-        }
     }
 
-    .addon-button {
-        align-self: flex-start;
-        background: $gtx-color-very-light-gray;
-        border-top: 2px solid $gtx-color-light-gray;
-        border-right: 2px solid $gtx-color-light-gray;
-        border-bottom: 2px solid $gtx-color-light-gray;
-        border-top-right-radius: 3px;
-        border-bottom-right-radius: 3px;
-        display: flex;
-        flex-direction: column;
-        height: 2.5rem;
-        justify-content: center;
-        transition: 300ms;
-        margin-top: 20px;
-
-        icon {
-            color: inherit;
-        }
+    .projected-addon-buttons {
+        display: contents !important;
     }
 
-    .clear-button:hover::ng-deep .btn,
-    .clear-button:focus::ng-deep .btn {
-        color: $gtx-color-alert !important;
-    }
-
-    &.ng-invalid {
-        label {
-            color: $gtx-color-alert;
-        }
-
-        .input-element {
-            border-color: $gtx-color-alert;
-        }
+    &.ng-invalid gtx-form-element-container {
+        border-color: $gtx-color-alert;
     }
 }

@@ -1,23 +1,27 @@
-<textarea
-    #textarea
-
-    autosize
-    [minRows]="1"
-
-    class="materialize-textarea"
-
-    [attr.id]="id"
-    [attr.maxlength]="maxlength"
-    [attr.name]="name"
-    [attr.placeholder]="placeholder"
-
+<gtx-form-element-container
     [disabled]="disabled"
     [readonly]="readonly"
-    [required]="required"
-    [value]="value || ''"
+>
+    <label [attr.for]="id">{{ label }}</label>
 
-    (input)="textAreaInputHandler($event)"
-    (blur)="blurHandler()"
-></textarea>
+    <textarea
+        #textarea
 
-<label [attr.for]="id">{{ label }}</label>
+        autosize
+        [minRows]="1"
+
+        [attr.id]="id"
+        [attr.maxlength]="maxlength"
+        [attr.name]="name"
+        [attr.placeholder]="placeholder"
+
+        [disabled]="disabled"
+        [readonly]="readonly"
+        [required]="required"
+        [value]="value || ''"
+
+        (input)="textAreaInputHandler($event)"
+        (blur)="blurHandler()"
+    ></textarea>
+</gtx-form-element-container>
+

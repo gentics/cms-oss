@@ -291,3 +291,16 @@
         height: 0px !important;
     }
 }
+
+.form-editing-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex: 1 1 auto;
+    gap: 1rem;
+
+    .form-view-modes {
+        width: auto;
+        align-self: end;
+    }
+}

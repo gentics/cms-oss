@@ -2,7 +2,7 @@ import { LocalizationType } from './common';
 import { ExternalLink } from './external-link';
 import { Folder } from './folder';
 import { Group } from './group';
-import { InheritableItem } from './item';
+import { InheritableItem, ItemVersion } from './item';
 import { Tags } from './tag';
 import { Template } from './template';
 import { DefaultModelType, IndexById, ModelType, Normalizable, Raw } from './type-util';
@@ -77,23 +77,8 @@ export interface QueuedActionRequestClear {
     clearOfflineAt?: boolean;
 }
 
-/**
- * Represents a page version in the CMS
- * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_PageVersion.html
- */
-export interface PageVersion {
-
-    /** Version number */
-    // eslint-disable-next-line id-blacklist
-    number: string;
-
-    /** Version timestamp */
-    timestamp: number;
-
-    /** Editor of the version */
-    editor: User<Raw>;
-
-}
+/** @deprecated Use `ItemVersion` instead */
+export type PageVersion = ItemVersion;
 
 /** Information about the translation status of a page. */
 export interface PageTranslationStatus {

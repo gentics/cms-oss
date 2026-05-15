@@ -1,0 +1,51 @@
+<div class="page-manager">
+    @for (page of uiSchema().pages; track $index) {
+        <gtx-sortable-list
+            class="page-tab"
+            [group]="sortableGroup"
+            [sort]="false"
+            [filter]="'.page-tab-label, gtx-button'"
+            [attr.data-page-index]="$index"
+            [class.active]="pageIndex() === $index"
+            [class.drop-target-hint]="elementMoving() && !elementMoving()?.inserting"
+            [class.hovering]="hoveringIndex() === $index"
+            (click)="pageIndex.set($index)"
+            (dragover)="enterDrag($index)"
+            (dragleave)="leaveDrag($event, $index)"
+            (addItem)="moveElementToPage($event, $index)"
+        >
+            <span class="page-tab-label">
+                {{ (page.pagename | gtxI18nObject) || ('form_grid.page_untitled' | gtxI18n:{number: $index + 1}) }}
+            </span>
+
+            @if (mode() === FormGridEditMode.FULL) {
+                <gtx-button
+                    [icon]="true"
+                    [title]="'form_grid.page_edit_title' | gtxI18n"
+                    (click)="editPage.emit($index); $event.stopPropagation()"
+                >
+                    <icon>edit</icon>
+                </gtx-button>
+                <gtx-button
+                    type="alert"
+                    [icon]="true"
+                    [title]="'form_grid.page_delete_title' | gtxI18n"
+                    (click)="deletePage($index); $event.stopPropagation()"
+                >
+                    <icon>delete_outline</icon>
+                </gtx-button>
+            }
+        </gtx-sortable-list>
+    }
+
+    @if (mode() === FormGridEditMode.FULL) {
+        <gtx-button
+            class="add-page-btn"
+            [icon]="true"
+            [title]="'form_grid.page_add' | gtxI18n"
+            (click)="addPage()"
+        >
+            <icon>add</icon>
+        </gtx-button>
+    }
+</div>

@@ -3,7 +3,7 @@
         class="item-row icon-checkbox-trigger"
         [class.selected]="selected"
         [class.deleted]="itemIdDeleted"
-        [class.item-in-editor]="item === itemInEditor"
+        [class.item-in-editor]="item.id === activeItemId"
         [attr.data-item-type]="itemType"
         [attr.data-id]="item.id"
         [attr.data-global-id]="item.globalId"
@@ -28,16 +28,18 @@
             && nodeLanguages?.length > 1
             && showStatusIcons
             && languageState
-            && (itemType === 'page' || itemType === 'form')
+            && itemType === 'page'
         ) {
-            <gtx-language-state
-                [language]="languageState"
-                [activeLanguage]="activeLanguage"
-                [state]="languageState"
-                [mode]="uiMode"
-                [showIndicators]="true"
-                [showDeleted]="showDeleted"
-            ></gtx-language-state>
+            <div class="current-language-container">
+                <gtx-language-state
+                    [language]="languageState"
+                    [activeLanguage]="activeLanguage"
+                    [state]="languageState"
+                    [mode]="uiMode"
+                    [showIndicators]="true"
+                    [showDeleted]="showDeleted"
+                ></gtx-language-state>
+            </div>
         }
 
         <div #itemPrimary class="item-primary">
@@ -146,9 +148,8 @@
                 ></div>
             }
 
-            @if ((item.type === 'page' || item.type === 'form')
+            @if (((item.type === 'page' && activeLanguage != null) || item.type === 'form')
                 && nodeLanguages?.length > 1
-                && activeLanguage != null
             ) {
                 <div class="language-indicator">
                     @if (item.type === 'page') {
@@ -171,7 +172,6 @@
                     @if (item.type === 'form') {
                         <form-language-indicator
                             [languages]="nodeLanguages"
-                            [activeLanguage]="activeLanguage"
                             [form]="item"
                             [permissions]="permissions"
                             [mode]="mode"
@@ -204,6 +204,7 @@
                 <item-context-menu
                     class="context-menu"
                     [item]="item"
+                    [external]="external"
                     [activeNode]="activeNode"
                     [isFolderStartPage]="itemType === 'page' && item.id === startPageId"
                     [isLocked]="itemType === 'page' && item | pageIsLocked"

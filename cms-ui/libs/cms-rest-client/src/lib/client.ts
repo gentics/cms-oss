@@ -523,6 +523,11 @@ export class GCMSRestClient implements GCMSRootAPI {
         removeScheduledPublish: (id) => this.executeMappedJsonRequest(DELETE, `/form/${id}/online`),
         removeScheduledUnpublish: (id) => this.executeMappedJsonRequest(DELETE, `/form/${id}/offline`),
 
+        listConfigurations: (options) => this.executeMappedJsonRequest(GET, '/form/types', null, options),
+        getConfiguration: (type) => this.executeMappedJsonRequest(GET, `/form/types/${type}`),
+        assignConfiguration: (type, nodeId) => this.executeMappedJsonRequest(PUT, `/form/nodes/${nodeId}/types/${type}`),
+        unassignConfiguration: (type, nodeId) => this.executeMappedJsonRequest(DELETE, `/form/nodes/${nodeId}/types/${type}`),
+
         exportStatus: (id) => this.executeMappedJsonRequest(GET, `/form/${id}/export/status`),
         createExport: (id) => this.executeMappedJsonRequest(POST, `/form/${id}/export`),
         binariesStatus: (id) => this.executeMappedJsonRequest(GET, `/form/${id}/binaries/status`),
@@ -544,6 +549,10 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         restoreFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/restore/${id}`, null, options),
         deleteFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/delete/${id}`, null, options),
+
+        usageInPages: (options) => this.executeMappedJsonRequest(GET, '/form/usage/pages', null, options),
+        usageInTemplates: (options) => this.executeMappedJsonRequest(GET, '/form/usage/templates', null, options),
+        usageInTotal: (options) => this.executeMappedJsonRequest(GET, '/form/usage/total', null, options),
     } as const;
 
     public fum: GCMSFileUploadManipulatorAPI = {

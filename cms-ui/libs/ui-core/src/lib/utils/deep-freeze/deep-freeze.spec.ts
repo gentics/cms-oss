@@ -1,4 +1,3 @@
-import { cloneDeep as _cloneDeep } from'lodash-es'
 import { deepFreeze } from './deep-freeze';
 
 const TEST_OBJ = {
@@ -8,7 +7,7 @@ const TEST_OBJ = {
         a: 1,
         b: {
             c: 'test',
-            simpleArray: [ 1, 2, 3 ],
+            simpleArray: [1, 2, 3],
             complexArray: [
                 { x: 1, y: 2 },
                 { x: 3, y: 4 },
@@ -32,13 +31,13 @@ describe('deepFreeze()', () => {
     }
 
     it('recursively freezes a complex object', () => {
-        const orig = _cloneDeep(TEST_OBJ);
+        const orig = structuredClone(TEST_OBJ);
         const frozen = deepFreeze(orig);
         assertIsDeeplyFrozen(orig, frozen);
     });
 
     it('recursively freezes a complex object that is already partially frozen', () => {
-        const orig = _cloneDeep(TEST_OBJ);
+        const orig = structuredClone(TEST_OBJ);
         Object.freeze(orig.deeplyNestedObj);
         const frozen = deepFreeze(orig);
         assertIsDeeplyFrozen(orig, frozen);

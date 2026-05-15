@@ -63,3 +63,26 @@ $global-width: rem-calc(1200) !default;
     width: 70%;
   }
 }
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .columns {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        margin-bottom: 1rem;
+        margin-top: 0;
+
+        &.flex-row {
+            padding-left: 0;
+            padding-right: 0;
+            margin-bottom: 0;
+        }
+    }
+
+    .gtx-form-section-title {
+        width: 100%;
+    }
+}

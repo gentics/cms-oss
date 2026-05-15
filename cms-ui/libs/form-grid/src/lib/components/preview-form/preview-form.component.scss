@@ -1,0 +1,252 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.react-preview-bootstrap {
+  display: none;
+}
+
+.preview-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  gap: 0;
+  align-items: stretch;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.preview-shell--with-panel {
+  grid-template-columns: minmax(0, 1fr) 640px;
+}
+
+.preview-main {
+  min-width: 0;
+  min-height: 0;
+  background: #ffffff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 12px;
+}
+
+.react-preview-root {
+  position: relative;
+  width: 100%;
+  min-height: 500px;
+  background: #ffffff;
+  padding: 12px;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+/*
+ * Disable all UX interactions inside the embedded React app in preview mode
+ * (no clicks, focus, dropdowns, inputs, etc.).
+ */
+#root {
+  pointer-events: none;
+  user-select: none;
+}
+
+.preview-interaction-blocker {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: transparent;
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+
+.editor-panel {
+  background: #ffffff;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  max-height: 100%;
+  align-self: stretch;
+}
+
+.editor-panel--right {
+  border-left: 1px solid #e5e5e5;
+}
+
+.panel-header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+}
+
+.panel-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 6px 18px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+
+  i.material-icons {
+    font-size: 20px;
+    color: #3a3a3a;
+    transition: transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  }
+
+  &:hover {
+    background: #f7f7f7;
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.08),
+      0 10px 26px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.editor-panel--right .panel-toggle-btn {
+  margin-right: auto;
+}
+
+.panel-content {
+  padding: 12px 14px 14px;
+  overflow: hidden;
+}
+
+.panel-segment-title {
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 2px 0 12px;
+}
+
+.panel-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  padding: 20px;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  background: #fafafa;
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* panel form controls */
+.editor-panel .fg-form {
+  max-width: 100%;
+}
+
+.editor-panel .fg-field {
+  width: 100%;
+}
+
+.editor-panel .fg-field--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+
+  > label {
+    min-width: 0;
+  }
+
+  .fg-select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #d9d9d9;
+    background: #ffffff;
+    font-size: 14px;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+
+    &:focus {
+      outline: none;
+      border-color: #0096dc;
+      box-shadow: 0 0 0 3px rgba(0, 150, 220, 0.15);
+    }
+  }
+}
+
+.editor-panel .fg-field--checkrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  > label {
+    min-width: 0;
+    margin: 0;
+    flex: 1;
+    line-height: 1.2;
+  }
+
+  > input[type='checkbox'] {
+    margin: 0;
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 1200px) {
+  .preview-shell--with-panel {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+}
+
+@media (max-width: 960px) {
+  .preview-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-main {
+    padding-right: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 16px;
+  }
+
+  .editor-panel--right {
+    border-left: 0;
+    border-top: 1px solid #e5e5e5;
+    min-height: 320px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-toggle-btn,
+  .panel-toggle-btn i {
+    transition: none !important;
+  }
+}

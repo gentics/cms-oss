@@ -1,10 +1,10 @@
 import { schema } from 'normalizr';
-import { CmsI18nValue } from './cms-i18n-value';
+import { I18nString } from './common';
+import { ConstructCategory } from './construct-category';
 import { InstancePermissionItem } from './permissions';
 import { TagPart, TagPartProperty } from './tag-part';
 import { DefaultModelType, IndexByKey, ModelType } from './type-util';
 import { User } from './user';
-import { ConstructCategory } from './construct-category';
 
 export type TagTypeType = 'CONTENTTAG' | 'TEMPLATETAG' | 'OBJECTTAG';
 
@@ -145,13 +145,13 @@ export interface TagTypeBase<T extends ModelType> {
     name?: string;
 
     /** The name of the tag in multiple languages */
-    nameI18n?: CmsI18nValue;
+    nameI18n?: I18nString;
 
     /** Description in the current language */
     description?: string;
 
     /** Description of th etag in multiple languages */
-    descriptionI18n?: CmsI18nValue;
+    descriptionI18n?: I18nString;
 
     /** The list of TagParts of this TagType. */
     parts: TagPart[];

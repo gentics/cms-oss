@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { ScheduleData, ScheduleType } from '@gentics/cms-models';
-import { FormProperties, dateInYears, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, dateInYears, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { pick } from 'lodash-es';
 
 @Component({
@@ -14,9 +13,9 @@ import { pick } from 'lodash-es';
         generateFormProvider(ScheduleDataPropertiesComponent),
         generateValidatorProvider(ScheduleDataPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<ScheduleData> implements OnInit {
+export class ScheduleDataPropertiesComponent extends BaseFormPropertiesComponent<ScheduleData> implements OnInit {
 
     readonly ScheduleType = ScheduleType;
     public dateMin: Date;

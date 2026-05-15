@@ -7,7 +7,6 @@ import {
     PermissionsMapCollection,
     RecursivePartial,
 } from '@gentics/cms-models';
-import { cloneDeep } from 'lodash-es';
 import {
     DefaultPermissionsFactory,
     FolderInstancePermissions,
@@ -127,7 +126,7 @@ describe('permissions', () => {
             }
 
             function assertHasPermOrPrivWorksWithoutRoles(itemType: FolderItemType): void {
-                const mapsClone = cloneDeep(MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION);
+                const mapsClone = structuredClone(MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION);
                 delete mapsClone.rolePermissions;
                 folderPermissions = new FolderInstancePermissionsImpl(mapsClone as any, 4711, 1);
 
@@ -233,7 +232,7 @@ describe('permissions', () => {
                 });
 
                 it('with language: works if no language specific privileges are set', () => {
-                    const mapsClone = cloneDeep(MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION);
+                    const mapsClone = structuredClone(MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION);
                     delete mapsClone.rolePermissions.pageLanguages;
                     folderPermissions = new FolderInstancePermissionsImpl(mapsClone as any, 4711, 1);
 

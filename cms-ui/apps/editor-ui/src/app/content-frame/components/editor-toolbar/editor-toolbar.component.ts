@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
-    CmsFormType,
     File,
     Folder,
     Form,
@@ -27,6 +26,7 @@ import {
     Page,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { FormGridViewMode } from '@gentics/form-grid';
 import { ChangesOf, IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
@@ -72,7 +72,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public readonly SaveBehaviour = SaveBehaviour;
     public readonly EditMode = EditMode;
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
-    public readonly CmsFormType = CmsFormType;
+    public readonly FormGridViewMode = FormGridViewMode;
 
     @Input()
     public nodeInherited: boolean;
@@ -104,6 +104,9 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     @Input()
     public editorState: EditorState;
 
+    @Input()
+    public formViewMode: FormGridViewMode = FormGridViewMode.EDITOR;
+
     @Output()
     public close = new EventEmitter<void>();
 
@@ -112,6 +115,9 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     @Output()
     public timeManagement = new EventEmitter<ItemNormalized>();
+
+    @Output()
+    public formViewModeChange = new EventEmitter<FormGridViewMode>();
 
     public uploadInProgress$: Observable<boolean>;
     public alohaReady: boolean;
@@ -212,6 +218,10 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     updateBrokenLinkCount(count: number): void {
         this.brokenLinkCount = count;
+    }
+
+    updateFormViewMode(viewMode: FormGridViewMode): void {
+        this.formViewModeChange.emit(viewMode);
     }
 
     setUpBreadcrumbs(item: Page | File | Folder | Form | Image | Node | undefined, nodeId: number): void {

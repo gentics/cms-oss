@@ -1,23 +1,16 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
-import { ApplicationStateService } from '../../../../state';
 import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     CmsFormTagPartProperty,
     EditableTag,
-    Form,
-    ItemInNode,
-    NodeFeature,
-    Raw,
+    FormInNode,
     TagPart,
     TagPartProperty,
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { I18nService } from '@gentics/cms-components';
-import { Observable, Subscription, merge } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import { RepositoryBrowserClient } from '../../../../shared/providers';
+import { Subscription } from 'rxjs';
 import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper/selected-item-helper';
 
 /**
@@ -32,14 +25,8 @@ import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper
 })
 export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDestroy {
 
-    /** Form this edited tag belongs to */
-    private form?: Form<Raw>;
-
     /** The helper for managing and loading the selected internal form. */
-    private selectedInternalForm: SelectedItemHelper<ItemInNode<Form<Raw>>>;
-
-    /** The string that should be displayed in the input field for an internal form. */
-    internalFormDisplayValue$: Observable<string>;
+    public selectedInternalForm: SelectedItemHelper<FormInNode>;
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */
     tagPart: TagPart;
@@ -60,9 +47,6 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDest
     constructor(
         private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
-        private repositoryBrowserClient: RepositoryBrowserClient,
-        private i18n: I18nService,
-        private appState: ApplicationStateService,
     ) { }
 
     ngOnDestroy(): void {
@@ -71,60 +55,8 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDest
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
         this.selectedInternalForm = new SelectedItemHelper('form', context.node.id, this.client);
-
-        this.internalFormDisplayValue$ = merge(
-            this.selectedInternalForm.selectedItem$.pipe(
-                map((selectedItem: Form<Raw>) => {
-                    if (selectedItem) {
-                        return selectedItem.name;
-                    } else {
-                        /**
-                         * null is emitted, when nothing is selected.
-                         * Also, null is emitted in case a referenced form got deleted and the tag property data was refetched.
-                         * (Since the formId in tagProperty gets removed).
-                         */
-                        return this.i18n.instant('editor.form_no_selection');
-                    }
-                }),
-            ),
-            this.selectedInternalForm.loadingError$.pipe(
-                map((error: { error: any; item: { itemId: number; nodeId?: number } }) => {
-                    /**
-                     * When a form that is referenced gets deleted, the formId is kept in tagProperty.
-                     * When we try to fetch the form information we get an error message.
-                     * In that case we want to inform the user that the form got deleted
-                     * (and thus avoid suggesting that a valid form is still selected).
-                     */
-                    if (this.tagProperty && this.tagProperty.formId) {
-                        /**
-                         * additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
-                         * This could trigger an emission before this.tagProperty is set in updateTagProperty
-                         */
-                        return this.i18n.instant('editor.form_not_found', { id: this.tagProperty.formId });
-                    } else {
-                        return '';
-                    }
-                }),
-            ),
-        ).pipe(
-            tap(() => this.changeDetector.markForCheck()),
-        );
-
-        this.subscriptions.push(this.appState.select((state) => state.features.nodeFeatures).subscribe((nodeFeatures) => {
-            if (!context.node) {
-                this.formFeatureActive = false;
-                this.changeDetector.markForCheck();
-                return;
-            }
-
-            const currentNodeFeatures = nodeFeatures[context.node?.id] || [];
-            this.formFeatureActive = currentNodeFeatures.includes(NodeFeature.FORMS);
-            this.changeDetector.markForCheck();
-        }));
-
         this.tagPart = tagPart;
         this.readOnly = context.readOnly;
-        this.form = context.form;
         this.updateTagProperty(tagProperty);
     }
 
@@ -145,8 +77,8 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDest
      * to newSelectedForm. This method must only be called in response to
      * user input.
      */
-    changeSelectedForm(newSelectedForm: ItemInNode<Form<Raw>>): void {
-        let selectedInternalForm: ItemInNode<Form<Raw>>;
+    changeSelectedForm(newSelectedForm: FormInNode): void {
+        let selectedInternalForm: FormInNode;
 
         if (typeof newSelectedForm === 'string') {
             // Invalid, shouldn't happen
@@ -168,18 +100,6 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDest
             this.onChangeFn(changes);
         }
         this.selectedInternalForm.setSelectedItem(selectedInternalForm);
-    }
-
-    /**
-     * Opens the repository browser to allow the user to select an internal form.
-     */
-    browseForForm(): void {
-        let contentLanguage: string;
-        if (this.form) {
-            contentLanguage = this.form.languages[0];
-        }
-        this.repositoryBrowserClient.openRepositoryBrowser({ allowedSelection: 'form', selectMultiple: false, contentLanguage })
-            .then((selectedForm) => this.changeSelectedForm(selectedForm));
     }
 
     /**

@@ -9,8 +9,11 @@
       <h6>{{ 'modal.inheritance_channels_title' | gtxI18n }}</h6>
       @for (nodeId of item.inheritable; track nodeId) {
         <div>
-          <gtx-checkbox [disabled]="!generalInheritance" [label]="getChannelLabel(nodeId) | gtxI18n:{ channel: nodes[nodeId]?.name }"
-          [(ngModel)]="inheritedChannels[nodeId]"></gtx-checkbox>
+          <gtx-checkbox
+            [disabled]="!generalInheritance"
+            [label]="getChannelLabel(nodeId) | gtxI18n:{ channel: nodes[nodeId]?.name }"
+            [(ngModel)]="inheritedChannels[nodeId]"
+          ></gtx-checkbox>
         </div>
       }
     </div>

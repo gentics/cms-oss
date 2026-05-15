@@ -9,29 +9,31 @@ import {
     sortEntityRow,
     TableLoadEndEvent,
     TableSortEvent,
-} from '@admin-ui/common';
-import { ErrorHandler, LanguageHandlerService, LanguageTableLoaderService, NodeHandlerService, NodeTableLoaderService } from '@admin-ui/core';
-import { BaseEntityEditorComponent } from '@admin-ui/core/components';
-import { AppStateService } from '@admin-ui/state';
+} from '../../../../common';
+import { ErrorHandler, LanguageHandlerService, LanguageTableLoaderService, NodeHandlerService, NodeTableLoaderService } from '../../../../core';
+import { BaseEntityEditorComponent } from '../../../../core/components/base-entity-editor/base-entity-editor.component';
+import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
-import { Feature, Folder, Language, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
+import { Feature, Folder, FormTypeConfiguration, Language, NodeFeature, NodeFeatureModel, NodeHostnameType, NodePreviewurlType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ModalService, TableRow } from '@gentics/ui-core';
-import { finalize } from 'rxjs/operators';
+import { ModalService, PickListItem, TableRow } from '@gentics/ui-core';
+import { catchError, finalize } from 'rxjs/operators';
 import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/assign-languages-to-node-modal.component';
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData, NodePropertiesMode } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
+import { I18nService } from '@gentics/cms-components';
+import { of } from 'rxjs';
 
 @Component({
     selector: 'gtx-node-editor',
     templateUrl: './node-editor.component.html',
     styleUrls: ['./node-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntity.NODE> implements OnInit {
 
@@ -57,12 +59,21 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
 
     public devtoolsEnabled = false;
 
+    public allFormTypes: FormTypeConfiguration[] = [];
+
+    public allFormTypesAsPickListItems: PickListItem[] = [];
+
+    public selectedFormTypes = new FormControl<PickListItem[]>([]);
+
+    public assignedConfigurations: FormTypeConfiguration[] = [];
+
     constructor(
         changeDetector: ChangeDetectorRef,
         route: ActivatedRoute,
         router: Router,
         appState: AppStateService,
         handler: NodeHandlerService,
+        protected i18n: I18nService,
         protected tableLoader: NodeTableLoaderService,
         protected client: GCMSRestClientService,
         protected modalService: ModalService,
@@ -77,16 +88,38 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             router,
             appState,
             handler,
-        )
+        );
     }
 
     override ngOnInit(): void {
         this.isChildNode = this.entity?.type === 'channel';
 
-        this.subcriptions.push(this.appState.select(state => state.features.global[Feature.DEVTOOLS]).subscribe(enabled => {
+        this.subcriptions.push(this.appState.select((state) => state.features.global[Feature.DEVTOOLS]).subscribe((enabled) => {
             this.devtoolsEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
+
+        // Load assigned form configurations for this node
+        this.subcriptions.push(
+            (this.handler as NodeHandlerService)
+                .listNodeFormConfigurations(this.entityId)
+                .subscribe((items) => {
+                    this.assignedConfigurations = items;
+                    this.selectedFormTypes.setValue(items.map((item) => this.mapFormTypeToPickListItem(item)));
+                    this.changeDetector.markForCheck();
+                }),
+        );
+
+        // Load all available form types
+        this.subcriptions.push(
+            (this.handler as NodeHandlerService)
+                .listAllFormConfigurations()
+                .subscribe((items) => {
+                    this.allFormTypes = items;
+                    this.allFormTypesAsPickListItems = items.map((item) => this.mapFormTypeToPickListItem(item));
+                    this.changeDetector.markForCheck();
+                }),
+        );
 
         Promise.all([
             this.loadFeatureData(),
@@ -101,6 +134,17 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         this.tableLoader.reload();
     }
 
+    /**
+     * Returns true if the FORMS feature is enabled.
+     * Reads from the live form control value so the tab appears immediately
+     * when the checkbox is clicked, without needing to save first.
+     */
+    get isFormsEnabled(): boolean {
+        return this.fgNodeFeatures?.value?.[NodeFeature.FORMS]
+          ?? this.currentFeatures?.[NodeFeature.FORMS]
+          ?? false;
+    }
+
     protected initializeTabHandles(): void {
         this.fgProperties = new FormControl(this.getPropertiesData());
         this.tabHandles[this.Tabs.PROPERTIES] = new FormGroupTabHandle(this.fgProperties, {
@@ -112,7 +156,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                     description,
                     node: value,
                 }).pipe(
-                    discard(entity => {
+                    discard((entity) => {
                         this.handleEntityLoad(entity);
                         this.onEntityUpdate();
                     }),
@@ -134,7 +178,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
                 return this.handler.updateMapped(this.entityId, {
                     node: value,
                 }).pipe(
-                    discard(entity => {
+                    discard((entity) => {
                         this.handleEntityLoad(entity);
                         this.onEntityUpdate();
                     }),
@@ -160,6 +204,34 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             },
         });
 
+        this.tabHandles[this.Tabs.FORMS] = new FormGroupTabHandle(this.selectedFormTypes, {
+            save: () => {
+                this.selectedFormTypes.disable();
+
+                const updated = this.selectedFormTypes.value
+                    .map((item) => this.allFormTypes.find((f) => f.type === String(item.id)))
+                    .filter(Boolean);
+
+                return (this.handler as NodeHandlerService)
+                    .updateFormConfigurations(this.entityId, updated, this.assignedConfigurations)
+                    .pipe(
+                        discard(() => {
+                            this.assignedConfigurations = updated;
+                            this.changeDetector.markForCheck();
+                        }),
+                        catchError(() => of(null)),
+                        finalize(() => this.selectedFormTypes.enable()),
+                    )
+                    .toPromise();
+            },
+            reset: () => {
+                this.selectedFormTypes.reset(
+                    this.assignedConfigurations.map((item) => this.mapFormTypeToPickListItem(item)),
+                );
+                return Promise.resolve();
+            },
+        });
+
         this.tabHandles[this.Tabs.LANGUAGES] = {
             save: () => this.updateLanguages(),
             isDirty: () => this.isLanguagesChanged,
@@ -177,6 +249,17 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
     protected onEntityChange(): void {
         this.isChildNode = this.entity?.type === 'channel';
 
+        // Reload form configurations when switching to a different node
+        this.subcriptions.push(
+            (this.handler as NodeHandlerService)
+                .listNodeFormConfigurations(this.entityId)
+                .subscribe((items) => {
+                    this.assignedConfigurations = items;
+                    this.selectedFormTypes.setValue(items.map((item) => this.mapFormTypeToPickListItem(item)));
+                    this.changeDetector.markForCheck();
+                }),
+        );
+
         Promise.all([
             this.loadFeatureData(),
             this.loadRootFolder(),
@@ -193,7 +276,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         }
 
         return new Promise((resolve, reject) => {
-            this.subcriptions.push(this.client.folder.get(this.entity.folderId).subscribe(res => {
+            this.subcriptions.push(this.client.folder.get(this.entity.folderId).subscribe((res) => {
                 this.rootFolder = res.folder;
 
                 resolve();
@@ -221,7 +304,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
         }
 
         return new Promise((resolve, reject) => {
-            this.subcriptions.push((this.handler as NodeHandlerService).listFeatures().subscribe(features => {
+            this.subcriptions.push((this.handler as NodeHandlerService).listFeatures().subscribe((features) => {
                 this.features = features;
                 this.changeDetector.markForCheck();
                 resolve();
@@ -247,6 +330,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             publishImageVariants: this.entity?.publishImageVariants,
             defaultFileFolderId: this.entity?.defaultFileFolderId,
             defaultImageFolderId: this.entity?.defaultImageFolderId,
+            defaultFormFolderId: this.entity?.defaultFormFolderId,
             pubDirSegment: this.entity?.pubDirSegment,
             description: this.rootFolder?.description,
         };
@@ -278,7 +362,7 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
     }
 
     updateLanguages(): Promise<void> {
-        const nodeLanguages: Language[] = this.languageRows.map(row => row.item);
+        const nodeLanguages: Language[] = this.languageRows.map((row) => row.item);
 
         return (this.handler as NodeHandlerService).updateLanguages(this.entityId, nodeLanguages).pipe(
             discard(() => {
@@ -299,19 +383,19 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
     async assignLanguagesToNode(): Promise<void> {
         const dialog = await this.modalService.fromComponent(
             AssignLanguagesToNodeModal,
-            { closeOnOverlayClick: false , width: '50%' },
+            { closeOnOverlayClick: false, width: '50%' },
             {
                 nodeId: this.entityId,
                 nodeName: this.entity.name,
-                selectedLanguages: this.languageRows.map(row => row.item[BO_ID]),
+                selectedLanguages: this.languageRows.map((row) => row.item[BO_ID]),
             },
         );
         try {
             const languages = await dialog.open();
             if (Array.isArray(languages)) {
                 this.languageRows = languages
-                    .map(lang => this.languageHandler.mapToBusinessObject(lang))
-                    .map(bo => this.languageTableLoader.mapToTableRow(bo));
+                    .map((lang) => this.languageHandler.mapToBusinessObject(lang))
+                    .map((bo) => this.languageTableLoader.mapToTableRow(bo));
                 this.isLanguagesChanged = false;
                 this.changeDetector.markForCheck();
             }
@@ -321,5 +405,12 @@ export class NodeEditorComponent extends BaseEntityEditorComponent<EditableEntit
             }
             this.errorHandler.catch(err);
         }
+    }
+
+    mapFormTypeToPickListItem(form: FormTypeConfiguration): PickListItem {
+        return {
+            id: form.type,
+            label: form.nameI18n[this.i18n.getCurrentLanguage()],
+        };
     }
 }

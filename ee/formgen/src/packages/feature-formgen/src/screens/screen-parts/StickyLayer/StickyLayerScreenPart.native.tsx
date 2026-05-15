@@ -117,7 +117,7 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
   // On Mobile, exclude form_cancel and detail_info
 
   const footerButtons = buttons.filter(
-    b => !["form_cancel", "form_detailinfo"].includes(b.translateKey)
+    b => !["form_cancel", "form_detailinfo"].includes(b.labelTranslationKey)
   );
 
   // Determine arrangement for normal forms
@@ -126,15 +126,15 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
   // detect Prev/Next/Submit by component name or translateKey
   const prevDef = footerButtons.find(
     (b) =>
-      /prev/i.test(b.btnComponent || '') || /prev/i.test(b.translateKey || '')
+      /prev/i.test(b.reactClass || '') || /prev/i.test(b.labelTranslationKey || '')
   );
   const nextDef = footerButtons.find(
     (b) =>
-      /next/i.test(b.btnComponent || '') || /next/i.test(b.translateKey || '')
+      /next/i.test(b.reactClass || '') || /next/i.test(b.labelTranslationKey || '')
   );
   const submitDef = footerButtons.find(
     (b) =>
-      /submit/i.test(b.btnComponent || '') || /submit/i.test(b.translateKey || '')
+      /submit/i.test(b.reactClass || '') || /submit/i.test(b.labelTranslationKey || '')
   );
   const otherFooterButtons = footerButtons.filter(
     (b) => b !== prevDef && b !== nextDef && b !== submitDef && b.mobileDisabled == false
@@ -232,15 +232,15 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
 
 function renderButtons(buttonDefinition: IFormFlowButtonDefinition[], additionalProps: any = {}) {
   return buttonDefinition.map((buttonDef, index) => {
-    const ButtonComponent = ButtonComponents[buttonDef.btnComponent];
+    const ButtonComponent = ButtonComponents[buttonDef.reactClass];
     if (!ButtonComponent) {
-      console.warn(`Unbekannte Button-Komponente: ${buttonDef.btnComponent}`);
+      console.warn(`Unbekannte Button-Komponente: ${buttonDef.reactClass}`);
       return null;
     }
     return (
       <ButtonComponent
         key={index}
-        translateKey={buttonDef.translateKey}
+        translateKey={buttonDef.labelTranslationKey}
         buttonDefinition={buttonDef}
         {...additionalProps}
       />

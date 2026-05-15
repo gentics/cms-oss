@@ -30,8 +30,8 @@ const NextPageButtonScreenPart: React.FC<IFormPageComponent> = (
     let existingSubmitBtn = false;
     if (props.uiState.flowList.length > 0) {
       let formFlowObj = props.uiState.flowList[props.uiState.flowPageIndex];
-      formFlowObj.buttonDefinition.map((x) => {
-        if (x.btnComponent.toString() == 'SubmitButton') {
+      formFlowObj.buttons.map((x) => {
+        if (x.reactClass.toString() == 'SubmitButton') {
           existingSubmitBtn = true;
         }
       });
@@ -79,7 +79,7 @@ const NextPageButtonScreenPart: React.FC<IFormPageComponent> = (
     if (props.uiState.flowList.length > 0 && props.uiState.currentPage == props.uiState.lastPage - 1) {
       let formFlowObj = props.uiState.flowList[props.uiState.flowPageIndex + 1];
       if (formFlowObj && formFlowObj != null && formFlowObj != undefined && formFlowObj.reactClass != "SuccessScreen") {
-        return t(getButtonTranslationKey(formFlowObj.buttonText));
+        return t(getButtonTranslationKey(formFlowObj.buttonLabelTranslationKey));
       }
     }
     return t(props.translateKey ? getButtonTranslationKey(props.translateKey) : getButtonTranslationKey('form_nextPage'));

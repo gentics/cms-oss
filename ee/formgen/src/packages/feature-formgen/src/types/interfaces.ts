@@ -429,11 +429,11 @@ export interface NormalizedSchemas {
 
 export interface IFormFlowClass {
   reactClass: string;
-  buttonDefinition: IFormFlowButtonDefinition[];
-  name: string;
-  description: string;
+  buttons: IFormFlowButtonDefinition[];
+  nameTranslationKey: string;
+  descriptionTranslationKey: string;
   variables?: IFormFlowClassVariables[];
-  buttonText: string;
+  buttonLabelTranslationKey: string;
 }
 
 export interface IFormFlowClassVariables {
@@ -442,8 +442,8 @@ export interface IFormFlowClassVariables {
 }
 
 export interface IFormFlowButtonDefinition {
-  btnComponent: string;
-  translateKey: string;
+  reactClass: string;
+  labelTranslationKey: string;
   mobileDisabled?: boolean;
 }
 
@@ -452,12 +452,12 @@ export interface IFormFlowData {
 }
 
 export interface IFormFlowSteps {
-  key: string;
-  name: string;
-  formFlowSteps: IFormFlowClass[];
+  id: string;
+  nameTranslationKey: string;
+  steps: IFormFlowClass[];
 }
 export interface IFormFlowStep {
-  buttonText: string;
+  buttonLabelTranslationKey: string;
   reactClass: string;
 }
 /**
@@ -471,8 +471,6 @@ export interface IForm {
   pages?: IFormPage[];
   formwidth?: number;
   formwidthOptimized?: boolean;
-  formFlowKey: string;
-  formFlow: IFormFlowSteps[];
 }
 
 /**

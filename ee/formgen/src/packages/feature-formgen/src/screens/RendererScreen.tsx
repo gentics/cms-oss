@@ -620,6 +620,17 @@ const scrollToElement = (elementRef?: any) => {
     return missingFormFlowResponse;
   };
 
+  const applyFormFlow = (responseBody: any): ApiResponse | null => {
+    const flowStepsList: IFormFlowSteps[] | undefined = responseBody?.flows;
+    if (!flowStepsList || flowStepsList.length === 0) {
+      return handleMissingFormFlow();
+    }
+    const flowId = responseBody.flowId ?? "standard";
+    const matchingFlow = flowStepsList.find((x: IFormFlowSteps) => x.id == flowId);
+    uiState.flowList = matchingFlow ? matchingFlow.steps : [];
+    return null;
+  };
+
   // TODO v8.2 ist setNormalizedSchema notwendig ?????
   const initForm = async (data?: any, newFormId?: string): Promise<ApiResponse> => {
     if (newFormId) {
@@ -720,22 +731,11 @@ const scrollToElement = (elementRef?: any) => {
     // 1) Data provided directly
     if (data) {
       formState.form = data.uiSchema;
-      const FlowStepsList = data?.uiSchema?.formFlow;
-      if (!FlowStepsList || FlowStepsList.length === 0) {
-        return handleMissingFormFlow();
-      }
+      const missingFlowResponse1 = applyFormFlow(data);
+      if (missingFlowResponse1) return missingFlowResponse1;
       formState.data = getPrefillData(data.data);
       formState.schema = data.schema;
       uiState.lastPage = data.uiSchema.pages.length;
-      const formFlowStepsTemplateKey = data.uiSchema.formFlowKey
-        ? data.uiSchema.formFlowKey
-        : FlowStepsList[0].key;
-      const findElementWithKey = FlowStepsList.find(
-        (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
-      );
-      uiState.flowList = findElementWithKey
-        ? findElementWithKey.formFlowSteps
-        : [];
 
       if (data.schema.formType) {
         uiState.isReadOnlyForm = data.schema.formType === 'readonlyform';
@@ -764,19 +764,8 @@ const scrollToElement = (elementRef?: any) => {
       formState.data = getPrefillData(responseBody.data);
       formState.schema = responseBody.schema;
       uiState.lastPage = responseBody.uiSchema.pages.length;
-      const FlowStepsList = responseBody.uiSchema?.formFlow;
-      if (!FlowStepsList || FlowStepsList.length === 0) {
-        return handleMissingFormFlow();
-      }
-      let formFlowStepsTemplateKey = formState.form.formFlowKey
-        ? formState.form.formFlowKey
-        : FlowStepsList[0].key;
-      const findElementWithKey = FlowStepsList.find(
-        (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
-      );
-      uiState.flowList = findElementWithKey
-        ? findElementWithKey.formFlowSteps
-        : [];
+      const missingFlowResponse2 = applyFormFlow(responseBody);
+      if (missingFlowResponse2) return missingFlowResponse2;
       if (
         formState.data.savedPageIndex != null &&
         uiState.lastPage >= formState.data.savedPageIndex
@@ -855,21 +844,8 @@ const scrollToElement = (elementRef?: any) => {
     formState.data = responseBody.data;
     formState.schema = responseBody.schema;
     uiState.lastPage = responseBody.uiSchema.pages.length;
-    const FlowStepsList = responseBody.uiSchema?.formFlow;
-    if (!FlowStepsList || FlowStepsList.length === 0) {
-      return handleMissingFormFlow();
-    }
-
-    let formFlowStepsTemplateKey = formState.form.formFlowKey
-      ? formState.form.formFlowKey
-      : FlowStepsList[0].key;
-
-    const findElementWithKey = FlowStepsList.find(
-      (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
-    );
-    uiState.flowList = findElementWithKey
-      ? findElementWithKey.formFlowSteps
-      : [];
+    const missingFlowResponse3 = applyFormFlow(responseBody);
+    if (missingFlowResponse3) return missingFlowResponse3;
     if (responseBody.schema.formType) {
       uiState.isReadOnlyForm =
         responseBody.schema.formType === 'readonlyform';
@@ -2089,7 +2065,7 @@ const scrollToElement = (elementRef?: any) => {
           </Modal>
         </>
       )}
-      <ButtonProvider definitions={flowPageObj?.buttonDefinition}>
+      <ButtonProvider definitions={flowPageObj?.buttons}>
         {Platform.OS == "web" ? <Host>{renderScreen}</Host> : renderScreen}
       </ButtonProvider>
     </>

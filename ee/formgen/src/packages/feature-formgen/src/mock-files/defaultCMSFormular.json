@@ -1145,80 +1145,6 @@
       "it-AT": "Chiedere e autorizzare il sito e il numero d'esercizio"
     },
     "formwidth": "9",
-    "formFlowKey": "default",
-    "formFlow": [
-      {
-        "key": "default",
-        "name": "Standard",
-        "formFlowSteps": [
-          {
-            "buttonText": "form_flow_btn_form",
-            "reactClass": "FormScreen",
-            "name": "form_flow_name_form",
-            "description": "form_flow_desc_form",
-            "buttonDefinition": [
-              { "btnComponent": "DetailInfoButton",  "translateKey": "form_detailinfo",  "mobileDisabled": true },
-              { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
-              { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
-              { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" }
-            ],
-            "variables": []
-          },
-          {
-            "buttonText": "form_flow_btn_summary",
-            "reactClass": "SummaryScreen",
-            "name": "form_flow_name_summary",
-            "description": "form_flow_desc_summary",
-            "buttonDefinition": [
-              { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
-              { "btnComponent": "PrintPdfButton",    "translateKey": "form_print",       "mobileDisabled": true },
-              { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
-              { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" },
-              { "btnComponent": "SubmitButton",      "translateKey": "form_submit" }
-            ],
-            "variables": [
-              { "name": "showDetails", "value": true }
-            ]
-          },
-          {
-            "buttonText": "form_flow_btn_success",
-            "reactClass": "SuccessScreen",
-            "name": "form_flow_name_success",
-            "description": "form_flow_desc_success",
-            "buttonDefinition": [],
-            "variables": []
-          }
-        ]
-      },
-      {
-        "key": "no_summary",
-        "name": "Ohne Zusammenfassung",
-        "formFlowSteps": [
-          {
-            "buttonText": "form_flow_btn_form",
-            "reactClass": "FormScreen",
-            "name": "form_flow_name_form",
-            "description": "form_flow_desc_form",
-            "buttonDefinition": [
-              { "btnComponent": "DetailInfoButton",  "translateKey": "form_detailinfo",  "mobileDisabled": true },
-              { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
-              { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
-              { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" },
-              { "btnComponent": "SubmitButton",    "translateKey": "form_submit" }
-            ],
-            "variables": []
-          },
-          {
-            "buttonText": "form_flow_btn_success",
-            "reactClass": "SuccessScreen",
-            "name": "form_flow_name_success",
-            "description": "form_flow_desc_success",
-            "buttonDefinition": [],
-            "variables": []
-          }
-        ]
-      }
-    ],
     "pages": [
       {
         "pagename": {
@@ -6288,5 +6214,87 @@
       }
     }
   },
-  "transactionId": ""
+  "transactionId": "",
+  "flowId": "default",
+  "flows": [
+    {
+      "id": "default",
+      "labelI18n": {
+        "de": "Standard",
+        "en": "Default"
+      },
+      "nameTranslationKey": "formgen_flow_translation_key",
+      "steps": [
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_form",
+          "reactClass": "FormScreen",
+          "nameTranslationKey": "form_flow_name_form",
+          "descriptionTranslationKey": "form_flow_desc_form",
+          "buttons": [
+            { "reactClass": "DetailInfoButton",  "labelTranslationKey": "form_detailinfo",  "mobileDisabled": true },
+            { "reactClass": "CancelButton",      "labelTranslationKey": "form_cancel" },
+            { "reactClass": "PreviousPageButton", "labelTranslationKey": "form_previousPage" },
+            { "reactClass": "NextPageButton",    "labelTranslationKey": "form_nextPage" }
+          ],
+          "variables": []
+        },
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_summary",
+          "reactClass": "SummaryScreen",
+          "nameTranslationKey": "form_flow_name_summary",
+          "descriptionTranslationKey": "form_flow_desc_summary",
+          "buttons": [
+            { "reactClass": "CancelButton",      "labelTranslationKey": "form_cancel" },
+            { "reactClass": "PrintPdfButton",    "labelTranslationKey": "form_print",       "mobileDisabled": true },
+            { "reactClass": "PreviousPageButton", "labelTranslationKey": "form_previousPage" },
+            { "reactClass": "NextPageButton",    "labelTranslationKey": "form_nextPage" },
+            { "reactClass": "SubmitButton",      "labelTranslationKey": "form_submit" }
+          ],
+          "variables": [
+            { "name": "showDetails", "value": true }
+          ]
+        },
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_success",
+          "reactClass": "SuccessScreen",
+          "nameTranslationKey": "form_flow_name_success",
+          "descriptionTranslationKey": "form_flow_desc_success",
+          "buttons": [],
+          "variables": []
+        }
+      ]
+    },
+    {
+      "id": "no_summary",
+      "labelI18n": {
+        "de": "Ohne Zusammenfassung",
+        "en": "Without Summary"
+      },
+      "nameTranslationKey": "formgen_flow_translation_key",
+      "steps": [
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_form",
+          "reactClass": "FormScreen",
+          "nameTranslationKey": "form_flow_name_form",
+          "descriptionTranslationKey": "form_flow_desc_form",
+          "buttons": [
+            { "reactClass": "DetailInfoButton",  "labelTranslationKey": "form_detailinfo",  "mobileDisabled": true },
+            { "reactClass": "CancelButton",      "labelTranslationKey": "form_cancel" },
+            { "reactClass": "PreviousPageButton", "labelTranslationKey": "form_previousPage" },
+            { "reactClass": "NextPageButton",    "labelTranslationKey": "form_nextPage" },
+            { "reactClass": "SubmitButton",    "labelTranslationKey": "form_submit" }
+          ],
+          "variables": []
+        },
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_success",
+          "reactClass": "SuccessScreen",
+          "nameTranslationKey": "form_flow_name_success",
+          "descriptionTranslationKey": "form_flow_desc_success",
+          "buttons": [],
+          "variables": []
+        }
+      ]
+    }
+  ]
 }

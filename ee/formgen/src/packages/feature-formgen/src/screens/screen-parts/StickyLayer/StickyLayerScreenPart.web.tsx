@@ -114,15 +114,15 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
 
 function renderButtons(buttonDefinition: IFormFlowButtonDefinition[], additionalProps: any = {}) {
   return buttonDefinition.map((buttonDef, index) => {
-    const ButtonComponent = ButtonComponents[buttonDef.btnComponent];
+    const ButtonComponent = ButtonComponents[buttonDef.reactClass];
     if (!ButtonComponent) {
-      console.warn(`Unbekannte Button-Komponente: ${buttonDef.btnComponent}`);
+      console.warn(`Unbekannte Button-Komponente: ${buttonDef.reactClass}`);
       return null;
     }
     return (
       <ButtonComponent
         key={index}
-        translateKey={buttonDef.translateKey}
+        translateKey={buttonDef.labelTranslationKey}
         buttonDefinition={buttonDef}
         {...additionalProps}
       />

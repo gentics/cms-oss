@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import jakarta.ws.rs.client.Entity;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -30,7 +32,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.rest.client.ObjectMapperProvider;
 import com.gentics.contentnode.rest.client.RestClient;
-import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.ContentMaintenanceAction;
 import com.gentics.contentnode.rest.model.ContentMaintenanceType;
@@ -53,8 +54,6 @@ import com.gentics.contentnode.rest.model.response.scheduler.SchedulerStatus;
 import com.gentics.contentnode.rest.model.response.scheduler.SchedulerStatusResponse;
 import com.gentics.contentnode.tools.update.Config;
 import com.gentics.contentnode.tools.update.Logger;
-
-import jakarta.ws.rs.client.Entity;
 
 /**
  * CmdLine Tool for updating implementations in the CMS
@@ -179,7 +178,7 @@ public class UpdateImplementation implements AutoCloseable {
 		System.out.println(String.format("Updating implementation on CMS with base URL %s as user %s", config.getBase(),
 				config.getUser()));
 
-		client = new JerseyRestClientImpl(() -> {
+		client = new RestClient(() -> {
 			ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider())
 					.property(ClientProperties.CONNECT_TIMEOUT, config.getTimeout())
 					.property(ClientProperties.READ_TIMEOUT, config.getTimeout());

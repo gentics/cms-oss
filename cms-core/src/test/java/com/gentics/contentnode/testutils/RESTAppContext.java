@@ -6,13 +6,11 @@ import java.net.SocketException;
 import java.net.URI;
 import java.util.Map;
 
-import jakarta.ws.rs.core.Application;
-
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.server.NetworkConnector;
-import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.server.NetworkConnector;
+import org.eclipse.jetty.server.Server;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
@@ -23,9 +21,13 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.junit.rules.ExternalResource;
 
 import com.gentics.contentnode.rest.client.RestClient;
+import com.gentics.contentnode.rest.client.JerseyRestClientImpl;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
+import com.gentics.contentnode.testutils.openapi.OpenAPIClient;
 import com.gentics.lib.log.NodeLogger;
+
+import jakarta.ws.rs.core.Application;
 
 /**
  * REST Application Context. This must always be used in conjunction with a {@link DBTestContext}
@@ -314,7 +316,11 @@ public class RESTAppContext extends ExternalResource {
 		 * @throws RestException
 		 */
 		public LoggedInClient(String login, String password) throws RestException {
-			client = new RestClient(getBaseUri());
+			if (Boolean.parseBoolean(System.getProperty("test.client.use.openapi", "false"))) {
+				client = new OpenAPIClient(getBaseUri());
+			} else {
+				client = new JerseyRestClientImpl(getBaseUri());
+			}
 			client.login(login, password);
 		}
 
@@ -347,5 +353,5 @@ public class RESTAppContext extends ExternalResource {
 		 * Jersey Application Server
 		 */
 		jetty
-}
+	}
 }

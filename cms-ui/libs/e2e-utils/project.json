@@ -3,30 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/e2e-utils/src",
     "projectType": "library",
-    "tags": ["lib"],
-    "targets": {
-        "build": {
-            "executor": "@nx/rollup:rollup",
-            "outputs": [
-                "{options.outputPath}"
-            ],
-            "defaultConfiguration": "production",
-            "options": {
-                "main": "{projectRoot}/src/index.ts",
-                "outputPath": "dist/{projectRoot}",
-                "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "project": "{projectRoot}/package.json",
-                "generateExportsField": true,
-                "format": [
-                    "esm",
-                    "cjs"
-                ]
-            },
-            "configurations": {
-                "development": {},
-                "production": {},
-                "ci": {}
-            }
-        }
-    }
+    "tags": [],
+    "// targets": "to see all targets run: nx show project e2e-utils --web",
+    "targets": {}
 }

@@ -21,9 +21,6 @@ export class SchemaFieldsManagerComponent extends BaseFormListComponent<SchemaFi
     public type: SchemaFieldPropertiesType;
 
     @Input()
-    public label: string;
-
-    @Input()
     public ownName: string;
 
     @Input()

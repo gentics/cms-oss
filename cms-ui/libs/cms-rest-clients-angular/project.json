@@ -7,19 +7,22 @@
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
+            "executor": "@nx/angular:package",
+            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
             "options": {
-                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.prod.json",
-                "project": "libs/cms-rest-clients-angular/ng-package.json"
+                "project": "libs/cms-rest-clients-angular/ng-package.json",
+                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json"
             },
             "configurations": {
-                "production": {},
-                "development": {
-                    "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json"
+                "production": {
+                    "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.prod.json"
                 },
-                "ci": {}
+                "development": {}
             },
             "defaultConfiguration": "production"
+        },
+        "lint": {
+            "executor": "@nx/eslint:lint"
         },
         "test": {
             "executor": "nx:run-commands",

@@ -1,7 +1,8 @@
 import { ChangeDetectorRef, Component, computed, input, model, OnChanges, OnDestroy, OnInit, signal } from '@angular/core';
 import { discard } from '@gentics/cms-components';
 import { Feature, Item, Language, Node, PagingSortOrder, StagedItemsMap } from '@gentics/cms-models';
-import { ChangesOf, randomId, toValidNumber } from '@gentics/ui-core';
+import { randomId, toValidNumber } from '@gentics/common';
+import { ChangesOf } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { catchError, debounceTime, distinctUntilChanged, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
 import { emptyItemInfo, FolderPermissionData, ItemLoadData, ItemsInfo, UIMode } from '../../../common/models';

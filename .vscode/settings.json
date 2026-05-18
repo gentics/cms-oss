@@ -35,5 +35,6 @@
         {
             "mode": "auto"
         }
-    ]
+    ],
+    "nxConsole.nxWorkspacePath": "cms-ui"
 }

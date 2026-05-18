@@ -15,7 +15,7 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { cloneWithSymbols } from '@gentics/ui-core/utils';
 import { expect, test } from '@playwright/test';
 
 test.describe('Login', () => {

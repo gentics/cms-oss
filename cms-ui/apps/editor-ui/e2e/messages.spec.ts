@@ -16,7 +16,7 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { randomId } from '@gentics/ui-core/utils/random-id';
+import { randomId } from '@gentics/ui-core/utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 

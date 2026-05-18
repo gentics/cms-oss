@@ -1,10 +1,10 @@
 import { Component, NO_ERRORS_SCHEMA, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { TestBed, inject } from '@angular/core/testing';
+import { clientReportsMimeTypesOnDrag } from '@gentics/common';
+import { SpyEventTarget, componentTest, subscribeSpyObserver, triggerFakeDragEvent } from '@gentics/ui-core/testing';
 import { FILE_DROPAREA_DRAG_EVENT_TARGET } from '../../common';
 import { DragStateTrackerFactoryService } from '../../providers/drag-state-tracker/drag-state-tracker.service';
 import { PAGE_FILE_DRAG_EVENT_TARGET, PageFileDragHandlerService } from '../../providers/page-file-drag-handler/page-file-drag-handler.service';
-import { SpyEventTarget, componentTest, subscribeSpyObserver, triggerFakeDragEvent } from '../../testing';
-import { clientReportsMimeTypesOnDrag } from '../../utils/drag-and-drop';
 import { FileDropAreaDirective } from './file-drop-area.directive';
 
 let fakePageElement: SpyEventTarget;

@@ -1,11 +1,10 @@
-import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { coerceToBoolean } from '../../utils';
+import { booleanAttribute, Directive, ElementRef, Input } from '@angular/core';
 
 @Directive({
     selector: 'gtx-option',
-    standalone: false
+    standalone: false,
 })
-export class SelectOptionDirective implements OnChanges {
+export class SelectOptionDirective {
 
     @Input()
     public icon: string;
@@ -13,18 +12,12 @@ export class SelectOptionDirective implements OnChanges {
     @Input()
     public value: any;
 
-    @Input()
+    @Input({ transform: booleanAttribute })
     public disabled: boolean;
 
     constructor(
         public elementRef: ElementRef<HTMLElement>,
     ) {}
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.disabled) {
-            this.disabled = coerceToBoolean(this.disabled);
-        }
-    }
 
     /**
      * Returns the value of the option as displayed in the view, i.e. a string representation.

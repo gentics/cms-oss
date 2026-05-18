@@ -17,11 +17,12 @@ import {
     Self,
 } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
+import { I18nService } from '@gentics/cms-components';
 import { IndexByKey } from '@gentics/cms-models';
+import { coerceToBoolean } from '@gentics/common';
 import {
     ButtonComponent,
     CheckboxComponent,
-    coerceToBoolean,
     DateTimePickerComponent,
     DropdownItemComponent,
     InputComponent,
@@ -36,7 +37,6 @@ import {
 import { BehaviorSubject, combineLatest, Observable, of as observableOf, of, Subscription } from 'rxjs';
 import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { DashboardItemComponent } from '../../../dashboard/components/dashboard-item/dashboard-item.component';
-import { I18nService } from '@gentics/cms-components';
 
 /**
  * A component that should be used with the `ActionAllowedDirective` has to implement either

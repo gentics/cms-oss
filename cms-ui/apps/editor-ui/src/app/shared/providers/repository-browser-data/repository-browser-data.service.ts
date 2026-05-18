@@ -32,7 +32,7 @@ import {
     TemplateResponse,
     TotalUsageResponse,
 } from '@gentics/cms-models';
-import { cloneWithSymbols } from '@gentics/ui-core';
+import { cloneWithSymbols } from '@gentics/common';
 import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,

@@ -15,7 +15,7 @@ import { patchMultipleAlohaFunctions } from '../../utils';
 export class AlohaAttributeToggleButtonRendererComponent extends AlohaAttributeButtonRendererComponent {
 
     @Input()
-    public settings?: AlohaAttributeToggleButtonComponent | Partial<AlohaAttributeToggleButtonComponent> | Record<string, any>;
+    public declare settings?: AlohaAttributeToggleButtonComponent | Partial<AlohaAttributeToggleButtonComponent> | Record<string, any>;
 
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();

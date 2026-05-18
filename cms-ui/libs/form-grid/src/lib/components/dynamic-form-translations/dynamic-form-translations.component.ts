@@ -7,7 +7,7 @@ import {
     FormSettingConfiguration,
     I18nString,
 } from '@gentics/cms-models';
-import { getValueByPath, setByPath } from '@gentics/ui-core';
+import { getValueByPath, setByPath } from '@gentics/common';
 import { isSettingVisible } from '../../utils/conditions';
 
 @Component({

@@ -19,7 +19,7 @@ import {
     FormSchemaProperty,
     FormSettingConfiguration,
 } from '@gentics/cms-models';
-import { getValueByPath } from '@gentics/ui-core';
+import { getValueByPath } from '@gentics/common';
 import { isEqual } from 'lodash-es';
 
 export function isSettingVisible(

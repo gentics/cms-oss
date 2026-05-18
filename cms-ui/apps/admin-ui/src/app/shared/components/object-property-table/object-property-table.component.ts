@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { I18nService, typeIdsToName } from '@gentics/cms-components';
 import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
-import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn, toValidNumber } from '@gentics/ui-core';
+import { toValidNumber } from '@gentics/common';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '../../../common';

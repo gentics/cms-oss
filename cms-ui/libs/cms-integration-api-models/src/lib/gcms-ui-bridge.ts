@@ -80,7 +80,7 @@ export const MODAL_CLOSE_ERROR_INSTANCE = Symbol('gtx-modal-close');
 export class ModalCloseError extends Error {
 
     public reason: ModalClosingReason;
-    public cause?: Error;
+    public override cause?: Error;
 
     constructor(
         reasonOrError: ModalClosingReason | Error,
@@ -94,11 +94,11 @@ export class ModalCloseError extends Error {
             super(message);
             this.reason = reasonOrError;
         }
-        this[MODAL_CLOSE_ERROR_INSTANCE] = true;
+        (this as any)[MODAL_CLOSE_ERROR_INSTANCE] = true;
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-    static [Symbol.hasInstance](obj: any): boolean {
+    static override [Symbol.hasInstance](obj: any): boolean {
         return obj != null && MODAL_CLOSE_ERROR_INSTANCE in obj;
     }
 }

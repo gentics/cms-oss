@@ -8,7 +8,7 @@ import {
     FormUserOptionReference,
     ItemInNode,
 } from '@gentics/cms-models';
-import { setByPath } from '@gentics/ui-core';
+import { setByPath } from '@gentics/common';
 import { isSettingVisible } from '../../utils/conditions';
 import { sanitizeItemReference } from '../../utils/sanitize';
 

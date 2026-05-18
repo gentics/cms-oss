@@ -1,25 +1,41 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
         "declaration": true,
         "declarationMap": true,
         "inlineSources": true,
-        "types": ["node", "jquery"],
-        "moduleResolution": "bundler"
+        "types": ["node", "jquery"]
     },
     "include": [
         "src/**/*.ts",
+        "testing/src/**/*.ts",
+        "aloha/src/**/*.ts",
+        "aloha/testing/src/**/*.ts",
         "auth/src/**/*.ts",
-        "aloha/src/**/*.ts"
+        "auth/testing/src/**/*.ts",
+        "auth/aloha/src/**/*.ts",
+        "auth/aloha/testing/src/**/*.ts"
     ],
     "exclude": [
-        "test.ts",
-        "**/*.spec.ts",
-        "cypress/**/*",
-        "cypress.config.ts",
-        "**/*.cy.ts",
-        "**/*.cy.js",
-        "**/*.cy.tsx",
-        "**/*.cy.jsx"
+        "src/**/*.spec.ts",
+        "src/**/*.test.ts",
+        "jest.config.ts",
+        "jest.config.cts",
+        "src/test-setup.ts",
+        "testing/src/**/*.spec.ts",
+        "testing/src/**/*.test.ts",
+        "aloha/src/**/*.spec.ts",
+        "aloha/src/**/*.test.ts",
+        "aloha/testing/src/**/*.spec.ts",
+        "aloha/testing/src/**/*.test.ts",
+        "auth/src/**/*.spec.ts",
+        "auth/src/**/*.test.ts",
+        "auth/testing/src/**/*.spec.ts",
+        "auth/testing/src/**/*.test.ts",
+        "auth/aloha/src/**/*.spec.ts",
+        "auth/aloha/src/**/*.test.ts",
+        "auth/aloha/testing/src/**/*.spec.ts",
+        "auth/aloha/testing/src/**/*.test.ts"
     ]
 }

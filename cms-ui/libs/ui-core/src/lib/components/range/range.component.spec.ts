@@ -2,7 +2,7 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { componentTest } from '../../testing';
+import { componentTest } from '@gentics/ui-core/testing';
 import { RangeComponent } from './range.component';
 
 describe('RangeComponent', () => {

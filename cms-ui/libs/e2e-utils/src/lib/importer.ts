@@ -419,7 +419,7 @@ export class EntityImporter {
             if (this.options?.logImports) {
                 console.log(`Importing binary fixture ${fixture.fixturePath}`);
             }
-            return readFile(fixture.fixturePath).then(buffer => {
+            return readFile(fixture.fixturePath).then((buffer) => {
                 this.binaryMap[key] = {
                     ...fixture,
                     buffer,

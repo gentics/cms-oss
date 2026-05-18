@@ -29,3 +29,5 @@ report.*.json
 .claude/worktrees
 
 .angular
+
+test-output

@@ -8,15 +8,18 @@
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
+            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
             "options": {
                 "tsConfig": "libs/ui-core/tsconfig.lib.json",
                 "project": "libs/ui-core/ng-package.json"
             },
             "configurations": {
-                "production": {},
-                "development": {},
-                "ci": {}
-            }
+                "production": {
+                    "tsConfig": "libs/ui-core/tsconfig.lib.prod.json"
+                },
+                "development": {}
+            },
+            "defaultConfiguration": "production"
         },
         "test": {
             "executor": "nx:run-commands",

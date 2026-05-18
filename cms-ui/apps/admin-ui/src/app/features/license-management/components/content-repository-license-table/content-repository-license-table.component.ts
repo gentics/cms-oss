@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { License, PushLicenseRequest } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, toValidNumber } from '@gentics/ui-core';
+import { toValidNumber } from '@gentics/common';
+import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow } from '@gentics/ui-core';
 import { map, Observable } from 'rxjs';
 import { ContentRepositoryLicenseBO } from '../../../../common';
 import { ErrorHandler } from '../../../../core';

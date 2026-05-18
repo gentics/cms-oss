@@ -1,5 +1,5 @@
 import { ActionDeclaration } from '@gentics/cms-components';
-import { deepFreeze } from '@gentics/ui-core';
+import { deepFreeze } from '@gentics/common';
 
 const MODULE_STATE = 'aloha';
 

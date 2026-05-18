@@ -22,7 +22,7 @@ import {
     Tag,
     Template,
 } from '@gentics/cms-models';
-import { coerceToBoolean } from '@gentics/ui-core';
+import { coerceToBoolean } from '@gentics/common';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { Schema, normalize } from 'normalizr';
 import { Observable, Subscription, combineLatest, from, of, throwError } from 'rxjs';

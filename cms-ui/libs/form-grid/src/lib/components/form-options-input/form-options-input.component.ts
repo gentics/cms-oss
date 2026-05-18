@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormSelectOptionValue } from '@gentics/cms-models';
-import { BaseFormElementComponent, cancelEvent, generateFormProvider } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-form-options-input',

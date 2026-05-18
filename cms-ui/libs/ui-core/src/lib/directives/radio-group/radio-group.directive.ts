@@ -1,8 +1,9 @@
 import { Directive, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
+import { randomId } from '@gentics/common';
 import { ChangesOf } from '../../common';
 import { RadioButtonComponent } from '../../components/radio-button/radio-button.component';
-import { generateFormProvider, randomId } from '../../utils';
+import { generateFormProvider } from '../../utils';
 
 /**
  * RadioGroup groups multiple {@link RadioButtonComponent} elements together.
@@ -11,7 +12,7 @@ import { generateFormProvider, randomId } from '../../utils';
 @Directive({
     selector: 'gtx-radio-group, [gtx-radio-group]',
     providers: [generateFormProvider(RadioGroupDirective)],
-    standalone: false
+    standalone: false,
 })
 export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
 

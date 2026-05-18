@@ -22,7 +22,7 @@ import {
     UserImportData,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { cloneWithSymbols } from '@gentics/ui-core/utils';
 import { expect, Page, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,
@@ -36,7 +36,6 @@ import {
     selectNode,
     uploadFiles,
 } from './helpers';
-import { Test } from 'mocha';
 
 test.describe('Media Management', () => {
     const IMPORTER = new EntityImporter();

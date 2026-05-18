@@ -1,27 +1,20 @@
-import { Component, HostBinding, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { coerceToBoolean } from '../../utils';
+import { booleanAttribute, Component, HostBinding, Input } from '@angular/core';
 
 @Component({
     selector: 'gtx-dropdown-item',
     template: '<ng-content></ng-content>',
     styleUrls: ['./dropdown-item.component.scss'],
-    standalone: false
+    standalone: false,
 })
-export class DropdownItemComponent implements OnChanges {
+export class DropdownItemComponent {
 
     /**
      * If true, the DropdownItem cannot be clicked or selected. *Default: false*
      */
-    @Input()
+    @Input({ transform: booleanAttribute })
     @HostBinding('class.disabled')
     public disabled = false;
 
     @HostBinding('tabindex')
     public tabIndex = 0;
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.disabled) {
-            this.disabled = coerceToBoolean(this.disabled);
-        }
-    }
 }

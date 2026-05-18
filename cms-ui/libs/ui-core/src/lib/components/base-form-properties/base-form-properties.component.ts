@@ -159,7 +159,7 @@ export abstract class BaseFormPropertiesComponent<T> extends BaseFormElementComp
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
-                tap((value) => this.configureForm(value)),
+                tap((value) => this.configureForm(value as any)),
                 map(() => this.form.value),
             ),
             this.form.statusChanges,

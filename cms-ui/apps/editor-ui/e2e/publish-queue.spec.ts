@@ -19,8 +19,7 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
-import { randomId } from '@gentics/ui-core/utils/random-id';
+import { cloneWithSymbols, randomId } from '@gentics/ui-core/utils';
 import test from '@playwright/test';
 import { editorAction, findItem, findList, itemAction, openToolOrAction, selectNode } from './helpers';
 

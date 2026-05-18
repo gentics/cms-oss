@@ -1,8 +1,8 @@
 import { Component, EventEmitter, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
-import { TestBed, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { componentTest } from '@gentics/ui-core/testing';
 import { FileDropAreaDirective } from '../../directives/file-drop-area/file-drop-area.directive';
-import { componentTest } from '../../testing';
 import { ButtonComponent } from '../button/button.component';
 import { FilePickerComponent } from './file-picker.component';
 

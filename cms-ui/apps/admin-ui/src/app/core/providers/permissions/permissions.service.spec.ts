@@ -16,7 +16,7 @@ import {
     ResponseCode,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
+import { deepFreeze } from '@gentics/common';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { Observable, throwError, timer } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';

@@ -1,9 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { getValueByPath } from '../../utils';
+import { getValueByPath } from '@gentics/common';
 
 @Pipe({
     name: 'gtxValuePath',
-    standalone: false
+    standalone: false,
 })
 export class ValuePathPipe implements PipeTransform {
 

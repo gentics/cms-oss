@@ -1,6 +1,6 @@
 import { GtxIcon } from '@admin-ui/shared';
 import { Component, Input } from '@angular/core';
-import { coerceToBoolean } from '@gentics/ui-core';
+import { coerceToBoolean } from '@gentics/common';
 
 @Component({
     selector: 'gtx-dashboard-item',

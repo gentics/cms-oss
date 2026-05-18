@@ -9,67 +9,78 @@
     [style.--grid-table-columns]="columns.length"
 >
     <div class="grid-row header-row">
-        <div *ngIf="selectable && !inlineSelection" class="grid-cell select-column"><!-- Nothing to do here --></div>
-        <div *ngIf="!inlineExpansion" class="grid-cell expand-column"><!-- Nothing to do here --></div>
+        @if (selectable && !inlineSelection) {
+            <div class="grid-cell select-column"><!-- Nothing to do here --></div>
+        }
+        @if (!inlineExpansion) {
+            <div class="grid-cell expand-column"><!-- Nothing to do here --></div>
+        }
 
-        <div
-            *ngFor="let column of columns; trackBy: trackElement"
-            class="grid-cell data-column"
-            [class.sortable]="column.sortable"
-            [class.sort-active]="sortBy === column.id"
-            [ngClass]="column.align ? 'align-' + column.align : ''"
-            [attr.data-id]="column.id"
-            (click)="preventClick($event)"
-        >
-            <span class="column-label" (click)="updateSortBy(column)">{{ column.label }}</span>
-            <icon
-                *ngIf="column.sortable"
-                class="sort-icon"
-                [ngClass]="sortOrder != null ? sortOrder : ''"
-                (click)="updateSortBy(column)"
-            >arrow_upward</icon>
-        </div>
-
-        <div
-            *ngIf="!hideActions && hasActions"
-            class="grid-cell action-column"
-            (click)="preventClick($event)"
-        >
-            <gtx-button
-                *ngFor="let action of multiActions; trackBy: trackElement"
-                class="action-button"
-                [icon]="true"
-                [size]="'small'"
-                [disabled]="(rows?.length < 1) || (action.disabled | gtxTableActionEnabled)"
-                [title]="action.label"
-                [type]="action.type"
-                [attr.data-id]="action.id"
-                (click)="handleMultiActionClick(action)"
+        @for (column of columns; track trackElement($index, column)) {
+            <div
+                class="grid-cell data-column"
+                [class.sortable]="column.sortable"
+                [class.sort-active]="sortBy === column.id"
+                [ngClass]="column.align ? 'align-' + column.align : ''"
+                [attr.data-id]="column.id"
+                (click)="preventClick($event)"
             >
-                <icon>{{ action.icon }}</icon>
-            </gtx-button>
-        </div>
+                <span class="column-label" (click)="updateSortBy(column)">{{ column.label }}</span>
+                @if (column.sortable) {
+                    <icon
+                        class="sort-icon"
+                        [ngClass]="sortOrder != null ? sortOrder : ''"
+                        (click)="updateSortBy(column)"
+                    >arrow_upward</icon>
+                }
+            </div>
+        }
+
+        @if (!hideActions && hasActions) {
+            <div
+                class="grid-cell action-column"
+                (click)="preventClick($event)"
+            >
+                @for (action of multiActions; track trackElement($index, action)) {
+                    <gtx-button
+                        class="action-button"
+                        [icon]="true"
+                        [size]="'small'"
+                        [disabled]="(rows?.length < 1) || (action.disabled | gtxTableActionEnabled)"
+                        [title]="action.label"
+                        [type]="action.type"
+                        [attr.data-id]="action.id"
+                        (click)="handleMultiActionClick(action)"
+                    >
+                        <icon>{{ action.icon }}</icon>
+                    </gtx-button>
+                }
+            </div>
+        }
     </div>
 
-    <ng-container *ngFor="let row of rows; trackBy: trackRow">
+    @for (row of rows; track trackRow($index, row)) {
         <ng-container *ngTemplateOutlet="rowTemplate; context: { row: row, isSelected: selected[row.id] === true }"></ng-container>
-    </ng-container>
+    }
 
     <ng-template #rowTemplate let-row="row" let-rowSelected="isSelected">
         <ng-template #rowSelectionTemplate>
             <div class="row-selection-wrapper">
+                @if (row.selectable) {
                 <gtx-checkbox
-                    *ngIf="row.selectable"
                     class="selection-checkbox"
                     [value]="rowSelected"
                     (valueChange)="updateRowSelection(row, $event)"
                 ></gtx-checkbox>
+                }
             </div>
         </ng-template>
 
         <ng-template #rowExpansionTemplate>
             <button class="row-expansion" (click)="expandRow(row, $event)">
-                <icon *ngIf="row.hasChildren || !row.loaded">chevron_right</icon>
+                @if (row.hasChildren || !row.loaded) {
+                    <icon>chevron_right</icon>
+                }
             </button>
         </ng-template>
 
@@ -87,96 +98,126 @@
             [style]="'--trable-row-level: ' + (row.level || 0)"
             (click)="handleRowClick(row, $event)"
         >
-            <div
-                *ngIf="selectable && !inlineSelection"
+            @if (selectable && !inlineSelection) {
+                <div
                 class="grid-cell select-column"
                 (click)="preventClick($event)"
-            >
-                <ng-container [ngTemplateOutlet]="rowSelectionTemplate"></ng-container>
-            </div>
-
-            <div
-                *ngIf="!inlineExpansion"
-                class="grid-cell expand-column"
-                (click)="cancelEvent($event)"
-            >
-                <ng-container [ngTemplateOutlet]="rowExpansionTemplate"></ng-container>
-            </div>
-
-            <div
-                *ngFor="let column of columns; let isFirst = first"
-                class="grid-cell data-column"
-                [class.clickable]="column.clickable !== false"
-                [class.has-inline-content]="isFirst && (inlineExpansion || inlineSelection)"
-                [ngClass]="(column.align ? 'align-' + column.align : '')"
-                [attr.data-id]="column.id"
-                (click)="handleCellClick(row, column, $event)"
-            >
-                <ng-container *ngIf="isFirst; else columnContent">
-                    <ng-container *ngIf="inlineExpansion" [ngTemplateOutlet]="rowExpansionTemplate"></ng-container>
-
-                    <div *ngIf="selectable && inlineSelection" class="inline-selection">
-                        <ng-container [ngTemplateOutlet]="rowSelectionTemplate"></ng-container>
-                    </div>
-
-                    <div class="inline-column-content">
-                        <ng-container [ngTemplateOutlet]="columnContent"></ng-container>
-                    </div>
-                </ng-container>
-
-                <ng-template #columnContent>
-                    <ng-container
-                        *ngIf="renderers[column.id]; else fallbackCellRenderer"
-                        [ngTemplateOutlet]="renderers[column.id]"
-                        [ngTemplateOutletContext]="{
-                            row: row,
-                            column: column,
-                            value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
-                        }"
-                    ></ng-container>
-
-                    <ng-template #fallbackCellRenderer>
-                        <ng-container
-                            *ngIf="renderers[FALLBACK_TABLE_COLUMN_RENDERER]; else defaultCellRenderer"
-                            [ngTemplateOutlet]="renderers[FALLBACK_TABLE_COLUMN_RENDERER]"
-                            [ngTemplateOutletContext]="{
-                                row: row,
-                                column: column,
-                                value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
-                            }"
-                        ></ng-container>
-                    </ng-template>
-
-                    <ng-template #defaultCellRenderer>{{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}</ng-template>
-                </ng-template>
-            </div>
-
-            <div
-                *ngIf="!hideActions && hasActions"
-                class="grid-cell action-column"
-                (click)="preventClick($event)"
-            >
-                <gtx-button
-                    *ngFor="let action of singleActions; trackBy: trackElement"
-                    class="action-button"
-                    [attr.data-id]="action.id"
-                    [icon]="true"
-                    [size]="'small'"
-                    [disabled]="action.disabled | gtxTableActionEnabled:row.item"
-                    [title]="action.label"
-                    [type]="action.type"
-                    [attr.data-id]="action.id"
-                    (click)="handleSingleActionClick(action, row)"
                 >
-                    <icon>{{ action.icon }}</icon>
-                </gtx-button>
-            </div>
+                <ng-container [ngTemplateOutlet]="rowSelectionTemplate"></ng-container>
+                </div>
+            }
+
+            @if (!inlineExpansion) {
+                <div
+                    class="grid-cell expand-column"
+                    (click)="cancelEvent($event)"
+                >
+                    <ng-container [ngTemplateOutlet]="rowExpansionTemplate"></ng-container>
+                </div>
+            }
+
+            @for (column of columns; track column; let isFirst = $first) {
+                <div
+                    class="grid-cell data-column"
+                    [class.clickable]="column.clickable !== false"
+                    [class.has-inline-content]="isFirst && (inlineExpansion || inlineSelection)"
+                    [ngClass]="(column.align ? 'align-' + column.align : '')"
+                    [attr.data-id]="column.id"
+                    (click)="handleCellClick(row, column, $event)"
+                >
+                    @if (isFirst) {
+                        @if (inlineExpansion) {
+                            <ng-container [ngTemplateOutlet]="rowExpansionTemplate"></ng-container>
+                        }
+                        @if (selectable && inlineSelection) {
+                            <div class="inline-selection">
+                                <ng-container [ngTemplateOutlet]="rowSelectionTemplate"></ng-container>
+                            </div>
+                        }
+                        <div class="inline-column-content">
+                            <ng-container [ngTemplateOutlet]="columnContent"></ng-container>
+                        </div>
+                    } @else {
+                        @if (renderers[column.id]) {
+                            <ng-container
+                                [ngTemplateOutlet]="renderers[column.id]"
+                                [ngTemplateOutletContext]="{
+                                    row: row,
+                                    column: column,
+                                    value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
+                                }"
+                            ></ng-container>
+                        } @else if (renderers[FALLBACK_TABLE_COLUMN_RENDERER]) {
+                            <ng-container
+                                [ngTemplateOutlet]="renderers[FALLBACK_TABLE_COLUMN_RENDERER]"
+                                [ngTemplateOutletContext]="{
+                                    row: row,
+                                    column: column,
+                                    value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
+                                }"
+                            ></ng-container>
+                        } @else {
+                            {{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}
+                        }
+                    }
+
+                    <ng-template #columnContent>
+                        @if (renderers[column.id]) {
+                            <ng-container
+                                [ngTemplateOutlet]="renderers[column.id]"
+                                [ngTemplateOutletContext]="{
+                                    row: row,
+                                    column: column,
+                                    value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
+                                }"
+                            ></ng-container>
+                        } @else if (renderers[FALLBACK_TABLE_COLUMN_RENDERER]) {
+                            <ng-container
+                                [ngTemplateOutlet]="renderers[FALLBACK_TABLE_COLUMN_RENDERER]"
+                                [ngTemplateOutletContext]="{
+                                    row: row,
+                                    column: column,
+                                    value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
+                                }"
+                            ></ng-container>
+                        } @else {
+                            {{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}
+                        }
+                    </ng-template>
+                </div>
+            }
+
+            @if (!hideActions && hasActions) {
+                <div
+                    class="grid-cell action-column"
+                    (click)="preventClick($event)"
+                >
+                    @for (action of singleActions; track trackElement($index, action)) {
+                        <gtx-button
+                            class="action-button"
+                            [attr.data-id]="action.id"
+                            [icon]="true"
+                            [size]="'small'"
+                            [disabled]="action.disabled | gtxTableActionEnabled:row.item"
+                            [title]="action.label"
+                            [type]="action.type"
+                            [attr.data-id]="action.id"
+                            (click)="handleSingleActionClick(action, row)"
+                        >
+                            <icon>{{ action.icon }}</icon>
+                        </gtx-button>
+                    }
+                </div>
+            }
         </div>
 
-        <ng-container *ngIf="row.expanded && row.children?.length > 0">
-            <ng-container *ngFor="let child of row.children; trackRow">
-                <ng-container *ngTemplateOutlet="rowTemplate; context: { row: child, isSelected: (selected | gtxIncludes:child.id) }"></ng-container>
-            </ng-container>
-        </ng-container>
+        @if (row.expanded && row.children?.length > 0) {
+            @for (child of row.children; track child) {
+                <ng-container *ngTemplateOutlet="rowTemplate; context: {
+                    row: child,
+                    isSelected: (selected | gtxIncludes:child.id)
+                }"></ng-container>
+            }
+        }
     </ng-template>
 </div>

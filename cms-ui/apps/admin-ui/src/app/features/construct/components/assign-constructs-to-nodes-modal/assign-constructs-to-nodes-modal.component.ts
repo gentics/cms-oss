@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { IndexById, Node, Raw } from '@gentics/cms-models';
-import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray, toValidNumber } from '@gentics/ui-core';
-import { Subscription, forkJoin } from 'rxjs';
+import { toValidNumber } from '@gentics/common';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
+import { Observable, Subscription, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConstructBO } from '../../../../common';
 import { ConstructHandlerService, NodeOperations } from '../../../../core';
@@ -26,7 +27,7 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<boolean> im
     /**
      * @key nodeId
      */
-    protected currentAssignment: Record<number, Set<number>> = null;
+    protected currentAssignment: Record<number, Set<number>> = {};
 
     private subscriptions: Subscription[] = [];
 
@@ -44,8 +45,11 @@ export class AssignConstructsToNodesModalComponent extends BaseModal<boolean> im
             this.nodeOperations.getAll(),
             forkJoin(this.constructs.map((con) => this.handler.getLinkedNodes(con.id).pipe(
                 map((linked) => [con.id, linked]),
-            ))),
-        ]).subscribe(([loadedNodes, links]: [Node[], [number, Node[]][]]) => {
+            ))) as any,
+        ]).subscribe((data: any[]) => {
+            const loadedNodes = data[0] as any as Node[];
+            const links = data[1] as any as [number, Node[]][];
+
             const assignment: Record<number, Set<number>> = {};
             const newSelection: TableSelection = {};
 

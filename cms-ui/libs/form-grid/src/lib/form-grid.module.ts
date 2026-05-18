@@ -5,8 +5,8 @@ import { CmsComponentsModule } from '@gentics/cms-components';
 import { AlohaModule } from '@gentics/cms-components/aloha';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
-import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
+import * as DE_TRANSLATIONS from '../public/i18n/de.json';
+import * as EN_TRANSLATIONS from '../public/i18n/en.json';
 import {
     DynamicFormSettingsComponent,
     DynamicFormTranslationsComponent,

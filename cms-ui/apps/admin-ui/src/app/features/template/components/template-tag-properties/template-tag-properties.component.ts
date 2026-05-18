@@ -38,7 +38,6 @@ export class TemplateTagPropertiesComponent extends BaseFormPropertiesComponent<
     @Input()
     public tagName: string;
 
-    public form: UntypedFormGroup;
     public constructs: TagType<Raw>[] = [];
     public tagEditorBaseUrl: URL;
 

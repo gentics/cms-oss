@@ -1,5 +1,5 @@
 import { booleanAttribute, ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
-import { cancelEvent } from '../../utils';
+import { cancelEvent } from '@gentics/common';
 import { BaseComponent } from '../base-component/base.component';
 
 /**

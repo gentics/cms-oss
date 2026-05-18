@@ -283,7 +283,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         this.stopper.stop();
     }
 
-    @HostListener('window:resize', ['$event'])
+    @HostListener('window:resize')
     onResize(): void {
         this.onResizeInternal$.next();
     }

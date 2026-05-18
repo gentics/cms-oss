@@ -15,7 +15,7 @@ import { AlohaContextButtonRendererComponent } from '../aloha-context-button-ren
 export class AlohaContextToggleButtonRendererComponent<T> extends AlohaContextButtonRendererComponent<T> {
 
     @Input()
-    public settings: AlohaContextToggleButtonComponent<T> | Partial<AlohaContextToggleButtonComponent<T>> | Record<string, any>;
+    public declare settings: AlohaContextToggleButtonComponent<T> | Partial<AlohaContextToggleButtonComponent<T>> | Record<string, any>;
 
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();

@@ -3,36 +3,32 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/cms-rest-client/src",
     "projectType": "library",
-    "tags": ["lib", "publish"],
-    "targets": {
-        "build": {
-            "executor": "@nx/rollup:rollup",
-            "outputs": [
-                "{options.outputPath}"
+    "release": {
+        "version": {
+            "manifestRootsToUpdate": [
+                "dist/{projectRoot}"
             ],
-            "defaultConfiguration": "production",
+            "currentVersionResolver": "git-tag",
+            "fallbackCurrentVersionResolver": "disk"
+        }
+    },
+    "tags": [
+        "lib",
+        "publish"
+    ],
+    "targets": {
+        "nx-release-publish": {
             "options": {
-                "main": "{projectRoot}/src/public-api.ts",
-                "outputPath": "dist/{projectRoot}",
-                "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "project": "{projectRoot}/package.json",
-                "generateExportsField": true,
-                "format": [
-                    "esm",
-                    "cjs"
-                ]
-            },
-            "configurations": {
-                "development": {},
-                "production": {},
-                "ci": {}
+                "packageRoot": "dist/{projectRoot}"
             }
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/.reports/libs/cms-rest-client"],
+            "outputs": [
+                "{projectRoot}/test-output/jest"
+            ],
             "options": {
-                "jestConfig": "libs/cms-rest-client/jest.config.ts"
+                "jestConfig": "libs/cms-rest-client/jest.config.cts"
             },
             "configurations": {
                 "watch": {
@@ -40,7 +36,9 @@
                 },
                 "ci": {
                     "color": false,
-                    "jestConfig": "libs/cms-rest-client/jest.config.ci.ts"
+                    "colors": false,
+                    "ci": true,
+                    "jestConfig": "libs/cms-rest-client/jest.config.ci.cts"
                 }
             }
         }

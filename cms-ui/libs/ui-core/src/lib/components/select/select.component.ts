@@ -13,11 +13,12 @@ import {
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
+import { cancelEvent, getValueByPath } from '@gentics/common';
 import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
 import { SelectOptionGroupDirective } from '../../directives/select-option-group/option-group.directive';
 import { SelectOptionDirective } from '../../directives/select-option/option.directive';
-import { cancelEvent, generateFormProvider, getValueByPath } from '../../utils';
+import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
 import { DropdownListComponent } from '../dropdown-list/dropdown-list.component';

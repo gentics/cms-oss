@@ -1,18 +1,10 @@
 {
     "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "types": [
-            "jasmine",
-            "node",
-            "jquery"
-        ]
+        "compilerOptions": {
+        "types": ["jasmine", "node", "jquery", "hammer"]
     },
-    "files": [
-        "src/test.ts",
-        "src/polyfills.ts"
-    ],
     "include": [
-        "**/*.spec.ts",
-        "**/*.d.ts"
+        "src/**/*.ts",
+        "testing/src/**/*.ts"
     ]
 }

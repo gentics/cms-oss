@@ -11,7 +11,8 @@ import {
     SyncObjectsRequest,
     SyncObjectsResponse,
 } from '@gentics/cms-models';
-import { IModalDialog, toValidNumber } from '@gentics/ui-core';
+import { toValidNumber } from '@gentics/common';
+import { IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';

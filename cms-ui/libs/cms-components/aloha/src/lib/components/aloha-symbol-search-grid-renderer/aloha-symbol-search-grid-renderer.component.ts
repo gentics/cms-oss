@@ -14,12 +14,12 @@ interface NormalizedItem {
     styleUrls: ['./aloha-symbol-search-grid-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaSymbolSearchGridRendererComponent)],
-    standalone: false
+    standalone: false,
 })
 export class AlohaSymbolSearchGridRendererComponent extends AlohaSymbolGridRendererComponent implements OnInit {
 
     @Input()
-    public settings?: AlohaSymbolSearchGridComponent | Partial<AlohaSymbolSearchGridComponent> | Record<string, any>;
+    public declare settings?: AlohaSymbolSearchGridComponent | Partial<AlohaSymbolSearchGridComponent> | Record<string, any>;
 
     public filteredSymbols: SymbolGridItem[] = [];
 
@@ -49,7 +49,7 @@ export class AlohaSymbolSearchGridRendererComponent extends AlohaSymbolGridRende
         this.normalizedSymbols = (this.settings.symbols || []).map((obj: SymbolGridItem) => {
             return {
                 inner: obj,
-                items: [(obj.label || ''), ...(obj.keywords || [])].map(item => item.toLocaleLowerCase()),
+                items: [(obj.label || ''), ...(obj.keywords || [])].map((item) => item.toLocaleLowerCase()),
             };
         });
     }
@@ -63,7 +63,7 @@ export class AlohaSymbolSearchGridRendererComponent extends AlohaSymbolGridRende
         }
 
         this.filteredSymbols = this.normalizedSymbols
-            .filter(obj => obj.items.some(item => item.includes(txt)))
-            .map(obj => obj.inner);
+            .filter((obj) => obj.items.some((item) => item.includes(txt)))
+            .map((obj) => obj.inner);
     }
 }

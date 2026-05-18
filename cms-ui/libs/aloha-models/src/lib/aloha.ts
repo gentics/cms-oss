@@ -122,7 +122,9 @@ export interface FormatPluginSettings {
 }
 
 export interface AlohaRegistry<T = any> {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _entries: Record<string, T>;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _ids: string[];
     register: (id: string, entry: T) => void;
     unregister: (id: string) => void;
@@ -158,6 +160,7 @@ export type AlohaBlockType = any;
 export interface AlohaBlockManager {
     blockTypes: AlohaRegistry<AlohaBlockType>;
     blocks: AlohaRegistry<AlohaAbstractBlock>;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _activeBlock: AlohaAbstractBlock | null;
 
     getBlock: (idOrElement: string | HTMLElement) => AlohaAbstractBlock;
@@ -305,7 +308,7 @@ export interface AlohaDOM {
      * @param range range which eventually be modified
      * @param preserveContent true if the contents of the removed DOM object shall be preserved, false if not (default: false)
      */
-    removeFromDOM(object: any, range: AlohaRangeObject, preserveContent): void;
+    removeFromDOM(object: any, range: AlohaRangeObject, preserveContent?: boolean): void;
     /**
      * Remove the given markup from the given range. The given rangeObject will be modified if necessary
      * @param rangeObject range from which the markup shall be removed

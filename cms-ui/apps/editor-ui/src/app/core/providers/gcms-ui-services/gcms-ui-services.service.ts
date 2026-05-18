@@ -1,19 +1,21 @@
 import { Injectable } from '@angular/core';
 import { GcmsUiServices, ImageEditorOptions, RepositoryBrowserOptions, TagEditorOptions, TagEditorResult } from '@gentics/cms-integration-api-models';
 import { FileOrImage, Folder, Image, ItemInNode, Page, Raw, Tag, TagType } from '@gentics/cms-models';
+import { GCMSRestClient } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { SelectedItemHelper } from '../../../shared/util/selected-item-helper/selected-item-helper';
 import { ApplicationStateService } from '../../../state';
-import { UploadWithPropertiesModalComponent } from '../../../tag-editor/components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { TagEditorService } from '../../../tag-editor';
+import { UploadWithPropertiesModalComponent } from '../../../tag-editor/components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 
 @Injectable()
 export class GcmsUiServicesProvider implements GcmsUiServices {
 
-    editorNodeId: number | undefined;
+    public readonly restClient: GCMSRestClient;
+    public editorNodeId: number | undefined;
 
     constructor(
         private client: GCMSRestClientService,
@@ -24,9 +26,8 @@ export class GcmsUiServicesProvider implements GcmsUiServices {
         private modals: ModalService,
     ) {
         this.editorNodeId = this.appState.now.editor.nodeId;
+        this.restClient = this.client.getClient();
     }
-
-    public readonly restClient = this.client.getClient();
 
     openImageEditor(options: ImageEditorOptions): Promise<Image<Raw> | void> {
         return this.editorOverlayService.editImage(options);

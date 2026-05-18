@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { GcmsUiServices } from '@gentics/cms-integration-api-models';
 import { AllowedItemSelectionType, Item, ItemInNode, ItemRef, ItemRequestOptions, MarkupLanguageType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { BaseFormElementComponent, cancelEvent } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { BaseFormElementComponent } from '@gentics/ui-core';
 import { map } from 'rxjs';
 import { GCMS_UI_SERVICES_PROVIDER } from '../../providers/gcms-ui-services/gcms-ui-services';
 

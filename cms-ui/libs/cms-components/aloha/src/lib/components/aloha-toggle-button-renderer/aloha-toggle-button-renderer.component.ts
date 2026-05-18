@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AlohaToggleButtonComponent } from '@gentics/aloha-models';
-import { cancelEvent, generateFormProvider } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { generateFormProvider } from '@gentics/ui-core';
 import { patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 

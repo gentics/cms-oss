@@ -30,7 +30,6 @@ export class ConstructCategoryPropertiesComponent
     @Input()
     public supportedLanguages: Language[];
 
-    public form: UntypedFormGroup;
     public activeTabI18nLanguage: Language;
     public invalidLanguages: string[] = [];
 

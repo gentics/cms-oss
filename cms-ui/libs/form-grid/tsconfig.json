@@ -1,22 +1,21 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "target": "es2022",
+        "isolatedModules": true,
         "moduleResolution": "bundler",
         "strict": true,
         "noImplicitOverride": true,
         "noPropertyAccessFromIndexSignature": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
-        "resolveJsonModule": true
+        "emitDecoratorMetadata": false,
+        "module": "preserve"
     },
     "angularCompilerOptions": {
         "enableI18nLegacyMessageIdFormat": false,
         "strictInjectionParameters": true,
         "strictInputAccessModifiers": true,
-        "typeCheckHostBindings": true,
-        "strictTemplates": true,
-        "compilationMode": "partial"
+        "strictTemplates": true
     },
     "files": [],
     "include": [],
@@ -26,6 +25,9 @@
         },
         {
             "path": "./tsconfig.spec.json"
+        },
+        {
+            "path": "./cypress/tsconfig.json"
         }
     ]
 }

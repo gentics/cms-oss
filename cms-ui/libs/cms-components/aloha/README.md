@@ -1,4 +1,3 @@
-# Aloha Module
+# @gentics/cms-components/aloha
 
-This Module includes integration to Aloha-Editor to use with Angular.
-
+Secondary entry point of `@gentics/cms-components`. It can be used by importing from `@gentics/cms-components/aloha`.

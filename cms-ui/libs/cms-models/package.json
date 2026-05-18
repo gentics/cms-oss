@@ -12,5 +12,6 @@
   },
   "optionalDependencies": {
     "normalizr": "^3.4.0"
-  }
+  },
+  "sideEffects": false
 }

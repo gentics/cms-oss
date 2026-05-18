@@ -16,7 +16,7 @@ import {
 } from '@angular/core';
 import { distinctUntilChanged } from 'rxjs/operators';
 import Sortable from 'sortablejs';
-import { ISortableEvent, ISortableMoveEvent, SortFunction, SortableGroup } from '../../common';
+import type { ISortableEvent, ISortableMoveEvent, SortFunction, SortableGroup } from '../../common';
 import { BaseComponent } from '../base-component/base.component';
 import { SortableListDragHandleComponent } from '../drag-handle/drag-handle.component';
 

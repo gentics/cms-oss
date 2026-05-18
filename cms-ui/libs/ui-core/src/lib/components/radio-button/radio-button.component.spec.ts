@@ -2,8 +2,8 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/c
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { componentTest } from '@gentics/ui-core/testing';
 import { RadioGroupDirective } from '../../directives/radio-group/radio-group.directive';
-import { componentTest } from '../../testing';
 import { RadioButtonComponent } from './radio-button.component';
 
 describe('RadioButtonComponent', () => {

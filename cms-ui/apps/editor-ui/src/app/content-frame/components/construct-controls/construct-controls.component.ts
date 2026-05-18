@@ -4,7 +4,8 @@ import { I18nService } from '@gentics/cms-components';
 import { AlohaIntegrationService } from '@gentics/cms-components/aloha';
 import { AlohaGlobal, GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
 import { Construct, ConstructCategory } from '@gentics/cms-models';
-import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { DropdownListComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 
 interface DisplayGroup {

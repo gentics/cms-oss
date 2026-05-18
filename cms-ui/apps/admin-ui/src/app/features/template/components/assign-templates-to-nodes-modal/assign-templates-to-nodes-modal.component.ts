@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { IndexById, Node, Raw } from '@gentics/cms-models';
-import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray, toValidNumber } from '@gentics/ui-core';
+import { toValidNumber } from '@gentics/common';
+import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TemplateBO } from '../../../../common';

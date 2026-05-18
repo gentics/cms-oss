@@ -5,8 +5,6 @@ import {
     GCMSRestClient,
     GCMSRestClientConfig,
     GCMSRestClientRequest,
-} from '@gentics/cms-rest-client';
-import {
     AbstractAdminAPI,
     AbstractAuthenticationAPI,
     AbstractClusterAPI,
@@ -50,13 +48,13 @@ import {
     AbstractUserAPI,
     AbstractUsersnapAPI,
     AbstractValidationAPI,
-} from '@gentics/cms-rest-client/abstracts';
+} from '@gentics/cms-rest-client';
 import { Observable } from 'rxjs';
 import { AngularGCMSClientDriver } from './angular-cms-client-driver';
 import { NGGCMSRestClientRequest } from './models';
 
 type Callable<P extends Array<any>, R> = (...args: P) => R;
-type BasicAPI = { [key: string]: (...args) => any };
+type BasicAPI = { [key: string]: (...args: any) => any };
 
 type OriginalAPI<T extends BasicAPI> = {
     [K in Exclude<string, keyof T>]: never;
@@ -68,11 +66,11 @@ type AngularAPI<T extends BasicAPI> = {
     [K in Exclude<string, keyof T>]: never;
 } & {
     [FN in keyof T]: Callable<Parameters<T[FN]>, Observable<ReturnType<T[FN]>>>;
-}
+};
 
 type FullAngularAPI = {
     [K in keyof AbstractRootAPI]: AngularAPI<AbstractRootAPI[K]>;
-}
+};
 
 interface APIDefinition extends FullAngularAPI {
 
@@ -94,15 +92,14 @@ interface APIDefinition extends FullAngularAPI {
  * ```javascript
  * client.info.getMaintenanceMode().subscribe(status => console.log(status));
  * ```
- *
  * @param api The API to map
  * @returns An "Angular" API, which simply delegates the call and returns the Observable.
  */
 function asAngularAPI<T extends BasicAPI>(api: OriginalAPI<T>): AngularAPI<T> {
     return Object.entries(api).reduce((acc, [name, fn]: [string, Callable<any[], any>]) => {
-        acc[name] = (...args) => (fn(...args) as NGGCMSRestClientRequest<any>).rx();
+        acc[name] = (...args: any) => (fn(...args) as NGGCMSRestClientRequest<any>).rx();
         return acc;
-    }, {}) as any;
+    }, {} as Record<string, any>) as any;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -117,12 +114,9 @@ export class GCMSRestClientService implements APIDefinition {
         http: HttpClient,
     ) {
         this.driver = new AngularGCMSClientDriver(http);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.client = new GCMSRestClient(this.driver);
-        this.initializeAPIs();
-    }
 
-    private initializeAPIs(): void {
+        this.client = new GCMSRestClient(this.driver);
+
         this.apis = {
             admin: asAngularAPI<AbstractAdminAPI>(this.client.admin),
             auth: asAngularAPI<AbstractAuthenticationAPI>(this.client.auth),
@@ -171,7 +165,8 @@ export class GCMSRestClientService implements APIDefinition {
 
     init(config: GCMSRestClientConfig, sid?: string): void {
         this.client.config = config;
-        this.client.sid = sid;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        this.client.sid = sid as any;
     }
 
     configure(config: GCMSRestClientConfig): void {
@@ -199,7 +194,7 @@ export class GCMSRestClientService implements APIDefinition {
     }
 
     get auth(): AngularAPI<AbstractAuthenticationAPI> {
-        return this.apis.auth
+        return this.apis.auth;
     }
 
     get cluster(): AngularAPI<AbstractClusterAPI> {

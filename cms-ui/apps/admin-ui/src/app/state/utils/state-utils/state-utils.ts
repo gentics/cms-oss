@@ -1,4 +1,4 @@
-import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
+import { deepFreeze } from '@gentics/common';
 import { ConstructorOf } from '@admin-ui/common/utils/util-types/util-types';
 import { Action, Select, State } from '@ngxs/store';
 import { ɵStateClass, ɵStoreOptions } from '@ngxs/store/internals';

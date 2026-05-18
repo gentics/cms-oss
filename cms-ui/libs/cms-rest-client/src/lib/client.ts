@@ -1,4 +1,3 @@
-import { BaseListOptionsWithPaging, PublishLogEntry } from '@gentics/cms-models';
 import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
 import {
     GCMSAdminAPI,
@@ -65,14 +64,14 @@ export class GCMSRestClient implements GCMSRootAPI {
     constructor(
         public driver: GCMSClientDriver,
         public config: GCMSRestClientConfig = DEFAULT_CONFIG,
-        public sid: null | number | string = null,
+        public sid: undefined | null | number | string = null,
     ) { }
 
     protected prepareRequest(
         requestMethod: RequestMethod,
         path: string,
-        queryParams: Record<string, any>,
-        requestHeaders: Record<string, string>,
+        queryParams?: Record<string, any>,
+        requestHeaders?: Record<string, string>,
     ): GCMSRestClientRequestData {
         let buildPath = '';
 
@@ -103,8 +102,8 @@ export class GCMSRestClient implements GCMSRootAPI {
                 host: this.config.connection.host,
                 port: this.config.connection.port,
                 path: buildPath,
-                params: queryParams,
-                headers: requestHeaders,
+                params: queryParams || {},
+                headers: requestHeaders || {},
             }
             : {
                 method: requestMethod,
@@ -112,8 +111,8 @@ export class GCMSRestClient implements GCMSRootAPI {
                 host: null,
                 port: null,
                 path: buildPath,
-                params: queryParams,
-                headers: requestHeaders,
+                params: queryParams || {},
+                headers: requestHeaders || {},
             };
 
         const { method, protocol, host, port, path: finalPath, params, headers } = this.handleInterceptors(data);
@@ -133,8 +132,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         return {
             method,
             url,
-            params,
-            headers,
+            params: params || {},
+            headers: headers || {},
         };
     }
 
@@ -402,7 +401,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         upload: (file, options, fileName) => {
             const data = new FormData();
             data.append('fileBinaryData', file);
-            data.append('fileName', fileName);
+            data.append('fileName', fileName || '');
             if (options.folderId) {
                 data.append('folderId', options.folderId.toString());
             }
@@ -420,11 +419,13 @@ export class GCMSRestClient implements GCMSRootAPI {
             if (fileName) {
                 data.append('fileName', fileName);
             }
-            if (options.folderId) {
-                data.append('folderId', options.folderId.toString());
-            }
-            if (options.nodeId) {
-                data.append('nodeId', options.nodeId.toString());
+            if (options) {
+                if (options.folderId) {
+                    data.append('folderId', options.folderId.toString());
+                }
+                if (options.nodeId) {
+                    data.append('nodeId', options.nodeId.toString());
+                }
             }
             return this.executeMappedFormRequest(POST, `/file/save/${id}`, data, options);
         },
@@ -813,8 +814,8 @@ export class GCMSRestClient implements GCMSRootAPI {
     } as const;
 
     public publishProtocol: GCMSPublishProtocolAPI = {
-        get: (type, objId: number) => this.executeMappedJsonRequest(GET, `/publish/state/${type}/${objId}`, null, null),
-        list: (options: BaseListOptionsWithPaging<PublishLogEntry>) => this.executeMappedJsonRequest(GET, '/publish/state/', null, options),
+        get: (type, objId) => this.executeMappedJsonRequest(GET, `/publish/state/${type}/${objId}`, null),
+        list: (options) => this.executeMappedJsonRequest(GET, '/publish/state/', null, options),
     } as const;
 
     public role: GCMSRoleAPI = {

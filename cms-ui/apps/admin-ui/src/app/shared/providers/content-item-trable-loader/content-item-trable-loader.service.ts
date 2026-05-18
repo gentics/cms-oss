@@ -163,7 +163,7 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
         return Object.entries(item?.privilegeMap?.privileges || {})
             .filter(([, permitted]) => permitted)
             .map(([key]) => INVERSE_GCMS_PERMISSIONS[key])
-            .filter(perm => !!perm);
+            .filter(perm => !!perm) as GcmsPermission[];
     }
 
 }

@@ -188,7 +188,7 @@ export const GROUP_ROOT: GroupImportData = {
             perms: [
                 { type: GcmsPermission.UPDATE, value: false },
             ],
-        } as ImportPermissions)),
+        })),
         {
             type: AccessControlledType.CONSTRUCT_ADMIN,
             perms: [
@@ -412,7 +412,7 @@ export const PAGE_ONE: PageImportData = {
     ...createPage(NODE_MINIMAL, NODE_MINIMAL, BASIC_TEMPLATE_ID, 'One'),
     tags: {
         content: {
-            id: null,
+            id: null as any,
             constructId: 7,
             name: 'content',
             active: true,
@@ -443,7 +443,7 @@ export const PAGE_ONE_DE = createPageTranslation(PAGE_ONE, 'Eins', LANGUAGE_DE, 
     pageName: 'Seite Eins',
     tags: {
         content: {
-            id: null,
+            id: null as any,
             constructId: 7,
             name: 'content',
             active: true,

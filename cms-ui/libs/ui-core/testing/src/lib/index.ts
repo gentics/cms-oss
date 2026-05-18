@@ -6,4 +6,3 @@ export * from './mocked';
 export * from './spy-event-target';
 export * from './spy-observer';
 export * from './works-but-has-pending-timers';
-

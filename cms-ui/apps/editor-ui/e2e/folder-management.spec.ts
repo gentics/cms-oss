@@ -5,6 +5,7 @@ import {
     ObjectProperty,
     ObjectPropertyCreateRequest,
 } from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/common';
 import {
     CONSTRUCT_BOOLEAN,
     EntityImporter,
@@ -23,7 +24,6 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils';
 import { expect, Page, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,

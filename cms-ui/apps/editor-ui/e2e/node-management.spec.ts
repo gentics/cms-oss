@@ -14,7 +14,7 @@ import {
     TestSize,
     UserImportData,
 } from "@gentics/e2e-utils";
-import { cloneWithSymbols } from "@gentics/ui-core/utils";
+import { cloneWithSymbols } from "@gentics/common";
 import { expect, Page, test } from "@playwright/test";
 import { editorAction, selectNode } from "./helpers";
 

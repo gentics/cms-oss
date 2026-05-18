@@ -1,4 +1,5 @@
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/common';
 import {
     EntityImporter,
     FILE_ONE,
@@ -22,7 +23,6 @@ import {
     UserImportData,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils';
 import { expect, Page, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,

@@ -16,7 +16,7 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils';
+import { cloneWithSymbols } from '@gentics/common';
 import test, { expect, Locator, Response } from '@playwright/test';
 import { navigateToModule } from './helpers';
 

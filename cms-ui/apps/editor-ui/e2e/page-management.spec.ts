@@ -39,7 +39,7 @@ import {
     UserImportData,
     waitForResponseFrom
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils';
+import { cloneWithSymbols } from '@gentics/common';
 import { expect, Locator, Page, Response, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,

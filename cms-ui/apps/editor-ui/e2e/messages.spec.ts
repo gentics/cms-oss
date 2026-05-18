@@ -1,4 +1,5 @@
 import { AccessControlledType, GcmsPermission, LoginResponse } from '@gentics/cms-models';
+import { randomId } from '@gentics/common';
 import {
     createClient,
     EntityImporter,
@@ -16,7 +17,6 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { randomId } from '@gentics/ui-core/utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
 

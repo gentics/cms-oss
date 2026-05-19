@@ -8,8 +8,8 @@
 	</formats>
 	<fileSets>
 		<fileSet>
-			<directory>${project.basedir}/src</directory>
-			<outputDirectory>/</outputDirectory>
+			<directory>${project.basedir}/src/apps/andp-ma-formgen/dist</directory>
+			<outputDirectory>/formgen</outputDirectory>
 			<filtered>false</filtered>
 		</fileSet>
 	</fileSets>

@@ -19,17 +19,17 @@
 	<name>Gentics CMS Forms - Core</name>
 	<url>http://www.gentics.com</url>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.gentics.cms</groupId>
-				<artifactId>cms-bom</artifactId>
-				<type>pom</type>
-				<scope>import</scope>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.gentics.cms</groupId>
+                <artifactId>cms-bom</artifactId>
+                <type>pom</type>
+                <scope>import</scope>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 	<dependencies>
 		<dependency>
@@ -63,6 +63,14 @@
 			<artifactId>groovy-json</artifactId>
 			<version>5.0.5</version>
 		</dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+        </dependency>
 
 		<!--Test dependencies -->
 		<dependency>
@@ -108,16 +116,6 @@
 					<artifactId>log4j</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty.ee10</groupId>
-			<artifactId>jetty-ee10-servlet</artifactId>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

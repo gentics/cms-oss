@@ -17,6 +17,7 @@ export enum OverlayTypeEnum {
   FULL_SCREEN_LOADING,
   AGGREGATE_DELETE_CONFIRMATION,
   SUBMIT_USER_INPUT_FAILURE,
+  LOAD_CAPTCHA_ERROR,
   NONE,
 }
 
@@ -39,4 +40,5 @@ export const overlayTypes: IOverlayTypes = {
   [OverlayTypeEnum.AGGREGATE_DELETE_CONFIRMATION]:
     Overlays.AggregateDeleteConfirmationOverlay,
   [OverlayTypeEnum.SUBMIT_USER_INPUT_FAILURE]: Overlays.SubmitOverlay,
+  [OverlayTypeEnum.LOAD_CAPTCHA_ERROR]: Overlays.CaptchaErrorOverlay,
 };

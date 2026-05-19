@@ -6,7 +6,7 @@ import {
   UIState,
   IDialogFormInitBody,
 } from '../types/interfaces';
-import { RecaptchaService } from './RecaptchaService';
+import { CaptchaService } from './CaptchaService';
 import * as gzip from 'gzip-js';
 import createAxiosClient from '@andp/core/src/services/AxiosClient';
 import axios from 'axios';
@@ -26,8 +26,10 @@ export class RestService {
   initUrl: string;
   fullCulture: string | null; // something like de-AT, en-CH, etc.
   pluginName: PluginNameEnum;
+  languageParam: string | null;
+  FORMS_DATA_COOKIE: string = "forms-data";
 
-  constructor(meshPath: string, pluginName: PluginNameEnum, apiToken?: string, cultureParam?: string) {
+  constructor(meshPath: string, pluginName: PluginNameEnum, apiToken?: string, cultureParam?: string, languageParam?: string) {
     this.pluginName = pluginName;
     this.anBasePath = this.initBasePath(meshPath);
     this.apiToken = apiToken;
@@ -38,6 +40,7 @@ export class RestService {
     }else{
       this.fullCulture = null;
     }
+    this.languageParam = languageParam;
   }
 
   getFullCulture() : string | null {
@@ -56,6 +59,31 @@ export class RestService {
     return meshHost + '/api/' + this.pluginName + '/';
   }
 
+  private appendLangParam(url: string): string {
+    if (this.pluginName === PluginNameEnum.CMS_FORMS && this.languageParam) {
+      const separator = url.includes('?') ? '&' : '?';
+      return url + separator + 'lang=' + this.languageParam;
+    }
+    return url;
+  }
+
+  /**
+   * Liest den Wert eines bestimmten Cookies aus dem Browser (document.cookie).
+   * 
+   * Der verwendete reguläre Ausdruck `(?:^|; )' + name + '=([^;]*)` stellt Folgendes sicher:
+   * - `(?:^|; )`: Matcht entweder den Anfang des Strings oder die Standard-Cookie-Trennzeichen (Semikolon + Leerzeichen), um exakte Namensübereinstimmungen zu garantieren.
+   * - `name`: Der exakte Name des gesuchten Cookies.
+   * - `=([^;]*)`: Fängt den eigentlichen Wert (alles nach dem '=' bis zum nächsten ';') in die Capturing Group (match[1]) ein.
+   *
+   * @param name Der Name des auszulesenden Cookies.
+   * @returns Der decodierte Wert des Cookies oder null, falls er nicht existiert (oder nicht im Web ausgeführt wird).
+   */
+  private readCookie(name: string): string | null {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return null;
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
   async post(
     formId: string,
     url: string,
@@ -63,6 +91,7 @@ export class RestService {
     requestHeader?: any,
     formState?: FormState,
   ): Promise<ApiResponse> {
+    url = this.appendLangParam(url);
     //TODO v8.2 - compress logic
     //a few calls are never compressed
     let bodyForRequest: any;
@@ -127,10 +156,7 @@ export class RestService {
     if (__DEV__ && this.apiToken != undefined && this.apiToken != '') {
       headers['Authorization'] = 'Bearer ' + this.apiToken;
     }
-    const recaptchaToken = RecaptchaService.getToken();
-    if (recaptchaToken != null) {
-      headers['x-recaptcha-token'] = recaptchaToken;
-    }
+    Object.assign(headers, CaptchaService.getRequestHeaders());
 
     let requestConfig: AxiosRequestConfig = {
       baseURL: this.anBasePath,
@@ -187,6 +213,7 @@ export class RestService {
     requestHeader?: any,
     formId?: string,
   ): Promise<ApiResponse> {
+    url = this.appendLangParam(url);
     let headers = { ...requestHeader }; // if requestHeader -> headers with empty object
 
     if (formId && this.fullCulture && this.pluginName === PluginNameEnum.ACTA_NOVA) {
@@ -206,10 +233,6 @@ export class RestService {
       headers['Authorization'] = 'Bearer ' + this.apiToken;
     }
 
-    const recaptchaToken = RecaptchaService.getToken();
-    if (recaptchaToken != null) {
-      headers['x-recaptcha-token'] = recaptchaToken;
-    }
 
     let requestConfig: AxiosRequestConfig = {
       baseURL: this.anBasePath,
@@ -328,6 +351,10 @@ export class RestService {
       requestData.businessObjectID = businessObjectID;
     }
     url += '/load';
+    if (this.pluginName === PluginNameEnum.CMS_FORMS) {
+      const uuid = this.readCookie(this.FORMS_DATA_COOKIE);
+      if (uuid) url += '?formDataUuid=' + encodeURIComponent(uuid);
+    }
     if (
       initializeData &&
       initializeData != null &&
@@ -336,7 +363,7 @@ export class RestService {
       requestData.initializeData = JSON.parse(initializeData);
     }
     //TODO v8.2 payment
-    if(Platform.OS == "web"){
+    if(Platform.OS == "web" && this.pluginName == PluginNameEnum.ACTA_NOVA){
       const queryString = window.location.search;
       if (queryString && queryString.indexOf('payed=true') > 0) {
         url += '?payed=true';
@@ -367,11 +394,17 @@ export class RestService {
   }
 
   async loadSaveFormRequest(data: FormData, formState: FormState) {
-    if (RecaptchaService.isRequired() && RecaptchaService.getToken() == null) {
+    if (
+      CaptchaService.isActive() &&
+      !CaptchaService.hasExecute() &&
+      CaptchaService.getToken() == null
+    ) {
       return {
         success: false,
         responseCode: 400,
-        responseData: 'recaptcha token missing',
+        responseData: {
+          error_code: "CAPTCHA_ERROR"
+        }
       } as ApiResponse;
     }
     let url = 'form/' + encodeURIComponent(formState.formid);
@@ -384,6 +417,10 @@ export class RestService {
         '/businessObject/' + encodeURIComponent(formState.businessObjectID);
     }
     url += '/save';
+    if (this.pluginName === PluginNameEnum.CMS_FORMS) {
+      const uuid = this.readCookie(this.FORMS_DATA_COOKIE);
+      if (uuid) url += '?formDataUuid=' + encodeURIComponent(uuid);
+    }
     const header = { 'Content-Type': 'multipart/form-data' };
     const response = await this.post(
       formState.formid,
@@ -400,13 +437,6 @@ export class RestService {
     dataToSend: FormData,
     formState: FormState,
   ): Promise<ApiResponse> {
-    if (RecaptchaService.isRequired() && RecaptchaService.getToken() == null) {
-      return {
-        success: false,
-        responseCode: 400,
-        responseData: 'recaptcha token missing',
-      } as ApiResponse;
-    }
     let url = 'form/' + encodeURIComponent(formState.data.formID);
     if (
       typeof formState.businessObjectID !== 'undefined' &&
@@ -420,8 +450,12 @@ export class RestService {
     }
     url = url + '/submit';
 
+    if (this.pluginName === PluginNameEnum.CMS_FORMS) {
+      const uuid = this.readCookie(this.FORMS_DATA_COOKIE);
+      if (uuid) url += '?formDataUuid=' + encodeURIComponent(uuid);
+    }
     if (formState.paymentState) {
-      url = url + '?payment=true';
+      url = url + (url.includes('?') ? '&' : '?') + 'payment=true';
     }
     const apiResponse: ApiResponse = await this.post(
       formState.data.formID,

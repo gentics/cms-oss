@@ -42,7 +42,7 @@ const sharedElementTypes: IElementTypes = {
     ...FormGridElementTypes,           // shared
     ...cmsInputElementTypes,
     boolean: Elements.BooleanElement,
-    select: Elements.SelectElement,
+    catalog: Elements.CatalogElement,
     datetime: Elements.DateTimeElement as unknown as IElementType,
     time: Elements.DateTimeElement as unknown as IElementType,
     binary: Elements.BinaryElement as unknown as IElementType,
@@ -57,7 +57,7 @@ const sharedElementTypes: IElementTypes = {
 const cmsElementTypes: IElementTypes = {
     ...FormGridElementTypes,           // shared
     container: Elements.CmsContainerElement,
-    recaptcha: Elements.CmsRecaptchaElement,
+    adminmail: Elements.CatalogElement
 };
 
 /*
@@ -72,5 +72,6 @@ const pluginElementTypes: IPluginElements = {
 export const getElementTypeByPlugin = (elementType: string, pluginName: string) => {
     let sharedElementTypes = pluginElementTypes['shared'];
     let specificElementTypes = pluginElementTypes[pluginName];
+    // Der specific type wird bevorzugt
     return specificElementTypes[elementType] || sharedElementTypes[elementType];
 }

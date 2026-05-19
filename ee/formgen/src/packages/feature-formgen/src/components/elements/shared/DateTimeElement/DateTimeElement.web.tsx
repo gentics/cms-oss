@@ -454,6 +454,7 @@ function DateTimeElement(props: IFormComponentAttributes) {
       hideAnFieldLoadErrorIcon
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <View ref={inputContainerRef}>
         <Animated.Text

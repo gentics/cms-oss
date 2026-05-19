@@ -235,7 +235,8 @@ export interface IFormComponentBaseAttributes {
   isSearch?: boolean;
   isLoggedIn?: boolean;
   rawErrorMsgs?: IErrorMessage[];
-  insideSubaggregatIndex?: number
+  insideSubaggregatIndex?: number;
+  selectedElementId?: string;
 
 }
 
@@ -351,8 +352,24 @@ export interface FormState {
   isLoggedIn: boolean;
   detailUrl?: string;
   hasDetail?: boolean;
+  isFormgridPreview?: boolean;
   pluginName: PluginNameEnum;
+  captchaConfig?: CaptchaConfig;
 }
+
+export type FriendlyCaptchaMode = 'auto' | 'button' | 'background'
+export type reCaptchaMode = 'checkbox' | 'invisible'
+
+/**
+ * This 
+ */
+export interface CaptchaConfig {
+  provider: 'friendly' | 'recaptcha';
+  siteKey: string;
+  mode?: FriendlyCaptchaMode | reCaptchaMode;
+  language?: string;
+  baseUrl?: string;
+};
 //TODO Method uncomment "?""
 export interface IFormPageComponent {
   formState: FormState;
@@ -544,7 +561,9 @@ export interface IFormGridOptions {
 
   image?: IFormGridImageOptions;
   siteKey?: string;
+  baseUrl?: string;
   mode?: 'checkbox' | 'invisible';
+  condition?: ICmsCondition;
 }
 export interface IOverlayInfoOptions {
   isShowOverlay: boolean;
@@ -898,6 +917,13 @@ export interface LoadingOverlayScreenProps {
 
 export interface IOverlayFooterProps {
   footerMessages?: (string | undefined)[];
+}
+
+export interface IAggregateAddButtonProps {
+  id?: string;
+  className?: string;
+  onPress: () => any;
+  showButtonText?: boolean;
 }
 
 type formEditModeValues = keyof typeof editModeMap;

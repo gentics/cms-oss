@@ -619,6 +619,13 @@ export interface IInputElementTheme {
     iconColor: string;
     iconSize: number;
   }
+  unitBadge: {
+    gap: number;
+    paddingHorizontal: number;
+  }
+  isFilledIcon: {
+    width: number;
+  }
 }
 
 export interface IBinaryInputTheme {

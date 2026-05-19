@@ -97,7 +97,6 @@ const TableView: React.FC<TableViewProps> = (props) => {
   const calculateInitialColumnWidth = () => {
     if (!props.visibleColumns.length) return;
 
-
     const tempWidths = props.visibleColumns.map((i) => {
       const col = props.headerColumns[i];
       const samples = [
@@ -118,7 +117,8 @@ const TableView: React.FC<TableViewProps> = (props) => {
       return w;
     });
 
-    const columWidthSum = tempWidths.reduce((s, w) => s + w, 0) + (props.multiSelect ? 40 : 0);
+    const columWidthSum =
+      tempWidths.reduce((s, w) => s + w, 0) + (props.multiSelect ? 40 : 0);
     if (columWidthSum > containerWidthPx) return tempWidths;
     else {
       const remainingSpace = Math.max(0, containerWidthPx - 1 - columWidthSum);
@@ -130,12 +130,9 @@ const TableView: React.FC<TableViewProps> = (props) => {
   };
 
   // For Performance Reasons
-  const initialWidths = useMemo(
-    () => {
-      return calculateInitialColumnWidth()
-    },
-    [props.visibleColumns, props.content, containerWidthPx],
-  );
+  const initialWidths = useMemo(() => {
+    return calculateInitialColumnWidth();
+  }, [props.visibleColumns, props.content, containerWidthPx]);
 
   const { colWidths, startResize } = useResizeHandlers(initialWidths);
 
@@ -186,11 +183,13 @@ const TableView: React.FC<TableViewProps> = (props) => {
         enhancedWidthFromColumNumber(
           props.formWidth || 8,
           props.breakpoints.maximumMd,
-          !scrollableExpersearchTable
+          !scrollableExpersearchTable,
         ),
         !scrollableExpersearchTable && { width: 'min-content' },
       ]}
-      onLayout={(e) => setContainerWidthPx(Math.round(e.nativeEvent.layout.width))}
+      onLayout={(e) =>
+        setContainerWidthPx(Math.round(e.nativeEvent.layout.width))
+      }
     >
       {/* --------------------------------------------- */}
       {/* Dient nur für die obere scrollbar der Tabelle */}
@@ -206,7 +205,10 @@ const TableView: React.FC<TableViewProps> = (props) => {
         </ScrollView>
       )}
       {/* --------------------------------------------- */}
-      <ScrollView ref={headerRef} style={!scrollableExpersearchTable && { width: 'min-content' }}>
+      <ScrollView
+        ref={headerRef}
+        style={!scrollableExpersearchTable && { width: 'min-content' }}
+      >
         <View style={{ width: totalTableWidth }}>
           <Header
             visibleColumns={props.visibleColumns}
@@ -344,11 +346,7 @@ const CardView: React.FC<CardViewProps> = React.memo((props) => {
    * even if the total result set contains thousands of entries.
    */
   const pageContent = useMemo(
-    () =>
-      props.content.slice(
-        pageOffset,
-        pageOffset + CARD_PAGE_SIZE,
-      ),
+    () => props.content.slice(pageOffset, pageOffset + CARD_PAGE_SIZE),
     [props.content, pageOffset],
   );
 
@@ -415,7 +413,6 @@ const CardView: React.FC<CardViewProps> = React.memo((props) => {
           key={'ExpertSearchPaginationUnten-' + props.content.length}
           previousLabel={props.t('form_aggregat_previous')}
           nextLabel={props.t('form_aggregat_next')}
-
         />
       )}
     </View>
@@ -463,7 +460,7 @@ interface SearchTableProps {
  * ----------------------------------------
  * ! This Component was added in order to increase Performance and reduce re-renders !
  * It's a PureComponent which will only re-renderes if the shallow comparison is not equal.
- * 
+ *
  * Chooses between rendering a TableView or CardView based on screen size or platform.
  * Provides synchronized scrolling and multi-select capabilities.
  * Wraps main table and card presentations inside a PureComponent for optimized re-renders.
@@ -557,6 +554,7 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
   const content = reportResult?.content || [];
   const [checkBoxesState, setCheckBoxesState] = useState<number[]>([]);
   const [sortDirection, setSortDirection] = useState<string[]>([]);
+  const [hasSearched, setHasSearched] = useState(props.hasSearched);
 
   const styles = useMemo(
     () => mergeStyles(expertSearchStyles, customExpertSearchStyles),
@@ -577,21 +575,19 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
     [headerColumns],
   );
 
-  // initialSearch
-  const formHasVisibleProperties = Object.values(
-    props.formState.data?.properties || {},
-  ).some((p) => p?.visible);
-  const [hasSearched, setHasSearched] = useState(props.hasSearched);
+  const properties = props.formState.data?.properties;
+  const hasAnyProperties = !!properties && Object.keys(properties).length > 0;
+  const hasVisibleProperties = Object.values(properties || {}).some(
+    (p: any) => p?.visible,
+  );
+
+  const shouldAutoSearch = !hasAnyProperties || !hasVisibleProperties;
 
   useEffect(() => {
-    if (!hasSearched && !formHasVisibleProperties) {
-      props.handleExpertSearch && props.handleExpertSearch();
+    if (!props.hasSearched && shouldAutoSearch) {
+      props.handleExpertSearch?.();
     }
-  }, []);
-
-  useEffect(() => {
-    if (props.hasSearched != hasSearched) setHasSearched(props.hasSearched);
-  }, [props.hasSearched]);
+  }, [props.hasSearched, shouldAutoSearch, props.handleExpertSearch]);
 
   useEffect(() => {
     if (props.formState.expertMultipleHandler != triggerFormEndpointMultiple) {
@@ -660,8 +656,8 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
     [sortDirection, content, visibleColumns, checkBoxesState],
   );
 
-  const { andpSharedFunctions, andpSharedProps, andpNavigation } = useMicroAppSDK();
-
+  const { andpSharedFunctions, andpSharedProps, andpNavigation } =
+    useMicroAppSDK();
 
   const triggerFormEndpoint = async (buttonID: string, param: string) => {
     startANRequest(() => {
@@ -677,7 +673,7 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
       buttonID,
       [param],
       (res: any) => {
-        if (Platform.OS == "web") {
+        if (Platform.OS == 'web') {
           if (res.targetFormID) {
             const url = `/form/${res.targetFormID}`;
             localStorage.setItem('formID', res.targetFormID);
@@ -688,7 +684,6 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
             res.action === 'openWindow'
               ? window.open(url, '_blank')
               : (window.location.href = url);
-
           } else if (res.targetUrl) {
             const tgt = res.targetUrl.startsWith('http')
               ? res.targetUrl
@@ -696,15 +691,19 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
             res.action === 'openWindow'
               ? window.open(tgt, '_blank')
               : (window.location.href = tgt);
-
           }
         } else {
-
           if (res.targetFormID) {
             andpSharedProps.set('formgen.formID', res.targetFormID);
-            andpSharedProps.set('formgen.initializeData', JSON.stringify(res.initializeData));
+            andpSharedProps.set(
+              'formgen.initializeData',
+              JSON.stringify(res.initializeData),
+            );
 
-            andpSharedFunctions.get("services.linkCallback")?.(res.targetFormID, true)
+            andpSharedFunctions.get('services.linkCallback')?.(
+              res.targetFormID,
+              true,
+            );
           } else if (res.targetUrl) {
             const tgt = res.targetUrl.startsWith('http')
               ? res.targetUrl
@@ -712,13 +711,12 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
 
             Linking.openURL(tgt);
           }
-
         }
         endANRequest(props.uiState, props.updateState);
       },
       errorTriggerFormEndpoint,
     );
-  }
+  };
 
   const triggerFormEndpointMultiple = useCallback(
     async (buttonID?: string) => {
@@ -768,7 +766,7 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
 
   const callbackTriggerFormEndpoint = useCallback(
     (response: interfaces.ITriggerFormEndpointResponse) => {
-      if (Platform.OS == "web") {
+      if (Platform.OS == 'web') {
         if (response.targetFormID && response.targetFormID !== '') {
           let targetUrl = '/form/' + response.targetFormID;
           localStorage.setItem('formID', response.targetFormID);
@@ -799,9 +797,15 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
       } else {
         if (response.targetFormID) {
           andpSharedProps.set('formgen.formID', response.targetFormID);
-          andpSharedProps.set('formgen.initializeData', JSON.stringify(response.initializeData));
+          andpSharedProps.set(
+            'formgen.initializeData',
+            JSON.stringify(response.initializeData),
+          );
 
-          andpSharedFunctions.get("services.linkCallback")?.(response.targetFormID, true)
+          andpSharedFunctions.get('services.linkCallback')?.(
+            response.targetFormID,
+            true,
+          );
         } else if (response.targetUrl) {
           const tgt = response.targetUrl.startsWith('http')
             ? response.targetUrl
@@ -829,7 +833,7 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
     [],
   );
 
-  if (!hasSearched) {
+  if (!props.hasSearched) {
     return null;
   }
 
@@ -864,7 +868,7 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
       ) : !props.uiState.loading &&
         (global as any).anRequestRunning == false &&
         content.length === 0 &&
-        hasSearched ? (
+        props.hasSearched ? (
         <AndpText style={styles.emptyText}>
           {t('form_expertSearchEmpty')}
         </AndpText>

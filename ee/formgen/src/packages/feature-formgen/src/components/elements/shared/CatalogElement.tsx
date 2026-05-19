@@ -28,7 +28,7 @@ import SharedSelectRenderer from '../helper/SharedSelectRenderer';
  * via `utils.setValue(...)` and then triggers `updateState(...)` so the regular
  * form rendering and validation flow continues unchanged.
  */
-function SelectElement(props: IFormComponentAttributes) {
+function CatalogElement(props: IFormComponentAttributes) {
   const { formState } = props;
 
   const elementRef = useRef<any>(null);
@@ -70,7 +70,7 @@ function SelectElement(props: IFormComponentAttributes) {
   );
 }
 
-SelectElement.validate = function (
+CatalogElement.validate = function (
   state: FormState,
   jsonpath: string,
   id: string,
@@ -89,7 +89,7 @@ SelectElement.validate = function (
   );
 };
 
-SelectElement.getSummaryValue = function (
+CatalogElement.getSummaryValue = function (
   state: FormState,
   jsonpath: string,
   id: string,
@@ -104,4 +104,4 @@ SelectElement.getSummaryValue = function (
   return value.displayName || '';
 };
 
-export default SelectElement;
+export default CatalogElement;

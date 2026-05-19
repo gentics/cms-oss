@@ -18,16 +18,41 @@ import * as validationUtils from './ValidationUtils';
 import * as mockFormularUtils from './MockFormularUtils';
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { RestService } from '../services/RestService';
-import { RecaptchaService } from '../services/RecaptchaService';
+import { CaptchaService } from '../services/CaptchaService';
 import * as overlayUtils from './OverlayUtils';
 import { OverlayTypeEnum } from '../custom/OverlayTypes';
 import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
+import { FileUploadErrorTypeEnum } from '../constants/enums/FileUploadErrorTypeEnum';
 import * as hookUtils from '../custom/HooksUtils';
 import * as DocumentPicker from 'expo-document-picker';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { Platform } from 'react-native';
 import i18n from '@andp/core/src/services/i18n';
+
+/**
+ * Detects whether a failed API response is the backend's "captcha rejected"
+ * error. Backend signals it with HTTP 400 and a JSON body containing
+ * `error_code: 'CAPTCHA_ERROR'`. The body may arrive parsed (object) or as a
+ * raw JSON string — both shapes are accepted.
+ */
+function isCaptchaError(res: ApiResponse): boolean {
+  if (res.responseCode !== 400) return false;
+  const body = res.responseData;
+  if (body == null) return false;
+  if (typeof body === 'object' && (body as any).error_code === 'CAPTCHA_ERROR') {
+    return true;
+  }
+  if (typeof body === 'string') {
+    try {
+      const parsed = JSON.parse(body);
+      return parsed?.error_code === 'CAPTCHA_ERROR';
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
 
 
 export const submitCSVUpload = async (
@@ -351,6 +376,62 @@ export const cancelUpdateOnChange = () => {
   }
 };
 
+
+/**
+ * Verarbeitet Validierungsfehler beim Dateiupload (HTTP 422). submit und save
+ * Ermittelt anhand des `errorType` die passende Fehlermeldung und weist diese
+ * dem entsprechenden Formular-Element zu.
+ *
+ * @param responseData Die Fehlerantwort vom Backend, die `filename`, `jsonPath` und `errorType` enthalten kann.
+ * @param formState Der aktuelle Zustand des Formulars (FormState), der aktualisiert wird.
+ * @param jsonPath Ein optionaler Fallback-JSON-Pfad, falls dieser in `responseData` fehlt. wenn nicht gesetzt -> submit (anonym user)
+ * @returns Die übersetzte Validierungs-Fehlermeldung.
+ */
+export const handleFileUploadValidationError = ( 
+  responseData: any,
+  formState: FormState,
+  jsonPath?: string,
+): string => {
+  const filename = responseData?.filename as string | undefined;
+  const jsonPathFinal = responseData?.jsonPath ? responseData.jsonPath : jsonPath;
+  const errorType = responseData?.errorType as FileUploadErrorTypeEnum | undefined;
+  
+  let i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed';
+  
+  if (errorType) {
+    switch(errorType) {
+      case FileUploadErrorTypeEnum.FILE_TOO_LARGE:
+        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed_file_too_large';
+        break;
+      case FileUploadErrorTypeEnum.MIME_TYPE_NOT_ALLOWED:
+        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed_mime_type_not_allowed'; 
+        break;
+      case FileUploadErrorTypeEnum.MIME_TYPE_UNKNOWN:
+        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed_mime_type_unknown'; 
+        break;
+      case FileUploadErrorTypeEnum.FILE_UPLOAD_FAILED:
+        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed';
+        break;
+      default:
+        i18nKey = 'form_overlay_errorOnSubmit_fileupload_failed';
+        break;
+    }
+  }
+  const fileUploadError = i18n.t(i18nKey);
+  const validationMessage = filename ? `${fileUploadError} (${filename})` : fileUploadError;
+  // Entfernt ".value", ".values", ".value[index]" oder ".values[index]" am Ende des Pfades, um das Eltern-Element zu erhalten
+  const jsonPathBinary = jsonPathFinal ? jsonPathFinal.replace(/\.values?(\[\d+\])?$/, '') : jsonPathFinal;
+  let datafieldUploadElement = utils.getElementByJsonPath(formState.data, jsonPathBinary);
+
+  if (datafieldUploadElement) {
+      datafieldUploadElement.validationMessage = validationMessage;
+      formState.data.hasValidationErrors = true;
+      utils.setStateElementByJsonpath(formState.data, jsonPathBinary, datafieldUploadElement);
+  }
+
+  return validationMessage;
+};
+
 //if a binary element changes, it leads to a possible binary upload if the user is signed in
 //and all uploads are (client side) valid
 export async function possibleBinaryUpload(
@@ -393,25 +474,23 @@ export async function possibleBinaryUpload(
         await afterChange(formState, uiState, restService, jsonpath, id, true, updateState, formGridOptions, editable);
       };
 
-      const actionAfterError = () => {
+      const actionAfterError = (res?: ApiResponse) => {
         onBinaryChangeFinished();
-        //something went wrong (most probably backend file-check), we remove uploads, reset field and set an error message
-        if (utils.isListElement(formState.schema, id)) {
-          utils.setValue(formState, jsonpath, []);
-        }
-        else{
-          utils.setValue(formState, jsonpath, {});
-        }
-        formState.fileUploads = {};
-        const binaryElem = utils.getElementByJsonPath(formState.data, jsonpath);
-        if (binaryElem) {
-          binaryElem.validationMessage = i18n.t('form_binary_upload_failed');
-          updateState(StatesToUpdateEnum.ALL);
-        }
+
+        const responseData = res?.responseData;
+        
+        if (res?.responseCode === 422 && responseData) {
+          handleFileUploadValidationError(responseData, formState, jsonpath);
+        } else {
+          // something went wrong (most probably backend file-check), we set a generic error message
+          const binaryElem = utils.getElementByJsonPath(formState.data, jsonpath);
+          if (binaryElem) {
+            binaryElem.validationMessage = i18n.t('form_binary_upload_failed');
+          }
+        }        
+        updateState(StatesToUpdateEnum.ALL);
       };
-
       try {      
-
         onBinaryChangeFinished();
 
         console.log('handleBinaryFormSave');
@@ -653,8 +732,8 @@ export const saveForm = async (
     );
     }
   }, true);
-  if (RecaptchaService.hasExecute()) {
-    await RecaptchaService.execute();
+  if (CaptchaService.hasExecute()) {
+    await CaptchaService.execute();
   }
   let data = utils.prepareDataForSave(formState, uploadBinaries);
   let apiResponse: ApiResponse = await restService.loadSaveFormRequest(
@@ -670,6 +749,16 @@ export const saveForm = async (
 
   const errorFunc = function (res: ApiResponse) {
     if (showError) {
+      if (isCaptchaError(res)) {
+        overlayUtils.setOverlay(
+          uiState,
+          formState,
+          OverlayTypeEnum.LOAD_CAPTCHA_ERROR,
+          updateState,
+          { response: res },
+        );
+        return;
+      }
       if (!actionAfterError) {
         overlayUtils.setOverlay(uiState, formState, OverlayTypeEnum.LOAD_SAVE, updateState, {response: res});
       } else {
@@ -765,10 +854,10 @@ export const saveFormBinary = async (
     }
   };
 
-  const errorFunc = async () => {
+  const errorFunc = async (res?: ApiResponse) => {
     overlayUtils.hideOverlay(uiState, updateState);
     if (actionAfterError) {
-      await actionAfterError();
+      await actionAfterError(res);
     }
   };
 
@@ -1036,6 +1125,7 @@ export const submitForm = async (
 ) => {
   const dataToSend: FormData = utils.prepareDataForSave(formState, true);
   const handleSuccess = (res: ApiResponse) => {
+    CaptchaService.reset();
     formState.submitted = true;
     (global as any).submitted = true;
     try {
@@ -1066,6 +1156,35 @@ export const submitForm = async (
   const handleError = (res: ApiResponse) => {
     uiState.loading = false;
     const responseData = res.responseData;
+
+     if (isCaptchaError(res)) {
+      overlayUtils.setOverlay(
+        uiState,
+        formState,
+        OverlayTypeEnum.LOAD_CAPTCHA_ERROR,
+        updateState,
+        { response: res },
+      );
+      return;
+    }
+
+     if (res.responseCode === 422 && responseData) {
+      const validationMessage = handleFileUploadValidationError(responseData, formState);
+      const errorMsg: IErrorMessage = {
+          validationMessage,
+          pageNumber: uiState.currentPage,
+          elementInfo: { elementID: "random-dump" },
+        };
+      overlayUtils.setOverlay(
+        uiState,
+        formState,
+        OverlayTypeEnum.SUBMIT_USER_INPUT_FAILURE,
+        undefined,
+        { errorMsgs: [errorMsg], response: res },
+      );
+      updateState(StatesToUpdateEnum.ALL);
+      return;
+    }
 
     // Kombiniert: Exception/kein JSON ODER HTTP 400 -> LOAD_SUBMIT Overlay
     const showLoadSubmit =
@@ -1135,7 +1254,6 @@ export const submitForm = async (
   if (!apiResponse.success) {
     handleError(apiResponse);
   } else {
-    RecaptchaService.reset();
     handleSuccess(apiResponse);
   }
   await hookUtils.postSubmitForm(

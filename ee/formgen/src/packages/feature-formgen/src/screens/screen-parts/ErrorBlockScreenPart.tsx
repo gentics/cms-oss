@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { errorBoxStyles } from '../../styles/common/common-style';
 import { errorBoxStyles as customErrorBoxStyles } from '../../styles/custom/custom-style';
@@ -8,6 +8,8 @@ import AndpIcon from '@andp/core/src/components/AndpIcon';
 import AndpText from '@andp/core/src/components/AndpText';
 import { mergeStyles, useBreakpoints, widthFromColumNumber } from '@andp/core/src/AndpUtils';
 import { errorBoxTheme } from '@andp/core/src/styles/theme';
+import { CaptchaService } from '../../services/CaptchaService';
+
 
 const ErrorBlockScreenPart: React.FC<{
   formState: FormState;
@@ -22,7 +24,16 @@ const ErrorBlockScreenPart: React.FC<{
   let errorMessages: IErrorMessage[] = props.errorMsgs;
   const styles = useMemo(() => mergeStyles(errorBoxStyles, customErrorBoxStyles), []);
 
-  if (errorMessages.length > 0) {
+  const [captchaHasError, setCaptchaHasError] = useState<boolean>(
+    CaptchaService.hasError(),
+  );
+  useEffect(() => {
+    return CaptchaService.subscribe(() => {
+      setCaptchaHasError(CaptchaService.hasError());
+    });
+  }, []);
+
+  if (errorMessages.length > 0 || captchaHasError) {
     // filter for validation messages for the current or previous pages
     // only show one "form not filled" validation message
     const errorMessagesFromPreviousOrCurrentPage = errorMessages.filter(
@@ -42,7 +53,7 @@ const ErrorBlockScreenPart: React.FC<{
         return false;
       },
     );
-    if (errorMessagesFromPreviousOrCurrentPage.length) {
+    if (errorMessagesFromPreviousOrCurrentPage.length || captchaHasError) {
       return (
         <View style={[styles.errorBoxContainer]}>
           <View
@@ -83,10 +94,19 @@ const ErrorBlockScreenPart: React.FC<{
                     ));
                   }
                 })}
+                {captchaHasError && (
+                  <View style={styles.errorBoxItem} key="captcha-error">
+                    <AndpIcon name="circleWarning"
+                      size={errorBoxTheme.listContainer.iconSize}
+                      color={errorBoxTheme.listContainer.fontColor} />
+                    <AndpText style={styles.errorText}>
+                      {t('form_captchaNotSolvedError')}{' '}
+                    </AndpText>
+                  </View>
+                )}
               </View>
             </View>
           </View>
-          
         </View>
       );
     }

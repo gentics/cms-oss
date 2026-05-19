@@ -209,6 +209,7 @@ function ANAutocompleteInputElement(props: IFormComponentAttributes) {
       localErrorMsg={hasErrors || props.error || ''}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <BaseDropDownInputElement
         jsonpath={props.jsonpath}

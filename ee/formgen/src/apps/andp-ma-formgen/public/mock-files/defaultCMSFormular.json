@@ -15,6 +15,12 @@
         "isList": false,
         "name": "Rbn_AR_Standortverwaltung_Standortname"
       },
+      "CMS-ADMIN-MAIL-FIELD-0001": {
+        "type": "adminmail",
+        "updateOnChange": false,
+        "isList": false,
+        "name": "CMS-ADMIN-MAIL-FIELD"
+      },
       "CMS-CONDITION-INPUTFIELD": {
         "numberOfLines": 1,
         "type": "string",
@@ -25,11 +31,7 @@
         },
         "mandatory": true,
         "isList": false,
-        "name": "CMS-CONDITION-INPUTFIELD",
-        "condition": {
-          "source": { "control": "4491D2D9-7837-4A91-9B6F-EB3A13AB09CB" },
-          "equals": "condition"
-        }
+        "name": "CMS-CONDITION-INPUTFIELD"
       },
       "7EF4CA2A-DADD-4B9D-A2AD-A622F9A606DB": {
         "type": "number",
@@ -50,7 +52,12 @@
         "type": "number",
         "precision": 2,
         "isRaw": true,
-        "unit": {},
+        "unit": {
+          "de-AT": "Euro",
+          "en-CH": "Dollar",
+          "fr-CH": null,
+          "it-CH": null
+        },
         "updateOnChange": false,
         "validation": {
           "minValue": 10.5,
@@ -65,10 +72,14 @@
         "type": "number",
         "precision": 1,
         "isRaw": true,
-        "unit": {},
-        "updateOnChange": false,
-        "validation": {
+        "unit": {
+          "de-AT": "Euro",
+          "en-CH": "Dollar",
+          "fr-CH": null,
+          "it-CH": null
         },
+        "updateOnChange": false,
+        "validation": {},
         "mandatory": false,
         "isList": false,
 
@@ -79,8 +90,7 @@
         "isRaw": true,
         "unit": {},
         "updateOnChange": false,
-        "validation": {
-        },
+        "validation": {},
         "mandatory": false,
         "isList": false,
 
@@ -99,7 +109,7 @@
         "name": "Rbn_AR_Disabled_Test_Input"
       },
       "FDADA5C0-7948-4FFF-B5F9-A5609E03AAAA": {
-        "type": "select",
+        "type": "catalog",
         "searchselectValueMinLength": 0,
         "updateOnChange": false,
         "validation": {
@@ -110,9 +120,9 @@
         "isList": false,
         "name": "Rbn_AR_Disabled_Test_Dropdown"
       },
-      
+
       "FDADA5C0-7948-4FFF-B5F9-A5609E03BB0A": {
-        "type": "select",
+        "type": "catalog",
         "searchselectValueMinLength": 4,
         "updateOnChange": false,
         "validation": {
@@ -123,20 +133,8 @@
         "isList": false,
         "name": "Rbn_AR_Standortverwaltung_Geschaeftspartner"
       },
-      "BC2DA5C0-7948-4FFF-B5F9-A5609E03BB0A": {
-        "type": "select",
-        "searchselectValueMinLength": 4,
-        "updateOnChange": false,
-        "validation": {
-          "maxLength": 100,
-          "minLength": 0
-        },
-        "mandatory": false,
-        "isList": true,
-        "name": "Rbn_AR_Standortverwaltung_Geschaeftspartner"
-      },
       "FB255F6D-A98D-4AF1-85E1-4E32145C3DCA": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -153,7 +151,7 @@
       },
       "40679F86-C11F-4D1E-8BC9-077A06327B02": {
         "type": "boolean",
-         
+
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -161,7 +159,7 @@
       },
       "9F8C0470-61BF-4303-9FB9-A2C7EC63B9E6": {
         "type": "boolean",
-         
+
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -185,7 +183,7 @@
       },
       "51789F86-C11F-4D1E-8BC9-077A06327B02": {
         "type": "boolean",
-         
+
         "validation": {},
         "mandatory": true,
         "isList": false,
@@ -261,7 +259,7 @@
           },
           "21E56197-6C7B-48CA-83EF-A7F458B29B86": {
             "type": "boolean",
-             
+
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -309,15 +307,6 @@
         "isList": true,
         "name": "Aggregat_mit_Subformular"
       },
-      "3438E98D-7580-46B5-8BC8-A7E822674F02": {
-        "type": "select",
-        "searchselectValueMinLength": 1,
-         
-        "validation": {},
-        "mandatory": true,
-        "isList": false,
-        "name": "Rbn_AR_Standortverwaltung_Zustaendige_Gemeinde"
-      },
       "E133AAAF-46A6-402F-B516-4A76DF3AA0F7": {
         "type": "string",
         "updateOnChange": false,
@@ -328,46 +317,6 @@
         "mandatory": false,
         "isList": false,
         "name": "Rbn_AR_Standortverwaltung_Gemeindenummer"
-      },
-      "B7B60F75-F9F1-48FC-B941-3CE3F9D340F8": {
-        "type": "select",
-        "updateOnChange": false,
-        "validation": {},
-        "mandatory": true,
-        "isList": false,
-        "name": "Rbn_AR_Basis_Standort_zustaendigerKanton"
-      },
-      "49605B3F-A301-481D-AD82-2716AF40789B": {
-        "type": "select",
-        "updateOnChange": false,
-        "validation": {},
-        "mandatory": true,
-        "isList": false,
-        "name": "Rbn_AR_Standortverwaltung_Land"
-      },
-      "23F8AE89-1BC3-4BCA-9E94-1B693610729E": {
-        "type": "select",
-        "selectMinLength": 1,
-         
-        "validation": {
-          "maxLength": 20,
-          "minLength": 0
-        },
-        "mandatory": true,
-        "isList": false,
-        "name": "Rbn_AR_Standortverwaltung_StandortPLZ"
-      },
-      "D05B684D-6603-4F24-A9A4-6E6C19958109": {
-        "type": "select",
-        "selectMinLength": 3,
-        "updateOnChange": false,
-        "validation": {
-          "maxLength": 50,
-          "minLength": 0
-        },
-        "mandatory": true,
-        "isList": false,
-        "name": "Rbn_AR_Standortverwaltung_StandortOrt"
       },
       "645D76F7-AF8B-45DD-8336-55196720E33E": {
         "type": "string",
@@ -389,15 +338,11 @@
         },
         "mandatory": false,
         "isList": false,
-        "name": "Rbn_AR_Standortverwaltung_Zusatzzeile_2",
-        "condition": {
-          "source": { "control": "E8F51765-E4A5-422D-B598-CCE21C3E6DF5" },
-          "equals": "true"
-        }
+        "name": "Rbn_AR_Standortverwaltung_Zusatzzeile_2"
       },
       "2822F93A-6D57-4B61-AC37-4EA52BB6FE04": {
         "type": "boolean",
-         
+
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -478,14 +423,14 @@
       },
       "E8F51765-E4A5-422D-B598-CCE21C3E6DF5": {
         "type": "boolean",
-         
+
         "validation": {},
         "mandatory": false,
         "isList": false,
         "name": "Rbn_AR_Standortverwaltung_istAbfallanlage"
       },
       "F35C9670-8B2A-4731-8A01-9592C0DB6A31": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": true,
@@ -493,7 +438,7 @@
         "name": "Rbn_AR_Standortverwaltung_Wirtschaftsart"
       },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A12": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -501,7 +446,7 @@
         "name": "Rbn_AR_Standortverwaltung_Wirtschaftsart"
       },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A13": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -509,7 +454,7 @@
         "name": "Rbn_AR_Standortverwaltung_Wirtschaftsart"
       },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A14": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -517,32 +462,15 @@
         "name": "Rbn_AR_Standortverwaltung_Wirtschaftsart"
       },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A15": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
         "isList": true,
         "name": "Rbn_AR_Standortverwaltung_Wirtschaftsart"
       },
-      "G46F9670-8B2A-4731-8A01-9592C0DB6A31": {
-        "type": "select",
-        "updateOnChange": false,
-        "validation": {},
-        "mandatory": true,
-        "isList": false,
-        "name": "Rbn_AR_Standortverwaltung_Wirtschaftsart"
-      },
-      "F5DCB6D9-CE00-4D4D-AB9B-65A4195FE314": {
-        "type": "select",
-        "searchselectValueMinLength": 3,
-        "updateOnChange": false,
-        "validation": {},
-        "mandatory": false,
-        "isList": false,
-        "name": "Objektzeiger_Test"
-      },
       "4EFD58BF-DC54-4760-B866-BC5F09DC80CC": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": true,
@@ -562,7 +490,7 @@
       },
       "E5D5E793-82EE-45B5-88B6-4ADE9653B6D3": {
         "type": "string",
-         
+
         "validation": {
           "regexValidation": {
             "regex": "^(-?[0-9]{1,3}(?:\\'[0-9]{1,3}){1,3}\\.[0-9]{1,2}?)|([0-9]{6,9}\\.?[0-9]{0,3}?)$",
@@ -582,7 +510,7 @@
       },
       "C1181519-071C-4935-8FD1-FA60D451C4DB": {
         "type": "string",
-         
+
         "validation": {
           "regexValidation": {
             "regex": "^(-?[0-9]{1,3}(?:\\'[0-9]{1,3}){1,3}\\.[0-9]{1,2}?)|([0-9]{6,9}\\.?[0-9]{0,3}?)$",
@@ -601,7 +529,7 @@
         "name": "Rbn_AR_Standortverwaltung_Y_Koordinate"
       },
       "A26610D5-890A-4533-8AAC-86AE7F5B6CDF": {
-        "type": "select",
+        "type": "catalog",
         "searchselectValueMinLength": 3,
         "updateOnChange": false,
         "validation": {},
@@ -610,7 +538,7 @@
         "name": "Rbn_AR_Standortverwaltung_Inspektorat_Erfassung"
       },
       "0733B3BC-2D55-49FB-87B1-4F2283D83701": {
-        "type": "select",
+        "type": "catalog",
         "searchselectValueMinLength": 3,
         "updateOnChange": false,
         "validation": {},
@@ -650,47 +578,47 @@
       "5477E0F6-0E78-4573-98F7-B5FC5325E01D": {
         "properties": {
           "190837BC-C8FF-4B2C-80D1-E508435659E5": {
-            "type": "select",
-             
+            "type": "catalog",
+
             "validation": {},
             "mandatory": false,
             "isList": false,
             "name": "Rbn_AR_BasisV2_Gefaehrdungsklasse"
           },
           "931AE6C4-6EBE-4284-8C1A-8AFEC38112D9": {
-            "type": "select",
-             
+            "type": "catalog",
+
             "validation": {},
             "mandatory": true,
             "isList": false,
             "name": "Rbn_AR_Standortverwaltung_Klassifizierung"
           },
           "F4EA571B-9C43-49F4-8CE2-7A2DA86203B1": {
-            "type": "select",
-             
+            "type": "catalog",
+
             "validation": {},
             "mandatory": false,
             "isList": false,
             "name": "Rbn_AR_Standortverwaltung_Kapitel"
           },
           "00CC3D51-264D-40DA-BFD8-F3DEDBB67506": {
-            "type": "select",
-             
+            "type": "catalog",
+
             "validation": {},
             "mandatory": false,
             "isList": false,
             "name": "Rbn_AR_Standortverwaltung_Unterkapitel"
           },
           "9C6691D1-8E1B-4EBE-ABDE-88EC6D0790F1": {
-            "type": "select",
-             
+            "type": "catalog",
+
             "validation": {},
             "mandatory": false,
             "isList": false,
             "name": "Rbn_AR_Basis_Standort_Abfallcodes_Abfallcode_VVEA"
           },
           "ADC7BB09-89FC-45C4-8C53-EA4811D1238A": {
-            "type": "select",
+            "type": "catalog",
             "updateOnChange": false,
             "validation": {},
             "mandatory": true,
@@ -698,7 +626,7 @@
             "name": "Rbn_AR_Basis_Standort_Abfallcodes_Abfallcodes_LVA"
           },
           "3D0C0CCD-DCDB-4833-B02B-B290BB445064": {
-            "type": "select",
+            "type": "catalog",
             "updateOnChange": false,
             "validation": {},
             "mandatory": true,
@@ -708,7 +636,7 @@
           "A2C44FBD-15FE-46C3-A8CA-A33AC2324D37": {
             "dateOnly": true,
             "type": "datetime",
-             
+
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -716,7 +644,7 @@
           },
           "969481C2-1D88-456D-8313-7A24299B7D18": {
             "type": "boolean",
-             
+
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -731,7 +659,7 @@
         "name": "Rbn_AR_Standortverwaltung_Auswahl_Abfallcodes"
       },
       "B03B47A5-E598-4662-84CA-EF07E7693AC6": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -739,7 +667,7 @@
         "name": "Rbn_AR_Standortverwaltung_Hidden_VVEA"
       },
       "7E41790C-2E82-4E10-B17E-4CAADC1F4CDB": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -747,7 +675,7 @@
         "name": "Rbn_AR_Standortverwaltung_Hidden_Kapitel"
       },
       "E48455AD-FDB2-48C7-A61E-8D2B2D7F6520": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -756,7 +684,7 @@
       },
       "BF673305-0778-49BD-B433-18CFB1942B04": {
         "type": "boolean",
-         
+
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -764,7 +692,7 @@
       },
       "5687833A-7C37-49D6-A24E-D55236430867": {
         "type": "boolean",
-         
+
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -773,8 +701,8 @@
       "8589F116-3CE4-49E8-9D90-22D56DB9B65D": {
         "properties": {
           "D4FD38D6-70A0-4784-B0A4-F54E9CA5DEA8": {
-            "type": "select",
-             
+            "type": "catalog",
+
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -799,7 +727,7 @@
             "name": "Rbn_AR_Basis_Standort_Entsorgungsverfahren"
           },
           "3D0C0CCD-DCDB-4833-B02B-B290BB445064": {
-            "type": "select",
+            "type": "catalog",
             "updateOnChange": false,
             "validation": {},
             "mandatory": true,
@@ -807,7 +735,7 @@
             "name": "Rbn_AR_Basis_Standort_Abfallcodes_Entsorgungsverfahren"
           },
           "1E225A8A-0F68-4CB7-B01F-7BD58105CD2C": {
-            "type": "select",
+            "type": "catalog",
             "updateOnChange": false,
             "validation": {},
             "mandatory": false,
@@ -817,7 +745,7 @@
           "14217892-3D97-4407-8AF8-A8BC48C8881B": {
             "dateOnly": true,
             "type": "datetime",
-             
+
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -826,7 +754,7 @@
           "3A39DA32-37AC-4C2D-96B9-13378F470088": {
             "dateOnly": true,
             "type": "datetime",
-             
+
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -834,7 +762,7 @@
           },
           "07268C30-597E-4C27-B190-952E4E9BA0BE": {
             "type": "boolean",
-             
+
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -850,16 +778,16 @@
             "name": "Rbn_AR_Basis_Standort_Vorabzustimmung_Guetlig_bis"
           },
           "55BE7E2E-532D-4BB8-9FCB-E5DF35EE4F65": {
-            "type": "select",
-             
+            "type": "catalog",
+
             "validation": {},
             "mandatory": true,
             "isList": false,
             "name": "Rbn_AR_Basis_Standort_OECDListe"
           },
           "CECA8229-04DF-4892-A35A-F254C1EBB0E3": {
-            "type": "select",
-             
+            "type": "catalog",
+
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -867,7 +795,7 @@
           },
           "372BA85C-D33C-4385-895A-F5C662A693B4": {
             "type": "boolean",
-             
+
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -875,7 +803,7 @@
           },
           "7912E515-4920-4364-93D4-8AEC0D686FC2": {
             "type": "boolean",
-             
+
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -892,7 +820,7 @@
           },
           "32FB85B5-E5DE-4A94-85FD-144DD8D06862": {
             "type": "string",
-             
+
             "validation": {
               "maxLength": 255,
               "minLength": 0
@@ -921,7 +849,7 @@
       "0FA0FF4F-7ECC-4091-8BBA-EF537BECCDD2": {
         "dateOnly": true,
         "type": "datetime",
-         
+
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -929,7 +857,7 @@
       },
       "64D346FB-0B6F-444E-8D1C-72B17004CEA6": {
         "type": "boolean",
-         
+
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -963,7 +891,7 @@
         "name": "Rbn_AR_Standortverwaltung_Abfallanlagentyp_Hidden"
       },
       "F1C6E4BE-943D-4390-AB2C-3EC4B8E9F4A8": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": true,
@@ -973,7 +901,7 @@
       "4C9DE6F0-39A7-4FE8-B927-26507DE1B79C": {
         "numberOfLines": 5,
         "type": "string",
-         
+
         "validation": {
           "maxLength": 1000,
           "minLength": 0
@@ -1009,7 +937,7 @@
       },
       "CAA94D86-D1F6-47D9-8757-6D2582D187BC": {
         "type": "string",
-         
+
         "validation": {
           "maxLength": 255,
           "minLength": 0
@@ -1029,7 +957,7 @@
             "name": "Rbn_AR_Standortverwaltung_Z_Anhaenge"
           },
           "74A7D3BB-D1BA-4987-BAA3-CC846301A27C": {
-            "type": "select",
+            "type": "catalog",
             "updateOnChange": false,
             "validation": {},
             "mandatory": false,
@@ -1066,7 +994,7 @@
         "name": "Rbn_AR_Standortverwaltung_Z_KommentarHistorie"
       },
       "01B41755-DE61-425E-919C-272408ED76D5": {
-        "type": "select",
+        "type": "catalog",
         "updateOnChange": false,
         "validation": {},
         "mandatory": false,
@@ -1194,6 +1122,10 @@
                   "textPre": {},
                   "textPost": {}
                 }
+              },
+              "condition": {
+                "source": { "control": "4491D2D9-7837-4A91-9B6F-EB3A13AB09CB" },
+                "equals": "condition"
               }
             },
             "uiSchemaPage": 0
@@ -1245,13 +1177,15 @@
             "description": {},
             "formGridOptions": {
               "numberOfColumns": 3,
+              "alignment": "left",
               "overlayOptions": {
                 "isShowOverlay": false,
                 "texts": {
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "alignmentUnit": "left"
             },
             "uiSchemaPage": 0
           },
@@ -1265,13 +1199,15 @@
             "formGridOptions": {
               "numberStep": 0.5,
               "numberOfColumns": 3,
+              "alignment": "right",
               "overlayOptions": {
                 "isShowOverlay": false,
                 "texts": {
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "alignmentUnit": "right"
             },
             "uiSchemaPage": 0
           },
@@ -1303,6 +1239,28 @@
             "description": {},
             "formGridOptions": {
               "numberOfColumns": 12,
+              "overlayOptions": {
+                "isShowOverlay": false,
+                "texts": {
+                  "textPre": {},
+                  "textPost": {}
+                }
+              }
+            },
+            "uiSchemaPage": 0
+          },
+          {
+            "type": "property",
+            "id": "CMS-ADMIN-MAIL-FIELD-0001",
+            "label": {
+              "de-AT": "Zu dieser Admin Mail senden",
+              "en-AT": "Sending to this Admin Mail",
+              "it-AT": "Sending to Admin Mail",
+              "fr-AT": "Sending to Admin Mail"
+            },
+            "description": {},
+            "formGridOptions": {
+              "numberOfColumns": "4",
               "overlayOptions": {
                 "isShowOverlay": false,
                 "texts": {
@@ -1382,8 +1340,8 @@
             "type": "property",
             "formGridOptions": {
               "numberOfColumns": "12",
-              "value": { 
-                "de-AT": "<h1>Hauptüberschrift (h1)</h1><h2>Unterüberschrift (h2)</h2><h3>Kleinere Überschrift (h3)</h3><p>Dies ist ein <strong>normaler Absatz</strong> mit <em>kursivem Text</em> und <u>unterstrichenem Text</u>. Auch <code>Inline-Code</code> ist möglich.</p><p>Ein Link zu <a href=\"https://www.example.com\" target=\"_blank\">example.com</a>.</p><hr><h3>Ungeordnete Liste (ul)</h3><ul><li>Eintrag A</li><li>Eintrag B</li><li>Eintrag C</li></ul><h3>Geordnete Liste (ol)</h3><ol><li>Erster Schritt</li><li>Zweiter Schritt</li><li>Dritter Schritt</li></ol><h3>Zitat / Blockquote</h3><blockquote>\"Das Leben ist zu kurz für schlechten Code.\" – Irgendjemand</blockquote><h3>Codeblock</h3><pre>function hello() {\n  console.log(\"Hallo Welt\");\n}</pre>", 
+              "value": {
+                "de-AT": "<h1>Hauptüberschrift (h1)</h1><h2>Unterüberschrift (h2)</h2><h3>Kleinere Überschrift (h3)</h3><p>Dies ist ein <strong>normaler Absatz</strong> mit <em>kursivem Text</em> und <u>unterstrichenem Text</u>. Auch <code>Inline-Code</code> ist möglich.</p><p>Ein Link zu <a href=\"https://www.example.com\" target=\"_blank\">example.com</a>.</p><hr><h3>Ungeordnete Liste (ul)</h3><ul><li>Eintrag A</li><li>Eintrag B</li><li>Eintrag C</li></ul><h3>Geordnete Liste (ol)</h3><ol><li>Erster Schritt</li><li>Zweiter Schritt</li><li>Dritter Schritt</li></ol><h3>Zitat / Blockquote</h3><blockquote>\"Das Leben ist zu kurz für schlechten Code.\" – Irgendjemand</blockquote><h3>Codeblock</h3><pre>function hello() {\n  console.log(\"Hallo Welt\");\n}</pre>",
                 "en-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Help to apply for a site and company number</h4>\n\nFor further guidance, you can watch the <a target=\"_blank\" href=\"/en/standort-faq/apply-for-site-company-number\" class=\"aloha-link-text\" hreflang=\"\">Explanatory video on How can I apply for a site and a site number?</a>  or consult the <a target=\"_blank\" href=\"/en/help\" class=\"aloha-link-text\" hreflang=\"\">Help</a> on the Waste and resources Services.",
                 "fr-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Aide pour demander un site et un num\u00e9ro d'identification</h4>\n\nPour plus d'informations, vous pouvez regarder <a target=\"_blank\" href=\"/fr/standort-faq/demander-site-et-numero-identification\" class=\"aloha-link-text\" hreflang=\"\">la \tVid\u00e9o d'explication : Comment puis-je demander un site et un num\u00e9ro d'identification ?</a> ou consulter les <a target=\"_blank\" href=\"/fr/aides\" class=\"aloha-link-text\" hreflang=\"\">Aides</a> du groupe de service d\u00e9chets et mati\u00e8res premi\u00e8res.",
                 "it-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Supporto per richiedere un sito e numero d'esercizio</h4>\n\nPer ulteriori indicazioni, \u00e8 possibile visualizzare il <a target=\"_blank\" href=\"/it/standort-faq/richiedere-sito-e-numero-d-esercizio\" class=\"aloha-link-text\" hreflang=\"\">video esplicativo su come posso richiedere un numero d\u2019esercizio?</a> o consultare il <a target=\"_blank\" href=\"/it/supporto\" class=\"aloha-link-text\" hreflang=\"\">supporto</a> del gruppo di servizi Rifiuti e materie prime."
@@ -1632,22 +1590,22 @@
             "type": "property",
             "id": "89D6E122-2CC7-4940-A202-F1D2C51898AD",
             "label": {
-                "de-AT": "Radio Buttons",
-                "it-AT": "Radio Buttons",
-                "fr-AT": "Radio Buttons"
+              "de-AT": "Radio Buttons",
+              "it-AT": "Radio Buttons",
+              "fr-AT": "Radio Buttons"
             },
             "description": {},
             "formGridOptions": {
-                "numberOfColumns": 12,
-                "overlayOptions": {
-                    "isShowOverlay": false,
-                    "texts": {
-                        "textPre": {},
-                        "textPost": {}
-                    }
-                },
-                "radio": true,
-                "fileExtensionsNotAllowed": []
+              "numberOfColumns": 12,
+              "overlayOptions": {
+                "isShowOverlay": false,
+                "texts": {
+                  "textPre": {},
+                  "textPost": {}
+                }
+              },
+              "radio": true,
+              "fileExtensionsNotAllowed": []
             },
             "uiSchemaPage": 0
           },
@@ -1925,34 +1883,6 @@
           },
           {
             "type": "property",
-            "id": "3438E98D-7580-46B5-8BC8-A7E822674F02",
-            "label": {
-              "": "",
-              "de-AT": "Zust\u00e4ndige Gemeinde",
-              "en-AT": "Responsible municipality",
-              "it-AT": "Comune competente",
-              "fr-AT": "Commune responsable"
-            },
-            "description": {
-              "de-AT": "W\u00e4hlen Sie die zust\u00e4ndige Gemeinde nach dem amtlichen Gemeindeverzeichnis der Schweiz gem. www.bfs.admin.ch.",
-              "en-AT": "Select the responsible municipality according to the official Swiss municipal directory as per www.bfs.admin.ch.",
-              "it-AT": "Selezionare il Comune competente dall\u2019elenco ufficiale dei Comuni pubblicato su www.bfs.admin.ch.",
-              "fr-AT": "S\u00e9lectionnez la commune comp\u00e9tente telle qu\u2019elle figure dans le r\u00e9pertoire officiel des communes de la Suisse publi\u00e9 sur www.bfs.admin.ch."
-            },
-            "formGridOptions": {
-              "numberOfColumns": "6",
-              "overlayOptions": {
-                "isShowOverlay": false,
-                "texts": {
-                  "textPre": {},
-                  "textPost": {}
-                }
-              }
-            },
-            "uiSchemaPage": 0
-          },
-          {
-            "type": "property",
             "id": "E133AAAF-46A6-402F-B516-4A76DF3AA0F7",
             "label": {
               "": "",
@@ -1967,29 +1897,6 @@
               "it-AT": "Il numero del Comune viene inserito automaticamente.",
               "fr-AT": "Le num\u00e9ro de commune correspondant s\u2019affiche automatiquement."
             },
-            "formGridOptions": {
-              "numberOfColumns": "3",
-              "overlayOptions": {
-                "isShowOverlay": false,
-                "texts": {
-                  "textPre": {},
-                  "textPost": {}
-                }
-              }
-            },
-            "uiSchemaPage": 0
-          },
-          {
-            "type": "property",
-            "id": "B7B60F75-F9F1-48FC-B941-3CE3F9D340F8",
-            "label": {
-              "": "",
-              "de-AT": "Zust\u00e4ndiger Kanton",
-              "en-AT": "Responsible canton",
-              "it-AT": "Cantone competente",
-              "fr-AT": "Canton responsable"
-            },
-            "description": {},
             "formGridOptions": {
               "numberOfColumns": "3",
               "overlayOptions": {
@@ -2030,57 +1937,6 @@
             },
             "uiSchemaPage": 0,
             "id": "18706C9D-169F-4E1C-9572-D63CAB6F5C50"
-          },
-          {
-            "type": "property",
-            "id": "23F8AE89-1BC3-4BCA-9E94-1B693610729E",
-            "label": {
-              "": "",
-              "de-AT": "PLZ select (min 1)",
-              "en-AT": "Postal code",
-              "it-AT": "NPA",
-              "fr-AT": "Code postal"
-            },
-            "description": {},
-            "formGridOptions": {
-              "numberOfColumns": "4",
-              "overlayOptions": {
-                "isShowOverlay": false,
-                "texts": {
-                  "textPre": {},
-                  "textPost": {}
-                }
-              }
-            },
-            "uiSchemaPage": 0
-          },
-          {
-            "type": "property",
-            "id": "D05B684D-6603-4F24-A9A4-6E6C19958109",
-            "label": {
-              "": "",
-              "de-AT": "Ort select",
-              "en-AT": "Ort select",
-              "it-AT": "Ort select",
-              "fr-AT": "Ort select"
-            },
-            "description": {
-              "de-AT": "Die Standortadresse (PLZ, Ort) liegt nicht zwingend im selben Kanton wie die zust\u00e4ndige Gemeinde.",
-              "en-AT": "The location address (postcode, town) is not necessarily in the same canton as the responsible municipality.",
-              "it-AT": "L'indirizzo del luogo (codice postale, citt\u00e0) non deve necessariamente essere nello stesso cantone del comune responsabile.",
-              "fr-AT": "L'adresse de localisation (code postal, ville) ne doit pas n\u00e9cessairement se trouver dans le m\u00eame canton que la commune responsable."
-            },
-            "formGridOptions": {
-              "numberOfColumns": "8",
-              "overlayOptions": {
-                "isShowOverlay": false,
-                "texts": {
-                  "textPre": {},
-                  "textPost": {}
-                }
-              }
-            },
-            "uiSchemaPage": 0
           },
           {
             "type": "property",
@@ -2127,29 +1983,6 @@
             "formGridOptions": {
               "numberOfColumns": 12,
               "numberOfLines": 4,
-              "overlayOptions": {
-                "isShowOverlay": false,
-                "texts": {
-                  "textPre": {},
-                  "textPost": {}
-                }
-              }
-            },
-            "uiSchemaPage": 0
-          },
-          {
-            "type": "property",
-            "id": "49605B3F-A301-481D-AD82-2716AF40789B",
-            "label": {
-              "": "",
-              "de-AT": "Land",
-              "en-AT": "Country",
-              "it-AT": "Paese",
-              "fr-AT": "Pays"
-            },
-            "description": {},
-            "formGridOptions": {
-              "numberOfColumns": "12",
               "overlayOptions": {
                 "isShowOverlay": false,
                 "texts": {
@@ -2904,7 +2737,7 @@
             "uiSchemaPage": 0,
             "id": "CD73CF3B-0191-47F5-9BFD-9DFF682B2F21"
           },
-           {
+          {
             "label": {
               "de-AT": "Space"
             },
@@ -5316,41 +5149,14 @@
     "version": "274",
     "hasValidationErrors": false,
     "hasErrors": false,
-    "possibleValueSets": [
-      {
-        "possibleValueSetID": "895fc8bc-8887-4199-8437-9c985a974c91",
-        "possibleValues": []
-      },
-      {
-        "possibleValueSetID": "c7ce4abe-6ad1-485e-ae5b-3feca330f400",
-        "possibleValues": [
-          {
-              "identifier": "RefID_Test|123123123123_TenantID_UKF",
-              "displayName": "Aktiengesellschaft (AG)"
-          },
-          {
-              "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
-              "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
-          },
-          {
-              "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
-              "displayName": "Dienstleistung"
-          },
-          {
-              "identifier": "RefID_DS12313123123312|AB1231231223123123_TenantID_UKF",
-              "displayName": "Handel"
-          }
-        ]
-      }
-    ],
     "formControls": {
       "button": {
-          "id": "ABCDDSAD-1233-444C-A441-AASD1231SD1231",
-          "name": "Absenden",
-          "action": "openWindow",
-          "actionAfterCalling": "stayOnPage",
-          "returnUrl": "",
-          "targetUrl": ""
+        "id": "ABCDDSAD-1233-444C-A441-AASD1231SD1231",
+        "name": "Absenden",
+        "action": "openWindow",
+        "actionAfterCalling": "stayOnPage",
+        "returnUrl": "",
+        "targetUrl": ""
       }
     },
     "properties": {
@@ -5360,6 +5166,25 @@
         "name": "Input String",
         "value": "",
         "validationMessage": "error occurs"
+      },
+      "CMS-ADMIN-MAIL-FIELD-0001": {
+        "visible": true,
+        "editable": true,
+        "name": "Sende zu diese Admin Mail",
+        "possibleValues": [
+          {
+            "identifier": "Support",
+            "displayName": "Support"
+          },
+          {
+            "identifier": "Marketing",
+            "displayName": "Marketing"
+          },
+          {
+            "identifier": "Service Desk",
+            "displayName": "Service Desk"
+          }
+        ]
       },
       "CMS-CONDITION-INPUTFIELD": {
         "editable": true,
@@ -5408,26 +5233,10 @@
         }
       },
       "FDADA5C0-7948-4FFF-B5F9-A5609E03BB0A": {
-        "renderingType": "select",
         "id": "e8669430-f2ae-4de8-a675-d8e241bb4800",
         "visible": true,
         "editable": true,
         "name": "Dropdown select"
-      },
-      "BC2DA5C0-7948-4FFF-B5F9-A5609E03BB0A": {
-        "renderingType": "select",
-        "id": "f97791430-f2ae-4de8-a675-d8e241bb4800",
-        "visible": true,
-        "editable": true,
-        "name": "Dropdown select"
-      },
-      "FB255F6D-A98D-4AF1-85E1-4E32145C3DCA": {
-        "possibleValueSetID": "895fc8bc-8887-4199-8437-9c985a974c91",
-        "renderingType": "select",
-        "id": "93b4f41e-8929-43ba-8545-379820e356cb",
-        "visible": true,
-        "editable": true,
-        "name": "Dropdown"
       },
       "ED042909-E0D0-444F-AA1B-A352787EDD4C": {
         "id": "a61e7c7a-853d-4376-8741-25f0f43a39d5",
@@ -5475,28 +5284,24 @@
         "ANFieldLoadError": true
       },
       "6EFAC7A0-9D32-4A22-A98B-7EA1C15C1330": {
-        "isValuePrivate": true,
         "id": "773990b3-0050-407d-87d4-c64d5a0507c5",
         "visible": false,
         "editable": false,
         "name": "Verfasser"
       },
       "7ACAE36C-8061-4A53-B3A7-474A000BC75E": {
-        "isValuePrivate": true,
         "id": "6ce9b2bd-fdbc-47e8-b6e1-8d3d913b2eb6",
         "visible": false,
         "editable": false,
         "name": "Funktion"
       },
       "ADD1B8B8-8B9A-4D50-A27F-DD36FD31B31C": {
-        "isValuePrivate": true,
         "id": "ac7fb3c7-680a-48b6-bfde-db7fa243570a",
         "visible": false,
         "editable": false,
         "name": "E-Mail"
       },
       "30035033-33B4-440B-8AE4-00347139AF09": {
-        "isValuePrivate": true,
         "id": "7b2d8e45-aa52-4bab-9359-f11b329f6474",
         "visible": false,
         "editable": false,
@@ -5737,36 +5542,16 @@
           }
         }
       },
-      "3438E98D-7580-46B5-8BC8-A7E822674F02": {
-        "renderingType": "select",
-        "id": "eb0641f2-ac2e-4c7e-a51a-c7351dbecf6c",
-        "visible": true,
-        "editable": true,
-        "name": "Zust\u00e4ndige Gemeinde"
-      },
       "E133AAAF-46A6-402F-B516-4A76DF3AA0F7": {
         "visible": true,
         "editable": false,
         "name": "Gemeindenummer"
       },
-      "B7B60F75-F9F1-48FC-B941-3CE3F9D340F8": {
-        "renderingType": "select",
-        "visible": true,
-        "editable": false,
-        "name": "Zust\u00e4ndiger Kanton"
-      },
       "49605B3F-A301-481D-AD82-2716AF40789B": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "24ec5453-b012-4135-aa7b-0d1939c1f044",
         "visible": false,
         "editable": true,
         "name": "Land"
-      },
-      "23F8AE89-1BC3-4BCA-9E94-1B693610729E": {
-        "visible": true,
-        "editable": true,
-        "name": "PLZ"
       },
       "D05B684D-6603-4F24-A9A4-6E6C19958109": {
         "visible": true,
@@ -5831,106 +5616,145 @@
         "name": "Checkbox mit Tooltip",
         "value": false
       },
-      "F35C9670-8B2A-4731-8A01-9592C0DB6A31": {
-        "renderingType": "select",
-        "id": "677f8518-59df-434e-805f-65e4a02cb39c",
-        "visible": true,
-        "editable": true,
-        "name": "Wirtschaftsart"
-      },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A12": {
-        "renderingType": "select",
         "id": "677f8518-59df-434e-805f-65e4a02cb39c",
         "visible": true,
         "editable": true,
         "name": "Wirtschaftsart",
-        "possibleValueSetID": "c7ce4abe-6ad1-485e-ae5b-3feca330f400"
+        "possibleValues": [
+          {
+            "identifier": "RefID_Test|123123123123_TenantID_UKF",
+            "displayName": "Aktiengesellschaft (AG)"
+          },
+          {
+            "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
+            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+          },
+          {
+            "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
+            "displayName": "Dienstleistung"
+          },
+          {
+            "identifier": "RefID_DS12313123123312|AB1231231223123123_TenantID_UKF",
+            "displayName": "Handel"
+          }
+        ]
       },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A13": {
-        "renderingType": "select",
         "id": "677f8518-59df-434e-805f-65e4a02cb39c",
         "visible": true,
         "editable": true,
         "name": "Wirtschaftsart",
-        "possibleValueSetID": "c7ce4abe-6ad1-485e-ae5b-3feca330f400"
+        "possibleValues": [
+          {
+            "identifier": "RefID_Test|123123123123_TenantID_UKF",
+            "displayName": "Aktiengesellschaft (AG)"
+          },
+          {
+            "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
+            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+          },
+          {
+            "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
+            "displayName": "Dienstleistung"
+          },
+          {
+            "identifier": "RefID_DS12313123123312|AB1231231223123123_TenantID_UKF",
+            "displayName": "Handel"
+          }
+        ]
       },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A14": {
-        "renderingType": "select",
         "id": "677f8518-59df-434e-805f-65e4a02cb39c",
         "visible": true,
         "editable": true,
         "name": "Wirtschaftsart",
-        "possibleValueSetID": "c7ce4abe-6ad1-485e-ae5b-3feca330f400"
+        "possibleValues": [
+          {
+            "identifier": "RefID_Test|123123123123_TenantID_UKF",
+            "displayName": "Aktiengesellschaft (AG)"
+          },
+          {
+            "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
+            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+          },
+          {
+            "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
+            "displayName": "Dienstleistung"
+          },
+          {
+            "identifier": "RefID_DS12313123123312|AB1231231223123123_TenantID_UKF",
+            "displayName": "Handel"
+          }
+        ]
       },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A15": {
-        "renderingType": "select",
         "id": "677f8518-59df-434e-805f-65e4a02cb39c",
         "visible": true,
         "editable": true,
         "name": "Wirtschaftsart",
-        "possibleValueSetID": "c7ce4abe-6ad1-485e-ae5b-3feca330f400"
-      },
-      "G46F9670-8B2A-4731-8A01-9592C0DB6A31": {
-        "renderingType": "select",
-        "id": "677f8518-59df-434e-805f-65e4a02cb39c",
-        "visible": true,
-        "editable": true,
-        "name": "Wirtschaftsart"
+        "possibleValues": [
+          {
+            "identifier": "RefID_Test|123123123123_TenantID_UKF",
+            "displayName": "Aktiengesellschaft (AG)"
+          },
+          {
+            "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
+            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+          },
+          {
+            "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
+            "displayName": "Dienstleistung"
+          },
+          {
+            "identifier": "RefID_DS12313123123312|AB1231231223123123_TenantID_UKF",
+            "displayName": "Handel"
+          }
+        ]
       },
       "4EFD58BF-DC54-4760-B866-BC5F09DC80CC": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "644394cc-6f09-4cb9-b6c8-6a282945ddb9",
         "visible": false,
         "editable": true,
         "name": "Abfallanlagentyp"
       },
       "7003A59A-C42E-46FF-8586-C2F771F7FBCC": {
-        "isValuePrivate": true,
         "id": "aeb3ae62-8df0-4295-a679-767c841847b6",
         "visible": false,
         "editable": true,
         "name": "Parzellennummer"
       },
       "E5D5E793-82EE-45B5-88B6-4ADE9653B6D3": {
-        "isValuePrivate": true,
         "id": "8e402c7f-0393-4ef5-806f-3e176da1a2e3",
         "visible": false,
         "editable": true,
         "name": "X-Koordinate"
       },
       "C1181519-071C-4935-8FD1-FA60D451C4DB": {
-        "isValuePrivate": true,
         "id": "f643e191-e85c-42d9-bdd2-46af48686c87",
         "visible": false,
         "editable": true,
         "name": "Y-Koordinate"
       },
       "A26610D5-890A-4533-8AAC-86AE7F5B6CDF": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "6339d921-5c7f-487b-b656-df9e56e9d657",
         "visible": false,
         "editable": true,
         "name": "Inspektorat f\u00fcr die Erfassung der Meldung"
       },
       "0733B3BC-2D55-49FB-87B1-4F2283D83701": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "f44f20a1-29f3-47c6-987b-4f714edb7129",
         "visible": false,
         "editable": false,
         "name": "Inspektorat f\u00fcr die Pr\u00fcfung der Meldung"
       },
       "E73A81C1-B9A9-4F50-8E2F-6B6731BFF59E": {
-        "isValuePrivate": true,
         "id": "ac300164-c99c-4fcc-a38a-730f1febdfa1",
         "visible": false,
         "editable": false,
         "name": "FO Domain (Hidden)"
       },
       "5E2E6B0B-93E3-4A7C-AFA1-9C922D7723AE": {
-        "isValuePrivate": true,
         "id": "d6b0178e-0e63-4bf3-aaa0-da2ab46f61a9",
         "visible": false,
         "editable": true,
@@ -5943,45 +5767,36 @@
         "value": "Keine weiteren Angaben notwendig. Bitte dr\u00fccken sie 'N\u00e4chste Seite'."
       },
       "5477E0F6-0E78-4573-98F7-B5FC5325E01D": {
-        "isValuePrivate": true,
         "id": "44ef5ee4-f5ac-4dfe-9559-0776f7b36f5f",
         "visible": false,
         "editable": true,
         "name": "Auswahl Abfallcodes"
       },
       "B03B47A5-E598-4662-84CA-EF07E7693AC6": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "b49c8ede-a07e-4bef-bbc8-6e7544b2b337",
         "visible": false,
         "editable": true,
         "name": "VVEA (Hidden)"
       },
       "7E41790C-2E82-4E10-B17E-4CAADC1F4CDB": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "d168a85c-0d22-4eeb-bd51-d5cbce975823",
         "visible": false,
         "editable": true,
         "name": "Kapitel (Hidden)"
       },
       "E48455AD-FDB2-48C7-A61E-8D2B2D7F6520": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "76d76b5a-798a-4610-ab64-35e2dda982b0",
         "visible": false,
         "editable": true,
         "name": "Unterkapitel (Hidden)"
       },
       "BF673305-0778-49BD-B433-18CFB1942B04": {
-        "isValuePrivate": true,
         "id": "20d1e9c8-0279-4bea-92a7-7d11071512f2",
         "visible": false,
         "editable": true,
         "name": "Auswahl \u00fcbernehmen"
       },
       "5687833A-7C37-49D6-A24E-D55236430867": {
-        "isValuePrivate": true,
         "id": "1f64fdd9-bf0d-498d-98b3-71c21fe1f681",
         "visible": false,
         "editable": true,
@@ -5997,47 +5812,39 @@
         "possibleAggregateValues": {}
       },
       "89C0DD64-C008-452C-BD6A-5C563B925DAC": {
-        "isValuePrivate": true,
         "id": "0485de9a-64dc-4112-8b6f-47a2edc7bd71",
         "visible": false,
         "editable": true,
         "name": "Datum \u00abG\u00fcltig von\u00bb f\u00fcr alle Codes anpassen"
       },
       "0FA0FF4F-7ECC-4091-8BBA-EF537BECCDD2": {
-        "isValuePrivate": true,
         "id": "3079dc03-19bf-4455-adba-e8a59b93db74",
         "visible": false,
         "editable": true,
         "name": "Datum \u00abG\u00fcltig bis\u00bb f\u00fcr alle Codes anpassen"
       },
       "64D346FB-0B6F-444E-8D1C-72B17004CEA6": {
-        "isValuePrivate": true,
         "id": "e433f40b-d62d-4ff6-ae92-4c469758d973",
         "visible": false,
         "editable": true,
         "name": "G\u00fcltigkeitsdatum setzen"
       },
       "EF315F6B-B391-4C32-9BB0-93791315F071": {
-        "isValuePrivate": true,
         "visible": false,
         "editable": false,
         "name": "Standort ist Abfallanlage oder Abgeber (Hidden)"
       },
       "87B07D1A-D0DE-48B2-8E87-751C95AFB587": {
-        "isValuePrivate": true,
         "visible": false,
         "editable": false,
         "name": "Standort ist Abgeber (Hidden)"
       },
       "EF417AF2-933F-404B-93AE-E1F71EF1BD48": {
-        "isValuePrivate": true,
         "visible": false,
         "editable": false,
         "name": "Abfallanlagentyp (Hidden)"
       },
       "F1C6E4BE-943D-4390-AB2C-3EC4B8E9F4A8": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "de3546de-ed63-4915-bd27-de2e2b206c99",
         "visible": false,
         "editable": false,
@@ -6050,7 +5857,6 @@
         "name": "Kommentar"
       },
       "6C0CEBA2-BBB6-46BB-B14F-47D7FAC8FBA1": {
-        "isValuePrivate": true,
         "visible": false,
         "editable": false,
         "name": "Kommentar (Hidden)"
@@ -6176,8 +5982,6 @@
         "ANFieldLoadError": false
       },
       "01B41755-DE61-425E-919C-272408ED76D5": {
-        "renderingType": "select",
-        "isValuePrivate": true,
         "id": "7a08525b-3553-4fd3-9b8e-2ef90b9d0916",
         "visible": true,
         "editable": false,
@@ -6214,7 +6018,7 @@
       }
     }
   },
-  "transactionId": "",  
+  "transactionId": "",
   "flowId": "default",
   "flows": [
     {
@@ -6231,10 +6035,23 @@
           "nameTranslationKey": "form_flow_name_form",
           "descriptionTranslationKey": "form_flow_desc_form",
           "buttons": [
-            { "reactClass": "DetailInfoButton",  "labelTranslationKey": "form_detailinfo",  "mobileDisabled": true },
-            { "reactClass": "CancelButton",      "labelTranslationKey": "form_cancel" },
-            { "reactClass": "PreviousPageButton", "labelTranslationKey": "form_previousPage" },
-            { "reactClass": "NextPageButton",    "labelTranslationKey": "form_nextPage" }
+            {
+              "reactClass": "DetailInfoButton",
+              "labelTranslationKey": "form_detailinfo",
+              "mobileDisabled": true
+            },
+            {
+              "reactClass": "CancelButton",
+              "labelTranslationKey": "form_cancel"
+            },
+            {
+              "reactClass": "PreviousPageButton",
+              "labelTranslationKey": "form_previousPage"
+            },
+            {
+              "reactClass": "NextPageButton",
+              "labelTranslationKey": "form_nextPage"
+            }
           ],
           "variables": []
         },
@@ -6244,15 +6061,29 @@
           "nameTranslationKey": "form_flow_name_summary",
           "descriptionTranslationKey": "form_flow_desc_summary",
           "buttons": [
-            { "reactClass": "CancelButton",      "labelTranslationKey": "form_cancel" },
-            { "reactClass": "PrintPdfButton",    "labelTranslationKey": "form_print",       "mobileDisabled": true },
-            { "reactClass": "PreviousPageButton", "labelTranslationKey": "form_previousPage" },
-            { "reactClass": "NextPageButton",    "labelTranslationKey": "form_nextPage" },
-            { "reactClass": "SubmitButton",      "labelTranslationKey": "form_submit" }
+            {
+              "reactClass": "CancelButton",
+              "labelTranslationKey": "form_cancel"
+            },
+            {
+              "reactClass": "PrintPdfButton",
+              "labelTranslationKey": "form_print",
+              "mobileDisabled": true
+            },
+            {
+              "reactClass": "PreviousPageButton",
+              "labelTranslationKey": "form_previousPage"
+            },
+            {
+              "reactClass": "NextPageButton",
+              "labelTranslationKey": "form_nextPage"
+            },
+            {
+              "reactClass": "SubmitButton",
+              "labelTranslationKey": "form_submit"
+            }
           ],
-          "variables": [
-            { "name": "showDetails", "value": true }
-          ]
+          "variables": [{ "name": "showDetails", "value": true }]
         },
         {
           "buttonLabelTranslationKey": "form_flow_btn_success",
@@ -6278,11 +6109,27 @@
           "nameTranslationKey": "form_flow_name_form",
           "descriptionTranslationKey": "form_flow_desc_form",
           "buttons": [
-            { "reactClass": "DetailInfoButton",  "labelTranslationKey": "form_detailinfo",  "mobileDisabled": true },
-            { "reactClass": "CancelButton",      "labelTranslationKey": "form_cancel" },
-            { "reactClass": "PreviousPageButton", "labelTranslationKey": "form_previousPage" },
-            { "reactClass": "NextPageButton",    "labelTranslationKey": "form_nextPage" },
-            { "reactClass": "SubmitButton",    "labelTranslationKey": "form_submit" }
+            {
+              "reactClass": "DetailInfoButton",
+              "labelTranslationKey": "form_detailinfo",
+              "mobileDisabled": true
+            },
+            {
+              "reactClass": "CancelButton",
+              "labelTranslationKey": "form_cancel"
+            },
+            {
+              "reactClass": "PreviousPageButton",
+              "labelTranslationKey": "form_previousPage"
+            },
+            {
+              "reactClass": "NextPageButton",
+              "labelTranslationKey": "form_nextPage"
+            },
+            {
+              "reactClass": "SubmitButton",
+              "labelTranslationKey": "form_submit"
+            }
           ],
           "variables": []
         },

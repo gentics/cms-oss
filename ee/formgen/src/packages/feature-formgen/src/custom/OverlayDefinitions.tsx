@@ -11,3 +11,4 @@ export { default as ExpertSearchTableOverlayResultLimit } from '../components/ov
 export { default as FullScreenOverlay } from '../components/overlays/childOverlays/FullScreenOverlay';
 export { default as AggregateDeleteConfirmationOverlay } from '../components/overlays/childOverlays/AggregateDeleteConfirmationOverlay';
 export { default as SubmitOverlay } from '../components/overlays/childOverlays/SubmitOverlay';
+export { default as CaptchaErrorOverlay } from '../components/overlays/childOverlays/CaptchaErrorOverlay';

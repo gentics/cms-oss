@@ -1,8 +1,11 @@
 import React, { useMemo } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { stickyLayerStyles } from '../../../styles/common/common-style';
 import { stickyLayerStyles as customStickyLayerStyles } from '../../../styles/custom/custom-style';
-import { IFormFlowButtonDefinition, IFormPageComponent } from '../../../types/interfaces';
+import {
+  IFormFlowButtonDefinition,
+  IFormPageComponent,
+} from '../../../types/interfaces';
 import { ButtonComponents } from '../../../custom/ButtonComponentsTypes';
 import {
   CancelButton,
@@ -33,10 +36,13 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
   const isExpertSearch = uiState.isExpertSearch;
   const isDialogFormSubmit = props.uiState.dialogForm.isDialogFormOpen;
   const breakPoints = useBreakpoints();
-  const styles = useMemo(() => mergeStyles(stickyLayerStyles, customStickyLayerStyles), []);
+  const styles = useMemo(
+    () => mergeStyles(stickyLayerStyles, customStickyLayerStyles),
+    [],
+  );
   const { buttons } = useButtons();
   const footerButtons = buttons;
-
+  const hasPages = !!formState.form.pages?.length;
 
   return (
     <View style={styles.combinedStickyLayerContainer}>
@@ -66,14 +72,21 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
         <View
           style={[
             styles.buttonContainerWrapper,
-            widthFromColumNumber(props.formState.form.formwidth || 8, breakPoints)
+            widthFromColumNumber(
+              props.formState.form.formwidth || 8,
+              breakPoints,
+            ),
+            widthFromColumNumber(
+              props.formState.form.formwidth || 8,
+              breakPoints,
+            ),
           ]}
         >
           <View
             style={[
               styles.buttonContainer,
-              breakPoints.maximumSm &&
-                styles.buttonContainerScreenMaxSmall,
+              breakPoints.maximumSm && styles.buttonContainerScreenMaxSmall,
+              breakPoints.maximumSm && styles.buttonContainerScreenMaxSmall,
             ]}
           >
             {isExpertSearch ? (
@@ -87,15 +100,28 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
                     uiState={props.uiState}
                   />
                 )}
-                <ExpertSearchButton
-                  t={t}
-                  onPress={() =>
-                    props.handleExpertSearch
-                      ? props.handleExpertSearch()
-                      : () => {}
-                  }
-                  disabled={props.uiState.loading}
-                />
+                {hasPages && (
+                  <ExpertSearchButton
+                    t={t}
+                    onPress={() =>
+                      props.handleExpertSearch
+                        ? props.handleExpertSearch()
+                        : () => {}
+                    }
+                    disabled={props.uiState.loading}
+                  />
+                )}
+                {hasPages && (
+                  <ExpertSearchButton
+                    t={t}
+                    onPress={() =>
+                      props.handleExpertSearch
+                        ? props.handleExpertSearch()
+                        : () => {}
+                    }
+                    disabled={props.uiState.loading}
+                  />
+                )}
               </>
             ) : isDialogFormSubmit ? (
               <>
@@ -112,7 +138,10 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
   );
 };
 
-function renderButtons(buttonDefinition: IFormFlowButtonDefinition[], additionalProps: any = {}) {
+function renderButtons(
+  buttonDefinition: IFormFlowButtonDefinition[],
+  additionalProps: any = {},
+) {
   return buttonDefinition.map((buttonDef, index) => {
     const ButtonComponent = ButtonComponents[buttonDef.reactClass];
     if (!ButtonComponent) {

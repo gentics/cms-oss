@@ -184,6 +184,7 @@ function ANDropDownLazyCatalogElement(props: IFormComponentAttributes) {
       localErrorMsg={props.error || ""}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <View style={{ zIndex: 10 }}>
         <BaseDropDownInputElement

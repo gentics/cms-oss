@@ -21,7 +21,7 @@ const FormgenScreen: React.FC<{
   config: IFormFlowData;
   isLoggedIn: boolean;
   apiToken: string;
-  culture: string;
+  language: string;
   businessObjectId: string;
   devMode: boolean;
   mockForm: boolean;
@@ -35,6 +35,10 @@ const FormgenScreen: React.FC<{
   detailUrl?: string;
   hasDetail?: boolean;
   pluginName: string;
+  isFormgridPreview?: boolean;
+  formJson?: string;
+  currentPage?: number;
+  selectedElementId?: string;
 }> = (props) => {
   const [features, setFeatures] = useState<IFeatures>();
   const [loadFeatureError, setLoadFeatureError] = useState<boolean>(false);
@@ -42,7 +46,7 @@ const FormgenScreen: React.FC<{
   const [t, setT] = useState<any>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const pluginName = props.pluginName as PluginNameEnum;
+  const pluginName = (props.pluginName) as PluginNameEnum;
 
   const restService = new RestService(props.endpoint, pluginName, props.apiToken);
 
@@ -57,47 +61,46 @@ const FormgenScreen: React.FC<{
             setFeatures(features);
           } else {
             setLoadFeatureError(true);
+            setError("Server not responding: Features not available");
+          }
+        }
+      };
+
+      const fetchMockFeatures = async () => {
+        if (__DEV__ || props.isFormgridPreview) {
+          const response = await fetchMockDefaultFeatures();
+          const features = response;
+          if (features != null) {
+            setFeatures(features);
+          } else {
+            setLoadFeatureError(true);
             setError('Server not responding: Features not available');
           }
         }
       };
-    const fetchMockFeatures = async () => {
-      if (__DEV__) {
-        const response = await fetchMockDefaultFeatures();
-        const features = response;
-        if (features != null) {
-          setFeatures(features);
-        } else {
-          setLoadFeatureError(true);
-          setError("Server not responding: Features not available");
-        }
-      }
-    };
 
-    if(props.features != null){
-      setFeatures(props.features);
-    }else if (props.mockForm) {
-      fetchMockFeatures();
-    } else {
-      fetchFeatures();
-    }
+      if (props.features != null) {
+        setFeatures(props.features);
+      } else if (props.mockForm || props.isFormgridPreview) {
+        fetchMockFeatures();
+      } else if (!props.isFormgridPreview) {
+        fetchFeatures();
+      }
     }
   }, []);
 
   useEffect(() => {
-    if(props.t == null || props.t == undefined){
+    if(props.t == null){
       let mounted = true;
       (async () => {
         try {
           const i18nInstance = await initI18n(
             props.endpoint,
-            props.formId,
-            props.pluginName,
             props.translationUrl,
-            false,
-            props.culture
+            props.isFormgridPreview,
+            props.language,
           );
-          await i18nInstance.changeLanguage(props.culture);
+          await i18nInstance.changeLanguage(props.language);
           if (mounted) {
             setT(() => i18nInstance.t.bind(i18nInstance));
             setLoading(false);
@@ -121,7 +124,7 @@ const FormgenScreen: React.FC<{
   }, [props.endpoint, props.translationUrl]);
 
   useEffect(() => {
-    if (!loading && isWeb) {
+    if (!loading && isWeb && !props.isFormgridPreview) {
       const loader = document.getElementById('bcLoader');
       if (loader) {
         loader.style.opacity = '0';
@@ -168,7 +171,6 @@ const FormgenScreen: React.FC<{
       />
     );
   }
-
   const showRenderScreen = () => {
     if(pluginName == PluginNameEnum.ACTA_NOVA && features && props.config && t){
       return true; 
@@ -183,11 +185,11 @@ const FormgenScreen: React.FC<{
     return (
       <Suspense fallback={<LoadingScreen />}>
         <RendererScreen
-          features={features}
+          features={features as IFeatures}
           formId={props.formId}
           businessObjectId={props.businessObjectId}
           config={props.config}
-          culture={props.culture}
+          language={props.language}
           apiToken={props.apiToken}
           isLoggedIn={props.isLoggedIn}
           devMode={props.devMode}
@@ -200,6 +202,11 @@ const FormgenScreen: React.FC<{
           detailUrl={props.detailUrl}
           hasDetail={props.hasDetail}
           pluginName={pluginName}
+          successContent={props.successContent}
+          isFormgridPreview={props.isFormgridPreview}
+          formJson={props.formJson}
+          currentPage={props.currentPage}
+          selectedElementId={props.selectedElementId}
         />
         {Platform.OS === "web" && <span dangerouslySetInnerHTML={{ __html: styleHtml }} />}
       </Suspense>

@@ -15,5 +15,4 @@ export {default as FormGridImageElement} from '../components/elements/shared/For
 export {default as InputElement} from '../components/elements/shared/InputElement';
 export {default as BooleanElement} from '../components/elements/shared/BooleanElement';
 export {default as CmsContainerElement} from '../components/elements/cms/CmsContainerElement';
-export {default as CmsRecaptchaElement} from '../components/elements/cms/CmsRecaptchaElement';
-export {default as SelectElement} from '../components/elements/shared/SelectElement';
+export {default as CatalogElement} from '../components/elements/shared/CatalogElement';

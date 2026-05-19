@@ -117,9 +117,9 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         // performance optimization to fetch elements on the first level directly, not using jsonpath
         let isVisible = formState.data.properties?.[obj.id]?.visible;
         if (typeof isVisible === 'undefined') {
-          // CMS only: if visible is not set in data, evaluate schema condition as fallback
-          if (formState.pluginName === PluginNameEnum.CMS_FORMS && schemaElem.condition) {
-            const condition = schemaElem.condition;
+          // CMS only: if visible is not set in data, evaluate condition as fallback
+          if (formState.pluginName === PluginNameEnum.CMS_FORMS && obj.formGridOptions?.condition) {
+            const condition = obj.formGridOptions.condition;
             const referencedValue = formState.data.properties?.[condition.source.control]?.value;
             isVisible = referencedValue === condition.equals;
           } else { // visible is set in AN forms by default
@@ -238,6 +238,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
                 possibleValues={utils.getPossibleValues(
                   formState.data,
                   jsonpath,
+                  formState.pluginName,
                   obj.id,
                 )}
                 handleSearch={props.handleSearch}
@@ -279,6 +280,6 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         {elements}
       </Row>
     ),
-    [elements.length, props.formState, props.uiState.currentPage],
+    [elements.length, props.formState, props.uiState.currentPage, props.selectedElementId],
   );
 }

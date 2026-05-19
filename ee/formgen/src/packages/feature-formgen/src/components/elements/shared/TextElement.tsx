@@ -40,6 +40,7 @@ function TextElement(props: any) {
         localErrorMsg={localErrMsg}
         jsonPath={props.jsonpath}
         objectId={props.id}
+        selectedElementId={props.selectedElementId}
       >
         {/* TODO v8.2 should not only be html ?  */}
         <div

@@ -32,6 +32,7 @@ import { FormGridElementTypes } from '../custom/ElementTypes';
 import { Platform } from 'react-native';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 
 export function isFeatureActive(
   featureName: string,
@@ -326,7 +327,7 @@ export function getValue(formState: FormState, jsonpath: string, id?: string) {
   const elemState = getElementByIdOrJsonPath(formState.data, jsonpath, id);
   if (elemState) {
     if (elemState.values) {
-      return elemState.values;
+      return elemState.values;  
     }
     // Do not use if(elemState.value) because 0 and false are falsy values 
     if (elemState.value !== undefined && elemState.value !== null) {
@@ -469,18 +470,25 @@ export function isListElement(schema: ISchema, id: string): boolean {
 export function getPossibleValues(
   data: IData,
   jsonpath: string,
+  pluginName: PluginNameEnum,
   id?: string,
 ): IPossibleValue[] {
   const elementState = getElementByIdOrJsonPath(data, jsonpath, id);
+  // CMS: possibleValues direkt am Feld
+  if (pluginName == PluginNameEnum.CMS_FORMS && elementState?.possibleValues && elementState.possibleValues.length > 0) {
+    return elementState.possibleValues;
+  }
+  // AN: possibleValueSetID → possibleValueSets
   if (
+    pluginName == PluginNameEnum.ACTA_NOVA &&
     data.possibleValueSets != null &&
     elementState?.possibleValueSetID != null
   ) {
-    let possibleValues = data.possibleValueSets.find(
+    const set = data.possibleValueSets.find(
       (i) => i.possibleValueSetID === elementState?.possibleValueSetID,
     );
-    if (possibleValues) {
-      return possibleValues.possibleValues;
+    if (set) {
+      return set.possibleValues;
     }
   }
   return [];
@@ -881,3 +889,16 @@ export const isTouchOnlyDevice = (): boolean => {
 
   return isTouchPrimary && hasTouchPoints;
 };
+
+/**
+ * Liefert den passenden `pointerEvents`-Wert für eine View je nach Preview-Modus.
+ * Funktion existiert um mehrfachen identischen code zu reduzieren.
+ *
+ * Im Formgrid-Preview (Form ist im Angular-Editor eingebettet) sollen Form-Inputs
+ * nicht auf Klicks/Tastatur reagieren — sie sind reine Vorschau.
+ *
+ * @param preview `true` im Formgrid-Preview-Modus, sonst `false`/undefined
+ * @returns `'none'` (blockiert Interaktion) oder `'auto'` (normales Verhalten)
+ */
+export const previewPointerEvents = (preview?: boolean): 'none' | 'auto' =>
+  preview ? 'none' : 'auto';

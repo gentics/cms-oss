@@ -212,6 +212,6 @@
     "fr": "Französisch",
     "it": "Italienisch",
     "enable_biometric_login_title": "Biometrische Authentifizierung aktivieren",
-    "enable_biometric_login_description": "Ihr Gerät unterstützt die biometrische Authentifizierung. Aktivieren Sie diese Funktion, um sich schneller und sicherer anzumelden.\n\nSie müssen Ihren Benutzernamen und Ihr Passwort dann nicht mehr eingeben, wenn Sie die App öffnen.",
+    "enable_biometric_login_description": "Ihr Gerät unterstützt die biometrische Authentifizierung. Aktivieren Sie diese Funktion, um sich schneller und sicherer anzumelden.{\"\n\"}{\"\n\"} Sie müssen Ihren Benutzernamen und Ihr Passwort dann nicht mehr eingeben, wenn Sie die App öffnen.",
     "enable_biometric_login_button": "Aktivieren"
 }

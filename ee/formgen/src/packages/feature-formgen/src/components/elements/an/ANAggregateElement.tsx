@@ -7,7 +7,6 @@ import {
   Platform,
   useWindowDimensions,
   TouchableWithoutFeedback,
-  LayoutAnimation,
   UIManager,
   Easing
 } from 'react-native';
@@ -16,12 +15,12 @@ import {
   SummaryOptions,
   FormState,
   IFormGridOptions,
-  UIState,
   CommonValidation,
   IFormComponentAttributes,
   IFormElement,
   IDataAggregationListEntry,
   IOverlayAggregateDeleteConfirmationExtraProps,
+  IAggregateAddButtonProps,
 } from '../../../types/interfaces';
 import { aggregateElementStyles } from '../../../styles/common/common-style';
 import { aggregateElementStyles as customAggregateElementStyles } from '../../../styles/custom/custom-style';
@@ -53,11 +52,8 @@ import theme, {
   formElementWrapperTheme,
 } from '@andp/core/src/styles/theme';
 import Reanimated from 'react-native-reanimated';
-import Animated, {
-  LinearTransition,
-  Keyframe,
-} from 'react-native-reanimated';
-import { Animated as RNAnimated } from 'react-native'; 
+import Animated, { LinearTransition, Keyframe } from 'react-native-reanimated';
+import { Animated as RNAnimated } from 'react-native';
 
 import { SummaryElement } from '../helper/SummaryElement';
 import BaseDropDownInputElement from './DropDownElements/BaseDropDownInputElement';
@@ -101,7 +97,6 @@ function ActionButtons({
 }) {
   const [toggleButtonOnHover, setToggleButtonOnHover] = React.useState(false);
   const [deleteButtonOnHover, setDeleteButtonOnHover] = React.useState(false);
-  const [addButtonOnHover, setAddButtonOnHover] = React.useState(false);
 
   const toggleLabelKey = agg.detailsVisible
     ? isMobile
@@ -168,80 +163,53 @@ function ActionButtons({
         </Pressable>
       )}
 
-      {allowDelete ? 
-      <Pressable
-        //@ts-ignore
-        dataSet={{ class: 'agg-entry-delete-btn' }}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={t('form_delete_entry')}
-        accessibilityHint={t('form_accessibility_aggregate_delete_entry_hint')}
-        onPress={() => deleteFn(agg.id)}
-        onHoverIn={() => setDeleteButtonOnHover(true)}
-        onHoverOut={() => setDeleteButtonOnHover(false)}
-        style={[
-          styles.aggDeleteButton,
-          deleteButtonOnHover && styles.aggDeleteButtonOnHover,
-          isMobile && styles.aggDeleteButtonMobile,
-        ]}
-      >
-        <AndpIcon
-          name="trashCan"
+      {allowDelete ? (
+        <Pressable
+          //@ts-ignore
+          dataSet={{ class: 'agg-entry-delete-btn' }}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={t('form_delete_entry')}
+          accessibilityHint={t(
+            'form_accessibility_aggregate_delete_entry_hint',
+          )}
+          onPress={() => deleteFn(agg.id)}
+          onHoverIn={() => setDeleteButtonOnHover(true)}
+          onHoverOut={() => setDeleteButtonOnHover(false)}
           style={[
-            styles.aggDeleteButtonContent,
-            deleteButtonOnHover && styles.aggDeleteButtonContentOnHover,
-            isMobile && styles.aggDeleteButtonMobileContent,
+            styles.aggDeleteButton,
+            deleteButtonOnHover && styles.aggDeleteButtonOnHover,
+            isMobile && styles.aggDeleteButtonMobile,
           ]}
-        />
-        {!isMobile && showText && (
-          <AndpText
+        >
+          <AndpIcon
+            name="trashCan"
             style={[
               styles.aggDeleteButtonContent,
-              deleteButtonOnHover && styles.aggDeleteButtonOnHover,
+              deleteButtonOnHover && styles.aggDeleteButtonContentOnHover,
               isMobile && styles.aggDeleteButtonMobileContent,
             ]}
-          >
-            {t('form_delete_entry')}
-          </AndpText>
-        )}
-      </Pressable> : null}
-      {allowAdd ? 
-      <Pressable
-        //@ts-ignore
-        dataSet={{ class: 'agg-entry-add-btn' }}
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={t('form_add')}
-        accessibilityHint={t('form_accessibility_aggregate_add_entry_hint')}
-        onPress={() => addFn(index)}
-        onHoverIn={() => setAddButtonOnHover(true)}
-        onHoverOut={() => setAddButtonOnHover(false)}
-        style={[
-          styles.aggAddButton,
-          addButtonOnHover && styles.aggAddButtonOnHover,
-          isMobile && styles.aggAddButtonMobile,
-        ]}
-      >
-        <AndpIcon
-          name="plusSquare"
-          style={[
-            styles.aggAddButtonContent,
-            addButtonOnHover && styles.aggAddButtonContentOnHover,
-            isMobile && styles.aggAddButtonContentMobile,
-          ]}
+          />
+          {!isMobile && showText && (
+            <AndpText
+              style={[
+                styles.aggDeleteButtonContent,
+                deleteButtonOnHover && styles.aggDeleteButtonOnHover,
+                isMobile && styles.aggDeleteButtonMobileContent,
+              ]}
+            >
+              {t('form_delete_entry')}
+            </AndpText>
+          )}
+        </Pressable>
+      ) : null}
+      {allowAdd ? (
+        <AggregateAddButton
+          className="agg-entry-add-btn"
+          onPress={() => addFn(index)}
+          showButtonText={!isMobile && showText}
         />
-        {!isMobile && showText && (
-          <AndpText
-            style={[
-              styles.aggAddButtonContent,
-              addButtonOnHover && styles.aggAddButtonContentOnHover,
-              isMobile && styles.aggAddButtonContentMobile,
-            ]}
-          >
-            {t('form_add')}
-          </AndpText>
-        )}
-      </Pressable> : null}
+      ) : null}
     </View>
   );
 }
@@ -254,7 +222,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
   const breakpoints = useBreakpoints();
   const { formState, uiState, label } = props;
   if (
-    (Platform.OS === 'android' || Platform.OS === 'ios')  &&
+    (Platform.OS === 'android' || Platform.OS === 'ios') &&
     UIManager.setLayoutAnimationEnabledExperimental
   ) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -1123,7 +1091,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
     if (isRenderDialogForm) {
       handleDialogFormAdd(createAfterIndex);
     } else {
-       await listAddElement(
+      await listAddElement(
         formState,
         props.uiState,
         props.restService,
@@ -1162,11 +1130,6 @@ function ANAggregateElement(props: IFormComponentAttributes) {
     );
   }
 
-
-
-  
-
-
   const collapseInProgressRef = useRef(false);
 
   const [defaultHeights, setDefaultHeights] = useState<Record<string, number>>(
@@ -1203,9 +1166,6 @@ function ANAggregateElement(props: IFormComponentAttributes) {
       props.updateFirstErrorElementRef(props, elementRef);
   });
   const [animating, setAnimating] = useState<Record<string, boolean>>({});
-
-
-
 
   // Web Animation
   const toggleDetails = (id: string) => {
@@ -1256,9 +1216,6 @@ function ANAggregateElement(props: IFormComponentAttributes) {
     }
   };
 
-
-
-
   // IOS Animation
   const [activeBounceId, setActiveBounceId] = useState<string | null>(null);
 
@@ -1297,8 +1254,6 @@ function ANAggregateElement(props: IFormComponentAttributes) {
       useNativeDriver: true,
     }).start();
   };
-
-  
 
   useEffect(() => {
     // Nicht in Tabelle oder "nur erste Zeile"
@@ -1355,8 +1310,6 @@ function ANAggregateElement(props: IFormComponentAttributes) {
       }
     });
   }, [props.formState.errorOpenSubAggNonce]);
-
-
 
   const buildSingleAggregationElem = (agg: AggregationItem, index: number) => {
     const showOnlyFirstLine = props.formGridOptions?.showOnlyFirstLine;
@@ -1755,34 +1708,12 @@ function ANAggregateElement(props: IFormComponentAttributes) {
     return (
       <View
         key={'AggAddButton-' + isAddToTop + '-' + props.jsonpath}
-        style={styles.aggVarAddButtonContainer}
+        style={styles.aggAddButtonContainer}
       >
-        <TouchableOpacity
+        <AggregateAddButton
           id={`${props.id}-${isAddToTop ? 'add-agg-item-top' : 'add-agg-item-bottom'}`}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel={t('form_add')}
-          accessibilityHint={t(
-            'form_accessibility_aggregate_add_aggregate_hint',
-          )}
           onPress={async () => await addAggregationElement(createAfterIndex)}
-          style={
-            isMobile ? styles.aggVarAddButtonMobile : styles.aggVarAddButton
-          }
-        >
-          {showIcons && (
-            <AndpIcon
-              name={isMobile ? 'plus' : 'plusSquare'}
-              size={aggregateElementTheme.functionButtons.add.fontSize}
-              color={
-                isMobile
-                  ? aggregateElementTheme.functionButtons.add.smallView
-                      .fontColor
-                  : aggregateElementTheme.functionButtons.add.fontColor
-              }
-            />
-          )}
-        </TouchableOpacity>
+        />
       </View>
     );
   };
@@ -2332,7 +2263,6 @@ ANAggregateElement.getSummaryValue = function (
   return 'Debug';
 };
 
-
 function renderSummary(
   props: IFormComponentAttributes,
   elements: React.ReactElement[],
@@ -2352,5 +2282,52 @@ function renderSummary(
   );
 }
 
+const AggregateAddButton = ({
+  id,
+  className,
+  onPress,
+  showButtonText = false,
+}: IAggregateAddButtonProps) => {
+  const { t } = useTranslation();
+  const isMobile = useWindowDimensions().width < 768;
+  const styles = useMemo(
+    () => mergeStyles(aggregateElementStyles, customAggregateElementStyles),
+    [],
+  );
+
+  return (
+    <Pressable
+      //@ts-ignore
+      dataSet={className ? { class: className } : undefined}
+      id={id}
+      onPress={onPress}
+      style={({ hovered }) => [
+        styles.aggAddButton,
+        hovered && styles.aggAddButtonOnHover,
+        isMobile && styles.aggAddButtonMobile,
+      ]}
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={t('form_add')}
+      accessibilityHint={t('form_accessibility_aggregate_add_entry_hint')}
+    >
+      {({ hovered }) => {
+        const contentStyle = [
+          styles.aggAddButtonContent,
+          hovered && styles.aggAddButtonContentOnHover,
+        ];
+
+        return (
+          <>
+            <AndpIcon name="plusSquare" style={contentStyle} />
+            {showButtonText && (
+              <AndpText style={contentStyle}>{t('form_add')}</AndpText>
+            )}
+          </>
+        );
+      }}
+    </Pressable>
+  );
+};
 
 export default ANAggregateElement;

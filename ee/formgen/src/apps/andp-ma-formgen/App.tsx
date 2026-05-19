@@ -2,19 +2,30 @@ import '@expo/metro-runtime';
 import { View, Text, Linking } from 'react-native';
 import theme from '@andp/core/src/styles/theme';
 import FormgenScreen from '@andp/feature-formgen/src/screens/FormgenScreen';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as jsonConfig from './formgen.config.json';
 import Constants from 'expo-constants';
-import { IFormFlowData, ISummaryDetailsUser } from '@andp/feature-formgen/src/types/interfaces';
+import { IFeatures, IFormFlowData, ISummaryDetailsUser } from '@andp/feature-formgen/src/types/interfaces';
 import { Platform } from 'react-native';
 import { fontFamilies as commonFontFamilies } from '@andp/core/src/styles/common/font-config';
 import { fontFamilies as customFontFamilies } from '@andp/core/src/styles/custom/font-config';
 import { useFonts } from 'expo-font';
 
-export default function App() {
+export type FormgridPreviewData = {
+  formId?: string;
+  formJson?: string;
+  features?: IFeatures;
+  language?: string;
+  prefillContent?: string;
+  currentPage?: number;
+  selectedElementId?: string;
+};
+
+export default function App(props: { isFormgridPreview?: boolean; previewData?: FormgridPreviewData }) {
   const [formgenConfig, setFormgenConfig] = useState<IFormFlowData>(jsonConfig);
+  const isFormgridPreview = typeof document !== 'undefined' && document.getElementById('formgridForm') != null;
   const isDevMode = Constants.manifest.extra.devMode;
-  const isMockForm = Constants.manifest.extra.mockForm;
+  const isMockForm = Constants.manifest.extra.mockForm || isFormgridPreview;
   const [language, setLanguage] = useState<string>();
   const [Endpoint, setEndpoint] = useState<string>();
   const [formId, setFormId] = useState<string>();
@@ -27,12 +38,65 @@ export default function App() {
   const [translationUrl, setTranslationUrl] = useState<string>('');
   const [pluginName, setPluginName] = useState<string>('');
 
+  const domPreview = useMemo<FormgridPreviewData>(() => {
+    if (!isFormgridPreview || typeof document === 'undefined') return {};
+
+    const formJsonEl = document.getElementById('formJson');
+    const featuresEl = document.getElementById('formFeatures');
+    const currentPageEl = document.getElementById('formCurrentPage');
+    const selectedElementIdEl = document.getElementById('formSelectedElementId');
+
+    const formJsonText = formJsonEl?.innerText ?? '';
+    const featuresText = featuresEl?.innerText ?? null;
+    const currentPageText = currentPageEl?.innerText ?? '';
+    const selectedElementIdText = selectedElementIdEl?.innerText ?? '';
+
+    const parsedCurrentPage = Number.parseInt(currentPageText, 10);
+
+    let parsedFeatures: IFeatures | undefined = undefined;
+    if (featuresText) {
+      try {
+        parsedFeatures = JSON.parse(featuresText) as IFeatures;
+      } catch (e) {
+        console.warn('Could not parse formFeatures JSON', e);
+      }
+    }
+
+    return {
+      formJson: formJsonText,
+      features: parsedFeatures,
+      currentPage: Number.isFinite(parsedCurrentPage) ? parsedCurrentPage : 0,
+      selectedElementId: selectedElementIdText,
+    };
+  }, [isFormgridPreview]);
+
+  const effectivePreview: FormgridPreviewData = {
+    ...domPreview,
+    ...(props.previewData ?? {}),
+  };
+
   if (Platform.OS !== 'web' || isDevMode || isMockForm) {
     if (customFontFamilies && Object.keys(customFontFamilies).length > 0) {
       useFonts(customFontFamilies)
     } else {
       useFonts(commonFontFamilies)
     }
+  }
+
+  const formgridPreviewInit = (override?: FormgridPreviewData) => {
+    const formidElement = document.getElementById('formId');
+    const languageElement = document.getElementById("formLanguage");
+    const formid = formidElement && formidElement.innerText != null ? formidElement.innerText : "";
+    const language = languageElement && languageElement.innerText != null ? languageElement.innerText : "de";
+
+    const nextFormId = override?.formId ?? formid;
+    const nextLanguage = override?.language ?? language;
+    const nextPrefill = override?.prefillContent ?? prefillContent;
+
+    setLoggedIn(false);
+    setFormId(nextFormId);
+    setLanguage(nextLanguage || 'de');
+    setPrefillContent(nextPrefill);
   }
 
   useEffect(() => {
@@ -47,7 +111,10 @@ export default function App() {
     }
     setEndpoint(isDevMode || isMockForm ? formgenConfig.meshEndpoint : domain);
     if (typeof document !== 'undefined') {
-      if (document.getElementById('root') != undefined && document.getElementById('root') != null) {
+      if (isFormgridPreview) {
+        formgridPreviewInit(props.previewData)
+      }
+      else if (document.getElementById('root') != undefined && document.getElementById('root') != null && !isFormgridPreview) {
         const rootElement = document.getElementById('root');
         const lang = document.getElementById('data-culture')?.getAttribute('data-culture');
         //formid is the cms form uuid
@@ -85,7 +152,7 @@ export default function App() {
         setPrefillContent(prefillContent);
         setTranslationUrl(translationUrlFromId ?? '');
         setPluginName(pluginNameAttr ?? '');
-
+        
         if (formid) {
           setFormId(formid);
         }
@@ -105,6 +172,16 @@ export default function App() {
     setInit(true);
   }, []);
 
+  useEffect(() => {
+    if (!isFormgridPreview) return;
+    formgridPreviewInit(props.previewData);
+  }, [
+    isFormgridPreview,
+    props.previewData?.formId,
+    props.previewData?.language,
+    props.previewData?.prefillContent,
+  ]);
+  
   return (
     <View style={theme.container}>
       {initialInit && language && Endpoint ? (
@@ -115,7 +192,7 @@ export default function App() {
           apiToken={''}
           devMode={isDevMode}
           mockForm={isMockForm}
-          culture={language}
+          language={language}
           endpoint={Endpoint}
           businessObjectId={businessObjectId}
           prefillContent={prefillContent}
@@ -123,6 +200,11 @@ export default function App() {
           userData={userData}
           translationUrl={translationUrl}
           pluginName={pluginName}
+          isFormgridPreview={isFormgridPreview}
+          features={effectivePreview.features}
+          formJson={effectivePreview.formJson ?? ''}
+          currentPage={effectivePreview.currentPage ?? 0}
+          selectedElementId={effectivePreview.selectedElementId ?? ''}
         />
       ) : (
         <Text>Fehler</Text>

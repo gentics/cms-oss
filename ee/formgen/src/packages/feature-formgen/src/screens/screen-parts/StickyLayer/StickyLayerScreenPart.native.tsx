@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Text, TouchableOpacity, View, Pressable, StyleProp, ViewStyle } from 'react-native';
+import { Text, TouchableOpacity, View, StyleProp, ViewStyle } from 'react-native';
 import Animated, { Easing, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { stickyLayerStyles } from '../../../styles/common/common-style.native';
 import { stickyLayerStyles as customStickyLayerStyles } from '../../../styles/custom/custom-style.native';
@@ -113,6 +113,7 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
   const breakPoints = useBreakpoints();
   const styles = useMemo(() => mergeStyles(stickyLayerStyles, customStickyLayerStyles), []);
   const { buttons } = useButtons();
+  const hasPages = !!formState.form.pages?.length;
 
   // On Mobile, exclude form_cancel and detail_info
 
@@ -123,7 +124,7 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
   // Determine arrangement for normal forms
   const hasManyFooterButtons = footerButtons.length > 2;
 
-  // detect Prev/Next/Submit by component name or translateKey
+  // detect Prev/Next/Submit by component name or labelTranslationKey
   const prevDef = footerButtons.find(
     (b) =>
       /prev/i.test(b.reactClass || '') || /prev/i.test(b.labelTranslationKey || '')
@@ -139,6 +140,16 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
   const otherFooterButtons = footerButtons.filter(
     (b) => b !== prevDef && b !== nextDef && b !== submitDef && b.mobileDisabled == false
   );
+
+  // Abstracting the ExpertExcelDownloadButton button to avoid duplicate code
+  const excelButton = formState.schema.excelResultSupported ? (
+    <ExpertExcelDownloadButton
+      t={t}
+      onPress={props.handleExpertExcelDownload!}
+      disabled={props.uiState.loading}
+      uiState={props.uiState}
+    />
+  ) : null;
 
   return (
     <View style={styles.combinedStickyLayerContainer}>
@@ -180,25 +191,28 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
           >
             {isExpertSearch ? (
               <>
-                {formState.schema.excelResultSupported && (
-                  <ContextMenuMultiButton triggerIcon={<AndpIcon size="md" name="bars" color={theme.colors.colorAccent} />}>
-                    <ExpertExcelDownloadButton
-                      t={t}
-                      onPress={props.handleExpertExcelDownload!}
-                      disabled={props.uiState.loading}
-                      uiState={props.uiState}
-                    />
-                  </ContextMenuMultiButton>
+                {hasPages
+                  ? excelButton && (
+                      <ContextMenuMultiButton
+                        triggerIcon={
+                          <AndpIcon
+                            size="md"
+                            name="bars"
+                            color={theme.colors.colorAccent}
+                          />
+                        }
+                      >
+                        {excelButton}
+                      </ContextMenuMultiButton>
+                    )
+                  : excelButton}
+                {hasPages && (
+                  <ExpertSearchButton
+                    t={t}
+                    onPress={() => props.handleExpertSearch?.()}
+                    disabled={props.uiState.loading}
+                  />
                 )}
-                <ExpertSearchButton
-                  t={t}
-                  onPress={() =>
-                    props.handleExpertSearch
-                      ? props.handleExpertSearch()
-                      : () => { }
-                  }
-                  disabled={props.uiState.loading}
-                />
               </>
             ) : isDialogFormSubmit ? (
               <>

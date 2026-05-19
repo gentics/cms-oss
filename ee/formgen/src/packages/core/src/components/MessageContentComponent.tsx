@@ -9,6 +9,7 @@ import { messagesStyle } from "../styles/common/common-style";
 import { useReactToPrint } from 'react-to-print';
 import CustomRenderHTML from "./CustomRenderHTML";
 import AndpButton from "./AndpButton";
+import { useMicroAppSDK } from "../sdk/MicroAppSDK";
 
 
 interface MessageContentComponentProps {
@@ -35,6 +36,8 @@ const MessageContentComponent: React.FC<MessageContentComponentProps> =
 
   const smallScreen = useMemo(() => width < 500, [width < 500]);
   const mediumScreen = useMemo(() => width < 1007, [width < 1007]);
+
+  const { andpNavigation } = useMicroAppSDK();
 
   const closeMessage = () => {
     closeHandler();
@@ -164,11 +167,19 @@ const MessageContentComponent: React.FC<MessageContentComponentProps> =
                 title={message.metaInfo?.responseButton?.buttonText}
                 onPress={
                   () => {
-                    let url = '/api/andp/form/' + encodeURI(message.metaInfo?.responseButton?.formID!)
-                    if(message.metaInfo?.responseButton?.businessObjectID){
-                      url = url + '/' + encodeURIComponent(message.metaInfo?.responseButton?.businessObjectID)
+                   if(Platform.OS !== 'web') {
+                        andpNavigation.change('formgen', {
+                        formId: message.metaInfo?.responseButton?.formID!,
+                        businessObjectId: message.metaInfo?.responseButton?.businessObjectID ? message.metaInfo?.responseButton?.businessObjectID : '',
+                        mockForm: false,
+                      });
+                    }else{
+                      let url = '/api/andp/form/' + encodeURI(message.metaInfo?.responseButton?.formID!)
+                      if(message.metaInfo?.responseButton?.businessObjectID){
+                        url = url + '/' + encodeURIComponent(message.metaInfo?.responseButton?.businessObjectID)
+                      }
+                      return Linking.openURL(url);
                     }
-                    return Linking.openURL(url);
                   }
                 }
                 />

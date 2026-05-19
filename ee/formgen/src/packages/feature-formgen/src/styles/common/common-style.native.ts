@@ -355,6 +355,9 @@ const aggregateElementStyles = StyleSheet.create({
   },
 
   // ------ Aggregate Add Button -----
+  aggAddButtonContainer: {
+    alignItems: 'flex-start',
+  },
   aggAddButton: {
     backgroundColor: aggregateElementTheme.functionButtons.add.backgroundColor,
     borderRadius: aggregateElementTheme.functionButtons.add.borderRadius,
@@ -656,25 +659,6 @@ const aggregateElementStyles = StyleSheet.create({
   mobileDeleteButtonContent: {
     color: aggregateElementTheme.tableView.actionButtons.deleteColor,
     fontSize: aggregateElementTheme.tableView.actionButtons.fontSize,
-  },
-  //+---------------------------------+
-
-  aggVarAddButtonContainer: {
-    alignItems: 'flex-start',
-  },
-  aggVarAddButtonMobile: {
-    width: aggregateElementTheme.functionButtons.add.smallView.size,
-    height: aggregateElementTheme.functionButtons.add.smallView.size,
-    backgroundColor:
-      aggregateElementTheme.functionButtons.add.smallView.backgroundColor,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius:
-      aggregateElementTheme.functionButtons.add.smallView.borderRadius,
-  },
-  aggVarAddButton: {
-    justifyContent: 'center',
-    alignItems: 'flex-start',
   },
 
   // ------- Pagination Styles -------
@@ -1463,6 +1447,30 @@ const inputElementStyles = StyleSheet.create({
     paddingVertical: inputElementTheme.numberButtons.verticalPadding,
     width: '100%',
     alignItems: 'center',
+  },
+  unitBadge: {
+    position: 'absolute',
+    height: inputElementTheme.lineHeight,
+    top: inputElementTheme.paddingTop,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: inputElementTheme.disabled.backgroundColor,
+    borderRadius: inputElementTheme.borderRadius,
+    paddingHorizontal: inputElementTheme.unitBadge.paddingHorizontal,
+  },
+  unitBadgeError: {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  unitBadgeLeft: {
+    left: inputElementTheme.paddingLeft,
+  },
+  unitBadgeText: {
+    fontSize: inputElementTheme.placeholderFontSize,
+    fontFamily: inputElementTheme.placeholderFontFamily,
+    color: inputElementTheme.placeholderColor,
+  },
+  unitBadgeTextError: {
+    color: inputElementTheme.error.fontColor,
   },
   inputAreaFocused: {},
 
@@ -2449,6 +2457,10 @@ const recaptchaElementStyles = StyleSheet.create({
   buttonText: {
     fontSize: theme.fontSize.regular,
     fontWeight: theme.fontWeight.regular,
+    color: theme.colors.textPrimary
+  },
+  buttonTextVerified: {
+    color: '#082809'
   }
 });
 

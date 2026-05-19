@@ -1,11 +1,9 @@
-import { TFunction } from 'i18next';
 import {
   ApiResponse,
   CommonValidation,
   FormState,
   IData,
   IDataAggregationListEntry,
-  IDataFieldProperties,
   IErrorMessage,
   IFormElement,
   IFormGridOptions,
@@ -19,6 +17,7 @@ import * as mockFormularUtils from '../utils/MockFormularUtils';
 import JsonPath from 'jsonpath';
 import memoize from 'memoizee';
 import { RestService } from '../services/RestService';
+import { CaptchaService } from '../services/CaptchaService';
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { OverlayTypeEnum } from '../custom/OverlayTypes';
 import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
@@ -410,12 +409,14 @@ export const isPageValid = (
   if (typeof formState.form.pages != 'undefined') {
     for (const [key, value] of Object.entries(formState.form.pages)) {
       if (parseInt(key) === pageNumber) {
-        return areSubElementsValid(
+        const areFieldsValid = areSubElementsValid(
           formState,
           value.elements,
           updateErrorMessages,
           mockForm,
         );
+        const captchaValid = isCaptchaValid();
+        return areFieldsValid && captchaValid;
       }
     }
   }
@@ -897,4 +898,20 @@ export function needsANValidation(
     return true;
   }
   return false;
+}
+
+export function isCaptchaValid(): boolean {
+  if (!CaptchaService.isActive()) {
+    CaptchaService.setError(false);
+    return true;
+  }
+  // Invisible mode (reCAPTCHA): token is produced by `execute()` right before
+  // the request is sent — don't gate form-level validation on its presence here.
+  if (CaptchaService.hasExecute()) {
+    CaptchaService.setError(false);
+    return true;
+  }
+  const solved = CaptchaService.getToken() != null;
+  CaptchaService.setError(!solved);
+  return solved;
 }

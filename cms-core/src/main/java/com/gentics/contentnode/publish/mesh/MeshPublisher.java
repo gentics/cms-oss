@@ -4986,6 +4986,7 @@ public class MeshPublisher implements AutoCloseable {
 				ProjectResponse project = projectResult.get();
 
 				// read roles with read permission
+				rolesWithPermissions.clear();
 				rolesWithPermissions.addAll(client.getProjectRolePermissions(project.getUuid()).blockingGet().getRead().stream()
 						.map(RoleReference::getName).collect(Collectors.toSet()));
 

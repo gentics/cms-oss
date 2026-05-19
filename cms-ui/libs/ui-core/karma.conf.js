@@ -8,7 +8,7 @@ module.exports = function (config) {
     config.set({
         ...baseConfig,
         files: [
-            './lib/testing/global-variables.js',
+            './testing/src/lib/global-variables.js',
         ],
     });
 };

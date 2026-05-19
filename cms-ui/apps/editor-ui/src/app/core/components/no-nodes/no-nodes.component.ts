@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { I18nService } from '@gentics/cms-components';
 import { SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components/auth';
-import { cancelEvent } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
 import { Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
 import { ADMIN_UI_LINK } from '../../../common/config/config';

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { Feature, Group, Raw, User } from '@gentics/cms-models';
+import { toValidNumber } from '@gentics/common';
 import {
     BaseModal,
     CHECKBOX_STATE_INDETERMINATE,
@@ -10,7 +11,6 @@ import {
     TableActionClickEvent,
     TableSelection,
     toSelectionArray,
-    toValidNumber,
 } from '@gentics/ui-core';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';

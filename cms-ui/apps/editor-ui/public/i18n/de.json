@@ -92,11 +92,6 @@
     "aloha": {
         "tab_gtx_constructs": "Tag Typen",
         "tab_gtx_link_checker": "Link Checker",
-        "linktarget_target_label": "Ziel URL",
-        "linktarget_target_and_ref_label": "Ziel URL/Element",
-        "linktarget_anchor_label": "Anker",
-        "linktarget_pick_target": "Ziel Element auswählen",
-        "linktarget_clear_target": "Ziel Element entfernen",
         "link_checker_edit": "Bearbeiten",
         "link_checker_delete": "Entfernen",
         "link_checker_no_content": "Keine defekten Links vorhanden",
@@ -504,10 +499,6 @@
         "construct_favourites": "Favoriten",
         "constructs_loading": "Lade daten ...",
         "constructs_no_favourites": "Keine TagTypen wurden favoritisiert",
-        "table_size_input_rows": "Zeilen",
-        "table_size_input_columns": "Spalten",
-        "dropdown_confirm": "Bestätigen",
-        "dropdown_abort": "Abbrechen",
         "edit_mode_loading": "Lade Bearbeitungsmodus ...",
         "preview_mode_loading": "Lade Vorschaumodus ...",
         "loading_takes_more_time": "Das kann etwas dauern..."

@@ -2,10 +2,11 @@ import { CommonModule } from '@angular/common';
 import { inject, ModuleWithProviders, NgModule, provideAppInitializer } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CmsComponentsModule } from '@gentics/cms-components';
+import { AlohaModule } from '@gentics/cms-components/aloha';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
-import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
+import * as DE_TRANSLATIONS from '../public/i18n/de.json';
+import * as EN_TRANSLATIONS from '../public/i18n/en.json';
 import {
     DynamicFormSettingsComponent,
     DynamicFormTranslationsComponent,
@@ -33,9 +34,6 @@ const COMPONENTS = [
 ];
 
 @NgModule({
-    declarations: [
-        ...COMPONENTS,
-    ],
     imports: [
         CommonModule,
         FormsModule,
@@ -43,10 +41,11 @@ const COMPONENTS = [
         GenticsUICoreModule,
         CmsComponentsModule,
         TranslateModule,
+        AlohaModule,
     ],
-    exports: [
-        ...COMPONENTS,
-    ],
+    declarations: [...COMPONENTS],
+    providers: [],
+    exports: [...COMPONENTS],
 })
 export class FormGridModule {
     static forRoot(): ModuleWithProviders<FormGridModule> {

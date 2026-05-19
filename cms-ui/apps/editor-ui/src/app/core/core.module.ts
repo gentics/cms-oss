@@ -3,6 +3,7 @@ import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { API_BASE_URL, CmsComponentsModule, FALLBACK_LANGUAGE, GCMS_UI_SERVICES_PROVIDER, I18nDatePickerFormatService } from '@gentics/cms-components';
+import { AlohaModule } from '@gentics/cms-components/aloha';
 import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
@@ -51,7 +52,7 @@ import { DecisionModalsService } from './providers/decision-modals/decision-moda
 import { EntityResolver } from './providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from './providers/error-handler/error-handler.service';
 import { FavouritesService } from './providers/favourites/favourites.service';
-import { GcmsUiServices } from './providers/gcms-ui-services/gcms-ui-services.service';
+import { GcmsUiServicesProvider } from './providers/gcms-ui-services/gcms-ui-services.service';
 import { AuthGuard } from './providers/guards/auth-guard';
 import { OpenModalGuard } from './providers/guards/open-modal-guard';
 import { ListSearchService } from './providers/list-search/list-search.service';
@@ -136,7 +137,8 @@ const PROVIDERS = [
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: GCMS_API_BASE_URL, useValue: API_BASE_URL },
     { provide: GCMS_API_ERROR_HANDLER, useClass: ErrorHandler },
-    { provide: GCMS_UI_SERVICES_PROVIDER, useClass: GcmsUiServices },
+    GcmsUiServicesProvider,
+    { provide: GCMS_UI_SERVICES_PROVIDER, useClass: GcmsUiServicesProvider },
     {
         provide: GCMS_API_SID,
         useFactory: getSidFromAppState,
@@ -163,6 +165,7 @@ const PROVIDERS = [
             fallbackLang: FALLBACK_LANGUAGE,
         }),
         AuthenticationModule.forRoot(),
+        AlohaModule.forRoot(),
     ],
     exports: [
         BrowserModule,

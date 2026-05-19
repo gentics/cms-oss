@@ -12,7 +12,7 @@ import {
     Normalized,
     Raw,
 } from '@gentics/cms-models';
-import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
+import { deepFreeze } from '@gentics/common';
 import { debounce as _debounce, values as _values, isEqual } from 'lodash-es';
 import { Observable, ReplaySubject, Subject, of as observableOf, throwError } from 'rxjs';
 import {

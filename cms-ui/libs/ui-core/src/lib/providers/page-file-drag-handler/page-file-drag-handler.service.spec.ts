@@ -1,4 +1,4 @@
-import { SpyEventTarget, subscribeSpyObserver, triggerFakeDragEvent } from '../../testing';
+import { SpyEventTarget, subscribeSpyObserver, triggerFakeDragEvent } from '@gentics/ui-core/testing';
 import { DragStateTrackerFactoryService } from '../drag-state-tracker/drag-state-tracker.service';
 import { PageFileDragHandlerService } from './page-file-drag-handler.service';
 

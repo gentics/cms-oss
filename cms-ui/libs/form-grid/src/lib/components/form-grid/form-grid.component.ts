@@ -20,7 +20,8 @@ import {
     FormUISchema,
     I18nString,
 } from '@gentics/cms-models';
-import { BaseComponent, cancelEvent, ISortableEvent, SortableGroup } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { BaseComponent, ISortableEvent, SortableGroup } from '@gentics/ui-core';
 import { TranslateStore } from '@ngx-translate/core';
 import { v4 as uuidV4 } from 'uuid';
 import {

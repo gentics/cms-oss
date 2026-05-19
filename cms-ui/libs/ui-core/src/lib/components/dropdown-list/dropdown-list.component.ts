@@ -14,7 +14,7 @@ import {
     ViewContainerRef,
 } from '@angular/core';
 import { take } from 'rxjs/operators';
-import { DropdownAlignment, DropdownWidth, KeyCode } from '../../common';
+import { type DropdownAlignment, type DropdownWidth, KeyCode } from '../../common';
 import { DropdownTriggerDirective } from '../../directives/dropdown-trigger/dropdown-trigger.directive';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { BaseComponent } from '../base-component/base.component';
@@ -27,8 +27,8 @@ import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
  *
  * The component expects two child elements:
  *
- * * `<gtx-dropdown-trigger>` - this element is the button/label which the user will click to open the dropdown.
- * * `<gtx-dropdown-content>` - contains the contents of the dropdown. If it contains a `<ul>`, specific styles will be applied
+ * `<gtx-dropdown-trigger>` - this element is the button/label which the user will click to open the dropdown.
+ * `<gtx-dropdown-content>` - contains the contents of the dropdown. If it contains a `<ul>`, specific styles will be applied
  *
  * The `<gtx-dropdown-content>` element may contain arbitrary content, but list items should be wrapped in `<gtx-dropdown-item>`.
  * This will allow keyboard support for list navigation.
@@ -61,7 +61,7 @@ import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
     templateUrl: './dropdown-list.component.html',
     styleUrls: ['./dropdown-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DropdownListComponent extends BaseComponent implements OnDestroy {
 
@@ -135,8 +135,8 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
         super(changeDetector);
 
         overlayHostService.getHostView()
-            .then(view => this.overlayHostView = view)
-            .catch(err => console.error('Dropdown could not aquire a Overlay-Host instance!', err));
+            .then((view) => this.overlayHostView = view)
+            .catch((err) => console.error('Dropdown could not aquire a Overlay-Host instance!', err));
     }
 
     /**

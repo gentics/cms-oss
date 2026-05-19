@@ -1,0 +1,41 @@
+<gtx-form-element-container
+    [disabled]="disabled"
+    [class.active]="state === IFrameState.INITIALIZED && isFocused"
+    (mousedown)="clickedWithin()"
+>
+    @if (label) {
+        <label (click)="focusAloha()">{{ label }}</label>
+    }
+
+    <div class="toolbar">
+        @for (tab of toolbarSettings?.tabs; track tab.id) {
+            @for (group of tab.componentGroups; track $index) {
+                @for (slot of group.slots; track slot.name) {
+                    <gtx-aloha-component-renderer
+                        class="dynamic-component gtx-menu-element"
+                        [attr.slot]="slot.name"
+                        [slot]="slot.name"
+                        [component]="components[slot.name]"
+                    ></gtx-aloha-component-renderer>
+                }
+            }
+        }
+    </div>
+
+    <div
+        class="aloha-container"
+        [ngClass]="'state-' + state"
+        [class.active]="state === IFrameState.INITIALIZED && isFocused"
+        [style.--gtx-content-height.px]="contentHeight"
+        (click)="focusAloha($event)"
+    >
+        <div class="content-container">
+            <iframe #host class="aloha-frame"></iframe>
+
+            <div
+                class="content"
+                [innerHTML]="value | safe:'html'"
+            ></div>
+        </div>
+    </div>
+</gtx-form-element-container>

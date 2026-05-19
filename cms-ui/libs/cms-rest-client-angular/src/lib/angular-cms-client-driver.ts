@@ -28,8 +28,8 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
 
     protected createStringRequest<T>(
         request: GCMSRestClientRequestData,
-        body: null | string | FormData,
-        bodyHandler: (body: string, status: number) => T,
+        body: undefined | null | string | FormData,
+        bodyHandler: (body: string | null, status: number) => T,
     ): Observable<T> {
         let q = new HttpParams();
 
@@ -67,7 +67,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
 
     protected createBlobRequest(
         request: GCMSRestClientRequestData,
-        body: null | string | FormData,
+        body: undefined | null | string | FormData,
     ): Observable<Blob> {
         return this.http.request(request.method, request.url, {
             body,
@@ -78,7 +78,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         }).pipe(
             map((res) => {
                 if (res.ok) {
-                    return res.body;
+                    return res.body as Blob;
                 }
 
                 throw new HttpErrorResponse({
@@ -112,10 +112,10 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
                 try {
                     parsed = JSON.parse(raw);
                 } catch (err) {
-                    bodyError = err;
+                    bodyError = err as any;
                 }
             } catch (err) {
-                bodyError = err;
+                bodyError = err as any;
             }
 
             return throwError(() => new GCMSRestClientRequestError(
@@ -130,7 +130,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
     }
 
     protected createClientResponse<T>(obs: Observable<T>, request: GCMSRestClientRequestData): NGGCMSRestClientRequest<T> {
-        let promiseSub: Subscription;
+        let promiseSub: Subscription | null = null;
         let canceled = false;
 
         /*
@@ -143,7 +143,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
                     return Promise.reject(new GCMSRestClientAbortError(request));
                 }
                 return new Promise((resolve, reject) => {
-                    let tmpValue;
+                    let tmpValue: any;
                     let hasValue = false;
                     let isMultiValue = false;
 
@@ -196,7 +196,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         body?: string | FormData,
     ): NGGCMSRestClientRequest<string> {
         const obs = this.createStringRequest(request, body, (str) => str);
-        return this.createClientResponse(obs, request);
+        return this.createClientResponse(obs, request) as any;
     }
 
     performDownloadRequest(

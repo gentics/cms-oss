@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { CHECKBOX_STATE_INDETERMINATE, CheckboxState } from '../../common';
-import { cancelEvent, coerceToBoolean, generateFormProvider, randomId } from '../../utils';
+import { cancelEvent, coerceToBoolean, randomId } from '@gentics/common';
+import { CHECKBOX_STATE_INDETERMINATE, type CheckboxState } from '../../common';
+import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 function normalizeValue(value: any): CheckboxState {
@@ -74,7 +75,6 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
 
     /**
      * The value to be bound to the `value` property of the native checkbox.
-     *
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#value
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input#checked
      */

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { getDataTransfer, getEventTarget, getTransferMimeTypes, transferHasFiles } from '@gentics/common';
 import { Observable, Subscriber } from 'rxjs';
-import { getDataTransfer, getEventTarget, getTransferMimeTypes, transferHasFiles } from '../../utils/drag-and-drop';
 
 /**
  * A factory that creates a tracker instance that listens for dragenter/dragleave/drop events
@@ -20,7 +20,7 @@ import { getDataTransfer, getEventTarget, getTransferMimeTypes, transferHasFiles
 @Injectable()
 export class DragStateTrackerFactoryService {
     public trackElement(target: EventTarget): Observable<FileDragState> {
-        let tracker = new DragStateTracker(target);
+        const tracker = new DragStateTracker(target);
         return tracker.state$;
     }
 }
@@ -43,7 +43,7 @@ class DragStateTracker {
                 this.bindEvents();
             }
             return subscriber.add(() => {
-                let index = this.subscribers.indexOf(subscriber);
+                const index = this.subscribers.indexOf(subscriber);
                 this.subscribers.splice(index, 1);
                 if (!this.subscribers.length) {
                     this.unbindEvents();
@@ -68,26 +68,30 @@ class DragStateTracker {
     }
 
     emit(state: FileDragState): void {
-        this.subscribers.forEach(s => s.next(state));
+        this.subscribers.forEach((s) => s.next(state));
     }
 
     onDragEnter = (event: DragEvent) => {
-        let element = getEventTarget(event);
-        if (this.enteredElements.has(element)) { return; }
+        const element = getEventTarget(event);
+        if (this.enteredElements.has(element)) {
+            return;
+        }
 
-        let transfer = getDataTransfer(event);
-        if (!transferHasFiles(transfer)) { return; }
+        const transfer = getDataTransfer(event);
+        if (!transferHasFiles(transfer)) {
+            return;
+        }
 
         this.enteredElements.add(element);
 
         if ((++this.enterLeaveCounter) === 1) {
-            let types = getTransferMimeTypes(transfer).map(type => ({ type }));
+            const types = getTransferMimeTypes(transfer).map((type) => ({ type }));
             this.emit(types);
         }
-    }
+    };
 
     onDragLeave = (event: DragEvent) => {
-        let element = getEventTarget(event);
+        const element = getEventTarget(event);
         if (!transferHasFiles(getDataTransfer(event)) || !this.enteredElements.delete(element)) {
             return;
         }
@@ -95,10 +99,10 @@ class DragStateTracker {
         if ((--this.enterLeaveCounter) === 0) {
             this.emit([]);
         }
-    }
+    };
 
     onDrop = (event: DragEvent) => {
-        let element = getEventTarget(event);
+        const element = getEventTarget(event);
         if (!transferHasFiles(getDataTransfer(event)) || !this.enteredElements.delete(element)) {
             return;
         }
@@ -108,7 +112,7 @@ class DragStateTracker {
             this.enteredElements = new Set<Element>();
             this.emit([]);
         }
-    }
+    };
 
     detectUntrackedDrop = (event: MouseEvent) => {
         if (this.enterLeaveCounter > 0 && event.buttons === 0) {
@@ -116,6 +120,5 @@ class DragStateTracker {
             this.enteredElements = new Set<Element>();
             this.emit([]);
         }
-    }
+    };
 }
-

@@ -10,17 +10,16 @@
         @switch (setting.type) {
             @case ("string") {
                 @if (setting.richContent) {
-                    <gtx-rich-content-editor
+                    <gtx-aloha-text-editor
                         class="settings-entry"
                         [attr.data-control]="setting.id"
                         [attr.data-control-type]="setting.type"
                         [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
                         [required]="setting.required ?? false"
                         [disabled]="disabled()"
-                        [allowMultiLine]="setting.multiline ?? false"
                         [value]="settingData"
                         (valueChange)="updateData(setting, $event)"
-                    ></gtx-rich-content-editor>
+                    />
                 } @else if (setting.multiline) {
                     <gtx-textarea
                         class="settings-entry"
@@ -31,7 +30,7 @@
                         [disabled]="disabled()"
                         [value]="settingData"
                         (valueChange)="updateData(setting, $event)"
-                    ></gtx-textarea>
+                    />
                 } @else if (setting.multiple) {
                     <gtx-string-list
                         class="settings-entry"
@@ -42,7 +41,7 @@
                         [disabled]="disabled()"
                         [value]="settingData"
                         (valueChange)="updateData(setting, $event)"
-                    ></gtx-string-list>
+                    />
                 } @else {
                     <gtx-input
                         class="settings-entry"
@@ -53,7 +52,7 @@
                         [disabled]="disabled()"
                         [value]="settingData"
                         (valueChange)="updateData(setting, $event)"
-                    ></gtx-input>
+                    />
                 }
             }
 
@@ -70,7 +69,7 @@
                     [disabled]="disabled()"
                     [value]="settingData"
                     (valueChange)="updateData(setting, $event)"
-                ></gtx-input>
+                />
             }
 
             @case ("number") {
@@ -84,7 +83,7 @@
                     [disabled]="disabled()"
                     [value]="settingData"
                     (valueChange)="updateData(setting, $event)"
-                ></gtx-input>
+                />
             }
 
             @case ("boolean") {
@@ -96,7 +95,7 @@
                     [disabled]="disabled()"
                     [value]="settingData"
                     (valueChange)="updateData(setting, $event)"
-                ></gtx-checkbox>
+                />
             }
 
             @case ("date") {
@@ -110,7 +109,7 @@
                     [displayTime]="setting.allowTime ?? false"
                     [value]="settingData"
                     (valueChange)="updateData(setting, $event)"
-                ></gtx-date-time-picker>
+                />
             }
 
             @case ("select") {
@@ -141,7 +140,7 @@
                     [disabled]="disabled()"
                     [value]="settingData"
                     (valueChange)="updateData(setting, $event)"
-                ></gtx-form-options-input>
+                />
             }
 
             @case ("user") {
@@ -180,7 +179,7 @@
                     [browseTitle]="setting.titleI18n | gtxI18nObject"
                     [value]="settingData"
                     (valueChange)="updateReferenceValue(setting, $event)"
-                ></gtx-browse-box>
+                />
             }
 
             @default {

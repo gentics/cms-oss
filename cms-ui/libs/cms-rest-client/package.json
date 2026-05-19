@@ -9,5 +9,6 @@
   "devDependencies": {
     "@gentics/cms-models": "^6.4.4",
     "@gentics/mesh-models": "^3.2.0"
-  }
+  },
+  "sideEffects": false
 }

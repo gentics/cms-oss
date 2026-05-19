@@ -1,8 +1,8 @@
 import { Component, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { componentTest } from '@gentics/ui-core/testing';
 import * as Sortable from 'sortablejs';
 import { ISortableEvent } from '../../common';
-import { componentTest } from '../../testing';
 import { SortableListComponent, sortFactory } from './sortable-list.component';
 
 describe('SortableListComponent', () => {

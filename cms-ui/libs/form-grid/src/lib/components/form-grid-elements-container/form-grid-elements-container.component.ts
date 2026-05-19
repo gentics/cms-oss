@@ -20,7 +20,8 @@ import {
     FormTypeConfiguration,
     I18nString,
 } from '@gentics/cms-models';
-import { cancelEvent, ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
 import {
     ATTR_CONTAINER_ID,
@@ -109,12 +110,12 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public resizeOverlaySpanLocal = signal(12);
 
     private resizePointerId: number | null = null;
-    private resizeStartX: number;
+    private resizeStartX: number | null = null;
     private resizeTarget: FormElement | null = null;
     private resizeSurfaceEl: HTMLElement | null = null;
-    private resizeRowBaseCols: number;
-    private resizeRowMaxSpan: number;
-    private resizeStartSpan: number;
+    private resizeRowBaseCols: number | null = null;
+    private resizeRowMaxSpan: number | null = null;
+    private resizeStartSpan: number | null = null;
 
     /* SORTABLE GROUP
      * ===================================================================== */
@@ -270,16 +271,16 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
                 const rect = surface.getBoundingClientRect();
                 const colW = rect.width / 12;
-                const dx = e.clientX - this.resizeStartX;
+                const dx = e.clientX - this.resizeStartX!;
                 const deltaCols = Math.round(dx / colW);
 
-                const nextRaw = this.resizeStartSpan + deltaCols;
+                const nextRaw = this.resizeStartSpan! + deltaCols;
                 const minSpan = this.getMinSpan(this.resizeTarget);
-                const nextSpan = Math.max(minSpan, Math.min(this.resizeRowMaxSpan, nextRaw));
+                const nextSpan = Math.max(minSpan, Math.min(this.resizeRowMaxSpan!, nextRaw));
 
                 this.zone.run(() => {
                     this.setSpan(this.resizeTarget, nextSpan);
-                    const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + nextSpan));
+                    const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols! + nextSpan));
                     this.resizeOverlaySpanLocal.set(nextOverlaySpan);
                     this.changeDetector.markForCheck();
                 });

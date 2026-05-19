@@ -76,7 +76,7 @@ export class EditorOverlay implements OnInit, OnDestroy {
         switch (editMode) {
             case 'edit':
                 if (type === 'image') {
-                    this.editorOverlayService.editImage({ nodeId: nodeId, itemId: itemId });
+                    this.editorOverlayService.editImage({ nodeId: nodeId, imageId: itemId });
                 }
                 break;
             default:

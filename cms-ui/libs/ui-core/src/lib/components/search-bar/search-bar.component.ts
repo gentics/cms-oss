@@ -1,7 +1,8 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { booleanAttribute, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
+import { cancelEvent } from '@gentics/common';
 import { KeyCode } from '../../common';
-import { cancelEvent, coerceToBoolean, generateFormProvider } from '../../utils';
+import { generateFormProvider } from '../../utils';
 
 /**
  * The SearchBar component should be the primary search input for the app. It should be
@@ -47,11 +48,10 @@ import { cancelEvent, coerceToBoolean, generateFormProvider } from '../../utils'
     templateUrl: './search-bar.component.html',
     styleUrls: ['./search-bar.component.scss'],
     providers: [generateFormProvider(SearchBarComponent)],
-    standalone: false
+    standalone: false,
 })
-export class SearchBarComponent implements ControlValueAccessor, OnChanges {
+export class SearchBarComponent implements ControlValueAccessor {
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly cancelEvent = cancelEvent;
 
     /**
@@ -88,7 +88,7 @@ export class SearchBarComponent implements ControlValueAccessor, OnChanges {
      * Setting this attribute will prevent the "clear" button from being displayed
      * when the query is non-empty.
      */
-    @Input()
+    @Input({ transform: booleanAttribute })
     public hideClearButton: boolean;
 
     /**
@@ -113,6 +113,7 @@ export class SearchBarComponent implements ControlValueAccessor, OnChanges {
     private cvaChange: (value: string) => void = () => {
         // noop
     };
+
     private cvaTouch: () => void = () => {
         // noop
     };
@@ -120,12 +121,6 @@ export class SearchBarComponent implements ControlValueAccessor, OnChanges {
     constructor(
         private changeDetector: ChangeDetectorRef,
     ) { }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.hideClearButton) {
-            this.hideClearButton = coerceToBoolean(this.hideClearButton);
-        }
-    }
 
     doSearch(): void {
         this.search.emit(this.query);

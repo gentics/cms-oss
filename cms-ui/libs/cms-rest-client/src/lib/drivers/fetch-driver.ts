@@ -4,19 +4,19 @@ import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientRequestData } fr
 import { validateResponseObject } from '../utils';
 
 export async function parseFetchErrorFromAPI(request: GCMSRestClientRequestData, res: Response): Promise<never> {
-    let raw: string;
-    let parsed: GCMSResponse;
-    let bodyError: Error;
+    let raw: string | null = null;
+    let parsed: GCMSResponse | null = null;
+    let bodyError: Error | null = null;
 
     try {
         raw = await res.text();
         try {
             parsed = JSON.parse(raw);
         } catch (err) {
-            bodyError = err;
+            bodyError = err as Error;
         }
     } catch (err) {
-        bodyError = err;
+        bodyError = err as Error;
     }
 
     throw new GCMSRestClientRequestError(

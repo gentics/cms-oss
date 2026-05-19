@@ -1,17 +1,20 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
         "declaration": true,
         "declarationMap": true,
         "inlineSources": true,
-        "types": []
+        "types": ["node", "jquery"]
     },
+    "include": ["src/**/*.ts", "testing/src/**/*.ts"],
     "exclude": [
-        "src/test.ts",
-        "**/*.spec.ts",
-        "**/*.mock.ts"
-    ],
-    "include": [
-        "**/*.ts"
+        "src/**/*.spec.ts",
+        "src/**/*.test.ts",
+        "jest.config.ts",
+        "jest.config.cts",
+        "src/test-setup.ts",
+        "testing/src/**/*.spec.ts",
+        "testing/src/**/*.test.ts"
     ]
 }

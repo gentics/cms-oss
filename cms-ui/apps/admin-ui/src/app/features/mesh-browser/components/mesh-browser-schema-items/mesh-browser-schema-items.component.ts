@@ -1,7 +1,7 @@
-import { ContentRepositoryBO } from '@admin-ui/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ChangesOf } from '@gentics/ui-core';
+import { ContentRepositoryBO } from '../../../../common';
 import { SchemaElement } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
@@ -17,7 +17,7 @@ export interface LoadingState {
     templateUrl: './mesh-browser-schema-items.component.html',
     styleUrls: ['./mesh-browser-schema-items.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
@@ -118,7 +118,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
         // Make sure the languages are properly sorted
         schemaElements?.forEach((schemaElement) => {
-            schemaElement.availableLanguages.sort(lang => lang === this.language ? -1 : 1);
+            schemaElement.availableLanguages.sort((lang) => lang === this.language ? -1 : 1);
         });
 
         this.schemaElements = schemaElements;
@@ -128,7 +128,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         this.changeDetector.markForCheck();
     }
 
-    public changePage(page: number): void  {
+    public changePage(page: number): void {
         this.page = page;
         this.loadNodeChildren(this.node);
     }

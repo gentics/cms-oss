@@ -1,20 +1,16 @@
 import {
     EditableTag,
     File,
-    FileOrImage,
     Folder,
     Form,
     Image,
-    ItemInNode,
     Node,
     Page,
     Raw,
-    SerializableRepositoryBrowserOptions,
-    TagInContainer,
     Template,
 } from '@gentics/cms-models';
-import type { GCMSRestClient } from '@gentics/cms-rest-client';
 import { Observable } from 'rxjs';
+import { GcmsUiBridge } from '../gcms-ui-bridge';
 import { TagValidator } from './tag-validator';
 
 /** Describes the current context, in which a TagEditor is operating. */
@@ -95,46 +91,9 @@ export interface VariableTagEditorContext {
  * Additional services provided by the GCMS UI.
  * For example, services for opening the repository browser and the image editor.
  */
-export interface GcmsUiServices {
-
-    /** Method for opening the Repository Browser. */
-    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: SerializableRepositoryBrowserOptions): Promise<R | R[]>;
-
-    /** Method for opening the Image Editor. */
-    openImageEditor(options: { nodeId: number; imageId: number }): Promise<Image | void>;
-
-    /**
-     * Opens an the upload modal to allow the user to upload files/images to a specified folder.
-     * @param uploadType The type the user should be allowed to upload. Either 'image' or 'file'.
-     * @param destinationFolder The folder to where the file/image should be uploaded to.
-     * @param allowFolderSelection If the user should be allowed to change the destination folder.
-     * @returns A Promise for the uploaded file/image.
-     */
-    openUploadModal: (uploadType: 'image' | 'file', destinationFolder?: Folder, allowFolderSelection?: boolean) => Promise<FileOrImage>;
-
-    /**
-     * A client to perform REST-Requests directly with the current user.
-     */
-    restClient: GCMSRestClient;
-    /**
-     * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
-     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.
-     */
-    restRequestGET: (endpoint: string, params?: object) => Promise<object>;
-    /**
-     * Makes a POST request to an endpoint of the GCMS REST API and returns the parsed JSON object.
-     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.
-     */
-    restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
-    /**
-     * Makes a DELETE request to an endpoint of the GCMS REST API and returns the parsed JSON object (if present).
-     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.
-     */
-    restRequestDELETE: (endpoint: string, params?: object) => Promise<void | object>;
-
+export interface GcmsUiServices
+    extends Pick<GcmsUiBridge, 'openImageEditor' | 'openTagEditor' | 'openUploadModal' | 'openRepositoryBrowser' | 'restClient'>
+{
 }
 
 /**

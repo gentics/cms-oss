@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ScheduleData, ScheduleType } from '@gentics/cms-models';
-import { BaseFormPropertiesComponent, FormProperties, dateInYears, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { dateInYears } from '@gentics/common';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { pick } from 'lodash-es';
 
 @Component({

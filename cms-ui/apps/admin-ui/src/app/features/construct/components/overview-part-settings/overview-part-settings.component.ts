@@ -18,7 +18,6 @@ export class OverviewPartSettingsComponent
     extends BaseFormPropertiesComponent<OverviewSetting>
     implements ControlValueAccessor, OnInit, OnDestroy {
 
-    public form: FormGroup<FormProperties<OverviewSetting>>;
     public availableListTypes: ListType[] = [ListType.FILE, ListType.FOLDER, ListType.IMAGE, ListType.PAGE];
     public availableSelectTypes: SelectType[] = [SelectType.AUTO, SelectType.FOLDER, SelectType.MANUAL];
 

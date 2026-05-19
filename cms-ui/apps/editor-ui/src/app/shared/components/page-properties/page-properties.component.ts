@@ -18,9 +18,9 @@ import {
     Template,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { cancelEvent } from '@gentics/common';
 import {
     BaseFormPropertiesComponent,
-    cancelEvent,
     createMultiValuePatternValidator,
     FormProperties,
     generateFormProvider,

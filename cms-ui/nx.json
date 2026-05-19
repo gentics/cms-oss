@@ -1,5 +1,6 @@
 {
     "$schema": "./node_modules/nx/schemas/nx-schema.json",
+    "analytics": false,
     "workspaceLayout": {
         "appsDir": "apps",
         "libsDir": "libs"
@@ -46,14 +47,36 @@
         {
             "plugin": "@nx/eslint/plugin",
             "options": {
-                "targetName": "lint"
+                "targetName": "eslint:lint"
+            }
+        },
+        {
+            "plugin": "@nx/rollup/plugin",
+            "options": {
+                "buildTargetName": "build",
+                "buildDepsTargetName": "build-deps",
+                "watchDepsTargetName": "watch-deps"
+            }
+        },
+        {
+            "plugin": "@nx/jest/plugin",
+            "options": {
+                "targetName": "test"
             }
         },
         {
             "plugin": "@nx/cypress/plugin",
             "options": {
+                "targetName": "e2e",
                 "openTargetName": "open-cypress",
-                "componentTestingTargetName": "component-test"
+                "componentTestingTargetName": "component-test",
+                "ciTargetName": "e2e-ci"
+            }
+        },
+        {
+            "plugin": "@nx/playwright/plugin",
+            "options": {
+                "targetName": "e2e"
             }
         }
     ],
@@ -127,6 +150,7 @@
     "namedInputs": {
         "sharedGlobals": [
             "{workspaceRoot}/package.json",
+            "{workspaceRoot}/tsconfig.base.json",
             "{workspaceRoot}/tsconfig.json"
         ],
         "default": [
@@ -135,7 +159,8 @@
             "{projectRoot}/project.json",
             "{projectRoot}/tsconfig.json",
             "{projectRoot}/tsconfig.app.json",
-            "{projectRoot}/tsconfig.lib.json"
+            "{projectRoot}/tsconfig.lib.json",
+            "{projectRoot}/public/i18n/*.json"
         ],
         "building": [
             "default",
@@ -151,7 +176,10 @@
             "!{projectRoot}/tsconfig.spec.json",
             "!{projectRoot}/jest.config.[jt]s",
             "!{projectRoot}/src/test-setup.[jt]s",
-            "!{projectRoot}/test-setup.[jt]s"
+            "!{projectRoot}/test-setup.[jt]s",
+            "!{projectRoot}/cypress/**/*",
+            "!{projectRoot}/**/*.cy.[jt]s?(x)",
+            "!{projectRoot}/cypress.config.[jt]s"
         ],
         "envFiles": ["{workspaceRoot}/.env", "{workspaceRoot}/.env.local"],
         "linting": [
@@ -175,8 +203,8 @@
             "!{projectRoot}/src/**/*.cy.ts",
             "{projectRoot}/src/**/*.spec.ts",
             "{projectRoot}/tsconfig.spec.json",
-            "{projectRoot}/jest.config.ci.js",
-            "{projectRoot}/jest.config.js",
+            "{projectRoot}/jest.config.ci.(c)?[tj]s",
+            "{projectRoot}/jest.config.(c)?[tj]s",
             "{workspaceRoot}/jest.config.ts",
             "{workspaceRoot}/jest.preset.ts"
         ],
@@ -227,7 +255,8 @@
         },
         "test": {
             "inputs": ["default", "karmaTests", "^default"],
-            "cache": true
+            "cache": true,
+            "dependsOn": ["^build"]
         },
         "@nx/jest:jest": {
             "inputs": ["default", "jestTests", "^default"],

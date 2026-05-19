@@ -1,4 +1,4 @@
-import { enableProdMode } from '@angular/core';
+import { enableProdMode, provideZoneChangeDetection } from '@angular/core';
 import { platformBrowser } from '@angular/platform-browser';
 import hljs from 'highlight.js/lib/core';
 import typescript from 'highlight.js/lib/languages/typescript';
@@ -15,7 +15,5 @@ hljs.registerLanguage('typescript', typescript);
 hljs.registerLanguage('xml', xml);
 hljs.registerAliases(['html'], { languageName: 'xml' });
 
-platformBrowser().bootstrapModule(DocsModule, {
-    preserveWhitespaces: true,
-})
+platformBrowser().bootstrapModule(DocsModule, { applicationProviders: [provideZoneChangeDetection()], preserveWhitespaces: true,})
     .catch((err: any) => console.error(err));

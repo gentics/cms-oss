@@ -7,22 +7,21 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
-import { cancelEvent, generateFormProvider } from '../../utils';
+import { cancelEvent } from '@gentics/common';
+import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 /**
  * E-mail validator regex from Angular 8
- *
  * @todo Implement with validators
  * @see https://github.com/angular/angular/blob/8.2.9/packages/forms/src/validators.ts#L60
  */
-const EMAIL_REGEXP =
-    '^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]'+
-    '+(\\.[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$';
+const EMAIL_REGEXP
+    = '^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]'
+      + '+(\\.[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$';
 
 /**
  * Telephone number validator regex
- *
  * @todo Implement with validators
  * @see https://stackoverflow.com/a/26516985
  */
@@ -30,7 +29,6 @@ const TEL_REGEXP = '^([()\\- x+]*d[()\\- x+]*){4,16}$';
 
 /**
  * URL validator regex
- *
  * @todo Implement with validators
  * @see https://stackoverflow.com/a/52017332
  */
@@ -56,7 +54,7 @@ const URL_REGEXP = '(^|\\s)((https?:\\/\\/)?[\\w-]+(\\.[\\w-]+)+\\.?(:\\d+)?(\\/
     styleUrls: ['./input.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(InputComponent)],
-    standalone: false
+    standalone: false,
 })
 export class InputComponent extends BaseFormElementComponent<string | number> implements OnInit {
 

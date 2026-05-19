@@ -1168,6 +1168,19 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Clear cached data
+	 */
+	public static void clearCachedData() {
+		clientIsAdmin.clear();
+		roleMapSingle.clear();
+		serverInfo.clear();
+		meshStatus.clear();
+		schemasAndProjectsOk.clear();
+		meshProjectData.clear();
+		meshMicronodeData.clear();
+	}
+
+	/**
 	 * Create an instance of the MeshPublisher
 	 * @param cr ContentRepository
 	 * @throws NodeException
@@ -5790,6 +5803,13 @@ public class MeshPublisher implements AutoCloseable {
 		public MeshDataCache(java.util.function.Function<MeshRestClient, T> initMethod, T defaultValue) {
 			this.initMethod = initMethod;
 			this.defaultValue = defaultValue;
+		}
+
+		/**
+		 * Clear the data
+		 */
+		public void clear() {
+			cached.clear();
 		}
 
 		/**

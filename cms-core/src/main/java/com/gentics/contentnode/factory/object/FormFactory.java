@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.collections4.SetUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -127,6 +128,11 @@ public class FormFactory extends AbstractFactory {
 		@DataField("external_id")
 		@Unversioned
 		protected String externalId;
+
+		@DataField("external_hash")
+		@Unversioned
+		@Updateable
+		protected String externalHash;
 
 		@DataField("name")
 		@Updateable
@@ -726,6 +732,11 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public String getExternalHash() {
+			return externalHash;
+		}
+
+		@Override
 		public String getName() {
 			return name;
 		}
@@ -1239,6 +1250,14 @@ public class FormFactory extends AbstractFactory {
 					this.externalId = externalId;
 					this.modified = true;
 				}
+			}
+		}
+
+		@Override
+		public void setExternalHash(String externalHash) throws ReadOnlyException {
+			if (!Strings.CI.equals(this.externalHash, externalHash)) {
+				this.externalHash = externalHash;
+				this.modified = true;
 			}
 		}
 

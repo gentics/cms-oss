@@ -342,7 +342,7 @@ export const RENDERABLE_ALOHA_COMPONENTS: Record<string, string> = [
 ].reduce((acc, name) => {
     acc[name] = `gtx-aloha-${name}-renderer`;
     return acc;
-}, {});
+}, {} as Record<string, string>);
 
 export interface FormattedText {
     text: string;

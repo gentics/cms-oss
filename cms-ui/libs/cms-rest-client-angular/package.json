@@ -15,5 +15,6 @@
     "@gentics/cms-models": "^6.4.5",
     "@gentics/cms-rest-client": "^6.4.5",
     "@gentics/mesh-models": "^3.2.0"
-  }
+  },
+  "sideEffects": false
 }

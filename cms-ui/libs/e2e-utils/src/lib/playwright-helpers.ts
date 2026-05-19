@@ -1,6 +1,6 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
-import test, { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
+import test, { Disposable, expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import {
     ATTR_CONTEXT_ID,
     ATTR_MULTIPLE,
@@ -251,7 +251,7 @@ export async function pickSelectValue(select: Locator, values: string | number |
  * @param dataProvider Optional provider which will get the data for the user.
  * @returns Promise from `page.route`.
  */
-export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Promise<void> {
+export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Promise<Disposable> {
     return page.route((url) => matchesPath(url, '/rest/user/me/data'), (route, req) => {
         // Only re-route requests to load user-data
         if (req.method() !== 'GET') {
@@ -494,7 +494,7 @@ export function copyText(page: Page, text: string): Promise<void> {
 export async function setI18nGroupLanguage(group: Locator, language: number): Promise<void> {
     const tabs = group.locator('.properties-tabs');
     const langTab = tabs.locator(`.tab-link[data-id="${language}"]`);
-    const isActive = await langTab.evaluate(el => el.classList.contains('is-active'));
+    const isActive = await langTab.evaluate((el) => el.classList.contains('is-active'));
     if (isActive) {
         return;
     }

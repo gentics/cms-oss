@@ -1,0 +1,13 @@
+{
+    "aloha": {
+        "linktarget_target_label": "Ziel URL",
+        "linktarget_target_and_ref_label": "Ziel URL/Element",
+        "linktarget_anchor_label": "Anker",
+        "linktarget_pick_target": "Ziel Element auswählen",
+        "linktarget_clear_target": "Ziel Element entfernen",
+        "dropdown_confirm": "Bestätigen",
+        "dropdown_abort": "Abbrechen",
+        "table_size_input_rows": "Zeilen",
+        "table_size_input_columns": "Spalten"
+    }
+}

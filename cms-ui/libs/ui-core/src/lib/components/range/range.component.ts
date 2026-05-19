@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { booleanAttribute, ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
-import { coerceToBoolean, generateFormProvider } from '../../utils';
+import { generateFormProvider } from '../../utils';
 
 /**
  * The Range wraps the native `<input type="range">` form element.
@@ -14,7 +14,7 @@ import { coerceToBoolean, generateFormProvider } from '../../utils';
     templateUrl: './range.component.html',
     styleUrls: ['./range.component.scss'],
     providers: [generateFormProvider(RangeComponent)],
-    standalone: false
+    standalone: false,
 })
 export class RangeComponent implements ControlValueAccessor, OnInit {
 
@@ -81,13 +81,8 @@ export class RangeComponent implements ControlValueAccessor, OnInit {
     /**
      * Set to false to not show the thumb label. Defaults to true.
      */
-    @Input()
-    get thumbLabel(): boolean {
-        return this.showThumbLabel;
-    }
-    set thumbLabel(value: boolean) {
-        this.showThumbLabel = coerceToBoolean(value);
-    }
+    @Input({ transform: booleanAttribute })
+    thumbLabel: boolean;
 
     /**
      * Blur event

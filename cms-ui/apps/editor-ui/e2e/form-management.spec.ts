@@ -1,4 +1,5 @@
 import { AccessControlledType, CmsFormElementKeyI18nValuePair, FormSaveRequest, GcmsPermission, NodeFeature, Variant } from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/common';
 import {
     clickNotificationAction,
     EntityImporter,
@@ -27,7 +28,6 @@ import {
     UserImportData,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Page, test } from '@playwright/test';
 import { editorAction, expectItemLanguageCode, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
 

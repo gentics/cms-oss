@@ -26,5 +26,19 @@
         "**/*.cy.js",
         "**/*.cy.tsx",
         "**/*.cy.jsx"
+    ],
+    "references": [
+        {
+            "path": "../../libs/cms-rest-client"
+        },
+        {
+            "path": "../../libs/cms-rest-client-angular"
+        },
+        {
+            "path": "../../libs/aloha-models"
+        },
+        {
+            "path": "../../libs/cms-models"
+        }
     ]
 }

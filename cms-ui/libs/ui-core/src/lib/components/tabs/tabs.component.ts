@@ -1,5 +1,6 @@
 import {
     AfterViewInit,
+    booleanAttribute,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -13,9 +14,8 @@ import {
     QueryList,
     SimpleChanges,
 } from '@angular/core';
-import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
+import { BehaviorSubject, combineLatest, Subscription } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
-import { coerceToBoolean } from '../../utils';
 import { TabComponent } from '../tab/tab.component';
 
 /**
@@ -75,14 +75,14 @@ import { TabComponent } from '../tab/tab.component';
     templateUrl: './tabs.component.html',
     styleUrls: ['./tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     /**
      * When present (or set to true), tabs are displayed vertically.
      */
-    @Input()
+    @Input({ transform: booleanAttribute })
     @HostBinding('class.vertical')
     public vertical = false;
 
@@ -90,7 +90,7 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
      * When present (or set to true), only active tabs with icons will show the title.
      * Non-active tabs with icons will hide the title, show only icon.
      */
-    @Input()
+    @Input({ transform: booleanAttribute })
     public hideTitle = false;
 
     /**
@@ -102,7 +102,7 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
     /**
      * When present, sets the tabs to pure (stateless) mode.
      */
-    @Input()
+    @Input({ transform: booleanAttribute })
     public pure = false;
 
     /**
@@ -110,7 +110,7 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
      * a new line. Otherwise, tabs will remain on one line and the contents will be elided if all the available
      * space is filled.
      */
-    @Input()
+    @Input({ transform: booleanAttribute })
     public wrap = false;
 
     /**
@@ -147,7 +147,7 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
                 let hasSet = false;
 
                 if (tabs != null && tabs.length > 0) {
-                    tabs.forEach(singleTab => {
+                    tabs.forEach((singleTab) => {
                         singleTab.parentRef = this;
                         singleTab.active = id === singleTab.id;
                         singleTab.changeDetector.markForCheck();
@@ -177,26 +177,10 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
         if (changes.activeId) {
             this.activeTabId$.next(this.activeId);
         }
-
-        if (changes.vertical) {
-            this.vertical = coerceToBoolean(this.vertical);
-        }
-
-        if (changes.wrap) {
-            this.wrap = coerceToBoolean(this.wrap);
-        }
-
-        if (changes.hideTitle) {
-            this.hideTitle = coerceToBoolean(this.hideTitle);
-        }
-
-        if (changes.pure) {
-            this.pure = coerceToBoolean(this.pure);
-        }
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     identifyTab(idx: number, tab: TabComponent): string {
@@ -224,7 +208,7 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
     }
 
     private setAsActive(tab: TabComponent): void {
-        this.tabs.toArray().forEach(tab => tab.active = false);
+        this.tabs.toArray().forEach((tab) => tab.active = false);
         tab.active = true;
         this.activeTabId$.next(tab.id);
     }

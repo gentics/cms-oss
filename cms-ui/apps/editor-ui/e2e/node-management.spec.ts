@@ -14,8 +14,8 @@ import {
     TestSize,
     UserImportData,
 } from "@gentics/e2e-utils";
-import { cloneWithSymbols } from "@gentics/ui-core/utils/clone-with-symbols";
-import { test, expect, Page } from "@playwright/test";
+import { cloneWithSymbols } from "@gentics/common";
+import { expect, Page, test } from "@playwright/test";
 import { editorAction, selectNode } from "./helpers";
 
 test.describe('Node Management', () => {

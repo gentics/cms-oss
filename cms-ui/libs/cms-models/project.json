@@ -1,39 +1,21 @@
 {
-    "name": "cms-models",
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
-    "sourceRoot": "libs/cms-models/src",
-    "projectType": "library",
-    "tags": [
-        "lib",
-        "models",
-        "publish"
-    ],
-    "targets": {
-        "build": {
-            "executor": "@nx/rollup:rollup",
-            "outputs": [
-                "{options.outputPath}"
-            ],
-            "defaultConfiguration": "production",
-            "options": {
-                "main": "{projectRoot}/src/public-api.ts",
-                "outputPath": "dist/{projectRoot}",
-                "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "project": "{projectRoot}/package.json",
-                "generateExportsField": true,
-                "format": [
-                    "esm",
-                    "cjs"
-                ]
-            },
-            "configurations": {
-                "development": {},
-                "production": {},
-                "ci": {}
-            }
-        },
-        "test": {
-            "executor": "nx:noop"
-        }
+  "name": "cms-models",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/cms-models/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["dist/{projectRoot}"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
     }
+  },
+  "tags": ["lib", "models", "publish"],
+  "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  }
 }

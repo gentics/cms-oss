@@ -1,11 +1,10 @@
 import { Directive, ElementRef, EventEmitter, Inject, Input, NgZone, OnDestroy, OnInit, Optional, Output } from '@angular/core';
+import { clientReportsMimeTypesOnDrag, getDataTransfer, matchesMimeType, transferHasFiles } from '@gentics/common';
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DEFAULT_FILE_DROP_AREA_OPTIONS, FILE_DROPAREA_DRAG_EVENT_TARGET, IDraggedFile, IFileDropAreaOptions } from '../../common';
+import { DEFAULT_FILE_DROP_AREA_OPTIONS, FILE_DROPAREA_DRAG_EVENT_TARGET, type IDraggedFile, type IFileDropAreaOptions } from '../../common';
 import { DragStateTrackerFactoryService, FileDragState } from '../../providers/drag-state-tracker/drag-state-tracker.service';
 import { PageFileDragHandlerService } from '../../providers/page-file-drag-handler/page-file-drag-handler.service';
-import { clientReportsMimeTypesOnDrag, getDataTransfer, transferHasFiles } from '../../utils/drag-and-drop';
-import { matchesMimeType } from '../../utils/matches-mime-type';
 
 /**
  * File upload area that accepts files via drag and drop.
@@ -19,7 +18,7 @@ import { matchesMimeType } from '../../utils/matches-mime-type';
     selector: 'gtx-file-drop-area, [gtxFileDropArea]',
     exportAs: 'gtxFileDropArea',
     providers: [DragStateTrackerFactoryService, PageFileDragHandlerService],
-    standalone: false
+    standalone: false,
 })
 export class FileDropAreaDirective implements OnInit, OnDestroy {
 
@@ -58,6 +57,7 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
     @Input('gtxFileDropArea') get options(): IFileDropAreaOptions {
         return this._options;
     }
+
     set options(options: IFileDropAreaOptions) {
         this._options = Object.freeze(Object.assign({}, DEFAULT_FILE_DROP_AREA_OPTIONS, options));
     }
@@ -105,7 +105,6 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
      */
     @Output() pageDragLeave = new EventEmitter<void>();
 
-
     private _draggedFiles: IDraggedFile[] = [];
     private _isDraggedOver = false;
     private _isPageDraggedOver = false;
@@ -113,7 +112,6 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
     private _options = DEFAULT_FILE_DROP_AREA_OPTIONS;
     private _subscriptions: Subscription[] = [];
     private _eventTarget: EventTarget;
-
 
     constructor(elementRef: ElementRef,
         @Optional() @Inject(FILE_DROPAREA_DRAG_EVENT_TARGET) dragEventTarget: any,
@@ -124,15 +122,15 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
         this._eventTarget = dragEventTarget || elementRef.nativeElement;
 
         this.draggedFiles$ = fileDrag.trackElement(this._eventTarget).pipe(
-            map(files => files.filter(this.accepts)),
+            map((files) => files.filter(this.accepts)),
         );
 
         this.filesDraggedInPage$ = pageDrag.filesDragged$.pipe(
-            map(files => files.filter(this.accepts)),
+            map((files) => files.filter(this.accepts)),
         );
 
         this._subscriptions = [
-            this.draggedFiles$.subscribe(files => {
+            this.draggedFiles$.subscribe((files) => {
                 zone.runGuarded(() => {
                     this._isDraggedOver = files.length > 0;
                     this._draggedFiles = files;
@@ -143,7 +141,7 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
                     }
                 });
             }),
-            this.filesDraggedInPage$.subscribe(filesInPage => {
+            this.filesDraggedInPage$.subscribe((filesInPage) => {
                 zone.runGuarded(() => {
                     this._isPageDraggedOver = filesInPage.length > 0;
                     this._filesDraggedInPage = filesInPage;
@@ -164,19 +162,19 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this._subscriptions.forEach(s => s.unsubscribe());
+        this._subscriptions.forEach((s) => s.unsubscribe());
         this._eventTarget.removeEventListener('dragenter', this.onDragEnterOver);
         this._eventTarget.removeEventListener('dragover', this.onDragEnterOver);
         this._eventTarget.removeEventListener('drop', this.onDrop);
         this.pageDrag.destroy();
     }
 
-    private accepts = (file: {type: string}): boolean => {
+    private accepts = (file: { type: string }): boolean => {
         return !clientReportsMimeTypesOnDrag() || matchesMimeType(file.type, this._options.accept);
-    }
+    };
 
     private onDragEnterOver = (event: DragEvent) => {
-        let transfer = getDataTransfer(event);
+        const transfer = getDataTransfer(event);
         if (!transferHasFiles(transfer)) {
             return;
         }
@@ -188,10 +186,10 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
             transfer.effectAllowed = 'none';
         }
         event.preventDefault();
-    }
+    };
 
     private onDrop = (event: DragEvent) => {
-        let transfer = getDataTransfer(event);
+        const transfer = getDataTransfer(event);
         if (event.defaultPrevented || !transferHasFiles(transfer) || this._options.disabled) {
             return;
         }
@@ -199,12 +197,12 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
         event.preventDefault();
         transfer.dropEffect = 'copy';
 
-        let files = Array.from(transfer.files);
-        let acceptedFiles: File[] = [];
-        let rejectedFiles: File[] = [];
+        const files = Array.from(transfer.files);
+        const acceptedFiles: File[] = [];
+        const rejectedFiles: File[] = [];
 
         // Check if the dropped files match the "accept" option
-        for (let file of files) {
+        for (const file of files) {
             if (matchesMimeType(file.type, this._options.accept)) {
                 acceptedFiles.push(file);
             } else {
@@ -217,5 +215,5 @@ export class FileDropAreaDirective implements OnInit, OnDestroy {
         if (rejectedFiles.length > 0) {
             this.fileDropReject.emit(rejectedFiles);
         }
-    }
+    };
 }

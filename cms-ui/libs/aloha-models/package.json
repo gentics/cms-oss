@@ -7,5 +7,6 @@
   },
   "devDependencies": {
     "@types/jquery": "^3.5.19"
-  }
+  },
+  "sideEffects": false
 }

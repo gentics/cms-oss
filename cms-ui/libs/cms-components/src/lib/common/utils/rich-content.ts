@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
 import {
     ATTR_CONTENT_TYPE,
     ATTR_ITEM_ID,
@@ -16,20 +15,20 @@ import {
 
 /* eslint-disable quote-props */
 const ESCAPE_MAPPING: Record<string, string> = {
-    '&':    'amp',
-    '|':    'vert',
-    '"':    'quot',
-    '\'':   'apos',
-    '$':    'dollar',
-    '(':    'lpar',
-    ')':    'rpar',
-    ':':    'col',
-    '<':    'lt',
-    '>':    'gt',
-    '{':    'lcub',
-    '}':    'rcub',
-    '=':    'equals',
-    '\\':   'bsol',
+    '&': 'amp',
+    '|': 'vert',
+    '"': 'quot',
+    '\'': 'apos',
+    '$': 'dollar',
+    '(': 'lpar',
+    ')': 'rpar',
+    ':': 'col',
+    '<': 'lt',
+    '>': 'gt',
+    '{': 'lcub',
+    '}': 'rcub',
+    '=': 'equals',
+    '\\': 'bsol',
 };
 /* eslint-enable quote-props */
 const REVERSE_MAPPING: Record<string, string> = Object.entries(ESCAPE_MAPPING).reverse().reduce((acc, entry) => {

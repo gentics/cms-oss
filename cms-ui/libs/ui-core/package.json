@@ -8,6 +8,7 @@
     "@angular/core": ">=20.3.0",
     "@angular/forms": ">=20.3.0",
     "@bevacqua/rome": "^3.0.4",
+    "@gentics/common": "^6.4.5",
     "@gentics/cms-integration-api-models": "^6.4.5",
     "@types/sortablejs": "^1.15.8",
     "foundation-sites": "~6.5.3",
@@ -27,6 +28,7 @@
     "@angular/core": ">=20.3.0",
     "@angular/forms": ">=20.3.0",
     "@bevacqua/rome": "^3.0.4",
+    "@gentics/common": "^6.4.5",
     "@gentics/cms-integration-api-models": "^6.4.5",
     "@types/sortablejs": "^1.15.8",
     "foundation-sites": "~6.5.3",
@@ -38,5 +40,6 @@
     "ngx-autosize": "^2.0.4",
     "ngx-pagination": "^6.0.3",
     "sortablejs": "^1.15.2"
-  }
+  },
+  "sideEffects": false
 }

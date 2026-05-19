@@ -1,94 +1,102 @@
 <div class="modal-title">
-    <span class="modal-compatibility-state" [ngSwitch]="compatibilityState">
+  <span class="modal-compatibility-state">
         <ng-container [ngTemplateOutlet]="iconTemplate" [ngTemplateOutletContext]="{
             state: compatibilityState
         }"></ng-container>
-    </span>
-    <h5>{{ 'modal.version_info_modal' | gtxI18n }}</h5>
+  </span>
+  <h5>{{ 'modal.version_info_modal' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <div class="version-group system-information">
-        <div class="version-group-label">{{ 'modal.version_info_label_system' | gtxI18n }}</div>
-        <div class="version-table-wrapper">
-            <table class="version-table">
-                <tr>
-                    <td><b>Gentics Content Management Platform</b></td>
-                    <td><b><code>{{ cmpVersion }}</code></b></td>
-                </tr>
-                <tr>
-                    <td>Gentics Content Management System</td>
-                    <td><code>{{ cmsVersion }}</code></td>
-                </tr>
-            </table>
-        </div>
+  <div class="version-group system-information">
+    <div class="version-group-label">{{ 'modal.version_info_label_system' | gtxI18n }}</div>
+    <div class="version-table-wrapper">
+      <table class="version-table">
+        <tr>
+          <td><b>Gentics Content Management Platform</b></td>
+          <td><b><code>{{ cmpVersion }}</code></b></td>
+        </tr>
+        <tr>
+          <td>Gentics Content Management System</td>
+          <td><code>{{ cmsVersion }}</code></td>
+        </tr>
+      </table>
     </div>
+  </div>
 
-    <div class="version-group nodes-information">
-        <div class="version-group-label">{{ 'modal.version_info_label_nodes' | gtxI18n }}</div>
-        <div class="version-table-wrapper">
-            <table class="version-table">
-                <ng-container *ngFor="let node of nodeVersions">
-                    <tr>
-                        <td>{{ node.nodeName }}</td>
-                        <td class="compatibility-state">
+  <div class="version-group nodes-information">
+    <div class="version-group-label">{{ 'modal.version_info_label_nodes' | gtxI18n }}</div>
+    <div class="version-table-wrapper">
+      <table class="version-table">
+        @for (node of nodeVersions; track node) {
+          <tr>
+            <td>{{ node.nodeName }}</td>
+            <td class="compatibility-state">
                             <ng-container [ngTemplateOutlet]="iconTemplate" [ngTemplateOutletContext]="{
                                 state: node.nodeInfo.compatibility,
                                 nodeName: node.nodeName
                             }"></ng-container>
-                        </td>
-                    </tr>
-
-                    <ng-container *ngIf="node.nodeInfo">
-                        <tr *ngIf="node.nodeInfo.meshVersion" class="component-version">
-                            <td>{{ 'modal.version_info_label_mesh' | gtxI18n }}</td>
-                            <td><code>{{ node.nodeInfo.meshVersion }}</code></td>
-                        </tr>
-                        <tr *ngIf="node.nodeInfo.portalType" class="component-version">
-                            <td>{{ 'modal.version_info_label_portal_type' | gtxI18n }}</td>
-                            <td><code>{{ node.nodeInfo.portalType }}</code></td>
-                        </tr>
-                        <tr *ngIf="node.nodeInfo.portalVersion" class="component-version">
-                            <td>{{ 'modal.version_info_label_portal_version' | gtxI18n }}</td>
-                            <td><code>{{ node.nodeInfo.portalVersion }}</code></td>
-                        </tr>
-                    </ng-container>
-                </ng-container>
-            </table>
-        </div>
+            </td>
+          </tr>
+          @if (node.nodeInfo) {
+            @if (node.nodeInfo.meshVersion) {
+              <tr class="component-version">
+                <td>{{ 'modal.version_info_label_mesh' | gtxI18n }}</td>
+                <td><code>{{ node.nodeInfo.meshVersion }}</code></td>
+              </tr>
+            }
+            @if (node.nodeInfo.portalType) {
+              <tr class="component-version">
+                <td>{{ 'modal.version_info_label_portal_type' | gtxI18n }}</td>
+                <td><code>{{ node.nodeInfo.portalType }}</code></td>
+              </tr>
+            }
+            @if (node.nodeInfo.portalVersion) {
+              <tr class="component-version">
+                <td>{{ 'modal.version_info_label_portal_version' | gtxI18n }}</td>
+                <td><code>{{ node.nodeInfo.portalVersion }}</code></td>
+              </tr>
+            }
+          }
+        }
+      </table>
     </div>
+  </div>
 </div>
 
 <ng-template #iconTemplate let-state="state" let-nodeName="nodeName">
-    <ng-container [ngSwitch]="state">
-        <icon
-            *ngSwitchCase="VersionCompatibility.NOT_SUPPORTED"
-            class="not-supported"
-            [attr.left]="!nodeName"
-            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
-                nodeName: nodeName,
-                compatibility: ('modal.version_info_modal_compatibility_not_supported' | gtxI18n)
-            })"
-        >report_problem</icon>
+  @switch (state) {
+    @case (VersionCompatibility.NOT_SUPPORTED) {
+      <icon
+        class="not-supported"
+        [attr.left]="!nodeName"
+                [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
+                    nodeName: nodeName,
+                    compatibility: ('modal.version_info_modal_compatibility_not_supported' | gtxI18n)
+                })"
+      >report_problem</icon>
+    }
 
-        <icon
-            *ngSwitchCase="VersionCompatibility.SUPPORTED"
-            class="supported"
-            [attr.left]="!nodeName"
-            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
-                nodeName: nodeName,
-                compatibility: ('modal.version_info_modal_compatibility_supported' | gtxI18n)
-            })"
-        >check_circle</icon>
+    @case (VersionCompatibility.SUPPORTED) {
+      <icon
+        class="supported"
+        [attr.left]="!nodeName"
+                [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
+                    nodeName: nodeName,
+                    compatibility: ('modal.version_info_modal_compatibility_supported' | gtxI18n)
+                })"
+      >check_circle</icon>
+    }
 
-        <icon
-            *ngSwitchCase="VersionCompatibility.UNKNOWN"
-            class="unknown"
-            [attr.left]="!nodeName"
-            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
-                nodeName: nodeName,
-                compatibility: ('modal.version_info_modal_compatibility_unknown' | gtxI18n)
-            })"
-        >error</icon>
-    </ng-container>
+    @case (VersionCompatibility.UNKNOWN) {
+      <icon
+        class="unknown"
+        [attr.left]="!nodeName"
+                [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
+                    nodeName: nodeName,
+                    compatibility: ('modal.version_info_modal_compatibility_unknown' | gtxI18n)
+                })"
+      >error</icon>
+    }
+  }
 </ng-template>

@@ -186,7 +186,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
         if (!nodeId) {
             nodeId = this.context.node.id;
         }
-        this.editorOverlayService.editImage({ nodeId: nodeId, itemId: imageId })
+        this.editorOverlayService.editImage({ nodeId: nodeId, imageId: imageId })
             .then((newImage) => {
                 if (!newImage) {
                     return;

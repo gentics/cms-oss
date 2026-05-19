@@ -1,7 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { componentTest } from '../../testing';
+import { componentTest } from '@gentics/ui-core/testing';
 import { SplitViewContainerComponent } from './split-view-container.component';
 
 describe('SplitViewContainerComponent', () => {

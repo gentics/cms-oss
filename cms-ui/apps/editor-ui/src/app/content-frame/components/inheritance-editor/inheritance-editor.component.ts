@@ -14,7 +14,8 @@ import {
 import { ALOHAPAGE_URL, I18nService } from '@gentics/cms-components';
 import { Page, PageResponse } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { cancelEvent, ChangesOf } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { ChangesOf } from '@gentics/ui-core';
 import { forkJoin, Subscription } from 'rxjs';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ApplicationStateService } from '../../../state';

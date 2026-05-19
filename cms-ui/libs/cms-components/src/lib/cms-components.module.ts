@@ -1,8 +1,8 @@
 import { inject, ModuleWithProviders, NgModule, provideAppInitializer } from '@angular/core';
-import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
-import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
-import { CoreModule } from './core/core.module';
 import { TranslateService } from '@ngx-translate/core';
+import * as DE_TRANSLATIONS from '../public/i18n/de.json';
+import * as EN_TRANSLATIONS from '../public/i18n/en.json';
+import { CoreModule } from './core/core.module';
 
 @NgModule({
     imports: [

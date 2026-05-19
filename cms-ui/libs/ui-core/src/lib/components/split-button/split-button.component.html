@@ -5,8 +5,8 @@
     [autofocus]="autofocus"
     [size]="size"
     [type]="type"
-    [flat]="isFlat"
-    [disabled]="isDisabled"
+    [flat]="flat"
+    [disabled]="disabled"
     [class.has-secondary-actions]="secondaryActions.length > 0"
     (click)="onPrimaryButtonClick($event)"
     >
@@ -22,8 +22,8 @@
           data-action="open-context"
           [size]="size"
           [type]="type"
-          [flat]="isFlat"
-          [disabled]="isDisabled"
+          [flat]="flat"
+          [disabled]="disabled"
           >
           <icon>arrow_drop_down</icon>
         </gtx-button>

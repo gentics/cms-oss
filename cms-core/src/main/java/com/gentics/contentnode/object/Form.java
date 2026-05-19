@@ -67,6 +67,23 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	}
 
 	/**
+	 * Get the external hash, which is a hash generated over the data when the form is store with external ID
+	 * @return external hash
+	 */
+	@FieldGetter("external_hash")
+	String getExternalHash();
+
+	/**
+	 * Set the external hash
+	 * @param externalHash external hash
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("external_hash")
+	default void setExternalHash(String externalHash) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
+
+	/**
 	 * Get the name
 	 * @return name
 	 */

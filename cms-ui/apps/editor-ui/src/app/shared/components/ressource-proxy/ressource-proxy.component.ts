@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { downloadFromBlob } from '@gentics/cms-components';
-import { coerceToBoolean } from '@gentics/ui-core';
+import { coerceToBoolean } from '@gentics/common';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService } from '../../../state';
 

@@ -69,7 +69,6 @@ export interface DynamicControlConfiguration<T> {
     options?: Record<string, any>;
     /**
      * Validates a control and determines if it is valid or not.
-     *
      * @param controlValue The current value of the entire form.
      * @returns `null` if the control is valid, or a record of issues/errors for this control.
      */
@@ -77,7 +76,6 @@ export interface DynamicControlConfiguration<T> {
     /**
      * Simple callback which is called whenever the control value changes,
      * to be able to react to it's changes.
-     *
      * @param controlValue The current value of the control.
      * @param control An api for the control itself to manage it.
      */
@@ -138,7 +136,6 @@ export interface DynamicFormModalConfiguration<T> extends OverlayElementSettings
     };
     /**
      * Validates the entire form and determines if it is valid or not.
-     *
      * @param formValue The current value of the entire form.
      * @returns `null` if the form is valid, or a record of issues/errors for this form.
      */
@@ -146,7 +143,6 @@ export interface DynamicFormModalConfiguration<T> extends OverlayElementSettings
     /**
      * Simple callback which is called whenever a single control changes,
      * to be able to react to it's changes.
-     *
      * @param formValue The current value of the form.
      * @param formControl The control of the form control itself to manage it.
      */

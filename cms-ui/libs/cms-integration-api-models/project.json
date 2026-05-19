@@ -3,37 +3,19 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/cms-integration-api-models/src",
     "projectType": "library",
-    "tags": [
-        "lib",
-        "models",
-        "publish"
-    ],
+    "release": {
+        "version": {
+            "manifestRootsToUpdate": ["dist/{projectRoot}"],
+            "currentVersionResolver": "git-tag",
+            "fallbackCurrentVersionResolver": "disk"
+        }
+    },
+    "tags": ["lib", "models", "publish"],
     "targets": {
-        "build": {
-            "executor": "@nx/rollup:rollup",
-            "outputs": [
-                "{options.outputPath}"
-            ],
-            "defaultConfiguration": "production",
+        "nx-release-publish": {
             "options": {
-                "main": "{projectRoot}/src/public-api.ts",
-                "outputPath": "dist/{projectRoot}",
-                "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "project": "{projectRoot}/package.json",
-                "generateExportsField": true,
-                "format": [
-                    "esm",
-                    "cjs"
-                ]
-            },
-            "configurations": {
-                "development": {},
-                "production": {},
-                "ci": {}
+                "packageRoot": "dist/{projectRoot}"
             }
-        },
-        "test": {
-            "executor": "nx:noop"
         }
     }
 }

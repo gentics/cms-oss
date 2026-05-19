@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef } from '@angular/core';
+import { cancelEvent } from '@gentics/common';
 import {
     CHECKBOX_STATE_INDETERMINATE,
     FALLBACK_TABLE_COLUMN_RENDERER,
@@ -9,7 +10,7 @@ import {
     TableSelection,
     TableSortOrder,
 } from '../../common';
-import { cancelEvent, toSelectionArray } from '../../utils';
+import { toSelectionArray } from '../../utils';
 import { BaseComponent } from '../base-component/base.component';
 
 function selectionToMap(selection: string[] | TableSelection): TableSelection {

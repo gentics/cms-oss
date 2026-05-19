@@ -1,7 +1,8 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, NgZone, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
-import { BaseFormElementComponent, cancelEvent, generateFormProvider, ModalService } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { BaseFormElementComponent, generateFormProvider, ModalService } from '@gentics/ui-core';
 import { ATTR_CONTENT_TYPE, LINK_DEFAULT_DISPLAY_VALUE, RichContent, RichContentType } from '../../../common/models';
 import {
     elementToRichContentString,

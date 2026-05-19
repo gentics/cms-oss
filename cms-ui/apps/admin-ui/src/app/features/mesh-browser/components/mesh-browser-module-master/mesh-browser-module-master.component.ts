@@ -11,9 +11,10 @@ import {
     ChangeDetectorRef,
     Component,
     Input,
+    numberAttribute,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TableRow, toValidNumber } from '@gentics/ui-core';
+import { TableRow } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-mesh-browser-module-master',
@@ -26,7 +27,7 @@ export class MeshBrowserModuleMasterComponent {
 
     public readonly ROUTE_MESH_BROWSER_OUTLET = ROUTE_MESH_BROWSER_OUTLET;
 
-    @Input({ alias: ROUTE_MESH_REPOSITORY_ID, transform: toValidNumber })
+    @Input({ alias: ROUTE_MESH_REPOSITORY_ID, transform: numberAttribute })
     public currentRepositoryId: number;
 
     constructor(

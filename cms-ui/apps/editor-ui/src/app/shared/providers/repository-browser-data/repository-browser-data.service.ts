@@ -34,8 +34,8 @@ import {
     TemplateResponse,
     TotalUsageResponse,
 } from '@gentics/cms-models';
-import { cloneWithSymbols } from '@gentics/ui-core';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { cloneWithSymbols } from '@gentics/common';
 import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,

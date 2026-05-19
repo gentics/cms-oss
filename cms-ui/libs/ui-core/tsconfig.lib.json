@@ -1,22 +1,41 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
         "declaration": true,
         "declarationMap": true,
         "inlineSources": true,
-        "types": [],
-        "moduleResolution": "bundler"
+        "types": ["jasmine"]
     },
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts",
+        "src/testing/src/**/*.ts",
+        "src/utils/src/**/*.ts",
+        "src/utils/testing/src/**/*.ts",
+        "utils/src/**/*.ts",
+        "utils/src/testing/src/**/*.ts",
+        "utils/src/utils/src/**/*.ts",
+        "utils/src/utils/testing/src/**/*.ts"
+    ],
     "exclude": [
-        "src/test.ts",
         "src/**/*.spec.ts",
-        "src/lib/testing",
-        "cypress/**/*",
-        "cypress.config.ts",
-        "**/*.cy.ts",
-        "**/*.cy.js",
-        "**/*.cy.tsx",
-        "**/*.cy.jsx"
+        "src/**/*.test.ts",
+        "jest.config.ts",
+        "jest.config.cts",
+        "src/test-setup.ts",
+        "src/testing/src/**/*.spec.ts",
+        "src/testing/src/**/*.test.ts",
+        "src/utils/src/**/*.spec.ts",
+        "src/utils/src/**/*.test.ts",
+        "src/utils/testing/src/**/*.spec.ts",
+        "src/utils/testing/src/**/*.test.ts",
+        "utils/src/**/*.spec.ts",
+        "utils/src/**/*.test.ts",
+        "utils/src/testing/src/**/*.spec.ts",
+        "utils/src/testing/src/**/*.test.ts",
+        "utils/src/utils/src/**/*.spec.ts",
+        "utils/src/utils/src/**/*.test.ts",
+        "utils/src/utils/testing/src/**/*.spec.ts",
+        "utils/src/utils/testing/src/**/*.test.ts"
     ]
 }

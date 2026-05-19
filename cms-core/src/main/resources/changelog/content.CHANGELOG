@@ -822,3 +822,4 @@
 2026-03-24  CH-1739 NOP SQL INSERT INTO nodesetup (name, intvalue) VALUES ('job:migrateforms', 10000); ## add job to migrate forms
 2026-03-26  CH-1740 NOP SQL ALTER TABLE form ADD external_id VARCHAR(255) after id; ## add column for external ID
 2026-03-27  CH-1741 NOP SQL ALTER TABLE node ADD COLUMN default_form_folder_id INT NOT NULL default 0;
+2026-05-08  CH-1745 NOP SQL ALTER TABLE form ADD external_hash VARCHAR(255) after external_id; ## add column for external hash

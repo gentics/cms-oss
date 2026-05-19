@@ -1,7 +1,7 @@
+import { randomId } from '@gentics/common';
 import { createOutputSpy, mount, MountResponse } from 'cypress/angular';
-import { GenticsUICoreModule } from '@gentics/ui-core';
 import { CHECKBOX_STATE_INDETERMINATE, TableColumn, TableRow } from '../../common';
-import { randomId } from '../../utils';
+import { GenticsUICoreModule } from '../../ui-core.module';
 import { TableComponent } from './table.component';
 
 interface TestUser {

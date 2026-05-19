@@ -12,6 +12,7 @@ import {
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { componentTest } from '@gentics/ui-core/testing';
 import { Subject } from 'rxjs';
 import { IModalInstance, IModalOptions } from '../../common/modal';
 import { IconDirective } from '../../directives/icon/icon.directive';
@@ -20,7 +21,6 @@ import { ModalService } from '../../providers/modal/modal.service';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
 import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
-import { componentTest } from '../../testing';
 import { ButtonComponent } from '../button/button.component';
 import { DateTimePickerModal } from '../date-time-picker-modal/date-time-picker-modal.component';
 import { DynamicModal } from '../dynamic-modal/dynamic-modal.component';

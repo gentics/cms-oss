@@ -1,5 +1,5 @@
-import { ContentChildren, Directive, Input, QueryList } from '@angular/core';
-import { coerceToBoolean, randomId } from '../../utils';
+import { booleanAttribute, ContentChildren, Directive, Input, QueryList } from '@angular/core';
+import { randomId } from '@gentics/common';
 import { SelectOptionDirective } from '../select-option/option.directive';
 
 @Directive({
@@ -16,16 +16,8 @@ export class SelectOptionGroupDirective {
     @Input()
     label: string;
 
-    @Input()
-    set disabled(value: boolean) {
-        this._disabled = coerceToBoolean(value);
-    }
-
-    get disabled(): boolean {
-        return this._disabled;
-    }
-
-    private _disabled: any;
+    @Input({ transform: booleanAttribute })
+    disabled: boolean;
 
     @ContentChildren(SelectOptionDirective)
     private _options: QueryList<SelectOptionDirective>;

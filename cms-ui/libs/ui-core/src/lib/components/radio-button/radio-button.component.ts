@@ -11,10 +11,11 @@ import {
     Output,
     SimpleChanges,
 } from '@angular/core';
+import { randomId } from '@gentics/common';
 import { isEqual } from 'lodash-es';
 import { KeyCode } from '../../common';
 import { RadioGroupDirective } from '../../directives/radio-group/radio-group.directive';
-import { generateFormProvider, randomId } from '../../utils';
+import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 const NO_SET = Symbol();
@@ -50,7 +51,7 @@ const NO_SET = Symbol();
     templateUrl: './radio-button.component.html',
     styleUrls: ['./radio-button.component.scss'],
     providers: [generateFormProvider(RadioButtonComponent)],
-    standalone: false
+    standalone: false,
 })
 export class RadioButtonComponent
     extends BaseFormElementComponent<any>

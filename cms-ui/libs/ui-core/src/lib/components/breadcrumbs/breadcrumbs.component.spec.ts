@@ -3,10 +3,10 @@ import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, getTestBed, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { componentTest, createClickEvent } from '@gentics/ui-core/testing';
 import { of as observableOf } from 'rxjs';
 import { IconDirective } from '../../directives/icon/icon.directive';
 import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
-import { componentTest, createClickEvent } from '../../testing';
 import { ButtonComponent } from '../button/button.component';
 import { BreadcrumbsComponent, IBreadcrumbLink, IBreadcrumbRouterLink } from './breadcrumbs.component';
 

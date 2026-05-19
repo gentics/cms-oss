@@ -8,15 +8,18 @@
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
+            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
             "options": {
-                "tsConfig": "libs/image-editor/tsconfig.lib.json",
-                "project": "libs/image-editor/ng-package.json"
+                "project": "libs/image-editor/ng-package.json",
+                "tsConfig": "libs/image-editor/tsconfig.lib.json"
             },
             "configurations": {
-                "production": {},
-                "development": {},
-                "ci": {}
-            }
+                "production": {
+                    "tsConfig": "libs/image-editor/tsconfig.lib.prod.json"
+                },
+                "development": {}
+            },
+            "defaultConfiguration": "production"
         },
         "test": {
             "executor": "nx:run-commands",
@@ -33,6 +36,9 @@
                     "color": false
                 }
             }
+        },
+        "lint": {
+            "executor": "@nx/eslint:lint"
         },
         "component-test": {
             "executor": "@nx/cypress:cypress",

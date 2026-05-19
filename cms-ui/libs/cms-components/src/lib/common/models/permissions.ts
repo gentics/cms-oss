@@ -143,7 +143,7 @@ export class FolderInstancePermissionsImpl extends InstancePermissionsImpl imple
     }
 
     hasPermissionOrRolePrivilege(itemType: FolderItemType, privilege: GcmsRolePrivilege, languageCode?: string): boolean {
-        if (itemType !== 'page' && (privilege === GcmsRolePrivilege.publishpages || privilege === GcmsRolePrivilege.translatepages)) {
+        if (itemType !== 'page' && (privilege === GcmsRolePrivilege.PUBLISH_PAGES || privilege === GcmsRolePrivilege.TRANSLATE_PAGES)) {
             throw new Error(`The privilege '${privilege} is not applicable to '${itemType}'`);
         }
 
@@ -185,7 +185,6 @@ export class FolderInstancePermissionsImpl extends InstancePermissionsImpl imple
     }
 
 }
-
 
 /**
  * The default `PermissionsFactory`.

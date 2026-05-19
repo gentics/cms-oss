@@ -4,7 +4,7 @@ import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-c
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { mount } from 'cypress/angular';
-import { MockI18nPipe } from '../../../../testing/mocks';
+import { MockI18nPipe } from '../../../../../testing/src/lib/mocks';
 import { ATTR_CONTENT_TYPE, ATTR_LINK_TYPE, ATTR_TARGET, ATTR_URL, RichContentLinkType, RichContentType } from '../../../common/models';
 import { normalizeWhitespaces } from '../../../common/utils/rich-content';
 import { ValuesPipe } from '../../pipes';

@@ -4940,6 +4940,14 @@ public class MeshPublisher implements AutoCloseable {
 		protected void validate(Map<String, SchemaResponse> schemaMap, boolean repair, AtomicBoolean success) throws NodeException {
 			info(String.format("Start checking project %s", name));
 
+			// reset data
+			rootNodeUuid = null;
+			defaultBranch = null;
+			defaultBranchParameter = null;
+			branchMap.clear();
+			branchParamMap.clear();
+			rolesWithPermissions.clear();
+
 			Function<? super Throwable, ? extends SingleSource<? extends Optional<ProjectResponse>>> errorHandler = t -> {
 				return ifNotFound(t, () -> {
 					if (repair) {
@@ -4986,7 +4994,6 @@ public class MeshPublisher implements AutoCloseable {
 				ProjectResponse project = projectResult.get();
 
 				// read roles with read permission
-				rolesWithPermissions.clear();
 				rolesWithPermissions.addAll(client.getProjectRolePermissions(project.getUuid()).blockingGet().getRead().stream()
 						.map(RoleReference::getName).collect(Collectors.toSet()));
 

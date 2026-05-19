@@ -8,7 +8,6 @@
         "noPropertyAccessFromIndexSignature": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
-        "emitDecoratorMetadata": false,
         "module": "preserve"
     },
     "angularCompilerOptions": {

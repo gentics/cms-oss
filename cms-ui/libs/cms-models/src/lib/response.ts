@@ -378,6 +378,13 @@ export interface TemplateResponse extends Response {
 /**
  * Response from `folder/getTemplates`
  */
+export interface FolderTemplateListResponse extends BaseListResponse {
+    templates: Template<Raw>[];
+}
+
+/**
+ * Response from `folder/getTemplates`
+ */
 export interface TemplateListResponse extends BaseListResponse {
     templates: Template<Raw>[];
 }

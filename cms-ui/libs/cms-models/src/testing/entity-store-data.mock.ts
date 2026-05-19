@@ -1,4 +1,4 @@
-import { IS_NORMALIZED, NormalizedEntityStore, RecursivePartial } from '../lib/models';
+import { IS_NORMALIZED, NormalizedEntityStore, RecursivePartial } from '../lib';
 import { getExampleImageDataNormalized, getExampleNodeDataNormalized } from './test-data.mock';
 
 export function getExampleEntityStore(): NormalizedEntityStore {

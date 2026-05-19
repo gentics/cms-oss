@@ -2,14 +2,16 @@
 /* eslint-disable quote-props */
 import { normalize } from 'normalizr';
 import {
+    EditableObjectTag,
     File as FileModel,
     Folder,
     Form,
-    NodePageLanguageCode,
+    GcmsNormalizationSchemas,
     Image,
     IndexById,
     Language,
     Node,
+    NodePageLanguageCode,
     Normalized,
     ObjectTag,
     Page,
@@ -18,9 +20,7 @@ import {
     TagType,
     Template,
     User,
-} from '../lib/models';
-import { EditableObjectTag } from '../lib/models/editable-tag';
-import { GcmsNormalizationSchemas } from '../lib/models/gcms-normalizer/schemas';
+} from '../lib';
 
 const schemas = new GcmsNormalizationSchemas();
 

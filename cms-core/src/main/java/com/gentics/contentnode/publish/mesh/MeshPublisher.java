@@ -560,6 +560,12 @@ public class MeshPublisher implements AutoCloseable {
 		return Collections.synchronizedMap(new HashMap<>());
 	});
 
+	/**
+	 * Micronode Publisher Data
+	 */
+	protected static MeshDataCache<MeshMicronodePublisher.MeshMicronodePublisherData> meshMicronodeData = new MeshDataCache<>(
+			client -> null);
+
 	static {
 		schemaNames.put(Folder.TYPE_FOLDER, FOLDER_SCHEMA);
 		schemaNames.put(Page.TYPE_PAGE, PAGE_SCHEMA);
@@ -1241,6 +1247,8 @@ public class MeshPublisher implements AutoCloseable {
 			}
 		}
 
+		Optional.ofNullable(meshMicronodeData.get(this)).ifPresent(micronodePublisher::setData);
+
 		if (connect) {
 			if (ObjectTransformer.isEmpty(password)) {
 				throw new RestMappedException(I18NHelper.get("meshcr.apitoken.missing", cr.getName())).setMessageType(Message.Type.CRITICAL)
@@ -1671,6 +1679,8 @@ public class MeshPublisher implements AutoCloseable {
 		for (MeshProject project : alternativeProjects) {
 			project.validate(Collections.emptyMap(), false, new AtomicBoolean());
 		}
+
+		meshMicronodeData.set(this, micronodePublisher.getData());
 
 		meshProjectData.set(this,
 				projectMap.values().stream().collect(Collectors.toUnmodifiableMap(p -> p.name, p -> p.getData())));

@@ -208,6 +208,7 @@ import com.gentics.mesh.core.rest.tag.TagFamilyCreateRequest;
 import com.gentics.mesh.core.rest.tag.TagFamilyResponse;
 import com.gentics.mesh.core.rest.tag.TagListUpdateRequest;
 import com.gentics.mesh.core.rest.tag.TagReference;
+import com.gentics.mesh.json.JsonUtil;
 import com.gentics.mesh.parameter.GenericParameters;
 import com.gentics.mesh.parameter.NodeParameters;
 import com.gentics.mesh.parameter.VersioningParameters;
@@ -507,6 +508,58 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	protected static GenericParameters doNotWaitForIdle = new GenericParametersImpl();
 
+	/**
+	 * Flag that is set, when the client is a Mesh admin
+	 */
+	protected static MeshDataCache<Boolean> clientIsAdmin = new MeshDataCache<>(client -> {
+		Boolean adminFlag = client.me().blockingGet().getAdmin();
+		return adminFlag != null ? adminFlag.booleanValue() : false;
+	}, false);
+
+	/**
+	 * Role map single
+	 */
+	protected static MeshDataCache<Single<Map<String, String>>> roleMapSingle = new MeshDataCache<>(client -> {
+		Single<Map<String, String>> value = client.findRoles().toSingle()
+				.map(response -> response.getData().stream().filter(role -> !"admin".equals(role.getName()))
+						.collect(Collectors.toMap(RoleResponse::getName, RoleResponse::getUuid)))
+				.cache();
+		value.subscribe();
+		return value;
+	});
+
+	/**
+	 * Server Info
+	 */
+	protected static MeshDataCache<Single<MeshServerInfoModel>> serverInfo = new MeshDataCache<>(client -> {
+		@SuppressWarnings("deprecation")
+		Single<MeshServerInfoModel> value = client.getApiInfo().toSingle().cache();
+		value.subscribe();
+		return value;
+	});
+
+	/**
+	 * Mesh Status
+	 */
+	@SuppressWarnings("deprecation")
+	protected static MeshDataCache<MeshStatus> meshStatus = new MeshDataCache<>(client -> {
+		return client.meshStatus().blockingGet().getStatus();
+	});
+
+	/**
+	 * Schemas and Projects were checked OK
+	 */
+	protected static MeshDataCache<Boolean> schemasAndProjectsOk = new MeshDataCache<>(client -> {
+		return false;
+	}, false);
+
+	/**
+	 * Mesh Project Data
+	 */
+	protected static MeshDataCache<Map<String, MeshProjectData>> meshProjectData = new MeshDataCache<>(client -> {
+		return Collections.synchronizedMap(new HashMap<>());
+	});
+
 	static {
 		schemaNames.put(Folder.TYPE_FOLDER, FOLDER_SCHEMA);
 		schemaNames.put(Page.TYPE_PAGE, PAGE_SCHEMA);
@@ -555,11 +608,6 @@ public class MeshPublisher implements AutoCloseable {
 	protected MeshRestClient client;
 
 	/**
-	 * Flag that is set, when the client is a Mesh admin
-	 */
-	protected boolean clientIsAdmin;
-
-	/**
 	 * Mesh host
 	 */
 	protected String host;
@@ -592,24 +640,9 @@ public class MeshPublisher implements AutoCloseable {
 	protected Set<MeshProject> alternativeProjects = new HashSet<>();
 
 	/**
-	 * Role map single
-	 */
-	protected Single<Map<String, String>> roleMapSingle;
-
-	/**
 	 * Role map
 	 */
 	protected Map<String, String> roleMap;
-
-	/**
-	 * Server Info
-	 */
-	protected Single<MeshServerInfoModel> serverInfo;
-
-	/**
-	 * Flag, which is set when publishing into Mesh SQL
-	 */
-	protected boolean meshSql = false;
 
 	/**
 	 * Flag to mark whether an error was found
@@ -673,11 +706,6 @@ public class MeshPublisher implements AutoCloseable {
 	 * Configured call timeout (in seconds)
 	 */
 	protected long callTimeout = DEFAULT_TIMEOUT;
-
-	/**
-	 * Flag, which is set to true, when the Mesh Server supports publishing (and setting role permission) on create/update requests
-	 */
-	protected boolean supportsPublishOnCreate = false;
 
 	/**
 	 * Counter for requests to get a single node from Mesh
@@ -1099,12 +1127,47 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Create a new map containing the entries of the given map with the values converted.
+	 * If the given map is null, the function will return null
+	 * @param <T> type of the keys
+	 * @param <U> type of the resulting values
+	 * @param <W> type of the original values
+	 * @param map map to convert
+	 * @param valueConverter value converter
+	 * @return converted map
+	 */
+	protected static <T, U, W> Map<T, U> convertMap(Map<T, W> map, java.util.function.Function<W, U> valueConverter) {
+		return convertMap(map, java.util.function.Function.identity(), valueConverter);
+	}
+
+	/**
+	 * Create a new map containing the entries of the given map with keys and values converted.
+	 * If the given map is null, the function will return null
+	 * @param <T> type of the resulting keys
+	 * @param <U> type of the resulting values
+	 * @param <V> type of the original keys
+	 * @param <W> type of the original values
+	 * @param map map to convert
+	 * @param keyConverter key converter
+	 * @param valueConverter value converted
+	 * @return converted map
+	 */
+	protected static <T, U, V, W> Map<T, U> convertMap(Map<V, W> map, java.util.function.Function<V, T> keyConverter,
+			java.util.function.Function<W, U> valueConverter) {
+		return Optional.ofNullable(map)
+				.map(m -> m.entrySet().stream().map(
+						entry -> Map.entry(keyConverter.apply(entry.getKey()), valueConverter.apply(entry.getValue())))
+						.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())))
+				.orElse(null);
+	}
+
+	/**
 	 * Create an instance of the MeshPublisher
 	 * @param cr ContentRepository
 	 * @throws NodeException
 	 */
 	public MeshPublisher(ContentRepository cr) throws NodeException {
-		this(cr, true);
+		this(cr, true, false);
 	}
 
 	/**
@@ -1114,6 +1177,17 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public MeshPublisher(ContentRepository cr, boolean connect) throws NodeException {
+		this(cr, connect, false);
+	}
+
+	/**
+	 * Create an instance of the MeshPublisher
+	 * @param cr ContentRepository
+	 * @param connect true if the client shall be created, false if not
+	 * @param forceRefreshCachedData true to force refreshing of cached data
+	 * @throws NodeException
+	 */
+	public MeshPublisher(ContentRepository cr, boolean connect, boolean forceRefreshCachedData) throws NodeException {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.ATTRIBUTE_DIRTING)) {
 			throw new NodeException(
 					String.format("Publishing to mesh requires feature %s to be activated, but feature %s is inactive.",
@@ -1189,20 +1263,11 @@ public class MeshPublisher implements AutoCloseable {
 				client.setLogin(username, password).login().blockingGet();
 			}
 
-			// check whether the client is an admin
-			Boolean adminFlag = client.me().blockingGet().getAdmin();
-			clientIsAdmin = adminFlag != null ? adminFlag.booleanValue() : false;
-
-			roleMapSingle = client.findRoles().toSingle().map(response -> response.getData().stream().filter(role -> !"admin".equals(role.getName()))
-					.collect(Collectors.toMap(RoleResponse::getName, RoleResponse::getUuid))).cache();
-			roleMapSingle.subscribe();
-
-			serverInfo = client.getApiInfo().toSingle().cache();
-			serverInfo.subscribe();
-
-			// determine, whether the Mesh version supports publishing (and setting roles) with the save requests
-			meshSql = !serverInfo.blockingGet().getDatabaseVendor().contains("orientdb");
-			supportsPublishOnCreate = getMeshServerVersion().isGreaterOrEqual(meshSql ? FIRST_MESH_SQL_VERSION_WITH_PUBLISH_ON_CREATE : FIRST_MESH_VERSION_WITH_PUBLISH_ON_CREATE);
+			// initialize some data if empty
+			clientIsAdmin.init(this, forceRefreshCachedData);
+			roleMapSingle.init(this, forceRefreshCachedData);
+			serverInfo.init(this, forceRefreshCachedData);
+			meshStatus.init(this, forceRefreshCachedData);
 		} else {
 			micronodePublisher.initForPreview();
 		}
@@ -1264,6 +1329,12 @@ public class MeshPublisher implements AutoCloseable {
 
 			alternativeProjects.addAll(cr.getNodes().stream().map(n -> new MeshProject(n)).collect(Collectors.toSet()));
 		}
+
+		Optional.ofNullable(meshProjectData.get(this)).ifPresent(cachedData -> {
+			projectMap.values().forEach(project -> {
+				Optional.ofNullable(cachedData.get(project.name)).ifPresent(project::setData);
+			});
+		});
 	}
 
 	/**
@@ -1443,7 +1514,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return status
 	 */
 	public MeshStatus getStatus() {
-		return client.meshStatus().blockingGet().getStatus();
+		return meshStatus.get(this);
 	}
 
 	/**
@@ -1459,6 +1530,14 @@ public class MeshPublisher implements AutoCloseable {
 			error(String.format("Mesh status is %s", status));
 		}
 		return status == MeshStatus.READY;
+	}
+
+	/**
+	 * Were schemas and projects checked OK
+	 * @return check result
+	 */
+	public boolean schemasAndProjectsOk() {
+		return schemasAndProjectsOk.get(this);
 	}
 
 	/**
@@ -1488,6 +1567,7 @@ public class MeshPublisher implements AutoCloseable {
 
 			error("Inconsistent setting of \"publish directory segment\" found for assigned nodes:\n  Nodes with \"publish directory segment\": %s\n  Nodes without \"publish directory segment\": %s",
 					namesWith, namesWithout);
+			schemasAndProjectsOk.set(this, false);
 			return false;
 		}
 
@@ -1565,6 +1645,7 @@ public class MeshPublisher implements AutoCloseable {
 		// we cannot create an inexistent project, if schemas were not repaired successfully
 		if (!success.get() && repair) {
 			error("Skip checking project, since repairing schemas was not successful");
+			schemasAndProjectsOk.set(this, success.get());
 			return success.get();
 		}
 
@@ -1579,20 +1660,22 @@ public class MeshPublisher implements AutoCloseable {
 		// Since Mesh-SQL is case-insensitive when loading projects by name,
 		// alternative projects with the same name apart from case which are
 		// already in the project map must also be ignored.
-		if (meshSql) {
-			Set<String> projectNames = projectMap.values().stream()
-				.map(p -> p.name)
-				.filter(Objects::nonNull)
-				.map(String::toLowerCase)
-				.collect(Collectors.toSet());
+		Set<String> projectNames = projectMap.values().stream()
+			.map(p -> p.name)
+			.filter(Objects::nonNull)
+			.map(String::toLowerCase)
+			.collect(Collectors.toSet());
 
-			alternativeProjects.removeIf(p -> p.name == null || projectNames.contains(p.name.toLowerCase()));
-		}
+		alternativeProjects.removeIf(p -> p.name == null || projectNames.contains(p.name.toLowerCase()));
 
 		for (MeshProject project : alternativeProjects) {
 			project.validate(Collections.emptyMap(), false, new AtomicBoolean());
 		}
 
+		meshProjectData.set(this,
+				projectMap.values().stream().collect(Collectors.toUnmodifiableMap(p -> p.name, p -> p.getData())));
+
+		schemasAndProjectsOk.set(this, success.get());
 		return success.get();
 	}
 
@@ -1825,7 +1908,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * Check whether any jobs exist in Mesh, which are "RUNNING", "QUEUED" or "STARTING" and trigger job processing (just in case)
 	 */
 	public void triggerJobProcessing() {
-		if (clientIsAdmin) {
+		if (clientIsAdmin.get(this)) {
 			JobListResponse jobsList = client.findJobs().blockingGet();
 			List<JobStatus> stati = Arrays.asList(JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.STARTING);
 			if (jobsList.getData().stream().filter(job -> stati.contains(job.getStatus())).findAny().isPresent()) {
@@ -2893,7 +2976,7 @@ public class MeshPublisher implements AutoCloseable {
 									file.getFilesizeFromBinary(),
 									file.getFilename(),
 									file.getFiletype(),
-									supportsPublishOnCreate,
+									true,
 									task.project.enforceBranch(task.nodeId))
 								.toSingle();
 						});
@@ -2908,10 +2991,7 @@ public class MeshPublisher implements AutoCloseable {
 								NodeUpdateRequest update = new NodeUpdateRequest();
 								update.setLanguage(getMeshLanguage(image));
 								update.setVersion("draft");
-
-								if (supportsPublishOnCreate) {
-									update.setPublish(true);
-								}
+								update.setPublish(true);
 
 								update.getFields().put("binarycontent", new BinaryFieldImpl().setFocalPoint(image.getFpX(), image.getFpY()));
 								return client.updateNode(task.project.name, task.uuid, update, task.project.enforceBranch(task.nodeId))
@@ -2950,7 +3030,7 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	public Map<String, String> getRoleMap() {
 		if (roleMap == null) {
-			roleMap = Collections.synchronizedMap(new HashMap<>(roleMapSingle.blockingGet()));
+			roleMap = Collections.synchronizedMap(new HashMap<>(roleMapSingle.get(this).blockingGet()));
 		}
 		return roleMap;
 	}
@@ -2960,7 +3040,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return server version
 	 */
 	public CmpProductVersion getMeshServerVersion() {
-		return new CmpProductVersion(serverInfo.blockingGet().getMeshVersion());
+		return new CmpProductVersion(serverInfo.get(this).blockingGet().getMeshVersion());
 	}
 
 	/**
@@ -4126,11 +4206,9 @@ public class MeshPublisher implements AutoCloseable {
 		request.setSchema(new SchemaReferenceImpl().setName(task.schema));
 		request.setFields(task.fields);
 
-		if (supportsPublishOnCreate) {
-			request.setPublish(true);
-			if (task.roles != null) {
-				request.setGrant(createPermissionUpdateRequests(task));
-			}
+		request.setPublish(true);
+		if (task.roles != null) {
+			request.setGrant(createPermissionUpdateRequests(task));
 		}
 
 		boolean supportsAlternativeLanguages = supportsAlternativeLanguages(task.objType, true) && task.alternativeMeshLanguages != null;
@@ -4148,10 +4226,8 @@ public class MeshPublisher implements AutoCloseable {
 						start.set(System.currentTimeMillis());
 						saveNodeCounter.incrementAndGet();
 					})
-					.flatMap(node -> setRolePermissions(task, node))
 					.flatMap(node -> move(task, node))
 					.flatMap(node -> postSave(task, node))
-					.flatMap(node -> publish(task, node))
 					.doOnError(t -> {
 						if (!task.postponable || !isRecoverable(t)) {
 							String message = String.format("Error while performing task '%s' for '%s'", task, cr.getName());
@@ -4275,27 +4351,6 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
-	 * Set role permissions
-	 * @param task write task
-	 * @param node node response (from the save request)
-	 * @return single node response
-	 */
-	protected Single<NodeResponse> setRolePermissions(WriteTask task, NodeResponse node) {
-		if (task.roles == null) {
-			return Single.just(node);
-		}
-
-		if (supportsPublishOnCreate) {
-			return Single.just(node);
-		}
-
-		return ensureRoles(task.roles)
-			.andThen(updatePermissions(task, node.getUuid()))
-			.andThen(task.project.setPermissions(task.roles))
-			.andThen(Single.just(node));
-	}
-
-	/**
 	 * Create the request that will perform the permission update requests.
 	 *
 	 * @param task The current write task.
@@ -4364,21 +4419,6 @@ public class MeshPublisher implements AutoCloseable {
 		} else {
 			return Single.just(node);
 		}
-	}
-
-	/**
-	 * Publish the node
-	 * @param task write task
-	 * @param node node response (from the save request)
-	 * @return single node response
-	 */
-	protected Single<NodeResponse> publish(WriteTask task, NodeResponse node) {
-		if (supportsPublishOnCreate) {
-			return Single.just(node);
-		}
-
-		return client.publishNodeLanguage(task.project.name, task.uuid, task.language, task.project.enforceBranch(task.nodeId)).toSingle()
-				.flatMap(status -> Single.just(node));
 	}
 
 	/**
@@ -4813,6 +4853,45 @@ public class MeshPublisher implements AutoCloseable {
 		 */
 		protected MeshProject(String name) {
 			this.name = name;
+		}
+
+		/**
+		 * Get a copy the data from the instance as {@link MeshProjectData}
+		 * @return data copy
+		 */
+		protected MeshProjectData getData() {
+			return new MeshProjectData(hostname, pathPrefix, https, uuid, rootNodeUuid,
+					Optional.ofNullable(defaultBranch).map(BranchResponse::toJson).orElse(null),
+					Optional.ofNullable(defaultBranchParameter).map(VersioningParameters::getParameters).orElse(null),
+					convertMap(branchMap, BranchResponse::toJson),
+					convertMap(branchParamMap, VersioningParameters::getParameters),
+					new HashSet<>(rolesWithPermissions), latestTagUuid);
+		}
+
+		/**
+		 * Set the data from the instance of {@link MeshProjectData}
+		 * @param data data to set
+		 */
+		protected void setData(MeshProjectData data) {
+			this.hostname = data.hostname;
+			this.pathPrefix = data.pathPrefix;
+			this.https = data.https;
+			this.rootNodeUuid = data.rootNodeUuid;
+			this.defaultBranch = Optional.ofNullable(data.defaultBranch)
+					.map(json -> JsonUtil.readValue(json, BranchResponse.class)).orElse(null);
+			this.defaultBranchParameter = Optional.ofNullable(data.defaultBranchParameter).map(map -> {
+				VersioningParameters params = new VersioningParametersImpl();
+				params.getParameters().putAll(map);
+				return params;
+			}).orElse(null);
+			this.branchMap = convertMap(data.branchMap, json -> JsonUtil.readValue(json, BranchResponse.class));
+			this.branchParamMap = convertMap(data.branchParamMap, map -> {
+				VersioningParameters params = new VersioningParametersImpl();
+				params.getParameters().putAll(map);
+				return params;
+			});
+			this.rolesWithPermissions = new HashSet<>(data.rolesWithPermissions);
+			this.latestTagUuid = data.latestTagUuid;
 		}
 
 		/**
@@ -5655,5 +5734,88 @@ public class MeshPublisher implements AutoCloseable {
 		public static final String unescapeUrl(final String input) {
 			return UNESCAPE_URL.translate(input);
 		}
+	}
+
+	/**
+	 * Class for contentrepository specific cache for data
+	 * @param <T> type of the cached data
+	 */
+	protected static final class MeshDataCache<T> {
+		/**
+		 * Cached data per contentrepository ID
+		 */
+		protected Map<Integer, T> cached = Collections.synchronizedMap(new HashMap<>());
+
+		/**
+		 * Method to initialize the data
+		 */
+		protected java.util.function.Function<MeshRestClient, T> initMethod;
+
+		/**
+		 * Defautl value
+		 */
+		protected T defaultValue;
+
+		/**
+		 * Create instance with init method and null as default value
+		 * @param initMethod init method
+		 */
+		public MeshDataCache(java.util.function.Function<MeshRestClient, T> initMethod) {
+			this(initMethod, null);
+		}
+
+		/**
+		 * Create instance with init method and a default value
+		 * @param initMethod init method
+		 * @param defaultValue default value
+		 */
+		public MeshDataCache(java.util.function.Function<MeshRestClient, T> initMethod, T defaultValue) {
+			this.initMethod = initMethod;
+			this.defaultValue = defaultValue;
+		}
+
+		/**
+		 * Initialize the data for the given publisher, when current data is not present or the forceRefresh flag is set
+		 * @param publisher publisher
+		 * @param forceRefresh true to refresh the data in any case
+		 */
+		protected void init(MeshPublisher publisher, boolean forceRefresh) {
+			Optional.ofNullable(publisher).map(p -> p.cr).map(ContentRepository::getId).ifPresent(id -> {
+				if (forceRefresh) {
+					cached.put(id, initMethod.apply(publisher.client));
+				} else {
+					cached.computeIfAbsent(id, k -> initMethod.apply(publisher.client));
+				}
+			});
+		}
+
+		/**
+		 * Get the data for the given publisher
+		 * @param publisher publisher
+		 * @return data (may be null)
+		 */
+		protected T get(MeshPublisher publisher) {
+			return Optional.ofNullable(publisher).map(p -> p.cr).map(ContentRepository::getId)
+					.map(id -> cached.getOrDefault(id, defaultValue)).orElse(defaultValue);
+		}
+
+		/**
+		 * Set the data for the given publisher
+		 * @param publisher publisher
+		 * @param value value to set
+		 */
+		protected void set(MeshPublisher publisher, T value) {
+			Optional.ofNullable(publisher).map(p -> p.cr).map(ContentRepository::getId)
+					.ifPresent(id -> cached.put(id, value));
+		}
+	}
+
+	/**
+	 * Record of data used in {@link MeshProject}
+	 */
+	protected static record MeshProjectData(String hostname, String pathPrefix, Boolean https, String uuid,
+			String rootNodeUuid, String defaultBranch, Map<String, String> defaultBranchParameter,
+			Map<Node, String> branchMap, Map<Integer, Map<String, String>> branchParamMap,
+			Set<String> rolesWithPermissions, String latestTagUuid) {
 	}
 }

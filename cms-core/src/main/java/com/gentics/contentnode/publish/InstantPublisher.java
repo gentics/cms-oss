@@ -545,7 +545,7 @@ public class InstantPublisher {
 					result.set(new Result(ResultStatus.failed, reason));
 				})) {
 					for (MeshPublisher mp : meshPublishController.get()) {
-						if (mp.checkStatus() && mp.checkSchemasAndProjects(false, false)) {
+						if (mp.checkStatus() && mp.schemasAndProjectsOk()) {
 							for (Consumer<MeshPublisher> consumer : meshOperations) {
 								consumer.accept(mp);
 							}

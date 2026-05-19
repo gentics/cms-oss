@@ -61,7 +61,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     public readonly IFrameState = IFrameState;
 
     @Input()
-    public plugins: string[] = ['common/ui', 'common/block', 'common/contenthandler', 'common/format'];
+    public plugins: string[] = ['common/ui', 'common/block', 'common/contenthandler', 'common/format', 'common/link'];
 
     @Input()
     public settings: Partial<AlohaSettings & Record<string, any>>;
@@ -186,7 +186,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                 const editable = this.getEditable();
                 if (editable) {
                     editable.addEventListener('focusin', this.focusInHandler);
-                    editable.addEventListener('focusout', this.focusOutHandler);
+                    editable.addEventListener('blur', this.focusOutHandler);
 
                     this.changeObserver = new MutationObserver(this.inputHandler);
                     this.changeObserver.observe(editable, {
@@ -250,13 +250,16 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                 },
 
                 openDynamicModal: (config) => {
-                    return wrapOverlayHandle(() => this.overlay.openDynamicModal(config));
+                    return wrapOverlayHandle(() => this.overlay.openDynamicModal(config)
+                        .then((ctl) => ctl.value));
                 },
                 openDynamicDropdown: (config, slot) => {
-                    return wrapOverlayHandle(() => this.overlay.openDynamicDropdown(config, slot));
+                    return wrapOverlayHandle(() => this.overlay.openDynamicDropdown(config, slot)
+                        .then((ctl) => ctl.value));
                 },
                 openDialog: (config) => {
-                    return wrapOverlayHandle(() => this.overlay.openDialog(config));
+                    return wrapOverlayHandle(() => this.overlay.openDialog(config)
+                        .then((ctl) => ctl.value));
                 },
                 focusEditorTab: (tabId) => {
                     this.aloha.changeActivePageEditorTab(tabId);
@@ -382,11 +385,12 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         return this.iframe.nativeElement.contentDocument.querySelector('[contenteditable]');
     }
 
-    public focusInHandler = () => {
+    public focusInHandler = (): void => {
         if (this.isFocused) {
             return;
         }
 
+        this.aloha.clearReferences();
         this.isFocused = true;
 
         if (this.iframe?.nativeElement) {
@@ -394,7 +398,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             this.aloha.setWindow(cw);
             this.aloha.reference$.next(cw.Aloha);
             this.aloha.settings$.next(cw.Aloha.settings);
-            this.aloha.setComponents(this.components);
+            this.aloha.setComponents({ ...this.components });
             cw.Aloha.ready(() => {
                 this.aloha.ready$.next(true);
                 this.aloha.windowLoaded$.next(true);
@@ -404,18 +408,22 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         this.changeDetector.markForCheck();
     };
 
-    public focusOutHandler = () => {
+    public focusOutHandler = (): void => {
+        // Ignore focus out/blurs while the user interacts with a overlay element
+        if (this.openOverlayCount > 0) {
+            return;
+        }
+
         if (this.markWithin) {
             this.markWithin = false;
             return;
         }
 
-        // this.isFocused = false;
-        // this.aloha.clearReferences();
+        this.isFocused = false;
         this.changeDetector.markForCheck();
     };
 
-    private inputHandler = () => {
+    private inputHandler = (): void => {
         if (!this.isFocused) {
             return;
         }
@@ -427,7 +435,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         this.resizeHandler();
     };
 
-    private resizeHandler = () => {
+    private resizeHandler = (): void => {
         const editable = this.getEditable();
         if (!editable) {
             return;

@@ -1,7 +1,7 @@
 <gtx-form-element-container
     [disabled]="disabled"
     [class.active]="state === IFrameState.INITIALIZED && isFocused"
-    (click)="clickedWithin()"
+    (mousedown)="clickedWithin()"
 >
     @if (label) {
         <label (click)="focusAloha()">{{ label }}</label>

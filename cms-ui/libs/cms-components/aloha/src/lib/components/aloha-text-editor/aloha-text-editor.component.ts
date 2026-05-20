@@ -196,7 +196,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                     });
 
                     this.sizeObserver = new ResizeObserver(this.resizeHandler);
-                    this.sizeObserver.observe(editable);
+                    this.sizeObserver.observe(editable.ownerDocument.body);
                 }
 
                 this.state = IFrameState.INITIALIZED;
@@ -278,8 +278,11 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             // Now we can attach the message listener
             cw.addEventListener('message', handler);
 
-            cw.Aloha.require(['gcn/texteditor-plugin'], () => {});
             cw.Aloha.trigger('gcmsui.ready', {});
+            cw.Aloha.require(['gcn/texteditor-plugin'], (plugin) => {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                plugin.init();
+            });
         });
 
         const settings: Partial<AlohaSettings & Record<string, any>> = {
@@ -333,6 +336,10 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                 src: url('Roboto-Italic-VariableFont.ttf') format('truetype');
             }
 
+            html {
+                max-height: 100%;
+            }
+
             body {
                 display: block;
                 height: 100%;
@@ -346,6 +353,10 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
 
             .aloha-editable {
                 outline: none !important;
+
+                > p:first-child {
+                    margin-top: 0;
+                }
             }
 
             .aloha-sidebar-bar,

@@ -318,6 +318,13 @@ export class AlohaIntegrationService {
         );
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    public trigger(eventName: string, data: any): Promise<void> {
+        return this.reference$.toPromise().then((ref) => {
+            ref.trigger(eventName, data);
+        });
+    }
+
     /**
      * PubSub "sub" subscription.
      * @param eventName Event name

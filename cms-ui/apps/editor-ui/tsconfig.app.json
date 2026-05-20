@@ -2,18 +2,7 @@
     "extends": "./tsconfig.json",
     "files": ["src/main.ts", "src/polyfills.ts"],
     "include": [
-        "src/**/*.d.ts",
-        "../../libs/aloha-models/src/public-api.ts",
-        "../../libs/cms-components/src/public-api.ts",
-        "../../libs/cms-integration-api-models/src/public-api.ts",
-        "../../libs/cms-models/src/public-api.ts",
-        "../../libs/cms-rest-client/src/public-api.ts",
-        "../../libs/cms-rest-client-angular/src/public-api.ts",
-        "../../libs/cms-rest-clients-angular/src/public-api.ts",
-        "../../libs/form-generator/src/public-api.ts",
-        "../../libs/image-editor/src/public-api.ts",
-        "../../libs/mesh-models/src/public-api.ts",
-        "../../libs/ui-core/src/public-api.ts"
+        "src/**/*.ts"
     ],
     "exclude": [
         "src/test.ts",
@@ -26,19 +15,5 @@
         "**/*.cy.js",
         "**/*.cy.tsx",
         "**/*.cy.jsx"
-    ],
-    "references": [
-        {
-            "path": "../../libs/cms-rest-client"
-        },
-        {
-            "path": "../../libs/cms-rest-client-angular"
-        },
-        {
-            "path": "../../libs/aloha-models"
-        },
-        {
-            "path": "../../libs/cms-models"
-        }
     ]
 }

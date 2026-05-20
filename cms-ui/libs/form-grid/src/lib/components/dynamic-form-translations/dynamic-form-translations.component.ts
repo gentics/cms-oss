@@ -74,6 +74,16 @@ export class DynamicFormTranslationsComponent {
         this.updateData(setting, () => value);
     }
 
+    public updateAlohaValue(setting: FormSettingConfiguration, value: string | null): void {
+        this.updateData(setting, (data) => {
+            if (data == null || typeof data !== 'object') {
+                data = {};
+            }
+            (data as Record<string, string>)[this.selectedLanguage()] = value;
+            return data;
+        });
+    }
+
     public updateOptionLabel(setting: FormSettingConfiguration, index: number, value: I18nString | null): void {
         this.updateData(setting, (data) => {
             if (!Array.isArray(data)) {

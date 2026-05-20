@@ -96,9 +96,11 @@ const FormgenScreen: React.FC<{
         try {
           const i18nInstance = await initI18n(
             props.endpoint,
+            props.formId,
+            props.pluginName,
             props.translationUrl,
-            props.isFormgridPreview,
-            props.language,
+            false,
+            props.language
           );
           await i18nInstance.changeLanguage(props.language);
           if (mounted) {

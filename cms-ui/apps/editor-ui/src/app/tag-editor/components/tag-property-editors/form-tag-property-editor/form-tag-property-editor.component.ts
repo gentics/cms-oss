@@ -4,6 +4,7 @@ import {
     CmsFormTagPartProperty,
     EditableTag,
     FormInNode,
+    NodeFeature,
     TagPart,
     TagPartProperty,
     TagPropertyMap,
@@ -12,6 +13,7 @@ import {
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Subscription } from 'rxjs';
 import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper/selected-item-helper';
+import { ApplicationStateService } from '../../../../state';
 
 /**
  * Used to insert forms created with Editor UI Form Generator.
@@ -47,6 +49,7 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDest
     constructor(
         private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
+        private appState: ApplicationStateService,
     ) { }
 
     ngOnDestroy(): void {
@@ -58,6 +61,18 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor, OnDest
         this.tagPart = tagPart;
         this.readOnly = context.readOnly;
         this.updateTagProperty(tagProperty);
+
+        this.subscriptions.push(this.appState.select((state) => state.features.nodeFeatures).subscribe((nodeFeatures) => {
+            if (!context.node) {
+                this.formFeatureActive = false;
+                this.changeDetector.markForCheck();
+                return;
+            }
+
+            const currentNodeFeatures = nodeFeatures[context.node?.id] || [];
+            this.formFeatureActive = currentNodeFeatures.includes(NodeFeature.FORMS);
+            this.changeDetector.markForCheck();
+        }));
     }
 
     registerOnChange(fn: TagPropertiesChangedFn): void {

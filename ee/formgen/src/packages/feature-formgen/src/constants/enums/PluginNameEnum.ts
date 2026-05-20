@@ -1,4 +1,4 @@
 export enum PluginNameEnum {
-  CMS_FORMS = 'cms-forms',
+  CMS_FORMS = 'forms',
   ACTA_NOVA = 'acta-nova',
 }

@@ -36,7 +36,8 @@ const FormgenScreen: React.FC<{
   hasDetail?: boolean;
   pluginName: string;
   isFormgridPreview?: boolean;
-  formJson?: string;
+  previewSchema?: any;
+  previewUiSchema?: any;
   currentPage?: number;
   selectedElementId?: string;
 }> = (props) => {
@@ -204,7 +205,8 @@ const FormgenScreen: React.FC<{
           pluginName={pluginName}
           successContent={props.successContent}
           isFormgridPreview={props.isFormgridPreview}
-          formJson={props.formJson}
+          previewSchema={props.previewSchema}
+          previewUiSchema={props.previewUiSchema}
           currentPage={props.currentPage}
           selectedElementId={props.selectedElementId}
         />

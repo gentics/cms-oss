@@ -92,7 +92,8 @@ const RendererScreen: React.FC<{
   hasDetail?: boolean;
   pluginName: PluginNameEnum;
   isFormgridPreview?: boolean;
-  formJson?: string;
+  previewSchema?: any;
+  previewUiSchema?: any;
   currentPage?: number;
   selectedElementId?: string;
 }> = (props) => {
@@ -937,20 +938,9 @@ const RendererScreen: React.FC<{
     // 3) Mock load
     let responseBody: any = "";
     if (props.isFormgridPreview) {
-      const emptyForm = { uiSchema: { pages: [] }, schema: {} };
-      if (!props.formJson) {
-        responseBody = emptyForm;
-      } else {
-        try {
-          responseBody = JSON.parse(props.formJson);
-        } catch (e) {
-          console.warn('Invalid formJson from Formgrid preview', e);
-          responseBody = emptyForm;
-        }
-      }
-      formState.form = responseBody.uiSchema;
+      formState.form = props.previewUiSchema;
       formState.data = { formID: props.formId, properties: {} };
-      formState.schema = responseBody.schema;
+      formState.schema = props.previewSchema;
       formState.captchaConfig = responseBody.captchaConfig;
     } else {
       const mockJSON = await mockFormularUtils.fetchMockDefaultFormular(mockFormType);

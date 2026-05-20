@@ -79,6 +79,8 @@ export default defineConfig([
         rules: {
             '@angular-eslint/prefer-inject': 'off',
             '@angular-eslint/prefer-standalone': 'off',
+            '@angular-eslint/template/interactive-supports-focus': 'off',
+            '@angular-eslint/template/click-events-have-key-events': 'off',
 
             '@stylistic/arrow-parens': ['warn', 'always'],
             '@stylistic/brace-style': ['error', '1tbs', {

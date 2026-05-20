@@ -14,11 +14,15 @@
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
 
+        "resolveJsonModule": true,
+        "forceConsistentCasingInFileNames": true,
+        "useDefineForClassFields": false,
         "strict": false,
         "noImplicitOverride": false,
         "noPropertyAccessFromIndexSignature": false,
         "noImplicitReturns": false,
         "strictNullChecks": false,
+        "noFallthroughCasesInSwitch": false,
         "strictPropertyInitialization": false,
 
         "paths": {

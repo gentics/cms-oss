@@ -14,16 +14,5 @@
         "**/*.cy.js",
         "**/*.cy.tsx",
         "**/*.cy.jsx"
-    ],
-    "references": [
-        {
-            "path": "../../libs/cms-rest-client-angular"
-        },
-        {
-            "path": "../../libs/cms-rest-client"
-        },
-        {
-            "path": "../../libs/cms-models"
-        }
     ]
 }

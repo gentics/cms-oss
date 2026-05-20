@@ -200,7 +200,12 @@ public enum ConfigurationValue {
 	TRANSLATION_LANGUAGE_PREFERENCES("AUTOMATIC_TRANSLATION_LANG_PREF", "com.gentics.contentnode.automatic_translation.language", "automatic_translation.language"),
 
 
-	TRANSLATION_SERVICE_IMPLEMENTATION("AUTOMATIC_TRANSLATION_IMPLEMENTATION", "com.gentics.contentnode.automatic_translation.implementation", "automatic_translation.implementation")
+	TRANSLATION_SERVICE_IMPLEMENTATION("AUTOMATIC_TRANSLATION_IMPLEMENTATION", "com.gentics.contentnode.automatic_translation.implementation", "automatic_translation.implementation"),
+
+	/**
+	 * Path to the built formgen path to serve instead of the bundled/prebuilt formgen.
+	 */ 
+	FORMGEN_PATH("FORMGEN_PATH", "com.gentics.contentnode.forms.formgen.path")
 
 	;
 

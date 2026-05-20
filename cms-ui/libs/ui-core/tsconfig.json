@@ -1,7 +1,6 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "isolatedModules": true,
         "target": "es2022",
         "moduleResolution": "bundler",
         "strict": false,
@@ -9,7 +8,6 @@
         "noPropertyAccessFromIndexSignature": false,
         "noImplicitReturns": false,
         "noFallthroughCasesInSwitch": true,
-        "emitDecoratorMetadata": false,
         "module": "preserve"
     },
     "angularCompilerOptions": {

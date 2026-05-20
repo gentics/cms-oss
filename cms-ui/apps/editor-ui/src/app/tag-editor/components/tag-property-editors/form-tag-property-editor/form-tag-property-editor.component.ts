@@ -49,6 +49,7 @@ export class FormTagPropertyEditorComponent implements TagPropertyEditor {
         this.tagPart = tagPart;
         this.readOnly = context.readOnly;
         this.updateTagProperty(tagProperty);
+        console.log('form context, readonly', context.readOnly);
     }
 
     registerOnChange(fn: TagPropertiesChangedFn): void {

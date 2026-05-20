@@ -238,7 +238,6 @@
             <groupId>com.gentics.cms</groupId>
             <artifactId>formgen</artifactId>
             <type>zip</type>
-            <version>6.5.0-SNAPSHOT</version>
         </dependency>
 
         <!--Test dependencies -->

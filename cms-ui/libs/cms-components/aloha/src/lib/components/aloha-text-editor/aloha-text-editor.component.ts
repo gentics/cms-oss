@@ -17,12 +17,12 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { cancelEvent } from '@gentics/common';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 import { Store } from '@ngxs/store';
-import { isEqual, merge, mergeWith } from 'lodash-es';
+import { isEqual, mergeWith } from 'lodash-es';
 import { distinctUntilChanged, filter } from 'rxjs';
 import { AlohaStateModel } from '../../models';
+import { AlohaComponentRenderedEvent, RenderedAlohaComponent } from '../../models/internal';
 import { AlohaIntegrationService, NormalizedToolbarSizeSettings } from '../../providers/aloha-integration/aloha-integration.service';
 import { AlohaOverlayService } from '../../providers/aloha-overlay/aloha-overlay.service';
-import { AlohaComponentRenderedEvent, RenderedAlohaComponent } from '../../models/internal';
 
 enum IFrameState {
     NONE = 'none',
@@ -317,7 +317,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             });
         });
 
-        const plugins = Array.from(new Set([...REQUIRED_PLUGINS, ...(this.plugins || [])]));
+        const plugins = Array.from(new Set([...REQUIRED_PLUGINS, ...(this.plugins || DEFAULT_PLUGINS)]));
         const settings = mergeWith({}, DEFAULT_SETTINGS, this.settings, {
             readonly: false,
             sidebar: {

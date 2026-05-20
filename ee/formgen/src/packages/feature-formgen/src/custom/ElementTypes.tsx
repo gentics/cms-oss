@@ -66,7 +66,7 @@ const cmsElementTypes: IElementTypes = {
 const pluginElementTypes: IPluginElements = {
     "shared": sharedElementTypes,
     "acta-nova": anElementTypes,
-    "cms-forms": cmsElementTypes
+    "forms": cmsElementTypes
 }
 
 export const getElementTypeByPlugin = (elementType: string, pluginName: string) => {

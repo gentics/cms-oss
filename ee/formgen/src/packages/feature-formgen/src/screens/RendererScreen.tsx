@@ -704,8 +704,13 @@ const RendererScreen: React.FC<{
     if (!flowStepsList || flowStepsList.length === 0) {
       return handleMissingFormFlow();
     }
-    const flowId = responseBody.flowId ?? "standard";
-    const matchingFlow = flowStepsList.find((x: IFormFlowSteps) => x.id == flowId);
+
+    //use defined flow, or first flow in list
+    const flowId = responseBody.flowId;
+    const matchingFlow = flowId
+      ? flowStepsList?.find((x: IFormFlowSteps) => x.id === flowId)
+      : flowStepsList?.[0];
+   
     uiState.flowList = matchingFlow ? matchingFlow.steps : [];
     return null;
   };

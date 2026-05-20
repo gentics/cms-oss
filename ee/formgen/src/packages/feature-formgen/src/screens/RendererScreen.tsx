@@ -2123,16 +2123,11 @@ const RendererScreen: React.FC<{
             rawErrorMsgs={rawErrorMsgs}
             reportResult={reportResult}
           ></FlowPage>
-          {flowPageReactClass !== 'SuccessScreen' && (
+          {/* {flowPageReactClass !== 'SuccessScreen' && (
             <CMSFormCaptcha
               formState={formState}
-              config={{
-                provider: 'friendly',
-                siteKey: 'FCMMSGLUK81DK3C6',
-                mode: 'button',
-              }}
             />
-          )}
+          )} */}
         </ScrollView>
         <StickyLayerScreenPart
           updateState={updateState}

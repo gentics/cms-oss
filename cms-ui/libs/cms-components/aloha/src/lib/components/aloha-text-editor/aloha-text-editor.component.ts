@@ -17,11 +17,12 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { cancelEvent } from '@gentics/common';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 import { Store } from '@ngxs/store';
-import { isEqual } from 'lodash-es';
+import { isEqual, merge, mergeWith } from 'lodash-es';
 import { distinctUntilChanged, filter } from 'rxjs';
 import { AlohaStateModel } from '../../models';
 import { AlohaIntegrationService, NormalizedToolbarSizeSettings } from '../../providers/aloha-integration/aloha-integration.service';
 import { AlohaOverlayService } from '../../providers/aloha-overlay/aloha-overlay.service';
+import { AlohaComponentRenderedEvent, RenderedAlohaComponent } from '../../models/internal';
 
 enum IFrameState {
     NONE = 'none',
@@ -30,24 +31,29 @@ enum IFrameState {
 }
 
 const DEFAULT_SETTINGS: Partial<AlohaSettings & Record<string, any>> = {
-    readonly: false,
-    sidebar: {
-        disabled: false,
-    },
     contentHandler: {
         initEditable: ['blockelement'],
         getContents: ['blockelement', 'basic'],
         insertHtml: ['word', 'generic', 'block', 'formatless'],
     },
-    // Config so the gcn ressources load properly
-    requireConfig: {
-        paths: {
-            gcn: '../plugins/gcn/gcn/lib',
+    plugins: {
+        block: {
+            // Disabled on default, so the button doesn't show up
+            toggleDragdropGlobal: false,
+            dragdrop: false,
         },
     },
 };
 
 const EVENT_ALOHA_READY = 'aloha-ready';
+/**
+ * These plugins are required to work properly.
+ * UI: So the ui can actually be properly used within this editor.
+ * Contenthandler: So special copy/pasting handling and general cleanups happen.
+ * Block: Only needed for translations.
+ */
+const REQUIRED_PLUGINS = ['common/ui', 'common/contenthandler', 'common/block'];
+const DEFAULT_PLUGINS = ['common/format', 'common/link'];
 
 @Component({
     selector: 'gtx-aloha-text-editor',
@@ -61,7 +67,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     public readonly IFrameState = IFrameState;
 
     @Input()
-    public plugins: string[] = ['common/ui', 'common/block', 'common/contenthandler', 'common/format', 'common/link'];
+    public plugins: string[] = DEFAULT_PLUGINS;
 
     @Input()
     public settings: Partial<AlohaSettings & Record<string, any>>;
@@ -75,6 +81,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     public toolbarSettings: NormalizedToolbarSizeSettings;
 
     public components: Record<string, AlohaComponent> = {};
+    public renderedComponents: Record<string, RenderedAlohaComponent<any, any>> = {};
 
     private focusAfterInit = false;
     private markWithin = false;
@@ -133,6 +140,10 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     }
 
     public focusAloha(event?: Event): void {
+        if (this.disabled) {
+            return;
+        }
+
         if (this.state !== IFrameState.INITIALIZED) {
             this.focusAfterInit = true;
             return;
@@ -153,6 +164,14 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         this.markWithin = true;
     }
 
+    public registerRenderedComponent(event: AlohaComponentRenderedEvent<any, any>): void {
+        this.renderedComponents[event.name] = event.component;
+    }
+
+    public destroyRenderedComponent(name: string): void {
+        delete this.renderedComponents[name];
+    }
+
     protected onValueChange(): void {
         // Only allow simple strings
         this.value = this.value || '';
@@ -165,6 +184,19 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             editable.innerHTML = this.value;
         }
         this.resizeHandler();
+    }
+
+    protected override onDisabledChange(): void {
+        super.onDisabledChange();
+
+        this.markWithin = false;
+        if (this.isFocused) {
+            const editable = this.getEditable();
+            if (editable) {
+                editable.blur();
+            }
+        }
+        this.isFocused = false;
     }
 
     private initializeIframe(): void {
@@ -285,20 +317,30 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             });
         });
 
-        const settings: Partial<AlohaSettings & Record<string, any>> = {
-            ...DEFAULT_SETTINGS,
-            ...this.settings,
+        const plugins = Array.from(new Set([...REQUIRED_PLUGINS, ...(this.plugins || [])]));
+        const settings = mergeWith({}, DEFAULT_SETTINGS, this.settings, {
+            readonly: false,
+            sidebar: {
+                disabled: false,
+            },
             locale: this.i18n.getCurrentLanguage(),
             i18n: {
                 current: this.i18n.getCurrentLanguage(),
             },
-        };
+            // Config so the gcn ressources load properly
+            requireConfig: {
+                paths: {
+                    gcn: '../plugins/gcn/gcn/lib',
+                },
+            },
+        });
+
         const cssHtml = this.cssFiles.map((file) => `<link rel="stylesheet" href="${file}" />`).join('\n');
         const jsHtml = this.jsFiles
             .filter((file) => !file.endsWith('gcmsui-scripts-launcher.js'))
             .map((file) => {
                 if (file.endsWith('aloha.js')) {
-                    return `<script src="${file}" data-aloha-plugins="${this.plugins.join(',')}"></script>`;
+                    return `<script src="${file}" data-aloha-plugins="${plugins.join(',')}"></script>`;
                 } else {
                     return `<script src="${file}"></script>`;
                 }
@@ -410,6 +452,10 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
             this.aloha.reference$.next(cw.Aloha);
             this.aloha.settings$.next(cw.Aloha.settings);
             this.aloha.setComponents({ ...this.components });
+
+            // Explicitly a reference
+            this.aloha.renderedComponents = this.renderedComponents;
+
             cw.Aloha.ready(() => {
                 this.aloha.ready$.next(true);
                 this.aloha.windowLoaded$.next(true);

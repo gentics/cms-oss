@@ -57,7 +57,7 @@ gtx-form-element-container::ng-deep .box-wrapper .box-content {
         }
     }
 
-    &.state-initialized {
+    &.state-initialized:not(.disabled) {
         .content-container {
             .aloha-frame {
                 opacity: 1;
@@ -69,8 +69,15 @@ gtx-form-element-container::ng-deep .box-wrapper .box-content {
             }
         }
     }
+
+    &.disabled {
+        .content {
+            /* Should inherit, doesn't work */
+            color: $gtx-color-mid-gray;
+        }
+    }
 }
 
-gtx-form-element-container.active .toolbar {
+gtx-form-element-container.active .toolbar:not(.disabled) {
     display: flex;
 }

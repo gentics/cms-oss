@@ -18,6 +18,8 @@
                         [required]="setting.required ?? false"
                         [disabled]="disabled()"
                         [value]="settingData"
+                        [plugins]="setting.aloha?.plugins"
+                        [settings]="setting.aloha?.settings"
                         (valueChange)="updateData(setting, $event)"
                     />
                 } @else if (setting.multiline) {

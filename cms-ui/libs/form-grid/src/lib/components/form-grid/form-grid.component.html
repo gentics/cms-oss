@@ -232,7 +232,7 @@
                                     [element]="selectedElement()!"
                                     [elementConfig]="selectedElementConfiguration()!"
                                     [elementSchema]="selectedElementSchema()"
-                                    [disabled]="mode() !== FormGridEditMode.FULL"
+                                    [disabled]="mode() === FormGridEditMode.NONE"
                                     (elementChange)="upsetElementChanges($event)"
                                 ></gtx-form-element-settings>
                             </gtx-tab>

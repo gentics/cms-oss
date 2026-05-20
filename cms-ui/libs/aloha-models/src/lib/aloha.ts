@@ -18,7 +18,7 @@ export interface AlohaSettings {
     locale: string;
     plugins: {
         block?: BlockPluginSettings;
-        format: FormatPluginSettings;
+        format?: FormatPluginSettings;
         /** Which plugins are to be loaded */
         load?: string[];
         [key: string]: any;
@@ -103,6 +103,7 @@ export interface BlockPluginSettings {
     config?: BlockPluginEditableConfig;
     editables?: Record<string, BlockPluginEditableConfig>;
     rootTags?: string[];
+    toggleDragdropGlobal?: boolean;
 }
 
 export interface BlockPluginEditableConfig {

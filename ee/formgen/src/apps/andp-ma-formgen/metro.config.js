@@ -1,15 +1,19 @@
 const { getDefaultConfig } = require("expo/metro-config");
+const fs = require("fs");
 const path = require("path");
 const { resolve } = require("metro-resolver");
 
 const projectRoot = __dirname;
 const monorepoRoot = path.resolve(projectRoot, "../..");
 
+const isProduction = process.env.NODE_ENV === "production";
+const translationsPath = path.resolve(monorepoRoot, "./translations");
+const hasTranslations = fs.existsSync(translationsPath);
+
 const config = getDefaultConfig(projectRoot);
 
 config.watchFolders = [
   monorepoRoot,
-  path.resolve(monorepoRoot, "../cms/packages-common/andp/files/translations")
 ];
 
 config.resolver.nodeModulesPaths = [

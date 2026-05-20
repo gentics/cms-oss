@@ -12,14 +12,12 @@ import java.io.IOException;
 
 public class FormFeatureFilter extends HttpFilter {
 
-    public static final String FILTER_NAME = "Gentics CMS Forms Feature Filter";
-
     @Override
     protected void doFilter(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws IOException, ServletException {
         final var featureIsEnabled = NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS);
 
         if (!featureIsEnabled) {
-            res.sendError(400, "Forms Feature not enabled");
+            res.sendError(404, "Forms Feature not enabled");
             return;
         }
 

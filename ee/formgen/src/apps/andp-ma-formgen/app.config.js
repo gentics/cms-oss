@@ -16,6 +16,7 @@ export default {
     },
     experiments: {
       tsconfigPaths: true,
+      baseUrl: process.env.APP_BASE_URL || '/',
     },
     extra: {
       devMode: process.env.DEV_MODE === "true",

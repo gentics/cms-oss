@@ -127,6 +127,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
+                                    <env key="APP_BASE_URL" value="/formgen" />
                                     <arg line="run build" />
                                 </exec>
                             </target>

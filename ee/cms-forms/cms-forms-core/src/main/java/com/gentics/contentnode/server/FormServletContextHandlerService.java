@@ -1,7 +1,9 @@
 package com.gentics.contentnode.server;
 
+import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.log.NodeLogger;
 import jakarta.servlet.DispatcherType;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.ee10.servlet.ResourceServlet;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHandler;
@@ -20,16 +22,18 @@ public class FormServletContextHandlerService implements ServletContextHandlerSe
 
     @Override
     public void init(ServletContextHandler context) {
-        context.addServlet(getWebrootResourceServlet("formgen"), "/formgen/*");
-        ServletHandler servletHandler = context.getServletHandler();
+        String fsPath = ConfigurationValue.FORMGEN_PATH.get();
+        if (StringUtils.isBlank(fsPath)) {
+            context.addServlet(getWebrootResourceServlet("formgen"), "/formgen/*");
+        } else {
+            context.addServlet(getStaticFileServletForPath(fsPath), "/formgen/*");
+        }
+
         try {
-            addFilter(
-                    servletHandler,
-                    FormFeatureFilter.FILTER_NAME,
+            context.addFilter(
                     FormFeatureFilter.class,
-                    "/formgen/**",
-                    EnumSet.of(DispatcherType.REQUEST),
-                    (holder) -> {}
+                    "/formgen/*",
+                    EnumSet.of(DispatcherType.REQUEST)
             );
         } catch (Exception e) {
             log.error("Error while adding Forms filters: " + e.getMessage(), e);

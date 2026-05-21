@@ -370,7 +370,7 @@ export function validateField(
   }
 
   // do not validate invisible fields and readonly fields
-  if (!elemState?.visible || !elemState?.editable) {
+  if (!elemState || elemState.visible === false || elemState.editable === false) {
     return { isValid: true, errorMessage: '' };
   }
 
@@ -469,7 +469,7 @@ export function areSubElementsValid(
       // eslint-disable-next-line
       res.forEach((foundElem: any) => {
         // do not check items or its children which are not visible
-        if (!foundElem?.value?.visible) {
+        if (foundElem?.value?.visible === false) {
           return true;
         }
         // TODO add more abort scenarios

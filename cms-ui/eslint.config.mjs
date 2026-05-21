@@ -79,8 +79,6 @@ export default defineConfig([
         rules: {
             '@angular-eslint/prefer-inject': 'off',
             '@angular-eslint/prefer-standalone': 'off',
-            '@angular-eslint/template/interactive-supports-focus': 'off',
-            '@angular-eslint/template/click-events-have-key-events': 'off',
 
             '@stylistic/arrow-parens': ['warn', 'always'],
             '@stylistic/brace-style': ['error', '1tbs', {
@@ -369,6 +367,19 @@ export default defineConfig([
         files: ['**/*.module.ts'],
         rules: {
             '@typescript-eslint/no-extraneous-class': 'off',
+        },
+    },
+    {
+        files: ["**/*.html"],
+        rules: {
+            '@angular-eslint/template/interactive-supports-focus': 'off',
+            '@angular-eslint/template/click-events-have-key-events': 'off',
+            "@angular-eslint/template/eqeqeq": [
+                "error",
+                {
+                    "allowNullOrUndefined": true
+                }
+            ]
         },
     },
     {

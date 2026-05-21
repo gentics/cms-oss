@@ -2,13 +2,15 @@ import {
     AfterViewInit,
     ChangeDetectionStrategy,
     Component,
+    computed,
     effect,
     ElementRef,
     input,
+    model,
     signal,
     ViewChild,
 } from '@angular/core';
-import { FormSchema, FormUISchema } from '@gentics/cms-models';
+import { FormPropertyData, FormSchema, FormUISchema } from '@gentics/cms-models';
 
 interface IFeatures {
     [key: string]: IFeaturesConfig & IFeatureUploadConstraintOptions;
@@ -30,7 +32,7 @@ type FormgridPreviewData = {
     uiSchema?: FormUISchema;
     features?: IFeatures;
     language?: string;
-    prefillContent?: string;
+    prefillContent?: Record<string, FormPropertyData>;
     currentPage?: number;
     selectedElementId?: string;
 };
@@ -41,15 +43,27 @@ interface ExtendedWindow extends Window {
 }
 
 const PREVIEW_DATA_EVENT_NAME = 'preview-data-change';
+const PREVIEW_ELEMENT_SELECT_EVENT_NAME = 'preview-select-element';
 const PREVIEW_CONNECTION_EVENT_NAME = 'preview-connect';
+const PREVIEW_PAGE_CHANGE_EVENT_NAME = 'preview-change-page';
 
 interface InterchangeEvent {
     eventType: string;
 }
 
+interface PreviewElementSelectEvent extends InterchangeEvent {
+    eventType: typeof PREVIEW_ELEMENT_SELECT_EVENT_NAME;
+    elementId: string;
+}
+
 interface PreviewDataChangeEvent extends InterchangeEvent {
     eventType: typeof PREVIEW_DATA_EVENT_NAME;
     data: Partial<FormgridPreviewData>;
+}
+
+interface PreviewPageChangeEvent extends InterchangeEvent {
+    eventType: typeof PREVIEW_PAGE_CHANGE_EVENT_NAME;
+    pageIndex: number;
 }
 
 @Component({
@@ -61,27 +75,74 @@ interface PreviewDataChangeEvent extends InterchangeEvent {
 })
 export class FormPreviewComponent implements AfterViewInit {
 
+    /* INPUTS / OUTPUTS
+     * ===================================================================== */
+
+    public readonly formId = input.required<number>();
     public readonly schema = input.required<FormSchema>();
     public readonly uiSchema = input.required<FormUISchema>();
-    /** TODO: Move language select in here */
-    public readonly language = input.required<string>();
-    public readonly pageIndex = input.required<number>();
+    public readonly languages = input.required<string[]>();
+
+    public readonly pageIndex = model.required<number>();
+    public readonly activeLanguage = model.required<string>();
+    public readonly selectedElementId = model<string>();
+
+    /* LOCAL STATE
+     * ===================================================================== */
+
+    public readonly loading = signal(true);
+    public readonly hasError = signal(false);
+    public readonly initialized = signal(false);
 
     @ViewChild('iframe')
     public iframe: ElementRef<HTMLIFrameElement>;
 
-    private readonly initialized = signal(false);
+    private readonly prefill = computed<Record<string, FormPropertyData>>(() => {
+        const propData: Record<string, FormPropertyData> = {};
+        const raw = this.schema().properties || {};
+
+        for (const [id, def] of Object.entries(raw)) {
+            propData[id] = {
+                editable: false,
+                visible: true,
+                name: def.name,
+                value: def.formGridOptions?.defaultValue,
+            };
+        }
+
+        return propData;
+    });
+
+    /* CONSTRUCTOR
+     * ===================================================================== */
 
     constructor() {
         effect(() => {
-            if (!this.initialized) {
+            const data = this.createPreviewData();
+            if (!this.initialized()) {
                 return;
             }
-            this.postPreviewDataEvent();
+
+            this.postPreviewDataEvent(data);
         });
     }
 
+    /* LIFECYCLE HOOKS
+     * ===================================================================== */
+
     public ngAfterViewInit(): void {
+        this.iframe.nativeElement.addEventListener('error', () => {
+            this.loading.set(false);
+            this.hasError.set(true);
+
+            const nat = this.iframe.nativeElement;
+            const win = nat.contentWindow;
+            win.addEventListener('unload', () => {
+                this.loading.set(true);
+                this.initialized.set(false);
+            });
+        });
+
         this.iframe.nativeElement.addEventListener('load', () => {
             const nat = this.iframe.nativeElement;
             const win = nat.contentWindow;
@@ -90,11 +151,11 @@ export class FormPreviewComponent implements AfterViewInit {
                 win.location.toString() === 'about:blank'
                 || nat.contentDocument.readyState !== 'complete'
             ) {
-                console.log('empty load');
                 return;
             }
 
-            console.log('iframe loaded');
+            this.loading.set(false);
+            this.hasError.set(false);
 
             try {
                 (win as ExtendedWindow).formPreviewData = this.createPreviewData();
@@ -102,17 +163,27 @@ export class FormPreviewComponent implements AfterViewInit {
                 // Ignore err
             }
 
+            win.addEventListener('unload', () => {
+                this.loading.set(true);
+                this.initialized.set(false);
+            });
+
             win.addEventListener('message', (event) => {
                 const data = event.data as InterchangeEvent;
                 if (data == null || typeof data !== 'object' || typeof data.eventType !== 'string') {
                     return;
                 }
 
-                if (data.eventType === PREVIEW_CONNECTION_EVENT_NAME) {
-                    console.log('connection established!');
-                    this.initialized.set(true);
-                    this.postPreviewDataEvent();
-                    return;
+                switch (data.eventType) {
+                    case PREVIEW_CONNECTION_EVENT_NAME:
+                        this.initialized.set(true);
+                        return;
+                    case PREVIEW_ELEMENT_SELECT_EVENT_NAME:
+                        this.selectedElementId.set((data as PreviewElementSelectEvent).elementId);
+                        return;
+                    case PREVIEW_PAGE_CHANGE_EVENT_NAME:
+                        this.pageIndex.set((data as PreviewPageChangeEvent).pageIndex);
+                        return;
                 }
             });
         });
@@ -122,23 +193,23 @@ export class FormPreviewComponent implements AfterViewInit {
         return {
             schema: this.schema(),
             uiSchema: this.uiSchema(),
-            language: this.language(),
+            language: this.activeLanguage(),
             currentPage: this.pageIndex(),
-            formId: 'foobar123',
-            features: {},
+            formId: `${this.formId()}`,
+            selectedElementId: this.selectedElementId(),
+            prefillContent: this.prefill(),
         };
     }
 
-    private postPreviewDataEvent(): void {
+    private postPreviewDataEvent(data: FormgridPreviewData): void {
         const win = this.iframe?.nativeElement?.contentWindow;
         if (!win) {
             return;
         }
         const event: PreviewDataChangeEvent = {
             eventType: PREVIEW_DATA_EVENT_NAME,
-            data: this.createPreviewData(),
+            data: data,
         };
-        console.log('sending preview data event');
         win.postMessage(event, '*');
     }
 }

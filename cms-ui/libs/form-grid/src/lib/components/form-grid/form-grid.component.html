@@ -154,10 +154,14 @@
 
         <main class="preview-main">
             <gtx-form-preview
+                [formId]="formId()"
                 [schema]="schema()"
                 [uiSchema]="uiSchema()"
-                [language]="languages()[0]"
-                [pageIndex]="pageIndex()"
+                [languages]="languages()"
+                [(pageIndex)]="pageIndex"
+                [selectedElementId]="selectedElementId()"
+                (selectedElementIdChange)="setSelectedElement($event)"
+                [(activeLanguage)]="activeLanguage"
             />
         </main>
 
@@ -255,6 +259,7 @@
                                     (elementSchemaChange)="updateElementSchema($event)"
                                     [mode]="mode()"
                                     [languages]="languages()"
+                                    [(activeLanguage)]="activeLanguage"
                                     (hasMissingTranslationsChange)="hasMissingTranslations.set($event)"
                                 ></gtx-form-element-translation>
                             </gtx-tab>

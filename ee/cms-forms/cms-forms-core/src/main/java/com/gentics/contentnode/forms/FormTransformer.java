@@ -973,6 +973,7 @@ public class FormTransformer {
 			switch (this) {
 			case publish:
 				data.put("cms_id", form.getId());
+				data.put(FormDataUtils.NAME, form.getName());
 				data.put(FormDataUtils.TYPE, form.getFormType());
 				data.put(FormDataUtils.SUBMIT_ONCE, typeConfig.submitOnce);
 				// schema.properties is required in the plugin

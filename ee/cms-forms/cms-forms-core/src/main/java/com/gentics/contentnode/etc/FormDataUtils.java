@@ -62,6 +62,10 @@ public class FormDataUtils {
 	 * Name of the properties property
 	 */
 	public final static String PROPERTIES = "properties";
+	/**
+	 * Name of the name property
+	 */
+	public final static String NAME = "name";
 
 	/**
 	 * Name of the type property

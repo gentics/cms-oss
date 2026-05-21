@@ -1,27 +1,36 @@
 import { Platform } from "react-native";
 
-const FORMGRID_ELEMENT_SELECTED_EVENT = 'andp:formgen/elementSelected' as const;
+const PREVIEW_ELEMENT_SELECT_EVENT_NAME = 'preview-select-element';
+const PREVIEW_PAGE_CHANGE_EVENT_NAME = 'preview-change-page';
 
-export type FormgridElementSelectedDetail = {
+interface PreviewElementSelectEvent {
+  eventType: typeof PREVIEW_ELEMENT_SELECT_EVENT_NAME;
   elementId: string;
-  jsonPath: string;
-  source: 'pointer';
-};
+}
 
-export default function emitSelected(elementId: string, jsonPath: string) {
+interface PreviewPageChangeEvent {
+  eventType: typeof PREVIEW_PAGE_CHANGE_EVENT_NAME;
+  pageIndex: number;
+}
+
+export function emitSelected(elementId: string): void {
   if (Platform.OS !== 'web') return;
   if (typeof window === 'undefined') return;
 
-  const detail: FormgridElementSelectedDetail = {
+  const event: PreviewElementSelectEvent = {
+    eventType: PREVIEW_ELEMENT_SELECT_EVENT_NAME,
     elementId,
-    jsonPath,
-    source: 'pointer',
-  };
+  }
+  window.postMessage(event, '*');
+}
 
-  window.dispatchEvent(
-    new CustomEvent<FormgridElementSelectedDetail>(
-      FORMGRID_ELEMENT_SELECTED_EVENT,
-      { detail },
-    ),
-  );
+export function emitPageChange(pageIndex: number): void {
+  if (Platform.OS !== 'web') return;
+  if (typeof window === 'undefined') return;
+
+  const event: PreviewPageChangeEvent = {
+    eventType: PREVIEW_PAGE_CHANGE_EVENT_NAME,
+    pageIndex,
+  };
+  window.postMessage(event, '*');
 }

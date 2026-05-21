@@ -1,20 +1,20 @@
-import React, { Suspense, useState, useEffect, useMemo } from 'react';
-import { Platform } from 'react-native';
-import baseTheme, { baseStyles } from '../styles/common/common-style';
-import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
-import RendererScreen from './RendererScreen';
-import { IFeatures, IFormFlowData, ISummaryDetailsUser } from '../types/interfaces';
-import { RestService } from '../services/RestService';
+import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
 import {
   LoadingScreen,
 } from '@andp/core/src/components/LoadingComponents';
 import { initI18n } from '@andp/core/src/services/i18n';
-import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
+import theme from '@andp/core/src/styles/theme';
+import { TFunction } from 'i18next';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import FormgenScreenErrorOverlay from '../components/overlays/childOverlays/FormgenScreenErrorOverlay';
 import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
-import { TFunction } from 'i18next';
-import theme from '@andp/core/src/styles/theme';
-import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
+import { RestService } from '../services/RestService';
+import { baseStyles } from '../styles/common/common-style';
+import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
+import { IDataFields, IFeatures, IForm, IFormFlowData, ISchema, ISummaryDetailsUser } from '../types/interfaces';
+import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
+import RendererScreen from './RendererScreen';
 
 const FormgenScreen: React.FC<{
   formId: string;
@@ -28,7 +28,7 @@ const FormgenScreen: React.FC<{
   endpoint: string;
   translationUrl?: string; // for loading translations inside webroot of mesh plugin (for example boxed solution)
   successContent?: string;
-  prefillContent?: string;
+  prefillContent?: IDataFields;
   userData?: ISummaryDetailsUser;
   features?: IFeatures;
   t?: TFunction;
@@ -36,8 +36,8 @@ const FormgenScreen: React.FC<{
   hasDetail?: boolean;
   pluginName: string;
   isFormgridPreview?: boolean;
-  previewSchema?: any;
-  previewUiSchema?: any;
+  previewSchema?: ISchema;
+  previewUiSchema?: IForm;
   currentPage?: number;
   selectedElementId?: string;
 }> = (props) => {
@@ -50,7 +50,6 @@ const FormgenScreen: React.FC<{
   const pluginName = (props.pluginName) as PluginNameEnum;
 
   const restService = new RestService(props.endpoint, pluginName, props.apiToken);
-
 
   useEffect(() => {
     if(pluginName == PluginNameEnum.ACTA_NOVA){
@@ -178,6 +177,9 @@ const FormgenScreen: React.FC<{
     }
     if(pluginName == PluginNameEnum.CMS_FORMS && props.config && t){
         return true;
+    }
+    if (props.isFormgridPreview) {
+      return props.previewUiSchema != null && props.previewSchema != null;
     }
     return false;
   }

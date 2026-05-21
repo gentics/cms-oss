@@ -1,23 +1,22 @@
-import '@expo/metro-runtime';
-import { View, Text } from 'react-native';
-import theme from '@andp/core/src/styles/theme';
-import FormgenScreen from '@andp/feature-formgen/src/screens/FormgenScreen';
-import { useEffect, useReducer, useState } from 'react';
-import * as jsonConfig from './formgen.config.json';
-import Constants from 'expo-constants';
-import { IFeatures, IFormFlowData, ISummaryDetailsUser } from '@andp/feature-formgen/src/types/interfaces';
-import { Platform } from 'react-native';
 import { fontFamilies as commonFontFamilies } from '@andp/core/src/styles/common/font-config';
 import { fontFamilies as customFontFamilies } from '@andp/core/src/styles/custom/font-config';
+import theme from '@andp/core/src/styles/theme';
+import FormgenScreen from '@andp/feature-formgen/src/screens/FormgenScreen';
+import { IDataFields, IFeatures, IForm, IFormFlowData, ISchema, ISummaryDetailsUser } from '@andp/feature-formgen/src/types/interfaces';
+import '@expo/metro-runtime';
+import Constants from 'expo-constants';
 import { useFonts } from 'expo-font';
+import { useEffect, useReducer, useState } from 'react';
+import { Platform, Text, View } from 'react-native';
+import * as jsonConfig from './formgen.config.json';
 
 export type FormgridPreviewData = {
   formId?: string;
-  schema?: any;
-  uiSchema?: any;
+  schema?: ISchema;
+  uiSchema?: IForm;
   features?: IFeatures;
   language?: string;
-  prefillContent?: string;
+  prefillContent?: IDataFields;
   currentPage?: number;
   selectedElementId?: string;
 };
@@ -39,9 +38,7 @@ export default function App() {
   let dynamicPreview = false;
 
   if (Platform.OS === 'web') {
-    console.log('is web')
     const queryParams = new URLSearchParams(window.location.search);
-    console.log('params', queryParams, window.location.search);
     dynamicPreview = queryParams.get('preview') === 'true';
 
     // Load initial/static preview data from 
@@ -50,8 +47,6 @@ export default function App() {
     }
   }
 
-  console.log('is dynamic preview', dynamicPreview, initialPreviewData);
-
   const [previewData, dispatch] = useReducer((state, action: Partial<FormgridPreviewData>) => {
     return {
       ...state,
@@ -59,6 +54,7 @@ export default function App() {
     };
   }, initialPreviewData);
 
+  const [previewConnected, setPreviewConnected] = useState(false);
   const [formgenConfig, setFormgenConfig] = useState<IFormFlowData>(jsonConfig);
   const isFormgridPreview = initialPreviewData != null || dynamicPreview;
   const isDevMode = Constants.manifest.extra.devMode;
@@ -70,31 +66,30 @@ export default function App() {
   const [initialInit, setInit] = useState<boolean>(false);
   const [isLoggedIn, setLoggedIn] = useState<boolean>(false);
   const [successContent, setSuccessContent] = useState<string>('');
-  const [prefillContent, setPrefillContent] = useState<string>('');
+  const [prefillContent, setPrefillContent] = useState<IDataFields>();
   const [userData, setUserData] = useState<ISummaryDetailsUser>();
   const [translationUrl, setTranslationUrl] = useState<string>('');
   const [pluginName, setPluginName] = useState<string>('');
 
-  if (dynamicPreview) {
+  if (dynamicPreview && !previewConnected) {
     window.addEventListener('message', (event) => {
-      console.log('received message from parent');
       // TODO: Verify origin?
 
       const mapped = event.data as PreviewDataChangeEvent;
       if (mapped != null && mapped.eventType === PREVIEW_DATA_EVENT_NAME && mapped.data != null) {
-        console.log('is change data', mapped.data);
         dispatch(mapped.data);
 
         setFormId(mapped.data.formId);
         setLanguage(mapped.data.language);
-        setPrefillContent(mapped.data.prefillContent || '');
+        setPrefillContent(mapped.data.prefillContent);
       }
     });
 
-    console.log('sending connect message!');
     window.postMessage({
       eventType: 'preview-connect',
     }, '*');
+
+    setPreviewConnected(true);
   }
 
   if (Platform.OS !== 'web' || isDevMode || isMockForm) {

@@ -36,7 +36,7 @@ import { formElementWrapperStyles as customFormElementWrapperStyles } from '../.
 import { mergeStyles } from '@andp/core/src/AndpUtils';
 import theme, { formElementWrapperTheme } from '@andp/core/src/styles/theme';
 import CustomTooltip from './CustomTooltip';
-import emitSelected from './formgridPreviewBridge';
+import {emitSelected} from './formgridPreviewBridge';
 if (Platform.OS === 'web') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   require('../../../styles/custom/custom-style.css');
@@ -162,24 +162,15 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
   }
 
   //formgrid
-  const handleSelectPointerDownCapture = (e: any) => {
+  const handleSelectPointerDown = (e: any) => {
     if (Platform.OS !== 'web') return;
-
+    
+    setIsWrapperPressed(true);
     // Ensure selection event fires even if something inside prevents default later
     e?.stopPropagation?.();
 
-    emitSelected(props.objectId, props.jsonPath);
+    emitSelected(props.objectId);
   };
-
-  
-
-  const webSelectionProps =
-    isPreview && Platform.OS === 'web'
-      ? ({
-          'data-formgen-element-id': props.objectId,
-          onPointerDownCapture: handleSelectPointerDownCapture,
-        } as any)
-      : {};
 
   const hasIcons = !!(
     (loading && !props.hideLoading) ||
@@ -354,12 +345,13 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
   const previewWebInteractionProps =
     isPreview && Platform.OS === 'web'
       ? ({
+          'data-formgen-element-id': props.objectId,
           onMouseEnter: handleWrapperHoverIn,
           onMouseLeave: () => {
             handleWrapperHoverOut();
             setIsWrapperPressed(false);
           },
-          onPointerDown: () => setIsWrapperPressed(true),
+          onPointerDown: (e: any) => handleSelectPointerDown(e),
           onPointerUp: () => setIsWrapperPressed(false),
           onPointerCancel: () => setIsWrapperPressed(false),
         } as any)
@@ -389,7 +381,6 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
         },
       ]}
       {...previewWebInteractionProps}
-      {...webSelectionProps}
     >
       {wrapperInner}
     </View>

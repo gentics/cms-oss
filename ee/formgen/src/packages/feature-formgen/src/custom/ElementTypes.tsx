@@ -71,7 +71,7 @@ const pluginElementTypes: IPluginElements = {
 
 export const getElementTypeByPlugin = (elementType: string, pluginName: string) => {
     let sharedElementTypes = pluginElementTypes['shared'];
-    let specificElementTypes = pluginElementTypes[pluginName];
+    let specificElementTypes = pluginElementTypes[pluginName] || {};
     // Der specific type wird bevorzugt
     return specificElementTypes[elementType] || sharedElementTypes[elementType];
 }

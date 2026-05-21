@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.forms.FormTransformer;
 import com.gentics.contentnode.rest.model.formtype.BlockConfig;
+import com.gentics.contentnode.rest.model.formtype.Blocks;
 
 /**
  * Test cases for merging ui-schema changes with modifications made with formgrid
@@ -36,10 +37,10 @@ public class UiSchemaMergeTest {
 	@Parameters(name = "{index}: test {0}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = List
-				.of(/* "empty", "add_element", "remove_element", "reorder_elements", "reorder_elements_with_block",
+				.of("empty", "add_element", "remove_element", "reorder_elements", "reorder_elements_with_block",
 						"move_to_page", "change_label", "change_description", "aggregate/add_element",
 						"aggregate/change_description", "aggregate/change_label", "aggregate/remove_element",
-						"aggregate/reorder_elements", "aggregate/reorder_elements_with_block", */ "complex")
+						"aggregate/reorder_elements", "aggregate/reorder_elements_with_block", "complex")
 				.stream().map(name -> new Object[] { name }).collect(Collectors.toList());
 		return data;
 	}
@@ -47,7 +48,7 @@ public class UiSchemaMergeTest {
 	@BeforeClass
 	public static void setupOnce() {
 		config = new FormTypeConfiguration(Map.of(), "test_plugin");
-		config.blocks = Map.of("spacer", new BlockConfig(Map.of()));
+		config.blocks = new Blocks(Map.of("spacer", new BlockConfig(Map.of())));
 	}
 
 	@Parameter(0)

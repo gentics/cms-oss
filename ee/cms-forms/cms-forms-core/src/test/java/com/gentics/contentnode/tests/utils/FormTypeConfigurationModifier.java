@@ -16,6 +16,7 @@ import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.forms.Migration;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.rest.model.formtype.StringSetting;
 import com.gentics.contentnode.testutils.ConfigModifier;
@@ -48,7 +49,7 @@ public class FormTypeConfigurationModifier implements ConfigModifier {
 		stringSetting.richContent = true;
 		stringControl.settings = Arrays.asList(stringSetting);
 
-		formsConfig.controls = Map.of("string", stringControl);
+		formsConfig.controls = new Controls(Map.of("string", stringControl));
 
 		try {
 			formsConfig.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);

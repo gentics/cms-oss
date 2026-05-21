@@ -40,6 +40,7 @@ import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.PublishAsType;
 import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
 import com.gentics.contentnode.rest.model.formtype.ReferenceType;
@@ -300,7 +301,7 @@ public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> i
 				Collections.singleton(ReferenceType.page), PublishAsType.url);
 		referenceSetting.backend = true;
 		stringControl.settings = Arrays.asList(referenceSetting);
-		formsConfig.controls = Map.of("string", stringControl);
+		formsConfig.controls = new Controls(Map.of("string", stringControl));
 
 		formTypeConfiguration.put(GENERIC_TYPE, formsConfig);
 

@@ -1,0 +1,15 @@
+<div class="pm-toast-container" aria-live="polite" aria-atomic="false">
+  <div
+    *ngFor="let toast of toasts$ | async; trackBy: trackById"
+    class="pm-toast"
+    [ngClass]="'pm-toast--' + toast.kind"
+    role="status">
+    <span class="pm-toast__icon" [attr.data-kind]="toast.kind">{{ iconFor(toast) }}</span>
+    <span class="pm-toast__message">{{ toast.message }}</span>
+    <button
+      type="button"
+      class="pm-toast__close"
+      [attr.aria-label]="'COMMON.CLOSE' | gtxTranslate"
+      (click)="onDismiss(toast.id)">×</button>
+  </div>
+</div>

@@ -1,0 +1,30 @@
+:host { display: contents; }
+
+.pm-toast__icon {
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+
+  &[data-kind='success'] { color: var(--pm-color-success); }
+  &[data-kind='error']   { color: var(--pm-color-danger); }
+  &[data-kind='warning'] { color: var(--pm-color-warning); }
+  &[data-kind='info']    { color: var(--pm-color-primary); }
+}
+
+.pm-toast__message {
+  flex: 1;
+  color: var(--pm-color-text);
+}
+
+.pm-toast__close {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--pm-color-text-disabled);
+  cursor: pointer;
+  padding: 0 4px;
+
+  &:hover { color: var(--pm-color-text); }
+}

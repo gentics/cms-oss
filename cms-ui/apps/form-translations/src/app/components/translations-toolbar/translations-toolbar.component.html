@@ -1,0 +1,51 @@
+<div class="toolbar">
+  <label class="toolbar__search">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input
+      type="text"
+      [value]="search"
+      (input)="onSearchInput($event)"
+      [placeholder]="'TOOLBAR.SEARCH_PLACEHOLDER' | gtxTranslate" />
+  </label>
+
+  <div class="toolbar__filter" role="tablist">
+    <button
+      type="button"
+      [class.is-active]="filter === 'all'"
+      (click)="onFilter('all')">
+      {{ 'TOOLBAR.FILTER_ALL' | gtxTranslate }}
+    </button>
+    <button
+      type="button"
+      [class.is-active]="filter === 'incomplete'"
+      (click)="onFilter('incomplete')">
+      {{ 'TOOLBAR.FILTER_INCOMPLETE' | gtxTranslate }}
+    </button>
+  </div>
+
+  <div class="toolbar__spacer"></div>
+
+  <div class="toolbar__legend">
+    <span class="toolbar__legend-item">
+      <span class="toolbar__swatch toolbar__swatch--saved"></span>
+      {{ 'TOOLBAR.LEGEND_SAVED' | gtxTranslate }}
+    </span>
+    <span class="toolbar__legend-item">
+      <span class="toolbar__swatch toolbar__swatch--dirty"></span>
+      {{ 'TOOLBAR.LEGEND_DIRTY' | gtxTranslate }}
+    </span>
+    <span class="toolbar__legend-item">
+      <span class="toolbar__swatch toolbar__swatch--empty"></span>
+      {{ 'TOOLBAR.LEGEND_EMPTY' | gtxTranslate }}
+    </span>
+  </div>
+
+  <div class="toolbar__info">
+    {{ 'TOOLBAR.COUNT' | gtxTranslate:{ shown: shown, total: total } }}
+  </div>
+</div>

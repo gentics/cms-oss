@@ -1,0 +1,22 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "moduleResolution": "bundler",
+        "module": "preserve"
+    },
+    "files": [],
+    "include": [],
+    "angularCompilerOptions": {
+        "annotateForClosureCompiler": true,
+        "skipTemplateCodegen": false,
+        "strictMetadataEmit": true,
+        "strictTemplates": true,
+        "strictInjectionParameters": true,
+        "enableResourceInlining": false
+    },
+    "references": [
+        {
+            "path": "./tsconfig.app.json"
+        }
+    ]
+}

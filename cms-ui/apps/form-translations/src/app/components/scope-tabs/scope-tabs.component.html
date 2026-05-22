@@ -1,0 +1,17 @@
+<nav class="scope-tabs" role="tablist">
+  <button
+    *ngFor="let tab of tabs; trackBy: trackById"
+    type="button"
+    role="tab"
+    class="scope-tabs__tab"
+    [class.scope-tabs__tab--active]="tab.scope.id === activeScopeId"
+    [attr.aria-selected]="tab.scope.id === activeScopeId"
+    (click)="onClick(tab.scope.id)">
+    <span class="scope-tabs__label">{{ tab.scope.label }}</span>
+    <span class="scope-tabs__count">{{ tab.translatedCount }}/{{ tab.totalCount }}</span>
+    <span
+      *ngIf="tab.hasDirty"
+      class="pm-dirty-indicator"
+      title="Ungespeicherte Änderungen"></span>
+  </button>
+</nav>

@@ -1,0 +1,50 @@
+<div class="table-wrapper" *ngIf="keys.length > 0; else empty">
+  <table class="translations">
+    <thead>
+      <tr>
+        <th class="col-key">{{ 'TABLE.HEADER_PLACEHOLDER' | gtxTranslate }}</th>
+        <th class="col-lang" *ngFor="let lang of languages; trackBy: trackLang">
+          {{ lang.name }}
+          <span class="lang-meta">({{ lang.code }})</span>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let key of keys; trackBy: trackKey">
+        <td class="col-key">
+          <span class="placeholder-key">{{ key }}</span>
+        </td>
+        <td *ngFor="let lang of languages; trackBy: trackLang">
+          <div
+            class="cell-input-wrapper"
+            [class.is-dirty]="getCellState(key, lang.code) === 'dirty'"
+            [class.is-empty]="getCellState(key, lang.code) === 'empty'">
+            <input
+              type="text"
+              [value]="getValue(key, lang.code)"
+              [placeholder]="key"
+              (input)="onInput(key, lang.code, $event)" />
+            <span class="cell-indicator" aria-hidden="true">
+              <ng-container [ngSwitch]="getCellState(key, lang.code)">
+                <ng-container *ngSwitchCase="'dirty'">●</ng-container>
+                <ng-container *ngSwitchCase="'empty'">—</ng-container>
+              </ng-container>
+            </span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<ng-template #empty>
+  <div class="pm-empty-state">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <h3>{{ 'TABLE.EMPTY_TITLE' | gtxTranslate }}</h3>
+    <p>{{ 'TABLE.EMPTY_DESC' | gtxTranslate }}</p>
+  </div>
+</ng-template>

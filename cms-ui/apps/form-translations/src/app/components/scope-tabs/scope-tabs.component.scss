@@ -1,0 +1,53 @@
+:host { display: block; }
+
+.scope-tabs {
+  background: var(--pm-color-surface);
+  border-bottom: 1px solid var(--pm-color-border);
+  padding: 0 var(--pm-spacing-lg);
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.scope-tabs__tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: var(--pm-spacing-md);
+  font-family: inherit;
+  font-size: var(--pm-font-size-md);
+  color: var(--pm-color-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pm-spacing-sm);
+  white-space: nowrap;
+  transition: var(--pm-transition);
+
+  &:hover {
+    color: var(--pm-color-text);
+    background: var(--pm-color-primary-subtle);
+  }
+
+  &--active {
+    color: var(--pm-color-primary-dark);
+    border-bottom-color: var(--pm-color-primary);
+    font-weight: 600;
+
+    .scope-tabs__count {
+      background: var(--pm-color-primary-light);
+      color: var(--pm-color-primary-dark);
+    }
+  }
+}
+
+.scope-tabs__count {
+  background: var(--pm-color-border-light);
+  color: var(--pm-color-text-secondary);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: var(--pm-font-size-xs);
+  font-weight: 500;
+}

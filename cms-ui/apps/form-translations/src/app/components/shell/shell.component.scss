@@ -1,0 +1,122 @@
+:host { display: contents; }
+
+.shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shell__header {
+  background: var(--pm-color-surface);
+  border-bottom: 1px solid var(--pm-color-border);
+  padding: var(--pm-spacing-md) var(--pm-spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--pm-spacing-md);
+  flex-shrink: 0;
+
+  h1 {
+    font-size: var(--pm-font-size-xl);
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+.shell__subtitle {
+  color: var(--pm-color-text-secondary);
+  font-size: var(--pm-font-size-sm);
+}
+
+.shell__header-spacer { flex: 1; }
+
+.shell__session-badge {
+  font-size: var(--pm-font-size-xs);
+  color: var(--pm-color-text-secondary);
+  background: var(--pm-color-bg);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--pm-color-border-light);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.shell__main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.shell__content-pane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shell__scroll-wrapper {
+  flex: 1;
+  min-height: 0;
+  /* Nur vertikal — horizontaler Scroll bleibt in der Tabelle selbst,
+     dadurch bleiben Scope-Card und Toolbar auf engen Viewports sichtbar. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--pm-spacing-lg);
+}
+
+@media (max-width: 600px) {
+  .shell__scroll-wrapper { padding: var(--pm-spacing-md); }
+  .shell__header        { padding: var(--pm-spacing-sm) var(--pm-spacing-md); }
+  .shell__subtitle      { display: none; }
+  .shell__session-badge { display: none; }
+  .shell__scope-card {
+    padding: var(--pm-spacing-sm) var(--pm-spacing-md);
+    svg { display: none; }
+  }
+}
+
+.shell__scope-card {
+  background: var(--pm-color-surface);
+  border: 1px solid var(--pm-color-border-light);
+  border-left: 3px solid var(--pm-color-primary);
+  border-radius: var(--pm-radius-md);
+  padding: var(--pm-spacing-md) var(--pm-spacing-lg);
+  margin-bottom: var(--pm-spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--pm-spacing-md);
+
+  h3 {
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--pm-color-text);
+  }
+
+  p {
+    margin: 0;
+    color: var(--pm-color-text-secondary);
+    font-size: var(--pm-font-size-sm);
+  }
+}
+
+.shell__loading {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shell__loading-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--pm-spacing-sm);
+  color: var(--pm-color-text-secondary);
+  padding: var(--pm-spacing-lg);
+  justify-content: center;
+}
+
+.shell__no-session {
+  height: 100vh;
+  justify-content: center;
+}

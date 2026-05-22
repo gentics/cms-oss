@@ -1,7 +1,12 @@
-<div class="save-bar" [class.is-visible]="dirtyCount > 0">
+<div
+  class="save-bar"
+  data-region="save-bar"
+  [attr.data-visible]="dirtyCount > 0"
+  [attr.data-saving]="isSaving"
+  [class.is-visible]="dirtyCount > 0">
   <div class="save-bar__info">
     <span class="save-bar__dot"></span>
-    <span>
+    <span data-name="dirty-count" [attr.data-count]="dirtyCount">
       {{ 'SAVE_BAR.UNSAVED' | gtxTranslate:{ count: dirtyCount } }}
     </span>
   </div>
@@ -9,6 +14,7 @@
   <button
     type="button"
     class="pm-btn pm-btn-ghost"
+    data-action="discard"
     [disabled]="dirtyCount === 0 || isSaving"
     (click)="discard.emit()">
     {{ 'COMMON.DISCARD' | gtxTranslate }}
@@ -16,6 +22,7 @@
   <button
     type="button"
     class="pm-btn pm-btn-primary"
+    data-action="save"
     [disabled]="dirtyCount === 0 || isSaving"
     (click)="save.emit()">
     <span *ngIf="isSaving" class="pm-spinner pm-spinner--sm"></span>

@@ -1,26 +1,30 @@
-<div class="table-wrapper" *ngIf="keys.length > 0; else empty">
+<div class="table-wrapper" *ngIf="keys.length > 0; else empty" data-region="translations-table">
   <table class="translations">
     <thead>
       <tr>
         <th class="col-key">{{ 'TABLE.HEADER_PLACEHOLDER' | gtxTranslate }}</th>
-        <th class="col-lang" *ngFor="let lang of languages; trackBy: trackLang">
+        <th class="col-lang" *ngFor="let lang of languages; trackBy: trackLang" [attr.data-lang]="lang.code">
           {{ lang.name }}
           <span class="lang-meta">({{ lang.code }})</span>
         </th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let key of keys; trackBy: trackKey">
+      <tr *ngFor="let key of keys; trackBy: trackKey" [attr.data-id]="key" data-name="row">
         <td class="col-key">
-          <span class="placeholder-key">{{ key }}</span>
+          <span class="placeholder-key" data-name="key">{{ key }}</span>
         </td>
-        <td *ngFor="let lang of languages; trackBy: trackLang">
+        <td *ngFor="let lang of languages; trackBy: trackLang" [attr.data-lang]="lang.code" data-name="cell">
           <div
             class="cell-input-wrapper"
+            [attr.data-state]="getCellState(key, lang.code)"
             [class.is-dirty]="getCellState(key, lang.code) === 'dirty'"
             [class.is-empty]="getCellState(key, lang.code) === 'empty'">
             <input
               type="text"
+              data-action="edit-cell"
+              [attr.data-key]="key"
+              [attr.data-lang]="lang.code"
               [value]="getValue(key, lang.code)"
               [placeholder]="key"
               (input)="onInput(key, lang.code, $event)" />
@@ -38,7 +42,7 @@
 </div>
 
 <ng-template #empty>
-  <div class="pm-empty-state">
+  <div class="pm-empty-state" data-name="empty-state">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="8"/>

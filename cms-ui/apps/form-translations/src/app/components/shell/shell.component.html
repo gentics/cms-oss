@@ -1,7 +1,7 @@
 <ng-container *ngIf="vm$ | async as vm">
 
   <!-- No-Session-Fehler -->
-  <div class="shell__no-session pm-error-state" *ngIf="vm.ready && !vm.hasSession">
+  <div class="shell__no-session pm-error-state" data-name="no-session" *ngIf="vm.ready && !vm.hasSession">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"/>
@@ -13,14 +13,14 @@
   </div>
 
   <!-- Bootstrapping -->
-  <div class="shell__loading" *ngIf="!vm.ready">
+  <div class="shell__loading" data-name="bootstrap-loading" *ngIf="!vm.ready">
     <span class="pm-spinner pm-spinner--lg"></span>
   </div>
 
   <!-- Haupt-UI -->
-  <div class="shell" *ngIf="vm.ready && vm.hasSession">
+  <div class="shell" data-region="shell" *ngIf="vm.ready && vm.hasSession">
 
-    <header class="shell__header">
+    <header class="shell__header" data-region="header">
       <h1>{{ 'TOOL.TITLE' | gtxTranslate }}</h1>
       <span class="shell__subtitle">{{ 'TOOL.SUBTITLE' | gtxTranslate }}</span>
       <div class="shell__header-spacer"></div>
@@ -47,7 +47,7 @@
     <main class="shell__main">
       <div class="shell__content-pane">
         <div class="shell__scroll-wrapper">
-          <div class="shell__scope-card" *ngIf="vm.activeScope">
+          <div class="shell__scope-card" data-name="scope-card" [attr.data-scope-id]="vm.activeScope?.id" *ngIf="vm.activeScope">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                  style="color: var(--pm-color-primary);">

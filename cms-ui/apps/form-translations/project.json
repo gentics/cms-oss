@@ -78,6 +78,14 @@
             },
             "defaultConfiguration": "development",
             "continuous": true
+        },
+        "e2e": {
+            "executor": "@nx/playwright:playwright",
+            "outputs": ["{workspaceRoot}/.playwright/form-translations"],
+            "options": {
+                "config": "apps/form-translations/playwright.config.ts",
+                "skipInstall": true
+            }
         }
     }
 }

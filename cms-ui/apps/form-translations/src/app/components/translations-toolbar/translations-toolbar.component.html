@@ -1,4 +1,4 @@
-<div class="toolbar">
+<div class="toolbar" data-region="toolbar">
   <label class="toolbar__search">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -8,20 +8,27 @@
     </svg>
     <input
       type="text"
+      data-action="search"
       [value]="search"
       (input)="onSearchInput($event)"
       [placeholder]="'TOOLBAR.SEARCH_PLACEHOLDER' | gtxTranslate" />
   </label>
 
-  <div class="toolbar__filter" role="tablist">
+  <div class="toolbar__filter" role="tablist" data-region="filter">
     <button
       type="button"
+      data-action="filter"
+      data-id="all"
+      [attr.data-active]="filter === 'all'"
       [class.is-active]="filter === 'all'"
       (click)="onFilter('all')">
       {{ 'TOOLBAR.FILTER_ALL' | gtxTranslate }}
     </button>
     <button
       type="button"
+      data-action="filter"
+      data-id="incomplete"
+      [attr.data-active]="filter === 'incomplete'"
       [class.is-active]="filter === 'incomplete'"
       (click)="onFilter('incomplete')">
       {{ 'TOOLBAR.FILTER_INCOMPLETE' | gtxTranslate }}
@@ -45,7 +52,7 @@
     </span>
   </div>
 
-  <div class="toolbar__info">
+  <div class="toolbar__info" data-name="counter" [attr.data-shown]="shown" [attr.data-total]="total">
     {{ 'TOOLBAR.COUNT' | gtxTranslate:{ shown: shown, total: total } }}
   </div>
 </div>

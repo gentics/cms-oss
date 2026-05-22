@@ -249,14 +249,15 @@ public class FormsPublisherService implements MeshPublisherService {
 	 * Get the formGen translations model for the given set of active form types
 	 * @param activeFormTypes set of active form types
 	 * @return formGen translations model
+	 * @throws NodeException
 	 */
-	protected FormGenTranslationsModel getFormGenTranslations(Set<String> activeFormTypes) {
+	protected FormGenTranslationsModel getFormGenTranslations(Set<String> activeFormTypes) throws NodeException {
 		FormGenTranslationsModel model = new FormGenTranslationsModel();
-		model._default = transform(FormConfigProvider.getFormGenTranslations());
+		model._default = transform(FormConfigProvider.getFormGenTranslations(true));
 		model.types = new LinkedHashMap<>();
 
 		for (String formType : activeFormTypes) {
-			model.types.put(formType, transform(FormConfigProvider.getFormGenTranslations(formType)));
+			model.types.put(formType, transform(FormConfigProvider.getFormGenTranslations(formType, true)));
 		}
 
 		return model;

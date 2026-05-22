@@ -7,7 +7,9 @@ import static com.gentics.contentnode.rest.util.MiscUtils.loadForm;
 import static com.gentics.contentnode.rest.util.MiscUtils.loadFormWithoutPermissionCheck;
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -62,6 +64,7 @@ import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -73,6 +76,8 @@ import com.gentics.contentnode.rest.model.FormTimeManagement;
 import com.gentics.contentnode.rest.model.form.FormListResponse;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
@@ -80,17 +85,20 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.WastebinSearch;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
+import com.gentics.contentnode.rest.model.response.LanguageList;
 import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
 import com.gentics.contentnode.rest.model.response.TotalUsageInfo;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
+import com.gentics.contentnode.rest.model.response.admin.CustomTool;
 import com.gentics.contentnode.rest.resource.FormResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticatedContentNodeResource.PageUsage;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
@@ -98,11 +106,15 @@ import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+import com.gentics.contentnode.rest.util.AndFilter;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.rest.util.NodeFeatureFilter;
 import com.gentics.contentnode.rest.util.PermFilter;
+import com.gentics.contentnode.rest.util.PermissionFilter;
 import com.gentics.contentnode.rest.util.ResolvableComparator;
+import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.staging.StagingUtil;
 
@@ -244,6 +256,11 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 		return form;
 	};
+
+	/**
+	 * Required key of the translations custom tool
+	 */
+	public final static String TRANSLATIONS_CUSTOM_TOOL_KEY = "form_translations";
 
 	@Override
 	@GET
@@ -1094,6 +1111,102 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	}
 
 	@Override
+	@GET
+	@Path("/translations")
+	public FormGenTranslationsResponse getGlobalTranslations() throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(translations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/translations")
+	public FormGenTranslationsResponse saveGlobalTranslations(FormGenTranslations translations) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			FormGenTranslations diff = FormConfigProvider.diff(FormConfigProvider.getFormGenTranslations(false), translations);
+			FormConfigProvider.storeFormGenTranslations(diff);
+
+			FormGenTranslations newTranslations = FormConfigProvider.getFormGenTranslations(true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(newTranslations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types/{type}/translations")
+	public FormGenTranslationsResponse getFormTypeTranslations(@PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+			getFormTypeConfiguration(type);
+
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(translations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/types/{type}/translations")
+	public FormGenTranslationsResponse saveFormTypeTranslations(@PathParam("type") String type,
+			FormGenTranslations translations) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+			getFormTypeConfiguration(type);
+
+			FormGenTranslations diff = FormConfigProvider.diff(FormConfigProvider.getFormGenTranslations(type, false), translations);
+			FormConfigProvider.storeFormGenTranslations(type, diff);
+
+			FormGenTranslations newTranslations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(newTranslations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/translations/languages")
+	public LanguageList getTranslationLanguages(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			// get all nodes with the FORMS feature active the user can see 
+			List<Node> nodes = new ArrayList<>(trx.getTransaction().getObjects(Node.class, DBUtils.select("SELECT id FROM node", DBUtils.IDS)));
+			AndFilter nodeFilter = new AndFilter();
+			nodeFilter.addFilter(PermissionFilter.get(ObjectPermission.view));
+			nodeFilter.addFilter(NodeFeatureFilter.get(Feature.FORMS));
+			nodeFilter.filter(nodes);
+
+			// collect all languages of the remaining nodes
+			Set<ContentLanguage> languages = new HashSet<>();
+			for (Node node : nodes) {
+				languages.addAll(node.getLanguages());
+			}
+
+			LanguageList response = ListBuilder.from(languages, ContentLanguage.TRANSFORM2REST)
+					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "code"))
+					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "code"))
+					.page(paging).to(new LanguageList());
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
 	@DELETE
 	@Path("/nodes/{nodeId}/types/{type}")
 	public GenericResponse removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
@@ -1215,6 +1328,47 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				form.getFolderId(), PermType.formreport.getBit())) {
 			throw new InsufficientPrivilegesException(
 					I18NHelper.get("form.nopermission", Integer.toString(form.getId())), form, PermType.formreport);
+		}
+	}
+
+	/**
+	 * Get the custom tool for handling the translations as optional
+	 * @return optional custom tool
+	 */
+	protected Optional<CustomTool> getCustomFormTranslationsTool() {
+		Collection<?> customTools = ObjectTransformer.getCollection(
+				NodeConfigRuntimeConfiguration.getPreferences().getPropertyObject("custom_tools"),
+				Collections.emptyList());
+		return customTools.stream().map(o -> {
+			if (o instanceof Map) {
+				return ModelBuilder.getCustomTool((Map<?, ?>) o);
+			} else {
+				return null;
+			}
+		}).filter(tool -> tool != null).filter(tool -> Strings.CI.equals(tool.getKey(), TRANSLATIONS_CUSTOM_TOOL_KEY))
+				.findFirst();
+	}
+
+	/**
+	 * Check whether the custom tool for handling translations is configured and if the user has permission on it
+	 * @throws EntityNotFoundException if the custom tool is not configured
+	 * @throws InsufficientPrivilegesException if the user has no permission on the custom tool
+	 * @throws NodeException
+	 */
+	protected void checkTranslationsPermission() throws EntityNotFoundException, InsufficientPrivilegesException, NodeException {
+		CustomTool customTool = getCustomFormTranslationsTool().orElseThrow(() -> new EntityNotFoundException(
+				I18NHelper.get("custom_tool.notfound", TRANSLATIONS_CUSTOM_TOOL_KEY)));
+
+		PermHandler permHandler = TransactionManager.getCurrentTransaction().getPermHandler();
+
+		boolean admin = permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOLS, null, PermHandler.PERM_VIEW)
+				&& permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOLS, null, PermHandler.PERM_CHANGE_PERM);
+
+		if (!admin && !permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOL, customTool.getId(),
+				PermHandler.PERM_VIEW)) {
+			throw new InsufficientPrivilegesException(
+					I18NHelper.get("custom_tool.nopermission", I18NHelper.get(customTool.getName())), null,
+					PermType.read);
 		}
 	}
 

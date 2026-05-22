@@ -5,16 +5,20 @@ import java.util.List;
 import com.gentics.contentnode.rest.model.form.FormListResponse;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
+import com.gentics.contentnode.rest.model.response.LanguageList;
 import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
 import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
@@ -567,6 +571,74 @@ public interface FormResource {
 	@GET
 	@Path("/types/{type}")
 	FormTypeConfigurationResponse getFormTypeconfiguration(@PathParam("type") String type) throws Exception;
+
+	/**
+	 * Get the global translations
+	 * @return global translations
+	 * @HTTP 200 The global translations are returned
+	 * @HTTP 403 The user has no permission on the custom tool for form translations
+	 * @HTTP 404 The custom tool for doing form translations is not found
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/translations")
+	FormGenTranslationsResponse getGlobalTranslations() throws Exception;
+
+	/**
+	 * Save modifications to the global translations
+	 * @param translations translations to save
+	 * @return the modified global translations
+	 * @HTTP 200 The global translations were saved
+	 * @HTTP 403 The user has no permission on the custom tool for form translations
+	 * @HTTP 404 The custom tool for doing form translations is not found
+	 * @throws Exception
+	 */
+	@POST
+	@Path("/translations")
+	FormGenTranslationsResponse saveGlobalTranslations(FormGenTranslations translations) throws Exception;
+
+	/**
+	 * Get the form type translations for the given type
+	 * @param type form type
+	 * @return translations
+	 * @HTTP 200 The form type translations are returned
+	 * @HTTP 403 The user has no permission on the custom tool for form translations
+	 * @HTTP 404 Either the custom tool for doing form translations or the given form type is not found
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/types/{type}/translations")
+	FormGenTranslationsResponse getFormTypeTranslations(@PathParam("type") String type) throws Exception;
+
+	/**
+	 * Save modifications to the form type translations
+	 * @param type form type
+	 * @param translations translations to save
+	 * @return modified translations
+	 * @HTTP 200 The form type translations were saved
+	 * @HTTP 403 The user has no permission on the custom tool for form translations
+	 * @HTTP 404 Either the custom tool for doing form translations or the given form type is not found
+	 * @throws Exception
+	 */
+	@POST
+	@Path("/types/{type}/translations")
+	FormGenTranslationsResponse saveFormTypeTranslations(@PathParam("type") String type, FormGenTranslations translations) throws Exception;
+
+	/**
+	 * Get the languages for creating form type translations
+	 * @param filter filter parameters
+	 * @param sorting sorting parameters
+	 * @param paging paging parameters
+	 * @return list of languages
+	 * @HTTP 200 The languages are returned
+	 * @HTTP 403 The user has no permission on the custom tool for form translations
+	 * @HTTP 404 The custom tool for doing form translations is not found
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/translations/languages")
+	LanguageList getTranslationLanguages(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws Exception;
 
 	/**
 	 * Remove the form type configuration from the node.

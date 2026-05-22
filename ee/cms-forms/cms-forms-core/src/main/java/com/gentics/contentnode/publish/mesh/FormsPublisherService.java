@@ -25,6 +25,7 @@ import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.object.FormFactory;
+import com.gentics.contentnode.forms.FormTransformer;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshProject;
@@ -257,7 +258,15 @@ public class FormsPublisherService implements MeshPublisherService {
 		model.types = new LinkedHashMap<>();
 
 		for (String formType : activeFormTypes) {
-			model.types.put(formType, transform(FormConfigProvider.getFormGenTranslations(formType, true)));
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(formType, true);
+
+			FormTypeConfiguration config = Optional.ofNullable(FormConfigProvider.getConfig()).map(m -> m.get(formType)).orElse(null);
+
+			if (config != null) {
+				translations = FormTransformer.transformToExternalLanguageCodes(config, translations.clone());
+			}
+
+			model.types.put(formType, transform(translations));
 		}
 
 		return model;

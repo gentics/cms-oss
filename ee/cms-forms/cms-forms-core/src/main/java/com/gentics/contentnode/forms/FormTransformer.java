@@ -56,6 +56,7 @@ import com.gentics.contentnode.render.RenderUrlFactory;
 import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
 import com.gentics.contentnode.rest.model.formtype.BaseSetting;
 import com.gentics.contentnode.rest.model.formtype.ElementConfig;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.rest.model.formtype.PublishAsType;
 import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
 import com.gentics.contentnode.rest.model.formtype.ReferenceType;
@@ -402,6 +403,52 @@ public class FormTransformer {
 	}
 
 	/**
+	 * Convert the given translations by transforming internal language codes to external codes, if a mapping exists in the configuration
+	 * @param config configuration
+	 * @param translations translations (will be modified)
+	 * @return transformed translations
+	 * @throws NodeException
+	 */
+	public static FormGenTranslations transformToExternalLanguageCodes(FormTypeConfiguration config, FormGenTranslations translations) throws NodeException {
+		if (MapUtils.isNotEmpty(config.languageMapping) && translations != null) {
+			return transformLanguageCodes(config, translations, MapUtils.invertMap(config.languageMapping));
+		} else {
+			return translations;
+		}
+	}
+
+	/**
+	 * Convert the given translations by transforming external language codes to internal codes, if a mapping exists in the configuration
+	 * @param config configuration
+	 * @param translations translations (will be modified)
+	 * @return transformed translations
+	 * @throws NodeException
+	 */
+	public static FormGenTranslations transformToInternalLanguageCodes(FormTypeConfiguration config, FormGenTranslations translations) throws NodeException {
+		if (MapUtils.isNotEmpty(config.languageMapping) && translations != null) {
+			return transformLanguageCodes(config, translations, config.languageMapping);
+		} else {
+			return translations;
+		}
+	}
+
+	/**
+	 * Convert the given translations with the transformation map
+	 * @param config configuration
+	 * @param translations translations (will be modified)
+	 * @param transformationMap transformation map
+	 * @return transformed translations
+	 * @throws NodeException
+	 */
+	private static FormGenTranslations transformLanguageCodes(FormTypeConfiguration config, FormGenTranslations translations,
+			Map<String, String> transformationMap) throws NodeException {
+		translations.entrySet().forEach(entry -> {
+			transformLanguageCodes(entry.getValue(), transformationMap);
+		});
+		return translations;
+	}
+
+	/**
 	 * Transform the language codes in the given property
 	 * @param property property (will be modified)
 	 * @param transformationMap transformation map
@@ -417,6 +464,24 @@ public class FormTransformer {
 					propertyObject.remove(oldKey);
 					propertyObject.set(newKey, value);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Transform the language codes in the given translation map
+	 * @param translationMap translation map (will be modified)
+	 * @param transformationMap transformation map
+	 */
+	private static void transformLanguageCodes(Map<String, String> translationMap, Map<String, String> transformationMap) {
+		for (Entry<String, String> entry : transformationMap.entrySet()) {
+			String oldKey = entry.getKey();
+			String newKey = entry.getValue();
+
+			if (translationMap.get(oldKey) != null) {
+				String value = translationMap.get(oldKey);
+				translationMap.remove(oldKey);
+				translationMap.put(newKey, value);
 			}
 		}
 	}

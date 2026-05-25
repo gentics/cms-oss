@@ -87,7 +87,7 @@ export default function App() {
 
     window.postMessage({
       eventType: 'preview-connect',
-    }, '*');
+    }, '/');
 
     setPreviewConnected(true);
   }

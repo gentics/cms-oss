@@ -102,7 +102,7 @@ const FormProgressScreenPart: React.FC<{
         if (formState.form.pages?.[i]) {
           const formpage: IFormPage = formState.form.pages[i];
           const pageNumber = i;
-          const allowNavigation = currentPage >= pageNumber;
+          const allowNavigation = formState.isFormgridPreview || currentPage >= pageNumber;
 
           let formpageName = '';
           let tooltipTitle = '';

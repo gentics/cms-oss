@@ -177,7 +177,7 @@ const RendererScreen: React.FC<{
   const initialUIState: UIState = {
     flowPageIndex: 0,
     flowList: [],
-    currentPage: 0,
+    currentPage: props.currentPage ?? 0,
     lastPage: 0,
     initDone: false,
     loading: false,
@@ -220,7 +220,7 @@ const RendererScreen: React.FC<{
     clicked: false,
   });
 
-  const currentPage = uiState.currentPage;
+  const currentPage = props.currentPage ?? uiState.currentPage;
   const uiSchema: IForm = formState.form;
   const lastPage = uiState.lastPage;
   let initialFullCulture = getCorrectANCulture(props.language, props.features);
@@ -363,7 +363,7 @@ const RendererScreen: React.FC<{
     if (props.mockForm) {
       updateState(StatesToUpdateEnum.ALL);
     }
-  }, [mockFormType]);
+  }, [mockFormType, props.previewSchema, props.previewUiSchema]);
 
   useEffect(() => {
     if (

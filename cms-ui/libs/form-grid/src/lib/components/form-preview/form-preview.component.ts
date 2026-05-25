@@ -132,6 +132,7 @@ export class FormPreviewComponent implements AfterViewInit {
 
     public ngAfterViewInit(): void {
         this.iframe.nativeElement.addEventListener('error', () => {
+            console.error('Error loading preview iframe!');
             this.loading.set(false);
             this.hasError.set(true);
 
@@ -147,10 +148,26 @@ export class FormPreviewComponent implements AfterViewInit {
             const nat = this.iframe.nativeElement;
             const win = nat.contentWindow;
 
+            // "Empty" load events from iframes which aren't what we look for.
             if (
                 win.location.toString() === 'about:blank'
                 || nat.contentDocument.readyState !== 'complete'
             ) {
+                return;
+            }
+
+            win.addEventListener('unload', () => {
+                this.loading.set(true);
+                this.initialized.set(false);
+            });
+
+            // For some reason, if the response has a non 200/300 code, it is still treated
+            // as a successful reaquest and doesn't trigger the error handler above.
+            // Therefore, hacky check if the page contains the formgen app root - if it doesn't,
+            // then it's some kind of error page and we have to display an error.
+            if (win.document.querySelector('div#root') == null) {
+                this.loading.set(false);
+                this.hasError.set(true);
                 return;
             }
 
@@ -162,11 +179,6 @@ export class FormPreviewComponent implements AfterViewInit {
             } catch (err) {
                 // Ignore err
             }
-
-            win.addEventListener('unload', () => {
-                this.loading.set(true);
-                this.initialized.set(false);
-            });
 
             win.addEventListener('message', (event) => {
                 const data = event.data as InterchangeEvent;
@@ -210,6 +222,6 @@ export class FormPreviewComponent implements AfterViewInit {
             eventType: PREVIEW_DATA_EVENT_NAME,
             data: data,
         };
-        win.postMessage(event, '*');
+        win.postMessage(event, '/');
     }
 }

@@ -64,6 +64,8 @@
         "paste_form_type_mismatch": "Cannot paste: the copied element originates from a different form type (\"{{sourceType}}\").",
         "paste_element_success": "Element \"{{name}}\" inserted",
         "resize_element_width": "Resize width of the element",
-        "fallback_element_title": "Unknown or unlabeled element"
+        "fallback_element_title": "Unknown or unlabeled element",
+        "loading_preview": "Preview is loading ...",
+        "preview_loading_error": "There has been an error while loading the Preview!"
     }
 }

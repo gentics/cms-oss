@@ -1,7 +1,19 @@
-<div class="preview-container">
+<div class="preview-container" [class.loading]="loading()" [class.has-error]="hasError()">
+    <gtx-loading-spinner
+        class="loading-spinner"
+        [visible]="loading()"
+        [message]="'form_grid.loading_preview' | gtxI18n"
+    ></gtx-loading-spinner>
+
     <iframe
         #iframe
         class="preview-frame"
         src="/formgen/?preview=true"
     ></iframe>
+
+    <div class="error-container">
+        <span class="error-message">
+            {{ 'form_grid.preview_loading_error' | gtxI18n }}
+        </span>
+    </div>
 </div>

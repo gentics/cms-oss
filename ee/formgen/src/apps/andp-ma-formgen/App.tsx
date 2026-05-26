@@ -73,8 +73,6 @@ export default function App() {
 
   if (dynamicPreview && !previewConnected) {
     window.addEventListener('message', (event) => {
-      // TODO: Verify origin?
-
       const mapped = event.data as PreviewDataChangeEvent;
       if (mapped != null && mapped.eventType === PREVIEW_DATA_EVENT_NAME && mapped.data != null) {
         dispatch(mapped.data);

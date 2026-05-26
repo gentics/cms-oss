@@ -6,6 +6,7 @@ import {
     Input,
     OnChanges,
     OnInit,
+    SimpleChanges,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import {
@@ -69,6 +70,9 @@ export class FormPropertiesComponent
     public languages: Language[];
 
     @Input()
+    public configuration: FormTypeConfiguration;
+
+    @Input()
     public disableLanguageSelect = false;
 
     @Input()
@@ -114,24 +118,22 @@ export class FormPropertiesComponent
             for (const config of res.items) {
                 this.formTypeConfigurations[config.type] = config;
             }
-            if (this.item?.formType) {
-                this.activeConfiguration = this.formTypeConfigurations[this.item.formType];
-            } else if (this.form) {
-                this.activeConfiguration = this.formTypeConfigurations[this.form.value.formType];
-            }
-            this.hadInitialConfiguration = this.activeConfiguration != null;
 
             this.changeDetector.markForCheck();
         }));
     }
 
+    public override ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
+        if (changes.configuration) {
+            this.activeConfiguration = this.configuration;
+            this.hadInitialConfiguration = true;
+        }
+    }
+
     protected override initializeWithData(): void {
         super.initializeWithData();
-
-        if (this.item?.formType && this.activeConfiguration == null && this.formTypeConfigurations != null) {
-            this.activeConfiguration = this.formTypeConfigurations[this.item.formType];
-            this.hadInitialConfiguration = this.activeConfiguration != null;
-        }
 
         if (Number.isInteger(this.item?.data?.successPageId) && this.item.data.successPageId !== 0) {
             const options: PageRequestOptions = {};

@@ -187,7 +187,7 @@ const FormgenScreen: React.FC<{
   if (showRenderScreen()) {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <RendererScreen
+        {t && <RendererScreen
           features={features as IFeatures}
           formId={props.formId}
           businessObjectId={props.businessObjectId}
@@ -211,7 +211,7 @@ const FormgenScreen: React.FC<{
           previewUiSchema={props.previewUiSchema}
           currentPage={props.currentPage}
           selectedElementId={props.selectedElementId}
-        />
+        />}
         {Platform.OS === "web" && <span dangerouslySetInnerHTML={{ __html: styleHtml }} />}
       </Suspense>
     );

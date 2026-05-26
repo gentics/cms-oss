@@ -150,7 +150,11 @@ export default function App() {
         setUserData(userData);
         setLanguage(lang ? lang : 'de');
         setSuccessContent(successMessage);
-        setPrefillContent(prefillContent);
+        try {
+          setPrefillContent(JSON.parse(prefillContent));
+        } catch (err) {
+          console.warn('Could not load prefill content');
+        }
         setTranslationUrl(translationUrlFromId ?? '');
         setPluginName(pluginNameAttr ?? '');
         

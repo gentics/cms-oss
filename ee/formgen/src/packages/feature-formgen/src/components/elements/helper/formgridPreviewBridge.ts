@@ -21,7 +21,7 @@ export function emitSelected(elementId: string): void {
     eventType: PREVIEW_ELEMENT_SELECT_EVENT_NAME,
     elementId,
   }
-  window.postMessage(event, '*');
+  window.postMessage(event, '/');
 }
 
 export function emitPageChange(pageIndex: number): void {
@@ -32,5 +32,5 @@ export function emitPageChange(pageIndex: number): void {
     eventType: PREVIEW_PAGE_CHANGE_EVENT_NAME,
     pageIndex,
   };
-  window.postMessage(event, '*');
+  window.postMessage(event, '/');
 }

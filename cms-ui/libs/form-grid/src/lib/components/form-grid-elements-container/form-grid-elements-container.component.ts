@@ -215,7 +215,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
         }
 
         const handleEl = event.currentTarget as HTMLElement | null;
-        const hostEl = handleEl?.closest('gtx-sortable-item');
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        const hostEl = handleEl?.closest('gtx-sortable-item') as HTMLElement;
         const parentEl = hostEl?.parentElement;
 
         let rowBase = 0;

@@ -1260,7 +1260,7 @@ const RendererScreen: React.FC<{
     }
 
     if (!uiState.isMockForm) {
-      let apiResponse = await restService.ANCancelFormANRequest(formState);
+      let apiResponse = await restService.cancelFormRequest(formState);
 
       if (!apiResponse.success) {
         endANRequest(uiState, updateState);

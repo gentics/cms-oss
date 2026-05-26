@@ -543,8 +543,7 @@ export class RestService {
     return response;
   }
 
-  /** @ANOnly */
-  async ANCancelFormANRequest(formState: FormState): Promise<ApiResponse> {
+  async cancelFormRequest(formState: FormState): Promise<ApiResponse> {
     let data = new FormData();
 
     let url = 'form/' + encodeURIComponent(formState.formid);
@@ -557,6 +556,10 @@ export class RestService {
         '/businessObject/' + encodeURIComponent(formState.businessObjectID);
     }
     url += '/cancel';
+    if (this.pluginName === PluginNameEnum.CMS_FORMS) {
+      const uuid = this.readCookie(this.FORMS_DATA_COOKIE);
+      if (uuid) url += '?formDataUuid=' + encodeURIComponent(uuid);
+    }
     const response = await this.post(
       formState.formid,
       url,

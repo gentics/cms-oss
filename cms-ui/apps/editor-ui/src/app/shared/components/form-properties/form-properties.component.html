@@ -118,118 +118,120 @@
             }
         </div>
 
-        <div class="flex-row" formGroupName="data">
-            <div class="gtx-form-section-title">{{ 'editor.form_administrator_email_title' | gtxI18n }}</div>
+        @if (activeConfiguration != null && !activeConfiguration.external) {
+            <div class="flex-row" formGroupName="data">
+                <div class="gtx-form-section-title">{{ 'editor.form_administrator_email_title' | gtxI18n }}</div>
 
-            <gtx-input
-                class="columns small-12"
-                [label]="'editor.item_email_label' | gtxI18n"
-                formControlName="adminEmailAddress"
-            ></gtx-input>
-
-            @if (formLanguages?.length > 0) {
-                <gtx-i18n-panel-group
+                <gtx-input
                     class="columns small-12"
-                    [languages]="formLanguages"
-                    [(activeLanguage)]="activeLanguage"
-                >
-                    <gtx-i18n-input
-                        [label]="'editor.item_localized_mail_subject' | gtxI18n"
-                        [language]="activeLanguage?.code"
-                        [availableLanguages]="form?.value?.languages"
-                        formControlName="adminEmailSubject"
-                    ></gtx-i18n-input>
-                </gtx-i18n-panel-group>
-            }
+                    [label]="'editor.item_email_label' | gtxI18n"
+                    formControlName="adminEmailAddress"
+                ></gtx-input>
 
-            @if (activeConfiguration?.adminEmailTemplateOptions) {
-                <gtx-radio-group
-                    class="form-section-container"
-                    [value]="useEmailPageTemplate"
-                    (valueChange)="updateEmailTemplate($event)"
-                >
-                    <div class="radio-select-container">
-                        <gtx-radio-button
-                            [label]="'editor.item_localized_mail_custom' | gtxI18n"
-                            [value]="true"
-                        ></gtx-radio-button>
+                @if (formLanguages?.length > 0) {
+                    <gtx-i18n-panel-group
+                        class="columns small-12"
+                        [languages]="formLanguages"
+                        [(activeLanguage)]="activeLanguage"
+                    >
+                        <gtx-i18n-input
+                            [label]="'editor.item_localized_mail_subject' | gtxI18n"
+                            [language]="activeLanguage?.code"
+                            [availableLanguages]="form?.value?.languages"
+                            formControlName="adminEmailSubject"
+                        ></gtx-i18n-input>
+                    </gtx-i18n-panel-group>
+                }
 
-                        <div
-                            class="confirmation-page-setting"
-                            [ngClass]="{
-                                'confirmation-page-setting--active': !!useEmailPageTemplate,
-                                'confirmation-page-setting--inactive': !useEmailPageTemplate
-                            }"
-                        >
-                            <gtx-browse-box
-                                data-action="pick-mail-page"
-                                [attr.data-target-id]="form.value.adminEmailPageId"
-                                [attr.data-target-node-id]="form.value.adminEmailNodeId"
-                                [label]="'editor.item_mail_custom_description' | gtxI18n"
-                                [placeholder]="'editor.page_no_selection' | gtxI18n"
-                                [disabled]="disabled || !useEmailPageTemplate"
-                                [allowedSelection]="'page'"
-                                [multiple]="false"
-                                [includeMlId]="[MarkupLanguageType.FormsEmailTemplate]"
-                                [browseTitle]="'modal.repository_browser_title_forms_email_template_single' | gtxI18n"
-                                [startNode]="form.value.adminEmailNodeId || nodeId"
-                                [showBreadcrumb]="true"
-                                [breadcrumbTitle]="'tag_editor.selected_folder' | gtxI18n"
-                                [value]="loadedMailTemplate"
-                                (valueChange)="setEmailTemplatePage($event)"
-                            ></gtx-browse-box>
-                        </div>
-                    </div>
+                @if (activeConfiguration?.adminEmailTemplateOptions) {
+                    <gtx-radio-group
+                        class="form-section-container"
+                        [value]="useEmailPageTemplate"
+                        (valueChange)="updateEmailTemplate($event)"
+                    >
+                        <div class="radio-select-container">
+                            <gtx-radio-button
+                                [label]="'editor.item_localized_mail_custom' | gtxI18n"
+                                [value]="true"
+                            ></gtx-radio-button>
 
-                    <div class="radio-select-container">
-                        <gtx-radio-button
-                            [label]="'editor.item_localized_mail_temp' | gtxI18n"
-                            [value]="false"
-                        ></gtx-radio-button>
-
-                        <div
-                            class="confirmation-page-setting"
-                            [ngClass]="{
-                                'confirmation-page-setting--active': !useEmailPageTemplate,
-                                'confirmation-page-setting--inactive': !!useEmailPageTemplate
-                            }"
-                        >
-                            <gtx-i18n-select
-                                [language]="activeFormLanguageCode"
-                                [availableLanguages]="languages"
-                                (change)="setEmailTemplateOption($event)"
-                                formControlName="adminEmailTemplate"
+                            <div
+                                class="confirmation-page-setting"
+                                [ngClass]="{
+                                    'confirmation-page-setting--active': !!useEmailPageTemplate,
+                                    'confirmation-page-setting--inactive': !useEmailPageTemplate
+                                }"
                             >
-                                @for (option of activeConfiguration?.adminEmailTemplateOptions; track option.value) {
-                                    <gtx-option [value]="option.value">
-                                        {{ option.labelI18n | gtxI18nObject }}
-                                    </gtx-option>
-                                }
-                            </gtx-i18n-select>
+                                <gtx-browse-box
+                                    data-action="pick-mail-page"
+                                    [attr.data-target-id]="form.value.adminEmailPageId"
+                                    [attr.data-target-node-id]="form.value.adminEmailNodeId"
+                                    [label]="'editor.item_mail_custom_description' | gtxI18n"
+                                    [placeholder]="'editor.page_no_selection' | gtxI18n"
+                                    [disabled]="disabled || !useEmailPageTemplate"
+                                    [allowedSelection]="'page'"
+                                    [multiple]="false"
+                                    [includeMlId]="[MarkupLanguageType.FormsEmailTemplate]"
+                                    [browseTitle]="'modal.repository_browser_title_forms_email_template_single' | gtxI18n"
+                                    [startNode]="form.value.adminEmailNodeId || nodeId"
+                                    [showBreadcrumb]="true"
+                                    [breadcrumbTitle]="'tag_editor.selected_folder' | gtxI18n"
+                                    [value]="loadedMailTemplate"
+                                    (valueChange)="setEmailTemplatePage($event)"
+                                ></gtx-browse-box>
+                            </div>
                         </div>
-                    </div>
-                </gtx-radio-group>
-            } @else {
-                <gtx-browse-box
-                    class="columns small-12"
-                    data-action="pick-mail-page"
-                    [attr.data-target-id]="form.value.adminEmailPageId"
-                    [attr.data-target-node-id]="form.value.adminEmailNodeId"
-                    [label]="'editor.item_mail_custom_description' | gtxI18n"
-                    [placeholder]="'editor.page_no_selection' | gtxI18n"
-                    [disabled]="disabled || !useEmailPageTemplate"
-                    [allowedSelection]="'page'"
-                    [multiple]="false"
-                    [includeMlId]="[MarkupLanguageType.FormsEmailTemplate]"
-                    [browseTitle]="'modal.repository_browser_title_forms_email_template_single' | gtxI18n"
-                    [startNode]="form.value.adminEmailNodeId || nodeId"
-                    [showBreadcrumb]="true"
-                    [breadcrumbTitle]="'tag_editor.selected_folder' | gtxI18n"
-                    [value]="loadedMailTemplate"
-                    (valueChange)="setEmailTemplatePage($event)"
-                ></gtx-browse-box>
-            }
-        </div>
+
+                        <div class="radio-select-container">
+                            <gtx-radio-button
+                                [label]="'editor.item_localized_mail_temp' | gtxI18n"
+                                [value]="false"
+                            ></gtx-radio-button>
+
+                            <div
+                                class="confirmation-page-setting"
+                                [ngClass]="{
+                                    'confirmation-page-setting--active': !useEmailPageTemplate,
+                                    'confirmation-page-setting--inactive': !!useEmailPageTemplate
+                                }"
+                            >
+                                <gtx-i18n-select
+                                    [language]="activeFormLanguageCode"
+                                    [availableLanguages]="languages"
+                                    (change)="setEmailTemplateOption($event)"
+                                    formControlName="adminEmailTemplate"
+                                >
+                                    @for (option of activeConfiguration?.adminEmailTemplateOptions; track option.value) {
+                                        <gtx-option [value]="option.value">
+                                            {{ option.labelI18n | gtxI18nObject }}
+                                        </gtx-option>
+                                    }
+                                </gtx-i18n-select>
+                            </div>
+                        </div>
+                    </gtx-radio-group>
+                } @else {
+                    <gtx-browse-box
+                        class="columns small-12"
+                        data-action="pick-mail-page"
+                        [attr.data-target-id]="form.value.adminEmailPageId"
+                        [attr.data-target-node-id]="form.value.adminEmailNodeId"
+                        [label]="'editor.item_mail_custom_description' | gtxI18n"
+                        [placeholder]="'editor.page_no_selection' | gtxI18n"
+                        [disabled]="disabled || !useEmailPageTemplate"
+                        [allowedSelection]="'page'"
+                        [multiple]="false"
+                        [includeMlId]="[MarkupLanguageType.FormsEmailTemplate]"
+                        [browseTitle]="'modal.repository_browser_title_forms_email_template_single' | gtxI18n"
+                        [startNode]="form.value.adminEmailNodeId || nodeId"
+                        [showBreadcrumb]="true"
+                        [breadcrumbTitle]="'tag_editor.selected_folder' | gtxI18n"
+                        [value]="loadedMailTemplate"
+                        (valueChange)="setEmailTemplatePage($event)"
+                    ></gtx-browse-box>
+                }
+            </div>
+        }
 
         <div class="form-section-container" formGroupName="data">
             <div class="gtx-form-section-title">{{ 'editor.form_success_page_title' | gtxI18n }}</div>

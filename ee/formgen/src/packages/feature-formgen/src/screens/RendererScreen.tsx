@@ -1,24 +1,39 @@
+import AndpIcon from '@andp/core/src/components/AndpIcon';
+import AndpText from '@andp/core/src/components/AndpText';
+import { useMicroAppSDK } from '@andp/core/src/sdk/MicroAppSDK';
+import i18n from '@andp/core/src/services/i18n';
+import theme, { expertSearchTableTheme } from '@andp/core/src/styles/theme';
+import { TFunction } from 'i18next';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  ScrollView,
-  Platform,
-  StyleSheet,
-  useWindowDimensions,
-  Modal,
-  TouchableOpacity,
   BackHandler,
-  UIManager,
   findNodeHandle,
-  InteractionManager,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  UIManager,
+  useWindowDimensions,
+  View
 } from 'react-native';
-import FormProgressScreenPart from './screen-parts/FormProgress';
-import StickyLayerScreenPart from './screen-parts/StickyLayer';
-import ErrorBlockScreenPart from './screen-parts/ErrorBlockScreenPart';
+import { Host } from 'react-native-portalize';
+import CMSFormCaptcha from '../components/elements/cms/CmsCaptcha/CMSFormCaptcha';
+import { IMockFormTypeEnum } from '../constants/enums/IMockFormTypeEnum';
+import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
+import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
+import { postInitForm, preInitForm } from '../custom/HooksUtils';
+import { OverlayTypeEnum, overlayTypes } from '../custom/OverlayTypes';
+import { ScreenComponents } from '../custom/ScreenComponents';
+import { CaptchaService } from '../services/CaptchaService';
+import { RestService } from '../services/RestService';
+import { useFormMirrorStore } from '../state/useFormMirrorState';
 import {
   ApiResponse,
   FormState,
   IData,
+  IDataFields,
   IElementBeingFocusedInfo,
   IElementIdentifier,
   IErrorMessage,
@@ -32,14 +47,17 @@ import {
   IOverlayLeaveExtraProps,
   IPossibleValue,
   IReportResult,
+  ISchema,
   ISchemaFieldProperties,
   ISummaryDetailsUser,
   SummaryOptions,
   UIState,
 } from '../types/interfaces';
-import { RestService } from '../services/RestService';
-import { ScreenComponents } from '../custom/ScreenComponents';
-import ReadOnlyFormScreen from './ReadOnlyFormScreen';
+import * as formEventsUtils from '../utils/FormEventsUtils';
+import * as mockFormularUtils from '../utils/MockFormularUtils';
+import * as overlayUtils from '../utils/OverlayUtils';
+import { changeToPage } from '../utils/UiUtils';
+import * as utils from '../utils/Utils';
 import {
   endANRequest,
   getFeatureActive,
@@ -47,30 +65,14 @@ import {
   startANRequest,
 } from '../utils/Utils';
 import * as validationUtils from '../utils/ValidationUtils';
-import i18n from '@andp/core/src/services/i18n';
-import * as overlayUtils from '../utils/OverlayUtils';
-import * as formEventsUtils from '../utils/FormEventsUtils';
-import * as utils from '../utils/Utils';
-import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { isPageValid } from '../utils/ValidationUtils';
-import { CaptchaService } from '../services/CaptchaService';
-import { TFunction } from 'i18next';
-import * as mockFormularUtils from '../utils/MockFormularUtils';
-import { OverlayTypeEnum, overlayTypes } from '../custom/OverlayTypes';
-import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
-import { postInitForm, preInitForm } from '../custom/HooksUtils';
-import { IMockFormTypeEnum } from '../constants/enums/IMockFormTypeEnum';
-import AndpText from '@andp/core/src/components/AndpText';
-import AndpIcon from '@andp/core/src/components/AndpIcon';
-import theme, { expertSearchTableTheme } from '@andp/core/src/styles/theme';
-import { Host } from 'react-native-portalize';
-import { useMicroAppSDK } from '@andp/core/src/sdk/MicroAppSDK';
 import { ButtonProvider } from './essentials/ButtonProvider';
-import { useFormMirrorStore } from '../state/useFormMirrorState';
 import { ElementRenderer } from './essentials/ElementRenderer';
-import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
-import { changeToPage } from '../utils/UiUtils';
-import CMSFormCaptcha from '../components/elements/cms/CmsCaptcha/CMSFormCaptcha';
+import ReadOnlyFormScreen from './ReadOnlyFormScreen';
+import ErrorBlockScreenPart from './screen-parts/ErrorBlockScreenPart';
+import FormProgressScreenPart from './screen-parts/FormProgress';
+import StickyLayerScreenPart from './screen-parts/StickyLayer';
+import { emitPageChange } from '../components/elements/helper/formgridPreviewBridge';
 
 const RendererScreen: React.FC<{
   formId: string;
@@ -86,13 +88,14 @@ const RendererScreen: React.FC<{
   endpoint: string;
   translationUrl?: string;
   successContent?: string;
-  prefillContent?: string;
+  prefillContent?: IDataFields;
   userData?: ISummaryDetailsUser;
   detailUrl?: string;
   hasDetail?: boolean;
   pluginName: PluginNameEnum;
   isFormgridPreview?: boolean;
-  formJson?: string;
+  previewSchema?: ISchema;
+  previewUiSchema?: IForm;
   currentPage?: number;
   selectedElementId?: string;
 }> = (props) => {
@@ -174,7 +177,7 @@ const RendererScreen: React.FC<{
   const initialUIState: UIState = {
     flowPageIndex: 0,
     flowList: [],
-    currentPage: 0,
+    currentPage: props.currentPage ?? 0,
     lastPage: 0,
     initDone: false,
     loading: false,
@@ -217,7 +220,7 @@ const RendererScreen: React.FC<{
     clicked: false,
   });
 
-  const currentPage = uiState.currentPage;
+  const currentPage = props.currentPage ?? uiState.currentPage;
   const uiSchema: IForm = formState.form;
   const lastPage = uiState.lastPage;
   let initialFullCulture = getCorrectANCulture(props.language, props.features);
@@ -360,7 +363,7 @@ const RendererScreen: React.FC<{
     if (props.mockForm) {
       updateState(StatesToUpdateEnum.ALL);
     }
-  }, [mockFormType]);
+  }, [mockFormType, props.previewSchema, props.previewUiSchema]);
 
   useEffect(() => {
     if (
@@ -585,95 +588,100 @@ const RendererScreen: React.FC<{
       return data;
     }
     if (
-      (Platform.OS === 'web' &&
-        utils.isFeatureActive('feature_prefill', formState.features)) ||
-      new URLSearchParams(window.location.search).get('feature_prefill') !==
-        null
+      !utils.isFeatureActive('feature_prefill', formState.features)
+      && !(new URLSearchParams(window.location.search).has('feature_prefill'))
     ) {
-      const prefillText = props.prefillContent;
-      if (prefillText) {
-        try {
-          const preFill = JSON.parse(prefillText.trim());
-          //only prefill if form was not saved before (no savedPageIndex available)
-          if (typeof data.savedPageIndex === 'undefined') {
-            for (const [key, value] of Object.entries(preFill)) {
-              const fieldToPrefill = data?.properties?.[key];
-              const isMultiSelect = Array.isArray(value);
-              // check if the field to be prefilled exists
-              // check if the value to be prefilled is a string
-              // on catalog fields, arrays are also allowed
-              if (
-                fieldToPrefill &&
-                (typeof value === 'string' ||
-                  (fieldToPrefill.possibleValues && isMultiSelect))
-              ) {
-                //only prefill if field is empty / not available
-                if (
-                  !(fieldToPrefill as Object).hasOwnProperty('value') ||
-                  fieldToPrefill?.value === ''
-                ) {
-                  // special handling for catalog fields:
-                  if (
-                    fieldToPrefill.possibleValues ||
-                    fieldToPrefill.possibleValueSetID
-                  ) {
-                    //get possible values of field
-                    let possibleValues: IPossibleValue[] = [];
-                    //backwards compatibility, old possibleValues, remove in next version
-                    if (
-                      fieldToPrefill.possibleValues &&
-                      fieldToPrefill.possibleValues.length > 0
-                    ) {
-                      possibleValues = fieldToPrefill.possibleValues;
-                    } else if (
-                      data.possibleValueSets &&
-                      fieldToPrefill.possibleValueSetID
-                    ) {
-                      const possibleValueSet = data.possibleValueSets.find(
-                        (i) =>
-                          i.possibleValueSetID ===
-                          fieldToPrefill.possibleValueSetID,
-                      );
-                      if (possibleValueSet?.possibleValues) {
-                        possibleValues = possibleValueSet.possibleValues;
-                      }
-                    }
+      return data;
+    }
 
-                    const catalogValueToPrefill =
-                      // multi select?
-                      isMultiSelect
-                        ? // get all possible values with matching identifiers
-                          possibleValues.filter((possibleValue) =>
-                            (value as IPossibleValue[]).some(
-                              (v) => v.identifier === possibleValue.identifier,
-                            ),
-                          )
-                        : // get first matching value by identifier
-                          possibleValues.find(
-                            (possibleValue) =>
-                              possibleValue.identifier === value,
-                          );
-                    if (catalogValueToPrefill) {
-                      // multi select fields expect the property `values`, while single select fields expect the property `value`
-                      if (isMultiSelect) {
-                        fieldToPrefill.values = catalogValueToPrefill;
-                        delete fieldToPrefill.oldValue;
-                      } else {
-                        fieldToPrefill.value = catalogValueToPrefill;
-                      }
-                    }
-                  } else {
-                    // usage of not-null assertion operator "!" because we just checked for its existence
-                    fieldToPrefill!.value = value;
-                  }
-                }
-              }
-            }
+    try {
+      const preFill = props.prefillContent;
+      //only prefill if form was not saved before (no savedPageIndex available)
+      if (typeof data.savedPageIndex !== 'undefined') {
+        return data;
+      }
+
+      for (const [key, value] of Object.entries(preFill)) {
+        const fieldToPrefill = data?.properties?.[key];
+        const isMultiSelect = Array.isArray(value);
+
+        // check if the field to be prefilled exists
+        // check if the value to be prefilled is a string
+        // on catalog fields, arrays are also allowed
+        if (
+          !(fieldToPrefill &&
+          (typeof value === 'string' ||
+            (fieldToPrefill.possibleValues && isMultiSelect))
+        )) {
+          continue;
+        }
+
+        //only prefill if field is empty / not available
+        if (
+          !(!(fieldToPrefill as Object).hasOwnProperty('value') ||
+          fieldToPrefill?.value === '')
+        ) {
+          continue;
+        }
+
+        // special handling for non-catalog fields:
+        if (
+          !(fieldToPrefill.possibleValues ||
+          fieldToPrefill.possibleValueSetID)
+        ) {
+          // usage of not-null assertion operator "!" because we just checked for its existence
+          fieldToPrefill!.value = value;
+          continue;
+        }
+
+        //get possible values of field
+        let possibleValues: IPossibleValue[] = [];
+        //backwards compatibility, old possibleValues, remove in next version
+        if (
+          fieldToPrefill.possibleValues &&
+          fieldToPrefill.possibleValues.length > 0
+        ) {
+          possibleValues = fieldToPrefill.possibleValues;
+        } else if (
+          data.possibleValueSets &&
+          fieldToPrefill.possibleValueSetID
+        ) {
+          const possibleValueSet = data.possibleValueSets.find(
+            (i) =>
+              i.possibleValueSetID ===
+              fieldToPrefill.possibleValueSetID,
+          );
+          if (possibleValueSet?.possibleValues) {
+            possibleValues = possibleValueSet.possibleValues;
           }
-        } catch (error) {
-          console.error('Parsing prefill json failed');
+        }
+
+        const catalogValueToPrefill =
+          // multi select?
+          isMultiSelect
+            ? // get all possible values with matching identifiers
+              possibleValues.filter((possibleValue) =>
+                (value as IPossibleValue[]).some(
+                  (v) => v.identifier === possibleValue.identifier,
+                ),
+              )
+            : // get first matching value by identifier
+              possibleValues.find(
+                (possibleValue) =>
+                  possibleValue.identifier === value,
+              );
+        if (catalogValueToPrefill) {
+          // multi select fields expect the property `values`, while single select fields expect the property `value`
+          if (isMultiSelect) {
+            fieldToPrefill.values = catalogValueToPrefill;
+            delete fieldToPrefill.oldValue;
+          } else {
+            fieldToPrefill.value = catalogValueToPrefill;
+          }
         }
       }
+    } catch (error) {
+      console.error('Parsing prefill json failed');
     }
 
     return data;
@@ -940,23 +948,18 @@ const RendererScreen: React.FC<{
     }
 
     // 3) Mock load
-    let responseBody: any = "";
+    let responseBody: { uiSchema: IForm, schema: ISchema, data?: IData, captchaConfig?: any; } | null = null;
     if (props.isFormgridPreview) {
-      const emptyForm = { uiSchema: { pages: [] }, schema: {} };
-      if (!props.formJson) {
-        responseBody = emptyForm;
-      } else {
-        try {
-          responseBody = JSON.parse(props.formJson);
-        } catch (e) {
-          console.warn('Invalid formJson from Formgrid preview', e);
-          responseBody = emptyForm;
-        }
-      }
-      formState.form = responseBody.uiSchema;
-      formState.data = { formID: props.formId, properties: {} };
-      formState.schema = responseBody.schema;
-      formState.captchaConfig = responseBody.captchaConfig;
+      formState.form = props.previewUiSchema!;
+      formState.data = { formID: props.formId, properties: props.prefillContent };
+      formState.schema = props.previewSchema!;
+      // Preview does not have a captcha
+      formState.captchaConfig = undefined;
+      responseBody = {
+        schema: props.previewSchema!,
+        uiSchema: props.previewUiSchema!,
+        captchaConfig: null,
+      };
     } else {
       const mockJSON = await mockFormularUtils.fetchMockDefaultFormular(mockFormType);
       responseBody = mockJSON;
@@ -965,7 +968,11 @@ const RendererScreen: React.FC<{
       formState.schema = responseBody.schema;
       formState.captchaConfig = responseBody.captchaConfig;
     }
-    uiState.lastPage = responseBody.uiSchema.pages.length;
+    if (formState?.form?.pages) {
+      uiState.lastPage = formState.form.pages.length;
+    } else {
+      uiState.lastPage = 0;
+    }
     const missingFlowResponse3 = applyFormFlow(responseBody);
     if (missingFlowResponse3) return missingFlowResponse3;
     if (responseBody.schema.formType) {
@@ -1929,6 +1936,10 @@ const RendererScreen: React.FC<{
     } else if (pageNum < 0) {
       console.log('Cannot change to a negative page index.');
     }
+
+    if (props.isFormgridPreview) {
+      emitPageChange(pageNum);
+    }
     updateState(StatesToUpdateEnum.UIState);
   };
 
@@ -1992,8 +2003,8 @@ const RendererScreen: React.FC<{
             handleExpertSearch={handleExpertSearch}
             selectedElementId={props.selectedElementId}
           />
-        </ScrollView></Host>
-      </>)
+        </ScrollView>
+      </Host></>)
   }
 
   let renderScreen = <></>;

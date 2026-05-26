@@ -198,6 +198,8 @@ spec:
                         currentBuild.description = version
                     }
 
+                    mvnArguments += " -Dnodejs.npm.bin=/opt/node/bin/npm";
+
                     if (params.runTests) {
                         mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
                         if (!params.runReleaseBuild && !params.deploy && !params.deployTesting) {

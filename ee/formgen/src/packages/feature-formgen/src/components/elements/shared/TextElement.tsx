@@ -1,21 +1,20 @@
+import { TFunction } from 'i18next';
 import React from 'react';
 import {
   FormState,
   IFormGridOptions,
   SummaryOptions,
 } from '../../../types/interfaces';
-import { SummaryElement } from '../helper/SummaryElement';
+import { getI18nText, getValue } from '../../../utils/Utils';
 import { FormElementWrapper } from '../helper/FormElementWrapper';
-import * as utils from '../../../utils/Utils';
-import { TFunction } from 'i18next';
+import { SummaryElement } from '../helper/SummaryElement';
 
 /**
  * TextElement
  */
 function TextElement(props: any) {
-  const item = props.element;
   const summary = props.summary;
-  const value = item.value;
+  const value = getI18nText(props.formState, props.formGridOptions?.text || props.value) || '';
   const localErrMsg = props.error;
 
   if (summary === SummaryOptions.SummaryText) {
@@ -26,7 +25,7 @@ function TextElement(props: any) {
         uiState={props.uiState}
         summaryOption={props.summary}
         label={props.label}
-        value={TextElement.getSummaryValue(props.formState, props.jsonpath, item.id, props.t)}
+        value={TextElement.getSummaryValue(props.formState, props.jsonpath, props.id, props.t)}
         initUrl={props.restService.initUrl}
       />
     );
@@ -71,7 +70,7 @@ TextElement.getSummaryValue = function (
   t: TFunction,
   formGridOptions?: IFormGridOptions,
 ) {
-  const value = utils.getValue(state, jsonpath, id);
+  const value = getValue(state, jsonpath, id);
   return value;
 };
 

@@ -8,23 +8,28 @@
 }
 
 .shell__header {
-  background: var(--pm-color-surface);
-  border-bottom: 1px solid var(--pm-color-border);
+  /* Gentics-Blau Verlauf — vom Primary in den Dark-Akzent rechts. */
+  background:
+    linear-gradient(135deg, var(--pm-color-primary) 0%, var(--pm-color-primary-dark) 100%);
+  color: #fff;
   padding: var(--pm-spacing-md) var(--pm-spacing-lg);
   display: flex;
   align-items: center;
   gap: var(--pm-spacing-md);
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 
   h1 {
     font-size: var(--pm-font-size-xl);
     font-weight: 600;
     margin: 0;
+    color: #fff;
+    letter-spacing: 0.01em;
   }
 }
 
 .shell__subtitle {
-  color: var(--pm-color-text-secondary);
+  color: rgba(255, 255, 255, 0.85);
   font-size: var(--pm-font-size-sm);
 }
 
@@ -32,11 +37,11 @@
 
 .shell__session-badge {
   font-size: var(--pm-font-size-xs);
-  color: var(--pm-color-text-secondary);
-  background: var(--pm-color-bg);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid var(--pm-color-border-light);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -77,9 +82,10 @@
 }
 
 .shell__scope-card {
-  background: var(--pm-color-surface);
-  border: 1px solid var(--pm-color-border-light);
-  border-left: 3px solid var(--pm-color-primary);
+  background:
+    linear-gradient(90deg, var(--pm-color-primary-subtle) 0%, var(--pm-color-surface) 60%);
+  border: 1px solid var(--pm-color-primary-light);
+  border-left: 4px solid var(--pm-color-primary);
   border-radius: var(--pm-radius-md);
   padding: var(--pm-spacing-md) var(--pm-spacing-lg);
   margin-bottom: var(--pm-spacing-md);
@@ -90,7 +96,7 @@
   h3 {
     font-weight: 600;
     margin: 0 0 4px 0;
-    color: var(--pm-color-text);
+    color: var(--pm-color-primary-dark);
   }
 
   p {

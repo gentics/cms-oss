@@ -2,7 +2,7 @@
 
 .scope-tabs {
   background: var(--pm-color-surface);
-  border-bottom: 1px solid var(--pm-color-border);
+  border-bottom: 1px solid var(--pm-color-primary-light);
   padding: 0 var(--pm-spacing-lg);
   display: flex;
   gap: 2px;
@@ -14,7 +14,7 @@
   appearance: none;
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
   padding: var(--pm-spacing-md);
   font-family: inherit;
   font-size: var(--pm-font-size-md);
@@ -27,18 +27,19 @@
   transition: var(--pm-transition);
 
   &:hover {
-    color: var(--pm-color-text);
+    color: var(--pm-color-primary-dark);
     background: var(--pm-color-primary-subtle);
   }
 
   &--active {
     color: var(--pm-color-primary-dark);
     border-bottom-color: var(--pm-color-primary);
+    background: var(--pm-color-primary-subtle);
     font-weight: 600;
 
     .scope-tabs__count {
-      background: var(--pm-color-primary-light);
-      color: var(--pm-color-primary-dark);
+      background: var(--pm-color-primary);
+      color: #fff;
     }
   }
 }

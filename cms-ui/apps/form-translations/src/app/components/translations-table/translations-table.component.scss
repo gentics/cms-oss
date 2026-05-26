@@ -27,7 +27,7 @@ table.translations {
 }
 
 table.translations thead {
-  background: var(--pm-color-bg);
+  background: var(--pm-color-primary-light);
   position: sticky;
   top: 0;
   z-index: 2;
@@ -36,10 +36,10 @@ table.translations thead {
 table.translations th {
   text-align: left;
   padding: var(--pm-spacing-sm) var(--pm-spacing-md);
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--pm-font-size-sm);
-  color: var(--pm-color-text-secondary);
-  border-bottom: 1px solid var(--pm-color-border);
+  color: var(--pm-color-primary-dark);
+  border-bottom: 2px solid var(--pm-color-primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 
@@ -48,11 +48,11 @@ table.translations th {
     min-width: 200px;
     position: sticky;
     left: 0;
-    background: var(--pm-color-bg);
+    background: var(--pm-color-primary-light);
     z-index: 3;
-    border-right: 1px solid var(--pm-color-border-light);
+    border-right: 1px solid var(--pm-color-primary);
     /* Sichtbarer Schatten an der Sticky-Kante, sobald die Tabelle horizontal scrollt */
-    box-shadow: 1px 0 0 var(--pm-color-border-light);
+    box-shadow: 1px 0 0 rgba(2, 157, 221, 0.3);
   }
 
   &.col-lang {
@@ -61,10 +61,11 @@ table.translations th {
 
   .lang-meta {
     font-weight: 400;
-    color: var(--pm-color-text-disabled);
+    color: var(--pm-color-primary);
     text-transform: none;
     letter-spacing: 0;
     margin-left: 4px;
+    opacity: 0.7;
   }
 }
 

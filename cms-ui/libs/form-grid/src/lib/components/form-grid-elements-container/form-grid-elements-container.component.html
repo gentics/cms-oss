@@ -43,7 +43,7 @@
 
         <gtx-sortable-item
             class="form-item columns"
-            [class.is-selected-card]="selectedElement() != null && element?.id === selectedElement()?.id"
+            [class.is-selected]="selectedElement() != null && element?.id === selectedElement()?.id"
             [class.container-element]="displayItem.isAggregate || displayItem.isContainer"
             [ngClass]="'small-' + getDisplaySpan(element, $index)"
             data-drop-item="true"
@@ -58,10 +58,9 @@
             ></div>
 
             <gtx-contents-list-item
-                class="fg-box"
+                class="element-container"
                 [class.empty]="!element.label"
                 [attr.data-element-id]="element.id"
-                [class.is-selected]="selectedElement() != null && element.id === selectedElement()?.id"
                 (click)="selectElement(element, $event)"
             >
                 <div class="item-primary">
@@ -82,10 +81,9 @@
                         }
                     </div>
 
-                    <strong
-                        class="formtitle"
-                        [class.is-selected-title]="selectedElement() != null && element.id === selectedElement()?.id"
-                    >{{ (element.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}</strong>
+                    <strong class="element-title">
+                        {{ (element.label | gtxI18nObject) || ('form_grid.fallback_element_title' | gtxI18n) }}
+                    </strong>
                 </div>
             </gtx-contents-list-item>
 
@@ -96,12 +94,14 @@
 
                     [config]="config()"
                     [rootId]="rootId()"
+                    [parentId]="id()"
                     [id]="element.id"
                     [level]="level() + 1"
                     [pageIndex]="pageIndex()"
                     [languages]="languages()"
                     [mode]="mode()"
                     [gridSurface]="gridSurface()"
+                    [isAggregate]="displayItem.isAggregate"
                     [whitelist]="displayItem.whitelist"
 
                     [elements]="element.elements || []"

@@ -96,7 +96,7 @@
 }
 
 .columns>gtx-contents-list-item,
-.columns>.fg-box {
+.columns>.element-container {
     flex: 1 1 auto;
     min-height: 1px;
 }
@@ -172,7 +172,7 @@ gtx-contents-list-item {
         cursor: pointer;
     }
 
-    &.is-selected-card {
+    &.is-selected {
         border-left: 3px solid #0096DC;
         background-color: #e4f6ff;
 
@@ -419,7 +419,7 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
         margin-right: 0;
     }
 
-    .fg-box {
+    .element-container {
         padding: 0 ;
     }
 
@@ -447,7 +447,7 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
         margin-right: 0;
     }
 
-    .fg-box {
+    .element-container {
         padding: 0;
     }
 
@@ -529,11 +529,6 @@ gtx-sortable-item.form-item>gtx-contents-list-item {
     color: #e65100;
     font-size: 1rem;
     vertical-align: middle;
-}
-
-gtx-sortable-item.has-condition-warning .fg-box {
-    border-color: #ffb74d;
-    background: #fff8f0;
 }
 
 /* --- SortableJS drag visual feedback --- */

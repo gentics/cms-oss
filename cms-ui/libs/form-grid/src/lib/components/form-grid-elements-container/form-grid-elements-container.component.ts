@@ -16,6 +16,7 @@ import {
     FormElement,
     FormElementConfiguration,
     FormSchema,
+    FormSchemaProperties,
     FormSchemaProperty,
     FormTypeConfiguration,
     I18nString,
@@ -77,6 +78,10 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly pageIndex = input.required<number>();
     /** All languages the form is available in. */
     public readonly languages = input.required<string[]>();
+    /** The ID of the parent container */
+    public readonly parentId = input.required<string>();
+    /** If this element/container is a aggregate */
+    public readonly isAggregate = input.required<boolean>();
 
     /** The schema of the form */
     public readonly schema = model.required<FormSchema>();
@@ -210,8 +215,8 @@ export class FormGridElementsContainerComponent implements OnChanges {
         }
 
         const handleEl = event.currentTarget as HTMLElement | null;
-        const hostEl = handleEl?.closest('gtx-sortable-item') as HTMLElement | null;
-        const parentEl = hostEl?.parentElement as HTMLElement | null;
+        const hostEl = handleEl?.closest('gtx-sortable-item');
+        const parentEl = hostEl?.parentElement;
 
         let rowBase = 0;
         let rowMax = 12;
@@ -271,16 +276,16 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
                 const rect = surface.getBoundingClientRect();
                 const colW = rect.width / 12;
-                const dx = e.clientX - this.resizeStartX!;
+                const dx = e.clientX - this.resizeStartX;
                 const deltaCols = Math.round(dx / colW);
 
-                const nextRaw = this.resizeStartSpan! + deltaCols;
+                const nextRaw = this.resizeStartSpan + deltaCols;
                 const minSpan = this.getMinSpan(this.resizeTarget);
-                const nextSpan = Math.max(minSpan, Math.min(this.resizeRowMaxSpan!, nextRaw));
+                const nextSpan = Math.max(minSpan, Math.min(this.resizeRowMaxSpan, nextRaw));
 
                 this.zone.run(() => {
                     this.setSpan(this.resizeTarget, nextSpan);
-                    const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols! + nextSpan));
+                    const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + nextSpan));
                     this.resizeOverlaySpanLocal.set(nextOverlaySpan);
                     this.changeDetector.markForCheck();
                 });
@@ -429,11 +434,11 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
         // Creating a new element when a palette item has been dragged into the grid
         if (event.item.classList.contains('palette-item')) {
-            const elType = event.item.getAttribute('data-element-type')!;
+            const elType = event.item.getAttribute('data-element-type');
             const isControl = event.item.getAttribute('data-is-control') === 'true';
             const containerType = event.item.getAttribute('data-container-type');
 
-            this.addNewElement(elType, event.newDraggableIndex || event.newIndex!, isControl, containerType as any);
+            this.addNewElement(elType, event.newDraggableIndex || event.newIndex, isControl, containerType as any);
             return;
         }
 
@@ -450,7 +455,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
             elementId: elId,
             fromContainerId: fromId,
             toContainerId: toId,
-            targetIndex: Math.max(0, event.newDraggableIndex! - 1),
+            targetIndex: Math.max(0, event.newDraggableIndex - 1),
         });
 
         this.elementMoving.set(null);
@@ -491,9 +496,21 @@ export class FormGridElementsContainerComponent implements OnChanges {
     }
 
     private updateDisplayItems(): void {
+        let propertyLookup: FormSchemaProperties = this.schema().properties;
+
+        if (this.isAggregate()) {
+            const ownSchema = this.schema().properties[this.id()];
+
+            if (ownSchema == null || ownSchema.properties == null || typeof ownSchema.properties !== 'object') {
+                console.warn(`The aggregate "${this.id()}" does not have valid properties set, to correctly work as aggregate. Sub-Elements will not be able to be displayed correctly!`);
+            } else {
+                propertyLookup = ownSchema.properties;
+            }
+        }
+
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
         this.displayItems.set((this.elements() || []).map((el) => {
-            const itemSchema = this.schema().properties[el.id];
+            const itemSchema = propertyLookup?.[el.id];
 
             if (itemSchema) {
                 const itemConfig = this.config().controls[itemSchema?.type];
@@ -521,6 +538,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 const type = el.formGridOptions?.type;
 
                 if (!type) {
+                    console.warn('Could not determine a item type from element! Element will not be displayed in editor.', el);
                     return null;
                 }
 

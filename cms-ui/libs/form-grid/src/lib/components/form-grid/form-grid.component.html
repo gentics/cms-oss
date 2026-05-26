@@ -129,12 +129,14 @@
 
                         [config]="config()"
                         [rootId]="ELEMENT_ROOT_CONTAINER_ID"
+                        [parentId]="ELEMENT_ROOT_CONTAINER_ID"
                         [id]="ELEMENT_ROOT_CONTAINER_ID"
                         [level]="0"
                         [pageIndex]="pageIndex()"
                         [languages]="languages()"
                         [mode]="mode()"
                         [gridSurface]="gridSurface"
+                        [isAggregate]="false"
 
                         [elements]="elements()"
                         (elementsChange)="updatePageElements($event)"

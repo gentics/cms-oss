@@ -1,5 +1,6 @@
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     OnInit,
     inject,
@@ -41,6 +42,7 @@ export class ShellComponent implements OnInit {
     private readonly api = inject(FormTranslationsApiService);
     private readonly notifications = inject(I18nNotificationService);
     private readonly i18n = inject(I18nService);
+    private readonly cdr = inject(ChangeDetectorRef);
 
     // -------- bootstrap state --------
     bootstrapStatus: LoadStatus = 'idle';
@@ -75,6 +77,7 @@ export class ShellComponent implements OnInit {
         this.hasSession = this.sid != null;
         if (!this.hasSession) {
             this.bootstrapStatus = 'loaded';
+            this.cdr.markForCheck();
             return;
         }
 
@@ -116,6 +119,8 @@ export class ShellComponent implements OnInit {
             this.notifications.show({ type: 'alert', message: 'NOTIFY.LOAD_ERROR' });
             // eslint-disable-next-line no-console
             console.error('form-translations bootstrap failed', err);
+        } finally {
+            this.cdr.markForCheck();
         }
     }
 
@@ -124,6 +129,7 @@ export class ShellComponent implements OnInit {
             return;
         }
         this.scopeStatus[scopeId] = 'loading';
+        this.cdr.markForCheck();
         try {
             const data = await firstValueFrom(this.api.loadTypeTranslations(scopeId));
             this.saved[scopeId] = data;
@@ -138,6 +144,8 @@ export class ShellComponent implements OnInit {
             });
             // eslint-disable-next-line no-console
             console.error('scope load failed', err);
+        } finally {
+            this.cdr.markForCheck();
         }
     }
 
@@ -265,6 +273,7 @@ export class ShellComponent implements OnInit {
         if (cellCount === 0) return;
 
         this.saving = true;
+        this.cdr.markForCheck();
         try {
             const obs = scope.isGlobal
                 ? this.api.saveGlobalTranslations(delta)
@@ -287,6 +296,7 @@ export class ShellComponent implements OnInit {
             console.error('save failed', err);
         } finally {
             this.saving = false;
+            this.cdr.markForCheck();
         }
     }
 

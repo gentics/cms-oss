@@ -1,4 +1,4 @@
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { inject, NgModule, provideAppInitializer } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
@@ -9,12 +9,14 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import * as DE_TRANSLATIONS from '../assets/i18n/de.json';
 import * as EN_TRANSLATIONS from '../assets/i18n/en.json';
+import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
 import { SaveBarComponent } from './components/save-bar/save-bar.component';
 import { ScopeTabsComponent } from './components/scope-tabs/scope-tabs.component';
 import { ShellComponent } from './components/shell/shell.component';
 import { TranslationsTableComponent } from './components/translations-table/translations-table.component';
 import { TranslationsToolbarComponent } from './components/translations-toolbar/translations-toolbar.component';
+import { DevMockInterceptor } from './core/interceptors/dev-mock.interceptor';
 import { AuthenticationService } from './core/services/authentication.service';
 
 @NgModule({
@@ -36,6 +38,11 @@ import { AuthenticationService } from './core/services/authentication.service';
     ],
     providers: [
         provideHttpClient(withInterceptorsFromDi()),
+        /* Local dev fallback while the backend endpoints aren't shipped yet.
+           Production builds skip this entirely (see environment.prod.ts). */
+        ...(environment.useDevMock
+            ? [{ provide: HTTP_INTERCEPTORS, useClass: DevMockInterceptor, multi: true }]
+            : []),
         provideAppInitializer(() => {
             const translate = inject(TranslateService);
             const auth = inject(AuthenticationService);

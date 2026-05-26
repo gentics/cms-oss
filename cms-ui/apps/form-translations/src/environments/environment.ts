@@ -1,9 +1,15 @@
 /**
- * Development configuration. Run against a real CMS via `npm run start:proxy`
- * (proxy.conf.json points at the dev CMS). The mock-mode that previously
- * lived here was removed in f-gpu-2441 — see refactor note in the PR.
+ * Development configuration.
+ *
+ * `useDevMock: true` activates an HTTP interceptor that stubs the
+ * `/rest/form/translations*` and `/rest/form/types*` endpoints so the tool
+ * can be used before the backend lands them. Set to `false` once the real
+ * endpoints are available, or run `start:proxy` against a CMS that already
+ * implements them.
  */
 export const environment = {
     production: false,
     toolKey: 'form-translations',
+    useDevMock: true,
+    devMockLatencyMs: 200,
 };

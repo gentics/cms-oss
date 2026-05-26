@@ -177,6 +177,14 @@
 				<artifactId>cms-translation-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+
+			<!-- FormGen -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>formgen</artifactId>
+				<type>zip</type>
+				<version>${project.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 </project>

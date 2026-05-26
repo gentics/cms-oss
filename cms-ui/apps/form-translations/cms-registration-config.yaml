@@ -1,0 +1,13 @@
+# Example CMS configuration snippet — append into the `custom_tools` section
+# of your CMS configuration YAML. See:
+# https://www.gentics.com/Content.Node/cmp8/guides/admin_custom_tools.html
+
+custom_tools:
+  - id: form-translations
+    key: form-translations
+    name:
+      de: Formular-Übersetzungen
+      en: Form Translations
+    toolUrl: /tools/form-translations/?sid=${SID}
+    iconUrl: /tools/form-translations/assets/icon.svg
+    newtab: false

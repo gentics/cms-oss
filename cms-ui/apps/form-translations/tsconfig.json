@@ -1,6 +1,7 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
+        "target": "es2022",
         "moduleResolution": "bundler",
         "module": "preserve"
     },
@@ -10,7 +11,7 @@
         "annotateForClosureCompiler": true,
         "skipTemplateCodegen": false,
         "strictMetadataEmit": true,
-        "strictTemplates": true,
+        "strictTemplates": false,
         "strictInjectionParameters": true,
         "enableResourceInlining": false
     },

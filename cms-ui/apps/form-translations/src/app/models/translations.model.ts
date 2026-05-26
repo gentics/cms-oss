@@ -1,55 +1,26 @@
-import { LoadingState } from './app-state.model';
-
 /**
- * ViewModels für die UI. Werden aus DTOs (siehe dto.model.ts) transformiert.
+ * View-side concepts for the form-translations tool. Wire models
+ * (DTOs / Response shapes) live in `@gentics/cms-models`.
  */
 
-export interface Language {
-  code: string;
-  name: string;
-}
-
-/** Sentinel-Key für den globalen Scope (gegenüber Formulartyp-Scopes). */
+/** Sentinel id of the global translations scope. */
 export const GLOBAL_SCOPE_ID = 'global';
 export type ScopeId = typeof GLOBAL_SCOPE_ID | string;
 
+/**
+ * A scope tab in the UI. `Global` is always present; the remaining scopes are
+ * derived from the CMS form-type configurations.
+ */
 export interface Scope {
-  id: ScopeId;
-  /** Anzeigename in den Tabs. */
-  label: string;
-  /** Beschreibungstext für die Scope-Karte. Darf HTML enthalten. */
-  description: string;
-  /**
-   * true für den globalen Scope, false für Formulartyp-Scopes.
-   * Wichtig u.a. für die Endpoint-Wahl beim Save.
-   */
-  isGlobal: boolean;
+    /** Either `'global'` or a form-type key (e.g. `'andp'`). */
+    id: ScopeId;
+    /** Label shown in the tab strip. */
+    label: string;
+    /** Description shown in the scope card. */
+    description: string;
+    /** `true` for `'global'`, `false` for form-type scopes. */
+    isGlobal: boolean;
 }
 
-/**
- * Map: Placeholder-Key → Sprachcode → Übersetzungstext.
- * Identische Struktur wie das POST-Payload der API.
- */
-export type TranslationsMap = Record<string, Record<string, string>>;
-
-/**
- * Zustand pro Scope.
- * - `saved` spiegelt den letzten erfolgreich vom Server bestätigten Stand.
- * - `draft` enthält die aktuell im UI editierten Werte.
- * - Abweichung saved ↔ draft = dirty.
- */
-export interface ScopeData {
-  loading: LoadingState;
-  saving: LoadingState;
-  saved: TranslationsMap;
-  draft: TranslationsMap;
-}
-
-export function createEmptyScopeData(): ScopeData {
-  return {
-    loading: 'idle',
-    saving: 'idle',
-    saved: {},
-    draft: {}
-  };
-}
+/** UI-side filter mode for the placeholder list. */
+export type FilterMode = 'all' | 'incomplete';

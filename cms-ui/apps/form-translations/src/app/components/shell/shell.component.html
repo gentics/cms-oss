@@ -1,97 +1,97 @@
-<ng-container *ngIf="vm$ | async as vm">
-
-  <!-- No-Session-Fehler -->
-  <div class="shell__no-session pm-error-state" data-name="no-session" *ngIf="vm.ready && !vm.hasSession">
+<!-- No-Session-Fehler -->
+<div class="shell__no-session pm-error-state" data-name="no-session"
+     *ngIf="bootstrapStatus === 'loaded' && !hasSession">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/>
-      <line x1="12" y1="8" x2="12" y2="12"/>
-      <line x1="12" y1="16" x2="12.01" y2="16"/>
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
     </svg>
-    <h2>{{ 'ERROR.NO_SESSION_TITLE' | gtxTranslate }}</h2>
-    <p>{{ 'ERROR.NO_SESSION_DESC' | gtxTranslate }}</p>
-  </div>
+    <h2>{{ 'ERROR.NO_SESSION_TITLE' | gtxI18n }}</h2>
+    <p>{{ 'ERROR.NO_SESSION_DESC' | gtxI18n }}</p>
+</div>
 
-  <!-- Bootstrapping -->
-  <div class="shell__loading" data-name="bootstrap-loading" *ngIf="!vm.ready">
+<!-- Bootstrap -->
+<div class="shell__loading" data-name="bootstrap-loading"
+     *ngIf="bootstrapStatus === 'loading'">
     <span class="pm-spinner pm-spinner--lg"></span>
-  </div>
+</div>
 
-  <!-- Haupt-UI -->
-  <div class="shell" data-region="shell" *ngIf="vm.ready && vm.hasSession">
+<!-- Main UI -->
+<div class="shell" data-region="shell"
+     *ngIf="bootstrapStatus === 'loaded' && hasSession">
 
     <header class="shell__header" data-region="header">
-      <h1>{{ 'TOOL.TITLE' | gtxTranslate }}</h1>
-      <span class="shell__subtitle">{{ 'TOOL.SUBTITLE' | gtxTranslate }}</span>
-      <div class="shell__header-spacer"></div>
-      <span class="shell__session-badge" *ngIf="vm.sid">
-        {{ 'TOOL.SESSION_BADGE' | gtxTranslate }}: {{ vm.sid }}
-      </span>
+        <h1>{{ 'TOOL.TITLE' | gtxI18n }}</h1>
+        <span class="shell__subtitle">{{ 'TOOL.SUBTITLE' | gtxI18n }}</span>
+        <div class="shell__header-spacer"></div>
+        <span class="shell__session-badge" *ngIf="sid">
+            {{ 'TOOL.SESSION_BADGE' | gtxI18n }}: {{ sid }}
+        </span>
     </header>
 
     <gtx-scope-tabs
-      [tabs]="vm.scopeTabs"
-      [activeScopeId]="vm.activeScopeId"
-      (scopeSelect)="onScopeSelect($event)">
+        [tabs]="scopeTabs"
+        [activeScopeId]="activeScopeId"
+        (scopeSelect)="onScopeSelect($event)">
     </gtx-scope-tabs>
 
     <gtx-translations-toolbar
-      [search]="vm.search"
-      [filter]="vm.filter"
-      [shown]="vm.visibleKeys.length"
-      [total]="vm.totalKeys"
-      (searchChange)="onSearchChange($event)"
-      (filterChange)="onFilterChange($event)">
+        [search]="search"
+        [filter]="filter"
+        [shown]="visibleKeys.length"
+        [total]="totalKeys"
+        (searchChange)="onSearchChange($event)"
+        (filterChange)="onFilterChange($event)">
     </gtx-translations-toolbar>
 
     <main class="shell__main">
-      <div class="shell__content-pane">
-        <div class="shell__scroll-wrapper">
-          <div class="shell__scope-card" data-name="scope-card" [attr.data-scope-id]="vm.activeScope?.id" *ngIf="vm.activeScope">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                 style="color: var(--pm-color-primary);">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            <div>
-              <h3>
-                <ng-container *ngIf="vm.activeScope.isGlobal">
-                  {{ 'SCOPE.GLOBAL_TITLE' | gtxTranslate }}
-                </ng-container>
-                <ng-container *ngIf="!vm.activeScope.isGlobal">
-                  {{ 'SCOPE.TYPE_TITLE' | gtxTranslate:{ name: vm.activeScope.label } }}
-                </ng-container>
-              </h3>
-              <p [innerHTML]="vm.activeScope.description"></p>
+        <div class="shell__content-pane">
+            <div class="shell__scroll-wrapper">
+                <div class="shell__scope-card" data-name="scope-card"
+                     [attr.data-scope-id]="activeScope?.id"
+                     *ngIf="activeScope">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                         style="color: var(--pm-color-primary);">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <div>
+                        <h3>
+                            <ng-container *ngIf="activeScope.isGlobal">
+                                {{ 'SCOPE.GLOBAL_TITLE' | gtxI18n }}
+                            </ng-container>
+                            <ng-container *ngIf="!activeScope.isGlobal">
+                                {{ 'SCOPE.TYPE_TITLE' | gtxI18n:{ name: activeScope.label } }}
+                            </ng-container>
+                        </h3>
+                        <p>{{ activeScope.description | gtxI18n:{ name: activeScope.label } }}</p>
+                    </div>
+                </div>
+
+                <div class="shell__loading-inline" *ngIf="activeScopeLoading">
+                    <span class="pm-spinner"></span>
+                    {{ 'COMMON.LOADING' | gtxI18n }}
+                </div>
+
+                <gtx-translations-table
+                    *ngIf="!activeScopeLoading"
+                    [keys]="visibleKeys"
+                    [languages]="languages"
+                    [saved]="activeSaved"
+                    [draft]="activeDraft"
+                    (cellEdit)="onCellEdit($event)">
+                </gtx-translations-table>
             </div>
-          </div>
 
-          <div class="shell__loading-inline" *ngIf="vm.scopeLoading === 'loading'">
-            <span class="pm-spinner"></span>
-            {{ 'COMMON.LOADING' | gtxTranslate }}
-          </div>
-
-          <gtx-translations-table
-            *ngIf="vm.scopeLoading !== 'loading'"
-            [keys]="vm.visibleKeys"
-            [languages]="vm.languages"
-            [scopeData]="vm.activeScopeData"
-            (cellEdit)="onCellEdit($event)">
-          </gtx-translations-table>
+            <gtx-save-bar
+                [dirtyCount]="dirtyCount"
+                [saving]="saving"
+                (save)="onSave()"
+                (discard)="onDiscard()">
+            </gtx-save-bar>
         </div>
-
-        <gtx-save-bar
-          [dirtyCount]="vm.dirtyCount"
-          [savingState]="vm.scopeSaving"
-          (save)="onSave()"
-          (discard)="onDiscard()">
-        </gtx-save-bar>
-      </div>
     </main>
-  </div>
-
-  <gtx-toasts></gtx-toasts>
-
-</ng-container>
+</div>

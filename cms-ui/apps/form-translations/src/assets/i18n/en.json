@@ -32,6 +32,7 @@
   "SAVE_BAR.CONFIRM_DISCARD": "Discard all changes?",
   "SAVE_BAR.CONFIRM_SCOPE_SWITCH": "Discard unsaved changes in the current scope?",
 
+  "NOTIFY.LOAD_ERROR": "Failed to load the initial data.",
   "NOTIFY.LANGUAGES_LOAD_ERROR": "Failed to load languages.",
   "NOTIFY.FORM_TYPES_LOAD_ERROR": "Failed to load form types.",
   "NOTIFY.SCOPE_LOAD_ERROR": "Failed to load translations for “{{scope}}”.",

@@ -2,7 +2,7 @@
   <table class="translations">
     <thead>
       <tr>
-        <th class="col-key">{{ 'TABLE.HEADER_PLACEHOLDER' | gtxTranslate }}</th>
+        <th class="col-key">{{ 'TABLE.HEADER_PLACEHOLDER' | gtxI18n }}</th>
         <th class="col-lang" *ngFor="let lang of languages; trackBy: trackLang" [attr.data-lang]="lang.code">
           {{ lang.name }}
           <span class="lang-meta">({{ lang.code }})</span>
@@ -48,7 +48,7 @@
       <circle cx="11" cy="11" r="8"/>
       <line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
-    <h3>{{ 'TABLE.EMPTY_TITLE' | gtxTranslate }}</h3>
-    <p>{{ 'TABLE.EMPTY_DESC' | gtxTranslate }}</p>
+    <h3>{{ 'TABLE.EMPTY_TITLE' | gtxI18n }}</h3>
+    <p>{{ 'TABLE.EMPTY_DESC' | gtxI18n }}</p>
   </div>
 </ng-template>

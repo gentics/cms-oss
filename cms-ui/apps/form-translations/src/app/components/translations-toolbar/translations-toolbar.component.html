@@ -11,7 +11,7 @@
       data-action="search"
       [value]="search"
       (input)="onSearchInput($event)"
-      [placeholder]="'TOOLBAR.SEARCH_PLACEHOLDER' | gtxTranslate" />
+      [placeholder]="'TOOLBAR.SEARCH_PLACEHOLDER' | gtxI18n" />
   </label>
 
   <div class="toolbar__filter" role="tablist" data-region="filter">
@@ -22,7 +22,7 @@
       [attr.data-active]="filter === 'all'"
       [class.is-active]="filter === 'all'"
       (click)="onFilter('all')">
-      {{ 'TOOLBAR.FILTER_ALL' | gtxTranslate }}
+      {{ 'TOOLBAR.FILTER_ALL' | gtxI18n }}
     </button>
     <button
       type="button"
@@ -31,7 +31,7 @@
       [attr.data-active]="filter === 'incomplete'"
       [class.is-active]="filter === 'incomplete'"
       (click)="onFilter('incomplete')">
-      {{ 'TOOLBAR.FILTER_INCOMPLETE' | gtxTranslate }}
+      {{ 'TOOLBAR.FILTER_INCOMPLETE' | gtxI18n }}
     </button>
   </div>
 
@@ -40,19 +40,19 @@
   <div class="toolbar__legend">
     <span class="toolbar__legend-item">
       <span class="toolbar__swatch toolbar__swatch--saved"></span>
-      {{ 'TOOLBAR.LEGEND_SAVED' | gtxTranslate }}
+      {{ 'TOOLBAR.LEGEND_SAVED' | gtxI18n }}
     </span>
     <span class="toolbar__legend-item">
       <span class="toolbar__swatch toolbar__swatch--dirty"></span>
-      {{ 'TOOLBAR.LEGEND_DIRTY' | gtxTranslate }}
+      {{ 'TOOLBAR.LEGEND_DIRTY' | gtxI18n }}
     </span>
     <span class="toolbar__legend-item">
       <span class="toolbar__swatch toolbar__swatch--empty"></span>
-      {{ 'TOOLBAR.LEGEND_EMPTY' | gtxTranslate }}
+      {{ 'TOOLBAR.LEGEND_EMPTY' | gtxI18n }}
     </span>
   </div>
 
   <div class="toolbar__info" data-name="counter" [attr.data-shown]="shown" [attr.data-total]="total">
-    {{ 'TOOLBAR.COUNT' | gtxTranslate:{ shown: shown, total: total } }}
+    {{ 'TOOLBAR.COUNT' | gtxI18n:{ shown: shown, total: total } }}
   </div>
 </div>

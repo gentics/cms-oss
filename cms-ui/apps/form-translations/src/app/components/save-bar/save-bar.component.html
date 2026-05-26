@@ -7,7 +7,7 @@
   <div class="save-bar__info">
     <span class="save-bar__dot"></span>
     <span data-name="dirty-count" [attr.data-count]="dirtyCount">
-      {{ 'SAVE_BAR.UNSAVED' | gtxTranslate:{ count: dirtyCount } }}
+      {{ 'SAVE_BAR.UNSAVED' | gtxI18n:{ count: dirtyCount } }}
     </span>
   </div>
   <div class="save-bar__spacer"></div>
@@ -17,7 +17,7 @@
     data-action="discard"
     [disabled]="dirtyCount === 0 || isSaving"
     (click)="discard.emit()">
-    {{ 'COMMON.DISCARD' | gtxTranslate }}
+    {{ 'COMMON.DISCARD' | gtxI18n }}
   </button>
   <button
     type="button"
@@ -32,7 +32,7 @@
       <polyline points="17 21 17 13 7 13 7 21"/>
       <polyline points="7 3 7 8 15 8"/>
     </svg>
-    <ng-container *ngIf="!isSaving">{{ 'COMMON.SAVE' | gtxTranslate }}</ng-container>
-    <ng-container *ngIf="isSaving">{{ 'COMMON.SAVING' | gtxTranslate }}</ng-container>
+    <ng-container *ngIf="!isSaving">{{ 'COMMON.SAVE' | gtxI18n }}</ng-container>
+    <ng-container *ngIf="isSaving">{{ 'COMMON.SAVING' | gtxI18n }}</ng-container>
   </button>
 </div>

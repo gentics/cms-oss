@@ -1,79 +1,69 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-import { environment } from '../../../environments/environment';
-
-const STORAGE_KEY = 'gtx-form-translations.sid';
+const SID_STORAGE_KEY = 'GCMSUI_sid';
 
 /**
- * Hält die aktuelle CMS-Session-ID. Wird beim Bootstrap durch den AppService
- * via `initialize()` befüllt. Quellen, in Reihenfolge der Priorität:
- *   1. URL-Parameter `?sid=…` (Production-Pfad — CMS embedded das Tool so)
- *   2. sessionStorage (Fallback nach Reload)
- *   3. environment.mockSid (nur im Mock-Modus)
+ * Reads the Gentics CMS Session-ID from the URL or localStorage.
+ *
+ * Mirrors the `GcmsAuthenticationService` implementation in `ct-link-checker`.
+ * The reviewer asked to consolidate this into `@gentics/cms-components`
+ * (along with the tool-api service) — tracked as a follow-up.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
-  private readonly sid$ = new BehaviorSubject<string | null>(null);
 
-  /** Initialisiert die SID. Gibt true zurück, wenn eine SID etabliert werden konnte. */
-  initialize(): boolean {
-    const fromUrl = this.extractSidFromUrl();
-    if (fromUrl) {
-      this.setSid(fromUrl);
-      return true;
+    private initialized = false;
+    private currentSid: string | null = null;
+    private readonly sid$ = new BehaviorSubject<string | null>(null);
+
+    /** Must be called once during app bootstrap. */
+    init(): void {
+        if (this.initialized) {
+            throw new Error('AuthenticationService.init() must be called only once.');
+        }
+        this.updateSid();
+        this.initialized = true;
     }
-    const fromStorage = this.loadSidFromStorage();
-    if (fromStorage) {
-      this.setSid(fromStorage);
-      return true;
+
+    get sid(): string | null {
+        return this.currentSid;
     }
-    if (environment.useMockData && environment.mockSid) {
-      this.setSid(environment.mockSid);
-      return true;
+
+    getSid(): Observable<string | null> {
+        return this.sid$.asObservable();
     }
-    return false;
-  }
 
-  get sid(): Observable<string | null> {
-    return this.sid$.asObservable();
-  }
-
-  get currentSid(): string | null {
-    return this.sid$.getValue();
-  }
-
-  setSid(sid: string): void {
-    this.sid$.next(sid);
-    try {
-      sessionStorage.setItem(STORAGE_KEY, sid);
-    } catch {
-      /* sessionStorage kann blockiert sein, kein Hard-Error */
+    /** Re-reads the SID from URL / storage. */
+    updateSid(): void {
+        this.currentSid = this.extractSidFromLocationOrStorage();
+        this.sid$.next(this.currentSid);
     }
-  }
 
-  clearSid(): void {
-    this.sid$.next(null);
-    try {
-      sessionStorage.removeItem(STORAGE_KEY);
-    } catch { /* ignore */ }
-  }
+    /**
+     * Priority is URL parameter first (the CMS shell hands the SID to the
+     * embedded tool that way), then `localStorage['GCMSUI_sid']` as fallback
+     * for refresh and standalone use.
+     */
+    private extractSidFromLocationOrStorage(): string | null {
+        const fromUrl = (window.location.href.match(/[?&]sid=(\d+)/i) ?? [])[1];
+        if (fromUrl) {
+            return fromUrl;
+        }
 
-  private extractSidFromUrl(): string | null {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const sid = params.get('sid');
-      return sid && sid.trim() !== '' ? sid : null;
-    } catch {
-      return null;
+        let stored: string | null = null;
+        try {
+            stored = localStorage.getItem(SID_STORAGE_KEY);
+        } catch {
+            return null;
+        }
+        if (!stored) {
+            return null;
+        }
+        /* Some places persist the SID JSON-stringified — strip surrounding quotes. */
+        if (stored.startsWith('"') || stored.startsWith('\'')) {
+            stored = stored.slice(1, -1);
+        }
+        return stored;
     }
-  }
-
-  private loadSidFromStorage(): string | null {
-    try {
-      return sessionStorage.getItem(STORAGE_KEY);
-    } catch {
-      return null;
-    }
-  }
 }

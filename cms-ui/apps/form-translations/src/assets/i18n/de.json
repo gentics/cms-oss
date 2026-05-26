@@ -32,6 +32,7 @@
   "SAVE_BAR.CONFIRM_DISCARD": "Alle Änderungen verwerfen?",
   "SAVE_BAR.CONFIRM_SCOPE_SWITCH": "Ungespeicherte Änderungen im aktuellen Bereich verwerfen?",
 
+  "NOTIFY.LOAD_ERROR": "Die Initialdaten konnten nicht geladen werden.",
   "NOTIFY.LANGUAGES_LOAD_ERROR": "Sprachen konnten nicht geladen werden.",
   "NOTIFY.FORM_TYPES_LOAD_ERROR": "Formulartypen konnten nicht geladen werden.",
   "NOTIFY.SCOPE_LOAD_ERROR": "Übersetzungen für „{{scope}}“ konnten nicht geladen werden.",

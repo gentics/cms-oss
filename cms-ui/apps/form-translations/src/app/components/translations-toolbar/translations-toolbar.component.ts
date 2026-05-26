@@ -6,7 +6,7 @@ import {
   Output
 } from '@angular/core';
 
-import { FilterMode } from '../../services/form-translations.service';
+import { FilterMode } from '../../models/translations.model';
 
 @Component({
   selector: 'gtx-translations-toolbar',

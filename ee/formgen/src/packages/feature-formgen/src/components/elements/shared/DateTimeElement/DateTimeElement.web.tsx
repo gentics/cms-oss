@@ -460,14 +460,11 @@ function DateTimeElement(props: IFormComponentAttributes) {
         <Animated.Text
           style={[
             styles.datePickerLabel,
-            Platform.select({
-              web: {
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              },
-              default: null,
-            }),
+            {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            },  
             placeholderAnimatedStyle,
             placeholderTextAnimatedStyle,
             props.error && props.editable && styles.errorDatePickerLabel,

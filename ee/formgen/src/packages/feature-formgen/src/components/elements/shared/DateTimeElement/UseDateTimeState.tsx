@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import moment, { Moment } from 'moment';
 import { IFormComponentAttributes, FormState } from '../../../../types/interfaces';
 import * as utils from '../../../../utils/Utils';
 import * as formEventsUtils from '../../../../utils/FormEventsUtils';
 import { StatesToUpdateEnum } from '../../../../constants/enums/StateToUpdateEnum';
 import { useSharedValue, withSpring } from 'react-native-reanimated';
+import { mergeStyles } from '@andp/core/src/AndpUtils';
+import { dateTimeElementStyles } from '../../../../styles/common/common-style';
+import { dateTimeElementStyles as customDateTimeElementStyles} from '../../../../styles/custom/custom-style';
 
 export type SharedState = ReturnType<typeof useDateTimeState>;
 
@@ -12,6 +15,11 @@ export function useDateTimeState(props: IFormComponentAttributes) {
   const schema = utils.getSchemaForElement(props.formState.schema, props.id);
   const isTimeField: boolean = schema?.type === 'time';
   const formState: FormState = props.formState;
+  const styles = useMemo(
+    () => mergeStyles(dateTimeElementStyles, customDateTimeElementStyles),
+    [],
+  );
+
 
   const labelText =
     utils.getI18nText(formState, props.label) + (props.required ? ' *' : '');
@@ -61,19 +69,19 @@ export function useDateTimeState(props: IFormComponentAttributes) {
   }, [props?.value]);
 
   // Reanimated Placeholder (plattformunabhängig nutzbar)
-  const placeholderTop = useSharedValue(props.value ? 4 : 16);
-  const placeholderFontSize = useSharedValue(props.value ? 12 : 20);
+  const placeholderTop = useSharedValue(props.value ? styles.datePickerLabelActive.top : styles.datePickerLabel.top);
+  const placeholderFontSize = useSharedValue(props.value ? styles.datePickerLabelActive.fontSize : styles.datePickerLabel.fontSize);
 
   const animCfg = { stiffness: 1800, damping: 150 };
 
   const handleAnimationForBlur = () => {
-    placeholderTop.value = withSpring(16, animCfg);
-    placeholderFontSize.value = withSpring(20, animCfg);
+    placeholderTop.value = withSpring(styles.datePickerLabel.top, animCfg);
+    placeholderFontSize.value = withSpring(styles.datePickerLabel.fontSize, animCfg);
   };
 
   const handleAnimationForFocus = () => {
-    placeholderTop.value = withSpring(4, animCfg);
-    placeholderFontSize.value = withSpring(12, animCfg);
+    placeholderTop.value = withSpring(styles.datePickerLabelActive.top, animCfg);
+    placeholderFontSize.value = withSpring(styles.datePickerLabelActive.fontSize, animCfg);
   };
 
   const onChangeHelper = (val: string | Moment) => {

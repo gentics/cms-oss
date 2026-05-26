@@ -221,6 +221,7 @@ const dateTimeElementStyles = StyleSheet.create({
   errorDatePickerInput: {},
   datePickerInputText: {},
   datePickerLabel: {},
+  datePickerLabelActive: {},
   errorDatePickerLabel: {},
 });
 

@@ -220,8 +220,8 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
 
   const stiffness = 1800;
   const damping = 150;
-  const placeholderTopSV = useSharedValue(hasInitialValue ? 4 : 17);
-  const placeholderFontSV = useSharedValue(hasInitialValue ? 12 : 17);
+  const placeholderTopSV = useSharedValue(hasInitialValue ? styles.datePickerLabelActive.top : styles.datePickerLabel.top);
+  const placeholderFontSV = useSharedValue(hasInitialValue ? styles.datePickerLabelActive.fontSize : styles.datePickerLabel.fontSize);
 
   const localPlaceholderStyle = useAnimatedStyle(() => ({
     top: placeholderTopSV.value,
@@ -232,21 +232,21 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
 
   React.useEffect(() => {
     if (!displayValue) {
-      placeholderTopSV.value = withSpring(17, { stiffness, damping });
-      placeholderFontSV.value = withSpring(17, { stiffness, damping });
+      placeholderTopSV.value = withSpring(styles.datePickerLabel.top, { stiffness, damping });
+      placeholderFontSV.value = withSpring(styles.datePickerLabel.fontSize, { stiffness, damping });
     }
   }, [displayValue]);
 
   const runFocus = () => {
     (handleAnimationForFocus ?? (() => {}))();
-    placeholderTopSV.value = withSpring(4, { stiffness, damping });
-    placeholderFontSV.value = withSpring(12, { stiffness, damping });
+    placeholderTopSV.value = withSpring(styles.datePickerLabelActive.top, { stiffness, damping });
+    placeholderFontSV.value = withSpring(styles.datePickerLabelActive.fontSize, { stiffness, damping });
   };
   const runBlur = () => {
     (handleAnimationForBlur ?? (() => {}))();
     if (!displayValue) {
-      placeholderTopSV.value = withSpring(17, { stiffness, damping });
-      placeholderFontSV.value = withSpring(17, { stiffness, damping });
+      placeholderTopSV.value = withSpring(styles.datePickerLabel.top, { stiffness, damping });
+      placeholderFontSV.value = withSpring(styles.datePickerLabel.fontSize, { stiffness, damping });
     }
   };
 
@@ -255,8 +255,8 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
     const v = (formProps as any)?.value;
     if (v == null) {
       setDisplayValue('');
-      placeholderTopSV.value = withSpring(17, { stiffness, damping });
-      placeholderFontSV.value = withSpring(17, { stiffness, damping });
+      placeholderTopSV.value = withSpring(styles.datePickerLabelActive.top, { stiffness, damping });
+      placeholderFontSV.value = withSpring(styles.datePickerLabelActive.fontSize, { stiffness, damping });
       prevDisplayRef.current = '';
       hadValueOnOpenRef.current = false;
       return;
@@ -300,11 +300,11 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
       hadValueOnOpenRef.current = !!s;
 
       if (s) {
-        placeholderTopSV.value = withSpring(4, { stiffness, damping });
-        placeholderFontSV.value = withSpring(12, { stiffness, damping });
+        placeholderTopSV.value = withSpring(styles.datePickerLabelActive.top, { stiffness, damping });
+        placeholderFontSV.value = withSpring(styles.datePickerLabelActive.fontSize, { stiffness, damping });
       } else {
-        placeholderTopSV.value = withSpring(17, { stiffness, damping });
-        placeholderFontSV.value = withSpring(17, { stiffness, damping });
+        placeholderTopSV.value = withSpring(styles.datePickerLabel.top, { stiffness, damping });
+        placeholderFontSV.value = withSpring(styles.datePickerLabel.fontSize, { stiffness, damping });
       }
     }
   }, [formProps.value, type]);

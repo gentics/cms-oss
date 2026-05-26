@@ -370,6 +370,10 @@ export default defineConfig([
         },
     },
     {
+        extends: [
+            // Apply the recommended Angular template rules
+            ...ngPlugin.configs.templateRecommended,
+        ],
         files: ["**/*.html"],
         rules: {
             '@angular-eslint/template/interactive-supports-focus': 'off',

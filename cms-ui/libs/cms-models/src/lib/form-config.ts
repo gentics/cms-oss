@@ -275,6 +275,10 @@ export interface FormTypeConfiguration {
      */
     userOptions?: FormSelectOption[];
     /**
+     * Options which captcha variations are available to use.
+     */
+    captchaOptions?: FormSelectOption[];
+    /**
      * Which styling variations the form-type has
      */
     templateOptions?: FormSelectOption[];

@@ -57,6 +57,10 @@ export interface EditableFormData {
      * The ui-schema definition of the form
      */
     'ui-schema': FormUISchema;
+    /**
+     * The ID of the captcha to use for this form.
+     */
+    captchaId?: string;
 
     /* INTERNAL FORMS
      * ===================================================================== */

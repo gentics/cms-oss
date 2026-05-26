@@ -178,6 +178,7 @@
         "form_administrator_email_title": "Administrator E-Mail",
         "form_success_page_title": "Success page",
         "form_flow_label": "Form flow",
+        "form_captcha_label": "Form Captcha",
         "item_not_found": "The item with the ID \"{{id}}\" was not found",
         "forcePublish_label": "Force publish",
         "general_properties_label": "General",

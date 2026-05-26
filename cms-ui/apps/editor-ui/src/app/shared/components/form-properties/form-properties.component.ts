@@ -173,6 +173,7 @@ export class FormPropertiesComponent
     protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
         this.formData = new FormGroup<FormProperties<Partial<EditableFormData>>>({
             flowId: new FormControl(this.item?.data?.flowId || this.safeValue(['data', 'flowId'])),
+            captchaId: new FormControl(this.item?.data.flowId || this.safeValue(['data', 'captchaId'])),
             templateContext: new FormControl(this.item?.data?.templateContext || this.safeValue(['data', 'templateContext'])),
             successUrlI18n: new FormControl(this.item?.data?.successUrlI18n || this.safeValue(['data', 'successUrlI18n'])),
             successPageId: new FormControl(this.item?.data?.successPageId || this.safeValue(['data', 'successPageId'])),

@@ -11,9 +11,15 @@
 
             @if (formTypeConfigurations) {
                 <div class="flex-row columns small-12">
+                    @let colSize = activeConfiguration?.flows?.length > 0 && activeConfiguration?.captchaOptions?.length > 0
+                        ? 4
+                        : ((activeConfiguration?.flows?.length > 0 || activeConfiguration?.captchaOptions?.length > 0)
+                            ? 6
+                            : 12);
                     @if (item?.formTypeName) {
                         <gtx-form-element-container
-                            class="columns small-6"
+                            class="columns"
+                            [ngClass]="'small-' + colSize"
                             [readonly]="true"
                         >
                             <label>{{ ('editor.form_type_label' | gtxI18n) + '*' }}</label>
@@ -24,7 +30,8 @@
                             [label]="('editor.form_type_label' | gtxI18n) + '*'"
                             [multiple]="false"
                             [required]="true"
-                            class="columns small-6"
+                            class="columns"
+                            [ngClass]="'small-' + colSize"
                             formControlName="formType"
                             (valueChange)="setActiveFormType($event)"
                         >
@@ -39,8 +46,8 @@
                     @if (activeConfiguration?.flows) {
                         <ng-container formGroupName="data">
                             <gtx-select
-                                class="columns small-6"
-                                [required]="true"
+                                class="columns"
+                                [ngClass]="'small-' + colSize"
                                 [label]="('editor.form_flow_label' | gtxI18n) + '*'"
                                 [required]="true"
                                 formControlName="flowId"
@@ -48,6 +55,24 @@
                                 @for (flow of activeConfiguration.flows; track flow.id) {
                                     <gtx-option [value]="flow.id">
                                         {{ flow.labelI18n | gtxI18nObject }}
+                                    </gtx-option>
+                                }
+                            </gtx-select>
+                        </ng-container>
+                    }
+
+                    @if (activeConfiguration?.captchaOptions) {
+                        <ng-container formGroupName="data">
+                            <gtx-select
+                                class="columns"
+                                [ngClass]="'small-' + colSize"
+                                [label]="'editor.form_captcha_label' | gtxI18n"
+                                [clearable]="true"
+                                formControlName="captchaId"
+                            >
+                                @for (option of activeConfiguration.captchaOptions; track option.value) {
+                                    <gtx-option [value]="option.value">
+                                        {{ option.labelI18n | gtxI18nObject }}
                                     </gtx-option>
                                 }
                             </gtx-select>

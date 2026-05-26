@@ -178,6 +178,7 @@
         "form_administrator_email_title": "Administrator E-Mail",
         "form_success_page_title": "Bestätigungsseite",
         "form_flow_label": "Formular Ablauf",
+        "form_captcha_label": "Formular Captcha",
         "item_not_found": "Das Objekt mit ID \"{{id}}\" wurde nicht gefunden",
         "forcePublish_label": "Publizieren erzwingen",
         "general_properties_label": "Allgemein",

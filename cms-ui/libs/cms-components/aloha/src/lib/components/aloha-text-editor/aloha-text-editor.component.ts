@@ -26,6 +26,7 @@ import { AlohaOverlayService } from '../../providers/aloha-overlay/aloha-overlay
 
 enum IFrameState {
     NONE = 'none',
+    SCHEDULED = 'scheduled',
     INITIALIZING = 'initializing',
     INITIALIZED = 'initialized',
 }
@@ -75,6 +76,9 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     @ViewChild('host')
     public iframe: ElementRef<HTMLIFrameElement>;
 
+    @ViewChild('container')
+    public container: ElementRef<HTMLDivElement>;
+
     public isFocused = false;
     public state = IFrameState.NONE;
     public contentHeight: number;
@@ -88,8 +92,10 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     private openOverlayCount = 0;
     private jsFiles: string[];
     private cssFiles: string[];
+    private viewInitialized = false;
     private sizeObserver: ResizeObserver;
     private changeObserver: MutationObserver;
+    private intersectionObserver: IntersectionObserver;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -110,7 +116,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         ).subscribe((state: AlohaStateModel) => {
             this.jsFiles = state.jsFiles;
             this.cssFiles = state.cssFiles;
-            this.initializeIframe();
+            this.scheduleIframeInit();
             this.changeDetector.markForCheck();
         }));
 
@@ -123,7 +129,8 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
     }
 
     public ngAfterViewInit(): void {
-        this.initializeIframe();
+        this.viewInitialized = true;
+        this.scheduleIframeInit();
     }
 
     public override ngOnDestroy(): void {
@@ -133,6 +140,9 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         }
         if (this.changeObserver) {
             this.changeObserver.disconnect();
+        }
+        if (this.intersectionObserver) {
+            this.intersectionObserver.disconnect();
         }
         if (this.isFocused) {
             this.aloha.clearReferences();
@@ -199,10 +209,44 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         this.isFocused = false;
     }
 
+    private scheduleIframeInit(): void {
+        if (this.state !== IFrameState.NONE || !this.viewInitialized) {
+            return;
+        }
+
+        this.state = IFrameState.SCHEDULED;
+
+        /*
+         * We check here if the user is on firefox/gecko, as there's a "bug" in it,
+         * where the iframes `window.Selection` is `undefined` as long as the iframe hasn't been rendered once.
+         * Rendering of it is in gecko defered until it's element is in the DOM-Structure visible, which it is
+         * on certain cases not when one of it's parents (or itself) has `display: none` set.
+         */
+        if (!navigator.userAgent.includes('Gecko/')) {
+            this.initializeIframe();
+            return;
+        }
+
+        this.intersectionObserver = new IntersectionObserver(this.intersectHandler, {
+            threshold: 0.1,
+        });
+        this.intersectionObserver.observe(this.container.nativeElement);
+    }
+
+    private intersectHandler = (entries: IntersectionObserverEntry[]) => {
+        if (!entries.some((en) => en.isIntersecting)) {
+            return;
+        }
+        // We only need this check while the iframe hasn't been initialized yet.
+        // Since everything is setup now, we can disconnect from the observer to redcuce usage.
+        this.intersectionObserver.disconnect();
+        this.initializeIframe();
+    };
+
     private initializeIframe(): void {
         if (
             !this.iframe?.nativeElement
-            || this.state !== IFrameState.NONE
+            || (this.state !== IFrameState.NONE && this.state !== IFrameState.SCHEDULED)
             || this.jsFiles == null
             || this.cssFiles == null
         ) {

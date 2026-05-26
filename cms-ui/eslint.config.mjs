@@ -370,6 +370,19 @@ export default defineConfig([
         },
     },
     {
+        files: ["**/*.html"],
+        rules: {
+            '@angular-eslint/template/interactive-supports-focus': 'off',
+            '@angular-eslint/template/click-events-have-key-events': 'off',
+            "@angular-eslint/template/eqeqeq": [
+                "error",
+                {
+                    "allowNullOrUndefined": true
+                }
+            ]
+        },
+    },
+    {
         files: ['**/e2e/*.spec.ts'],
         extends: [
             playwrightPlugin.configs['flat/recommended']

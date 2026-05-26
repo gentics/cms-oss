@@ -499,6 +499,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 const itemConfig = this.config().controls[itemSchema?.type];
 
                 if (!itemConfig) {
+                    console.warn(`Could not find a control config for type "${itemSchema?.type}"! Is the form-type configuration correct?  Element ${el.id} will not be dispalyed in the editor.`);
                     return null;
                 }
 
@@ -526,6 +527,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                 const itemConfig = (this.config().blocks || {})[type];
 
                 if (!itemConfig) {
+                    console.warn(`Could not find a block config for type "${type}"! Is the form-type configuration correct? Element ${el.id} will not be dispalyed in the editor.`);
                     return null;
                 }
 
@@ -570,7 +572,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
             formGridOptions: {
                 type,
                 numberOfColumns: containerType ? 12 : 6,
-                value: {},
                 valueSummary: {},
                 inForm: true,
                 inSummary: false,

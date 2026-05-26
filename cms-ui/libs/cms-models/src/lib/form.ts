@@ -289,6 +289,36 @@ export interface FormDownloadInfo {
     error?: string;
 }
 
+export interface FormInterchangeData {
+    formID: string;
+    version?: string;
+    hasValidationErrors: boolean;
+    hasErrors: boolean;
+
+    possibleValueSets: FormValueSet[];
+    properties: Record<string, FormPropertyData>;
+    currentPage?: number;
+}
+
+export interface FormValueSet {
+    possibleValueSetID: string;
+    possibleValues: FormValueSetEntry[];
+}
+
+export interface FormValueSetEntry {
+    identifier: string;
+    displayName: string;
+}
+
+export interface FormPropertyData {
+    renderingType?: string;
+    possibleValueSetID?: string;
+    visible: boolean;
+    editable: boolean;
+    name: string;
+    value: unknown;
+}
+
 export interface FormSchema {
     /**
      * The Key of the form? Basically the ID

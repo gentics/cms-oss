@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, model, output } from '@angular/core';
 import {
     FormElement,
     FormElementConfiguration,
@@ -27,10 +27,9 @@ export class FormElementTranslationComponent {
     public readonly elementSchema = model<FormSchemaProperty>();
 
     public readonly languages = input.required<string[]>();
+    public readonly activeLanguage = model.required<string>();
 
     public readonly hasMissingTranslationsChange = output<boolean>();
-
-    public readonly selectedLanguage = signal<string>('');
 
     public readonly translationSettings = computed(() => {
         const all = this.elementConfig().settings || [];
@@ -59,8 +58,8 @@ export class FormElementTranslationComponent {
     constructor() {
         effect(() => {
             const langs = this.languages();
-            if (langs.length > 0 && !langs.includes(this.selectedLanguage())) {
-                this.selectedLanguage.set(langs[0]);
+            if (langs.length > 0 && !langs.includes(this.activeLanguage())) {
+                this.activeLanguage.set(langs[0]);
             }
         });
 
@@ -73,7 +72,7 @@ export class FormElementTranslationComponent {
     public updateSelectedLanguage(value: string | number | (string | number)[] | null): void {
         const lang = Array.isArray(value) ? value[0] : value;
         if (lang != null) {
-            this.selectedLanguage.set(String(lang));
+            this.activeLanguage.set(String(lang));
         }
     }
 

@@ -2,7 +2,7 @@
     <gtx-select
         class="language-select"
         [label]="'form_grid.translation_language' | gtxI18n"
-        [value]="selectedLanguage()"
+        [value]="activeLanguage()"
         (valueChange)="updateSelectedLanguage($event)"
     >
         @for (lang of languages(); track lang) {
@@ -19,7 +19,7 @@
             [label]="'form_grid.translation_label' | gtxI18n"
             [value]="element().label"
             [disabled]="mode() === FormGridEditMode.NONE"
-            [language]="selectedLanguage()"
+            [language]="activeLanguage()"
             [availableLanguages]="languages()"
             (valueChange)="updateLabel($event)"
         ></gtx-i18n-input>
@@ -28,7 +28,7 @@
             [label]="'form_grid.translation_description' | gtxI18n"
             [value]="element().description ?? null"
             [disabled]="mode() === FormGridEditMode.NONE"
-            [language]="selectedLanguage()"
+            [language]="activeLanguage()"
             [availableLanguages]="languages()"
             (valueChange)="updateDescription($event)"
         ></gtx-i18n-input>
@@ -37,7 +37,7 @@
             [label]="'form_grid.translation_summary' | gtxI18n"
             [value]="element().formGridOptions?.valueSummary ?? null"
             [disabled]="mode() === FormGridEditMode.NONE"
-            [language]="selectedLanguage()"
+            [language]="activeLanguage()"
             [availableLanguages]="languages()"
             (valueChange)="updateSummary($event)"
         ></gtx-i18n-input>
@@ -49,7 +49,7 @@
                 [elementConfig]="elementConfig()"
                 [elementSchema]="elementSchema()"
                 [languages]="languages()"
-                [selectedLanguage]="selectedLanguage()"
+                [activeLanguage]="activeLanguage()"
                 [disabled]="mode() !== FormGridEditMode.FULL"
                 (elementChange)="element.set($event)"
                 (elementSchemaChange)="elementSchema.set($event)"
@@ -65,7 +65,7 @@
                 [elementConfig]="elementConfig()"
                 [elementSchema]="elementSchema()"
                 [languages]="languages()"
-                [selectedLanguage]="selectedLanguage()"
+                [activeLanguage]="activeLanguage()"
                 [disabled]="mode() !== FormGridEditMode.FULL"
                 (elementChange)="element.set($event)"
                 (elementSchemaChange)="elementSchema.set($event)"

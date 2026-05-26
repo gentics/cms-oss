@@ -49,6 +49,19 @@ function addElementsToMap(data: Record<string, FormElement>, elements: FormEleme
     }
 }
 
+function addElementToContainerReverseMap(data: Record<string, string>, elements: FormElement[], container: string): void {
+    for (const el of elements) {
+        if (data[el.id]) {
+            console.error(`An element with ID ${el.id} already exists in the map, which indicates that elements with the same ID are duplicated!`);
+        }
+        data[el.id] = container;
+
+        if (Array.isArray(el.elements)) {
+            addElementToContainerReverseMap(data, el.elements, el.id);
+        }
+    }
+}
+
 function moveNestedElement(
     currentContainerId: null | string,
     entries: FormElement[],
@@ -162,6 +175,18 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         return data;
     });
 
+    public readonly containerReverseMap = computed<Record<string, string>>(() => {
+        const data: Record<string, string> = {};
+
+        for (const page of (this.uiSchema()?.pages || [])) {
+            if (page?.elements?.length > 0) {
+                addElementToContainerReverseMap(data, page.elements, this.ELEMENT_ROOT_CONTAINER_ID);
+            }
+        }
+
+        return data;
+    });
+
     /** Whether the selected element has any missing translations across all form languages */
     public hasMissingTranslations = signal(false);
     /** The type of the current element which is being dragged. If null, then nothing is being dragged right now. */
@@ -192,6 +217,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly selectedElementId = signal<string | null>(null);
     /** The ID of the container where the selectedElement is contained in. */
     public selectedElementContainerId: string | null = null;
+    /** The active language that is being viewed/edited */
+    public activeLanguage = signal<string | null>(null);
 
     /** The currently selected element, which may be getting edited. */
     public readonly selectedElement = computed(() => {
@@ -213,7 +240,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
 
         const schema = this.selectedElementSchema();
-        return schema == null ? element.formGridOptions!.type : schema.type;
+        return schema == null ? element.formGridOptions.type : schema.type;
     });
 
     /** The configuration of the currently selected element */
@@ -226,16 +253,9 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         const schema = this.selectedElementSchema();
 
         return schema == null
-            ? (this.config().blocks || {})[element.formGridOptions!.type]
+            ? (this.config().blocks || {})[element.formGridOptions.type]
             : this.config().controls[schema.type];
     });
-
-    /* PREVIEW
-     * ===================================================================== */
-
-    public previewFormJson = '';
-    public previewRemountToken = 0;
-    public previewLanguage: string | null = null;
 
     /* RESIZE
      * ===================================================================== */
@@ -259,7 +279,12 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
      * ===================================================================== */
 
     public ngOnInit(): void {
-        this.previewLanguage = this.i18n.getCurrentLanguage();
+        if (this.languages().length > 0) {
+            this.activeLanguage.set(this.languages()[0]);
+        } else {
+            // Just in case as fallback, but should never happen
+            this.activeLanguage.set(this.i18n.getCurrentLanguage());
+        }
     }
 
     public override ngOnDestroy(): void {
@@ -294,7 +319,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
         const data: FormGridClipboardData = {
             element: structuredClone(element),
-            elementSchema: this.selectedElementSchema() ? structuredClone(this.selectedElementSchema()!) : undefined,
+            elementSchema: this.selectedElementSchema() ? structuredClone(this.selectedElementSchema()) : undefined,
             childSchemas: Object.keys(childSchemas).length > 0 ? structuredClone(childSchemas) : undefined,
             formId: this.formId(),
             formType: this.formType(),
@@ -391,7 +416,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
                     if (!schemaCopy.properties[pastedElement.id].properties) {
                         schemaCopy.properties[pastedElement.id].properties = {};
                     }
-                    schemaCopy.properties[pastedElement.id].properties![newId] = structuredClone(nestedSchema);
+                    schemaCopy.properties[pastedElement.id].properties[newId] = structuredClone(nestedSchema);
                 }
             }
 
@@ -421,7 +446,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             // If container, paste at the end of the container
             if (Array.isArray(selected.elements)) {
                 const updatedSelected = structuredClone(selected);
-                updatedSelected.elements!.push(pastedElement);
+                updatedSelected.elements.push(pastedElement);
                 if (this.replaceElementInTree(pageElements, updatedSelected)) {
                     this.updatePageElements(pageElements);
                 }
@@ -622,7 +647,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
                 return true;
             }
             if (Array.isArray(elements[i].elements)
-              && this.replaceElementInTree(elements[i].elements!, replacement)
+              && this.replaceElementInTree(elements[i].elements, replacement)
             ) {
                 return true;
             }
@@ -664,20 +689,15 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
     }
 
-    private ensurePreviewBootstrapData(): void {
-        try {
-            this.previewFormJson = JSON.stringify({
-                schema: this.schema(),
-                uiSchema: this.uiSchema(),
-            });
-        } catch {
-            this.previewFormJson = '';
-        }
-    }
-
-    setSelectedElement(data?: ElementSelectionEvent | null, event?: Event): void {
+    setSelectedElement(data?: ElementSelectionEvent | string | null, event?: Event): void {
         cancelEvent(event);
 
+        if (typeof data === 'string') {
+            data = {
+                element: this.elementMap()[data],
+                containerId: this.containerReverseMap()[data] ?? this.ELEMENT_ROOT_CONTAINER_ID,
+            };
+        }
         if (data == null || data.element == null || data.containerId == null) {
             this.clearSelectedElement();
             return;

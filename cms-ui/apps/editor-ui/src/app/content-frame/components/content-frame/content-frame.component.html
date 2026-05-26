@@ -62,6 +62,7 @@
         >
             <combined-properties-editor
                 [item]="currentItem"
+                [formConfiguration]="currentItem?.type === 'form' ? currentFormConfig : null"
                 [isDisabled]="!saveButtonVisible"
                 [(itemClean)]="currentItemClean"
             ></combined-properties-editor>

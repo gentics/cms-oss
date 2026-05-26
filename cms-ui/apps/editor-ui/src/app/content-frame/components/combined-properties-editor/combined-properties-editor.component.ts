@@ -29,6 +29,7 @@ import {
     Folder,
     FolderSaveRequestOptions,
     Form,
+    FormTypeConfiguration,
     ItemPermissions,
     ItemType,
     ItemWithContentTags,
@@ -204,6 +205,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
     @Input()
     nodeId: number;
+
+    @Input()
+    public formConfiguration: FormTypeConfiguration;
 
     @Output()
     itemCleanChange = new EventEmitter<boolean>();

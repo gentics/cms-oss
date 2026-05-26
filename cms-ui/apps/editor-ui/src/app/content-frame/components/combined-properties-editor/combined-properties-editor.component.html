@@ -14,7 +14,7 @@
         [label]="'editor.general_properties_label' | gtxI18n"
         (select)="onTabChange(ITEM_PROPERTIES_TAB)"
       ></gtx-tab-pane>
-      @if (item.type == 'form') {
+      @if (item.type === 'form' && formConfiguration != null && !formConfiguration.external) {
         <gtx-tab-pane
           hideStatusIcon
           [disabled]="!(item?.online)"

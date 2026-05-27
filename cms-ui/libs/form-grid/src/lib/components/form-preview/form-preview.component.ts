@@ -42,10 +42,11 @@ interface ExtendedWindow extends Window {
     formPreviewData: FormgridPreviewData;
 }
 
+const PREVIEW_CONNECTION_EVENT_NAME = 'preview-connect';
 const PREVIEW_DATA_EVENT_NAME = 'preview-data-change';
 const PREVIEW_ELEMENT_SELECT_EVENT_NAME = 'preview-select-element';
-const PREVIEW_CONNECTION_EVENT_NAME = 'preview-connect';
 const PREVIEW_PAGE_CHANGE_EVENT_NAME = 'preview-change-page';
+const PREVIEW_LOADED_EVENT_NAME = 'preview-loaded';
 
 interface InterchangeEvent {
     eventType: string;
@@ -140,6 +141,7 @@ export class FormPreviewComponent implements AfterViewInit {
             const win = nat.contentWindow;
             win.addEventListener('unload', () => {
                 this.loading.set(true);
+                this.hasError.set(false);
                 this.initialized.set(false);
             });
         });
@@ -158,6 +160,7 @@ export class FormPreviewComponent implements AfterViewInit {
 
             win.addEventListener('unload', () => {
                 this.loading.set(true);
+                this.hasError.set(false);
                 this.initialized.set(false);
             });
 
@@ -170,9 +173,6 @@ export class FormPreviewComponent implements AfterViewInit {
                 this.hasError.set(true);
                 return;
             }
-
-            this.loading.set(false);
-            this.hasError.set(false);
 
             try {
                 (win as ExtendedWindow).formPreviewData = this.createPreviewData();
@@ -195,6 +195,9 @@ export class FormPreviewComponent implements AfterViewInit {
                         return;
                     case PREVIEW_PAGE_CHANGE_EVENT_NAME:
                         this.pageIndex.set((data as PreviewPageChangeEvent).pageIndex);
+                        return;
+                    case PREVIEW_LOADED_EVENT_NAME:
+                        this.loading.set(false);
                         return;
                 }
             });

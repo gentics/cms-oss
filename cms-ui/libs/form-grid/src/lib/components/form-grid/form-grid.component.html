@@ -219,9 +219,13 @@
                             ></gtx-i18n-input>
                         </div>
                     } @else {
-                        <gtx-tabs class="element-tabs">
+                        <gtx-tabs [pure]="true" [activeId]="editingSidebarTab()" class="element-tabs">
                             @if (selectedElementSchema() != null) {
-                                <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
+                                <gtx-tab
+                                    [id]="EditTabs.DEFINITION"
+                                    [title]="'form_grid.edit_tab_definition' | gtxI18n"
+                                    (select)="changeEditingTab(EditTabs.DEFINITION)"
+                                >
                                     <gtx-form-element-definition
                                         [config]="config()"
                                         [schema]="schema()"
@@ -235,7 +239,11 @@
                                 </gtx-tab>
                             }
 
-                            <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
+                            <gtx-tab
+                                [id]="EditTabs.SETTINGS"
+                                [title]="'form_grid.edit_tab_settings' | gtxI18n"
+                                (select)="changeEditingTab(EditTabs.SETTINGS)"
+                            >
                                 <gtx-form-element-settings
                                     [config]="config()"
                                     [schema]="schema()"
@@ -252,6 +260,7 @@
                                 [id]="EditTabs.TRANSLATIONS"
                                 [icon]="hasMissingTranslations() ? 'warning' : ''"
                                 [title]="'form_grid.edit_tab_translations' | gtxI18n"
+                                 (select)="changeEditingTab(EditTabs.TRANSLATIONS)"
                             >
                                 <gtx-form-element-translation
                                     [element]="selectedElement()!"

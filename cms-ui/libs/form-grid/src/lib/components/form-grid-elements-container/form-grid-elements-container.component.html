@@ -79,6 +79,17 @@
                                 <icon>delete_outline</icon>
                             </gtx-button>
                         }
+
+                        @if (mode() !== FormGridEditMode.NONE) {
+                            <gtx-button
+                                [type]="displayItem.visible ? 'default' : 'secondary'"
+                                class="visibility-button"
+                                [icon]="true"
+                                (click)="setElementVisibility(displayItem, !displayItem.visible, $event)"
+                            >
+                                <icon>{{ displayItem.visible ? 'visibility' : 'visibility_off' }}</icon>
+                            </gtx-button>
+                        }
                     </div>
 
                     <strong class="element-title">

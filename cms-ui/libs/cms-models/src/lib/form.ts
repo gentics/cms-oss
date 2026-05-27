@@ -527,6 +527,12 @@ export interface FormGridOptions {
      */
     condition?: FormCondition;
     /**
+     * If this element is marked as hidden.
+     * If it is, then it should be disregarded entirely and only exists to keep data around.
+     * Usually these elements are filtered out in the backend so they don't even reach formgen.
+     */
+    hidden?: boolean;
+    /**
      * How many columns this element should use in the grid
      */
     numberOfColumns?: number;

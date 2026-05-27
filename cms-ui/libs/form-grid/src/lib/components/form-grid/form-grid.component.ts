@@ -199,6 +199,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly editingPageIndex = signal<number | null>(null);
     /** Selected language for page name editing */
     public readonly selectedPageLanguage = signal<string>('');
+    /** Which tab the editing sidebar (right one) currently is displayed. */
+    public readonly editingSidebarTab = signal<EditTabs>(EditTabs.DEFINITION);
     /** The page currently being edited */
     public readonly editingPage = computed<FormPage | null>(() => {
         const idx = this.editingPageIndex();
@@ -725,6 +727,12 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             this.rightSidebarExpanded.set(true);
         }
 
+        // If the tab is set to be definition, but we don't have any, we default the
+        // tab to settings instead.
+        if (!elementSchema && this.editingSidebarTab() === EditTabs.DEFINITION) {
+            this.editingSidebarTab.set(EditTabs.SETTINGS);
+        }
+
         this.selectedElementId.set(data.element.id);
         this.selectedElementContainerId = data.containerId;
     }
@@ -774,5 +782,10 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.selectedElementId.set(null);
         this.selectedElementContainerId = null;
         this.editingPageIndex.set(null);
+        this.editingSidebarTab.set(EditTabs.DEFINITION);
+    }
+
+    public changeEditingTab(tab: EditTabs): void {
+        this.editingSidebarTab.set(tab);
     }
 }

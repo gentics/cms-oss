@@ -3,6 +3,7 @@ import {
     ChangeDetectorRef,
     Component,
     computed,
+    effect,
     input,
     model,
     NgZone,
@@ -44,6 +45,7 @@ interface DisplayItem {
     whitelist: string[] | null;
     config: FormElementConfiguration;
     schema?: FormSchemaProperty;
+    visible: boolean;
 }
 
 const MIN_SPAN_CONTAINER = 6;
@@ -56,7 +58,7 @@ const MIN_SPAN_ELEMENT = 3;
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class FormGridElementsContainerComponent implements OnChanges {
+export class FormGridElementsContainerComponent {
 
     public readonly FormGridEditMode = FormGridEditMode;
 
@@ -173,15 +175,10 @@ export class FormGridElementsContainerComponent implements OnChanges {
         private zone: NgZone,
         private i18n: I18nService,
         private modals: ModalService,
-    ) {}
-
-    /* HOOKS
-     * ===================================================================== */
-
-    public ngOnChanges(changes: SimpleChanges): void {
-        if (changes['elements'] || changes['schema'] || changes['config']) {
+    ) {
+        effect(() => {
             this.updateDisplayItems();
-        }
+        });
     }
 
     /* TEMPLATE HANDLERS
@@ -462,6 +459,32 @@ export class FormGridElementsContainerComponent implements OnChanges {
         this.elementMoving.set(null);
     }
 
+    public setElementVisibility(item: DisplayItem, visibility: boolean, event?: Event): void {
+        cancelEvent(event);
+
+        this.elements.update((data) => {
+            const idx = data.findIndex((el) => el.id === item.id);
+
+            if (idx < 0) {
+                return data;
+            }
+
+            const el = structuredClone(data[idx]);
+            if (el.formGridOptions == null) {
+                if (item.schema) {
+                    el.formGridOptions = {
+                        type: item.schema.type,
+                    };
+                }
+            }
+            el.formGridOptions.hidden = !visibility;
+            const copy = data.slice();
+            copy[idx] = el;
+
+            return copy;
+        });
+    }
+
     /* INTERNALS
      * ===================================================================== */
 
@@ -512,6 +535,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
         this.displayItems.set((this.elements() || []).map((el) => {
             const itemSchema = propertyLookup?.[el.id];
+            const visible = !el.formGridOptions?.['hidden'];
 
             if (itemSchema) {
                 const itemConfig = this.config().controls[itemSchema?.type];
@@ -534,6 +558,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     whitelist: isAggregate ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
                     schema: itemSchema,
+                    visible,
                 };
             } else {
                 const type = el.formGridOptions?.type;
@@ -562,6 +587,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     isContainer,
                     whitelist: isContainer ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
+                    visible,
                 };
             }
         }).filter((item) => item != null));

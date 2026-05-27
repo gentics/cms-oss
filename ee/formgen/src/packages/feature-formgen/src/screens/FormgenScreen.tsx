@@ -15,6 +15,7 @@ import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
 import { IDataFields, IFeatures, IForm, IFormFlowData, ISchema, ISummaryDetailsUser } from '../types/interfaces';
 import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
 import RendererScreen from './RendererScreen';
+import { emitLoadedEvent } from '../components/elements/helper/formgridPreviewBridge';
 
 const FormgenScreen: React.FC<{
   formId: string;
@@ -126,7 +127,11 @@ const FormgenScreen: React.FC<{
   }, [props.endpoint, props.translationUrl]);
 
   useEffect(() => {
-    if (!loading && isWeb && !props.isFormgridPreview) {
+    if (loading || !isWeb) {
+      return;
+    }
+
+    if (!props.isFormgridPreview) {
       const loader = document.getElementById('bcLoader');
       if (loader) {
         loader.style.opacity = '0';
@@ -134,6 +139,8 @@ const FormgenScreen: React.FC<{
           loader.style.display = 'none';
         }, 500);
       }
+    } else {
+      emitLoadedEvent();
     }
   }, [loading, isWeb]);
 

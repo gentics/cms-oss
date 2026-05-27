@@ -8,6 +8,7 @@ import {
 import { TFunction } from "i18next";
 import * as utils from "./Utils"; // Pfad zu deinem bestehenden Utils-File
 import * as validationUtils from "./ValidationUtils";
+import { PluginNameEnum } from "../constants/enums/PluginNameEnum";
 
 // Hilfsfunktion: Prüfen, ob es eine bereits existierende ActaNova-Datei ist
 export function isActaNovaFile(file: IBinary): boolean {
@@ -22,8 +23,12 @@ export function isActaNovaFile(file: IBinary): boolean {
   return true;
 }
 
-// 1. Gemeinsame Funktion für die Dateiendung
-export function hasAllowedFileExtension(
+function cmsHasAllowedFileExtension(): boolean {
+  // TODO - implement
+  return false;
+}
+
+function anHasAllowedFileExtension(
   formState: FormState,
   jsonpath: string,
   elemState: IDataFieldProperties,
@@ -64,8 +69,7 @@ export function hasAllowedFileExtension(
   return hasAllowedExtension;
 }
 
-// 2. Gemeinsame Funktion für die Dateigröße
-export function hasAllowedUploadSize(
+export function anHasAllowedUploadSize(
   formState: FormState,
   jsonpath: string,
   elemState: IDataFieldProperties,
@@ -118,6 +122,52 @@ export function hasAllowedUploadSize(
       utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
     }
     return false;
+  }
+
+  return true;
+}
+
+// 2. Gemeinsame Funktion für die Dateigröße
+export function hasAllowedUploadSize(
+  formState: FormState,
+  jsonpath: string,
+  elemState: IDataFieldProperties,
+  updateErrorMessages: boolean,
+  value: IBinary | IBinary[],
+  t: TFunction,
+): boolean {
+  let maxSize: number | undefined;
+  const elementFromSchema = utils.getSchemaForElement(
+    formState.schema,
+    elemState.id!,
+  );
+  switch (formState.pluginName) {
+    case PluginNameEnum.ACTA_NOVA:
+      maxSize = elementFromSchema.maxSize;
+      break;
+    case PluginNameEnum.CMS_FORMS:
+      maxSize = elementFromSchema.validation?.binary?.max_filesize;
+      break;
+    default:
+      maxSize = undefined;
+  }
+
+  if (maxSize === undefined) return true;
+
+  const files: IBinary[] = Array.isArray(value) ? value : [value];
+
+  for (const file of files) {
+    if (file.size) {
+      if (file.size > maxSize) {
+        if (updateErrorMessages) {
+          elemState.validationMessage = `${t(
+            "form_maxFileUploadSizeSingleError",
+          ).replace("%size%", maxSize.toString())}: ${file.fileName}`;
+          utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
+        }
+        return false;
+      }
+    }
   }
 
   return true;

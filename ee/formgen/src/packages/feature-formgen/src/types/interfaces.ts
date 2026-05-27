@@ -606,12 +606,22 @@ export interface ISchemaFieldProperties {
   autoCompleteMinLength?: number;
   isRaw?: boolean;
   condition?: ICmsCondition;
+  maxSize?: number
+  allowedFileExtensions?: string[]
+  allowAllFileExtensions?: string[]
 }
 
 export interface IValidation {
   formID?: string;
   hasValidationErrors?: boolean;
+  binary?: IBinaryValidationOptions;
   [key: string]: any;
+}
+
+export interface IBinaryValidationOptions {
+  allowedFileTypes?: string[];
+  allowedFileNames?: string[];
+  max_filesize?: number;
 }
 
 export interface ICmsCondition {

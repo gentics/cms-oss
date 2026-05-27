@@ -1,7 +1,12 @@
 import { Platform } from "react-native";
 
+const PREVIEW_LOADED_EVENT_NAME = 'preview-loaded';
 const PREVIEW_ELEMENT_SELECT_EVENT_NAME = 'preview-select-element';
 const PREVIEW_PAGE_CHANGE_EVENT_NAME = 'preview-change-page';
+
+interface PreviewLoadedEvent {
+  eventType: typeof PREVIEW_LOADED_EVENT_NAME;
+}
 
 interface PreviewElementSelectEvent {
   eventType: typeof PREVIEW_ELEMENT_SELECT_EVENT_NAME;
@@ -31,6 +36,16 @@ export function emitPageChange(pageIndex: number): void {
   const event: PreviewPageChangeEvent = {
     eventType: PREVIEW_PAGE_CHANGE_EVENT_NAME,
     pageIndex,
+  };
+  window.postMessage(event, '/');
+}
+
+export function emitLoadedEvent(): void {
+    if (Platform.OS !== 'web') return;
+  if (typeof window === 'undefined') return;
+
+  const event: PreviewLoadedEvent = {
+    eventType: PREVIEW_LOADED_EVENT_NAME,
   };
   window.postMessage(event, '/');
 }

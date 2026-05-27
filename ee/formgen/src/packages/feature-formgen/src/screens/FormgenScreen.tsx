@@ -15,7 +15,8 @@ import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
 import { IDataFields, IFeatures, IForm, IFormFlowData, ISchema, ISummaryDetailsUser } from '../types/interfaces';
 import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
 import RendererScreen from './RendererScreen';
-import { emitLoadedEvent } from '../components/elements/helper/formgridPreviewBridge';
+import { sendPreviewLoadedEvent } from '../components/elements/helper/formgridPreviewBridge';
+import { PreviewFormData, PreviewInformation } from '../types/preview';
 
 const FormgenScreen: React.FC<{
   formId: string;
@@ -37,10 +38,10 @@ const FormgenScreen: React.FC<{
   hasDetail?: boolean;
   pluginName: string;
   isFormgridPreview?: boolean;
-  previewSchema?: ISchema;
-  previewUiSchema?: IForm;
-  currentPage?: number;
-  selectedElementId?: string;
+  previewFormData?: PreviewFormData;
+  previewInformation?: PreviewInformation;
+  previewSelectedElement?: string;
+  previewPageIndex?: number;
 }> = (props) => {
   const [features, setFeatures] = useState<IFeatures>();
   const [loadFeatureError, setLoadFeatureError] = useState<boolean>(false);
@@ -101,6 +102,7 @@ const FormgenScreen: React.FC<{
             props.pluginName,
             props.translationUrl,
             false,
+            props.previewInformation,
             props.language
           );
           await i18nInstance.changeLanguage(props.language);
@@ -140,7 +142,7 @@ const FormgenScreen: React.FC<{
         }, 500);
       }
     } else {
-      emitLoadedEvent();
+      sendPreviewLoadedEvent();
     }
   }, [loading, isWeb]);
 
@@ -188,7 +190,8 @@ const FormgenScreen: React.FC<{
         return true;
     }
     if (props.isFormgridPreview) {
-      return props.previewUiSchema != null && props.previewSchema != null;
+      return props.previewFormData?.uiSchema != null
+        && props.previewFormData?.schema != null;
     }
     return false;
   }
@@ -216,10 +219,10 @@ const FormgenScreen: React.FC<{
           pluginName={pluginName}
           successContent={props.successContent}
           isFormgridPreview={props.isFormgridPreview}
-          previewSchema={props.previewSchema}
-          previewUiSchema={props.previewUiSchema}
-          currentPage={props.currentPage}
-          selectedElementId={props.selectedElementId}
+          previewFormData={props.previewFormData}
+          previewInformation={props.previewInformation}
+          previewSelectedElement={props.previewSelectedElement}
+          previewPageIndex={props.previewPageIndex}
         />}
         {Platform.OS === "web" && <span dangerouslySetInnerHTML={{ __html: styleHtml }} />}
       </Suspense>

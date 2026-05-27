@@ -72,7 +72,8 @@ import ReadOnlyFormScreen from './ReadOnlyFormScreen';
 import ErrorBlockScreenPart from './screen-parts/ErrorBlockScreenPart';
 import FormProgressScreenPart from './screen-parts/FormProgress';
 import StickyLayerScreenPart from './screen-parts/StickyLayer';
-import { emitPageChange } from '../components/elements/helper/formgridPreviewBridge';
+import { sendPreviewPageChangeEvent } from '../components/elements/helper/formgridPreviewBridge';
+import { PreviewFormData, PreviewInformation } from '../types/preview';
 
 const RendererScreen: React.FC<{
   formId: string;
@@ -94,10 +95,10 @@ const RendererScreen: React.FC<{
   hasDetail?: boolean;
   pluginName: PluginNameEnum;
   isFormgridPreview?: boolean;
-  previewSchema?: ISchema;
-  previewUiSchema?: IForm;
-  currentPage?: number;
-  selectedElementId?: string;
+  previewFormData?: PreviewFormData;
+  previewInformation?: PreviewInformation;
+  previewSelectedElement?: string;
+  previewPageIndex?: number;
 }> = (props) => {
   // Nutze useWindowDimensions, um die Bildschirmbreite zu ermitteln
   const { width, height } = useWindowDimensions();
@@ -177,7 +178,7 @@ const RendererScreen: React.FC<{
   const initialUIState: UIState = {
     flowPageIndex: 0,
     flowList: [],
-    currentPage: props.currentPage ?? 0,
+    currentPage: props.previewPageIndex ?? 0,
     lastPage: 0,
     initDone: false,
     loading: false,
@@ -220,7 +221,7 @@ const RendererScreen: React.FC<{
     clicked: false,
   });
 
-  const currentPage = props.currentPage ?? uiState.currentPage;
+  const currentPage = props.previewPageIndex ?? uiState.currentPage;
   const uiSchema: IForm = formState.form;
   const lastPage = uiState.lastPage;
   let initialFullCulture = getCorrectANCulture(props.language, props.features);
@@ -363,7 +364,7 @@ const RendererScreen: React.FC<{
     if (props.mockForm) {
       updateState(StatesToUpdateEnum.ALL);
     }
-  }, [mockFormType, props.previewSchema, props.previewUiSchema]);
+  }, [mockFormType, props.previewFormData]);
 
   useEffect(() => {
     if (
@@ -595,7 +596,7 @@ const RendererScreen: React.FC<{
     }
 
     try {
-      const preFill = props.prefillContent;
+      const preFill = props.prefillContent || data.properties || {};
       //only prefill if form was not saved before (no savedPageIndex available)
       if (typeof data.savedPageIndex !== 'undefined') {
         return data;
@@ -949,24 +950,26 @@ const RendererScreen: React.FC<{
 
     // 3) Mock load
     let responseBody: { uiSchema: IForm, schema: ISchema, data?: IData, captchaConfig?: any; } | null = null;
-    if (props.isFormgridPreview) {
-      formState.form = props.previewUiSchema!;
+    if (props.isFormgridPreview && props.previewFormData != null) {
+      formState.form = props.previewFormData.uiSchema;
       formState.data = { formID: props.formId, properties: props.prefillContent };
-      formState.schema = props.previewSchema!;
+      formState.schema = props.previewFormData.schema;
       // Preview does not have a captcha
       formState.captchaConfig = undefined;
       responseBody = {
-        schema: props.previewSchema!,
-        uiSchema: props.previewUiSchema!,
+        schema: props.previewFormData.schema,
+        uiSchema: props.previewFormData.uiSchema,
         captchaConfig: null,
       };
     } else {
       const mockJSON = await mockFormularUtils.fetchMockDefaultFormular(mockFormType);
-      responseBody = mockJSON;
-      formState.form = responseBody.uiSchema;
-      formState.data = responseBody.data;
-      formState.schema = responseBody.schema;
-      formState.captchaConfig = responseBody.captchaConfig;
+      if (mockJSON) {
+        responseBody = mockJSON;
+        formState.form = responseBody!.uiSchema;
+        formState.data = responseBody!.data!;
+        formState.schema = responseBody!.schema;
+        formState.captchaConfig = responseBody!.captchaConfig;
+      }
     }
     if (formState?.form?.pages) {
       uiState.lastPage = formState.form.pages.length;
@@ -1030,11 +1033,11 @@ const RendererScreen: React.FC<{
 
   useEffect(() => {
     if (!props.isFormgridPreview) return;
-    if (props.currentPage == null || props.currentPage < 0) return;
+    if (props.previewPageIndex == null || props.previewPageIndex < 0) return;
     if (!uiState.initDone) return;
-    if (uiState.currentPage === props.currentPage) return;
-    changeToPage(uiState, props.currentPage, updateState, true);
-  }, [props.isFormgridPreview, props.currentPage, uiState.initDone, uiState.currentPage]);
+    if (uiState.currentPage === props.previewPageIndex) return;
+    changeToPage(uiState, props.previewPageIndex, updateState, true);
+  }, [props.isFormgridPreview, props.previewPageIndex, uiState.initDone, uiState.currentPage]);
 
 
   useEffect(() => {
@@ -1938,7 +1941,7 @@ const RendererScreen: React.FC<{
     }
 
     if (props.isFormgridPreview) {
-      emitPageChange(pageNum);
+      sendPreviewPageChangeEvent(pageNum);
     }
     updateState(StatesToUpdateEnum.UIState);
   };
@@ -2001,7 +2004,7 @@ const RendererScreen: React.FC<{
             isLoggedIn={props.isLoggedIn}
             handleSearch={handleSearch}
             handleExpertSearch={handleExpertSearch}
-            selectedElementId={props.selectedElementId}
+            selectedElementId={props.previewSelectedElement}
           />
         </ScrollView>
       </Host></>)

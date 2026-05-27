@@ -36,7 +36,7 @@ import { formElementWrapperStyles as customFormElementWrapperStyles } from '../.
 import { mergeStyles } from '@andp/core/src/AndpUtils';
 import theme, { formElementWrapperTheme } from '@andp/core/src/styles/theme';
 import CustomTooltip from './CustomTooltip';
-import {emitSelected} from './formgridPreviewBridge';
+import {sendPreviewSelectedElementEvent} from './formgridPreviewBridge';
 if (Platform.OS === 'web') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   require('../../../styles/custom/custom-style.css');
@@ -169,7 +169,7 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
     // Ensure selection event fires even if something inside prevents default later
     e?.stopPropagation?.();
 
-    emitSelected(props.objectId);
+    sendPreviewSelectedElementEvent(props.objectId);
   };
 
   const hasIcons = !!(

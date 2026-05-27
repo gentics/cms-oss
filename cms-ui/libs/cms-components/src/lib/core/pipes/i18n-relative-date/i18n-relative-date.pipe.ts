@@ -32,11 +32,10 @@ export class I18nRelativeDatePipe implements PipeTransform, OnDestroy {
     }
 
     transform(date: Date | string | number): string {
-        if (typeof date === 'string' || typeof date === 'number') {
-            date = new Date(date);
-        }
-
-        return formatRelativeI18nDate(date, this.translation.getCurrentLanguage());
+        // Strings must be parsed into a Date object; numbers (Unix seconds from the REST API)
+        // and Date objects are passed as-is — formatRelativeI18nDate handles the conversion.
+        const value: Date | number = typeof date === 'string' ? new Date(date) : date;
+        return formatRelativeI18nDate(value, this.translation.getCurrentLanguage());
     }
 
 }

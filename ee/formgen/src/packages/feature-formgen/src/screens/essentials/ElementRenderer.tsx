@@ -38,7 +38,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       let lowerCaseSchemaElementType = schemaElem.type.toLowerCase();
       let elementConfigurationType: string;
       let ElemTyp;
-      if(lowerCaseSchemaElementType == "property" && obj && obj.formGridOptions && obj.formGridOptions?.type){
+      if(lowerCaseSchemaElementType === "property" && obj && obj.formGridOptions && obj.formGridOptions?.type){
         elementConfigurationType = obj.formGridOptions?.type.toLowerCase();
       }else {
         elementConfigurationType = lowerCaseSchemaElementType;
@@ -121,7 +121,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       }
 
       // performance optimization to fetch elements on the first level directly, not using jsonpath
-      let isVisible = formState.data.properties?.[obj.id]?.visible;
+      let isVisible = formState.data.properties?.[obj.id]?.visible && obj.formGridOptions?.hidden !== true;
       if (typeof isVisible === 'undefined') {
         // CMS only: if visible is not set in data, evaluate condition as fallback
         if (formState.pluginName === PluginNameEnum.CMS_FORMS && obj.formGridOptions?.condition) {
@@ -140,7 +140,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         ? obj.formGridOptions.value
         : utils.getValue(formState, jsonpath, obj.id);
 
-      if (!obj.formGridOptions?.type && !isVisible) {
+      if (!obj.formGridOptions?.type || !isVisible) {
         return null;
       }
 

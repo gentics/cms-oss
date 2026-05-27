@@ -563,6 +563,7 @@ export interface IFormGridOptions {
   siteKey?: string;
   baseUrl?: string;
   mode?: 'checkbox' | 'invisible';
+  hidden?: boolean;
   condition?: ICmsCondition;
 }
 export interface IOverlayInfoOptions {

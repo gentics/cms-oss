@@ -37,34 +37,95 @@ type FormgridPreviewData = {
     selectedElementId?: string;
 };
 
+/**
+ * Info about the preview-form which doesn't change
+ */
+interface PreviewInformation {
+    formType: string;
+    features: IFeatures;
+    availableLanguages: string[];
+}
+
+/**
+ * Form-data which may change when editing a form
+ */
+interface PreviewFormData {
+    schema: FormSchema;
+    uiSchema: FormUISchema;
+}
+
 interface ExtendedWindow extends Window {
     // Form Data that is assigned in the page directly.
     formPreviewData: FormgridPreviewData;
 }
 
-const PREVIEW_CONNECTION_EVENT_NAME = 'preview-connect';
-const PREVIEW_DATA_EVENT_NAME = 'preview-data-change';
-const PREVIEW_ELEMENT_SELECT_EVENT_NAME = 'preview-select-element';
-const PREVIEW_PAGE_CHANGE_EVENT_NAME = 'preview-change-page';
+const PREVIEW_CONNECT_EVENT = 'preview-connect';
+const PREVIEW_INTIALIZATION_EVENT_NAME = 'preview-init';
+const PREVIEW_FORM_CHANGE_EVENT_NAME = 'preview-form-change';
+const PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME = 'preview-selected-element-change';
+const PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME = 'preview-current-page-change';
+const PREVIEW_DISPLAY_LANGUAGE_CHANGE_EVENT_NAME = 'preview-language-change';
 const PREVIEW_LOADED_EVENT_NAME = 'preview-loaded';
 
-interface InterchangeEvent {
-    eventType: string;
+enum PreviewEventReceiver {
+    CONTROLLER = 'controller',
+    PUPPET = 'puppet',
 }
 
-interface PreviewElementSelectEvent extends InterchangeEvent {
-    eventType: typeof PREVIEW_ELEMENT_SELECT_EVENT_NAME;
+interface BasePreviewEvent {
+    receiver: PreviewEventReceiver;
+}
+
+type PreviewEvent = PreviewConnectEvent
+  | PreviewInitializationEvent
+  | PreviewLoadedEvent
+  | PreviewFormChangeEvent
+  | PreviewSelectedElementChangeEvent
+  | PreviewCurrentPageChangeEvent
+  | PreviewDisplayLanguageChangeEvent
+  ;
+
+interface PreviewConnectEvent extends BasePreviewEvent {
+    eventType: typeof PREVIEW_CONNECT_EVENT;
+}
+
+interface PreviewInitializationEvent extends BasePreviewEvent, Omit<PreviewInformation, 'features'>, Partial<Pick<PreviewInformation, 'features'>> {
+    eventType: typeof PREVIEW_INTIALIZATION_EVENT_NAME;
+
+    formId: string;
+    language: string;
+    pageIndex: number;
+    elementId?: string;
+}
+
+interface PreviewLoadedEvent extends BasePreviewEvent {
+    eventType: typeof PREVIEW_LOADED_EVENT_NAME;
+    receiver: PreviewEventReceiver;
+}
+
+interface PreviewFormChangeEvent extends BasePreviewEvent, PreviewFormData {
+    eventType: typeof PREVIEW_FORM_CHANGE_EVENT_NAME;
+
+    prefillContent: Record<string, FormPropertyData>;
+}
+
+interface PreviewSelectedElementChangeEvent extends BasePreviewEvent {
+    eventType: typeof PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME;
+
     elementId: string;
 }
 
-interface PreviewDataChangeEvent extends InterchangeEvent {
-    eventType: typeof PREVIEW_DATA_EVENT_NAME;
-    data: Partial<FormgridPreviewData>;
+interface PreviewCurrentPageChangeEvent extends BasePreviewEvent {
+    eventType: typeof PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME;
+    receiver: PreviewEventReceiver;
+
+    pageIndex: number;
 }
 
-interface PreviewPageChangeEvent extends InterchangeEvent {
-    eventType: typeof PREVIEW_PAGE_CHANGE_EVENT_NAME;
-    pageIndex: number;
+interface PreviewDisplayLanguageChangeEvent extends BasePreviewEvent {
+    eventType: typeof PREVIEW_DISPLAY_LANGUAGE_CHANGE_EVENT_NAME;
+
+    language: string;
 }
 
 @Component({
@@ -80,6 +141,7 @@ export class FormPreviewComponent implements AfterViewInit {
      * ===================================================================== */
 
     public readonly formId = input.required<number>();
+    public readonly formType = input.required<string>();
     public readonly schema = input.required<FormSchema>();
     public readonly uiSchema = input.required<FormUISchema>();
     public readonly languages = input.required<string[]>();
@@ -93,7 +155,7 @@ export class FormPreviewComponent implements AfterViewInit {
 
     public readonly loading = signal(true);
     public readonly hasError = signal(false);
-    public readonly initialized = signal(false);
+    private initialized = false;
 
     @ViewChild('iframe')
     public iframe: ElementRef<HTMLIFrameElement>;
@@ -119,12 +181,41 @@ export class FormPreviewComponent implements AfterViewInit {
 
     constructor() {
         effect(() => {
-            const data = this.createPreviewData();
-            if (!this.initialized()) {
-                return;
-            }
+            this.postEvent({
+                eventType: PREVIEW_FORM_CHANGE_EVENT_NAME,
+                receiver: PreviewEventReceiver.PUPPET,
 
-            this.postPreviewDataEvent(data);
+                schema: this.schema(),
+                uiSchema: this.uiSchema(),
+                prefillContent: this.prefill(),
+            });
+        });
+
+        effect(() => {
+            this.postEvent({
+                eventType: PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME,
+                receiver: PreviewEventReceiver.PUPPET,
+
+                pageIndex: this.pageIndex(),
+            });
+        });
+
+        effect(() => {
+            this.postEvent({
+                eventType: PREVIEW_DISPLAY_LANGUAGE_CHANGE_EVENT_NAME,
+                receiver: PreviewEventReceiver.PUPPET,
+
+                language: this.activeLanguage(),
+            });
+        });
+
+        effect(() => {
+            this.postEvent({
+                eventType: PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME,
+                receiver: PreviewEventReceiver.PUPPET,
+
+                elementId: this.selectedElementId(),
+            });
         });
     }
 
@@ -142,7 +233,7 @@ export class FormPreviewComponent implements AfterViewInit {
             win.addEventListener('unload', () => {
                 this.loading.set(true);
                 this.hasError.set(false);
-                this.initialized.set(false);
+                this.initialized = false;
             });
         });
 
@@ -161,7 +252,7 @@ export class FormPreviewComponent implements AfterViewInit {
             win.addEventListener('unload', () => {
                 this.loading.set(true);
                 this.hasError.set(false);
-                this.initialized.set(false);
+                this.initialized = false;
             });
 
             // For some reason, if the response has a non 200/300 code, it is still treated
@@ -175,27 +266,57 @@ export class FormPreviewComponent implements AfterViewInit {
             }
 
             try {
-                (win as ExtendedWindow).formPreviewData = this.createPreviewData();
+                (win as ExtendedWindow).formPreviewData = {
+                    schema: this.schema(),
+                    uiSchema: this.uiSchema(),
+                    language: this.activeLanguage(),
+                    currentPage: this.pageIndex(),
+                    formId: `${this.formId()}`,
+                    selectedElementId: this.selectedElementId(),
+                    prefillContent: this.prefill(),
+                };
             } catch (err) {
                 // Ignore err
             }
 
-            win.addEventListener('message', (event) => {
-                const data = event.data as InterchangeEvent;
-                if (data == null || typeof data !== 'object' || typeof data.eventType !== 'string') {
+            win.addEventListener('message', (raw) => {
+                const event = raw.data as PreviewEvent;
+                if (
+                    event == null
+                    || typeof event !== 'object'
+                    || typeof event.eventType !== 'string'
+                    || event.receiver !== PreviewEventReceiver.CONTROLLER
+                ) {
                     return;
                 }
 
-                switch (data.eventType) {
-                    case PREVIEW_CONNECTION_EVENT_NAME:
-                        this.initialized.set(true);
+                // eslint-disable-next-line no-console
+                console.debug('<< FormGrid', event.eventType);
+
+                switch (event.eventType) {
+                    case PREVIEW_CONNECT_EVENT:
+                        this.initialized = true;
+                        this.postEvent({
+                            eventType: PREVIEW_INTIALIZATION_EVENT_NAME,
+                            receiver: PreviewEventReceiver.PUPPET,
+
+                            language: this.activeLanguage(),
+                            formId: `${this.formId()}`,
+                            formType: this.formType(),
+                            pageIndex: this.pageIndex(),
+                            elementId: this.selectedElementId(),
+                            availableLanguages: this.languages(),
+                        });
                         return;
-                    case PREVIEW_ELEMENT_SELECT_EVENT_NAME:
-                        this.selectedElementId.set((data as PreviewElementSelectEvent).elementId);
+
+                    case PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME:
+                        this.selectedElementId.set(event.elementId);
                         return;
-                    case PREVIEW_PAGE_CHANGE_EVENT_NAME:
-                        this.pageIndex.set((data as PreviewPageChangeEvent).pageIndex);
+
+                    case PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME:
+                        this.pageIndex.set(event.pageIndex);
                         return;
+
                     case PREVIEW_LOADED_EVENT_NAME:
                         this.loading.set(false);
                         return;
@@ -204,27 +325,15 @@ export class FormPreviewComponent implements AfterViewInit {
         });
     }
 
-    private createPreviewData(): FormgridPreviewData {
-        return {
-            schema: this.schema(),
-            uiSchema: this.uiSchema(),
-            language: this.activeLanguage(),
-            currentPage: this.pageIndex(),
-            formId: `${this.formId()}`,
-            selectedElementId: this.selectedElementId(),
-            prefillContent: this.prefill(),
-        };
-    }
-
-    private postPreviewDataEvent(data: FormgridPreviewData): void {
+    private postEvent(event: PreviewEvent): void {
         const win = this.iframe?.nativeElement?.contentWindow;
-        if (!win) {
+        if (!win || !this.initialized) {
             return;
         }
-        const event: PreviewDataChangeEvent = {
-            eventType: PREVIEW_DATA_EVENT_NAME,
-            data: data,
-        };
-        win.postMessage(event, '/');
+
+        // eslint-disable-next-line no-console
+        console.debug('>> FormGrid', event.eventType);
+
+        win.postMessage(event, '*');
     }
 }

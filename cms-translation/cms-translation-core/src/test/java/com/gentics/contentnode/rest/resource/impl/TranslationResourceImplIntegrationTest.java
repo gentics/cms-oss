@@ -28,6 +28,7 @@ import org.junit.runners.Parameterized.Parameters;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.TranslationServiceLoaderUtil;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
@@ -73,6 +74,7 @@ public class TranslationResourceImplIntegrationTest {
 				() -> createConstruct(node, FileURLPartType.class, textKeyword, "link1"));
 
 		changeSessionLanguage();
+		TranslationServiceLoaderUtil.reloadService();
 	}
 
 	private static void changeSessionLanguage() throws NodeException {

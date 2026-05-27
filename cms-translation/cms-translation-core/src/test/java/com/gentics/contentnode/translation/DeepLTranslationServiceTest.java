@@ -59,11 +59,11 @@ class DeepLTranslationServiceTest {
 	}
 
 	private TextResult givenTextResult() {
-		return new TextResult("Hello World", "de");
+		return new TextResult("Hello World", "de", 0, null);
 	}
 
 	private TextResult givenCorruptHtmlResult() {
-		return new TextResult("<div>Hello World", "de");
+		return new TextResult("<div>Hello World", "de", 0, null);
 	}
 
 }

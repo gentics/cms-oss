@@ -69,64 +69,6 @@ function anHasAllowedFileExtension(
   return hasAllowedExtension;
 }
 
-export function anHasAllowedUploadSize(
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-): boolean {
-  const maxSingleUploadSizeByte =
-    formState.features?.feature_upload_constraints?.maxSizePerFile ?? 5_242_880;
-
-  const maxMultipleUploadSizeByte =
-    formState.features?.feature_upload_constraints?.maxSizeOverall ??
-    20_971_520;
-
-  const byteToMBFactor = 1_048_576;
-  const maxSingleUploadSizeMB = Math.floor(
-    maxSingleUploadSizeByte / byteToMBFactor,
-  );
-  const maxMultipleUploadSizeMB = Math.floor(
-    maxMultipleUploadSizeByte / byteToMBFactor,
-  );
-
-  const files: IBinary[] = Array.isArray(value) ? value : [value];
-  let sumSizes = 0;
-
-  for (const file of files) {
-    if (isActaNovaFile(file)) continue;
-
-    if (file.size) {
-      sumSizes += file.size;
-      if (file.size > maxSingleUploadSizeByte) {
-        if (updateErrorMessages) {
-          elemState.validationMessage = `${t(
-            "form_maxFileUploadSizeSingleError",
-          ).replace("%size%", maxSingleUploadSizeMB.toString())}: ${
-            file.fileName
-          }`;
-          utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-        }
-        return false;
-      }
-    }
-  }
-
-  if (sumSizes > maxMultipleUploadSizeByte) {
-    if (updateErrorMessages) {
-      elemState.validationMessage = `${t(
-        "form_maxFileUploadSizeMultipleError",
-      )}: ${maxMultipleUploadSizeMB} MB`;
-      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-    }
-    return false;
-  }
-
-  return true;
-}
-
 // 2. Gemeinsame Funktion für die Dateigröße
 export function hasAllowedUploadSize(
   formState: FormState,

@@ -152,8 +152,10 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             map(([elasticsearchFeatureEnabled, seearchQueryActive]) => elasticsearchFeatureEnabled && seearchQueryActive),
         );
 
-        this.subscriptions.push(this.appState.select(state => state.folder.activeLanguage).pipe(
-            map(langId => this.entityResolver.getLanguage(langId)),
+        this.subscriptions.push(combineLatest([this.appState.select(state => state.folder.activeLanguage),
+            this.appState.select((state) => state.entities.language),
+        ]).pipe(
+            map(([langId]) => this.entityResolver.getLanguage(langId)),
         ).subscribe(lang => {
             this.folderLanguage = lang;
             this.changeDetector.markForCheck();

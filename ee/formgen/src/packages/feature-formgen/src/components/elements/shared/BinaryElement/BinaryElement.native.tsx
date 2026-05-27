@@ -4,10 +4,8 @@ import {
   FormState,
   IFormGridOptions,
   IFormComponentAttributes,
-  IDataFieldProperties,
   SummaryOptions,
   IBinary,
-  CommonValidation,
   IBinaryFile,
   BinarySource,
 } from '../../../../types/interfaces';
@@ -15,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { binaryElementStyles } from '../../../../styles/common/common-style.native';
 import { binaryElementStyles as customBinaryElementStyles } from '../../../../styles/custom/custom-style.native';
 import { TFunction } from 'i18next';
-import * as validationUtils from '../../../../utils/ValidationUtils';
+import * as BinaryValidationUtils from '../../../../utils/BinaryValidationUtils';
 import * as formEventsUtils from '../../../../utils/FormEventsUtils';
 import * as utils from '../../../../utils/Utils';
 import { SummaryElement } from '../../helper/SummaryElement';
@@ -429,87 +427,8 @@ function BinaryElement(props: IFormComponentAttributes) {
   );
 }
 
-BinaryElement.validate = function (
-  state: FormState,
-  jsonpath: string,
-  id: string,
-  updateErrorMessages: boolean,
-  t: TFunction,
-  formGridOptions?: IFormGridOptions,
-  localValue?: any,
-): CommonValidation {
-  const commonResult: CommonValidation = validationUtils.commonValidate(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    formGridOptions,
-    localValue,
-  );
-  if (!commonResult.isValid) return commonResult;
-
-  const binaryIsValid = BinaryElement.validateBinary(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    t,
-    formGridOptions?.fileExtensionsNotAllowed,
-  );
-
-  if (!binaryIsValid) {
-    const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
-    return { isValid: false, errorMessage: elemState?.validationMessage };
-  }
-
-  return { isValid: true };
-};
-
-BinaryElement.validateBinary = function (
-  state: FormState,
-  jsonpath: string,
-  id: string,
-  updateErrorMessages: boolean,
-  t: TFunction,
-  fileExtensionsNotAllowed?: string[],
-): boolean {
-  const value = utils.getValue(state, jsonpath, id);
-  const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
-
-  if (
-    elemState &&
-    (value.fileName || (Array.isArray(value) && value[0]?.fileName))
-  ) {
-    if (
-      !BinaryElement.hasAllowedFileExtension(
-        state,
-        jsonpath,
-        elemState,
-        updateErrorMessages,
-        value,
-        t,
-        fileExtensionsNotAllowed,
-      )
-    ) {
-      return false;
-    }
-
-    if (
-      !hasAllowedUploadSize(
-        state,
-        jsonpath,
-        elemState,
-        updateErrorMessages,
-        value,
-        t,
-      )
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-};
+BinaryElement.validateBinary = BinaryValidationUtils.validateBinary;
+BinaryElement.validate = BinaryValidationUtils.validate;
 
 BinaryElement.getSummaryValue = function (
   state: FormState,
@@ -578,121 +497,6 @@ BinaryElement.getRenderedBinaryLinkMarkup = function (
     <AndpText style={styles.fileListItemText}>{fileObject.fileName}</AndpText>
   );
 };
-
-function isActaNovaFile(file: IBinary) {
-  if (
-    !file.value ||
-    file.value === '' ||
-    file.value.startsWith('mesh:') ||
-    file.value.startsWith('mesh(not uploaded yet):')
-  ) {
-    return false;
-  }
-  return true;
-}
-
-BinaryElement.hasAllowedFileExtension = function (
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-  fileExtensionsNotAllowed?: string[],
-) {
-  const fileExtensionsAllowedDefault =
-    formState.features?.feature_upload_constraints
-      ?.fileExtensionsAllowed || [];
-
-  const allowedExtensions = fileExtensionsNotAllowed
-    ? fileExtensionsAllowedDefault.filter(
-      (ext) => fileExtensionsNotAllowed.indexOf(ext) === -1,
-    )
-    : fileExtensionsAllowedDefault;
-
-  let hasAllowedExtension = true;
-
-  const files: IBinary[] = Array.isArray(value) ? value : [value];
-
-  for (const file of files) {
-    if (isActaNovaFile(file)) continue;
-
-    const fileExt = file.fileName
-      .split('.')
-      .pop()
-      ?.toLowerCase();
-
-    if (!allowedExtensions.some((ext) => ext.toLowerCase() === fileExt)) {
-      hasAllowedExtension = false;
-      break;
-    }
-  }
-
-  if (!hasAllowedExtension && updateErrorMessages) {
-    elemState.validationMessage = `${t('form_fileTypeError')} ${allowedExtensions.join(', ')}`;
-    utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-  }
-
-  return hasAllowedExtension;
-};
-
-function hasAllowedUploadSize(
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-) {
-  const maxSingleUploadSizeByte =
-    formState.features?.feature_upload_constraints?.maxSizePerFile ??
-    5_242_880;
-
-  const maxMultipleUploadSizeByte =
-    formState.features?.feature_upload_constraints?.maxSizeOverall ??
-    20_971_520;
-
-  const byteToMBFactor = 1_048_576;
-  const maxSingleUploadSizeMB = Math.floor(
-    maxSingleUploadSizeByte / byteToMBFactor,
-  );
-  const maxMultipleUploadSizeMB = Math.floor(
-    maxMultipleUploadSizeByte / byteToMBFactor,
-  );
-
-  const files: IBinary[] = Array.isArray(value) ? value : [value];
-  let sumSizes = 0;
-
-  for (const file of files) {
-    if (isActaNovaFile(file)) continue;
-
-    if (file.size) {
-      sumSizes += file.size;
-      if (file.size > maxSingleUploadSizeByte) {
-        if (updateErrorMessages) {
-          elemState.validationMessage = `${t(
-            'form_maxFileUploadSizeSingleError',
-          ).replace('%size%', maxSingleUploadSizeMB.toString())}: ${file.fileName
-            }`;
-          utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-        }
-        return false;
-      }
-    }
-  }
-
-  if (sumSizes > maxMultipleUploadSizeByte) {
-    if (updateErrorMessages) {
-      elemState.validationMessage = `${t(
-        'form_maxFileUploadSizeMultipleError',
-      )}: ${maxMultipleUploadSizeMB} MB`;
-      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-    }
-    return false;
-  }
-
-  return true;
-}
 
 export default BinaryElement;
 

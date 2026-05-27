@@ -4,10 +4,8 @@ import {
   FormState,
   IFormGridOptions,
   IFormComponentAttributes,
-  IDataFieldProperties,
   SummaryOptions,
   IBinary,
-  CommonValidation,
   IBinaryFile,
   BinarySource,
 } from '../../../../types/interfaces';
@@ -15,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { binaryElementStyles } from '../../../../styles/common/common-style';
 import { binaryElementStyles as customBinaryElementStyles } from '../../../../styles/custom/custom-style';
 import { TFunction } from 'i18next';
-import * as validationUtils from '../../../../utils/ValidationUtils';
+import * as BinaryValidationUtils from '../../../../utils/BinaryValidationUtils';
 import * as formEventsUtils from '../../../../utils/FormEventsUtils';
 import * as utils from '../../../../utils/Utils';
 import { SummaryElement } from '../../helper/SummaryElement';
@@ -36,8 +34,6 @@ import { v4 as uuidv4 } from 'uuid';
 type BinaryFileWithUid = IBinaryFile & { uid: string };
 
 const binaryLocalCache: Map<string, BinaryFileWithUid[]> = new Map();
-
-
 
 function BinaryElement(props: IFormComponentAttributes) {
   const { t } = useTranslation();
@@ -500,96 +496,8 @@ async function onBinaryPress(props: IFormComponentAttributes): Promise<File[] | 
   }
 }
 
-
-BinaryElement.validate = function (
-  state: FormState,
-  jsonpath: string,
-  id: string,
-  updateErrorMessages: boolean,
-  t: TFunction,
-  formGridOptions?: IFormGridOptions,
-  localValue?: any,
-): CommonValidation {
-  const commonResult: CommonValidation = validationUtils.commonValidate(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    formGridOptions,
-    localValue,
-  );
-  if (!commonResult.isValid) {
-    return commonResult;
-  }
-
-  const binaryIsValid = BinaryElement.validateBinary(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    t,
-    formGridOptions?.fileExtensionsNotAllowed,
-  );
-
-  if (!binaryIsValid) {
-    const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
-    return {
-      isValid: false,
-      errorMessage: elemState?.validationMessage,
-    };
-  }
-  return { isValid: true };
-};
-
-/**
- * Binary-spezifische Validierung:
- * - Dateiendungen
- * - Dateigrößen
- */
-BinaryElement.validateBinary = function (
-  state: FormState,
-  jsonpath: string,
-  id: string,
-  updateErrorMessages: boolean,
-  t: TFunction,
-  fileExtensionsNotAllowed?: string[],
-): boolean {
-  const value = utils.getValue(state, jsonpath, id);
-  const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
-
-  if (
-    elemState &&
-    (value.fileName || (Array.isArray(value) && value[0]?.fileName))
-  ) {
-    if (
-      !BinaryElement.hasAllowedFileExtension(
-        state,
-        jsonpath,
-        elemState,
-        updateErrorMessages,
-        value,
-        t,
-        fileExtensionsNotAllowed,
-      )
-    ) {
-      return false;
-    }
-    if (
-      !hasAllowedUploadSize(
-        state,
-        jsonpath,
-        elemState,
-        updateErrorMessages,
-        value,
-        t,
-      )
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-};
+BinaryElement.validateBinary = BinaryValidationUtils.validateBinary;
+BinaryElement.validate = BinaryValidationUtils.validate;
 
 /**
  * Zusammenfassungswert für die Summary-Anzeige
@@ -669,193 +577,5 @@ BinaryElement.getRenderedBinaryLinkMarkup = function (
     );
   }
 };
-
-/**
- * Hilfsfunktion, um zu erkennen, ob es sich um eine bereits in ActaNova
- * gespeicherte Datei handelt (dann müssen wir sie nicht erneut validieren).
- */
-function isActaNovaFile(file: IBinary) {
-  if (
-    !file.value ||
-    file.value === '' ||
-    file.value.startsWith('mesh:') ||
-    file.value.startsWith('mesh(not uploaded yet):')
-  ) {
-    return false;
-  }
-  return true;
-}
-
-BinaryElement.hasAllowedFileExtension = function (
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-  fileExtensionsNotAllowed?: string[],
-) {
-  const fileExtensionsAllowedDefault = formState.features
-    ?.feature_upload_constraints?.fileExtensionsAllowed
-    ? formState.features.feature_upload_constraints.fileExtensionsAllowed
-    : [];
-  // are there any file extensions restrictions?
-  // if so reduce the list of allowed extensions by default by the not allowed extensions
-  const allowedExtensions = fileExtensionsNotAllowed
-    ? fileExtensionsAllowedDefault.filter(
-      (extension) => fileExtensionsNotAllowed.indexOf(extension) === -1,
-    )
-    : fileExtensionsAllowedDefault;
-  let hasAllowedExtension = false;
-  // multi file upload
-
-  if (Array.isArray(value)) {
-    // loop through all files
-    // check if the filename ends with an allowed extension
-    for (let fileIndex = 0; fileIndex < value.length; fileIndex++) {
-      const file = value[fileIndex];
-      const currentFileName = file.fileName;
-      let isCurrentFileAllowed = false;
-      // acta nova files don't need to be checked
-      if (isActaNovaFile(value[fileIndex])) {
-        isCurrentFileAllowed = true;
-      } else {
-        for (let index = 0; index < allowedExtensions.length; index++) {
-          const currentFileExtension = allowedExtensions[index];
-          if (
-            currentFileName
-              .substr(
-                currentFileName.length - currentFileExtension.length,
-                currentFileExtension.length,
-              )
-              .toLowerCase() === currentFileExtension.toLowerCase()
-          ) {
-            isCurrentFileAllowed = true;
-            break;
-          }
-        }
-      }
-      // exit if there is one file with a not allowed extension
-      if (!isCurrentFileAllowed) {
-        hasAllowedExtension = false;
-        break;
-      } else {
-        hasAllowedExtension = true;
-      }
-    }
-    // now all files have been checked
-  } else {
-    // single file upload
-    // check if filename does not end with one of the allowed extensions
-    // acta nova files don't need to be checked
-    if (isActaNovaFile(value)) {
-      hasAllowedExtension = true;
-    } else {
-      hasAllowedExtension = allowedExtensions.some(
-        (currentFileExtension) =>
-          value.fileName
-            .substr(
-              value.fileName.length - currentFileExtension.length,
-              currentFileExtension.length,
-            )
-            .toLowerCase() === currentFileExtension.toLowerCase(),
-      );
-    }
-  }
-
-  if (!hasAllowedExtension && updateErrorMessages) {
-    elemState.validationMessage = `${t(
-      'form_fileTypeError',
-    )} ${allowedExtensions?.join(', ')}`;
-    utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-  }
-
-  return hasAllowedExtension;
-};
-
-/**
- * Check auf erlaubte Dateigröße (Einzel- und Gesamtgrößenbeschränkung)
- */
-function hasAllowedUploadSize(
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-) {
-  // use config from feature if available or fall back to 5 MB per file / 20 MB overall
-  const maxSingleUploadSizeByte = formState.features?.feature_upload_constraints
-    ?.maxSizePerFile
-    ? formState.features.feature_upload_constraints.maxSizePerFile
-    : 5_242_880;
-  const maxMultipleUploadSizeByte = formState.features
-    ?.feature_upload_constraints?.maxSizeOverall
-    ? formState.features.feature_upload_constraints.maxSizeOverall
-    : 20_971_520;
-  const byteToMBFactor = 1_048_576; // 1024 * 1024
-  const maxSingleUploadSizeMB = Math.floor(
-    maxSingleUploadSizeByte / byteToMBFactor,
-  );
-  const maxMultipleUploadSizeMB = Math.floor(
-    maxMultipleUploadSizeByte / byteToMBFactor,
-  );
-
-  let sumSizes = 0;
-  let failedCheckForOneFile = false;
-
-  if (Array.isArray(value)) {
-    // multiple files
-    value.forEach((singleElement) => {
-      // only consider non-ActaNova files
-      if (!isActaNovaFile(singleElement)) {
-        if (singleElement.size) {
-          sumSizes = sumSizes + singleElement.size;
-          if (singleElement.size > maxSingleUploadSizeByte) {
-            if (updateErrorMessages) {
-              elemState.validationMessage = `${t(
-                'form_maxFileUploadSizeSingleError',
-              ).replace('%size%', maxSingleUploadSizeMB.toString())}: ${singleElement.fileName
-                }`;
-            }
-            utils.setStateElementByJsonpath(
-              formState.data,
-              jsonpath,
-              elemState,
-            );
-            failedCheckForOneFile = true;
-            return false;
-          }
-        }
-      }
-    });
-    if (failedCheckForOneFile) return false;
-
-    // overall
-    if (sumSizes > maxMultipleUploadSizeByte) {
-      if (updateErrorMessages) {
-        elemState.validationMessage = `${t(
-          'form_maxFileUploadSizeMultipleError',
-        )}: ${maxMultipleUploadSizeMB} MB`;
-      }
-      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-      return false;
-    }
-  } else if (
-    // single file
-    !isActaNovaFile(value) &&
-    value.size &&
-    value.size > maxSingleUploadSizeByte
-  ) {
-    if (updateErrorMessages) {
-      elemState.validationMessage = `${t(
-        'form_maxFileUploadSizeSingleError',
-      ).replace('%size%', maxSingleUploadSizeMB.toString())}: ${maxMultipleUploadSizeMB} MB`;
-      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-    }
-    return false;
-  }
-  return true;
-}
 
 export default BinaryElement;

@@ -544,8 +544,8 @@ export class RestService {
   }
 
   async cancelFormRequest(formState: FormState): Promise<ApiResponse> {
-    let data = new FormData();
-
+    // 
+    let data = formState.data;
     let url = 'form/' + encodeURIComponent(formState.formid);
     if (
       typeof formState.businessObjectID !== 'undefined' &&

@@ -152,7 +152,8 @@ function BinaryElement(props: IFormComponentAttributes) {
             200,
           )
           : formFile.uri,
-      type: fileExt,
+      ext: fileExt,
+      type: formFile.type ?? '',
     };
     return {
       binary: withUri,

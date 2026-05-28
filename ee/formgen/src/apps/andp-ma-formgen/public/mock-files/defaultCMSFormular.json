@@ -933,7 +933,7 @@
         "validation": {
           "binary": {
             "maxFilesize": 5,
-            "allowedFileTypes": ["image/.*"]
+            "allowedFileTypes": ["image/png", "image/jpeg", "image/svg"]
           }
         },
         "mandatory": false,

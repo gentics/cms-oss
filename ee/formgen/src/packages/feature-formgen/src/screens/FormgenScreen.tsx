@@ -46,7 +46,7 @@ const FormgenScreen: React.FC<{
   const [features, setFeatures] = useState<IFeatures>();
   const [loadFeatureError, setLoadFeatureError] = useState<boolean>(false);
   const isWeb = Platform.OS === 'web';
-  const [t, setT] = useState<any>();
+  const [t, setT] = useState<TFunction>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const pluginName = (props.pluginName) as PluginNameEnum;
@@ -142,7 +142,7 @@ const FormgenScreen: React.FC<{
           loader.style.display = 'none';
         }, 500);
       }
-    } else {
+    } else if (props.previewFormData?.schema != null && props.previewFormData.uiSchema != null) {
       sendPreviewLoadedEvent();
     }
   }, [loading, isWeb]);

@@ -71,6 +71,8 @@ export interface PreviewInitializationEvent extends PreviewInformation {
     formId: string;
     language: string;
     pageIndex: number;
+    schema: ISchema;
+    uiSchema: IForm;
     elementId?: string;
 }
 

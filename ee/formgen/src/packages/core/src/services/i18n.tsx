@@ -40,7 +40,6 @@ export async function initI18n(
       .use(initReactI18next)
       .init({
         lng: culture,
-        fallbackLng: culture,
         showSupportNotice: false,
         supportedLngs: previewInfo.availableLanguages,
         partialBundledLanguages: true,

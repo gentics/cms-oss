@@ -50,7 +50,7 @@ export default function App() {
 
   const [formgenConfig, setFormgenConfig] = useState<IFormFlowData>(jsonConfig);
   const isDevMode = Constants.manifest.extra.devMode;
-  const isMockForm = Constants.manifest.extra.mockForm || isFormgridPreview;
+  const isMockForm = Constants.manifest.extra.mockForm && !isFormgridPreview;
   const [language, setLanguage] = useState<string>();
   const [Endpoint, setEndpoint] = useState<string>();
   const [formId, setFormId] = useState<string>();
@@ -64,7 +64,7 @@ export default function App() {
   const [pluginName, setPluginName] = useState<string>('');
 
   // Load the data from the window variable if available, but only once
-  if (initialPreviewData && !previewFromDomLoaded) {
+  if (initialPreviewData && !previewFromDomLoaded && !previewInitialized) {
     setFormId(initialPreviewData.formId);
     setPreviewInformation({
       dynamic: false,
@@ -93,7 +93,7 @@ export default function App() {
   }
 
   // Register the dynamic preview message handler
-  if (dynamicPreview && !previewMessageListener) {
+  if (dynamicPreview && !previewMessageListener && !previewInitialized) {
     window.addEventListener('message', (raw) => {
       const event = raw.data as PreviewEvent;
       if (event.receiver !== PreviewEventReceiver.PUPPET) {
@@ -111,6 +111,10 @@ export default function App() {
             formType: event.formType,
             availableLanguages: event.availableLanguages,
             cmsSid: event.cmsSid,
+          });
+          setPreviewFormData({
+            schema: event.schema,
+            uiSchema: event.uiSchema,
           });
           setLanguage(event.language);
           setPreviewPageIndex(event.pageIndex);
@@ -240,7 +244,7 @@ export default function App() {
   return (
     <View style={theme.container}>
       {initialInit && language && Endpoint ? (
-        (!dynamicPreview || previewInitialized) && <>
+        (!isFormgridPreview || previewInitialized) && <>
           <FormgenScreen
             config={formgenConfig}
             formId={formId ? formId : ''}

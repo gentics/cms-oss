@@ -512,6 +512,12 @@ const RendererScreen: React.FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (i18n) {
+      handleChangeLanguage(props.language);
+    }
+  }, [props.language]);
+
   const _updateFormState = () => {
     // Always clone the current local formState so React can detect the change
     // and then push the same snapshot into the global mirror store.
@@ -745,7 +751,6 @@ const RendererScreen: React.FC<{
         ? data.data.formID
         : props.formId;
     const features = props.features;
-    const culture = props.language;
     const isLoggedIn = props.isLoggedIn;
     const businessObjectId = props.businessObjectId;
     let requestInitializeData = undefined;
@@ -782,22 +787,13 @@ const RendererScreen: React.FC<{
       formState.features = features;
     }
 
-    // fallback to german
-    if (culture === '') {
-      formState.culture = 'de';
-    } else {
-      formState.culture = culture;
-    }
-
     formState.t = t;
     formState.isFormgridPreview = props.isFormgridPreview;
 
-    !props.isFormgridPreview && handleChangeLanguage(formState.culture);
+    handleChangeLanguage(formState.culture);
 
     formState.businessObjectID = businessObjectId;
     updateState(StatesToUpdateEnum.ALL);
-
-    
 
     if (isLoggedIn) {
       // intercept clicks on links away from the form and present the overlayLeave
@@ -855,7 +851,7 @@ const RendererScreen: React.FC<{
     }
 
     // 2) Real API load
-    if (!props.mockForm) {
+    if (!props.mockForm && !props.isFormgridPreview) {
       const apiResponse = await restService.loadFormAsync(
         formId,
         businessObjectId,
@@ -977,8 +973,10 @@ const RendererScreen: React.FC<{
       uiState.lastPage = 0;
     }
     const missingFlowResponse3 = applyFormFlow(responseBody);
-    if (missingFlowResponse3) return missingFlowResponse3;
-    if (responseBody.schema.formType) {
+    if (missingFlowResponse3) {
+      return missingFlowResponse3;
+    }
+    if (responseBody?.schema.formType) {
       uiState.isReadOnlyForm = responseBody.schema.formType === 'readonlyform';
       uiState.isExpertSearch =
         responseBody.schema.formType === 'searchform' ||
@@ -1076,18 +1074,21 @@ const RendererScreen: React.FC<{
     }
   }, [props.isFormgridPreview, formState.deleted, updateState]);
 
-  function handleChangeLanguage(lng: any) {
-    i18n.changeLanguage(lng);
-    if (lng.length > 2) {
-      formState.culture = lng;
-      restService.setFullCulture(lng);
-    } else {
-      if (props.pluginName == PluginNameEnum.ACTA_NOVA) {
-        const resolved = utils.getCorrectANCulture(lng, formState.features);
-        formState.culture = resolved;
-        restService.setFullCulture(resolved);
-      }
+  function handleChangeLanguage(language: string) {
+    // fallback to german
+    if (language === '') {
+      language = 'de';
     }
+
+    i18n.changeLanguage(language);
+    let culture = language;
+    if (language.length <= 2) {
+      culture = utils.getCorrectANCulture(language, formState.features);
+    }
+
+    formState.culture = culture;
+    restService.setFullCulture(culture);
+
     updateState(StatesToUpdateEnum.ALL);
   }
 

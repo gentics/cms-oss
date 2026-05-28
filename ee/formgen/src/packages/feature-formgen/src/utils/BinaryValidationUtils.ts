@@ -181,7 +181,7 @@ export function hasAllowedUploadSize(
   const files: IBinary[] = Array.isArray(value) ? value : [value];
 
   for (const file of files) {
-    if (file.size) {
+    if (file.size != null) {
       if (file.size > maxSize) {
         if (updateErrorMessages) {
           elemState.validationMessage = `${t(

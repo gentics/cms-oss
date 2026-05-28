@@ -110,8 +110,8 @@ public class Migration {
 			"minValue", "validation.minValue",
 			"maxValue", "validation.maxValue",
 			"maxLength", "validation.maxLength",
-			"maxFilesize", "validation.maxFilesize",
-			"allowedTypes", "validation.allowedTypes");
+			"maxFilesize", "validation.binary.maxFilesize",
+			"allowedTypes", "validation.binary.allowedTypes");
 
 	/**
 	 * Migration map for property ids

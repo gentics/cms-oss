@@ -122,6 +122,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
 
       // performance optimization to fetch elements on the first level directly, not using jsonpath
       let isVisible = formState.data.properties?.[obj.id]?.visible && obj.formGridOptions?.hidden !== true;
+
       if (typeof isVisible === 'undefined') {
         // CMS only: if visible is not set in data, evaluate condition as fallback
         if (formState.pluginName === PluginNameEnum.CMS_FORMS && obj.formGridOptions?.condition) {
@@ -140,7 +141,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         ? obj.formGridOptions.value
         : utils.getValue(formState, jsonpath, obj.id);
 
-      if (!obj.formGridOptions?.type || !isVisible) {
+      if ((schemaElem == null && !obj.formGridOptions?.type )|| !isVisible ) {
         return null;
       }
 

@@ -48,6 +48,7 @@ interface PreviewInformation {
     formType: string;
     features: IFeatures;
     availableLanguages: string[];
+    cmsSid?: number;
 }
 
 /**
@@ -93,7 +94,10 @@ interface PreviewConnectEvent extends BasePreviewEvent {
     eventType: typeof PREVIEW_CONNECT_EVENT;
 }
 
-interface PreviewInitializationEvent extends BasePreviewEvent, Omit<PreviewInformation, 'features'>, Partial<Pick<PreviewInformation, 'features'>> {
+interface PreviewInitializationEvent extends BasePreviewEvent,
+    Omit<PreviewInformation, 'features'>, Partial<Pick<PreviewInformation, 'features'>>,
+    PreviewFormData
+{
     eventType: typeof PREVIEW_INTIALIZATION_EVENT_NAME;
 
     formId: string;
@@ -314,9 +318,12 @@ export class FormPreviewComponent implements AfterViewInit {
                             language: this.activeLanguage(),
                             formId: `${this.formId()}`,
                             formType: this.formType(),
+                            cmsSid: this.client.getClient().sid as number,
                             pageIndex: this.pageIndex(),
                             elementId: this.selectedElementId(),
                             availableLanguages: this.languages(),
+                            schema: this.schema(),
+                            uiSchema: this.uiSchema(),
                         });
                         return;
 

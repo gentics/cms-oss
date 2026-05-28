@@ -49,6 +49,11 @@
         "secure": false,
         "changeOrigin": true
     },
+    "/formgen": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
     "/v2/check": {
         "target": "http://localhost:8010",
         "secure": false,

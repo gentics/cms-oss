@@ -11,6 +11,7 @@
     "form_error_overlay_deletedDataVersion_content": "The saved data had to be removed due to an update. Please start from the beginning",
     "form_error_overlay_close_button": "Close",
     "form_fileTypeError": "Only the following file types are allowed: ",
+    "form_fileNameError": "Invalid Filename",
     "form_preconditions_overlay__second_line": "",
     "form_save_overlay_button_save": "Save Temporarily",
     "form_detailinfo": "Detailed Information",

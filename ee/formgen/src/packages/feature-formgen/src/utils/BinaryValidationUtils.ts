@@ -39,26 +39,22 @@ function cmsHasAllowedFileExtension(
   value: IBinary | IBinary[],
   t: TFunction,
 ): boolean {
-  const activeTypeRegexes = schemaProperty.validation?.binary?.allowedFileTypes;
+  const activeTypes = schemaProperty.validation?.binary?.allowedFileTypes;
   const activeNameRegexes = schemaProperty.validation?.binary?.allowedFileNames;
 
-  if (!activeTypeRegexes?.length && !activeNameRegexes?.length) return true;
+  if (!activeTypes?.length && !activeNameRegexes?.length) return true;
 
   const files: IBinary[] = Array.isArray(value) ? value : [value];
 
   for (const file of files) {
-    if (activeTypeRegexes?.length) {
-      const mimeType = file.type ?? "";
-      const typeAllowed = activeTypeRegexes.some((pattern) => {
-        try {
-          return new RegExp(pattern).test(mimeType);
-        } catch {
-          return false;
-        }
-      });
+    if (activeTypes?.length) {
+      const mimeType = (file.type ?? "").toLowerCase();
+      const typeAllowed = activeTypes.some(
+        (pattern) => mimeType === pattern.toLowerCase(),
+      );
       if (!typeAllowed) {
         if (updateErrorMessages) {
-          elemState.validationMessage = `${t("form_fileTypeError")} ${activeTypeRegexes.join(", ")}`;
+          elemState.validationMessage = `${t("form_fileTypeError")} ${activeTypes.join(", ")}`;
           utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
         }
         return false;
@@ -75,7 +71,7 @@ function cmsHasAllowedFileExtension(
       });
       if (!nameAllowed) {
         if (updateErrorMessages) {
-          elemState.validationMessage = `${t("form_fileTypeError")} ${activeNameRegexes.join(", ")}`;
+          elemState.validationMessage = t("form_fileNameError");
           utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
         }
         return false;
@@ -85,6 +81,7 @@ function cmsHasAllowedFileExtension(
 
   return true;
 }
+
 /**
  * Validates file extension against the global feature_upload_constraints allowlist, optionally excluding specific extensions.
  */

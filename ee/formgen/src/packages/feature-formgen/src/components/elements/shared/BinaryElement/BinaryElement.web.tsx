@@ -173,7 +173,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       binary: withUri,
       file: null,
       source,
-      fileExt,
+      fileExt: fileExt,
       mimeType: formFile.type ?? '',
       uid: uuidv4(),
     };

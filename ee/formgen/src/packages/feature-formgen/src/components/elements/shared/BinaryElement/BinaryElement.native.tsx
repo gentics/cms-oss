@@ -127,10 +127,11 @@ function BinaryElement(props: IFormComponentAttributes) {
   };
 
   const makeBinaryFromFile = (
-    file: { name: string; size?: number | null; uri?: string }
+    file: { name: string; size?: number | null; uri?: string, type: string }
   ): IBinary => ({
     fileName: file.name,
-    type: readExt(file.name),
+    type: file.type,
+    ext : readExt(file.name),
     uri: file.uri || '',
     value: '',
     size: file.size ?? undefined,
@@ -157,7 +158,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       binary: withUri,
       file: null,
       source,
-      fileExt,
+      fileExt: fileExt,
       mimeType: formFile.type ?? '',
       uid: uuidv4(),
     };
@@ -352,10 +353,10 @@ function BinaryElement(props: IFormComponentAttributes) {
 
               const fileObjs: any[] = [];
 
-              assets.forEach((asset) => {
+              assets.forEach((asset: DocumentPickerAsset) => {
                 // Web: expo-document-picker exposes a real File instance
-                if ((asset as any).file) {
-                  fileObjs.push((asset as any).file);
+                if (asset.file) {
+                  fileObjs.push(asset.file);
                   return;
                 }
 

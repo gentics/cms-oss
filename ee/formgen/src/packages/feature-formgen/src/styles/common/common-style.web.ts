@@ -788,6 +788,11 @@ const dateTimeElementStyles = StyleSheet.create({
     fontSize: dateTimeElementTheme.input.labelFontSize,
     fontFamily: dateTimeElementTheme.input.labelFontFamily,
     left: dateTimeElementTheme.input.paddingLeft,
+    top: dateTimeElementTheme.input.labelPaddingTop
+  },
+  datePickerLabelActive: {
+    fontSize: dateTimeElementTheme.focused.labelFontSize,
+    top: dateTimeElementTheme.focused.labelPaddingTop
   },
   errorDatePickerLabel: {
     color: dateTimeElementTheme.error.labelFontColor,

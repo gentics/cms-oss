@@ -1,27 +1,48 @@
 import { Platform } from "react-native";
+import {
+  PREVIEW_CONNECT_EVENT,
+  PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME,
+  PREVIEW_LOADED_EVENT_NAME,
+  PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME,
+  PreviewEvent,
+  PreviewEventReceiver
+} from "../../../types/preview";
 
-const FORMGRID_ELEMENT_SELECTED_EVENT = 'andp:formgen/elementSelected' as const;
+export function sendPreviewConnectEvent(): void {
+  sendEvent({
+    eventType: PREVIEW_CONNECT_EVENT,
+    receiver: PreviewEventReceiver.CONTROLLER,
+  });
+}
 
-export type FormgridElementSelectedDetail = {
-  elementId: string;
-  jsonPath: string;
-  source: 'pointer';
-};
+export function sendPreviewSelectedElementEvent(elementId: string): void {
+  sendEvent({
+    eventType: PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME,
+    receiver: PreviewEventReceiver.CONTROLLER,
+    elementId,
+  });
+}
 
-export default function emitSelected(elementId: string, jsonPath: string) {
+export function sendPreviewPageChangeEvent(pageIndex: number): void {
+  sendEvent({
+    eventType: PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME,
+    receiver: PreviewEventReceiver.CONTROLLER,
+    pageIndex,
+  });
+}
+
+export function sendPreviewLoadedEvent(): void {
+  sendEvent({
+    eventType: PREVIEW_LOADED_EVENT_NAME,
+    receiver: PreviewEventReceiver.CONTROLLER,
+  });
+}
+
+function sendEvent(event: PreviewEvent): void {
   if (Platform.OS !== 'web') return;
   if (typeof window === 'undefined') return;
 
-  const detail: FormgridElementSelectedDetail = {
-    elementId,
-    jsonPath,
-    source: 'pointer',
-  };
+  console.debug('>> FormGen', event.eventType);
 
-  window.dispatchEvent(
-    new CustomEvent<FormgridElementSelectedDetail>(
-      FORMGRID_ELEMENT_SELECTED_EVENT,
-      { detail },
-    ),
-  );
+  window.postMessage(event, '/');
 }

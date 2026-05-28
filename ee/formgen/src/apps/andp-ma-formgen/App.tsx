@@ -1,29 +1,54 @@
-import '@expo/metro-runtime';
-import { View, Text, Linking } from 'react-native';
-import theme from '@andp/core/src/styles/theme';
-import FormgenScreen from '@andp/feature-formgen/src/screens/FormgenScreen';
-import { useEffect, useMemo, useState } from 'react';
-import * as jsonConfig from './formgen.config.json';
-import Constants from 'expo-constants';
-import { IFeatures, IFormFlowData, ISummaryDetailsUser } from '@andp/feature-formgen/src/types/interfaces';
-import { Platform } from 'react-native';
 import { fontFamilies as commonFontFamilies } from '@andp/core/src/styles/common/font-config';
 import { fontFamilies as customFontFamilies } from '@andp/core/src/styles/custom/font-config';
+import theme from '@andp/core/src/styles/theme';
+import FormgenScreen from '@andp/feature-formgen/src/screens/FormgenScreen';
+import { IDataFields, IFormFlowData, ISummaryDetailsUser } from '@andp/feature-formgen/src/types/interfaces';
+import {
+  ExtendedWindow,
+  FormgridPreviewData,
+  PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME,
+  PREVIEW_DISPLAY_LANGUAGE_CHANGE_EVENT_NAME,
+  PREVIEW_FORM_CHANGE_EVENT_NAME,
+  PREVIEW_INTIALIZATION_EVENT_NAME,
+  PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME,
+  PreviewEvent,
+  PreviewEventReceiver,
+  PreviewFormData,
+  PreviewInformation,
+} from '@andp/feature-formgen/src/types/preview';
+import '@expo/metro-runtime';
+import Constants from 'expo-constants';
 import { useFonts } from 'expo-font';
+import { useEffect, useState } from 'react';
+import { Platform, Text, View } from 'react-native';
+import * as jsonConfig from './formgen.config.json';
+import { sendPreviewConnectEvent } from '@andp/feature-formgen/src/components/elements/helper/formgridPreviewBridge';
 
-export type FormgridPreviewData = {
-  formId?: string;
-  formJson?: string;
-  features?: IFeatures;
-  language?: string;
-  prefillContent?: string;
-  currentPage?: number;
-  selectedElementId?: string;
-};
+export default function App() {
+  let initialPreviewData: FormgridPreviewData | undefined;
+  let dynamicPreview = false;
 
-export default function App(props: { isFormgridPreview?: boolean; previewData?: FormgridPreviewData }) {
+  if (Platform.OS === 'web') {
+    const queryParams = new URLSearchParams(window.location.search);
+    dynamicPreview = queryParams.get('preview') === 'true';
+
+    // Load initial/static preview data from 
+    if ((window as any as ExtendedWindow).formPreviewData != null) {
+      initialPreviewData = (window as any as ExtendedWindow).formPreviewData;
+    }
+  }
+
+  const isFormgridPreview = initialPreviewData != null || dynamicPreview;
+
+  const [previewInitialized, setPreviewInitialized] = useState(false);
+  const [previewFormData, setPreviewFormData] = useState<PreviewFormData>();
+  const [previewInformation, setPreviewInformation] = useState<PreviewInformation>();
+  const [previewSelectedElement, setPreviewSelectedElement] = useState<string>();
+  const [previewPageIndex, setPreviewPageIndex] = useState<number>();
+  const [previewMessageListener, setPreviewMessageListener] = useState(false);
+  const [previewFromDomLoaded, setPreviewFromDomLoaded] = useState(false);
+
   const [formgenConfig, setFormgenConfig] = useState<IFormFlowData>(jsonConfig);
-  const isFormgridPreview = typeof document !== 'undefined' && document.getElementById('formgridForm') != null;
   const isDevMode = Constants.manifest.extra.devMode;
   const isMockForm = Constants.manifest.extra.mockForm || isFormgridPreview;
   const [language, setLanguage] = useState<string>();
@@ -33,47 +58,83 @@ export default function App(props: { isFormgridPreview?: boolean; previewData?: 
   const [initialInit, setInit] = useState<boolean>(false);
   const [isLoggedIn, setLoggedIn] = useState<boolean>(false);
   const [successContent, setSuccessContent] = useState<string>('');
-  const [prefillContent, setPrefillContent] = useState<string>('');
+  const [prefillContent, setPrefillContent] = useState<IDataFields>();
   const [userData, setUserData] = useState<ISummaryDetailsUser>();
   const [translationUrl, setTranslationUrl] = useState<string>('');
   const [pluginName, setPluginName] = useState<string>('');
 
-  const domPreview = useMemo<FormgridPreviewData>(() => {
-    if (!isFormgridPreview || typeof document === 'undefined') return {};
-
-    const formJsonEl = document.getElementById('formJson');
-    const featuresEl = document.getElementById('formFeatures');
-    const currentPageEl = document.getElementById('formCurrentPage');
-    const selectedElementIdEl = document.getElementById('formSelectedElementId');
-
-    const formJsonText = formJsonEl?.innerText ?? '';
-    const featuresText = featuresEl?.innerText ?? null;
-    const currentPageText = currentPageEl?.innerText ?? '';
-    const selectedElementIdText = selectedElementIdEl?.innerText ?? '';
-
-    const parsedCurrentPage = Number.parseInt(currentPageText, 10);
-
-    let parsedFeatures: IFeatures | undefined = undefined;
-    if (featuresText) {
-      try {
-        parsedFeatures = JSON.parse(featuresText) as IFeatures;
-      } catch (e) {
-        console.warn('Could not parse formFeatures JSON', e);
-      }
+  // Load the data from the window variable if available, but only once
+  if (initialPreviewData && !previewFromDomLoaded) {
+    setFormId(initialPreviewData.formId);
+    setPreviewInformation({
+      features: initialPreviewData.features,
+      formType: initialPreviewData.formType,
+      availableLanguages: [initialPreviewData.language],
+    });
+    setLanguage(initialPreviewData.language);
+    setPreviewFormData({
+      schema: initialPreviewData.schema,
+      uiSchema: initialPreviewData.uiSchema,
+    });
+    setPrefillContent(initialPreviewData.prefillContent);
+    if (initialPreviewData.currentPage) {
+      setPreviewPageIndex(initialPreviewData.currentPage);
     }
+    if (initialPreviewData.selectedElementId) {
+      setPreviewSelectedElement(initialPreviewData.selectedElementId);
+    }
+    setPreviewFromDomLoaded(true);
+  }
 
-    return {
-      formJson: formJsonText,
-      features: parsedFeatures,
-      currentPage: Number.isFinite(parsedCurrentPage) ? parsedCurrentPage : 0,
-      selectedElementId: selectedElementIdText,
-    };
-  }, [isFormgridPreview]);
+  // Register the dynamic preview message handler
+  if (dynamicPreview && !previewMessageListener) {
+    window.addEventListener('message', (raw) => {
+      const event = raw.data as PreviewEvent;
+      if (event.receiver !== PreviewEventReceiver.PUPPET) {
+        return;
+      }
 
-  const effectivePreview: FormgridPreviewData = {
-    ...domPreview,
-    ...(props.previewData ?? {}),
-  };
+      console.debug('<< FormGen', event.eventType);
+
+      switch (event.eventType) {
+        case PREVIEW_INTIALIZATION_EVENT_NAME:
+          setFormId(event.formId);
+          setPreviewInformation({
+            features: event.features,
+            formType: event.formType,
+            availableLanguages: event.availableLanguages,
+          });
+          setLanguage(event.language);
+          setPreviewPageIndex(event.pageIndex);
+          setPreviewSelectedElement(event.elementId);
+          setPreviewInitialized(true);
+          break;
+
+        case PREVIEW_FORM_CHANGE_EVENT_NAME:
+          setPreviewFormData({
+            schema: event.schema,
+            uiSchema: event.uiSchema,
+          });
+          setPrefillContent(event.prefillContent);
+          break;
+
+        case PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME:
+          setPreviewPageIndex(event.pageIndex);
+          break;
+
+        case PREVIEW_DISPLAY_LANGUAGE_CHANGE_EVENT_NAME:
+          setLanguage(event.language);
+          break;
+
+        case PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME:
+          setPreviewSelectedElement(event.elementId);
+          break;
+      }
+    });
+    setPreviewMessageListener(true);
+
+    sendPreviewConnectEvent();
+  }
 
   if (Platform.OS !== 'web' || isDevMode || isMockForm) {
     if (customFontFamilies && Object.keys(customFontFamilies).length > 0) {
@@ -81,22 +142,6 @@ export default function App(props: { isFormgridPreview?: boolean; previewData?: 
     } else {
       useFonts(commonFontFamilies)
     }
-  }
-
-  const formgridPreviewInit = (override?: FormgridPreviewData) => {
-    const formidElement = document.getElementById('formId');
-    const languageElement = document.getElementById("formLanguage");
-    const formid = formidElement && formidElement.innerText != null ? formidElement.innerText : "";
-    const language = languageElement && languageElement.innerText != null ? languageElement.innerText : "de";
-
-    const nextFormId = override?.formId ?? formid;
-    const nextLanguage = override?.language ?? language;
-    const nextPrefill = override?.prefillContent ?? prefillContent;
-
-    setLoggedIn(false);
-    setFormId(nextFormId);
-    setLanguage(nextLanguage || 'de');
-    setPrefillContent(nextPrefill);
   }
 
   useEffect(() => {
@@ -110,102 +155,106 @@ export default function App(props: { isFormgridPreview?: boolean; previewData?: 
       domain = window.location.origin;
     }
     setEndpoint(isDevMode || isMockForm ? formgenConfig.meshEndpoint : domain);
-    if (typeof document !== 'undefined') {
-      if (isFormgridPreview) {
-        formgridPreviewInit(props.previewData)
-      }
-      else if (document.getElementById('root') != undefined && document.getElementById('root') != null && !isFormgridPreview) {
-        const rootElement = document.getElementById('root');
-        const lang = document.getElementById('data-culture')?.getAttribute('data-culture');
-        //formid is the cms form uuid
-        //externalId - a possible externalFormID, e.g. a actanova form-id
-        //internally used formid is now externalId if available
-        const externalId = rootElement?.getAttribute('data-externalId');
-        const formid = externalId || rootElement?.getAttribute('data-formid');
-        const isloggedin = document.getElementById("egov-template--user-data--email") != null ? true : false;
-        const emailElement = document.getElementById("egov-template--user-data--email");
-        const nameElement = document.getElementById("egov-template--user-data--displayname");
-        const userNameElement = document.getElementById("egov-template--user-data--username");
-        const translationUrlFromId = rootElement?.getAttribute('data-translation-url');
 
-        // TODO GPU-2306 GPU-2305 später acta-nova entfernen hier. 
-        const pluginNameAttr = rootElement?.getAttribute('data-plugin-name') ?? "acta-nova";
-
-        const userEmail = emailElement && emailElement.innerText != null ? emailElement.innerText : "";
-        const userName = nameElement && nameElement.innerText != null ? nameElement.innerText : "";
-        const userUsername = userNameElement && userNameElement.innerText != null ? userNameElement.innerText : "";
-
-        const userData: ISummaryDetailsUser = {
-          name: userName,
-          username: userUsername,
-          email: userEmail
-        }
-
-        const successElement = document.getElementById("egov-template--success-message");
-        const prefillElement = document.getElementById("egov-template--prefill");
-        const successMessage = successElement && successElement.innerText != null ? successElement.innerText : "";
-        const prefillContent = prefillElement && prefillElement.innerText != null ? prefillElement.innerText : "";
-        setLoggedIn(isloggedin);
-        setUserData(userData);
-        setLanguage(lang ? lang : 'de');
-        setSuccessContent(successMessage);
-        setPrefillContent(prefillContent);
-        setTranslationUrl(translationUrlFromId ?? '');
-        setPluginName(pluginNameAttr ?? '');
-        
-        if (formid) {
-          setFormId(formid);
-        }
-      }
-      const searchString = window.location.search;
-      if (searchString) {
-        const params = new URLSearchParams(searchString);
-        const boId = params.get("businessObjectId");
-        if (boId) {
-          setBusinessObjectId(boId);
-        }
-      }
-    } else {
+    if (document == null) {
       setLanguage('de');
       setLoggedIn(true);
+      setInit(true);
+      return;
     }
+
+    if (isFormgridPreview) {
+      setLoggedIn(false);
+    } else if (document.getElementById('root') != undefined && document.getElementById('root') != null && !isFormgridPreview) {
+      initFromDocumentElements();
+    }
+
+    const searchString = window.location.search;
+    if (searchString) {
+      const params = new URLSearchParams(searchString);
+      const boId = params.get("businessObjectId");
+      if (boId) {
+        setBusinessObjectId(boId);
+      }
+    }
+
     setInit(true);
   }, []);
 
-  useEffect(() => {
-    if (!isFormgridPreview) return;
-    formgridPreviewInit(props.previewData);
-  }, [
-    isFormgridPreview,
-    props.previewData?.formId,
-    props.previewData?.language,
-    props.previewData?.prefillContent,
-  ]);
-  
+  function initFromDocumentElements(): void {
+    const rootElement = document.getElementById('root');
+    const lang = document.getElementById('data-culture')?.getAttribute('data-culture');
+    //formid is the cms form uuid
+    //externalId - a possible externalFormID, e.g. a actanova form-id
+    //internally used formid is now externalId if available
+    const externalId = rootElement?.getAttribute('data-externalId');
+    const formid = externalId || rootElement?.getAttribute('data-formid');
+    const emailElement = document.getElementById("egov-template--user-data--email");
+    const isloggedin = emailElement != null ? true : false;
+    const nameElement = document.getElementById("egov-template--user-data--displayname");
+    const userNameElement = document.getElementById("egov-template--user-data--username");
+    const translationUrlFromId = rootElement?.getAttribute('data-translation-url');
+
+    // TODO GPU-2306 GPU-2305 später acta-nova entfernen hier. 
+    const pluginNameAttr = rootElement?.getAttribute('data-plugin-name') ?? "acta-nova";
+
+    const userEmail = emailElement && emailElement.innerText != null ? emailElement.innerText : "";
+    const userName = nameElement && nameElement.innerText != null ? nameElement.innerText : "";
+    const userUsername = userNameElement && userNameElement.innerText != null ? userNameElement.innerText : "";
+
+    const userData: ISummaryDetailsUser = {
+      name: userName,
+      username: userUsername,
+      email: userEmail
+    }
+
+    const successElement = document.getElementById("egov-template--success-message");
+    const prefillElement = document.getElementById("egov-template--prefill");
+    const successMessage = successElement && successElement.innerText != null ? successElement.innerText : "";
+    const prefillContent = prefillElement && prefillElement.innerText != null ? prefillElement.innerText : "";
+    setLoggedIn(isloggedin);
+    setUserData(userData);
+    setLanguage(lang ? lang : 'de');
+    setSuccessContent(successMessage);
+    try {
+      setPrefillContent(JSON.parse(prefillContent));
+    } catch (err) {
+      console.warn('Could not load prefill content');
+    }
+    setTranslationUrl(translationUrlFromId ?? '');
+    setPluginName(pluginNameAttr ?? '');
+    
+    if (formid) {
+      setFormId(formid);
+    }
+  }
+
   return (
     <View style={theme.container}>
       {initialInit && language && Endpoint ? (
-        <FormgenScreen
-          config={formgenConfig}
-          formId={formId ? formId : ''}
-          isLoggedIn={isLoggedIn}
-          apiToken={''}
-          devMode={isDevMode}
-          mockForm={isMockForm}
-          language={language}
-          endpoint={Endpoint}
-          businessObjectId={businessObjectId}
-          prefillContent={prefillContent}
-          successContent={successContent}
-          userData={userData}
-          translationUrl={translationUrl}
-          pluginName={pluginName}
-          isFormgridPreview={isFormgridPreview}
-          features={effectivePreview.features}
-          formJson={effectivePreview.formJson ?? ''}
-          currentPage={effectivePreview.currentPage ?? 0}
-          selectedElementId={effectivePreview.selectedElementId ?? ''}
-        />
+        (!dynamicPreview || previewInitialized) && <>
+          <FormgenScreen
+            config={formgenConfig}
+            formId={formId ? formId : ''}
+            isLoggedIn={isLoggedIn}
+            apiToken={''}
+            devMode={isDevMode}
+            mockForm={isMockForm}
+            language={language}
+            endpoint={Endpoint}
+            businessObjectId={businessObjectId}
+            prefillContent={prefillContent}
+            successContent={successContent}
+            userData={userData}
+            translationUrl={translationUrl}
+            pluginName={pluginName}
+            isFormgridPreview={isFormgridPreview}
+            previewFormData={previewFormData}
+            previewInformation={previewInformation}
+            previewSelectedElement={previewSelectedElement}
+            previewPageIndex={previewPageIndex}
+          />
+        </>
       ) : (
         <Text>Fehler</Text>
       )}

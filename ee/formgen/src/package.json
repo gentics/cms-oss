@@ -2,6 +2,10 @@
   "private": true,
   "name": "andp-cpa",
   "version": "1.0.0",
+  "engines": {
+    "npm": "^10.9.2",
+    "node": "^22.15.0"
+  },
   "scripts": {
     "start:mobile": "cd apps/andp-mobile && npm start",
     "start:ma-messages": "cd apps/andp-ma-messages && expo start -c",

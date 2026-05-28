@@ -1,20 +1,22 @@
-import React, { Suspense, useState, useEffect, useMemo } from 'react';
-import { Platform } from 'react-native';
-import baseTheme, { baseStyles } from '../styles/common/common-style';
-import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
-import RendererScreen from './RendererScreen';
-import { IFeatures, IFormFlowData, ISummaryDetailsUser } from '../types/interfaces';
-import { RestService } from '../services/RestService';
+import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
 import {
   LoadingScreen,
 } from '@andp/core/src/components/LoadingComponents';
 import { initI18n } from '@andp/core/src/services/i18n';
-import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
+import theme from '@andp/core/src/styles/theme';
+import { TFunction } from 'i18next';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import FormgenScreenErrorOverlay from '../components/overlays/childOverlays/FormgenScreenErrorOverlay';
 import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
-import { TFunction } from 'i18next';
-import theme from '@andp/core/src/styles/theme';
-import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
+import { RestService } from '../services/RestService';
+import { baseStyles } from '../styles/common/common-style';
+import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
+import { IDataFields, IFeatures, IForm, IFormFlowData, ISchema, ISummaryDetailsUser } from '../types/interfaces';
+import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
+import RendererScreen from './RendererScreen';
+import { sendPreviewLoadedEvent } from '../components/elements/helper/formgridPreviewBridge';
+import { PreviewFormData, PreviewInformation } from '../types/preview';
 
 const FormgenScreen: React.FC<{
   formId: string;
@@ -28,7 +30,7 @@ const FormgenScreen: React.FC<{
   endpoint: string;
   translationUrl?: string; // for loading translations inside webroot of mesh plugin (for example boxed solution)
   successContent?: string;
-  prefillContent?: string;
+  prefillContent?: IDataFields;
   userData?: ISummaryDetailsUser;
   features?: IFeatures;
   t?: TFunction;
@@ -36,9 +38,10 @@ const FormgenScreen: React.FC<{
   hasDetail?: boolean;
   pluginName: string;
   isFormgridPreview?: boolean;
-  formJson?: string;
-  currentPage?: number;
-  selectedElementId?: string;
+  previewFormData?: PreviewFormData;
+  previewInformation?: PreviewInformation;
+  previewSelectedElement?: string;
+  previewPageIndex?: number;
 }> = (props) => {
   const [features, setFeatures] = useState<IFeatures>();
   const [loadFeatureError, setLoadFeatureError] = useState<boolean>(false);
@@ -49,7 +52,6 @@ const FormgenScreen: React.FC<{
   const pluginName = (props.pluginName) as PluginNameEnum;
 
   const restService = new RestService(props.endpoint, pluginName, props.apiToken);
-
 
   useEffect(() => {
     if(pluginName == PluginNameEnum.ACTA_NOVA){
@@ -100,6 +102,7 @@ const FormgenScreen: React.FC<{
             props.pluginName,
             props.translationUrl,
             false,
+            props.previewInformation,
             props.language
           );
           await i18nInstance.changeLanguage(props.language);
@@ -126,7 +129,11 @@ const FormgenScreen: React.FC<{
   }, [props.endpoint, props.translationUrl]);
 
   useEffect(() => {
-    if (!loading && isWeb && !props.isFormgridPreview) {
+    if (loading || !isWeb) {
+      return;
+    }
+
+    if (!props.isFormgridPreview) {
       const loader = document.getElementById('bcLoader');
       if (loader) {
         loader.style.opacity = '0';
@@ -134,6 +141,8 @@ const FormgenScreen: React.FC<{
           loader.style.display = 'none';
         }, 500);
       }
+    } else {
+      sendPreviewLoadedEvent();
     }
   }, [loading, isWeb]);
 
@@ -180,13 +189,17 @@ const FormgenScreen: React.FC<{
     if(pluginName == PluginNameEnum.CMS_FORMS && props.config && t){
         return true;
     }
+    if (props.isFormgridPreview) {
+      return props.previewFormData?.uiSchema != null
+        && props.previewFormData?.schema != null;
+    }
     return false;
   }
   
   if (showRenderScreen()) {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <RendererScreen
+        {t && <RendererScreen
           features={features as IFeatures}
           formId={props.formId}
           businessObjectId={props.businessObjectId}
@@ -206,10 +219,11 @@ const FormgenScreen: React.FC<{
           pluginName={pluginName}
           successContent={props.successContent}
           isFormgridPreview={props.isFormgridPreview}
-          formJson={props.formJson}
-          currentPage={props.currentPage}
-          selectedElementId={props.selectedElementId}
-        />
+          previewFormData={props.previewFormData}
+          previewInformation={props.previewInformation}
+          previewSelectedElement={props.previewSelectedElement}
+          previewPageIndex={props.previewPageIndex}
+        />}
         {Platform.OS === "web" && <span dangerouslySetInnerHTML={{ __html: styleHtml }} />}
       </Suspense>
     );

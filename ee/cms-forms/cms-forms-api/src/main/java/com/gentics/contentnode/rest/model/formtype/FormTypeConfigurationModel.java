@@ -69,6 +69,12 @@ public class FormTypeConfigurationModel implements Serializable {
 	public List<SelectOption> userOptions;
 
 	/**
+	 * Options which captcha variations are available to use.
+	 */
+	@JsonProperty
+	public List<SelectOption> captchaOptions;
+
+	/**
 	 * Which styling variations the form-type has
 	 */
 	@JsonProperty

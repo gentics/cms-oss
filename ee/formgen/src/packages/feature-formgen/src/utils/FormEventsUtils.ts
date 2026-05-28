@@ -467,7 +467,6 @@ export async function possibleBinaryUpload(
         true,
         formGridOptions,
       ).isValid
-      && isLoggedIn
     ) {
       const actionAfterSuc = async () => {
         onBinaryChangeFinished();

@@ -15,8 +15,6 @@ const isDevMode = Constants.manifest.extra.devMode;
 const isMockForm = Constants.manifest.extra.mockForm;
 
 if (Platform.OS === 'web') {
-  type PreviewData = import('./App').FormgridPreviewData;
-
   const ensureFonts = () => {
     if (isDevMode || isMockForm) return;
     if (document.getElementById('formgen-fonts')) return;
@@ -44,47 +42,8 @@ if (Platform.OS === 'web') {
 
   const rootTag =
     document.getElementById('root') ?? document.getElementById('main');
-  const isEmbeddedPreview = document.getElementById('formgridForm') != null;
 
-  if (isEmbeddedPreview) {
-    const roots = new Map<HTMLElement, ReturnType<typeof createRoot>>();
-
-    const mount = (container: HTMLElement, data?: PreviewData) => {
-      ensureFonts();
-      let root = roots.get(container);
-      if (!root) {
-        root = createRoot(container);
-        roots.set(container, root);
-      }
-      root.render(
-        createElement(App, { isFormgridPreview: true, previewData: data }),
-      );
-    };
-
-    const update = (container: HTMLElement, data?: PreviewData) => {
-      const root = roots.get(container);
-      if (!root) {
-        mount(container, data);
-        return;
-      }
-      root.render(
-        createElement(App, { isFormgridPreview: true, previewData: data }),
-      );
-    };
-
-    const unmount = (container: HTMLElement) => {
-      const root = roots.get(container);
-      if (!root) return;
-      root.unmount();
-      roots.delete(container);
-    };
-
-    (window as any).FormgenPreview = (window as any).FormgenPreview || {
-      mount,
-      update,
-      unmount,
-    };
-  } else if (rootTag) {
+  if (rootTag) {
     ensureFonts();
     createRoot(rootTag).render(createElement(App));
   }

@@ -217,7 +217,7 @@ const FormProgressScreenPart: React.FC<{
       const flowItems: ProgressItem[] = extraFlowSteps.map((s, i) => ({
         kind: 'flow',
         index: pages.length + i,
-        label: s.name ? t(s.name) : '',
+        label: s.nameTranslationKey ? t(s.nameTranslationKey) : '',
       }));
 
       const items: ProgressItem[] = [...formItems, ...flowItems];

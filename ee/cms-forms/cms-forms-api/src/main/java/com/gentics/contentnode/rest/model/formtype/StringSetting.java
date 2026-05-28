@@ -22,6 +22,12 @@ public class StringSetting extends BaseSetting {
 	public boolean richContent;
 
 	/**
+	 * The configuration for the rich-content editor aloha.
+	 */
+	@JsonProperty
+	public AlohaConfiguration aloha;
+
+	/**
      * If it should render a multiline input (textarea) for editing instead.
      */
 	@JsonProperty

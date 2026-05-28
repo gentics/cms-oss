@@ -12,7 +12,7 @@ import * as validationUtils from "./ValidationUtils";
 import { PluginNameEnum } from "../constants/enums/PluginNameEnum";
 
 /**
- * Returns false for new (not yet uploaded) or Mesh-linked files, 
+ * Returns false for new (not yet uploaded) or Mesh-linked files,
  * so they are skipped during ActaNova-specific validation.
  */
 export function isActaNovaFile(file: IBinary): boolean {
@@ -39,11 +39,9 @@ function cmsHasAllowedFileExtension(
   value: IBinary | IBinary[],
   t: TFunction,
 ): boolean {
-  const activeTypeRegexes =
-    schemaProperty.validation?.binary?.allowedFileTypes;
-  const activeNameRegexes =
-    schemaProperty.validation?.binary?.allowedFileNames;
-  
+  const activeTypeRegexes = schemaProperty.validation?.binary?.allowedFileTypes;
+  const activeNameRegexes = schemaProperty.validation?.binary?.allowedFileNames;
+
   if (!activeTypeRegexes?.length && !activeNameRegexes?.length) return true;
 
   const files: IBinary[] = Array.isArray(value) ? value : [value];
@@ -51,9 +49,13 @@ function cmsHasAllowedFileExtension(
   for (const file of files) {
     if (activeTypeRegexes?.length) {
       const mimeType = file.type ?? "";
-      const typeAllowed = activeTypeRegexes.some((pattern) =>
-        new RegExp(pattern).test(mimeType),
-      );
+      const typeAllowed = activeTypeRegexes.some((pattern) => {
+        try {
+          return new RegExp(pattern).test(mimeType);
+        } catch {
+          return false;
+        }
+      });
       if (!typeAllowed) {
         if (updateErrorMessages) {
           elemState.validationMessage = `${t("form_fileTypeError")} ${activeTypeRegexes.join(", ")}`;
@@ -64,9 +66,13 @@ function cmsHasAllowedFileExtension(
     }
 
     if (activeNameRegexes?.length) {
-      const nameAllowed = activeNameRegexes.some((pattern) =>
-        new RegExp(pattern).test(file.fileName),
-      );
+      const nameAllowed = activeNameRegexes.some((pattern) => {
+        try {
+          return new RegExp(pattern).test(file.fileName);
+        } catch {
+          return false;
+        }
+      });
       if (!nameAllowed) {
         if (updateErrorMessages) {
           elemState.validationMessage = `${t("form_fileTypeError")} ${activeNameRegexes.join(", ")}`;
@@ -123,10 +129,10 @@ function anHasAllowedFileExtension(
   return hasAllowedExtension;
 }
 
-/** 
- * Delegates file extension validation to the plugin-specific implementation, 
+/**
+ * Delegates file extension validation to the plugin-specific implementation,
  * as each plugin (ActaNova, CMS Forms) defines allowed types differently.
-*/
+ */
 function hasAllowedFileExtension(
   formState: FormState,
   jsonpath: string,
@@ -159,12 +165,12 @@ function hasAllowedFileExtension(
         t,
       );
     default:
-      return false;
+      return true;
   }
 }
 
 /**
- * Checks that no file exceeds the plugin-specific max size — ActaNova reads 
+ * Checks that no file exceeds the plugin-specific max size — ActaNova reads
  * it from schema directly, CMS Forms stores it in MB and converts to bytes.
  */
 export function hasAllowedUploadSize(
@@ -183,10 +189,12 @@ export function hasAllowedUploadSize(
     case PluginNameEnum.ACTA_NOVA:
       maxSize = schemaProperty.maxSize;
       break;
-    case PluginNameEnum.CMS_FORMS:
-      const sizeInMb: number | undefined = schemaProperty.validation?.binary?.maxFilesize;
+    case PluginNameEnum.CMS_FORMS: {
+      const sizeInMb: number | undefined =
+        schemaProperty.validation?.binary?.maxFilesize;
       maxSize = sizeInMb !== undefined ? sizeInMb * 1_024 * 1_024 : undefined;
       break;
+    }
     default:
       maxSize = undefined;
   }
@@ -201,7 +209,10 @@ export function hasAllowedUploadSize(
         if (updateErrorMessages) {
           elemState.validationMessage = `${t(
             "form_maxFileUploadSizeSingleError",
-          ).replace("%size%", (maxSize / 1_024 / 1_024).toString())}: ${file.fileName}`;
+          ).replace(
+            "%size%",
+            (maxSize / 1_024 / 1_024).toString(),
+          )}: ${file.fileName}`;
           utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
         }
         return false;
@@ -213,7 +224,7 @@ export function hasAllowedUploadSize(
 }
 
 /**
- * Runs file extension and size validation for a binary 
+ * Runs file extension and size validation for a binary
  * field, skipping both checks if no file is present.
  */
 export function validateBinary(
@@ -269,7 +280,7 @@ export function validateBinary(
 }
 
 /**
- * Main entry point: runs common field validation first, 
+ * Main entry point: runs common field validation first,
  * then binary-specific checks (extension + size).
  */
 export function validate(

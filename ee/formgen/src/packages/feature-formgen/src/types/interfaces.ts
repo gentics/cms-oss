@@ -608,7 +608,7 @@ export interface ISchemaFieldProperties {
   condition?: ICmsCondition;
   maxSize?: number
   allowedFileExtensions?: string[]
-  allowAllFileExtensions?: string[]
+  allowAllFileExtensions?: boolean
 }
 
 export interface IValidation {

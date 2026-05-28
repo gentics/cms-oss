@@ -14,7 +14,6 @@ import {
 import { SummaryElement } from '../../components/elements/helper/SummaryElement';
 import { Row } from '../../components/elements/helper/Row';
 import * as utils from '../../utils/Utils';
-import { PluginNameEnum } from '../../constants/enums/PluginNameEnum';
 
 export function ElementRenderer(props: IFormComponentBaseAttributes) {
   const { formState, uiState } = props;
@@ -37,13 +36,14 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       const schemaElem = schemas[obj.id] ?? { type: 'property' };
       let lowerCaseSchemaElementType = schemaElem.type.toLowerCase();
       let elementConfigurationType: string;
-      let ElemTyp;
-      if(lowerCaseSchemaElementType === "property" && obj && obj.formGridOptions && obj.formGridOptions?.type){
+
+      if (lowerCaseSchemaElementType === "property" && obj && obj.formGridOptions && obj.formGridOptions?.type) {
         elementConfigurationType = obj.formGridOptions?.type.toLowerCase();
-      }else {
+      } else {
         elementConfigurationType = lowerCaseSchemaElementType;
       }
-      ElemTyp = getElementTypeByPlugin(elementConfigurationType, formState.pluginName)
+
+      let ElemTyp = getElementTypeByPlugin(elementConfigurationType, formState.pluginName)
 
       if (!ElemTyp) {
         console.warn(`FormGrid: Element type could not be determined from: "${elementConfigurationType}"`, obj, schemaElem);
@@ -121,11 +121,17 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       }
 
       // performance optimization to fetch elements on the first level directly, not using jsonpath
-      let isVisible = formState.data.properties?.[obj.id]?.visible && obj.formGridOptions?.hidden !== true;
+      let isVisible = formState.data.properties?.[obj.id]?.visible;
 
+      // If the element itself is marked as hidden, we don't display it no matter what.
+      if (obj.formGridOptions?.hidden === true) {
+        isVisible = false;
+      }
+
+      // If the backend doesn't deceide if it's visible, we have to determine it here manually.
       if (typeof isVisible === 'undefined') {
-        // CMS only: if visible is not set in data, evaluate condition as fallback
-        if (formState.pluginName === PluginNameEnum.CMS_FORMS && obj.formGridOptions?.condition) {
+        // if visible is not set in data, evaluate condition as fallback
+        if (obj.formGridOptions?.condition) {
           const condition = obj.formGridOptions.condition;
           const referencedValue = formState.data.properties?.[condition.source.control]?.value;
           isVisible = referencedValue === condition.equals;
@@ -133,6 +139,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
           isVisible = utils.getVisible(formState, jsonpath);
         }
       }
+
       const isCreatable = formState.data.properties?.[obj.id]?.createable
         ? formState.data.properties?.[obj.id]?.createable
         : utils.getCreatable(formState, jsonpath);

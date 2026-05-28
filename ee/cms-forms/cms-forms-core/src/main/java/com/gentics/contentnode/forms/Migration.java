@@ -109,24 +109,27 @@ public class Migration {
 	protected final static Map<String, String> PROPERTY_PATH_MAP = Map.of(
 			"minValue", "validation.minValue",
 			"maxValue", "validation.maxValue",
-			"maxLength", "validation.maxLength");
+			"maxLength", "validation.maxLength",
+			"maxFilesize", "validation.maxFilesize",
+			"allowedTypes", "validation.allowedTypes");
 
 	/**
 	 * Migration map for property ids
 	 */
 	public final static Map<String, String> PROPERTY_MIGRATION_MAP = Map.of(
 			"additional_element", "customOption",
-			"max_filesize", "maxFileSize",
+			"max_filesize", "maxFilesize",
 			"options", "selectOptions",
 			"value", "defaultValue",
 			"minVal", "minValue",
 			"maxVal", "maxValue",
-			"maxCharCount", "maxLength");
+			"maxCharCount", "maxLength",
+			"allowedFiletypes", "allowedTypes");
 
 	/**
 	 * List of property ids, which are backend properties (have the backend flag set)
 	 */
-	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("minValue", "maxValue", "maxLength", "maxFileSize", "allowedFiletypes",
+	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("minValue", "maxValue", "maxLength", "maxFilesize", "allowedTypes",
 			"mailsubject", "mailtemplate", "mailsource", "defaultValue", "selectOptions");
 
 	/**

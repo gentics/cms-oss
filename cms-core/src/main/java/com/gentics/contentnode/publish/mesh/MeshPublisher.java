@@ -4957,7 +4957,7 @@ public class MeshPublisher implements AutoCloseable {
 			rootNodeUuid = null;
 			defaultBranch = null;
 			defaultBranchParameter = null;
-			branchMap.clear();
+			branchMap.entrySet().forEach(entry -> entry.setValue(null));
 			branchParamMap.clear();
 			rolesWithPermissions.clear();
 

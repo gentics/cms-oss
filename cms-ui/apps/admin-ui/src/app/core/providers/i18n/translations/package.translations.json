@@ -29,7 +29,7 @@
     },
     "package_sync_cms_to_filesystem": {
         "en": "Sync from CMS to filesystem",
-        "de": "Snychronisiere von CMS zu Dateisystem"
+        "de": "Synchronisiere von CMS zu Dateisystem"
     },
     "package_syncing_cms_to_filesystem": {
         "en": "Syncing from CMS to filesystem",
@@ -49,7 +49,7 @@
     },
     "package_sync_filesystem_to_cms": {
         "en": "Sync from filesystem to CMS",
-        "de": "Snychronisiere von Dateisystem zu CMS"
+        "de": "Synchronisiere von Dateisystem zu CMS"
     },
     "package_create": {
         "en": "Create new package",

@@ -4,6 +4,7 @@ import {
   IBinary,
   CommonValidation,
   IFormGridOptions,
+  ISchemaFieldProperties,
 } from "../types/interfaces"; // Pfad anpassen
 import { TFunction } from "i18next";
 import * as utils from "./Utils"; // Pfad zu deinem bestehenden Utils-File
@@ -23,9 +24,54 @@ export function isActaNovaFile(file: IBinary): boolean {
   return true;
 }
 
-function cmsHasAllowedFileExtension(): boolean {
-  // TODO - implement
-  return false;
+function cmsHasAllowedFileExtension(
+  formState: FormState,
+  jsonpath: string,
+  elemState: IDataFieldProperties,
+  schemaProperty: ISchemaFieldProperties,
+  updateErrorMessages: boolean,
+  value: IBinary | IBinary[],
+  t: TFunction,
+): boolean {
+  const activeTypeRegexes =
+    schemaProperty.validation?.binary?.allowedFileTypes;
+  const activeNameRegexes =
+    schemaProperty.validation?.binary?.allowedFileNames;
+  
+  if (!activeTypeRegexes?.length && !activeNameRegexes?.length) return true;
+
+  const files: IBinary[] = Array.isArray(value) ? value : [value];
+
+  for (const file of files) {
+    if (activeTypeRegexes?.length) {
+      const mimeType = file.type ?? "";
+      const typeAllowed = activeTypeRegexes.some((pattern) =>
+        new RegExp(pattern).test(mimeType),
+      );
+      if (!typeAllowed) {
+        if (updateErrorMessages) {
+          elemState.validationMessage = `${t("form_fileTypeError")} ${activeTypeRegexes.join(", ")}`;
+          utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
+        }
+        return false;
+      }
+    }
+
+    if (activeNameRegexes?.length) {
+      const nameAllowed = activeNameRegexes.some((pattern) =>
+        new RegExp(pattern).test(file.fileName),
+      );
+      if (!nameAllowed) {
+        if (updateErrorMessages) {
+          elemState.validationMessage = `${t("form_fileTypeError")} ${activeNameRegexes.join(", ")}`;
+          utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
+        }
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 function anHasAllowedFileExtension(
@@ -69,26 +115,62 @@ function anHasAllowedFileExtension(
   return hasAllowedExtension;
 }
 
+function hasAllowedFileExtension(
+  formState: FormState,
+  jsonpath: string,
+  elemState: IDataFieldProperties,
+  schemaProperty: ISchemaFieldProperties,
+  updateErrorMessages: boolean,
+  value: IBinary | IBinary[],
+  t: TFunction,
+  fileExtensionsNotAllowed?: string[],
+): boolean {
+  switch (formState.pluginName) {
+    case PluginNameEnum.ACTA_NOVA:
+      return anHasAllowedFileExtension(
+        formState,
+        jsonpath,
+        elemState,
+        updateErrorMessages,
+        value,
+        t,
+        fileExtensionsNotAllowed,
+      );
+    case PluginNameEnum.CMS_FORMS:
+      return cmsHasAllowedFileExtension(
+        formState,
+        jsonpath,
+        elemState,
+        schemaProperty,
+        updateErrorMessages,
+        value,
+        t,
+      );
+    default:
+      return false;
+  }
+}
+
 // 2. Gemeinsame Funktion für die Dateigröße
 export function hasAllowedUploadSize(
   formState: FormState,
   jsonpath: string,
   elemState: IDataFieldProperties,
+  schemaProperty: ISchemaFieldProperties,
   updateErrorMessages: boolean,
   value: IBinary | IBinary[],
   t: TFunction,
 ): boolean {
+  /** Value in Bytes */
   let maxSize: number | undefined;
-  const elementFromSchema = utils.getSchemaForElement(
-    formState.schema,
-    elemState.id!,
-  );
+
   switch (formState.pluginName) {
     case PluginNameEnum.ACTA_NOVA:
-      maxSize = elementFromSchema.maxSize;
+      maxSize = schemaProperty.maxSize;
       break;
     case PluginNameEnum.CMS_FORMS:
-      maxSize = elementFromSchema.validation?.binary?.max_filesize;
+      const sizeInMb: number | undefined = schemaProperty.validation?.binary?.maxFilesize;
+      maxSize = sizeInMb !== undefined ? sizeInMb * 1_024 * 1_024 : undefined;
       break;
     default:
       maxSize = undefined;
@@ -104,7 +186,7 @@ export function hasAllowedUploadSize(
         if (updateErrorMessages) {
           elemState.validationMessage = `${t(
             "form_maxFileUploadSizeSingleError",
-          ).replace("%size%", maxSize.toString())}: ${file.fileName}`;
+          ).replace("%size%", (maxSize / 1_024 / 1_024).toString())}: ${file.fileName}`;
           utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
         }
         return false;
@@ -125,6 +207,10 @@ export function validateBinary(
 ): boolean {
   const value = utils.getValue(state, jsonpath, id);
   const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
+  const schemaProperty: ISchemaFieldProperties = utils.getSchemaForElement(
+    state.schema,
+    id,
+  );
 
   if (
     elemState &&
@@ -135,6 +221,7 @@ export function validateBinary(
         state,
         jsonpath,
         elemState,
+        schemaProperty,
         updateErrorMessages,
         value,
         t,
@@ -149,6 +236,7 @@ export function validateBinary(
         state,
         jsonpath,
         elemState,
+        schemaProperty,
         updateErrorMessages,
         value,
         t,

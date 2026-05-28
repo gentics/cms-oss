@@ -68,9 +68,9 @@ function FileCard({
         return extensionToIconName[ext] || 'file';
     }
 
-    const iconName = getIconNameForExt(file.fileType);
-    const isPreviewAble = fileTypesToPreview.includes(file.fileType) && ((file.binary && file.binary.size && file.binary.size <= maxFileSizeToPreview) || (file.file && file.file.size <= maxFileSizeToPreview));
-    const isImage = fileTypesToPreview.filter(x => x != "pdf").includes(file.fileType)
+    const iconName = getIconNameForExt(file.fileExt);
+    const isPreviewAble = fileTypesToPreview.includes(file.fileExt) && ((file.binary && file.binary.size && file.binary.size <= maxFileSizeToPreview) || (file.file && file.file.size <= maxFileSizeToPreview));
+    const isImage = fileTypesToPreview.filter(x => x != "pdf").includes(file.fileExt)
 
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [previewFailed, setPreviewFailed] = useState(false);
@@ -228,7 +228,7 @@ function FileCard({
                 <Text style={[styles.fileName, breakpoints.maximumSm && styles.fileNameMobile]} numberOfLines={1}>
                     {file.binary.fileName}
                 </Text>
-                <Text style={[styles.fileType, breakpoints.maximumSm && styles.fileTypeMobile]}>{file.fileType.toUpperCase()}</Text>
+                <Text style={[styles.fileType, breakpoints.maximumSm && styles.fileTypeMobile]}>{file.fileExt.toUpperCase()}</Text>
             </View>
         </View>
     );

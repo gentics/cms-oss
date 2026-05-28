@@ -621,7 +621,7 @@ export interface IValidation {
 export interface IBinaryValidationOptions {
   allowedFileTypes?: string[];
   allowedFileNames?: string[];
-  max_filesize?: number;
+  maxFilesize?: number;
 }
 
 export interface ICmsCondition {
@@ -737,6 +737,7 @@ export interface IBinary {
   value: string; // z.B. "mesh(not uploaded yet):Dateiname"
   uri?: string | null;
   type?: string;
+  ext?: string;
   size?: number;
 }
 
@@ -754,13 +755,15 @@ export type BinarySource = 'local' | 'mesh' | 'actanova';
  * - `file`  : the original File object (only for local selections); null once
  *             the backend returns a server-side IBinary for the same file
  * - `source`: local | mesh | actanova
- * - `fileType`: lowercased extension derived from binary.fileName (no dot)
+ * - `fileExt`: lowercased extension derived from binary.fileName (no dot)
+ * - `mimeType`: the MIME Type of the file
  */
 export interface IBinaryFile {
   binary: IBinary;
   file: File | null;
   source: BinarySource;
-  fileType: string;
+  fileExt: string;
+  mimeType: string;
 }
 
 export interface ITranslationSet {

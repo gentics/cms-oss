@@ -23,7 +23,7 @@ import { mergeStyles } from '@andp/core/src/AndpUtils';
 import { RestService } from '../../../../services/RestService';
 import FileCard from './parts/FileCard/FileCard.web';
 import * as DocumentPicker from 'expo-document-picker';
-import { DocumentPickerAsset } from 'expo-document-picker';
+
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -146,13 +146,14 @@ function BinaryElement(props: IFormComponentAttributes) {
 
   const makeBinaryFromFile = (file: File): IBinary => ({
     fileName: file.name,
-    type: readExt(file.name),
+    type: file.type,
+    ext: readExt(file.name),
     uri: URL.createObjectURL(file),
     value: '',
   });
 
   const toIBinaryFileFromServer = (formFile: IBinary): BinaryFileWithUid => {
-    const fileType = readExt(formFile.fileName || '');
+    const fileExt = readExt(formFile.fileName || '');
     const source = classifySource(formFile);
     const withUri: IBinary = {
       ...formFile,
@@ -166,13 +167,14 @@ function BinaryElement(props: IFormComponentAttributes) {
             200
           )
           : formFile.uri,
-      type: fileType,
+      type: fileExt,
     };
     return {
       binary: withUri,
       file: null,
       source,
-      fileType,
+      fileExt,
+      mimeType: formFile.type ?? '',
       uid: uuidv4(),
     };
   };
@@ -181,6 +183,27 @@ function BinaryElement(props: IFormComponentAttributes) {
   const getFileKey = (it: BinaryFileWithUid): string => {
     return it.uid;
   };
+
+  function addFiles(rawFiles: File[], ctx: typeof latestRef.current) {
+    const filesToAdd = ctx.isList ? rawFiles : [rawFiles[0]];
+
+    formEventsUtils.handleBinaryAdd(
+      ctx.formState, ctx.uiState, ctx.jsonpath, ctx.id,
+      ctx.updateState, ctx.restService, filesToAdd,
+      ctx.isLoggedIn, ctx.formGridOptions, ctx.editable,
+    );
+
+    const additions: BinaryFileWithUid[] = filesToAdd.map((f) => ({
+      binary: makeBinaryFromFile(f),
+      file: f,
+      source: 'local',
+      fileExt: readExt(f.name),
+      mimeType: f.type,
+      uid: uuidv4(),
+    }));
+
+    setFiles((prev) => ctx.isList ? [...prev, ...additions] : additions);
+  }
 
 
   useEffect(() => {
@@ -217,32 +240,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       const dropped = Array.from(e.dataTransfer?.files ?? []);
       if (!dropped.length) return;
 
-      // In single-file mode, only keep the latest file and replace previous selection
-      const files = current.isList ? dropped : [dropped[0]];
-
-      formEventsUtils.handleBinaryAdd(
-        current.formState,
-        current.uiState,
-        current.jsonpath,
-        current.id,
-        current.updateState,
-        current.restService,
-        files,
-        current.isLoggedIn,
-        current.formGridOptions,
-        current.editable,
-      );
-
-      const additions: BinaryFileWithUid[] = files.map((f) => ({
-        binary: makeBinaryFromFile(f),
-        file: f,
-        source: 'local',
-        fileType: readExt(f.name),
-        uid: uuidv4(),
-      }));
-
-      // Append in list mode, replace in single-file mode
-      setFiles((prev) => (current.isList ? [...prev, ...additions] : additions));
+      addFiles(dropped, current);
     };
 
     const onDragLeave = () => setIsDragOver(false);
@@ -394,25 +392,9 @@ function BinaryElement(props: IFormComponentAttributes) {
               files.length > 0 && styles.fileChooserWithFiles,
             ]}
             onPress={async () => {
-              const newFiles = await onBinaryPress(props);
+              const newFiles = await onBinaryPress(props.isList);
               if (newFiles && newFiles.length > 0) {
-                setFiles((prev) => {
-                  const additions: BinaryFileWithUid[] = [];
-                  for (const f of newFiles) {
-                    additions.push({
-                      binary: makeBinaryFromFile(f),
-                      file: f,
-                      source: 'local',
-                      fileType: readExt(f.name),
-                      uid: uuidv4(),
-                    });
-                  }
-                  // Single-file upload: replace previous selection
-                  if (!props.isList) {
-                    return additions.slice(0, 1);
-                  }
-                  return [...prev, ...additions];
-                });
+                addFiles(newFiles, latestRef.current);
               }
             }}
             disabled={!props.editable}
@@ -450,46 +432,18 @@ function BinaryElement(props: IFormComponentAttributes) {
 
 }
 
-async function onBinaryPress(props: IFormComponentAttributes): Promise<File[] | null> {
-  // Open DocumentPicker
-  let pickerResult;
+async function onBinaryPress(isList: boolean): Promise<File[] | null> {
   try {
-    pickerResult = await DocumentPicker.getDocumentAsync({
+    const pickerResult = await DocumentPicker.getDocumentAsync({
       type: '*/*',
-      multiple: props.isList,
+      multiple: isList,
     });
 
-    if (pickerResult.canceled) {
-      return null;
-    }
+    if (pickerResult.canceled) return null;
 
-    const selectedFiles: DocumentPickerAsset[] = pickerResult.assets || [];
-
-    let filesToAdd: File[] = [];
-    selectedFiles.forEach((filePickerAsset, index) => {
-      if (filePickerAsset.file) {
-        filesToAdd.push(filePickerAsset.file);
-      }
-    });
-
-    // in single-file mode, only keep the first file
-    if (!props.isList && filesToAdd.length > 1) {
-      filesToAdd = [filesToAdd[0]];
-    }
-
-    formEventsUtils.handleBinaryAdd(
-      props.formState,
-      props.uiState,
-      props.jsonpath,
-      props.id,
-      props.updateState,
-      props.restService,
-      filesToAdd,
-      props.isLoggedIn,
-      props.formGridOptions,
-      props.editable,
-    );
-    return filesToAdd;
+    return (pickerResult.assets ?? [])
+      .filter((asset) => !!asset.file)
+      .map((asset) => asset.file!);
   } catch (error) {
     console.error('DocumentPicker error: ', error);
     return null;

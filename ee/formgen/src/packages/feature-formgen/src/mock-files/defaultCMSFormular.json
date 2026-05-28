@@ -930,7 +930,12 @@
       "A3B210F1-8DB6-46F5-B035-C1915E34D046": {
         "type": "binary",
         "updateOnChange": false,
-        "validation": {},
+        "validation": {
+          "binary": {
+            "maxFilesize": 5,
+            "allowedFileTypes": ["image/.*"]
+          }
+        },
         "mandatory": false,
         "isList": false,
         "name": "Rbn_AR_Standortverwaltung_Q_Anhang"

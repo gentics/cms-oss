@@ -137,7 +137,7 @@ function BinaryElement(props: IFormComponentAttributes) {
   });
 
   const toIBinaryFileFromServer = (formFile: IBinary): BinaryFileWithUid => {
-    const fileType = readExt(formFile.fileName || '');
+    const fileExt = readExt(formFile.fileName || '');
     const source = classifySource(formFile);
     const withUri: IBinary = {
       ...formFile,
@@ -151,13 +151,14 @@ function BinaryElement(props: IFormComponentAttributes) {
             200,
           )
           : formFile.uri,
-      type: fileType,
+      type: fileExt,
     };
     return {
       binary: withUri,
       file: null,
       source,
-      fileType,
+      fileExt,
+      mimeType: formFile.type ?? '',
       uid: uuidv4(),
     };
   };
@@ -393,7 +394,8 @@ function BinaryElement(props: IFormComponentAttributes) {
                   binary: makeBinaryFromFile(f),
                   file: f,
                   source: 'local',
-                  fileType: readExt(f.name),
+                  fileExt: readExt(f.name),
+                  mimeType: f.type,
                   uid: uuidv4(),
                 }));
 

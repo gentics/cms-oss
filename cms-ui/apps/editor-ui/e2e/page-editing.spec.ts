@@ -1241,9 +1241,23 @@ test.describe('Page Editing', () => {
                 await openEditingPageInEditmode(page);
             });
 
-            // FIXME: The drag-n-drop simply doesn't do anything in the test; Therefore functionality can't be properly tested.
-            // Tried already all kinds of workarounds, but sadly nothing works so far.
-            test.skip('should be able to move a construct between two existing ones', async ({ page }) => {
+            // Aloha's block drag is wired via jQuery UI's `.draggable()` (see `ui-draggable-disabled`
+            // check in gcn-block.js and Aloha's `block/dragbehavior` module). jQuery UI Draggable
+            // only reacts to native mouse events (mousedown/mousemove/mouseup) and ignores the
+            // HTML5 drag events that Playwright's `locator.dragTo()` dispatches, which is why the
+            // earlier `dragTo()`-based attempt did literally nothing. We therefore drive the drag
+            // manually via `page.mouse`, with: (1) `boundingBox()` for main-viewport coordinates
+            // (the editable lives inside an iframe — `getBoundingClientRect()` would be iframe-
+            // local and off by the iframe offset), (2) a small initial nudge to clear jQuery UI's
+            // distance threshold, and (3) several intermediate `mousemove` steps so the Sortable
+            // reorder logic actually runs while the pointer travels to the drop target.
+            // Ticket: SUP-19961.
+            test('should be able to move a construct between two existing ones', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19961',
+                }],
+            }, async ({ page }) => {
                 const TEST_IMAGE = IMPORTER.get(IMAGE_ONE);
 
                 // Clear the content
@@ -1295,14 +1309,38 @@ test.describe('Page Editing', () => {
                     const targetImage = blocks.first();
 
                     const blockId = await originImage.getAttribute('id');
-                    const targetRect = await targetImage.evaluate(el => el.getBoundingClientRect());
 
-                    await originImage.locator('.aloha-block-handle .gcn-construct-drag-handle').dragTo(targetImage, {
-                        targetPosition: {
-                            x: 10,
-                            y: targetRect.bottom,
-                        },
-                    });
+                    // Make sure the origin handle is initialized and in view before grabbing it.
+                    await originImage.hover();
+                    const handle = originImage.locator('.aloha-block-handle .gcn-construct-drag-handle');
+                    await handle.scrollIntoViewIfNeeded();
+
+                    // `boundingBox()` returns coordinates relative to the main-frame viewport,
+                    // which is what `page.mouse` operates in — even though the elements live
+                    // inside the editor iframe.
+                    const handleBox = await handle.boundingBox();
+                    const targetBox = await targetImage.boundingBox();
+                    expect(handleBox).not.toBeNull();
+                    expect(targetBox).not.toBeNull();
+
+                    const startX = handleBox!.x + handleBox!.width / 2;
+                    const startY = handleBox!.y + handleBox!.height / 2;
+                    // Aim for the middle of the target block — Aloha decides "insert before/after"
+                    // based on where the pointer sits relative to the block centre. Edges are
+                    // brittle (scroll/overlap).
+                    const endX = targetBox!.x + targetBox!.width / 2;
+                    const endY = targetBox!.y + targetBox!.height / 2;
+
+                    await page.mouse.move(startX, startY);
+                    await page.mouse.down();
+                    // Small initial nudge to clear jQuery UI Draggable's distance threshold.
+                    await page.mouse.move(startX + 6, startY + 6, { steps: 5 });
+                    // Travel to the target with enough intermediate mousemove events for
+                    // Sortable's reorder hit-tests to fire along the way.
+                    await page.mouse.move(endX, endY, { steps: 25 });
+                    // Brief pause so Aloha can settle the drop indicator before mouseup.
+                    await page.waitForTimeout(150);
+                    await page.mouse.up();
 
                     const idsAfter = await Promise.all((await blocks.all()).map(loc => loc.getAttribute('id')));
 

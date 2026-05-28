@@ -5,12 +5,14 @@ import {
     computed,
     effect,
     ElementRef,
+    inject,
     input,
     model,
     signal,
     ViewChild,
 } from '@angular/core';
 import { FormPropertyData, FormSchema, FormUISchema } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
 interface IFeatures {
     [key: string]: IFeaturesConfig & IFeatureUploadConstraintOptions;
@@ -27,11 +29,13 @@ interface IFeatureUploadConstraintOptions {
 }
 
 type FormgridPreviewData = {
-    formId?: string;
-    schema?: FormSchema;
-    uiSchema?: FormUISchema;
+    formId: string;
+    formType: string;
+    schema: FormSchema;
+    uiSchema: FormUISchema;
+    language: string;
+    cmsSid?: number;
     features?: IFeatures;
-    language?: string;
     prefillContent?: Record<string, FormPropertyData>;
     currentPage?: number;
     selectedElementId?: string;
@@ -136,6 +140,11 @@ interface PreviewDisplayLanguageChangeEvent extends BasePreviewEvent {
     standalone: false,
 })
 export class FormPreviewComponent implements AfterViewInit {
+
+    /* INJECTS
+     * ===================================================================== */
+
+    private readonly client = inject(GCMSRestClientService);
 
     /* INPUTS / OUTPUTS
      * ===================================================================== */
@@ -272,8 +281,10 @@ export class FormPreviewComponent implements AfterViewInit {
                     language: this.activeLanguage(),
                     currentPage: this.pageIndex(),
                     formId: `${this.formId()}`,
+                    formType: this.formType(),
                     selectedElementId: this.selectedElementId(),
                     prefillContent: this.prefill(),
+                    cmsSid: this.client.getClient().sid as number,
                 };
             } catch (err) {
                 // Ignore err

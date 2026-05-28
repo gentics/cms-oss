@@ -11,7 +11,10 @@ import * as utils from "./Utils"; // Pfad zu deinem bestehenden Utils-File
 import * as validationUtils from "./ValidationUtils";
 import { PluginNameEnum } from "../constants/enums/PluginNameEnum";
 
-// Hilfsfunktion: Prüfen, ob es eine bereits existierende ActaNova-Datei ist
+/**
+ * Returns false for new (not yet uploaded) or Mesh-linked files, 
+ * so they are skipped during ActaNova-specific validation.
+ */
 export function isActaNovaFile(file: IBinary): boolean {
   if (
     !file.value ||
@@ -24,6 +27,9 @@ export function isActaNovaFile(file: IBinary): boolean {
   return true;
 }
 
+/**
+ * Validates file MIME type and filename against regex patterns defined in the CMS Forms schema.
+ */
 function cmsHasAllowedFileExtension(
   formState: FormState,
   jsonpath: string,
@@ -73,7 +79,9 @@ function cmsHasAllowedFileExtension(
 
   return true;
 }
-
+/**
+ * Validates file extension against the global feature_upload_constraints allowlist, optionally excluding specific extensions.
+ */
 function anHasAllowedFileExtension(
   formState: FormState,
   jsonpath: string,
@@ -115,6 +123,10 @@ function anHasAllowedFileExtension(
   return hasAllowedExtension;
 }
 
+/** 
+ * Delegates file extension validation to the plugin-specific implementation, 
+ * as each plugin (ActaNova, CMS Forms) defines allowed types differently.
+*/
 function hasAllowedFileExtension(
   formState: FormState,
   jsonpath: string,
@@ -151,7 +163,10 @@ function hasAllowedFileExtension(
   }
 }
 
-// 2. Gemeinsame Funktion für die Dateigröße
+/**
+ * Checks that no file exceeds the plugin-specific max size — ActaNova reads 
+ * it from schema directly, CMS Forms stores it in MB and converts to bytes.
+ */
 export function hasAllowedUploadSize(
   formState: FormState,
   jsonpath: string,
@@ -197,6 +212,10 @@ export function hasAllowedUploadSize(
   return true;
 }
 
+/**
+ * Runs file extension and size validation for a binary 
+ * field, skipping both checks if no file is present.
+ */
 export function validateBinary(
   state: FormState,
   jsonpath: string,
@@ -249,7 +268,10 @@ export function validateBinary(
   return true;
 }
 
-// 4. Gemeinsame validate-Funktion (der Haupt-Einstiegspunkt)
+/**
+ * Main entry point: runs common field validation first, 
+ * then binary-specific checks (extension + size).
+ */
 export function validate(
   state: FormState,
   jsonpath: string,

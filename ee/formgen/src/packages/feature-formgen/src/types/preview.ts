@@ -6,6 +6,7 @@ export type FormgridPreviewData = {
   schema: ISchema;
   uiSchema: IForm;
   features?: IFeatures;
+  cmsSid?: number;
   language: string;
   prefillContent: IDataFields;
   currentPage?: number;
@@ -16,8 +17,10 @@ export type FormgridPreviewData = {
  * Info about the preview-form which doesn't change
  */
 export interface PreviewInformation {
+  dynamic: boolean;
   formType: string;
   availableLanguages: string[];
+  cmsSid?: number;
   features?: IFeatures;
 }
 

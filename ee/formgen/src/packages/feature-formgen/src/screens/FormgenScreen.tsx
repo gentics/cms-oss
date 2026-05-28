@@ -92,40 +92,41 @@ const FormgenScreen: React.FC<{
   }, []);
 
   useEffect(() => {
-    if(props.t == null){
-      let mounted = true;
-      (async () => {
-        try {
-          const i18nInstance = await initI18n(
-            props.endpoint,
-            props.formId,
-            props.pluginName,
-            props.translationUrl,
-            false,
-            props.previewInformation,
-            props.language
-          );
-          await i18nInstance.changeLanguage(props.language);
-          if (mounted) {
-            setT(() => i18nInstance.t.bind(i18nInstance));
-            setLoading(false);
-          }
-        } catch (err: any) {
-          console.error('i18n init error:', err);
-          if (mounted) {
-            setError('Translations could not be loaded: ' + err.toString());
-            setLoading(false);
-          }
-        }
-      })();
-      return () => {
-        mounted = false;
-      };
-    }else{
+    if (props.t != null) {
       setT(() => props.t);
       setLoading(false);
+      return;
     }
-    
+
+    let mounted = true;
+    (async () => {
+      try {
+        const i18nInstance = await initI18n(
+          props.endpoint,
+          props.formId,
+          props.pluginName,
+          props.translationUrl,
+          false,
+          props.previewInformation,
+          props.language
+        );
+        await i18nInstance.changeLanguage(props.language);
+        if (mounted) {
+          setT(() => i18nInstance.t.bind(i18nInstance));
+          setLoading(false);
+        }
+      } catch (err: any) {
+        console.error('i18n init error:', err);
+        if (mounted) {
+          setError('Translations could not be loaded: ' + err.toString());
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [props.endpoint, props.translationUrl]);
 
   useEffect(() => {

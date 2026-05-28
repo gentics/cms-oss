@@ -67,9 +67,11 @@ export default function App() {
   if (initialPreviewData && !previewFromDomLoaded) {
     setFormId(initialPreviewData.formId);
     setPreviewInformation({
+      dynamic: false,
       features: initialPreviewData.features,
       formType: initialPreviewData.formType,
       availableLanguages: [initialPreviewData.language],
+      cmsSid: initialPreviewData.cmsSid,
     });
     setLanguage(initialPreviewData.language);
     setPreviewFormData({
@@ -84,6 +86,10 @@ export default function App() {
       setPreviewSelectedElement(initialPreviewData.selectedElementId);
     }
     setPreviewFromDomLoaded(true);
+
+    if (!dynamicPreview) {
+      setPreviewInitialized(true);
+    }
   }
 
   // Register the dynamic preview message handler
@@ -100,9 +106,11 @@ export default function App() {
         case PREVIEW_INTIALIZATION_EVENT_NAME:
           setFormId(event.formId);
           setPreviewInformation({
+            dynamic: true,
             features: event.features,
             formType: event.formType,
             availableLanguages: event.availableLanguages,
+            cmsSid: event.cmsSid,
           });
           setLanguage(event.language);
           setPreviewPageIndex(event.pageIndex);

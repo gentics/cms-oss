@@ -53,7 +53,13 @@ export async function initI18n(
             payload: {} | string,
             callback: RequestCallback
           ): void => {
-            fetch(url)
+            const targetUrl = new URL(url, window.location as any);
+            if (previewInfo.cmsSid) {
+              targetUrl.searchParams.set('sid', `${previewInfo.cmsSid}`);
+            }
+            fetch(targetUrl.toString(), {
+              method: 'GET',
+            })
               .then((res) => {
                 if (!res.ok) {
                   throw new Error();

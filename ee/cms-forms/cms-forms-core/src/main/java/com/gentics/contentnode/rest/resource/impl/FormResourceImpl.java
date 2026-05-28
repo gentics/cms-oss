@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -77,6 +78,7 @@ import com.gentics.contentnode.rest.model.form.FormListResponse;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsForLanguage;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
@@ -1172,6 +1174,32 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			trx.success();
 			return new FormGenTranslationsResponse(newTranslations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types/{type}/translations/{code}")
+	public FormGenTranslationsForLanguage getFormTypeTranslationsForLanguage(@PathParam("type") String type, @PathParam("code") String code) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			FormTypeConfiguration config = getFormTypeConfiguration(type);
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			// if a language mapping exists, make sure to transform the language code to the internal version
+			if (MapUtils.isNotEmpty(config.languageMapping)) {
+				code = config.languageMapping.getOrDefault(code, code);
+				translations = FormTransformer.transformToInternalLanguageCodes(config, translations.clone());
+			}
+
+			final String finalCode = code;
+			FormGenTranslationsForLanguage response = new FormGenTranslationsForLanguage();
+			response.putAll(translations.entrySet().stream()
+					.map(entry -> Pair.of(entry.getKey(), entry.getValue().get(finalCode)))
+					.filter(pair -> StringUtils.isNotBlank(pair.getValue()))
+					.collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+
+			trx.success();
+			return response;
 		}
 	}
 

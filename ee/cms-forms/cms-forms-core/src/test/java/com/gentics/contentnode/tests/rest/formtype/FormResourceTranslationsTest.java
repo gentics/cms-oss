@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,7 @@ import com.gentics.contentnode.perm.PermissionStore;
 import com.gentics.contentnode.perm.Permissions;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsForLanguage;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsResponse;
 import com.gentics.contentnode.rest.model.response.LanguageList;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
@@ -356,10 +358,22 @@ public class FormResourceTranslationsTest implements ConfigModifier {
 					.path("translations").request().post(Entity.json(request), FormGenTranslationsResponse.class);
 
 			FormGenTranslations expected = new FormGenTranslations();
+			Map<String, String> de = new HashMap<>();
+			Map<String, String> en = new HashMap<>();
+			Map<String, String> fr = new HashMap<>();
+
 			if (setGlobally) {
 				expected.put("global_key_one", Map.of("de", "global_trans_one_de_modified", "en", "global_trans_one_en",
 						"fr", "global_trans_one_fr"));
 				expected.put("global_key_two", Map.of("de", "global_trans_two_de", "en", "global_trans_two_en"));
+
+				de.put("global_key_one", "global_trans_one_de_modified");
+				de.put("global_key_two", "global_trans_two_de");
+
+				en.put("global_key_one", "global_trans_one_en");
+				en.put("global_key_two", "global_trans_two_en");
+
+				fr.put("global_key_one", "global_trans_one_fr");
 			}
 			if (setForFormType) {
 				expected.put("global_key_one", Map.of("de", "global_trans_one_de_modified", "en", "global_trans_one_en_formtype",
@@ -367,14 +381,36 @@ public class FormResourceTranslationsTest implements ConfigModifier {
 				expected.put("formtype_key_one", Map.of("de", "formtype_trans_one_de", "en", "formtype_trans_one_en"));
 				expected.put("formtype_key_two", Map.of("de", "formtype_trans_two_de_modified", "en",
 						"formtype_trans_two_en", "fr", "formtype_trans_two_fr"));
+
+				de.put("global_key_one", "global_trans_one_de_modified");
+				de.put("formtype_key_one", "formtype_trans_one_de");
+				de.put("formtype_key_two", "formtype_trans_two_de_modified");
+
+				en.put("global_key_one", "global_trans_one_en_formtype");
+				en.put("formtype_key_one", "formtype_trans_one_en");
+				en.put("formtype_key_two", "formtype_trans_two_en");
+
+				fr.put("global_key_one", "global_trans_one_fr");
+				fr.put("formtype_key_two", "formtype_trans_two_fr");
 			}
 
 			assertThat(response.getItem()).as("Modified formtype translations").isEqualTo(expected);
 
+			// get the effective translations for all languages
+			FormGenTranslationsForLanguage deTranslations = client.get().base().path("form").path("types").path(GENERIC_TYPE).path("translations").path("de").request()
+					.get(FormGenTranslationsForLanguage.class);
+			assertThat(deTranslations).as("German translations").isEqualTo(de);
+			FormGenTranslationsForLanguage enTranslations = client.get().base().path("form").path("types").path(GENERIC_TYPE).path("translations").path("en").request()
+					.get(FormGenTranslationsForLanguage.class);
+			assertThat(enTranslations).as("English translations").isEqualTo(en);
+			FormGenTranslationsForLanguage frTranslations = client.get().base().path("form").path("types").path(GENERIC_TYPE).path("translations").path("fr").request()
+					.get(FormGenTranslationsForLanguage.class);
+			assertThat(frTranslations).as("Frensh translations").isEqualTo(fr);
+
 			// update again (remove overwrites)
 			request.clear();
 			expected.clear();
-			response = client.get().base().path("form").path("translations").request().post(Entity.json(request),
+			response = client.get().base().path("form").path("types").path(GENERIC_TYPE).path("translations").request().post(Entity.json(request),
 					FormGenTranslationsResponse.class);
 
 			if (setGlobally) {
@@ -382,11 +418,18 @@ public class FormResourceTranslationsTest implements ConfigModifier {
 				expected.put("global_key_two", Map.of("de", "global_trans_two_de", "en", "global_trans_two_en"));
 			}
 			if (setForFormType) {
-				expected.put("global_key_one", Map.of("de", "global_trans_one_de", "en", "global_trans_one_en_formtype",
-						"fr", "global_trans_one_fr_formtype"));
+				if (setGlobally) {
+					expected.put("global_key_one", Map.of("de", "global_trans_one_de", "en", "global_trans_one_en_formtype",
+							"fr", "global_trans_one_fr_formtype"));
+				} else {
+					expected.put("global_key_one",
+							Map.of("en", "global_trans_one_en_formtype", "fr", "global_trans_one_fr_formtype"));
+				}
 				expected.put("formtype_key_one", Map.of("de", "formtype_trans_one_de", "en", "formtype_trans_one_en"));
 				expected.put("formtype_key_two", Map.of("de", "formtype_trans_two_de", "en", "formtype_trans_two_en"));
 			}
+
+			assertThat(response.getItem()).as("Modified formtype translations").isEqualTo(expected);
 		}
 	}
 

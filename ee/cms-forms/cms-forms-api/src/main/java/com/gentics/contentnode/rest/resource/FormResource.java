@@ -6,6 +6,7 @@ import com.gentics.contentnode.rest.model.form.FormListResponse;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsForLanguage;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
@@ -623,6 +624,20 @@ public interface FormResource {
 	@POST
 	@Path("/types/{type}/translations")
 	FormGenTranslationsResponse saveFormTypeTranslations(@PathParam("type") String type, FormGenTranslations translations) throws Exception;
+
+	/**
+	 * Get the translations for a form type and a language (identified by its language code).
+	 * The response will not contain the usual envelope, but will just contain the translations
+	 * @param type form type
+	 * @param code language code
+	 * @return translations
+	 * @HTTP 200 The translations for the given language are returned
+	 * @HTTP 404 The form type is not found
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/types/{type}/translations/{code}")
+	FormGenTranslationsForLanguage getFormTypeTranslationsForLanguage(@PathParam("type") String type, @PathParam("code") String code) throws Exception;
 
 	/**
 	 * Get the languages for creating form type translations

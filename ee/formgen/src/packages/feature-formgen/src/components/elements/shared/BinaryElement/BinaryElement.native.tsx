@@ -122,10 +122,10 @@ function BinaryElement(props: IFormComponentAttributes) {
     name?.split('.').pop()?.toLowerCase() ?? '';
 
   const classifySource = (b: IBinary): BinarySource => {
-    if (!b?.value) return 'local';
-    if (String(b.value).startsWith('mesh:')) return 'mesh';
-    if (String(b.value).startsWith('mesh(not uploaded yet)')) return 'local';
-    return 'actanova';
+    if (!b?.value) return BinarySource.LOCAL;
+    if (String(b.value).startsWith('FormInstanceContent|')) return BinarySource.ACTANOVA;
+    if (String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
+    return BinarySource.LOCAL;
   };
 
   const makeBinaryFromFile = (
@@ -183,7 +183,7 @@ function BinaryElement(props: IFormComponentAttributes) {
     setFiles((prev) => {
       const serverNames = new Set(serverList.map((s) => s.binary.fileName));
       let remainingLocals = prev.filter(
-        (x) => x.source === 'local' && !serverNames.has(x.binary.fileName),
+        (x) => x.source === BinarySource.LOCAL && !serverNames.has(x.binary.fileName),
       );
 
       // Single-file upload: keep at most one local file (the most recent)
@@ -224,7 +224,7 @@ function BinaryElement(props: IFormComponentAttributes) {
     let binaryLink = '';
 
     // Mesh file => build URL from value
-    if (item.source === 'mesh') {
+    if (item.source === BinarySource.ACTANOVA) {
       binaryLink = props.restService.ANGetBinaryURL(
         props.formState.formid,
         item.binary.value,
@@ -232,7 +232,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       );
     }
     // Local file => use local URI (from picker)
-    else if (item.source === 'local') {
+    else if (item.source === BinarySource.LOCAL) {
       binaryLink = item.binary.uri || '';
     }
     // Server / generic case => fall back to binary.uri if set by toIBinaryFileFromServer
@@ -394,7 +394,7 @@ function BinaryElement(props: IFormComponentAttributes) {
                 const additions: BinaryFileWithUid[] = filesToAdd.map((f: any) => ({
                   binary: makeBinaryFromFile(f),
                   file: f,
-                  source: 'local',
+                  source: BinarySource.LOCAL,
                   fileType: readExt(f.name),
                   uid: uuidv4(),
                 }));

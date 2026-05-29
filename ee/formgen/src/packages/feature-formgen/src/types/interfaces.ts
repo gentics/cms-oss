@@ -737,7 +737,11 @@ export interface IBinary {
  * - 'mesh'     : uploaded to Mesh (value starts with "mesh:")
  * - 'actanova' : stored in ActaNova (any other non-empty value)
  */
-export type BinarySource = 'local' | 'mesh' | 'actanova';
+export enum BinarySource {
+  LOCAL = 'local',
+  MESH = 'mesh',
+  ACTANOVA = 'actanova',
+}
 
 /**
  * IBinaryFile is the single source of truth for the list UI.

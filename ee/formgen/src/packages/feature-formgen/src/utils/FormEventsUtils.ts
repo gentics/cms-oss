@@ -869,7 +869,7 @@ export const saveFormBinary = async (
     true,
     callbackFunc,
     errorFunc,
-    formState.isLoggedIn,
+    true,
     IOverlayFullScreenTextEnum.FileUpload
 
   );

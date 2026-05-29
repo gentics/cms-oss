@@ -47,35 +47,26 @@ function cmsHasAllowedFileExtension(
   const files: IBinary[] = Array.isArray(value) ? value : [value];
 
   for (const file of files) {
-    if (activeTypes?.length) {
-      const mimeType = (file.type ?? "").toLowerCase();
-      const typeAllowed = activeTypes.some(
-        (pattern) => mimeType === pattern.toLowerCase(),
-      );
-      if (!typeAllowed) {
-        if (updateErrorMessages) {
-          elemState.validationMessage = `${t("form_fileTypeError")} ${activeTypes.join(", ")}`;
-          utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-        }
-        return false;
-      }
-    }
+    const typePasses = activeTypes?.some(
+      (pattern) => (file.type ?? "").toLowerCase() === pattern.toLowerCase(),
+    ) ?? false;
 
-    if (activeNameRegexes?.length) {
-      const nameAllowed = activeNameRegexes.some((pattern) => {
-        try {
-          return new RegExp(pattern).test(file.fileName);
-        } catch {
-          return false;
-        }
-      });
-      if (!nameAllowed) {
-        if (updateErrorMessages) {
-          elemState.validationMessage = t("form_fileNameError");
-          utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-        }
+    const namePasses = activeNameRegexes?.some((pattern) => {
+      try {
+        return new RegExp(pattern).test(file.fileName);
+      } catch {
         return false;
       }
+    }) ?? false;
+
+    if (!typePasses && !namePasses) {
+      if (updateErrorMessages) {
+        elemState.validationMessage = activeTypes?.length
+          ? `${t("form_fileTypeError")} ${activeTypes.join(", ")}`
+          : t("form_fileNameError");
+        utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
+      }
+      return false;
     }
   }
 

@@ -558,6 +558,7 @@ export async function handleBinaryAdd(
     const binaryMetaInfo: IBinary = {
       fileName: file.name,
       size: file.size,
+      type: file.type,
       value: 'mesh(not uploaded yet): ' + uuidv4(),
     };
     fileArray.push(binaryMetaInfo);

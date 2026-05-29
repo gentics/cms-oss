@@ -11,6 +11,7 @@
     "form_error_overlay_deletedDataVersion_content": "Die zwischengespeicherten Daten mussten aufgrund des Updates entfernt werden. Bitte erfassen Sie die Daten erneut.&nbsp;",
     "form_error_overlay_close_button": "Schließen",
     "form_fileTypeError": "Es sind nur folgende Dateitypen erlaubt: ",
+    "form_fileNameError": "Ungültiger Dateiname",
     "form_preconditions_overlay__second_line": "",
     "form_save_overlay_button_save": "Zwischenspeichern",
     "form_detailinfo": "Detailinformationen",

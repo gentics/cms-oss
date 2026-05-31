@@ -202,12 +202,12 @@ const FormgenScreen: React.FC<{
       <Suspense fallback={<LoadingScreen />}>
         {t && <RendererScreen
           features={features as IFeatures}
-          formId={"48e3e3fc-84a0-40b5-bdda-f5834e66254a_TenantID_UKF"}
+          formId={props.formId}
           businessObjectId={props.businessObjectId}
           config={props.config}
           language={props.language}
           apiToken={props.apiToken}
-          isLoggedIn={false}
+          isLoggedIn={props.isLoggedIn}
           devMode={props.devMode}
           mockForm={props.mockForm}
           t={t}

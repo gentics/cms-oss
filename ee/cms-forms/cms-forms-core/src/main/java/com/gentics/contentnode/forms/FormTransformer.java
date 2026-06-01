@@ -1016,6 +1016,11 @@ public class FormTransformer {
 		publish,
 
 		/**
+		 * Transform the form for preview
+		 */
+		preview,
+
+		/**
 		 * Transform the form for exporting it into a devtool package. This will
 		 * transform references to global IDs
 		 */
@@ -1053,6 +1058,13 @@ public class FormTransformer {
 				}
 				data.without(FormDataUtils.OLD_UI_SCHEMA);
 				transformToExternalLanguageCodes(typeConfig, data);
+				break;
+			case preview:
+				data.put("formId", form.getId());
+				data.put("formType", form.getFormType());
+				data.set("uiSchema", data.get(FormDataUtils.UI_SCHEMA));
+				data.without(FormDataUtils.UI_SCHEMA);
+				data.put("cmsSid", TransactionManager.getCurrentTransaction().getSession().getSessionId());
 				break;
 			case fromContentPackage:
 			case toContentPackage:

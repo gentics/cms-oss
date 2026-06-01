@@ -47,17 +47,19 @@ function cmsHasAllowedFileExtension(
   const files: IBinary[] = Array.isArray(value) ? value : [value];
 
   for (const file of files) {
-    const typePasses = activeTypes?.some(
-      (pattern) => (file.type ?? "").toLowerCase() === pattern.toLowerCase(),
-    ) ?? false;
+    const typePasses =
+      activeTypes?.some(
+        (pattern) => (file.type ?? "").toLowerCase() === pattern.toLowerCase(),
+      ) ?? false;
 
-    const namePasses = activeNameRegexes?.some((pattern) => {
-      try {
-        return new RegExp(pattern).test(file.fileName);
-      } catch {
-        return false;
-      }
-    }) ?? false;
+    const namePasses =
+      activeNameRegexes?.some((pattern) => {
+        try {
+          return new RegExp(pattern).test(file.fileName);
+        } catch {
+          return false;
+        }
+      }) ?? false;
 
     if (!typePasses && !namePasses) {
       if (updateErrorMessages) {
@@ -74,7 +76,7 @@ function cmsHasAllowedFileExtension(
 }
 
 /**
- * Validates file extension against the global feature_upload_constraints allowlist, optionally excluding specific extensions.
+ * Validates file extension against the configuration sent by Acta Nova , optionally excluding specific extensions.
  */
 function anHasAllowedFileExtension(
   formState: FormState,
@@ -90,7 +92,13 @@ function anHasAllowedFileExtension(
   if (allowAllFileExtensions) return true;
 
   const allowedFileExtensions = schemaProperty.allowedFileExtensions;
-  if (allowedFileExtensions == null || !allowedFileExtensions.length) return false;
+  if (allowedFileExtensions == null || !allowedFileExtensions.length) {
+    if (updateErrorMessages) {
+      elemState.validationMessage = `${t("form_noFileTypeError")}`;
+      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
+    }
+    return false;
+  }
 
   const files: IBinary[] = Array.isArray(value) ? value : [value];
 
@@ -194,7 +202,7 @@ export function hasAllowedUploadSize(
             "form_maxFileUploadSizeSingleError",
           ).replace(
             "%size%",
-            (maxSize / 1_024 / 1_024).toString(),
+            Math.floor(maxSize / 1_024 / 1_024).toString(),
           )}: ${file.fileName}`;
           utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
         }
@@ -204,6 +212,67 @@ export function hasAllowedUploadSize(
   }
 
   return true;
+}
+
+/**
+ * Checks that the combined size of all AN files does not exceed the schema-defined
+ * maxSizeEntireList limit. Skipped if the property is not set.
+ */
+function anHasAllowedEntireListUploadSize(
+  formState: FormState,
+  jsonpath: string,
+  elemState: IDataFieldProperties,
+  schemaProperty: ISchemaFieldProperties,
+  updateErrorMessages: boolean,
+  value: IBinary | IBinary[],
+  t: TFunction,
+): boolean {
+  const maxSizeEntireList = schemaProperty.maxSizeEntireList;
+  if (maxSizeEntireList === undefined) return true;
+
+  const files: IBinary[] = Array.isArray(value) ? value : [value];
+  const totalSize = files.reduce((sum, file) => sum + (file.size ?? 0), 0);
+
+  if (totalSize > maxSizeEntireList) {
+    if (updateErrorMessages) {
+      elemState.validationMessage = t(
+        "form_maxFileUploadSizeMultipleError",
+      ).replace("%size%", Math.floor(maxSizeEntireList / 1_024 / 1_024).toString());
+      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
+    }
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Dispatches entire-list size validation per plugin.
+ * Currently only ActaNova enforces a combined file size limit.
+ */
+export function hasAllowedEntireListUploadSize(
+  formState: FormState,
+  jsonpath: string,
+  elemState: IDataFieldProperties,
+  schemaProperty: ISchemaFieldProperties,
+  updateErrorMessages: boolean,
+  value: IBinary | IBinary[],
+  t: TFunction,
+): boolean {
+  switch (formState.pluginName) {
+    case PluginNameEnum.ACTA_NOVA:
+      return anHasAllowedEntireListUploadSize(
+        formState,
+        jsonpath,
+        elemState,
+        schemaProperty,
+        updateErrorMessages,
+        value,
+        t,
+      );
+    default:
+      return true;
+  }
 }
 
 /**
@@ -243,9 +312,21 @@ export function validateBinary(
     ) {
       return false;
     }
-
     if (
       !hasAllowedUploadSize(
+        state,
+        jsonpath,
+        elemState,
+        schemaProperty,
+        updateErrorMessages,
+        value,
+        t,
+      )
+    ) {
+      return false;
+    }
+    if (
+      !hasAllowedEntireListUploadSize(
         state,
         jsonpath,
         elemState,

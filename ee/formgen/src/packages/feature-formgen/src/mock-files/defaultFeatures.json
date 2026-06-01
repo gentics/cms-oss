@@ -30,43 +30,5 @@
     "enabled": true,
     "detailPage": true,
     "elementsTemplateName": "form-detail"
-  },
-  "feature_upload_constraints": {
-    "maxSizePerFile": 5242880,
-    "maxSizeOverall": 20971520,
-    "fileExtensionsAllowed": [
-      "docx",
-      "xlsx",
-      "pptx",
-      "pdf",
-      "jpg",
-      "jpeg",
-      "png",
-      "mpeg",
-      "mp3",
-      "wav",
-      "mp4",
-      "mk4"
-    ],
-    "fileMimeTypesAllowed": [
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-      "audio/mpeg",
-      "audio/mp3",
-      "audio/wav",
-      "audio/x-wav",
-      "audio/mp4",
-      "audio/x-matroska",
-      "video/mp4",
-      "video/quicktime",
-      "video/mpeg",
-      "video/x-msvideo",
-      "video/x-matroska"
-    ],
-    "enabled": true
   }
 }

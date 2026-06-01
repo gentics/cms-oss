@@ -41,7 +41,7 @@
     "form_summary": "Summary",
     "form_step": "Step",
     "form_notANumberError": "This field must be filled with a number",
-    "form_maxFileUploadSizeMultipleError": "The total size of all uploaded files exceeds the maximum file size: ",
+    "form_maxFileUploadSizeMultipleError": "The total size of all uploaded files exceeds the maximum file size: %size% MB",
     "form_preconditionsNotMet": "Preconditions not met",
     "form_submit_error_overlay__second_line": "Please correct the data entered in the form.",
     "form_previousPage": "Previous Page",

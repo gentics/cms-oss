@@ -29,6 +29,7 @@ import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { Platform } from 'react-native';
 import i18n from '@andp/core/src/services/i18n';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 
 /**
  * Detects whether a failed API response is the backend's "captcha rejected"
@@ -604,8 +605,73 @@ export async function handleBinaryDelete(
   formGridOptions?: IFormGridOptions,
   editable?: boolean,
 ) {
-  console.log("delete binary");
-  let value = utils.getValue(formState, jsonpath);
+  const hasDialogPortalHostId = !!formState.data?.DialogPortalFormHostObjectID;
+  const isServerSideFile = toDelete && toDelete.length > 0 && hasDialogPortalHostId;
+
+  if (isServerSideFile && formState.pluginName == PluginNameEnum.ACTA_NOVA) {
+    const bodyData: IData = JSON.parse(JSON.stringify(formState.data));
+    const fieldElement = utils.getElementByJsonPath(bodyData, jsonpath);
+    if (fieldElement) {
+      if (Array.isArray(fieldElement.values) && fieldElement.values[index] != null) {
+        fieldElement.values[index].shouldBeDelete = true;
+      } else if (fieldElement.value != null && typeof fieldElement.value === 'object') {
+        fieldElement.value.shouldBeDelete = true;
+      }
+    }
+
+      utils.startANRequest(() =>
+        overlayUtils.setOverlay(
+          uiState,
+          formState,
+          OverlayTypeEnum.FULL_SCREEN_LOADING,
+          updateState,
+          { loadingText: IOverlayFullScreenTextEnum.DeleteFile },
+        ),
+      );
+      const response = await restService.deleteFileRequest(formState, bodyData);
+      utils.endANRequest(uiState, updateState, () => {
+        (global as any).saveRunning = false;
+        if ((global as any).valueIsChanged) {
+          (global as any).valueIsChanged = undefined;
+        }
+      });
+
+    if (response.success && response.responseData) {
+      formState.data = response.responseData;
+      (global as any).valueIsChanged = true; // to trigger background
+      if (formState.fileUploads?.[binaryFieldID]?.[jsonpath]) {
+        formState.fileUploads[binaryFieldID][jsonpath].splice(index, 1);
+      }
+      updateState(StatesToUpdateEnum.FormState);
+    } else {
+      // Fallback: clientseitig entfernen
+      clientSideDeleteBinary(formState, jsonpath, binaryFieldID, index);
+      updateState(StatesToUpdateEnum.FormState);
+    }
+  } else {
+    clientSideDeleteBinary(formState, jsonpath, binaryFieldID, index);
+  }
+
+  await possibleBinaryUpload(
+    formState,
+    uiState,
+    jsonpath,
+    binaryFieldID,
+    updateState,
+    restService,
+    isLoggedIn,
+    formGridOptions,
+    editable,
+  );
+}
+
+function clientSideDeleteBinary(
+  formState: FormState,
+  jsonpath: string,
+  binaryFieldID: string,
+  index: number,
+) {
+  const value = utils.getValue(formState, jsonpath);
   if (value != null) {
     if (Array.isArray(value)) {
       // Remove exactly the entry at the given index from the values array
@@ -631,23 +697,8 @@ export async function handleBinaryDelete(
       formState.fileUploads[binaryFieldID][jsonpath]
     ) {
       formState.fileUploads[binaryFieldID][jsonpath].splice(index, 1);
-    }    
+    }
   }
-
-
-  //even after a file-delete it could be that a binary field is now valid, so it can be uploaded
-  await possibleBinaryUpload (
-    formState,
-    uiState,
-    jsonpath,
-    binaryFieldID,
-    updateState,
-    restService,
-    isLoggedIn,
-    formGridOptions,
-    editable  
-  )
-
 }
 
 

@@ -99,7 +99,8 @@ export class RestService {
       url.indexOf('/save') === -1 &&
       url.indexOf('/submit') === -1 &&
       url.indexOf('/triggerForm') === -1 &&
-      url.indexOf('/csvupload') === -1
+      url.indexOf('/csvupload') === -1 &&
+      url.indexOf('/deleteFile') === -1
     ) {
       //cleanup request before it's sent (remove values not needed in BO)
       const bodyClone = JSON.parse(JSON.stringify(body));
@@ -541,6 +542,15 @@ export class RestService {
       formState,
     );
     return response;
+  }
+
+  async deleteFileRequest(formState: FormState, body: IData): Promise<ApiResponse> {
+    let url = `form/${encodeURIComponent(formState.formid)}`;
+    if (formState.businessObjectID) {
+      url += `/businessObject/${encodeURIComponent(formState.businessObjectID)}`;
+    }
+    url += '/deleteFile';
+    return this.post(formState.formid, url, body, {}, formState);
   }
 
   async cancelFormRequest(formState: FormState): Promise<ApiResponse> {

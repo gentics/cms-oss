@@ -7,4 +7,5 @@ export enum IOverlayFullScreenTextEnum {
   FileUpload = 'form_OverlayBinary_text',
   DialogForm = 'form_OverlayDialogForm_text',
   LoadPage = 'form_OverlayInitial_text',
+  DeleteFile = 'form_overlay_delete_file',
 }

@@ -314,7 +314,6 @@ function BinaryElement(props: IFormComponentAttributes) {
   const renderItems = files.map((item, index) => {
     const key = getFileKey(item);
     let binaryLink = "";
-    debugger;
     if (item.source === BinarySource.LOCAL) {
       binaryLink = item.binary.uri || "";
     } else if (item.source === BinarySource.ACTANOVA) {

@@ -729,6 +729,7 @@ export interface IBinary {
   uri?: string | null;
   type?: string;
   size?: number;
+  shouldBeDelete?: boolean; // nur im deleteFile-Request-Body gesetzt, nie persistent
 }
 
 /**

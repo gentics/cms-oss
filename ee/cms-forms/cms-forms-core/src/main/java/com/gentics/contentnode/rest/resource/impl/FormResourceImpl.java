@@ -1531,6 +1531,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 					getFormTypeConfiguration(form.getFormType()), oldData.withObjectProperty(FormDataUtils.OLD_UI_SCHEMA), uiSchema,
 					oldData.withObjectProperty(FormDataUtils.UI_SCHEMA));
 
+			oldData.set(FormDataUtils.SCHEMA, schema);
 			oldData.set(FormDataUtils.UI_SCHEMA, merged);
 			oldData.set(FormDataUtils.OLD_UI_SCHEMA, uiSchema);
 			form.setExternalHash(currentExternalHash);

@@ -80,21 +80,17 @@ function anHasAllowedFileExtension(
   formState: FormState,
   jsonpath: string,
   elemState: IDataFieldProperties,
+  schemaProperty: ISchemaFieldProperties,
   updateErrorMessages: boolean,
   value: IBinary | IBinary[],
   t: TFunction,
   fileExtensionsNotAllowed?: string[],
 ): boolean {
-  const fileExtensionsAllowedDefault =
-    formState.features?.feature_upload_constraints?.fileExtensionsAllowed || [];
+  const allowAllFileExtensions = schemaProperty.allowAllFileExtensions;
+  if (allowAllFileExtensions) return true;
 
-  const allowedExtensions = fileExtensionsNotAllowed
-    ? fileExtensionsAllowedDefault.filter(
-        (ext) => fileExtensionsNotAllowed.indexOf(ext) === -1,
-      )
-    : fileExtensionsAllowedDefault;
-
-  let hasAllowedExtension = true;
+  const allowedFileExtensions = schemaProperty.allowedFileExtensions;
+  if (allowedFileExtensions == null || !allowedFileExtensions.length) return false;
 
   const files: IBinary[] = Array.isArray(value) ? value : [value];
 
@@ -103,18 +99,16 @@ function anHasAllowedFileExtension(
 
     const fileExt = file.fileName.split(".").pop()?.toLowerCase();
 
-    if (!allowedExtensions.some((ext) => ext.toLowerCase() === fileExt)) {
-      hasAllowedExtension = false;
-      break;
+    if (!allowedFileExtensions.some((ext) => ext.toLowerCase() === fileExt)) {
+      if (updateErrorMessages) {
+        elemState.validationMessage = `${t("form_fileTypeError")} ${allowedFileExtensions.join(", ")}`;
+        utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
+      }
+      return false;
     }
   }
 
-  if (!hasAllowedExtension && updateErrorMessages) {
-    elemState.validationMessage = `${t("form_fileTypeError")} ${allowedExtensions.join(", ")}`;
-    utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-  }
-
-  return hasAllowedExtension;
+  return true;
 }
 
 /**
@@ -137,6 +131,7 @@ function hasAllowedFileExtension(
         formState,
         jsonpath,
         elemState,
+        schemaProperty,
         updateErrorMessages,
         value,
         t,

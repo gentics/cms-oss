@@ -15,9 +15,11 @@ const isDevMode = Constants.manifest.extra.devMode;
 const isMockForm = Constants.manifest.extra.mockForm;
 
 if (Platform.OS === 'web') {
-  const ensureFonts = () => {
+  const ensureFonts = (rootTag: HTMLElement) => {
     if (isDevMode || isMockForm) return;
     if (document.getElementById('formgen-fonts')) return;
+
+    const basePath = rootTag.getAttribute('data-static-serve-path') ?? '/static/cpa';
 
     const style = document.createElement('style');
     style.id = 'formgen-fonts';
@@ -32,7 +34,7 @@ if (Platform.OS === 'web') {
       const filename = fullName.substring(0, fullName.lastIndexOf('.'));
       const fontFace = `@font-face {
         font-family: '${fontName}';
-        src: url('/static/cpa/fonts/${filename}.${ext}') format('truetype');
+        src: url('${basePath}/fonts/${filename}.${ext}') format('truetype');
         font-display: auto;
       }`;
       style.appendChild(document.createTextNode(fontFace));
@@ -44,7 +46,7 @@ if (Platform.OS === 'web') {
     document.getElementById('root') ?? document.getElementById('main');
 
   if (rootTag) {
-    ensureFonts();
+    ensureFonts(rootTag);
     createRoot(rootTag).render(createElement(App));
   }
 } else {

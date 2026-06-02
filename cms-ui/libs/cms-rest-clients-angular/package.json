@@ -4,12 +4,12 @@
   "peerDependencies": {
     "@angular/common": "^21.2.0",
     "@angular/core": "^21.2.0",
-    "@gentics/cms-models": "^6.4.5"
+    "@gentics/cms-models": "^6.4.6"
   },
   "devDependencies": {
     "@angular/common": "^21.2.0",
     "@angular/core": "^21.2.0",
-    "@gentics/cms-models": "^6.4.5"
+    "@gentics/cms-models": "^6.4.6"
   },
   "sideEffects": false
 }

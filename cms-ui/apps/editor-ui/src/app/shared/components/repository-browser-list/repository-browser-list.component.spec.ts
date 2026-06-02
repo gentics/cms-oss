@@ -1,5 +1,6 @@
 import { Component, DebugElement, Injectable, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { I18nNotificationService } from '@gentics/cms-components';
@@ -58,6 +59,7 @@ describe('RepositoryBrowserList', () => {
     beforeEach(() => {
         configureComponentTest({
             imports: [
+                HttpClientTestingModule,
                 GenticsUICoreModule.forRoot(),
             ],
             providers: [

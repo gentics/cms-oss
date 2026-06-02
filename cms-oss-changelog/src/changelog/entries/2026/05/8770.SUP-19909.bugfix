@@ -1,0 +1,3 @@
+Instant Publishing into a Mesh Content.Repository will no longer make extensive tests for checking validity
+of the Mesh Instance but rely on the tests made by the last regular publish run.
+This will increase the overall performance of instant publishing.

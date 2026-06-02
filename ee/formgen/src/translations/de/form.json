@@ -97,6 +97,8 @@
     "form_OverlayDialogForm_text": "Für die Bearbeitung wird ein Dialogformular geladen ...",
     "form_notValidStepNumberError": "Ungültige Eingabe - bitte wählen Sie eine Zahl, die ein Vielfaches von {{step}} ist.",
     "form_OverlayInitial_text": "Seite wird geladen...",
+    "form_overlay_delete_file": "Datei wird gelöscht...",
+    "form_OverlayBinary_client_process_text": "Datei wird verarbeitet...",
     "form_print": "Drucken",
     "form_print__form_info_heading": "Formular Informationen",
     "form_print__form_info_formid": "Formular ID",

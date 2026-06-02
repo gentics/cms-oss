@@ -27,6 +27,10 @@ import FileCard from './parts/FileCard/FileCard.web';
 import * as DocumentPicker from 'expo-document-picker';
 import { DocumentPickerAsset } from 'expo-document-picker';
 import { v4 as uuidv4 } from 'uuid';
+import { IOverlayFullScreenTextEnum } from '../../../../constants/enums/IOverlayFullScreenTextEnum';
+import { OverlayTypeEnum } from '../../../../custom/OverlayTypes';
+import * as overlayUtils from '../../../../utils/OverlayUtils';
+
 
 /**
  * In-memory per-field cache to keep local (unuploaded) files across unmount/remount
@@ -401,7 +405,15 @@ function BinaryElement(props: IFormComponentAttributes) {
               files.length > 0 && styles.fileChooserWithFiles,
             ]}
             onPress={async () => {
+              overlayUtils.setOverlay(
+                props.uiState,
+                props.formState,
+                OverlayTypeEnum.FULL_SCREEN_LOADING,
+                props.updateState,
+                { loadingText: IOverlayFullScreenTextEnum.FileUploadClientProcess },
+              );
               const newFiles = await onBinaryPress(props);
+              overlayUtils.hideOverlay(props.uiState, props.updateState);
               if (newFiles && newFiles.length > 0) {
                 setFiles((prev) => {
                   const additions: BinaryFileWithUid[] = [];
@@ -473,6 +485,7 @@ async function onBinaryPress(props: IFormComponentAttributes): Promise<File[] | 
     const selectedFiles: DocumentPickerAsset[] = pickerResult.assets || [];
 
     let filesToAdd: File[] = [];
+
     selectedFiles.forEach((filePickerAsset, index) => {
       if (filePickerAsset.file) {
         filesToAdd.push(filePickerAsset.file);
@@ -484,7 +497,7 @@ async function onBinaryPress(props: IFormComponentAttributes): Promise<File[] | 
       filesToAdd = [filesToAdd[0]];
     }
 
-    formEventsUtils.handleBinaryAdd(
+    await formEventsUtils.handleBinaryAdd(
       props.formState,
       props.uiState,
       props.jsonpath,

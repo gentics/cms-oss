@@ -93,6 +93,8 @@
     "form_OverlayDialogForm_text": "A dialog form is being loaded for processing ...",
     "form_notValidStepNumberError": "Invalid input - please choose a number that is a multiple of {{step}}.",
     "form_OverlayInitial_text": "Page is loading...",
+    "form_overlay_delete_file": "Deleting file...",
+    "form_OverlayBinary_client_process_text": "File is being processed.",
     "form_print": "Print",
     "form_print__form_info_heading": "Form Information",
     "form_print__form_info_formid": "Form ID",

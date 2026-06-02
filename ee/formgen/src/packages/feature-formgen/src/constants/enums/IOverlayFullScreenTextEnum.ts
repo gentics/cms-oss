@@ -5,6 +5,7 @@ export enum IOverlayFullScreenTextEnum {
   ExpertSearchExcelDownloadTry = 'form_excel_download_try',
   Redirect = 'form_OverlayRedirect_text',
   FileUpload = 'form_OverlayBinary_text',
+  FileUploadClientProcess = 'form_OverlayBinary_client_process_text',
   DialogForm = 'form_OverlayDialogForm_text',
   LoadPage = 'form_OverlayInitial_text',
   DeleteFile = 'form_overlay_delete_file',

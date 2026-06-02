@@ -30,7 +30,6 @@ public class JsoupValidator implements Validator {
 
 		return errors.isEmpty();
 	};
-	private static final Logger log = LoggerFactory.getLogger(JsoupValidator.class);
 
 	/**
 	 * Specifies the allowed tags. i.e.: How strict the check is.
@@ -53,7 +52,6 @@ public class JsoupValidator implements Validator {
 		for (var parseError : document.parser().getErrors()) {
 			errors.add(parseError.getErrorMessage());
 		}
-
 		return errors;
 	}
 

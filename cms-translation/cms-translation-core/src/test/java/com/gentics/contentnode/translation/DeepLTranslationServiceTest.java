@@ -1,19 +1,22 @@
 package com.gentics.contentnode.translation;
 
 import static com.gentics.contentnode.translation.ConfigurationTestUtils.mockTranslationConfig;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.deepl.api.TextResult;
-import com.deepl.api.Translator;
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import com.deepl.api.TextResult;
+import com.deepl.api.TextTranslationOptions;
+import com.deepl.api.Translator;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 
 class DeepLTranslationServiceTest {
 
@@ -43,7 +46,7 @@ class DeepLTranslationServiceTest {
 		this.translationService = new DeepLTranslationService(mockedTranslator);
 		translationService.translate("Hallo Welt!", "de", "en");
 
-		verify(mockedTranslator).translateText(anyString(), eq("de"), eq("en-US"));
+		verify(mockedTranslator).translateText(anyString(), eq("de"), eq("en-US"), any(TextTranslationOptions.class));
 	}
 
 	@Test
@@ -55,15 +58,15 @@ class DeepLTranslationServiceTest {
 		this.translationService = new DeepLTranslationService(mockedTranslator);
 		translationService.translate("Hallo Welt!", "de", "fr");
 
-		verify(mockedTranslator).translateText(anyString(), eq("de"), eq("fr"));
+		verify(mockedTranslator).translateText(anyString(), eq("de"), eq("fr"), any(TextTranslationOptions.class));
 	}
 
 	private TextResult givenTextResult() {
-		return new TextResult("Hello World", "de");
+		return new TextResult("Hello World", "de", 0, null);
 	}
 
 	private TextResult givenCorruptHtmlResult() {
-		return new TextResult("<div>Hello World", "de");
+		return new TextResult("<div>Hello World", "de", 0, null);
 	}
 
 }

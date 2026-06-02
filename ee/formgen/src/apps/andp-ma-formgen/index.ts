@@ -34,7 +34,7 @@ if (Platform.OS === 'web') {
       const filename = fullName.substring(0, fullName.lastIndexOf('.'));
       const fontFace = `@font-face {
         font-family: '${fontName}';
-        src: url('${basePath}/fonts/${filename}.${ext}') format('truetype');
+        src: url('${basePath}/formgen/assets/__packages/core/src/styles/common/fonts/${filename}.${ext}') format('truetype');
         font-display: auto;
       }`;
       style.appendChild(document.createTextNode(fontFace));

@@ -29,6 +29,7 @@ import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { Platform } from 'react-native';
 import i18n from '@andp/core/src/services/i18n';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 
 /**
  * Detects whether a failed API response is the backend's "captcha rejected"
@@ -712,7 +713,7 @@ export const saveForm = async (
   }
   // send the keep alive request before attempting the save
   // this will refresh the authentication if needed
-  await restService.keepAlive();
+  if (PluginNameEnum.ACTA_NOVA) await restService.keepAlive();
 
   let fileUploadHash = 0;
   if (formState.fileUploads) {

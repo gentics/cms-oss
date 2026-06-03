@@ -643,10 +643,6 @@ export async function handleBinaryDelete(
         formState.fileUploads[binaryFieldID][jsonpath].splice(index, 1);
       }
       updateState(StatesToUpdateEnum.FormState);
-    } else {
-      // Fallback: clientseitig entfernen
-      clientSideDeleteBinary(formState, jsonpath, binaryFieldID, index);
-      updateState(StatesToUpdateEnum.FormState);
     }
   } else {
     clientSideDeleteBinary(formState, jsonpath, binaryFieldID, index);

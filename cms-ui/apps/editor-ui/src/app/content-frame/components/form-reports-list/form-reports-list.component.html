@@ -63,102 +63,90 @@
   }
 
   @if (loading$ | async) {
-    <div
-      [@fadeAnim]
-      class="loading-info"
-      >
+    <div class="loading-info">
       <span>{{ 'editor.reports_loading_status_loading' | gtxI18n }}</span>
     </div>
-  }
-
-  @if (result?.entries.length === 0) {
-    <div
-      [@fadeAnim]
-      class="loading-info"
-      >
+  } @else if (result?.entries.length === 0) {
+    <div class="loading-info">
       <span>{{ 'editor.reports_loading_status_empty' | gtxI18n }}</span>
     </div>
-  }
-
-  @if (loadingError$ | async) {
-    <div
-      [@fadeAnim]
-      class="loading-info"
-      >
+  } @else if (loadingError$ | async) {
+    <div class="loading-info">
       <i class="material-icons invalid">warning</i>
       <span>{{ errorMessage }}</span>
     </div>
-  }
-
-  @if (!(loading$ | async) && !(loadingError$ | async) && result?.entries.length > 0) {
-    <div
-      [@fadeAnim]
-      class="table-wrapper-outer"
-      >
+  } @else if (formConfig == null) {
+    <div class="loading-info">
+      <i class="material-icons invalid">warning</i>
+      <span>{{ 'editor.report_loading_form_type_missing' | gtxI18n }}</span>
+    </div>
+  } @else {
+    <div class="table-wrapper-outer">
       <div class="table-wrapper-inner">
-        @if ((formElementLabelPropertyI18nValues$ | async); as formElementLabelPropertyI18nValues) {
-          <table
-            class="data-table"
-            >
+        <table class="data-table">
             <thead>
-              <tr>
-                <th class="icon-checkbox">
-                  <icon-checkbox
-                    [selected]="allSelected"
-                    [icon]="icon"
-                    (change)="toggleAllSelect()"
-                  ></icon-checkbox>
-                </th>
-                @for (key of entryKeys; track key) {
-                  @if (key !== 'errors' && ((formElementLabelPropertyI18nValues[key] | i18nfg$:'content':'_ui' | async) || key); as entryLabel) {
-                    <th [title]="entryLabel">
-                      <span>{{ entryLabel }}</span>
+                <tr>
+                    <th data-id="check" class="icon-checkbox">
+                        <icon-checkbox
+                            [selected]="allSelected"
+                            [icon]="icon"
+                            (change)="toggleAllSelect()"
+                        ></icon-checkbox>
                     </th>
-                  }
-                }
-                <th class="delete-icon">
-                  <i
-                    class="material-icons invalid"
-                    [class.disabled]="isNothingSelected()"
-                    (click)="deleteMultipleReports()"
-                  >delete</i>
-                </th>
-              </tr>
+                    @for (el of elementKeys; track el) {
+                        @if (formElementMap.get(el); as elSettings) {
+                            <ng-container [ngTemplateOutlet]="columnTitle" [ngTemplateOutletContext]="{ id: el, label: elSettings.label | gtxI18nObject }" />
+                        } @else if (formConfig.controls[resultElementMap[el]]; as entryCtl) {
+                            <ng-container [ngTemplateOutlet]="columnTitle" [ngTemplateOutletContext]="{ id: el, label: entryCtl.labelI18n | gtxI18nObject }" />
+                        }
+
+                        <ng-template #columnTitle let-label="label" let-id="id">
+                            <th [attr.data-id]="id" [title]="label">
+                                <span>{{ label }}</span>
+                            </th>
+                        </ng-template>
+                    }
+                    <th data-id="delete" class="delete-icon">
+                        <i
+                            class="material-icons invalid"
+                            [class.disabled]="selected.size === 0"
+                            (click)="deleteMultipleReports()"
+                        >delete</i>
+                    </th>
+                </tr>
             </thead>
             <tbody>
-              @for (result of result?.entries | paginate: paginationConfig; track identify(i, result); let i = $index) {
-                <tr>
-                  <td class="icon-checkbox fixed sticky-left">
-                    <icon-checkbox
-                      [selected]="selected[i] != null"
-                      [icon]="icon"
-                      (change)="changeSelection(i)"
-                    ></icon-checkbox>
-                  </td>
-                  @for (key of entryKeys; track key; let j = $index) {
-                    <td>
-                      @if (entryValues[i]) {
-                        @if (isFile(entryValues[i][j])) {
-                          <a
-                            [href]="getFileHref(entryValues[i][j], result)"
-                            download
-                            >
-                            <span>{{ getEntryValue(entryValues[i][j]) }}</span>
-                          </a>
-                        } @else {
-                          <span>{{ getEntryValue(entryValues[i][j]) }}</span>
+                @for (entry of result?.entries | paginate: paginationConfig; track entry.uuid) {
+                    <tr>
+                        <td data-id="check" class="icon-checkbox fixed sticky-left">
+                            <icon-checkbox
+                                [selected]="selected | gtxIncludes:entry.uuid"
+                                [icon]="icon"
+                                (change)="changeSelection(entry.uuid)"
+                            ></icon-checkbox>
+                        </td>
+                        @for (el of elementKeys; track el) {
+                            @let resultElVal = entry.fields[el];
+                            <td [attr.data-id]="el">
+                                @if (isFile(resultElVal)) {
+                                    <a
+                                        [href]="getFileHref(resultElVal, entry)"
+                                        download
+                                    >
+                                        <span>{{ getEntryValue(resultElVal) }}</span>
+                                    </a>
+                                } @else {
+                                    <span>{{ getEntryValue(resultElVal) }}</span>
+                                }
+                            </td>
                         }
-                      }
-                    </td>
-                  }
-                  <td class="delete-icon fixed sticky-right">
-                    <i (click)="deleteSingleReport(i)" class="material-icons invalid">delete</i>
-                  </td>
-                </tr>
-              }
+                        <td data-id="delete" class="delete-icon fixed sticky-right">
+                            <i (click)="deleteSingleReport(entry)" class="material-icons invalid">delete</i>
+                        </td>
+                    </tr>
+                }
             </tbody>
-          </table>
-        }
+        </table>
       </div>
     </div>
   }

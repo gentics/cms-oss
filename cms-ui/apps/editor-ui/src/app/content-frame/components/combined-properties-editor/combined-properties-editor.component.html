@@ -95,7 +95,7 @@
       @if (activeTabId === ITEM_REPORTS_TAB) {
         <div class="form-reports">
           <h2 class="form-reports-heading">{{ 'editor.form_reports_label' | gtxI18n }}</h2>
-          <form-reports-list [form]="item"></form-reports-list>
+          <form-reports-list [form]="item" [formConfig]="formConfiguration"></form-reports-list>
         </div>
       }
       @if (activeTabId === ITEM_TAG_LIST_TAB) {

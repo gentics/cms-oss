@@ -111,6 +111,7 @@ import {
     FormCreateRequest,
     FormCreateResponse,
     FormDataListOptions,
+    FormDataListResponse,
     FormDownloadInfoResponse,
     FormListOptions,
     FormListResponse,
@@ -369,7 +370,6 @@ import {
     UserGroupsResponse,
     UserListOptions,
     UserListResponse,
-    UserRequestOptions,
     UserResponse,
     UserUpdateRequest,
     UserUpdateResponse,
@@ -379,7 +379,10 @@ import {
     WastebinDeleteOptions,
     WastebinRestoreOptions,
 } from '@gentics/cms-models';
-import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
+import {
+    LoginResponse as MeshLoginResponse,
+    NodeResponse as MeshNodeResponse
+} from '@gentics/mesh-models';
 import { BasicAPI } from './common';
 
 type SearchableType = 'page' | 'image' | 'file' | 'folder' | 'form';
@@ -708,8 +711,8 @@ export interface AbstractFormAPI extends BasicAPI {
     listVersions: (id: number | string) => FormListResponse;
     getVersion: (id: number | string, version: string) => FormResponse;
 
-    listData: (id: number | string, options?: FormDataListOptions) => NodeListResponse;
-    getData: (id: number | string, dataUuid: string) => NodeResponse;
+    listData: (id: number | string, options?: FormDataListOptions) => FormDataListResponse;
+    getData: (id: number | string, dataUuid: string) => MeshNodeResponse;
     deleteData: (id: number | string, dataUuid: string) => void;
     getDataBinary: (id: number | string, dataUuid: string, binaryField: string) => Blob;
 

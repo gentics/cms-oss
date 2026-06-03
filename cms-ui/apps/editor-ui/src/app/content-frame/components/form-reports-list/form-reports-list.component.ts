@@ -1,18 +1,21 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { API_BASE_URL, I18nNotificationService, I18nService, downloadFromBlob } from '@gentics/cms-components';
 import {
     Form,
     FormDataListEntry,
     FormDataListResponse,
     FormDownloadInfo,
+    FormElement,
+    FormSchemaProperties,
+    FormSchemaProperty,
+    FormTypeConfiguration,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { PaginationInstance } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, interval, throwError } from 'rxjs';
 import { catchError, finalize, switchMap, takeWhile } from 'rxjs/operators';
 import { dateToFileSystemString } from '../../../common/utils/date-to-string';
-import { Api } from '../../../core/providers/api';
-import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
 import { SimpleDeleteModalComponent } from '../simple-delete-modal/simple-delete-modal.component';
 
@@ -25,14 +28,18 @@ const STATUS_POLL_INTERVAL_MS = 2_000;
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class FormReportsListComponent implements OnInit, OnDestroy {
+export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
     @Input()
     public form: Form;
 
+    @Input()
+    public formConfig: FormTypeConfiguration;
+
     icon = 'list';
-    selected: string[] = [];
-    allSelected = false;
+
+    public selected = new Set<string>();
+    public allSelected = false;
 
     loading$ = new BehaviorSubject<boolean>(false);
 
@@ -54,46 +61,44 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
 
     result: FormDataListResponse;
 
-    entryKeys = [];
-    entryValues = [];
+    public elementKeys: string[] = [];
+    public resultElementMap: Record<string, string> = {};
+
+    public formElementMap = new Map<string, FormElement>();
 
     private reload$ = new Subject<void>();
 
     protected subscriptions: Subscription[] = [];
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private appState: ApplicationStateService,
         private changeDetector: ChangeDetectorRef,
         private modalService: ModalService,
         private notification: I18nNotificationService,
-        private entityResolver: EntityResolver,
         private translation: I18nService,
     ) { }
 
     public ngOnInit(): void {
-
         this.subscriptions.push(this.appState.select((state) => state.auth.sid).subscribe((sid) => {
             this.sid = sid;
         }));
 
         this.subscriptions.push(combineLatest([
-            this.currentPage$,
+            this.currentPage$.asObservable(),
             this.reload$,
         ]).pipe(
             switchMap(([currentPage]) => this.getReports(currentPage)),
         ).subscribe((res: FormDataListResponse) => {
             this.result = res;
-
-            this.entryValues = [];
-
-            this.result.entries.forEach((entry) => {
-                delete entry.fields.errors;
-                this.entryKeys = Object.keys(entry.fields);
-                this.entryValues.push(Object.values(entry.fields));
-            });
-
             this.paginationConfig.totalItems = this.result.totalCount;
+
+            this.elementKeys = [];
+            this.resultElementMap = {};
+            Object.entries(this.result.elements).forEach(([key, prop]) => {
+                this.elementKeys.push(key);
+                this.resultElementMap[key] = prop.type;
+            });
 
             for (let index = 0; index < this.result.entries.length; index++) {
                 this.selected[index] = null;
@@ -106,8 +111,8 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
 
         this.subscriptions.push(statusLoader$.pipe(
             switchMap(() => combineLatest([
-                this.api.forms.getBinaryStatus(this.form.id),
-                this.api.forms.getExportStatus(this.form.id),
+                this.client.form.binariesStatus(this.form.id),
+                this.client.form.exportStatus(this.form.id),
             ])),
         ).subscribe(([binaryStatus, exportStatus]) => {
             this.binaryStatus = binaryStatus;
@@ -121,8 +126,32 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
         this.reload();
     }
 
+    public ngOnChanges(changes: SimpleChanges): void {
+        if (changes.form) {
+            this.rebuildMaps();
+        }
+    }
+
     public ngOnDestroy(): void {
         this.subscriptions.forEach((s) => s.unsubscribe());
+    }
+
+    public rebuildMaps(): void {
+        this.formElementMap.clear();
+
+        (this.form.data['ui-schema']?.pages || []).forEach((page) => {
+            this.addElementsToMap(page.elements);
+        });
+    }
+
+    protected addElementsToMap(elements: FormElement[]): void {
+        for (const el of elements) {
+            this.formElementMap.set(el.id, el);
+
+            if (Array.isArray(el.elements)) {
+                this.addElementsToMap(el.elements);
+            }
+        }
     }
 
     public isFile(entryValue: object): boolean {
@@ -148,9 +177,9 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
         });
 
         this.subscriptions.push(
-            this.api.forms.createBinaryDownload(this.form.id).pipe(
+            this.client.form.createBinaries(this.form.id).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
-                    switchMap(() => this.api.forms.getBinaryStatus(this.form.id)),
+                    switchMap(() => this.client.form.binariesStatus(this.form.id)),
                     takeWhile((status) => status.requestPending, true),
                 )),
             ).subscribe((status) => {
@@ -180,7 +209,7 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
             type: 'success',
         });
 
-        this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.binaryStatus.downloadUuid).subscribe((blob) => {
+        this.subscriptions.push(this.client.form.downloadData(this.form.id, this.binaryStatus.downloadUuid).subscribe((blob) => {
             const time = new Date(this.binaryStatus.downloadTimestamp);
             downloadFromBlob(blob, `form_${this.form.id}_binaries_${dateToFileSystemString(time)}`);
         }));
@@ -193,9 +222,9 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
         });
 
         this.subscriptions.push(
-            this.api.forms.createExportDownload(this.form.id).pipe(
+            this.client.form.createExport(this.form.id).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
-                    switchMap(() => this.api.forms.getExportStatus(this.form.id)),
+                    switchMap(() => this.client.form.exportStatus(this.form.id)),
                     takeWhile((status) => status.requestPending, true),
                 )),
             ).subscribe((status) => {
@@ -226,7 +255,7 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
             type: 'success',
         });
 
-        this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.exportStatus.downloadUuid).subscribe((blob) => {
+        this.subscriptions.push(this.client.form.downloadData(this.form.id, this.exportStatus.downloadUuid).subscribe((blob) => {
             const time = new Date(this.exportStatus.downloadTimestamp);
             downloadFromBlob(blob, `form_${this.form.id}_export_${dateToFileSystemString(time)}`);
         }));
@@ -252,7 +281,7 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
     getReports(pageIndex: number): Observable<FormDataListResponse> {
         this.loading$.next(true);
 
-        return this.api.forms.getReports(
+        return this.client.form.listData(
             this.form.id,
             {
                 page: pageIndex,
@@ -273,9 +302,9 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
         );
     }
 
-    deleteSingleReport(index: number): void {
+    deleteSingleReport(entry: FormDataListEntry): void {
         this.modalService.fromComponent(SimpleDeleteModalComponent, null, {
-            items: [this.result.entries[index]],
+            items: [entry],
             itemType: 'editor.form_reports_label',
             idProperty: 'uuid',
             iconString: 'list_alt',
@@ -283,7 +312,7 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
             .then((modal) => modal.open())
             .then(() => {
                 this.loading$.next(true);
-                return this.api.forms.deleteReport(this.form.id, this.result.entries[index].uuid).toPromise();
+                return this.client.form.deleteData(this.form.id, entry.uuid).toPromise();
             })
         // display toast notification
             .then(() => this.notification.show({
@@ -302,8 +331,9 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
     }
 
     deleteMultipleReports(): void {
-        const selected = this.selected.filter((s) => !!s);
-        const selectedItems: FormDataListEntry[] = this.result.entries.filter((s) => this.selected.includes(s.uuid));
+        const selected = Array.from(this.selected);
+        const selectedItems: FormDataListEntry[] = this.result.entries.filter((s) => this.selected.has(s.uuid));
+
         this.modalService.fromComponent(SimpleDeleteModalComponent, null, {
             items: selectedItems,
             itemType: 'editor.form_reports_label',
@@ -313,7 +343,7 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
             .then((modal) => modal.open())
             .then(() => {
                 this.loading$.next(true);
-                const requests = selected.map((id) => this.api.forms.deleteReport(this.form.id, id)
+                const requests = selected.map((id) => this.client.form.deleteData(this.form.id, id)
                     .toPromise()
                     .catch((error) => this.notification.show({
                         type: 'alert',
@@ -336,27 +366,12 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
             });
     }
 
-    isNothingSelected(): boolean {
-        return this.selected.every((element) => element === null);
-    }
-
     isValidString(entry: any): boolean {
         return typeof (entry) === 'string' && entry.length > 0;
     }
 
-    isEmptyString(entry: any): boolean {
-        return entry === '';
-    }
-
     hasErrors(): boolean {
         return this.result.entries.some((e) => this.isValidString(e.fields.errors));
-    }
-
-    /**
-     * Tracking function for ngFor for better performance.
-     */
-    identify(index: number, item: FormDataListEntry): string {
-        return item.uuid;
     }
 
     pageChanged(newPageNumber: number): void {
@@ -368,28 +383,24 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
     toggleAllSelect(): void {
         this.allSelected = !this.allSelected;
 
-        for (let index = 0; index < this.result.entries.length; index++) {
-            if (this.allSelected) {
-                this.selected[index] = this.result.entries[index].uuid;
-            } else {
-                this.selected[index] = null;
-            }
+        if (this.allSelected) {
+            this.selected = new Set(Array.from(this.result.entries.map((entry) => entry.uuid)));
+        } else {
+            this.selected.clear();
         }
-
     }
 
-    changeSelection(index: number): void {
-        for (let i = 0; i < this.result.entries.length; i++) {
-            if (i === index) {
-                if (this.selected[index]) {
-                    this.selected[index] = null;
-                } else {
-                    this.selected[index] = this.result.entries[index].uuid;
-                }
-            }
+    changeSelection(uuid: string): void {
+        if (this.selected.has(uuid)) {
+            this.selected.delete(uuid);
+        } else {
+            this.selected.add(uuid);
         }
+
+        this.allSelected = this.selected.size === this.result.entries.length;
     }
 
     private reload(): void {
+        this.reload$.next();
     }
 }

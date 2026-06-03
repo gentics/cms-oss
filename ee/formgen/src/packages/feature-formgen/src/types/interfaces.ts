@@ -197,7 +197,7 @@ export interface IFormComponentBaseAttributes {
     instant?: boolean,
     formGridOptions?: IFormGridOptions,
   ) => void;
-  submitCSVUpload?: (jsonpath: string, id: string) => void;
+  submitCSVUpload?: (jsonpath: string) => void;
   handleSearch?: (jsonPath: string, searchTerm: string, callback: any) => void;
   handleLazyCatalog?: (
     jsonPath: string,
@@ -416,7 +416,7 @@ export interface IFormPageComponent {
     instant?: boolean,
     formGridOptions?: IFormGridOptions,
   ) => void;
-  submitCSVUpload?: (jsonpath: string, id: string) => void;
+  submitCSVUpload?: (jsonpath: string) => void;
   handleSearch?: (jsonPath: string, searchTerm: string, callback: any) => void;
   handleLazyCatalog?: (
     jsonPath: string,
@@ -694,7 +694,6 @@ export interface IDataFieldProperties {
   renderingType?: string;
   autoCompleteSearchValue?: string;
   autoCompleteResults?: IAutocompleteValue[];
-  csvUpload?: boolean;
   isUpdateOnChange?: boolean;
   createable?: boolean;
 }

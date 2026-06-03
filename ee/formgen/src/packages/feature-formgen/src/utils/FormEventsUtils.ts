@@ -58,7 +58,6 @@ function isCaptchaError(res: ApiResponse): boolean {
 
 export const submitCSVUpload = async (
   jsonpath: string,
-  id: string,
   formState: FormState,
   uiState: UIState,
   updateState: (state: StatesToUpdateEnum) => void,
@@ -88,13 +87,9 @@ export const submitCSVUpload = async (
     const file = res.assets[0];
     const data = new FormData();
 
-    const stateDataWithCSVUploadFlag = formState.data;
-    if (stateDataWithCSVUploadFlag.properties?.[id]) {
-      stateDataWithCSVUploadFlag.properties[id]!.csvUpload = true;
-    }
-    data.append('formdata', JSON.stringify(stateDataWithCSVUploadFlag));
+    data.append('formdata', JSON.stringify(formState.data));
     const uploadFile = (file as any).file as File;
-    data.append(uploadFile.name, uploadFile);
+    data.append(encodeURIComponent(jsonpath), uploadFile);
 
     const handleSuccess = (response: IData) => {
       if (!uiState.showErrorBlockOnInvalid) {

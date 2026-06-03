@@ -768,10 +768,6 @@ export const handleValidation = (
       prevFieldState: any,
       isUpdateOnChange: boolean,
     ) => {
-      if (fieldState?.csvUpload) {
-        return;
-      }
-
       if (!isUpdateOnChange) {
         delete fieldState.validationMessage;
       }

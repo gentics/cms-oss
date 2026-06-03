@@ -57,6 +57,7 @@ const sharedElementTypes: IElementTypes = {
 const cmsElementTypes: IElementTypes = {
     ...FormGridElementTypes,           // shared
     container: Elements.CmsContainerElement,
+    conditionalContainer: Elements.CmsContainerElement,
     adminmail: Elements.CatalogElement
 };
 

@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { IDataFields, IFeatures, IForm, ISchema } from "./interfaces";
 
 export type FormgridPreviewData = {
@@ -35,6 +36,21 @@ export interface PreviewFormData {
 export interface ExtendedWindow extends Window {
   // Form Data that is assigned in the page directly.
   formPreviewData: FormgridPreviewData;
+}
+
+/**
+ * Detects whether the app is running inside the formgrid preview, based on the
+ * two signals available at startup:
+ *  - the URL query param `?preview=true`
+ *  - statically injected `window.formPreviewData`
+ */
+export function detectFormgridPreview(): boolean {
+  if (Platform.OS !== 'web') return false;
+  const queryParams = new URLSearchParams(window.location.search);
+  return (
+    queryParams.get('preview') === 'true' ||
+    (window as any as ExtendedWindow).formPreviewData != null
+  );
 }
 
 export const PREVIEW_CONNECT_EVENT = 'preview-connect';

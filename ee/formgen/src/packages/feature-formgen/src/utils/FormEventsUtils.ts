@@ -713,7 +713,7 @@ export const saveForm = async (
   }
   // send the keep alive request before attempting the save
   // this will refresh the authentication if needed
-  if (PluginNameEnum.ACTA_NOVA) await restService.keepAlive();
+  if (formState.pluginName === PluginNameEnum.ACTA_NOVA) await restService.keepAlive();
 
   let fileUploadHash = 0;
   if (formState.fileUploads) {

@@ -605,14 +605,9 @@ export async function handleBinaryDelete(
 
   if (isServerSideFile && formState.pluginName == PluginNameEnum.ACTA_NOVA) {
     const bodyData: IData = JSON.parse(JSON.stringify(formState.data));
-    const fieldElement = utils.getElementByJsonPath(bodyData, jsonpath);
-    if (fieldElement) {
-      if (Array.isArray(fieldElement.values) && fieldElement.values[index] != null) {
-        fieldElement.values[index].shouldBeDelete = true;
-      } else if (fieldElement.value != null && typeof fieldElement.value === 'object') {
-        fieldElement.value.shouldBeDelete = true;
-      }
-    }
+    bodyData.deleteFileJsonPath = utils.isListElement(formState.schema, binaryFieldID)
+      ? `${jsonpath}.values[${index}]`
+      : `${jsonpath}.value`;
 
       utils.startANRequest(() =>
         overlayUtils.setOverlay(

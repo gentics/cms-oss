@@ -643,6 +643,7 @@ export interface IData {
   formControls?: any;
   transactionId?: string;
   paymentStatus?: string;
+  deleteFileJsonPath?: string;
   possibleValueSets?: PossibleValueSet[];
 }
 

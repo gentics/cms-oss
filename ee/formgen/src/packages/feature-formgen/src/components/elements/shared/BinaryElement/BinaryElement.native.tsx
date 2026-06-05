@@ -182,8 +182,16 @@ function BinaryElement(props: IFormComponentAttributes) {
 
     setFiles((prev) => {
       const serverNames = new Set(serverList.map((s) => s.binary.fileName));
+      // allValueNames includes both server-confirmed entries and local placeholders
+      // ("mesh(not uploaded yet)"). If a local file's name is no longer present in
+      // props.value — e.g. because the upload failed and the state was rolled back —
+      // the card is removed from the UI automatically.
+      const allValueNames = new Set(normalizeFiles(props.value).map((f) => f.fileName));
       let remainingLocals = prev.filter(
-        (x) => x.source === BinarySource.LOCAL && !serverNames.has(x.binary.fileName),
+        (x) =>
+          x.source === BinarySource.LOCAL &&
+          !serverNames.has(x.binary.fileName) &&
+          allValueNames.has(x.binary.fileName),
       );
 
       // Single-file upload: keep at most one local file (the most recent)

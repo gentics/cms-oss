@@ -284,8 +284,16 @@ function BinaryElement(props: IFormComponentAttributes) {
 
     setFiles((prev) => {
       const serverNames = new Set(serverList.map((s) => s.binary.fileName));
+      // allValueNames includes both server-confirmed entries and local placeholders
+      // ("mesh(not uploaded yet)"). If a local file's name is no longer present in
+      // props.value — e.g. because the upload failed and the state was rolled back —
+      // the card is removed from the UI automatically.
+      const allValueNames = new Set(normalizeFiles(props.value).map((f) => f.fileName));
       const remainingLocals = prev.filter(
-        (x) => x.source === BinarySource.LOCAL && !serverNames.has(x.binary.fileName),
+        (x) =>
+          x.source === BinarySource.LOCAL &&
+          !serverNames.has(x.binary.fileName) &&
+          allValueNames.has(x.binary.fileName),
       );
       return [...serverList, ...remainingLocals];
     });
@@ -827,36 +835,36 @@ function hasAllowedUploadSize(
       if (!isActaNovaFile(singleElement)) {
         if (singleElement.size) {
           sumSizes = sumSizes + singleElement.size;
-          // if (singleElement.size > maxSingleUploadSizeByte) {
-          //   if (updateErrorMessages) {
-          //     elemState.validationMessage = `${t(
-          //       'form_maxFileUploadSizeSingleError',
-          //     ).replace('%size%', maxSingleUploadSizeMB.toString())}: ${singleElement.fileName
-          //       }`;
-          //   }
-          //   utils.setStateElementByJsonpath(
-          //     formState.data,
-          //     jsonpath,
-          //     elemState,
-          //   );
-          //   failedCheckForOneFile = true;
-          //   return false;
-          // }
+          if (singleElement.size > maxSingleUploadSizeByte) {
+            if (updateErrorMessages) {
+              elemState.validationMessage = `${t(
+                'form_maxFileUploadSizeSingleError',
+              ).replace('%size%', maxSingleUploadSizeMB.toString())}: ${singleElement.fileName
+                }`;
+            }
+            utils.setStateElementByJsonpath(
+              formState.data,
+              jsonpath,
+              elemState,
+            );
+            failedCheckForOneFile = true;
+            return false;
+          }
         }
       }
     });
     if (failedCheckForOneFile) return false;
 
     // overall
-    // if (sumSizes > maxMultipleUploadSizeByte) {
-    //   if (updateErrorMessages) {
-    //     elemState.validationMessage = `${t(
-    //       'form_maxFileUploadSizeMultipleError',
-    //     )}: ${maxMultipleUploadSizeMB} MB`;
-    //   }
-    //   utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-    //   return false;
-    // }
+    if (sumSizes > maxMultipleUploadSizeByte) {
+      if (updateErrorMessages) {
+        elemState.validationMessage = `${t(
+          'form_maxFileUploadSizeMultipleError',
+        )}: ${maxMultipleUploadSizeMB} MB`;
+      }
+      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
+      return false;
+    }
   } else if (
     // single file
     !isActaNovaFile(value) &&

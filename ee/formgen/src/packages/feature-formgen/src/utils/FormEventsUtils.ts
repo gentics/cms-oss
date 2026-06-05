@@ -440,6 +440,7 @@ export async function possibleBinaryUpload(
   isLoggedIn?: boolean,
   formGridOptions?: IFormGridOptions,
   editable?: boolean,
+  rollbackOnError?: () => void,
 ) {
 
   if (formState.submitted || (global as any).submitted) return;
@@ -471,9 +472,9 @@ export async function possibleBinaryUpload(
 
       const actionAfterError = (res?: ApiResponse) => {
         onBinaryChangeFinished();
+        rollbackOnError?.();
 
         const responseData = res?.responseData;
-        
         if (res?.responseCode === 422 && responseData) {
           handleFileUploadValidationError(responseData, formState, jsonpath);
         } else {
@@ -482,10 +483,10 @@ export async function possibleBinaryUpload(
           if (binaryElem) {
             binaryElem.validationMessage = i18n.t('form_binary_upload_failed');
           }
-        }        
+        }
         updateState(StatesToUpdateEnum.ALL);
       };
-      try {      
+      try {
         onBinaryChangeFinished();
 
         console.log('handleBinaryFormSave');
@@ -499,6 +500,7 @@ export async function possibleBinaryUpload(
         );
       } catch (error) {
         console.error('Error during binary upload: ', error);
+        rollbackOnError?.();
         onBinaryChangeFinished();
       }
     }
@@ -530,6 +532,10 @@ export async function handleBinaryAdd(
   const savedVal = JSON.parse(
     JSON.stringify(utils.getValue(formState, jsonpath, id)),
   );
+  // saved the old fileuploads in case if there are errors 
+  const savedFileUploads = formState.fileUploads?.[id]?.[jsonpath]
+    ? [...formState.fileUploads[id][jsonpath]]
+    : undefined;
 
   if (utils.isListElement(formState.schema, id)) {
     const oldValue = utils.getValue(formState, jsonpath, id);
@@ -559,7 +565,6 @@ export async function handleBinaryAdd(
     fileArray.push(binaryMetaInfo);
     formState.fileUploads[id][jsonpath][fileArray.length - 1] = file;
   });
-  
 
   if (fileArray.length === 0) {
     utils.removeValue(formState, jsonpath);
@@ -571,7 +576,21 @@ export async function handleBinaryAdd(
     }
   }
 
-  
+  const rollbackBinaryAdd = () => {
+    if (utils.isFilled(savedVal)) {
+      utils.setValue(formState, jsonpath, savedVal);
+    } else {
+      utils.removeValue(formState, jsonpath);
+    }
+    if (formState.fileUploads?.[id]) {
+      if (savedFileUploads != null) {
+        formState.fileUploads[id][jsonpath] = savedFileUploads;
+      } else {
+        delete formState.fileUploads[id][jsonpath];
+      }
+    }
+  };
+
   //if logged in and everything is ok, files will be uploaded
   //at least afterChanged will be called for updateOnChange events
   await possibleBinaryUpload (
@@ -583,7 +602,8 @@ export async function handleBinaryAdd(
     restService,
     isLoggedIn,
     formGridOptions,
-    editable  
+    editable,
+    rollbackBinaryAdd,
   )
 }
 

@@ -545,11 +545,7 @@ export class RestService {
   }
 
   async deleteFileRequest(formState: FormState, body: IData): Promise<ApiResponse> {
-    let url = `form/${encodeURIComponent(formState.formid)}`;
-    if (formState.businessObjectID) {
-      url += `/businessObject/${encodeURIComponent(formState.businessObjectID)}`;
-    }
-    url += '/deleteFile';
+    let url = `form/${encodeURIComponent(formState.formid)}/deleteFile`;
     return this.post(formState.formid, url, body, {}, formState);
   }
 

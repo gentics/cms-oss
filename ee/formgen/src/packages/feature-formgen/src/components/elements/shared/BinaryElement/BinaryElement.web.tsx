@@ -342,7 +342,6 @@ function BinaryElement(props: IFormComponentAttributes) {
         t={props.t}
         file={item}
         onLink={() => {
-          console.log(binaryLink);
           Linking.openURL(binaryLink);
         }}
         showDownload={(binaryLink !== '')}

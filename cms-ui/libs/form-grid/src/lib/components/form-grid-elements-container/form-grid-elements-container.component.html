@@ -115,6 +115,7 @@
                     [isAggregate]="displayItem.isAggregate"
                     [whitelist]="displayItem.whitelist"
 
+                    [schemaPropertiesMap]="schemaPropertiesMap()"
                     [elements]="element.elements || []"
                     (elementsChange)="updateChildElements(element, $event)"
                     [(schema)]="schema"

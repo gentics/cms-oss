@@ -138,10 +138,11 @@
                         [gridSurface]="gridSurface"
                         [isAggregate]="false"
 
+                        [schemaPropertiesMap]="schemaPropertiesMap()"
                         [elements]="elements()"
                         (elementsChange)="updatePageElements($event)"
                         [selectedElement]="selectedElement()"
-                        [selectedElementContainerId]="selectedElementContainerId"
+                        [selectedElementContainerId]="selectedElementContainerId()"
                         (elementSelect)="setSelectedElement($event)"
                         [schema]="schema()"
                         (schemaChange)="updateSchema($event)"

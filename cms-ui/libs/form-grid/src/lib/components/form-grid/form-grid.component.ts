@@ -15,6 +15,7 @@ import {
     FormElement,
     FormPage,
     FormSchema,
+    FormSchemaProperties,
     FormSchemaProperty,
     FormTypeConfiguration,
     FormUISchema,
@@ -35,6 +36,17 @@ import {
     FormGridEditMode,
     FormGridViewMode,
 } from '../../models';
+
+function addPropertiesToMap(data: FormSchemaProperties, properties: FormSchemaProperties): void {
+    const entries = Object.entries(properties || {});
+    for (const ent of entries) {
+        data[ent[0]] = ent[1];
+
+        if (ent[1].properties != null && typeof ent[1].properties === 'object') {
+            addPropertiesToMap(data, ent[1].properties);
+        }
+    }
+}
 
 function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
     for (const el of elements) {
@@ -162,6 +174,15 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         return this.uiSchema()?.pages?.[this.pageIndex()]?.elements || [];
     });
 
+    /** A flattened map of all schema properties to access them easier. */
+    public readonly schemaPropertiesMap = computed<FormSchemaProperties>(() => {
+        const data: FormSchemaProperties = {};
+
+        addPropertiesToMap(data, this.schema().properties);
+
+        return data;
+    });
+
     /** Mapping of ID to each element in a flat map for the current page */
     public readonly elementMap = computed<Record<string, FormElement>>(() => {
         const data: Record<string, FormElement> = {};
@@ -218,9 +239,9 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     /** The ID of the current selected element. */
     public readonly selectedElementId = signal<string | null>(null);
     /** The ID of the container where the selectedElement is contained in. */
-    public selectedElementContainerId: string | null = null;
+    public readonly selectedElementContainerId = signal<string | null>(null);
     /** The active language that is being viewed/edited */
-    public activeLanguage = signal<string | null>(null);
+    public readonly activeLanguage = signal<string | null>(null);
 
     /** The currently selected element, which may be getting edited. */
     public readonly selectedElement = computed(() => {
@@ -231,11 +252,11 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     /** The schema definition of the selected element (if it has one) */
     public readonly selectedElementSchema = computed(() => {
         const id = this.selectedElementId();
-        return id == null ? undefined : (this.schema()?.properties || {})?.[id];
+        return id == null ? undefined : this.schemaPropertiesMap()?.[id];
     });
 
     /** Which type the element is */
-    public selectedElementType = computed(() => {
+    public readonly selectedElementType = computed(() => {
         const element = this.selectedElement();
         if (element == null) {
             return null;
@@ -470,7 +491,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
         this.setSelectedElement({
             element: pastedElement,
-            containerId: this.selectedElementContainerId ?? this.ELEMENT_ROOT_CONTAINER_ID,
+            containerId: this.selectedElementContainerId() ?? this.ELEMENT_ROOT_CONTAINER_ID,
         });
 
         this.notification.show({
@@ -708,7 +729,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         this.editingPageIndex.set(null);
 
         const blockType = data.element.formGridOptions?.type || null;
-        const elementSchema = this.schema()?.properties?.[data.element.id] || null;
+        const elementSchema = this.schemaPropertiesMap()[data.element.id] || null;
         const controlConfig = elementSchema
             ? this.config().controls[elementSchema?.type]
             : null;
@@ -734,7 +755,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
 
         this.selectedElementId.set(data.element.id);
-        this.selectedElementContainerId = data.containerId;
+        this.selectedElementContainerId.set(data.containerId);
     }
 
     public startEditPage(index: number): void {
@@ -780,7 +801,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     public clearSelectedElement(): void {
         this.selectedElementId.set(null);
-        this.selectedElementContainerId = null;
+        this.selectedElementContainerId.set(null);
         this.editingPageIndex.set(null);
         this.editingSidebarTab.set(EditTabs.DEFINITION);
     }

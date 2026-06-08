@@ -7,10 +7,8 @@ import {
     input,
     model,
     NgZone,
-    OnChanges,
     output,
     signal,
-    SimpleChanges,
 } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import {
@@ -89,6 +87,8 @@ export class FormGridElementsContainerComponent {
     public readonly schema = model.required<FormSchema>();
     /** The elements of this container */
     public readonly elements = model.required<FormElement[]>();
+    /** All schema properties */
+    public readonly schemaPropertiesMap = input.required<FormSchemaProperties>();
 
     /** HTML element which indicates the resizing. */
     public readonly gridSurface = input.required<HTMLElement>();
@@ -520,21 +520,9 @@ export class FormGridElementsContainerComponent {
     }
 
     private updateDisplayItems(): void {
-        let propertyLookup: FormSchemaProperties = this.schema().properties;
-
-        if (this.isAggregate()) {
-            const ownSchema = this.schema().properties[this.id()];
-
-            if (ownSchema == null || ownSchema.properties == null || typeof ownSchema.properties !== 'object') {
-                console.warn(`The aggregate "${this.id()}" does not have valid properties set, to correctly work as aggregate. Sub-Elements will not be able to be displayed correctly!`);
-            } else {
-                propertyLookup = ownSchema.properties;
-            }
-        }
-
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
         this.displayItems.set((this.elements() || []).map((el) => {
-            const itemSchema = propertyLookup?.[el.id];
+            const itemSchema = this.schemaPropertiesMap()?.[el.id];
             const visible = !el.formGridOptions?.['hidden'];
 
             if (itemSchema) {

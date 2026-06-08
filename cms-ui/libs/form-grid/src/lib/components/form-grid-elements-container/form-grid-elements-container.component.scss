@@ -176,7 +176,7 @@ gtx-contents-list-item {
         border-left: 3px solid #0096DC;
         background-color: #e4f6ff;
 
-        .element-title {
+        > .element-container .element-title {
             color: #0096DC;
             font-weight: 700;
         }

@@ -91,8 +91,16 @@ public class Migration {
 	/**
 	 * List of unmigrated properties (properties, which are standard)
 	 */
-	protected final static List<String> UNMIGRATED_PROPERTIES = Arrays.asList("label", "description", "mandatory",
-			"validation", "select_type", "element_to_check", "value_to_check");
+	protected final static List<String> UNMIGRATED_PROPERTIES = Arrays.asList(
+		"label",
+		"description",
+		"mandatory",
+		"validation",
+		"select_type",
+		"element_to_check",
+		"value_to_check",
+		// The checked value will be handled by the custom checkbox migrators.
+		"checked");
 
 	/**
 	 * List of unmigrated properties per element type ID
@@ -101,7 +109,9 @@ public class Migration {
 			"string", Arrays.asList("minVal", "maxVal"),
 			"datetime", Arrays.asList("minVal", "maxVal", "maxCharCount"),
 			"time", Arrays.asList("minVal", "maxVal", "maxCharCount"),
-			"number", Arrays.asList("maxCharCount"));
+			"number", Arrays.asList("maxCharCount"),
+			// The default value for boolean elements will behandled by the custom checkbox migrations.
+			"boolean", Arrays.asList("value"));
 
 	/**
 	 * Map of property id to propertyPath settings

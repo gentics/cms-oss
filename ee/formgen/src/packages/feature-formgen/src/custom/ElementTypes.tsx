@@ -41,7 +41,6 @@ export const cmsInputElementTypes: IElementTypes = {
 const sharedElementTypes: IElementTypes = {
     ...FormGridElementTypes,           // shared
     ...cmsInputElementTypes,
-    boolean: Elements.BooleanElement,
     catalog: Elements.CatalogElement,
     datetime: Elements.DateTimeElement as unknown as IElementType,
     time: Elements.DateTimeElement as unknown as IElementType,
@@ -56,6 +55,7 @@ const sharedElementTypes: IElementTypes = {
 */
 const cmsElementTypes: IElementTypes = {
     ...FormGridElementTypes,           // shared
+    boolean: Elements.CMSBooleanElement,
     container: Elements.CmsContainerElement,
     conditionalContainer: Elements.CmsContainerElement,
     adminmail: Elements.CatalogElement

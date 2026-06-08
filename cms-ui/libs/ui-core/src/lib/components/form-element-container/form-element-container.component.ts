@@ -24,6 +24,13 @@ export class FormElementContainerComponent extends BaseComponent {
     public readonly = false;
 
     /**
+     * If the element is currently the active element.
+     * Only affects styling.
+     */
+    @Input({ transform: booleanAttribute })
+    public active = false;
+
+    /**
      * If the box should be focusable.
      * Allows the user to focus the container with the keyboard.
      */

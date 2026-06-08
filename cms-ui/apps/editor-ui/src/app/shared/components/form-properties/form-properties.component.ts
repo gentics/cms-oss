@@ -85,7 +85,6 @@ export class FormPropertiesComponent
 
     public formTypeConfigurations: Record<string, FormTypeConfiguration> | null = null;
     public activeConfiguration: FormTypeConfiguration | null = null;
-    public hadInitialConfiguration = false;
 
     public useEmailPageTemplate: boolean;
     public loadedMailTemplate: Page | null = null;
@@ -128,7 +127,6 @@ export class FormPropertiesComponent
 
         if (changes.configuration) {
             this.activeConfiguration = this.configuration;
-            this.hadInitialConfiguration = true;
         }
     }
 
@@ -170,10 +168,13 @@ export class FormPropertiesComponent
             this.item?.data?.adminEmailNodeId,
             this.item?.data?.adminEmailTemplate,
         );
+
+        this.configureForm(this.form.value as any);
     }
 
     protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
         this.formData = new FormGroup<FormProperties<Partial<EditableFormData>>>({
+            formWidth: new FormControl(this.item?.data?.formWidth || this.safeValue(['data', 'formWidth'])),
             flowId: new FormControl(this.item?.data?.flowId || this.safeValue(['data', 'flowId'])),
             captchaId: new FormControl(this.item?.data.flowId || this.safeValue(['data', 'captchaId'])),
             templateContext: new FormControl(this.item?.data?.templateContext || this.safeValue(['data', 'templateContext'])),
@@ -198,10 +199,7 @@ export class FormPropertiesComponent
 
     protected configureForm(value: FormPropertiesData, loud?: boolean): void {
         // Should be enabled while it's still loading, and if the name isn't in the item (i.E. something has already been selected)
-        setControlsEnabled(this.form, ['formType'], !this.item?.formTypeName && (
-            this.formTypeConfigurations == null
-            || !this.hadInitialConfiguration
-        ));
+        setControlsEnabled(this.form, ['formType'], this.configuration != null, { emitEvent: loud });
 
         const selectedLangs = (value?.languages || []);
         this.formLanguages = (this.languages || []).filter((lang) => selectedLangs.includes(lang.code));

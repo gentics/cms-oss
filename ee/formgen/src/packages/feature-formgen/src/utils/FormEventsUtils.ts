@@ -58,7 +58,6 @@ function isCaptchaError(res: ApiResponse): boolean {
 
 export const submitCSVUpload = async (
   jsonpath: string,
-  id: string,
   formState: FormState,
   uiState: UIState,
   updateState: (state: StatesToUpdateEnum) => void,
@@ -88,13 +87,9 @@ export const submitCSVUpload = async (
     const file = res.assets[0];
     const data = new FormData();
 
-    const stateDataWithCSVUploadFlag = formState.data;
-    if (stateDataWithCSVUploadFlag.properties?.[id]) {
-      stateDataWithCSVUploadFlag.properties[id]!.csvUpload = true;
-    }
-    data.append('formdata', JSON.stringify(stateDataWithCSVUploadFlag));
+    data.append('formdata', JSON.stringify(formState.data));
     const uploadFile = (file as any).file as File;
-    data.append(uploadFile.name, uploadFile);
+    data.append(encodeURIComponent(jsonpath), uploadFile);
 
     const handleSuccess = (response: IData) => {
       if (!uiState.showErrorBlockOnInvalid) {
@@ -445,6 +440,7 @@ export async function possibleBinaryUpload(
   isLoggedIn?: boolean,
   formGridOptions?: IFormGridOptions,
   editable?: boolean,
+  rollbackOnError?: () => void,
 ) {
 
   if (formState.submitted || (global as any).submitted) return;
@@ -476,9 +472,9 @@ export async function possibleBinaryUpload(
 
       const actionAfterError = (res?: ApiResponse) => {
         onBinaryChangeFinished();
+        rollbackOnError?.();
 
         const responseData = res?.responseData;
-        
         if (res?.responseCode === 422 && responseData) {
           handleFileUploadValidationError(responseData, formState, jsonpath);
         } else {
@@ -487,10 +483,10 @@ export async function possibleBinaryUpload(
           if (binaryElem) {
             binaryElem.validationMessage = i18n.t('form_binary_upload_failed');
           }
-        }        
+        }
         updateState(StatesToUpdateEnum.ALL);
       };
-      try {      
+      try {
         onBinaryChangeFinished();
 
         console.log('handleBinaryFormSave');
@@ -504,6 +500,7 @@ export async function possibleBinaryUpload(
         );
       } catch (error) {
         console.error('Error during binary upload: ', error);
+        rollbackOnError?.();
         onBinaryChangeFinished();
       }
     }
@@ -535,6 +532,10 @@ export async function handleBinaryAdd(
   const savedVal = JSON.parse(
     JSON.stringify(utils.getValue(formState, jsonpath, id)),
   );
+  // saved the old fileuploads in case if there are errors 
+  const savedFileUploads = formState.fileUploads?.[id]?.[jsonpath]
+    ? [...formState.fileUploads[id][jsonpath]]
+    : undefined;
 
   if (utils.isListElement(formState.schema, id)) {
     const oldValue = utils.getValue(formState, jsonpath, id);
@@ -565,7 +566,6 @@ export async function handleBinaryAdd(
     fileArray.push(binaryMetaInfo);
     formState.fileUploads[id][jsonpath][fileArray.length - 1] = file;
   });
-  
 
   if (fileArray.length === 0) {
     utils.removeValue(formState, jsonpath);
@@ -577,7 +577,21 @@ export async function handleBinaryAdd(
     }
   }
 
-  
+  const rollbackBinaryAdd = () => {
+    if (utils.isFilled(savedVal)) {
+      utils.setValue(formState, jsonpath, savedVal);
+    } else {
+      utils.removeValue(formState, jsonpath);
+    }
+    if (formState.fileUploads?.[id]) {
+      if (savedFileUploads != null) {
+        formState.fileUploads[id][jsonpath] = savedFileUploads;
+      } else {
+        delete formState.fileUploads[id][jsonpath];
+      }
+    }
+  };
+
   //if logged in and everything is ok, files will be uploaded
   //at least afterChanged will be called for updateOnChange events
   await possibleBinaryUpload (
@@ -589,7 +603,8 @@ export async function handleBinaryAdd(
     restService,
     isLoggedIn,
     formGridOptions,
-    editable  
+    editable,
+    rollbackBinaryAdd,
   )
 }
 
@@ -606,8 +621,64 @@ export async function handleBinaryDelete(
   formGridOptions?: IFormGridOptions,
   editable?: boolean,
 ) {
-  console.log("delete binary");
-  let value = utils.getValue(formState, jsonpath);
+  const hasDialogPortalHostId = !!formState.data?.DialogPortalFormHostObjectID;
+  const isServerSideFile = toDelete && toDelete.length > 0 && hasDialogPortalHostId;
+
+  if (isServerSideFile && formState.pluginName == PluginNameEnum.ACTA_NOVA) {
+    const bodyData: IData = JSON.parse(JSON.stringify(formState.data));
+    bodyData.deleteFileJsonPath = utils.isListElement(formState.schema, binaryFieldID)
+      ? `${jsonpath}.values[${index}]`
+      : `${jsonpath}.value`;
+
+      utils.startANRequest(() =>
+        overlayUtils.setOverlay(
+          uiState,
+          formState,
+          OverlayTypeEnum.FULL_SCREEN_LOADING,
+          updateState,
+          { loadingText: IOverlayFullScreenTextEnum.DeleteFile },
+        ),
+      );
+      const response = await restService.deleteFileRequest(formState, bodyData);
+      utils.endANRequest(uiState, updateState, () => {
+        (global as any).saveRunning = false;
+        if ((global as any).valueIsChanged) {
+          (global as any).valueIsChanged = undefined;
+        }
+      });
+
+    if (response.success && response.responseData) {
+      formState.data = response.responseData;
+      (global as any).valueIsChanged = true; // to trigger background
+      if (formState.fileUploads?.[binaryFieldID]?.[jsonpath]) {
+        formState.fileUploads[binaryFieldID][jsonpath].splice(index, 1);
+      }
+      updateState(StatesToUpdateEnum.FormState);
+    }
+  } else {
+    clientSideDeleteBinary(formState, jsonpath, binaryFieldID, index);
+  }
+
+  await possibleBinaryUpload(
+    formState,
+    uiState,
+    jsonpath,
+    binaryFieldID,
+    updateState,
+    restService,
+    isLoggedIn,
+    formGridOptions,
+    editable,
+  );
+}
+
+function clientSideDeleteBinary(
+  formState: FormState,
+  jsonpath: string,
+  binaryFieldID: string,
+  index: number,
+) {
+  const value = utils.getValue(formState, jsonpath);
   if (value != null) {
     if (Array.isArray(value)) {
       // Remove exactly the entry at the given index from the values array
@@ -633,23 +704,8 @@ export async function handleBinaryDelete(
       formState.fileUploads[binaryFieldID][jsonpath]
     ) {
       formState.fileUploads[binaryFieldID][jsonpath].splice(index, 1);
-    }    
+    }
   }
-
-
-  //even after a file-delete it could be that a binary field is now valid, so it can be uploaded
-  await possibleBinaryUpload (
-    formState,
-    uiState,
-    jsonpath,
-    binaryFieldID,
-    updateState,
-    restService,
-    isLoggedIn,
-    formGridOptions,
-    editable  
-  )
-
 }
 
 
@@ -871,7 +927,7 @@ export const saveFormBinary = async (
     true,
     callbackFunc,
     errorFunc,
-    formState.isLoggedIn,
+    true,
     IOverlayFullScreenTextEnum.FileUpload
 
   );

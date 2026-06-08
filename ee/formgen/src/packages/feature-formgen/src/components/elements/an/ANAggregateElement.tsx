@@ -1948,7 +1948,6 @@ function ANAggregateElement(props: IFormComponentAttributes) {
             onPress={() => {
               formEventsUtils.submitCSVUpload(
                 props.jsonpath,
-                props.id,
                 props.formState,
                 props.uiState,
                 props.updateState,

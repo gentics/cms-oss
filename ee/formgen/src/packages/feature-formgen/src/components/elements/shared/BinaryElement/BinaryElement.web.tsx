@@ -25,6 +25,10 @@ import FileCard from './parts/FileCard/FileCard.web';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { v4 as uuidv4 } from 'uuid';
+import { IOverlayFullScreenTextEnum } from '../../../../constants/enums/IOverlayFullScreenTextEnum';
+import { OverlayTypeEnum } from '../../../../custom/OverlayTypes';
+import * as overlayUtils from '../../../../utils/OverlayUtils';
+
 
 /**
  * In-memory per-field cache to keep local (unuploaded) files across unmount/remount
@@ -138,10 +142,10 @@ function BinaryElement(props: IFormComponentAttributes) {
     name?.split('.').pop()?.toLowerCase() ?? '';
 
   const classifySource = (b: IBinary): BinarySource => {
-    if (!b?.value) return 'local';
-    if (String(b.value).startsWith('mesh:')) return 'mesh';
-    if (String(b.value).startsWith('mesh(not uploaded yet)')) return 'local';
-    return 'actanova';
+    if (!b?.value || String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
+    if (String(b.value).startsWith('FormInstanceContent|')) return BinarySource.ACTANOVA;
+    if (String(b.value).startsWith('mesh:')) return BinarySource.MESH;
+    return BinarySource.LOCAL;
   };
 
   const makeBinaryFromFile = (file: File): IBinary => ({
@@ -185,10 +189,10 @@ function BinaryElement(props: IFormComponentAttributes) {
     return it.uid;
   };
 
-  function addFiles(rawFiles: File[], ctx: typeof latestRef.current) {
+  async function addFiles(rawFiles: File[], ctx: typeof latestRef.current) {
     const filesToAdd = ctx.isList ? rawFiles : [rawFiles[0]];
 
-    formEventsUtils.handleBinaryAdd(
+    await formEventsUtils.handleBinaryAdd(
       ctx.formState, ctx.uiState, ctx.jsonpath, ctx.id,
       ctx.updateState, ctx.restService, filesToAdd,
       ctx.isLoggedIn, ctx.formGridOptions, ctx.editable,
@@ -197,7 +201,7 @@ function BinaryElement(props: IFormComponentAttributes) {
     const additions: BinaryFileWithUid[] = filesToAdd.map((f) => ({
       binary: makeBinaryFromFile(f),
       file: f,
-      source: 'local',
+      source: BinarySource.LOCAL,
       fileExt: readExt(f.name),
       mimeType: f.type,
       uid: uuidv4(),
@@ -241,7 +245,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       const dropped = Array.from(e.dataTransfer?.files ?? []);
       if (!dropped.length) return;
 
-      addFiles(dropped, current);
+      await addFiles(dropped, current);
     };
 
     const onDragLeave = () => setIsDragOver(false);
@@ -275,8 +279,16 @@ function BinaryElement(props: IFormComponentAttributes) {
 
     setFiles((prev) => {
       const serverNames = new Set(serverList.map((s) => s.binary.fileName));
+      // allValueNames includes both server-confirmed entries and local placeholders
+      // ("mesh(not uploaded yet)"). If a local file's name is no longer present in
+      // props.value — e.g. because the upload failed and the state was rolled back —
+      // the card is removed from the UI automatically.
+      const allValueNames = new Set(normalizeFiles(props.value).map((f) => f.fileName));
       const remainingLocals = prev.filter(
-        (x) => x.source === 'local' && !serverNames.has(x.binary.fileName),
+        (x) =>
+          x.source === BinarySource.LOCAL &&
+          !serverNames.has(x.binary.fileName) &&
+          allValueNames.has(x.binary.fileName),
       );
       return [...serverList, ...remainingLocals];
     });
@@ -309,9 +321,9 @@ function BinaryElement(props: IFormComponentAttributes) {
   const renderItems = files.map((item, index) => {
     const key = getFileKey(item);
     let binaryLink = "";
-    if (item.source == "local") {
+    if (item.source === BinarySource.LOCAL) {
       binaryLink = item.binary.uri || "";
-    } else if (item.source == "mesh") {
+    } else if (item.source === BinarySource.ACTANOVA) {
       binaryLink = props.restService.ANGetBinaryURL(
         props.formState.formid,
         item.binary.value,
@@ -324,8 +336,10 @@ function BinaryElement(props: IFormComponentAttributes) {
         key={key}
         t={props.t}
         file={item}
-        onLink={() => Linking.openURL(binaryLink)}
-        showDownload={(binaryLink !== '' && props.formState.isLoggedIn)}
+        onLink={() => {
+          Linking.openURL(binaryLink);
+        }}
+        showDownload={(binaryLink !== '')}
         onRemove={async () => {
           await formEventsUtils.handleBinaryDelete(
             props.formState,
@@ -393,9 +407,18 @@ function BinaryElement(props: IFormComponentAttributes) {
               files.length > 0 && styles.fileChooserWithFiles,
             ]}
             onPress={async () => {
-              const newFiles = await onBinaryPress(props.isList);
+              overlayUtils.setOverlay(
+                latestRef.current.uiState,
+                props.formState,
+                OverlayTypeEnum.FULL_SCREEN_LOADING,
+                latestRef.current.updateState,
+                { loadingText: IOverlayFullScreenTextEnum.FileUploadClientProcess },
+              );
+              const newFiles = await onBinaryPress(props);
+              overlayUtils.hideOverlay(latestRef.current.uiState, latestRef.current.updateState);
+
               if (newFiles && newFiles.length > 0) {
-                addFiles(newFiles, latestRef.current);
+                await addFiles(newFiles, latestRef.current);
               }
             }}
             disabled={!props.editable}
@@ -433,13 +456,13 @@ function BinaryElement(props: IFormComponentAttributes) {
 
 }
 
-async function onBinaryPress(isList: boolean): Promise<File[] | null> {
+async function onBinaryPress(props: IFormComponentAttributes): Promise<File[] | null> {
   try {
+     
     const pickerResult = await DocumentPicker.getDocumentAsync({
       type: '*/*',
-      multiple: isList,
+      multiple: props.isList,
     });
-
     if (pickerResult.canceled) return null;
 
     return (pickerResult.assets ?? [])

@@ -191,7 +191,7 @@ export interface IFormComponentBaseAttributes {
     instant?: boolean,
     formGridOptions?: IFormGridOptions,
   ) => void;
-  submitCSVUpload?: (jsonpath: string, id: string) => void;
+  submitCSVUpload?: (jsonpath: string) => void;
   handleSearch?: (jsonPath: string, searchTerm: string, callback: any) => void;
   handleLazyCatalog?: (
     jsonPath: string,
@@ -410,7 +410,7 @@ export interface IFormPageComponent {
     instant?: boolean,
     formGridOptions?: IFormGridOptions,
   ) => void;
-  submitCSVUpload?: (jsonpath: string, id: string) => void;
+  submitCSVUpload?: (jsonpath: string) => void;
   handleSearch?: (jsonPath: string, searchTerm: string, callback: any) => void;
   handleLazyCatalog?: (
     jsonPath: string,
@@ -648,6 +648,7 @@ export interface IData {
   formControls?: any;
   transactionId?: string;
   paymentStatus?: string;
+  deleteFileJsonPath?: string;
   possibleValueSets?: PossibleValueSet[];
 }
 
@@ -699,7 +700,6 @@ export interface IDataFieldProperties {
   renderingType?: string;
   autoCompleteSearchValue?: string;
   autoCompleteResults?: IAutocompleteValue[];
-  csvUpload?: boolean;
   isUpdateOnChange?: boolean;
   createable?: boolean;
 }
@@ -735,6 +735,7 @@ export interface IBinary {
   type?: string;
   ext?: string;
   size?: number;
+  shouldBeDelete?: boolean; // nur im deleteFile-Request-Body gesetzt, nie persistent
 }
 
 /**
@@ -743,7 +744,11 @@ export interface IBinary {
  * - 'mesh'     : uploaded to Mesh (value starts with "mesh:")
  * - 'actanova' : stored in ActaNova (any other non-empty value)
  */
-export type BinarySource = 'local' | 'mesh' | 'actanova';
+export enum BinarySource {
+  LOCAL = 'local',
+  MESH = 'mesh',
+  ACTANOVA = 'actanova',
+}
 
 /**
  * IBinaryFile is the single source of truth for the list UI.

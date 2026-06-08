@@ -983,6 +983,10 @@
         "type": "binary",
         "updateOnChange": false,
         "validation": {},
+        "maxSize": 20024000,
+        "maxSizeEntireList": 20024000,
+        "allowedFileExtensions": [],
+        "allowAllFileExtensions": true,
         "mandatory": false,
         "isList": true,
         "name": "Rbn_AR_Standortverwaltung_Q_Anhaenge"
@@ -991,6 +995,10 @@
         "type": "binary",
         "updateOnChange": false,
         "validation": {},
+        "maxSize": 20024000,
+        "maxSizeEntireList": 20120000,
+        "allowedFileExtensions": ["png"],
+        "allowAllFileExtensions": false,
         "mandatory": false,
         "isList": false,
         "name": "Rbn_AR_Standortverwaltung_Q_Anhang"

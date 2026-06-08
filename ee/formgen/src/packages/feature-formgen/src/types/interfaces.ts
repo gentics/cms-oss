@@ -109,17 +109,11 @@ export interface Theme {
 }
 
 export interface IFeatures {
-  [key: string]: IFeaturesConfig & IFeatureUploadConstraintOptions;
+  [key: string]: IFeaturesConfig;
 }
 
 export interface IFeaturesConfig {
   [key: string]: string;
-}
-
-interface IFeatureUploadConstraintOptions {
-  maxSizePerFile: number;
-  maxSizeOverall: number;
-  fileExtensionsAllowed: string[];
 }
 
 export enum PaymentStateTypes {
@@ -608,6 +602,7 @@ export interface ISchemaFieldProperties {
   isRaw?: boolean;
   condition?: ICmsCondition;
   maxSize?: number
+  maxSizeEntireList?: number
   allowedFileExtensions?: string[]
   allowAllFileExtensions?: boolean
 }

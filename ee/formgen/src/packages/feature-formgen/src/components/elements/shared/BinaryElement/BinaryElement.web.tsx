@@ -146,9 +146,9 @@ function BinaryElement(props: IFormComponentAttributes) {
     name?.split('.').pop()?.toLowerCase() ?? '';
 
   const classifySource = (b: IBinary): BinarySource => {
-    if (!b?.value) return BinarySource.LOCAL;
+    if (!b?.value || String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
     if (String(b.value).startsWith('FormInstanceContent|')) return BinarySource.ACTANOVA;
-    if (String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
+    if (String(b.value).startsWith('mesh:')) return BinarySource.MESH;
     return BinarySource.LOCAL;
   };
 

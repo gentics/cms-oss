@@ -251,7 +251,7 @@ public class MeshPublishChannelVersionTest {
 
 		// check CR consistency (will fail, this is expected)
 		boolean consistencyCheckResult = Trx.supply(t -> t.getObject(ContentRepository.class, crId).checkStructure(false));
-		assertThat(consistencyCheckResult).as("Structure consistency check result").isTrue();
+		assertThat(consistencyCheckResult).as("Structure consistency check result").isFalse();
 
 		// repair CR consistency (should succeed)
 		boolean consistencyRepairResult = Trx.supply(t -> t.getObject(ContentRepository.class, crId).checkStructure(true));

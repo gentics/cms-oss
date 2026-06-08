@@ -18,7 +18,7 @@
                 {{ (page.pagename | gtxI18nObject) || ('form_grid.page_untitled' | gtxI18n:{number: $index + 1}) }}
             </span>
 
-            @if (mode() === FormGridEditMode.FULL) {
+            @if (mode() !== FormGridEditMode.NONE) {
                 <gtx-button
                     [icon]="true"
                     [title]="'form_grid.page_edit_title' | gtxI18n"
@@ -26,6 +26,9 @@
                 >
                     <icon>edit</icon>
                 </gtx-button>
+            }
+
+            @if (mode() === FormGridEditMode.FULL) {
                 <gtx-button
                     type="alert"
                     [icon]="true"

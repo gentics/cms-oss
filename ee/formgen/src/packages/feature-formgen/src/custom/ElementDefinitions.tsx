@@ -13,6 +13,6 @@ export {default as ANAggregateElement} from '../components/elements/an/ANAggrega
 export {default as FormGridTextElement} from '../components/elements/shared/FormGridTextElement';
 export {default as FormGridImageElement} from '../components/elements/shared/FormGridImageElement';
 export {default as InputElement} from '../components/elements/shared/InputElement';
-export {default as BooleanElement} from '../components/elements/shared/BooleanElement';
 export {default as CmsContainerElement} from '../components/elements/cms/CmsContainerElement';
+export {default as CMSBooleanElement} from '../components/elements/cms/CMSBooleanElement';
 export {default as CatalogElement} from '../components/elements/shared/CatalogElement';

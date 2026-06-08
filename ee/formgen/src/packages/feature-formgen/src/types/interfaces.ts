@@ -559,6 +559,7 @@ export interface IFormGridOptions {
   mode?: 'checkbox' | 'invisible';
   hidden?: boolean;
   condition?: ICmsCondition;
+  storedValue?: string;
 }
 export interface IOverlayInfoOptions {
   isShowOverlay: boolean;

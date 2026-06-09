@@ -177,7 +177,6 @@ import {
     SetDisplayAllLanguagesAction,
     SetDisplayDeletedAction,
     SetDisplayImagesGridViewAction,
-    SetDisplayStatusIconsAction,
     SetFilterTermAction,
     SetFolderLanguageAction,
     SetFormLanguageAction,
@@ -410,13 +409,6 @@ export class FolderActionsService {
      */
     setDisplayAllPageLanguages(displayAll: boolean): void {
         this.appState.dispatch(new SetDisplayAllLanguagesAction(displayAll));
-    }
-
-    /**
-     * Toggle additional mini status icons indicating page translation states.
-     */
-    setDisplayStatusIcons(displayStatusIcons: boolean): void {
-        this.appState.dispatch(new SetDisplayStatusIconsAction(displayStatusIcons));
     }
 
     /**

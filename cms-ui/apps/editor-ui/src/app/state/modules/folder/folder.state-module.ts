@@ -68,7 +68,6 @@ import {
     SetDisplayAllLanguagesAction,
     SetDisplayDeletedAction,
     SetDisplayImagesGridViewAction,
-    SetDisplayStatusIconsAction,
     SetFilterTermAction,
     SetFolderLanguageAction,
     SetFormLanguageAction,
@@ -124,7 +123,6 @@ const INITIAL_FOLDER_STATE: FolderState = {
         fetching: false,
     },
     displayAllLanguages: false,
-    displayStatusIcons: false,
     displayDeleted: false,
     displayImagesGridView: true,
     files: { ...emptyItemInfo },
@@ -737,13 +735,6 @@ export class FolderStateModule {
     handleSetDisplayAllLanguagesAction(ctx: StateContext<FolderState>, action: SetDisplayAllLanguagesAction): void {
         ctx.patchState({
             displayAllLanguages: action.displayAll,
-        });
-    }
-
-    @ActionDefinition(SetDisplayStatusIconsAction)
-    handleSetDisplayStatusIconsAction(ctx: StateContext<FolderState>, action: SetDisplayStatusIconsAction): void {
-        ctx.patchState({
-            displayStatusIcons: action.displayIcons,
         });
     }
 

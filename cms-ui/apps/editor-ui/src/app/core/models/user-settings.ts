@@ -10,7 +10,6 @@ export interface UserSettings {
     contentFrameBreadcrumbsExpanded: boolean;
     displayAllLanguages: boolean;
     displayDeleted: boolean;
-    displayStatusIcons: boolean;
     displayImagesGridView: boolean;
     favourites: Favourite[];
     fileDisplayFields: string[];
@@ -54,7 +53,6 @@ export const defaultUserSettings: UserSettings = {
     contentFrameBreadcrumbsExpanded: false,
     displayAllLanguages: false,
     displayDeleted: false,
-    displayStatusIcons: false,
     displayImagesGridView: true,
     favourites: [],
     fileDisplayFields: [],

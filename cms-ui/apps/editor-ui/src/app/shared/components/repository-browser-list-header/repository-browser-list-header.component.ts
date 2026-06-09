@@ -24,7 +24,7 @@ export class RepositoryBrowserListHeader implements OnInit {
     @Input() collapsed: boolean;
     @Input() showImagesGridView: boolean;
     @Input() activeLanguage: Language;
-    @Input() showStatusIcons: boolean;
+    @Input() showStatusIcons = true;
     @Input() showAllLanguages: boolean;
 
     @Output() collapsedChange = new EventEmitter<boolean>();
@@ -96,10 +96,4 @@ export class RepositoryBrowserListHeader implements OnInit {
         const currentVal = this.appState.now.folder.displayAllLanguages;
         this.userSettings.setDisplayAllLanguages(!currentVal);
     }
-
-    toggleDisplayStatusIcons(): void {
-        const currentVal = this.appState.now.folder.displayStatusIcons;
-        this.userSettings.setDisplayStatusIcons(!currentVal);
-    }
-
 }

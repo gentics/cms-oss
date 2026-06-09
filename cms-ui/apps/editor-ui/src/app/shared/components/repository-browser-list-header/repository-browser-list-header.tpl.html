@@ -46,17 +46,6 @@
                 ></gtx-checkbox>
                 {{ 'editor.display_all_languages_label' | i18n }}
             </gtx-dropdown-item>
-            <gtx-dropdown-item
-                (click)="toggleDisplayStatusIcons()"
-                class="page-language-toggle"
-                *ngIf="itemType === 'page'"
-            >
-                <gtx-checkbox
-                    [checked]="showStatusIcons"
-                    (change)="toggleDisplayStatusIcons()"
-                ></gtx-checkbox>
-                {{ 'editor.display_status_icons_label' | i18n }}
-            </gtx-dropdown-item>
         </gtx-dropdown-content>
     </gtx-dropdown-list>
 

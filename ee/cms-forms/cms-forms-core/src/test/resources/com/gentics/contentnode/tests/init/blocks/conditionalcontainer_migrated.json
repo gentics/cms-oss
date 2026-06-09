@@ -17,6 +17,7 @@
                 "mandatory": false,
                 "isList": false,
                 "name": "checkbox_21292415_2d85_49a6_ae74_d1eefc01a7d8",
+                "value": "X",
                 "formGridOptions": {
                     "defaultValue": false
                 }

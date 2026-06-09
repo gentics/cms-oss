@@ -264,6 +264,12 @@ public class MigrateForms extends InitJob {
 			.flatMap(n -> n.valueStream().filter(JsonNode::isBoolean).map(JsonNode::asBoolean).findFirst())
 			.orElse(false);
 
+		if (property.optional("value").isEmpty()) {
+			elementNode.optional("value_i18n")
+				.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
+				.ifPresent(storedValue -> property.put("value", storedValue));
+		}
+
 		property.withObjectProperty(FORM_GRID_OPTIONS).put("defaultValue", defaultValue);
 	};
 
@@ -271,10 +277,9 @@ public class MigrateForms extends InitJob {
 	 * Migrator for checkbox ui-schema properties
 	 */
 	private final BiConsumer<ObjectNode, ObjectNode> CHECKBOX_UI_PROPERTY_MIGRATOR = (elementNode, property) -> {
-		System.out.printf("CHECKBOX_UI_PROPERTY_MIGRATOR: elementNode: %s, property: %s%n", elementNode, property);
 		var storedValue = elementNode.optional("value_i18n")
 			.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
-				.orElse("MISSING_VALUE");
+			.orElse("X");
 
 		property.withObjectProperty(FORM_GRID_OPTIONS).put("storedValue", storedValue);
 	};

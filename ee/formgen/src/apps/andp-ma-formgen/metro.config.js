@@ -1,26 +1,19 @@
 const { getDefaultConfig } = require("expo/metro-config");
-const fs = require("fs");
 const path = require("path");
-const { resolve } = require("metro-resolver");
 
 const projectRoot = __dirname;
 const monorepoRoot = path.resolve(projectRoot, "../..");
 
-const isProduction = process.env.NODE_ENV === "production";
-const translationsPath = path.resolve(monorepoRoot, "./translations");
-const hasTranslations = fs.existsSync(translationsPath);
-
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [
-  monorepoRoot,
-];
+// 1. Watch-Folders für das Monorepo (Packages & Root node_modules)
+config.watchFolders = [monorepoRoot];
 
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-  path.resolve(monorepoRoot, "node_modules"),
-];
+// 2. Hierarchischer Lookup wird in Expo 56 ZWINGEND benötigt!
+// Wir entfernen nodeModulesPaths und disableHierarchicalLookup komplett, 
+// da Metro den Baum jetzt nativ von der App bis zum Root scannt.
 
+// 3. SVG Transformer Setup
 const { transformer, resolver } = config;
 
 config.transformer = {
@@ -30,27 +23,22 @@ config.transformer = {
 
 config.resolver = {
   ...resolver,
-  platforms: ["web"],
+  // platforms NICHT auf "web" hardcoden! Metro reicht die Plattform dynamisch rein.
   assetExts: resolver.assetExts.filter((ext) => ext !== "svg"),
   sourceExts: [...resolver.sourceExts, "svg"]
 };
 
-// 🧩 REACT-PDF UND PDFJS-DIST DEAKTIVIEREN
-config.resolver.extraNodeModules = {
-  ...config.resolver.extraNodeModules
-};
-
-
-config.resolver.disableHierarchicalLookup = true;
-
+// 4. PDFJS-DIST Legacy-Umleitungen beibehalten
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName === "pdfjs-dist/build/pdf.mjs") {
-    return resolve(context, "pdfjs-dist/legacy/build/pdf.js", platform);
+    // Nutze den context.redirect- oder Standard-Resolver von Metro ohne harte Überschreibung
+    return context.resolveRequest(context, "pdfjs-dist/legacy/build/pdf.js", platform);
   }
   if (moduleName === "pdfjs-dist/build/pdf.worker.mjs") {
-    return resolve(context, "pdfjs-dist/legacy/build/pdf.worker.js", platform);
+    return context.resolveRequest(context, "pdfjs-dist/legacy/build/pdf.worker.js", platform);
   }
-  return resolve(context, moduleName, platform);
+  // Standard-Resolver aufrufen
+  return context.resolveRequest(context, moduleName, platform);
 };
 
 module.exports = config;

@@ -22,5 +22,9 @@ export default {
       devMode: process.env.DEV_MODE === "true",
       mockForm: process.env.MOCK_FORM === "true",
     },
+    plugins: [
+      "@react-native-community/datetimepicker",
+      "expo-font"
+    ]
   },
 };

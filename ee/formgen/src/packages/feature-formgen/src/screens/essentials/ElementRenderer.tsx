@@ -144,8 +144,13 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         ? formState.data.properties?.[obj.id]?.createable
         : utils.getCreatable(formState, jsonpath);
 
-      let value = obj?.formGridOptions?.value
-        ? obj.formGridOptions.value
+      const fgoValue = obj?.formGridOptions?.value;
+      // {} is truthy in JS but means "no translation configured" — treat empty objects as absent
+      const hasFgoValue = fgoValue != null && typeof fgoValue === 'object'
+        ? Object.keys(fgoValue).length > 0
+        : !!fgoValue;
+      let value = hasFgoValue
+        ? fgoValue
         : utils.getValue(formState, jsonpath, obj.id);
 
       if ((schemaElem == null && !obj.formGridOptions?.type )|| !isVisible ) {

@@ -82,7 +82,6 @@
         "validation": {},
         "mandatory": false,
         "isList": false,
-
         "name": "Kommazahl_Test_Step"
       },
       "7EF4CA2A-DADD-4B9D-A2AD-A622F9A606DF": {
@@ -93,7 +92,6 @@
         "validation": {},
         "mandatory": false,
         "isList": false,
-
         "name": "No_Precision_Test"
       },
       "12D6E122-2CC7-4940-A202-E1D2C51898AD": {
@@ -120,7 +118,6 @@
         "isList": false,
         "name": "Rbn_AR_Disabled_Test_Dropdown"
       },
-
       "FDADA5C0-7948-4FFF-B5F9-A5609E03BB0A": {
         "type": "catalog",
         "searchselectValueMinLength": 4,
@@ -151,7 +148,6 @@
       },
       "40679F86-C11F-4D1E-8BC9-077A06327B02": {
         "type": "boolean",
-
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -159,7 +155,6 @@
       },
       "9F8C0470-61BF-4303-9FB9-A2C7EC63B9E6": {
         "type": "boolean",
-
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -183,7 +178,6 @@
       },
       "51789F86-C11F-4D1E-8BC9-077A06327B02": {
         "type": "boolean",
-
         "validation": {},
         "mandatory": true,
         "isList": false,
@@ -259,7 +253,6 @@
           },
           "21E56197-6C7B-48CA-83EF-A7F458B29B86": {
             "type": "boolean",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -342,7 +335,6 @@
       },
       "2822F93A-6D57-4B61-AC37-4EA52BB6FE04": {
         "type": "boolean",
-
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -423,7 +415,6 @@
       },
       "E8F51765-E4A5-422D-B598-CCE21C3E6DF5": {
         "type": "boolean",
-
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -490,7 +481,6 @@
       },
       "E5D5E793-82EE-45B5-88B6-4ADE9653B6D3": {
         "type": "string",
-
         "validation": {
           "regexValidation": {
             "regex": "^(-?[0-9]{1,3}(?:\\'[0-9]{1,3}){1,3}\\.[0-9]{1,2}?)|([0-9]{6,9}\\.?[0-9]{0,3}?)$",
@@ -510,7 +500,6 @@
       },
       "C1181519-071C-4935-8FD1-FA60D451C4DB": {
         "type": "string",
-
         "validation": {
           "regexValidation": {
             "regex": "^(-?[0-9]{1,3}(?:\\'[0-9]{1,3}){1,3}\\.[0-9]{1,2}?)|([0-9]{6,9}\\.?[0-9]{0,3}?)$",
@@ -579,7 +568,6 @@
         "properties": {
           "190837BC-C8FF-4B2C-80D1-E508435659E5": {
             "type": "catalog",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -587,7 +575,6 @@
           },
           "931AE6C4-6EBE-4284-8C1A-8AFEC38112D9": {
             "type": "catalog",
-
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -595,7 +582,6 @@
           },
           "F4EA571B-9C43-49F4-8CE2-7A2DA86203B1": {
             "type": "catalog",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -603,7 +589,6 @@
           },
           "00CC3D51-264D-40DA-BFD8-F3DEDBB67506": {
             "type": "catalog",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -611,7 +596,6 @@
           },
           "9C6691D1-8E1B-4EBE-ABDE-88EC6D0790F1": {
             "type": "catalog",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -636,7 +620,6 @@
           "A2C44FBD-15FE-46C3-A8CA-A33AC2324D37": {
             "dateOnly": true,
             "type": "datetime",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -644,7 +627,6 @@
           },
           "969481C2-1D88-456D-8313-7A24299B7D18": {
             "type": "boolean",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -684,7 +666,6 @@
       },
       "BF673305-0778-49BD-B433-18CFB1942B04": {
         "type": "boolean",
-
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -692,7 +673,6 @@
       },
       "5687833A-7C37-49D6-A24E-D55236430867": {
         "type": "boolean",
-
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -702,7 +682,6 @@
         "properties": {
           "D4FD38D6-70A0-4784-B0A4-F54E9CA5DEA8": {
             "type": "catalog",
-
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -745,7 +724,6 @@
           "14217892-3D97-4407-8AF8-A8BC48C8881B": {
             "dateOnly": true,
             "type": "datetime",
-
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -754,7 +732,6 @@
           "3A39DA32-37AC-4C2D-96B9-13378F470088": {
             "dateOnly": true,
             "type": "datetime",
-
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -762,7 +739,6 @@
           },
           "07268C30-597E-4C27-B190-952E4E9BA0BE": {
             "type": "boolean",
-
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -779,7 +755,6 @@
           },
           "55BE7E2E-532D-4BB8-9FCB-E5DF35EE4F65": {
             "type": "catalog",
-
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -787,7 +762,6 @@
           },
           "CECA8229-04DF-4892-A35A-F254C1EBB0E3": {
             "type": "catalog",
-
             "validation": {},
             "mandatory": true,
             "isList": false,
@@ -795,7 +769,6 @@
           },
           "372BA85C-D33C-4385-895A-F5C662A693B4": {
             "type": "boolean",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -803,7 +776,6 @@
           },
           "7912E515-4920-4364-93D4-8AEC0D686FC2": {
             "type": "boolean",
-
             "validation": {},
             "mandatory": false,
             "isList": false,
@@ -820,7 +792,6 @@
           },
           "32FB85B5-E5DE-4A94-85FD-144DD8D06862": {
             "type": "string",
-
             "validation": {
               "maxLength": 255,
               "minLength": 0
@@ -849,7 +820,6 @@
       "0FA0FF4F-7ECC-4091-8BBA-EF537BECCDD2": {
         "dateOnly": true,
         "type": "datetime",
-
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -857,7 +827,6 @@
       },
       "64D346FB-0B6F-444E-8D1C-72B17004CEA6": {
         "type": "boolean",
-
         "validation": {},
         "mandatory": false,
         "isList": false,
@@ -1010,7 +979,10 @@
         "type": "string",
         "numberOfLines": 5,
         "updateOnChange": false,
-        "validation": { "maxLength": 500, "minLength": 0 },
+        "validation": {
+          "maxLength": 500,
+          "minLength": 0
+        },
         "mandatory": false,
         "isList": false,
         "name": "CMS_Textarea_Test"
@@ -1346,7 +1318,7 @@
             "formGridOptions": {
               "numberOfColumns": "12",
               "value": {
-                "de-AT": "<h1>Hauptüberschrift (h1)</h1><h2>Unterüberschrift (h2)</h2><h3>Kleinere Überschrift (h3)</h3><p>Dies ist ein <strong>normaler Absatz</strong> mit <em>kursivem Text</em> und <u>unterstrichenem Text</u>. Auch <code>Inline-Code</code> ist möglich.</p><p>Ein Link zu <a href=\"https://www.example.com\" target=\"_blank\">example.com</a>.</p><hr><h3>Ungeordnete Liste (ul)</h3><ul><li>Eintrag A</li><li>Eintrag B</li><li>Eintrag C</li></ul><h3>Geordnete Liste (ol)</h3><ol><li>Erster Schritt</li><li>Zweiter Schritt</li><li>Dritter Schritt</li></ol><h3>Zitat / Blockquote</h3><blockquote>\"Das Leben ist zu kurz für schlechten Code.\" – Irgendjemand</blockquote><h3>Codeblock</h3><pre>function hello() {\n  console.log(\"Hallo Welt\");\n}</pre>",
+                "de-AT": "<h1>Haupt\u00fcberschrift (h1)</h1><h2>Unter\u00fcberschrift (h2)</h2><h3>Kleinere \u00dcberschrift (h3)</h3><p>Dies ist ein <strong>normaler Absatz</strong> mit <em>kursivem Text</em> und <u>unterstrichenem Text</u>. Auch <code>Inline-Code</code> ist m\u00f6glich.</p><p>Ein Link zu <a href=\"https://www.example.com\" target=\"_blank\">example.com</a>.</p><hr><h3>Ungeordnete Liste (ul)</h3><ul><li>Eintrag A</li><li>Eintrag B</li><li>Eintrag C</li></ul><h3>Geordnete Liste (ol)</h3><ol><li>Erster Schritt</li><li>Zweiter Schritt</li><li>Dritter Schritt</li></ol><h3>Zitat / Blockquote</h3><blockquote>\"Das Leben ist zu kurz f\u00fcr schlechten Code.\" \u2013 Irgendjemand</blockquote><h3>Codeblock</h3><pre>function hello() {\n  console.log(\"Hallo Welt\");\n}</pre>",
                 "en-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Help to apply for a site and company number</h4>\n\nFor further guidance, you can watch the <a target=\"_blank\" href=\"/en/standort-faq/apply-for-site-company-number\" class=\"aloha-link-text\" hreflang=\"\">Explanatory video on How can I apply for a site and a site number?</a>  or consult the <a target=\"_blank\" href=\"/en/help\" class=\"aloha-link-text\" hreflang=\"\">Help</a> on the Waste and resources Services.",
                 "fr-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Aide pour demander un site et un num\u00e9ro d'identification</h4>\n\nPour plus d'informations, vous pouvez regarder <a target=\"_blank\" href=\"/fr/standort-faq/demander-site-et-numero-identification\" class=\"aloha-link-text\" hreflang=\"\">la \tVid\u00e9o d'explication : Comment puis-je demander un site et un num\u00e9ro d'identification ?</a> ou consulter les <a target=\"_blank\" href=\"/fr/aides\" class=\"aloha-link-text\" hreflang=\"\">Aides</a> du groupe de service d\u00e9chets et mati\u00e8res premi\u00e8res.",
                 "it-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Supporto per richiedere un sito e numero d'esercizio</h4>\n\nPer ulteriori indicazioni, \u00e8 possibile visualizzare il <a target=\"_blank\" href=\"/it/standort-faq/richiedere-sito-e-numero-d-esercizio\" class=\"aloha-link-text\" hreflang=\"\">video esplicativo su come posso richiedere un numero d\u2019esercizio?</a> o consultare il <a target=\"_blank\" href=\"/it/supporto\" class=\"aloha-link-text\" hreflang=\"\">supporto</a> del gruppo di servizi Rifiuti e materie prime."
@@ -1543,7 +1515,10 @@
               "de-AT": "Akzeptiere AGB",
               "en-AT": "Test question TSP",
               "it-AT": "Domanda FST",
-              "fr-AT": "Confirmation de fourniture de services de télécommunications"
+              "fr-AT": "Confirmation de fourniture de services de t\u00e9l\u00e9communications"
+            },
+            "formGridOptions": {
+              "storedValue": "X"
             },
             "description": {}
           },
@@ -1565,7 +1540,8 @@
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "storedValue": "X"
             },
             "uiSchemaPage": 0
           },
@@ -1587,7 +1563,8 @@
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "storedValue": "X"
             },
             "uiSchemaPage": 0
           },
@@ -1610,7 +1587,8 @@
                 }
               },
               "radio": true,
-              "fileExtensionsNotAllowed": []
+              "fileExtensionsNotAllowed": [],
+              "storedValue": "X"
             },
             "uiSchemaPage": 0
           },
@@ -1634,7 +1612,8 @@
               "radio": false,
               "fileExtensionsNotAllowed": [],
               "button": true,
-              "buttonIsPrimary": true
+              "buttonIsPrimary": true,
+              "storedValue": "X"
             },
             "uiSchemaPage": 0
           },
@@ -1661,7 +1640,8 @@
               "fileExtensionsNotAllowed": [],
               "radio": false,
               "dropdown": true,
-              "buttonIsPrimary": false
+              "buttonIsPrimary": false,
+              "storedValue": "X"
             },
             "uiSchemaPage": 0
           },
@@ -1770,7 +1750,8 @@
                       "textPre": {},
                       "textPost": {}
                     }
-                  }
+                  },
+                  "storedValue": "X"
                 },
                 "uiSchemaPage": 0
               }
@@ -2069,7 +2050,8 @@
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "storedValue": "X"
             },
             "uiSchemaPage": 0
           },
@@ -2372,7 +2354,8 @@
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "storedValue": "X"
             },
             "uiSchemaPage": 0
           },
@@ -2604,7 +2587,6 @@
             "uiSchemaPage": 0,
             "id": "E08A0C0E-5146-4034-B680-7F2296B2E634"
           },
-
           {
             "label": {
               "de-AT": "File Upload"
@@ -3055,7 +3037,8 @@
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "storedValue": "X"
             },
             "uiSchemaPage": 0
           },
@@ -3084,7 +3067,9 @@
           {
             "type": "property",
             "id": "CMS-TEXTAREA-TEST-0001",
-            "label": { "de-AT": "InputElement Textarea Test" },
+            "label": {
+              "de-AT": "InputElement Textarea Test"
+            },
             "description": {},
             "formGridOptions": {
               "numberOfColumns": 12,
@@ -3095,25 +3080,37 @@
           {
             "type": "property",
             "id": "CMS-CONTAINER-TEST-0001",
-            "label": { "de-AT": "CmsContainerElement Test" },
+            "label": {
+              "de-AT": "CmsContainerElement Test"
+            },
             "description": {},
-            "formGridOptions": { "numberOfColumns": 12 },
+            "formGridOptions": {
+              "numberOfColumns": 12
+            },
             "uiSchemaPage": 0,
             "elements": [
               {
                 "type": "property",
                 "id": "CMS-CONTAINER-CHILD-STR-001",
-                "label": { "de-AT": "Kind: String im Container" },
+                "label": {
+                  "de-AT": "Kind: String im Container"
+                },
                 "description": {},
-                "formGridOptions": { "numberOfColumns": 6 },
+                "formGridOptions": {
+                  "numberOfColumns": 6
+                },
                 "uiSchemaPage": 0
               },
               {
                 "type": "property",
                 "id": "CMS-CONTAINER-CHILD-NUM-001",
-                "label": { "de-AT": "Kind: Zahl im Container" },
+                "label": {
+                  "de-AT": "Kind: Zahl im Container"
+                },
                 "description": {},
-                "formGridOptions": { "numberOfColumns": 6 },
+                "formGridOptions": {
+                  "numberOfColumns": 6
+                },
                 "uiSchemaPage": 0
               }
             ]
@@ -3121,7 +3118,9 @@
           {
             "type": "property",
             "id": "CMS-RECAPTCHA-CHECKBOX-001",
-            "label": { "de-AT": "reCAPTCHA (Checkbox)" },
+            "label": {
+              "de-AT": "reCAPTCHA (Checkbox)"
+            },
             "description": {},
             "formGridOptions": {
               "numberOfColumns": 6,
@@ -3818,7 +3817,8 @@
                       "textPre": {},
                       "textPost": {}
                     }
-                  }
+                  },
+                  "storedValue": "X"
                 },
                 "uiSchemaPage": 0
               }
@@ -3913,7 +3913,8 @@
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "storedValue": "X"
             },
             "uiSchemaPage": 1
           },
@@ -4051,7 +4052,8 @@
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "storedValue": "X"
             },
             "uiSchemaPage": 1
           },
@@ -4307,7 +4309,8 @@
                       "textPre": {},
                       "textPost": {}
                     }
-                  }
+                  },
+                  "storedValue": "X"
                 },
                 "uiSchemaPage": 0
               },
@@ -4402,7 +4405,8 @@
                       "textPre": {},
                       "textPost": {}
                     }
-                  }
+                  },
+                  "storedValue": "X"
                 },
                 "uiSchemaPage": 0
               },
@@ -4425,7 +4429,8 @@
                       "textPre": {},
                       "textPost": {}
                     }
-                  }
+                  },
+                  "storedValue": "X"
                 },
                 "uiSchemaPage": 0
               },
@@ -4630,7 +4635,8 @@
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "storedValue": "X"
             },
             "uiSchemaPage": 1
           },
@@ -5247,43 +5253,43 @@
         "id": "a61e7c7a-853d-4376-8741-25f0f43a39d5",
         "visible": true,
         "editable": true,
-        "name": "Prüffrage FDA",
-        "value": false
+        "name": "Pr\u00fcffrage FDA",
+        "value": "X"
       },
       "40679F86-C11F-4D1E-8BC9-077A06327B02": {
         "id": "a048c639-0688-4eae-8a80-e54a24349c85",
         "visible": true,
         "editable": true,
         "name": "Checkbox 1",
-        "value": false
+        "value": null
       },
       "9F8C0470-61BF-4303-9FB9-A2C7EC63B9E6": {
         "id": "58eca3f3-526b-43fd-8582-0898b3f0bca8",
         "visible": true,
         "editable": false,
         "name": "Checkbox 2",
-        "value": true
+        "value": "X"
       },
       "89D6E122-2CC7-4940-A202-F1D2C51898AD": {
         "id": "41b10eb5-3c8f-4d43-a399-f45ea4ee7a24",
         "visible": true,
         "editable": true,
         "name": "Radio Button",
-        "value": false
+        "value": null
       },
       "78B7F122-2CC7-4940-A202-F1D2C51898AD": {
         "id": "41b10eb5-3c8f-4d43-a399-f45ea4ee7a24",
         "visible": true,
         "editable": true,
         "name": "Button in Prim\u00e4rfarbe",
-        "value": false
+        "value": null
       },
       "51789F86-C11F-4D1E-8BC9-077A06327B02": {
         "id": "02940996-7629-4530-96b4-578db9623a0b",
         "visible": true,
         "editable": true,
         "name": "Alle vorbef\u00fcllten Felder leeren",
-        "value": true,
+        "value": "X",
         "properties": {},
         "oldValue": "false",
         "ANFieldLoadError": true
@@ -5345,7 +5351,7 @@
                 "visible": true,
                 "editable": true,
                 "name": "Diese Person als Ansprechperson f\u00fcr Standort \u00fcbernehmen",
-                "value": false
+                "value": null
               }
             }
           },
@@ -5375,7 +5381,7 @@
                 "visible": true,
                 "editable": true,
                 "name": "Diese Person als Ansprechperson f\u00fcr Standort \u00fcbernehmen",
-                "value": false
+                "value": null
               }
             }
           },
@@ -5405,7 +5411,7 @@
                 "visible": true,
                 "editable": true,
                 "name": "Diese Person als Ansprechperson f\u00fcr Standort \u00fcbernehmen",
-                "value": false
+                "value": null
               }
             }
           },
@@ -5435,7 +5441,7 @@
                 "visible": true,
                 "editable": true,
                 "name": "Diese Person als Ansprechperson f\u00fcr Standort \u00fcbernehmen",
-                "value": false
+                "value": null
               }
             }
           }
@@ -5578,7 +5584,7 @@
         "visible": true,
         "editable": true,
         "name": "Adressvalidierung deaktivieren",
-        "value": true
+        "value": "X"
       },
       "8EFCEC2B-9F32-4492-8F15-A981B457969A": {
         "id": "d2468e2d-9fab-4c2d-8efb-ab911c6202da",
@@ -5619,7 +5625,7 @@
         "visible": true,
         "editable": true,
         "name": "Checkbox mit Tooltip",
-        "value": false
+        "value": null
       },
       "G46F9670-8B2A-4731-8A01-9592C0DB6A12": {
         "id": "677f8518-59df-434e-805f-65e4a02cb39c",
@@ -5633,7 +5639,7 @@
           },
           {
             "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
-            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+            "displayName": "Gesellschaft mit beschr\u00e4nkter Haftung (GmbH)"
           },
           {
             "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
@@ -5657,7 +5663,7 @@
           },
           {
             "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
-            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+            "displayName": "Gesellschaft mit beschr\u00e4nkter Haftung (GmbH)"
           },
           {
             "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
@@ -5681,7 +5687,7 @@
           },
           {
             "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
-            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+            "displayName": "Gesellschaft mit beschr\u00e4nkter Haftung (GmbH)"
           },
           {
             "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
@@ -5705,7 +5711,7 @@
           },
           {
             "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
-            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+            "displayName": "Gesellschaft mit beschr\u00e4nkter Haftung (GmbH)"
           },
           {
             "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
@@ -6088,7 +6094,12 @@
               "labelTranslationKey": "form_submit"
             }
           ],
-          "variables": [{ "name": "showDetails", "value": true }]
+          "variables": [
+            {
+              "name": "showDetails",
+              "value": true
+            }
+          ]
         },
         {
           "buttonLabelTranslationKey": "form_flow_btn_success",

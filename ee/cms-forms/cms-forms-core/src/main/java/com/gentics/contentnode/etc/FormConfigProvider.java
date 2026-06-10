@@ -1,6 +1,7 @@
 package com.gentics.contentnode.etc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +26,7 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.render.FormDirective;
 import com.gentics.contentnode.rest.model.formtype.BlockConfig;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
@@ -47,6 +50,16 @@ public final class FormConfigProvider implements ConfigurationService {
 	 * Configuration path to the type configurations
 	 */
 	public static final String TRANSLATIONS_CONFIG_PATH = "forms.formGenTranslations";
+
+	/**
+	 * Configuration name of the velocity configuration
+	 */
+	public static final String VTL_CONFIG_NAME = "velocity";
+
+	/**
+	 * Configuration name of the velocity userdirective configuration
+	 */
+	public static final String VT_USERDIRECTIVE_CONFIG_NAME = "userdirective";
 
 	/**
 	 * Key ("formtype") of the stored global translations
@@ -250,6 +263,8 @@ public final class FormConfigProvider implements ConfigurationService {
 
 	@Override
 	public List<Message> init(NodePreferences preferences) {
+		ensureFormDirective(preferences);
+
 		List<Message> messages = new ArrayList<>();
 		try {
 			configurationMap = mapper.convertValue(
@@ -388,5 +403,23 @@ public final class FormConfigProvider implements ConfigurationService {
 			logger.error("Error while checking formtype consistency", e);
 		}
 		return messages;
+	}
+
+	/**
+	 * Make sure that the FormDirective is configured for velocity
+	 * @param preferences preferences
+	 */
+	protected void ensureFormDirective(NodePreferences preferences) {
+		Optional.ofNullable(preferences.getPropertyMap(VTL_CONFIG_NAME)).ifPresent(vtlConfig -> {
+			String vtlUserDirective = vtlConfig.getOrDefault(VT_USERDIRECTIVE_CONFIG_NAME, "").toString();
+
+			List<String> directives = new ArrayList<>(Arrays.asList(StringUtils.split(vtlUserDirective, ',')));
+			String formDirectiveName = FormDirective.class.getName();
+			if (!directives.contains(formDirectiveName)) {
+				directives.add(formDirectiveName);
+				vtlUserDirective = directives.stream().collect(Collectors.joining(","));
+				vtlConfig.put(VT_USERDIRECTIVE_CONFIG_NAME, vtlUserDirective);
+			}
+		});
 	}
 }

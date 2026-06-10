@@ -21,7 +21,7 @@
     "zustand": "^5.0.13"
   },
   "peerDependencies": {
-    "@react-native-community/datetimepicker": ">=8 <9",
+    "@react-native-community/datetimepicker": ">=8 <10",
     "@shopify/flash-list": ">=2 <3",
     "expo": ">=54 <57",
     "expo-clipboard": ">=8 <9",
@@ -31,13 +31,13 @@
     "react": ">=19 <20",
     "react-dom": ">=19 <20",
     "react-i18next": ">=13 <16",
-    "react-native": ">=0.81 <0.86",
+    "react-native": ">=0.81 <0.87",
     "react-native-get-random-values": ">=1.11 <3",
     "react-native-reanimated": ">=4 <5",
     "react-native-safe-area-context": ">=5 <6",
-    "react-native-svg": ">=15 <16",
+    "react-native-svg": ">=15 <17",
     "react-native-webview": ">=13 <14",
-    "react-native-worklets": ">=0.5 <0.9"
+    "react-native-worklets": ">=0.5 <2"
   },
   "devDependencies": {
     "@types/memoizee": "^0.4.11",

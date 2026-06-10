@@ -31,27 +31,29 @@
   "devDependencies": {
     "@babel/core": "^7.28.4",
     "@babel/plugin-transform-class-static-block": "^7.28.3",
-    "@expo/metro-runtime": "^6.1.1",
+    "@types/lodash": "^4.17.24",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
+    "babel-plugin-transform-import-meta": "^2.3.3",
+    "copyfiles": "2.4.1",
     "cross-env": "^10.0.0",
     "patch-package": "^8.0.0",
     "prettier": "^3.6.2",
+    "react-native-web": "^0.21.0",
     "sass": "^1.92.1",
-    "typescript": "^5.9.2",
-    "@types/lodash": "^4.17.24"
+    "semver": "7.6.3",
+    "typescript": "^5.9.2"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
-  "dependencies": {
-    "babel-plugin-transform-import-meta": "^2.3.3",
-    "copyfiles": "2.4.1",
-    "react-native-web": "^0.21.0",
-    "semver": "7.6.3"
-  },
   "overrides": {
-    "uuid": ">= 11.1.1"
+    "uuid": "^11.1.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-reanimated": "4.4.1",
+    "react-native-gesture-handler": "2.31.1"
   }
 }

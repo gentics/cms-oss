@@ -273,6 +273,9 @@ export abstract class BaseFormPropertiesComponent<T> extends BaseFormElementComp
         if (!this.initialized && this.valueIsSet() && this.form) {
             this.initialized = true;
             this.initializeWithData();
+            this.form.markAsPristine();
+            this.form.markAsUntouched();
+            this.initialValueChange.emit(true);
         }
 
         if (this.form) {

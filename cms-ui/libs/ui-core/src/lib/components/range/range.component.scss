@@ -4,15 +4,219 @@
     display: block;
     position: relative;
 
-    > label {
-        position: absolute;
+    .range-content {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    label {
         display: block;
+        font-size: 0.85em;
+        max-width: 100%;
         color: $gtx-color-dark-gray;
         transition: color 0.2s;
     }
 
-    > .range-field {
-        margin-top: 20px;
+    .range-field {
+        width: 100%;
+        height: min-content;
+        position: relative;
+
+        &.with-bounds {
+            padding-bottom: 1rem;
+        }
+    }
+
+    .indicator-container {
+        position: absolute;
+        top: 0.7rem;
+        left: 0;
+        width: 100%;
+        height: 17px;
+        padding: 0 6px 0 6px;
+
+        .indicator-stripes {
+            display: block;
+            width: calc(100% + 1px);
+            height: 100%;
+            background-image: linear-gradient(
+                to right,
+                $gtx-color-light-gray 1px,
+                transparent 1px
+            );
+            background-repeat: repeat;
+            /* Firefox doesn't support the type */
+            background-size: calc(100% / var(--gtx-step-count));
+            border-right: 1px $gtx-color-light-gray solid;
+        }
+
+        .thumb {
+            position: absolute;
+            height: 30px;
+            width: 30px;
+            top: -30px;
+            margin-left: -15px;
+            border: none;
+            border-radius: 50%;
+            background-color: $gtx-color-primary;
+
+            transform: scale(0, 0) rotate(-45deg);
+            transform-origin: 50% 50%;
+
+            transition: transform 200ms cubic-bezier(1, 0, 0, 1);
+            will-change: transform, left;
+
+            .value {
+                display: block;
+                width: 30px;
+                text-align: center;
+                color: $gtx-color-primary;
+                font-size: 0;
+                transform: rotate(45deg);
+            }
+
+            &.active {
+                border-radius: 50% 50% 50% 0;
+                transform: scale(1, 1) rotate(-45deg);
+
+                .value {
+                    color: $input-background;
+                    margin-left: -1px;
+                    margin-top: 8px;
+                    font-size: 10px;
+                }
+            }
+        }
+    }
+
+    .bounds-container {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: baseline;
+        justify-content: space-between;
+
+        user-select: none;
+
+        color: $gtx-color-mid-gray;
+        font-size: 0.8rem;
+    }
+
+    .input-container {
+        padding: 0.35rem 0;
+
+        input[type='range'] {
+            margin: 0;
+        }
+    }
+
+    // WebKit
+    input[type='range'] {
+        -webkit-appearance: none;
+    }
+
+    input[type='range']::-webkit-slider-runnable-track {
+        height: 3px;
+        background: #c2c0c2;
+        border: none;
+    }
+
+    input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        border: none;
+        height: 13px;
+        width: 13px;
+        border-radius: 50%;
+        background-color: $gtx-color-primary;
+        transform-origin: 50% 50%;
+        margin: -5px 0 0 0;
+        transition: 0.3s;
+    }
+
+    input[type='range']:focus::-webkit-slider-runnable-track {
+        background: #ccc;
+    }
+
+    // FireFox
+    input[type='range'] {
+        /* fix for FF unable to apply focus style bug  */
+        border: 1px solid transparent;
+        height: 3px;
+        box-sizing: content-box;
+
+        /*required for proper track sizing in FF*/
+    }
+
+    input[type='range']::-moz-range-track {
+        height: 3px;
+        background: #ddd;
+        border: none;
+    }
+
+    input[type='range']::-moz-range-thumb {
+        border: none;
+        height: 13px;
+        width: 13px;
+        border-radius: 50%;
+        background: $gtx-color-primary;
+        margin-top: -5px;
+    }
+
+    // hide the outline behind the border
+    input[type='range']:-moz-focusring {
+        outline: 1px solid #fff;
+        outline-offset: -1px;
+    }
+
+    input[type='range']:focus::-moz-range-track {
+        background: #ccc;
+    }
+
+    // IE 10+
+    input[type='range']::-ms-track {
+        height: 3px;
+
+        // remove bg colour from the track, we'll use ms-fill-lower and ms-fill-upper instead
+        background: transparent;
+
+        // leave room for the larger thumb to overflow with a transparent border */
+        border-color: transparent;
+        border-width: 6px 0;
+
+        /*remove default tick marks*/
+        color: transparent;
+    }
+
+    input[type='range']::-ms-fill-lower {
+        background: #777;
+    }
+
+    input[type='range']::-ms-fill-upper {
+        background: #ddd;
+    }
+
+    input[type='range']::-ms-thumb {
+        border: none;
+        height: 13px;
+        width: 13px;
+        border-radius: 50%;
+        background: $gtx-color-primary;
+    }
+
+    input[type='range']:focus::-ms-fill-lower {
+        background: #888;
+    }
+
+    input[type='range']:focus::-ms-fill-upper {
+        background: #ccc;
     }
 
     // remove the value label in IE11
@@ -50,24 +254,6 @@
 
         label {
             color: $gtx-color-alert;
-        }
-    }
-
-    input[type=range] + .thumb {
-        transition: transform 200ms cubic-bezier(1, 0, 0, 1);
-        will-change: transform, left;
-        height: 30px;
-        width: 30px;
-        top: -23px;
-        margin-left: -15px;
-        transform: scale(0, 0) rotate(-45deg);
-
-        &.active {
-            transform: scale(1, 1) rotate(-45deg);
-        }
-
-        &.hidden {
-            display: none;
         }
     }
 }

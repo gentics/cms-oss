@@ -100,6 +100,7 @@ export class PropertiesEditorComponent
 
         if (changes.itemClean && !changes.itemClean.firstChange && this.itemClean && this.control) {
             this.control.markAsPristine();
+            this.control.markAsUntouched();
         }
     }
 
@@ -110,6 +111,10 @@ export class PropertiesEditorComponent
     }
 
     forwardItemCleanChange(value: boolean): void {
+        if (value && this.control) {
+            this.control.markAsPristine();
+            this.control.markAsUntouched();
+        }
         this.itemCleanChange.emit(value);
     }
 }

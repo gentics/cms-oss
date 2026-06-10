@@ -1,34 +1,58 @@
-<label [attr.for]="id">{{ label }}</label>
+<div class="range-content">
+    @if (label) {
+        <label [attr.for]="id">{{ label }}</label>
+    }
 
-<div class="range-field">
-    <input
-        #input
+    <div #rangeField class="range-field" [class.with-bounds]="showBounds">
+        @if (showBounds) {
+            <div class="bounds-container">
+                @if (min != null) {
+                    <span class="bounds-display min">{{ min }}</span>
+                }
+                @if (max != null) {
+                    <span class="bounds-display max">{{ max }}</span>
+                }
+            </div>
+        }
 
-        type="range"
-        [disabled]="disabled"
-        [attr.max]="max"
-        [attr.min]="min"
-        [attr.name]="name"
-        [required]="required"
-        [attr.step]="step"
+        <div class="indicator-container">
+            @if (showIndicators) {
+                <div
+                    class="indicator-stripes"
+                    [style.--gtx-step-count]="(max / (indicatorSteps ?? step) - (indicatorSteps ? 0 : 1))"
+                ></div>
+            }
 
-        [attr.id]="id"
+            @if (showThumb) {
+                <span
+                    class="thumb"
+                    [class.active]="active"
+                    [style.left]="thumbOffset"
+                >
+                    <span class="value">{{ value }}</span>
+                </span>
+            }
+        </div>
 
-        (blur)="onBlur($event)"
-        (change)="onChangeEvent($event)"
-        (focus)="onFocus($event)"
-        (input)="onInput($event)"
-        (mousedown)="onMousedown($event)"
-        (mouseup)="onMouseup()"
-        (mousemove)="onMousemove($event)"
-    />
+        <div class="input-container">
+            <input
+                type="range"
+                [attr.max]="max"
+                [attr.min]="min"
+                [attr.step]="step"
 
-    <span
-        class="thumb"
-        [class.hidden]="!thumbLabel"
-        [class.active]="active"
-        [style.left]="thumbLeft"
-    >
-        <span class="value">{{ currentValue }}</span>
-    </span>
+                [attr.name]="name"
+                [attr.id]="id"
+
+                [required]="required"
+                [disabled]="disabled"
+                [value]="value"
+
+                (input)="onInput($event)"
+                (mousedown)="onMousedown($event)"
+                (mouseup)="onMouseup()"
+                (mousemove)="onMousemove($event)"
+            />
+        </div>
+    </div>
 </div>

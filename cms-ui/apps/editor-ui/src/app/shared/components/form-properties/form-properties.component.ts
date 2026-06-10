@@ -199,7 +199,7 @@ export class FormPropertiesComponent
 
     protected configureForm(value: FormPropertiesData, loud?: boolean): void {
         // Should be enabled while it's still loading, and if the name isn't in the item (i.E. something has already been selected)
-        setControlsEnabled(this.form, ['formType'], this.configuration != null, { emitEvent: loud });
+        setControlsEnabled(this.form, ['formType'], this.mode !== FormPropertiesMode.EDIT || this.configuration == null, { emitEvent: loud });
 
         const selectedLangs = (value?.languages || []);
         this.formLanguages = (this.languages || []).filter((lang) => selectedLangs.includes(lang.code));

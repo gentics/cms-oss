@@ -1,6 +1,7 @@
-import { booleanAttribute, ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { ControlValueAccessor } from '@angular/forms';
+import { booleanAttribute, Component, ElementRef, Input, numberAttribute, ViewChild } from '@angular/core';
 import { generateFormProvider } from '../../utils';
+import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
+import { cancelEvent } from '@gentics/common';
 
 /**
  * The Range wraps the native `<input type="range">` form element.
@@ -16,156 +17,90 @@ import { generateFormProvider } from '../../utils';
     providers: [generateFormProvider(RangeComponent)],
     standalone: false,
 })
-export class RangeComponent implements ControlValueAccessor, OnInit {
+export class RangeComponent extends BaseFormElementComponent<number> {
 
     /**
      * Sets the input field to be auto-focused. Handled by `AutofocusDirective`.
      */
     @Input()
-    autofocus = false;
-
-    /**
-     * Sets the disabled state of the input.
-     */
-    @Input()
-    disabled = false;
-
-    /**
-     * Sets a label for the slider.
-     */
-    @Input()
-    label = '';
+    public autofocus = false;
 
     /**
      * Maximum allowed value.
      */
-    @Input()
-    max: number;
+    @Input({ transform: numberAttribute, required: true })
+    public max: number;
 
     /**
      * Minimum allowed value.
      */
-    @Input()
-    min: number;
-
-    /**
-     * Name of the input.
-     */
-    @Input()
-    name: string;
-
-    /**
-     * Sets the required state.
-     */
-    @Input()
-    required = false;
+    @Input({ transform: numberAttribute })
+    public min = 0;
 
     /**
      * Amount to increment by when sliding.
      */
-    @Input()
-    step: number;
-
-    /**
-     * Sets the value of the slider.
-     */
-    @Input()
-    value: number;
-
-    /**
-     * Sets an id for the slider.
-     */
-    @Input()
-    id: string;
+    @Input({ transform: numberAttribute })
+    public step = 1;
 
     /**
      * Set to false to not show the thumb label. Defaults to true.
      */
     @Input({ transform: booleanAttribute })
-    thumbLabel: boolean;
+    public showThumb: boolean;
 
     /**
-     * Blur event
+     * If it should display indicators for the steps
      */
-    @Output()
-    blur = new EventEmitter<number>();
+    @Input({ transform: booleanAttribute })
+    public showIndicators: boolean;
 
     /**
-     * Focus event
+     * Which steps to use when showing the indicators
      */
-    @Output()
-    focus = new EventEmitter<number>();
+    @Input({ transform: numberAttribute })
+    public indicatorSteps: number | null = null;
 
     /**
-     * Change event
+     * If it should show the min/max value at the beginning/end of the slider
      */
-    @Output()
-    change = new EventEmitter<number>();
+    @Input({ transform: booleanAttribute })
+    public showBounds: boolean;
 
-    @ViewChild('input', { static: true })
-    private inputElement: ElementRef;
+    /**
+     * Sets an id for the slider.
+     */
+    @Input()
+    public id: string;
 
-    active = false;
-    thumbLeft = '';
-    currentValue: number;
+    /**
+     * Name of the input.
+     */
+    @Input()
+    public name: string;
 
-    private showThumbLabel = true;
+    @ViewChild('rangeField', { static: true })
+    private rangeFieldRef: ElementRef<HTMLDivElement>;
 
-    private get canModify(): boolean {
-        return !this.disabled;
+    public active = false;
+    public thumbOffset = '';
+
+    protected onValueChange(): void {
+        // noop
     }
 
-    // ValueAccessor members
-    onChange = (value: any): void => { };
-    onTouched = (): void => { };
-
-    constructor(
-        private elementRef: ElementRef<HTMLElement>,
-        private changeDetector: ChangeDetectorRef,
-    ) { }
-
-    ngOnInit(): void {
-        this.writeValue(this.value);
-    }
-
-    onBlur(e: FocusEvent): void {
-        e.stopPropagation();
-        const value = this.getValueFromEvent(e);
-        this.blur.emit(value);
-        this.change.emit(value);
-    }
-
-    /**
-     * IE11 only fires the 'change' event rather than the 'input' event as the range input value is changed.
-     */
-    onChangeEvent(e: Event): void | boolean {
-        e.stopPropagation();
-        if (this.canModify) {
-            const value = this.currentValue = this.getValueFromEvent(e);
-            this.onChange(value);
-            this.change.emit(value);
+    onInput(e: InputEvent): void {
+        cancelEvent(e);
+        if (this.disabled) {
+            return;
         }
-    }
 
-    onFocus(e: FocusEvent): void {
-        e.stopPropagation();
-        this.focus.emit(this.value);
-    }
-
-    /**
-     * Browsers other than IE11 fire 'input' continuously as the range value is changed, and fires 'change' on mouseup.
-     */
-    onInput(e: Event): void {
-        e.stopPropagation();
-        if (this.canModify) {
-            const value = this.currentValue = this.getValueFromEvent(e);
-            this.onChange(value);
-            this.change.emit(value);
-        }
+        const newVal = Number((e.target as HTMLInputElement).value);
+        this.triggerChange(newVal);
     }
 
     onMousedown(e: MouseEvent): void {
-        if (this.canModify) {
+        if (!this.disabled) {
             this.active = true;
             this.setThumbPosition(e);
         }
@@ -173,46 +108,20 @@ export class RangeComponent implements ControlValueAccessor, OnInit {
 
     onMouseup(): void {
         this.active = false;
-
     }
 
     onMousemove(e: MouseEvent): void {
-        if (this.canModify) {
-            if (this.active) {
-                this.setThumbPosition(e);
-            }
+        if (this.disabled) {
+            return;
         }
-    }
-
-    writeValue(value: any): void {
-        if (value !== this.currentValue) {
-            this.currentValue = value;
-            this.inputElement.nativeElement.value = this.currentValue;
+        if (this.active) {
+            this.setThumbPosition(e);
         }
-    }
-
-    registerOnChange(fn: (newValue: number) => void): void {
-        this.onChange = (value: any) => fn(Number(value));
-    }
-
-    registerOnTouched(fn: () => void): void {
-        this.onTouched = fn;
-    }
-
-    setDisabledState(disabled: boolean): void {
-        this.disabled = disabled;
-        this.changeDetector.markForCheck();
-    }
-
-    private getValueFromEvent(e: Event): number {
-        const target: HTMLInputElement = <HTMLInputElement>e.target;
-        return Number(target.value);
     }
 
     private setThumbPosition(e: MouseEvent): void {
         const endMargin = 8;
-        const rangeWrapper: HTMLDivElement = this.elementRef.nativeElement.querySelector('.range-field');
-        const boundingRect = rangeWrapper.getBoundingClientRect();
+        const boundingRect = this.rangeFieldRef.nativeElement.getBoundingClientRect();
         const wrapperLeft = boundingRect.left;
         const wrapperWidth = boundingRect.width;
         let left = e.pageX - wrapperLeft;
@@ -221,6 +130,6 @@ export class RangeComponent implements ControlValueAccessor, OnInit {
         } else if (left > wrapperWidth - endMargin) {
             left = wrapperWidth - endMargin;
         }
-        this.thumbLeft = left + 'px';
+        this.thumbOffset = left + 'px';
     }
 }

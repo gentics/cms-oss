@@ -15,4 +15,7 @@ export class RangeDemoPage {
     rangeValDynamic = 35;
     rangeVal: any = 0;
     showThumb = true;
+    showBounds = false;
+    showIndicators = false;
+    indicatorSteps = 10;
 }

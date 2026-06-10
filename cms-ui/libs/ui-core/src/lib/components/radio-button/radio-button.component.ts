@@ -133,7 +133,7 @@ export class RadioButtonComponent
             this.group.add(this);
 
             if (this.checked) {
-                this.group.radioSelected(this);
+                this.group.radioSelected(this, true);
             }
         }
     }

@@ -713,6 +713,8 @@ public class FormTransformerTest implements ConfigModifier {
 		ObjectNode data = mapper.createObjectNode();
 		data.put("cms_id", form.getId());
 		data.put("type", form.getFormType());
+		data.put("name", form.getName());
+		data.put("submitOnce", FormConfigProvider.getConfig().get(form.getFormType()).submitOnce);
 		data.withObjectProperty("schema").withObjectProperty("properties");
 		ObjectNode formName = data.withObjectProperty("ui-schema").withObjectProperty("formname");
 		for (String language : form.getLanguages()) {

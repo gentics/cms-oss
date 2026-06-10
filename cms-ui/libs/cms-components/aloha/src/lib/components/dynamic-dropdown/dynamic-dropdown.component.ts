@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    HostBinding,
+    Input,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+} from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { DynamicDropdownConfiguration } from '@gentics/aloha-models';
 import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
@@ -18,7 +29,7 @@ type ErrorFn = (error?: any) => void;
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit {
+export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit, AfterViewInit, OnDestroy {
 
     public readonly RENDERING_CONTEXT_DROPDOWN = RENDERING_CONTEXT_DROPDOWN;
 
@@ -31,6 +42,15 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
     @ViewChild('content')
     public element: ElementRef<HTMLElement>;
 
+    @ViewChild('container')
+    public container: ElementRef<HTMLElement>;
+
+    @HostBinding('style.--content-width.px')
+    public contentWidth: number;
+
+    @HostBinding('style.--content-height.px')
+    public contentHeight: number;
+
     public controlNeedsConfirm = false;
     public showOverlay = false;
     public control: FormControl<T>;
@@ -38,6 +58,8 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
 
     protected closeFn: CloseFn<T> = () => {};
     protected errorFn: ErrorFn = () => {};
+
+    private observer: ResizeObserver;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -68,6 +90,27 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
                 this.closeIfValid(value);
             }
         }));
+    }
+
+    public ngAfterViewInit(): void {
+        this.observer = new ResizeObserver(() => {
+            this.updateContentSize();
+        });
+        this.observer.observe(this.container.nativeElement);
+        this.updateContentSize();
+    }
+
+    public ngOnDestroy(): void {
+        if (this.observer) {
+            this.observer.disconnect();
+        }
+    }
+
+    public updateContentSize(): void {
+        const rect = this.container.nativeElement.getBoundingClientRect();
+        this.contentWidth = rect.width;
+        this.contentHeight = rect.height;
+        this.changeDetector.markForCheck();
     }
 
     public updateNeedsConfirm(confirm: boolean): void {

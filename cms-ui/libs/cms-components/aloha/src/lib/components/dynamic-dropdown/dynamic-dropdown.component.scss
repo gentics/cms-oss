@@ -12,18 +12,28 @@
 
 :host {
     position: absolute;
-    left: var(--target-x);
-    top: calc(var(--target-y) + var(--target-height));
+    top: 0;
+    left: 0;
     z-index: 1000;
 }
 
 .gtx-context-menu {
     position: absolute;
+    left: min(var(--target-x), calc(100vw - var(--content-width)));
+    top: min(
+        calc(var(--target-y) + var(--target-height)),
+        max(
+            calc(100vh - var(--content-height)),
+            calc(var(--target-y) - var(--content-height))
+        )
+    );
+
     display: flex;
     flex-direction: column;
     overflow: hidden;
     z-index: 501;
     border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: 3px;
     @include gtxCommonButtonShadow;
 
     .context-menu-header {

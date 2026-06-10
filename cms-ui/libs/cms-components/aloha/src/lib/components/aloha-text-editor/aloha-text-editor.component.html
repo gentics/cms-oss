@@ -1,6 +1,6 @@
 <gtx-form-element-container
     [disabled]="disabled"
-    [active]="state === IFrameState.INITIALIZED && isFocused"
+    [active]="state === IFrameState.INITIALIZED && (isFocused || openOverlayCount > 0)"
     (mousedown)="clickedWithin()"
 >
     @if (label) {

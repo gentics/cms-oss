@@ -89,7 +89,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
 
     private focusAfterInit = false;
     private markWithin = false;
-    private openOverlayCount = 0;
+    public openOverlayCount = 0;
     private jsFiles: string[];
     private cssFiles: string[];
     private viewInitialized = false;
@@ -327,16 +327,40 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
                 },
 
                 openDynamicModal: (config) => {
-                    return wrapOverlayHandle(() => this.overlay.openDynamicModal(config)
-                        .then((ctl) => ctl.value));
+                    this.openOverlayCount++;
+                    return this.overlay.openDynamicModal(config).then((ctl) => {
+                        ctl.onClose.then(() => {
+                            this.openOverlayCount--;
+                            if (this.openOverlayCount === 0) {
+                                this.focusAloha();
+                            }
+                        });
+                        return ctl;
+                    });
                 },
                 openDynamicDropdown: (config, slot) => {
-                    return wrapOverlayHandle(() => this.overlay.openDynamicDropdown(config, slot)
-                        .then((ctl) => ctl.value));
+                    this.openOverlayCount++;
+                    return this.overlay.openDynamicDropdown(config, slot).then((ctl) => {
+                        ctl.onClose.then(() => {
+                            this.openOverlayCount--;
+                            if (this.openOverlayCount === 0) {
+                                this.focusAloha();
+                            }
+                        });
+                        return ctl;
+                    });
                 },
                 openDialog: (config) => {
-                    return wrapOverlayHandle(() => this.overlay.openDialog(config)
-                        .then((ctl) => ctl.value));
+                    this.openOverlayCount++;
+                    return this.overlay.openDialog(config).then((ctl) => {
+                        ctl.onClose.then(() => {
+                            this.openOverlayCount--;
+                            if (this.openOverlayCount === 0) {
+                                this.focusAloha();
+                            }
+                        });
+                        return ctl;
+                    });
                 },
                 focusEditorTab: (tabId) => {
                     this.aloha.changeActivePageEditorTab(tabId);

@@ -78,6 +78,6 @@ gtx-form-element-container::ng-deep .box-wrapper .box-content {
     }
 }
 
-gtx-form-element-container.active .toolbar:not(.disabled) {
+gtx-form-element-container::ng-deep .element-container.active .toolbar:not(.disabled) {
     display: flex;
 }

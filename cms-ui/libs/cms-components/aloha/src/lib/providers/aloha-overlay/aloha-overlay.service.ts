@@ -11,6 +11,10 @@ import { DynamicDropdownComponent } from '../../components/dynamic-dropdown/dyna
 import { DynamicFormModal } from '../../components/dynamic-form-modal/dynamic-form-modal.component';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 
+interface ExtendedOverlayElementControl<T> extends OverlayElementControl<T> {
+    onClose: Promise<void>;
+}
+
 @Injectable()
 export class AlohaOverlayService {
 
@@ -27,21 +31,25 @@ export class AlohaOverlayService {
         this.openOverlays = [];
     }
 
-    public async openDialog<T>(config: DynamicDialogConfiguration<T>): Promise<OverlayElementControl<T>> {
+    public async openDialog<T>(config: DynamicDialogConfiguration<T>): Promise<ExtendedOverlayElementControl<T>> {
         const dialog = await this.modals.dialog(config);
 
         let open = true;
+        const { promise: closePromise, resolve: closeResolve } = Promise.withResolvers<void>();
 
-        const ctl: OverlayElementControl<T> = {
+        const ctl: ExtendedOverlayElementControl<T> = {
             isOpen: () => open,
             close: () => {
                 dialog?.instance?.cancelFn(new ModalCloseError(ModalClosingReason.API));
                 open = false;
+                closeResolve();
             },
             value: dialog.open()
                 .finally(() => {
                     open = false;
+                    closeResolve();
                 }),
+            onClose: closePromise,
         };
 
         this.openOverlays.push(ctl);
@@ -49,11 +57,12 @@ export class AlohaOverlayService {
         return ctl;
     }
 
-    public async openDynamicDropdown<T>(configuration: DynamicDropdownConfiguration<T>, slot?: string): Promise<OverlayElementControl<T>> {
+    public async openDynamicDropdown<T>(configuration: DynamicDropdownConfiguration<T>, slot?: string): Promise<ExtendedOverlayElementControl<T>> {
         const host = await this.overlayHost.getHostView();
         let dropdownRef: ComponentRef<DynamicDropdownComponent<T>> = host.createComponent(DynamicDropdownComponent) as any;
         const instance = dropdownRef.instance;
         let open = true;
+        const { promise: closePromise, resolve: closeResolve } = Promise.withResolvers<void>();
 
         dropdownRef.onDestroy(() => {
             open = false;
@@ -74,9 +83,10 @@ export class AlohaOverlayService {
                 dropdownRef.destroy();
             }
             this.aloha.restoreSelection(true);
+            closeResolve();
         };
 
-        const ctl: OverlayElementControl<T> = {
+        const ctl: ExtendedOverlayElementControl<T> = {
             close: () => closeDropdown(),
             isOpen: () => open,
             value: new Promise((resolve, reject) => {
@@ -89,6 +99,7 @@ export class AlohaOverlayService {
                     reject(error);
                 });
             }),
+            onClose: closePromise,
         };
 
         this.openOverlays.push(ctl);
@@ -111,8 +122,9 @@ export class AlohaOverlayService {
         dropdownElement.style.setProperty('--target-y', `${rect.y}px`);
     }
 
-    public openDynamicModal<T>(configuration: DynamicFormModalConfiguration<T>): Promise<OverlayElementControl<T>> {
+    public openDynamicModal<T>(configuration: DynamicFormModalConfiguration<T>): Promise<ExtendedOverlayElementControl<T>> {
         let open = true;
+        const { promise: closePromise, resolve: closeResolve } = Promise.withResolvers<void>();
 
         return this.modals.fromComponent(DynamicFormModal, {
             closeOnEscape: configuration.closeOnEscape,
@@ -120,11 +132,12 @@ export class AlohaOverlayService {
             onClose: () => {
                 open = false;
                 this.aloha.restoreSelection(true);
+                closeResolve();
             },
         }, {
             configuration,
         } as any).then((ref) => {
-            const ctl: OverlayElementControl<T> = {
+            const ctl: ExtendedOverlayElementControl<T> = {
                 close: () => {
                     if (open && ref?.instance) {
                         ref.instance.cancelFn(null, ModalClosingReason.API);
@@ -132,6 +145,7 @@ export class AlohaOverlayService {
                 },
                 isOpen: () => open,
                 value: ref.open(),
+                onClose: closePromise,
             };
 
             this.openOverlays.push(ctl);

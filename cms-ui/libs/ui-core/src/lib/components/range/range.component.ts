@@ -1,7 +1,17 @@
-import { booleanAttribute, Component, ElementRef, Input, numberAttribute, ViewChild } from '@angular/core';
+import {
+    booleanAttribute,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    Input,
+    numberAttribute,
+    ViewChild,
+} from '@angular/core';
+import { cancelEvent } from '@gentics/common';
+import { UserAgentProvider } from '../../providers';
 import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
-import { cancelEvent } from '@gentics/common';
 
 /**
  * The Range wraps the native `<input type="range">` form element.
@@ -15,6 +25,7 @@ import { cancelEvent } from '@gentics/common';
     templateUrl: './range.component.html',
     styleUrls: ['./range.component.scss'],
     providers: [generateFormProvider(RangeComponent)],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
 export class RangeComponent extends BaseFormElementComponent<number> {
@@ -47,7 +58,7 @@ export class RangeComponent extends BaseFormElementComponent<number> {
      * Set to false to not show the thumb label. Defaults to true.
      */
     @Input({ transform: booleanAttribute })
-    public showThumb: boolean;
+    public showThumb = true;
 
     /**
      * If it should display indicators for the steps
@@ -84,6 +95,13 @@ export class RangeComponent extends BaseFormElementComponent<number> {
 
     public active = false;
     public thumbOffset = '';
+
+    constructor(
+        changeDetector: ChangeDetectorRef,
+        public userAgent: UserAgentProvider,
+    ) {
+        super(changeDetector);
+    }
 
     protected onValueChange(): void {
         // noop

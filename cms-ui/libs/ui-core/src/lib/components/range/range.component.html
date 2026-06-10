@@ -1,9 +1,14 @@
-<div class="range-content">
+<div class="range-content" [class.gecko]="userAgent.isGecko">
     @if (label) {
         <label [attr.for]="id">{{ label }}</label>
     }
 
-    <div #rangeField class="range-field" [class.with-bounds]="showBounds">
+    <div
+        #rangeField
+        class="range-field"
+        [class.with-bounds]="showBounds"
+        [style.--gtx-thumb-offset.%]="(100 / (max - min)) * ((value ?? 0) - min)"
+    >
         @if (showBounds) {
             <div class="bounds-container">
                 @if (min != null) {
@@ -19,7 +24,7 @@
             @if (showIndicators) {
                 <div
                     class="indicator-stripes"
-                    [style.--gtx-step-count]="(max / (indicatorSteps ?? step) - (indicatorSteps ? 0 : 1))"
+                    [style.--gtx-step-count]="((max - min) / (indicatorSteps ?? step) - (indicatorSteps ? 0 : 1))"
                 ></div>
             }
 
@@ -27,7 +32,6 @@
                 <span
                     class="thumb"
                     [class.active]="active"
-                    [style.left]="thumbOffset"
                 >
                     <span class="value">{{ value }}</span>
                 </span>
@@ -40,6 +44,7 @@
                 [attr.max]="max"
                 [attr.min]="min"
                 [attr.step]="step"
+                [attr.data-value]="value ?? 0"
 
                 [attr.name]="name"
                 [attr.id]="id"

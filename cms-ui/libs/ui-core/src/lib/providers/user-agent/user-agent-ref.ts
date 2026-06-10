@@ -4,14 +4,19 @@ import { Injectable } from '@angular/core';
 export class UserAgentProvider {
     static windowRef: Window = window;
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+    /** @deprecated Support for IE11 has been removed */
     readonly isIE11: boolean;
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+
+    /** If the browser is MS Edge, which still has some quirks */
     readonly isEdge: boolean;
+
+    /** If the browser is Firefox/Gecko based */
+    readonly isGecko: boolean;
 
     constructor() {
         const window = UserAgentProvider.windowRef;
         this.isIE11 = !!((window as any).MSInputMethodContext && (window.document as any).documentMode);
-        this.isEdge = !!(window.navigator.userAgent.indexOf('Edge') > -1);
+        this.isEdge = window.navigator.userAgent.includes('Edge');
+        this.isGecko = window.navigator.userAgent.includes('Gecko/');
     }
 }

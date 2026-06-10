@@ -3,6 +3,9 @@
 :host {
     display: block;
     position: relative;
+    --gtx-track-color: #{$gtx-color-mid-gray};
+    --gtx-thumb-color: #{$gtx-color-primary};
+    --gtx-indicator-color: #{$gtx-color-light-gray};
 
     .range-content {
         display: flex;
@@ -10,6 +13,13 @@
         height: 100%;
         flex-direction: row;
         flex-wrap: wrap;
+
+        &.gecko {
+            .input-container input[type='range'] {
+                width: calc(100% + 14px);
+                margin-left: -7px;
+            }
+        }
     }
 
     label {
@@ -26,17 +36,16 @@
         position: relative;
 
         &.with-bounds {
-            padding-bottom: 1rem;
+            padding-bottom: 1.2rem;
         }
     }
 
     .indicator-container {
         position: absolute;
-        top: 0.7rem;
+        top: 0.6rem;
         left: 0;
         width: 100%;
         height: 17px;
-        padding: 0 6px 0 6px;
 
         .indicator-stripes {
             display: block;
@@ -55,23 +64,24 @@
 
         .thumb {
             position: absolute;
-            height: 30px;
-            width: 30px;
-            top: -30px;
-            margin-left: -15px;
+            height: 27px;
+            width: 27px;
+            top: -33px;
+            margin-left: -13px;
+            left: var(--gtx-thumb-offset);
             border: none;
             border-radius: 50%;
-            background-color: $gtx-color-primary;
+            background-color: var(--gtx-thumb-color);
 
             transform: scale(0, 0) rotate(-45deg);
             transform-origin: 50% 50%;
 
-            transition: transform 200ms cubic-bezier(1, 0, 0, 1);
+            transition: transform 200ms cubic-bezier(1, 0, 0, 1), left 50ms;
             will-change: transform, left;
 
             .value {
                 display: block;
-                width: 30px;
+                width: 27px;
                 text-align: center;
                 color: $gtx-color-primary;
                 font-size: 0;
@@ -85,7 +95,7 @@
                 .value {
                     color: $input-background;
                     margin-left: -1px;
-                    margin-top: 8px;
+                    margin-top: 6px;
                     font-size: 10px;
                 }
             }
@@ -108,10 +118,14 @@
 
         color: $gtx-color-mid-gray;
         font-size: 0.8rem;
+        line-height: 1;
     }
 
     .input-container {
         padding: 0.35rem 0;
+        height: 17px;
+        box-sizing: content-box;
+        position: relative;
 
         input[type='range'] {
             margin: 0;
@@ -125,8 +139,15 @@
 
     input[type='range']::-webkit-slider-runnable-track {
         height: 3px;
-        background: #c2c0c2;
+        background: var(--gtx-track-color);
         border: none;
+        outline: 1px solid transparent;
+        transition: 150ms;
+    }
+
+    input[type='range']:focus::-webkit-slider-runnable-track {
+        background: color-mix(in oklab, var(--gtx-track-color) 90%, white);
+        outline-color: color-mix(in oklab, var(--gtx-thumb-color) 50%, transparent);
     }
 
     input[type='range']::-webkit-slider-thumb {
@@ -135,30 +156,35 @@
         height: 13px;
         width: 13px;
         border-radius: 50%;
-        background-color: $gtx-color-primary;
+        background-color: var(--gtx-thumb-color);
         transform-origin: 50% 50%;
         margin: -5px 0 0 0;
-        transition: 0.3s;
-    }
-
-    input[type='range']:focus::-webkit-slider-runnable-track {
-        background: #ccc;
+        transition: all 0.3s, left 50ms;
+        position: absolute;
+        left: calc(clamp(0%, var(--gtx-thumb-offset), 100%) - 7px);
     }
 
     // FireFox
     input[type='range'] {
         /* fix for FF unable to apply focus style bug  */
         border: 1px solid transparent;
+        /*required for proper track sizing in FF*/
         height: 3px;
         box-sizing: content-box;
-
-        /*required for proper track sizing in FF*/
     }
 
     input[type='range']::-moz-range-track {
         height: 3px;
-        background: #ddd;
+        background: var(--gtx-track-color);
         border: none;
+        width: calc(100% - 14px);
+        outline: 1px solid transparent;
+        transition: 150ms;
+    }
+
+    input[type='range']:focus::-moz-range-track {
+        background: color-mix(in oklab, var(--gtx-track-color) 90%, white);
+        outline-color: color-mix(in oklab, var(--gtx-thumb-color) 50%, transparent);
     }
 
     input[type='range']::-moz-range-thumb {
@@ -166,61 +192,10 @@
         height: 13px;
         width: 13px;
         border-radius: 50%;
-        background: $gtx-color-primary;
-        margin-top: -5px;
+        background: var(--gtx-thumb-color);
     }
 
-    // hide the outline behind the border
     input[type='range']:-moz-focusring {
-        outline: 1px solid #fff;
-        outline-offset: -1px;
-    }
-
-    input[type='range']:focus::-moz-range-track {
-        background: #ccc;
-    }
-
-    // IE 10+
-    input[type='range']::-ms-track {
-        height: 3px;
-
-        // remove bg colour from the track, we'll use ms-fill-lower and ms-fill-upper instead
-        background: transparent;
-
-        // leave room for the larger thumb to overflow with a transparent border */
-        border-color: transparent;
-        border-width: 6px 0;
-
-        /*remove default tick marks*/
-        color: transparent;
-    }
-
-    input[type='range']::-ms-fill-lower {
-        background: #777;
-    }
-
-    input[type='range']::-ms-fill-upper {
-        background: #ddd;
-    }
-
-    input[type='range']::-ms-thumb {
-        border: none;
-        height: 13px;
-        width: 13px;
-        border-radius: 50%;
-        background: $gtx-color-primary;
-    }
-
-    input[type='range']:focus::-ms-fill-lower {
-        background: #888;
-    }
-
-    input[type='range']:focus::-ms-fill-upper {
-        background: #ccc;
-    }
-
-    // remove the value label in IE11
-    input[type=range]::-ms-tooltip {
         display: none;
     }
 
@@ -244,7 +219,10 @@
     }
 
     &[disabled] input::-webkit-slider-thumb {
-        background-color: gray;
+        background-color: $gtx-color-dark-gray;
+    }
+    &[disabled] input::-moz-range-thumb {
+        background-color: $gtx-color-dark-gray;
     }
 
     &.ng-touched.ng-invalid {

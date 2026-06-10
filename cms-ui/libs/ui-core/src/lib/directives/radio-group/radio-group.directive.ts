@@ -49,12 +49,19 @@ export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
         }
     }
 
-    radioSelected(selected?: RadioButtonComponent): void {
+    radioSelected(selected?: RadioButtonComponent, fromInit?: boolean): void {
         for (const radio of this.radioButtons) {
             if (radio !== selected) {
                 radio.writeValue(selected ? selected.value : null);
             }
         }
+
+        // If it's from the radio button initialization, then we don't emit a value,
+        // as nothing has actually changed yet.
+        if (fromInit) {
+            return;
+        }
+
         // setTimeout because this method is invoked from a child component (RadioButton), which is the wrong direction
         // for change propagation (which should normally always be parent -> child). If we synchronously now update the
         // ngModel value, we will cause "changed after checked" errors in dev mode.

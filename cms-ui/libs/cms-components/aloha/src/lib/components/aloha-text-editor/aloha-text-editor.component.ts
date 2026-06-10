@@ -15,7 +15,7 @@ import { GCMS_UI_SERVICES_PROVIDER, I18nService } from '@gentics/cms-components'
 import { CNWindow, GcmsUiBridge, GcmsUiServices, ModalCloseError } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { cancelEvent } from '@gentics/common';
-import { BaseFormElementComponent } from '@gentics/ui-core';
+import { BaseFormElementComponent, UserAgentProvider } from '@gentics/ui-core';
 import { Store } from '@ngxs/store';
 import { isEqual, mergeWith } from 'lodash-es';
 import { distinctUntilChanged, filter } from 'rxjs';
@@ -104,6 +104,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         private client: GCMSRestClientService,
         private aloha: AlohaIntegrationService,
         private overlay: AlohaOverlayService,
+        private userAgent: UserAgentProvider,
         @Inject(GCMS_UI_SERVICES_PROVIDER)
         private uiService: GcmsUiServices,
     ) {
@@ -222,7 +223,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
          * Rendering of it is in gecko defered until it's element is in the DOM-Structure visible, which it is
          * on certain cases not when one of it's parents (or itself) has `display: none` set.
          */
-        if (!navigator.userAgent.includes('Gecko/')) {
+        if (!this.userAgent.isGecko) {
             this.initializeIframe();
             return;
         }

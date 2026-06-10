@@ -43,7 +43,7 @@
     [(focusedPanel)]="splitFocus"
     >
     <div class="list-pane" left>
-      @for (item of filteredContentItems; track item.type) {
+      @for (item of filteredContentItems; track item.title) {
         <gtx-contents-list-item>
           <div class="item-avatar">
             @switch (item.type) {

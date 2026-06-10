@@ -46,8 +46,8 @@ interface DisplayItem {
     visible: boolean;
 }
 
-const MIN_SPAN_CONTAINER = 6;
-const MIN_SPAN_ELEMENT = 3;
+const MIN_SPAN_CONTAINER = 1;
+const MIN_SPAN_ELEMENT = 1;
 
 @Component({
     selector: 'gtx-form-grid-elements-container',

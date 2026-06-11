@@ -340,6 +340,20 @@ public interface FormResource {
 	Response downloadDataBinaryField(@PathParam("id") String formId, @PathParam("dataId") String dataId, @PathParam("field") String field) throws Exception;
 
 	/**
+	 * Download a single binary data for a single multivalue field in a data entry
+	 * @param formId form ID
+	 * @param dataId data ID (uuid of the data node in Mesh)
+	 * @param field field name
+	 * @return response
+	 * @throws Exception
+	 */
+	@GET
+	@Path("{id}/data/{dataId}/binary/{field}/{index}")
+	@Produces({ "*/*" })
+	Response downloadDataMultivalueBinaryField(@PathParam("id") String formId, @PathParam("dataId") String dataId,
+			@PathParam("field") String field, @PathParam("index") int index) throws Exception;
+
+	/**
 	 * Export data from Mesh, which has been submitted to the form
 	 *
 	 * <p>

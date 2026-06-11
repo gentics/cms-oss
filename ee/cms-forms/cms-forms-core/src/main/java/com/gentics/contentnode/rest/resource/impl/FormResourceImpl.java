@@ -905,6 +905,30 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 	@Override
 	@GET
+	@Path("{id}/data/{dataId}/binary/{field}/{index}")
+	@Produces({ "*/*" })
+	public Response downloadDataMultivalueBinaryField(@PathParam("id") String formId, @PathParam("dataId") String dataId,
+			@PathParam("field") String field, @PathParam("index") int index) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = load(Form.class, formId);
+			checkReportingPermission(form);
+			ContentRepository cr = getMeshCrForPreview(form);
+
+			try (MeshPublisher mp = new MeshPublisher(cr)) {
+				String projectName = MeshPublisher.getMeshProjectName(form.getOwningNode());
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				return mp.get(uriBuilder -> {
+					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId, "binary", field, Integer.toString(index));
+				}, requestBuilder -> {
+					requestBuilder.addHeader("Accept", "application/zip");
+				});
+			}
+		}
+	}
+
+	@Override
+	@GET
 	@Path("{id}/export")
 	public Response exportData(@PathParam("id") String formId, @BeanParam FormDataExportParameterBean exportFormat, @BeanParam FilterFormDataParameterBean filter) throws NodeException {
 		return performPluginRequest(

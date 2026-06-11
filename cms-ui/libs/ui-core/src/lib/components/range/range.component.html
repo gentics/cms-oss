@@ -24,7 +24,7 @@
             @if (showIndicators) {
                 <div
                     class="indicator-stripes"
-                    [style.--gtx-step-count]="((max - min) / (indicatorSteps ?? step) - (indicatorSteps ? 0 : 1))"
+                    [style.--gtx-step-count]="((max - min) / (indicatorSteps ?? step))"
                 ></div>
             }
 

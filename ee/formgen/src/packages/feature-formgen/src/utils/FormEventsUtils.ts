@@ -474,15 +474,10 @@ export async function possibleBinaryUpload(
         onBinaryChangeFinished();
         rollbackOnError?.();
 
-        const responseData = res?.responseData;
-        if (res?.responseCode === 422 && responseData) {
-          handleFileUploadValidationError(responseData, formState, jsonpath);
-        } else {
-          // something went wrong (most probably backend file-check), we set a generic error message
-          const binaryElem = utils.getElementByJsonPath(formState.data, jsonpath);
-          if (binaryElem) {
-            binaryElem.validationMessage = i18n.t('form_binary_upload_failed');
-          }
+        // something went wrong, we set a generic error message
+        const binaryElem = utils.getElementByJsonPath(formState.data, jsonpath);
+        if (binaryElem) {
+          binaryElem.validationMessage = i18n.t("form_binary_upload_failed");
         }
         updateState(StatesToUpdateEnum.ALL);
       };
@@ -1222,24 +1217,6 @@ export const submitForm = async (
         updateState,
         { response: res },
       );
-      return;
-    }
-
-     if (res.responseCode === 422 && responseData) {
-      const validationMessage = handleFileUploadValidationError(responseData, formState);
-      const errorMsg: IErrorMessage = {
-          validationMessage,
-          pageNumber: uiState.currentPage,
-          elementInfo: { elementID: "random-dump" },
-        };
-      overlayUtils.setOverlay(
-        uiState,
-        formState,
-        OverlayTypeEnum.SUBMIT_USER_INPUT_FAILURE,
-        undefined,
-        { errorMsgs: [errorMsg], response: res },
-      );
-      updateState(StatesToUpdateEnum.ALL);
       return;
     }
 

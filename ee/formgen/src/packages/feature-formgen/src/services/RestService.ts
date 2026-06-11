@@ -26,7 +26,7 @@ export class RestService {
   initUrl: string;
   fullCulture: string | null; // something like de-AT, en-CH, etc.
   pluginName: PluginNameEnum;
-  languageParam: string | null;
+  languageParam: string | null | undefined;
   FORMS_DATA_COOKIE: string = "forms-data";
 
   constructor(meshPath: string, pluginName: PluginNameEnum, apiToken?: string, cultureParam?: string, languageParam?: string) {

@@ -551,7 +551,7 @@ export interface FormDataListResponse {
     pageCount: number;
     perPage: number;
     entries: FormDataListEntry[];
-    elements: FormDataListElement[];
+    elements: Record<string, FormDataListElement>;
 }
 
 /**

@@ -1,25 +1,60 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, OnDestroy, OnInit, SimpleChanges, input, signal } from '@angular/core';
 import { API_BASE_URL, I18nNotificationService, I18nService, downloadFromBlob } from '@gentics/cms-components';
 import {
     Form,
+    FormDataListElement,
     FormDataListEntry,
-    FormDataListResponse,
     FormDownloadInfo,
     FormElement,
-    FormSchemaProperties,
-    FormSchemaProperty,
     FormTypeConfiguration,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ModalService } from '@gentics/ui-core';
-import { PaginationInstance } from 'ngx-pagination';
-import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, interval, throwError } from 'rxjs';
-import { catchError, finalize, switchMap, takeWhile } from 'rxjs/operators';
+import { ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow } from '@gentics/ui-core';
+import { BehaviorSubject, Subscription, combineLatest, interval } from 'rxjs';
+import { switchMap, takeWhile } from 'rxjs/operators';
 import { dateToFileSystemString } from '../../../common/utils/date-to-string';
 import { ApplicationStateService } from '../../../state';
 import { SimpleDeleteModalComponent } from '../simple-delete-modal/simple-delete-modal.component';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 
 const STATUS_POLL_INTERVAL_MS = 2_000;
+
+enum ValueType {
+    STRING = 'string',
+    NUMBER = 'number',
+    BOOLEAN = 'boolean',
+    BINARY = 'binary',
+}
+
+interface StringValue {
+    type: ValueType.STRING;
+    value: string;
+}
+
+interface NumberValue {
+    type: ValueType.NUMBER;
+    value: number;
+}
+
+interface BooleanValue {
+    type: ValueType.BOOLEAN;
+    value: boolean;
+}
+
+interface BinaryValue {
+    type: ValueType.BINARY;
+    fileName: string;
+    link: string;
+}
+
+type FormValue = StringValue | NumberValue | BooleanValue | BinaryValue;
+
+interface DisplayItem {
+    uuid: string;
+    values: Record<string, FormValue | FormValue[]>;
+}
+
+const ACTION_DELETE = 'delete';
 
 @Component({
     selector: 'form-reports-list',
@@ -30,45 +65,34 @@ const STATUS_POLL_INTERVAL_MS = 2_000;
 })
 export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
-    @Input()
-    public form: Form;
+    public readonly ValueType = ValueType;
 
-    @Input()
-    public formConfig: FormTypeConfiguration;
+    public readonly form = input.required<Form>();
+    public readonly formConfig = input.required<FormTypeConfiguration>();
 
-    icon = 'list';
+    public readonly page = signal<number>(1);
+    public readonly pageSize = signal<number>(15);
+    public readonly totalCount = signal<number>(0);
 
-    public selected = new Set<string>();
-    public allSelected = false;
+    public readonly columns = signal<TableColumn<DisplayItem>[]>([]);
+    public readonly rows = signal<TableRow<DisplayItem>[]>([]);
+    public readonly actions = signal<TableAction<DisplayItem>[]>([]);
 
-    loading$ = new BehaviorSubject<boolean>(false);
+    public readonly selected = signal<Set<string>>(new Set());
 
-    loadingError$ = new BehaviorSubject<boolean>(false);
+    public binaryStatus: FormDownloadInfo;
+    public exportStatus: FormDownloadInfo;
 
-    currentPage$ = new BehaviorSubject<number>(1);
+    public readonly loadingStatus = signal<boolean>(false);
+    public readonly loadingReport = signal<boolean>(false);
+    public readonly loadingAction = signal<boolean>(false);
 
-    paginationConfig: PaginationInstance = {
-        itemsPerPage: 15,
-        currentPage: 1,
-    };
+    public tableError: string | null = null;
 
-    sid: number;
-
-    binaryStatus: FormDownloadInfo;
-    exportStatus: FormDownloadInfo;
-
-    errorMessage: string;
-
-    result: FormDataListResponse;
-
-    public elementKeys: string[] = [];
-    public resultElementMap: Record<string, string> = {};
-
-    public formElementMap = new Map<string, FormElement>();
-
-    private reload$ = new Subject<void>();
-
+    protected sid: number;
     protected subscriptions: Subscription[] = [];
+
+    private formElementMap = new Map<string, FormElement>();
 
     constructor(
         private client: GCMSRestClientService,
@@ -76,7 +100,8 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         private changeDetector: ChangeDetectorRef,
         private modalService: ModalService,
         private notification: I18nNotificationService,
-        private translation: I18nService,
+        private i18n: I18nService,
+        private errorHandler: ErrorHandler,
     ) { }
 
     public ngOnInit(): void {
@@ -84,35 +109,12 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             this.sid = sid;
         }));
 
-        this.subscriptions.push(combineLatest([
-            this.currentPage$.asObservable(),
-            this.reload$,
-        ]).pipe(
-            switchMap(([currentPage]) => this.getReports(currentPage)),
-        ).subscribe((res: FormDataListResponse) => {
-            this.result = res;
-            this.paginationConfig.totalItems = this.result.totalCount;
-
-            this.elementKeys = [];
-            this.resultElementMap = {};
-            Object.entries(this.result.elements).forEach(([key, prop]) => {
-                this.elementKeys.push(key);
-                this.resultElementMap[key] = prop.type;
-            });
-
-            for (let index = 0; index < this.result.entries.length; index++) {
-                this.selected[index] = null;
-            }
-
-            this.changeDetector.detectChanges();
-        }));
-
         const statusLoader$ = new BehaviorSubject<void>(null);
 
         this.subscriptions.push(statusLoader$.pipe(
             switchMap(() => combineLatest([
-                this.client.form.binariesStatus(this.form.id),
-                this.client.form.exportStatus(this.form.id),
+                this.client.form.binariesStatus(this.form().id),
+                this.client.form.exportStatus(this.form().id),
             ])),
         ).subscribe(([binaryStatus, exportStatus]) => {
             this.binaryStatus = binaryStatus;
@@ -123,12 +125,25 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         this.subscriptions.push(interval(30_000).subscribe(() => statusLoader$.next()));
         statusLoader$.next();
 
-        this.reload();
+        this.actions.set([
+            {
+                id: ACTION_DELETE,
+                enabled: true,
+                icon: 'delete',
+                label: this.i18n.instant('common.delete_button'),
+                multiple: true,
+                single: true,
+                type: 'alert',
+            },
+        ]);
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
         if (changes.form) {
             this.rebuildMaps();
+        }
+        if (changes.form || changes.formConfig) {
+            this.reload();
         }
     }
 
@@ -139,7 +154,11 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     public rebuildMaps(): void {
         this.formElementMap.clear();
 
-        (this.form.data['ui-schema']?.pages || []).forEach((page) => {
+        if (this.form() == null) {
+            return;
+        }
+
+        (this.form().data['ui-schema']?.pages || []).forEach((page) => {
             this.addElementsToMap(page.elements);
         });
     }
@@ -154,20 +173,152 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         }
     }
 
-    public isFile(entryValue: object): boolean {
-        return entryValue != null && entryValue.hasOwnProperty('fileName');
+    public handleActionClick(event: TableActionClickEvent<DisplayItem>): void {
+        if (event.actionId !== ACTION_DELETE) {
+            return;
+        }
+
+        if (event.selection) {
+            this.deleteMultipleReports();
+        } else {
+            this.deleteSingleReport(event.item.uuid);
+        }
     }
 
-    public getEntryValue(entryValue: any): string {
-        if (entryValue == null) {
-            return '';
+    public handlePageChange(page: number): void {
+        this.loadPage(page);
+    }
+
+    public handleSelectedChange(newSelection: string[]): void {
+        this.selected.set(new Set(newSelection));
+    }
+
+    protected loadPage(page: number): void {
+        if (this.loadingReport() || !this.form() || !this.formConfig()) {
+            return;
         }
 
-        if (entryValue.hasOwnProperty('fileName')) {
-            return entryValue.fileName;
+        this.loadingReport.set(true);
+        this.page.set(page);
+
+        this.subscriptions.push(this.client.form.listData(
+            this.form().id,
+            {
+                page: this.page(),
+                pageSize: this.pageSize(),
+            },
+        ).subscribe({
+            next: (res) => {
+                this.tableError = null;
+
+                // Make sure everything for paging is in sync
+                this.totalCount.set(res.totalCount);
+                this.page.set(res.currentPage);
+                this.pageSize.set(res.perPage);
+
+                // We only want to create the columns once on the first load.
+                if (this.columns().length === 0 && Object.keys(res.elements).length > 0) {
+                    this.createColumns(res.elements);
+                }
+
+                const items = res.entries.map((entry) => this.mapToDisplayItem(entry));
+                this.rows.set(items.map((item) => {
+                    return {
+                        id: item.uuid,
+                        item,
+                    };
+                }));
+                this.changeDetector.markForCheck();
+            },
+            error: (err) => {
+                if (err.statusCode === 403) {
+                    this.tableError = this.i18n.instant('editor.reports_loading_permission_error');
+                } else {
+                    this.tableError = this.i18n.instant('editor.reports_loading_status_error');
+                }
+                this.changeDetector.markForCheck();
+            },
+            complete: () => {
+                this.loadingReport.set(false);
+                this.changeDetector.markForCheck();
+            },
+        }));
+    }
+
+    protected createColumns(elements: Record<string, FormDataListElement>): void {
+        const cols: TableColumn<DisplayItem>[] = Object.entries(elements).map(([id, el]) => {
+            const formEl = this.formElementMap.get(id);
+            const controlConf = this.formConfig().controls[el.type];
+            const labelObj = formEl?.label ?? controlConf?.labelI18n;
+
+            if (!labelObj) {
+                console.warn(`Could not determine the label for column with ID "${id}"!`);
+            }
+
+            return {
+                id,
+                label: this.i18n.fromObject(labelObj ?? {}),
+                fieldPath: ['values', id],
+            };
+        });
+
+        this.columns.set(cols);
+    }
+
+    protected mapToDisplayItem(entry: FormDataListEntry): DisplayItem {
+        const values: Record<string, FormValue | FormValue[]> = {};
+
+        for (const [id, data] of Object.entries(entry.fields)) {
+            values[id] = this.mapToValue(entry.uuid, id, data);
         }
 
-        return entryValue;
+        return {
+            uuid: entry.uuid,
+            values,
+        };
+    }
+
+    protected mapToValue(entryUuid: string, id: string, data: any): FormValue | FormValue[];
+    protected mapToValue(entryUuid: string, id: string, data: any, index: number): FormValue;
+    protected mapToValue(entryUuid: string, id: string, data: any, index?: number): FormValue | FormValue[] {
+        if (data == null) {
+            return null;
+        }
+
+        const dataType = typeof data;
+        switch (dataType) {
+            case 'string':
+            case 'number':
+            case 'boolean':
+                return {
+                    type: dataType as any,
+                    value: data,
+                };
+            case 'object':
+                break;
+            default:
+                return null;
+        }
+
+        if (Array.isArray(data)) {
+            return data.map((value, idx) => this.mapToValue(entryUuid, id, value, idx));
+        }
+
+        if ('fileName' in data) {
+            let link = `${API_BASE_URL}/form/${this.form().id}/data/${entryUuid}/binary/${id}`;
+
+            if (index) {
+                link += `/${index}`;
+            }
+
+            return {
+                type: ValueType.BINARY,
+                fileName: data.fileName,
+                link: `${link}?sid=${this.sid}`,
+            };
+        }
+
+        return null;
     }
 
     public generateBinaryDownload(): void {
@@ -177,9 +328,9 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         });
 
         this.subscriptions.push(
-            this.client.form.createBinaries(this.form.id).pipe(
+            this.client.form.createBinaries(this.form().id).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
-                    switchMap(() => this.client.form.binariesStatus(this.form.id)),
+                    switchMap(() => this.client.form.binariesStatus(this.form().id)),
                     takeWhile((status) => status.requestPending, true),
                 )),
             ).subscribe((status) => {
@@ -209,9 +360,9 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             type: 'success',
         });
 
-        this.subscriptions.push(this.client.form.downloadData(this.form.id, this.binaryStatus.downloadUuid).subscribe((blob) => {
+        this.subscriptions.push(this.client.form.downloadData(this.form().id, this.binaryStatus.downloadUuid).subscribe((blob) => {
             const time = new Date(this.binaryStatus.downloadTimestamp);
-            downloadFromBlob(blob, `form_${this.form.id}_binaries_${dateToFileSystemString(time)}`);
+            downloadFromBlob(blob, `form_${this.form().id}_binaries_${dateToFileSystemString(time)}`);
         }));
     }
 
@@ -222,9 +373,9 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         });
 
         this.subscriptions.push(
-            this.client.form.createExport(this.form.id).pipe(
+            this.client.form.createExport(this.form().id).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
-                    switchMap(() => this.client.form.exportStatus(this.form.id)),
+                    switchMap(() => this.client.form.exportStatus(this.form().id)),
                     takeWhile((status) => status.requestPending, true),
                 )),
             ).subscribe((status) => {
@@ -255,100 +406,57 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             type: 'success',
         });
 
-        this.subscriptions.push(this.client.form.downloadData(this.form.id, this.exportStatus.downloadUuid).subscribe((blob) => {
+        this.subscriptions.push(this.client.form.downloadData(this.form().id, this.exportStatus.downloadUuid).subscribe((blob) => {
             const time = new Date(this.exportStatus.downloadTimestamp);
-            downloadFromBlob(blob, `form_${this.form.id}_export_${dateToFileSystemString(time)}`);
+            downloadFromBlob(blob, `form_${this.form().id}_export_${dateToFileSystemString(time)}`);
         }));
     }
 
-    public getFileHref(entryValue: any, entry: FormDataListEntry): string {
-        const fields = Object.entries(entry.fields).find(([key, value]) => {
-            if (!value) {
-                return false;
-            }
-            return Object.values(value).includes(entryValue.fileName);
-        });
-
-        if (fields?.length && fields.length > 0) {
-            const field = fields[0];
-            return `${API_BASE_URL}/form/${this.form.id}/data/${entry.uuid}/binary/${field}?sid=${this.sid}`;
-        }
-
-        console.error('Could not resolve file href');
-        return '';
-    }
-
-    getReports(pageIndex: number): Observable<FormDataListResponse> {
-        this.loading$.next(true);
-
-        return this.client.form.listData(
-            this.form.id,
-            {
-                page: pageIndex,
-                pageSize: this.paginationConfig.itemsPerPage,
-            },
-        ).pipe(
-            catchError((err) => {
-                if (err.statusCode === 403) {
-                    this.errorMessage = this.translation.instant('editor.reports_loading_permission_error');
-                } else {
-                    this.errorMessage = this.translation.instant('editor.reports_loading_status_error');
-                }
-                this.loadingError$.next(true);
-                this.paginationConfig.totalItems = 0;
-                return throwError(err);
-            }),
-            finalize(() => this.loading$.next(false)),
-        );
-    }
-
-    deleteSingleReport(entry: FormDataListEntry): void {
+    deleteSingleReport(uuid: string): void {
         this.modalService.fromComponent(SimpleDeleteModalComponent, null, {
-            items: [entry],
-            itemType: 'editor.form_reports_label',
+            items: [{ uuid: uuid }],
+            itemType: 'form_report',
             idProperty: 'uuid',
             iconString: 'list_alt',
         })
             .then((modal) => modal.open())
             .then(() => {
-                this.loading$.next(true);
-                return this.client.form.deleteData(this.form.id, entry.uuid).toPromise();
+                this.loadingAction.set(true);
+                return this.client.form.deleteData(this.form().id, uuid).toPromise();
             })
         // display toast notification
             .then(() => this.notification.show({
                 type: 'success',
                 message: 'message.report_successfully_removed_singular',
             }))
-            .catch((error) => this.notification.show({
-                type: 'alert',
-                message: error,
-            }))
+            .catch((error) => this.errorHandler.catch(error, { notification: true }))
         // clean up
             .finally(() => {
+                this.loadingAction.set(false);
                 this.reload();
-                this.loading$.next(false);
             });
     }
 
     deleteMultipleReports(): void {
-        const selected = Array.from(this.selected);
-        const selectedItems: FormDataListEntry[] = this.result.entries.filter((s) => this.selected.has(s.uuid));
+        if (this.selected().size === 0) {
+            return;
+        }
+
+        const selected = Array.from(this.selected());
+        const selectedItems = selected.map((uuid) => ({ uuid }));
 
         this.modalService.fromComponent(SimpleDeleteModalComponent, null, {
             items: selectedItems,
-            itemType: 'editor.form_reports_label',
+            itemType: 'form_report',
             idProperty: 'uuid',
             iconString: 'list_alt',
         })
             .then((modal) => modal.open())
             .then(() => {
-                this.loading$.next(true);
-                const requests = selected.map((id) => this.client.form.deleteData(this.form.id, id)
+                this.loadingAction.set(true);
+                const requests = selected.map((id) => this.client.form.deleteData(this.form().id, id)
                     .toPromise()
-                    .catch((error) => this.notification.show({
-                        type: 'alert',
-                        message: error,
-                    })),
+                    .catch((error) => this.errorHandler.catch(error, { notification: true })),
                 );
                 return Promise.all(requests);
             })
@@ -358,49 +466,16 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
                 message: 'message.report_successfully_removed_plural',
                 translationParams: { count: selected.length },
             }))
+            .catch((error) => this.errorHandler.catch(error, { notification: true }))
         // clean up
             .finally(() => {
+                this.loadingAction.set(false);
                 this.reload();
-                this.loading$.next(false);
-                this.allSelected = false;
+                this.selected.set(new Set());
             });
     }
 
-    isValidString(entry: any): boolean {
-        return typeof (entry) === 'string' && entry.length > 0;
-    }
-
-    hasErrors(): boolean {
-        return this.result.entries.some((e) => this.isValidString(e.fields.errors));
-    }
-
-    pageChanged(newPageNumber: number): void {
-        this.allSelected = false;
-        this.paginationConfig.currentPage = newPageNumber;
-        this.currentPage$.next(newPageNumber);
-    }
-
-    toggleAllSelect(): void {
-        this.allSelected = !this.allSelected;
-
-        if (this.allSelected) {
-            this.selected = new Set(Array.from(this.result.entries.map((entry) => entry.uuid)));
-        } else {
-            this.selected.clear();
-        }
-    }
-
-    changeSelection(uuid: string): void {
-        if (this.selected.has(uuid)) {
-            this.selected.delete(uuid);
-        } else {
-            this.selected.add(uuid);
-        }
-
-        this.allSelected = this.selected.size === this.result.entries.length;
-    }
-
     private reload(): void {
-        this.reload$.next();
+        this.loadPage(this.page());
     }
 }

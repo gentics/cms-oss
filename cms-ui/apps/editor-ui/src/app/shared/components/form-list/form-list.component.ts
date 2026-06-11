@@ -1,14 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, OnInit } from '@angular/core';
 import { Form } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { isEqual, pick } from 'lodash-es';
 import { distinctUntilChanged, map, Observable } from 'rxjs';
 import { ItemLoadData, ItemsInfo } from '../../../common/models';
-import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { ApplicationStateService } from '../../../state';
-import { FormListLoaderService } from '../../providers/form-list-loader/form-list-loader.service';
-import { BaseItemListComponent } from '../base-item-list/base-item-list.component';
+import { FormListLoaderService } from '../../../core/providers';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { BaseItemListComponent } from '../base-item-list/base-item-list.component';
 
 type ListUserSettings = Pick<ItemsInfo, 'itemsPerPage' | 'sortBy' | 'sortOrder'>;
 
@@ -21,18 +19,20 @@ type ListUserSettings = Pick<ItemsInfo, 'itemsPerPage' | 'sortBy' | 'sortOrder'>
 })
 export class FormListComponent extends BaseItemListComponent<Form> implements OnInit {
 
+    /* Injections
+     * ===================================================================== */
+
+    public readonly client = inject(GCMSRestClientService);
+    protected readonly loader = inject(FormListLoaderService);
+    protected readonly userSettings = inject(UserSettingsService);
+
+    /* Bindings
+     * ===================================================================== */
+
     public readonly external = input.required<boolean>();
 
-    constructor(
-        changeDetector: ChangeDetectorRef,
-        errorHandler: ErrorHandler,
-        appState: ApplicationStateService,
-        public client: GCMSRestClientService,
-        protected loader: FormListLoaderService,
-        protected userSettings: UserSettingsService,
-    ) {
-        super(changeDetector, errorHandler, appState);
-    }
+    /* Lifecycle Hooks
+     * ===================================================================== */
 
     public ngOnInit(): void {
         super.ngOnInit();
@@ -73,6 +73,9 @@ export class FormListComponent extends BaseItemListComponent<Form> implements On
             this.reload();
         }));
     }
+
+    /* Template bindings
+     * ===================================================================== */
 
     public loadItems(
         folderId: number,

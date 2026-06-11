@@ -7,15 +7,15 @@ import { FolderActionsService } from '../../../state';
 
 abstract class BaseListLoaderService<T, O extends ListLoadOptions = ListLoadOptions> implements ItemListLoaderService<T, O> {
 
-    protected reloadSub = new Subject<void>();
+    protected readonly reloadSub = new Subject<void>();
 
-    reload$ = this.reloadSub.asObservable();
+    public readonly reload$ = this.reloadSub.asObservable();
 
-    reload(): void {
+    public reload(): void {
         this.reloadSub.next();
     }
 
-    abstract loadItems(options: O): Observable<ItemLoadData<T>>;
+    public abstract loadItems(options: O): Observable<ItemLoadData<T>>;
 }
 
 interface FormListLoadOptions extends ListLoadOptions {

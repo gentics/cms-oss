@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
-import { Form, Item, Language } from '@gentics/cms-models';
+import { Form, Language } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
+import { StagingMode } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
@@ -21,7 +22,7 @@ import { SortingModal } from '../sorting-modal/sorting-modal.component';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class FormListHeaderComponent extends BaseItemListHeaderComponent {
+export class FormListHeaderComponent extends BaseItemListHeaderComponent<Form> {
 
     /** If this header is for external forms */
     public readonly external = input.required<boolean>();
@@ -156,11 +157,143 @@ export class FormListHeaderComponent extends BaseItemListHeaderComponent {
         });
     }
 
+    restoreSelected(): void {
+        const itemsToBeRestored = this.selectedItems().filter((item) => EntityStateUtil.stateDeleted(item));
+        if (itemsToBeRestored.length === 0) {
+            this.notifications.show({
+                message: 'editor.select_deleted_items',
+                translationParams: {
+                    itemTypePlural: this.i18n.instant('common.type_forms'),
+                },
+                type: 'warning',
+            });
+
+            return;
+        }
+
+        this.contextMenuOperations.restoreItems(itemsToBeRestored);
+    }
+
+    publishSelected(): void {
+        const itemsToPublish = this.getNotDeletedItems();
+        if (itemsToPublish.length === 0) {
+            return;
+        }
+
+        this.contextMenuOperations.publishForms(itemsToPublish);
+    }
+
+    takeSelectedOffline(): void {
+        const itemsToTakeOffline = this.getNotDeletedItems();
+        if (itemsToTakeOffline.length === 0) {
+            return;
+        }
+        this.contextMenuOperations.takeFormsOffline(itemsToTakeOffline);
+    }
+
+    async stageItems(mode: StagingMode): Promise<void> {
+        const itemsToStage = this.getNotDeletedItems();
+        if (itemsToStage.length === 0) {
+            return;
+        }
+
+        let counter = 0;
+
+        for (const item of itemsToStage) {
+            const res = await this.contextMenuOperations.stageItemToCurrentPackage(item, mode === StagingMode.RECURSIVE, false);
+            if (res) {
+                counter++;
+            }
+        }
+
+        if (counter === itemsToStage.length) {
+            if (counter === 1) {
+                this.notifications.show({
+                    type: 'success',
+                    message: 'editor.stage_item_success_message',
+                    translationParams: {
+                        itemType: this.i18n.instant('common.type_form_article'),
+                        itemName: itemsToStage[0].name,
+                    },
+                });
+            } else {
+                this.notifications.show({
+                    type: 'success',
+                    message: 'editor.stage_multiple_items_success_message',
+                    translationParams: {
+                        itemType: this.i18n.instant('common.type_forms'),
+                        amount: itemsToStage.length,
+                    },
+                });
+            }
+        } else if (counter > 0) {
+            this.notifications.show({
+                type: 'warning',
+                message: 'editor.stage_multiple_items_partial_success_message',
+                translationParams: {
+                    itemType: this.i18n.instant('common.type_forms'),
+                    amount: itemsToStage.length,
+                    count: counter,
+                },
+            });
+        }
+        // All other errors are reported anyways
+    }
+
+    async unstageItems(mode: StagingMode): Promise<void> {
+        const itemsToUnstage = this.getNotDeletedItems();
+        if (itemsToUnstage.length === 0) {
+            return;
+        }
+
+        let counter = 0;
+
+        for (const item of itemsToUnstage) {
+            const res = await this.contextMenuOperations.unstageItemFromCurrentPackage(item, false);
+            if (res) {
+                counter++;
+            }
+        }
+
+        if (counter === itemsToUnstage.length) {
+            if (counter === 1) {
+                this.notifications.show({
+                    type: 'success',
+                    message: 'editor.unstage_item_success_message',
+                    translationParams: {
+                        itemType: this.i18n.instant('common.type_form_article'),
+                        itemName: itemsToUnstage[0].name,
+                    },
+                });
+            } else {
+                this.notifications.show({
+                    type: 'success',
+                    message: 'editor.unstage_multiple_items_success_message',
+                    translationParams: {
+                        itemType: this.i18n.instant('common.type_forms'),
+                        amount: itemsToUnstage.length,
+                    },
+                });
+            }
+        } else if (counter > 0) {
+            this.notifications.show({
+                type: 'warning',
+                message: 'editor.unstage_multiple_items_partial_success_message',
+                translationParams: {
+                    itemType: this.i18n.instant('common.type_forms'),
+                    amount: itemsToUnstage.length,
+                    count: counter,
+                },
+            });
+        }
+        // All other errors are reported anyways
+    }
+
     /**
      * Helper method to filter out deleted items and which shows a notification if
      * no regular/not deleted item has been selected yet.
      */
-    private getNotDeletedItems(): Item[] {
+    private getNotDeletedItems(): Form[] {
         const validItems = this.selectedItems().filter((item) => !EntityStateUtil.stateDeleted(item));
         if (validItems.length !== 0) {
             return validItems;

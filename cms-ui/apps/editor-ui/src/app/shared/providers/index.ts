@@ -1,7 +1,6 @@
 export * from './breadcrumbs.service';
 export * from './chip-search-bar-config/chip-search-bar-config.service';
 export * from './document-ref';
-export * from './form-list-loader/form-list-loader.service';
 export * from './link-template/link-template.service';
 export * from './presentation/presentation.service';
 export * from './query-assembler/query-assembler-elasticsearch/query-assembler-elasticsearch.service';

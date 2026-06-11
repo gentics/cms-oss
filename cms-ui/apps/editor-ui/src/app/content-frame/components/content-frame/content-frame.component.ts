@@ -72,6 +72,7 @@ import {
     noItemPermissions,
 } from '../../../common/models';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
+import { FormListLoaderService } from '../../../core/providers';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -80,7 +81,6 @@ import { PermissionService } from '../../../core/providers/permissions/permissio
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { PublishTimeManagedPagesModal } from '../../../shared/components/publish-time-managed-pages-modal/publish-time-managed-pages-modal.component';
 import { TimeManagementModal } from '../../../shared/components/time-management-modal/time-management-modal.component';
-import { FormListLoaderService } from '../../../shared/providers';
 import { PublishableStateUtil } from '../../../shared/util/entity-states';
 import {
     AddEditedEntityToRecentItemsAction,

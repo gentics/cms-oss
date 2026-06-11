@@ -418,8 +418,8 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				nodeForm.setFolderId(folder.getId());
 
 				if (StringUtils.isNotBlank(nodeForm.getExternalId())) {
-					ObjectNode uiSchema = nodeForm.getData().path(FormDataUtils.UI_SCHEMA).deepCopy();
-					ObjectNode schema = nodeForm.getData().path(FormDataUtils.SCHEMA).deepCopy();
+					JsonNode uiSchema = nodeForm.getData().path(FormDataUtils.UI_SCHEMA);
+					JsonNode schema = nodeForm.getData().path(FormDataUtils.SCHEMA);
 
 					String currentExternalHash = DigestUtils.sha1Hex(schema.toString().concat(uiSchema.toString()));
 					nodeForm.setExternalHash(currentExternalHash);
@@ -1516,11 +1516,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	 * @throws NodeException
 	 */
 	protected void handleUiSchemaMerge(Form form, JsonNode newData) throws NodeException {
-		if (newData == null) {
+		if (Optional.ofNullable(newData).map(JsonNode::isNull).orElse(true)) {
 			return;
 		}
-		ObjectNode uiSchema = newData.path(FormDataUtils.UI_SCHEMA).deepCopy();
-		ObjectNode schema = newData.path(FormDataUtils.SCHEMA).deepCopy();
+		JsonNode copy = newData.deepCopy();
+		ObjectNode uiSchema = copy.withObjectProperty(FormDataUtils.UI_SCHEMA);
+		ObjectNode schema = copy.withObjectProperty(FormDataUtils.SCHEMA);
 		ObjectNode oldData = form.getData().deepCopy();
 
 		String currentExternalHash = DigestUtils.sha1Hex(schema.toString().concat(uiSchema.toString()));

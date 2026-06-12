@@ -304,7 +304,15 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             return data.map((value, idx) => this.mapToValue(entryUuid, id, value, idx));
         }
 
+        let fileName: string | null = null;
         if ('fileName' in data) {
+            fileName = data.fileName;
+        }
+        if ('fields' in data) {
+            fileName = data.fields?.binary?.fileName;
+        }
+
+        if (fileName) {
             let link = `${API_BASE_URL}/form/${this.form().id}/data/${entryUuid}/binary/${id}`;
 
             if (index) {
@@ -313,7 +321,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
             return {
                 type: ValueType.BINARY,
-                fileName: data.fileName,
+                fileName,
                 link: `${link}?sid=${this.sid}`,
             };
         }

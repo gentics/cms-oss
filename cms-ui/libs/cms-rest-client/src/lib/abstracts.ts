@@ -119,6 +119,9 @@ import {
     FormPublishRequest,
     FormResponse,
     FormSaveRequest,
+    FormTranslations,
+    FormTranslationsLanguagesResponse,
+    FormTranslationsResponse,
     FormTypeConfigirationListOptions,
     FormTypeConfigurationListResponse,
     FormTypeConfigurationResponse,
@@ -698,6 +701,27 @@ export interface AbstractFormAPI extends BasicAPI {
     getConfiguration: (type: string) => FormTypeConfigurationResponse;
     assignConfiguration: (type: string, nodeId: number | string) => Response;
     unassignConfiguration: (type: string, nodeId: number | string) => Response;
+
+    /**
+     * Languages available for form-engine placeholder translations.
+     * The list is global — there is no per-form-type variant.
+     */
+    listTranslationLanguages: () => FormTranslationsLanguagesResponse;
+
+    /** Load the global form-engine placeholder translations. */
+    listTranslations: () => FormTranslationsResponse;
+
+    /**
+     * Persist a partial form-translations diff. Only the keys/languages
+     * contained in `body` are written; everything else is left untouched.
+     */
+    updateTranslations: (body: FormTranslations) => FormTranslationsResponse;
+
+    /** Load the placeholder translations specific to a form type. */
+    listTypeTranslations: (type: string) => FormTranslationsResponse;
+
+    /** Persist a partial form-translations diff for a specific form type. */
+    updateTypeTranslations: (type: string, body: FormTranslations) => FormTranslationsResponse;
 
     exportStatus: (id: number | string) => FormDownloadInfoResponse;
     createExport: (id: number | string) => FormDownloadInfoResponse;

@@ -1,0 +1,46 @@
+{
+  "TOOL.TITLE": "Form Translations",
+  "TOOL.SUBTITLE": "Maintain the language strings for the Form Engine",
+  "TOOL.SESSION_BADGE": "SID",
+
+  "COMMON.SAVE": "Save",
+  "COMMON.DISCARD": "Discard",
+  "COMMON.CANCEL": "Cancel",
+  "COMMON.LOADING": "Loading…",
+  "COMMON.SAVING": "Saving…",
+  "COMMON.RETRY": "Retry",
+  "COMMON.CLOSE": "Close",
+  "COMMON.UNSAVED_CHANGES": "Unsaved changes",
+
+  "SCOPE.GLOBAL_TITLE": "Global translations",
+  "SCOPE.GLOBAL_DESC": "These translations apply to <strong>all form types</strong> and can be overridden per type.",
+  "SCOPE.TYPE_TITLE": "Form type: {{name}}",
+  "SCOPE.TYPE_DESC": "Translations specific to the form type <strong>“{{name}}”</strong>. Overrides global values.",
+
+  "TOOLBAR.SEARCH_PLACEHOLDER": "Search placeholder…",
+  "TOOLBAR.FILTER_ALL": "All",
+  "TOOLBAR.FILTER_INCOMPLETE": "Incomplete",
+  "TOOLBAR.COUNT": "{{shown}} of {{total}} placeholders",
+  "TOOLBAR.LEGEND_SAVED": "saved",
+  "TOOLBAR.LEGEND_DIRTY": "changed",
+  "TOOLBAR.LEGEND_EMPTY": "empty",
+
+  "TABLE.HEADER_PLACEHOLDER": "Placeholder",
+  "TABLE.EMPTY_TITLE": "No matching placeholders",
+  "TABLE.EMPTY_DESC": "Adjust the search term or filter.",
+
+  "SAVE_BAR.UNSAVED": "{{count}} unsaved change(s)",
+  "SAVE_BAR.CONFIRM_DISCARD": "Discard all changes?",
+  "SAVE_BAR.CONFIRM_SCOPE_SWITCH": "Discard unsaved changes in the current scope?",
+
+  "NOTIFY.LOAD_ERROR": "Failed to load the initial data.",
+  "NOTIFY.LANGUAGES_LOAD_ERROR": "Failed to load languages.",
+  "NOTIFY.FORM_TYPES_LOAD_ERROR": "Failed to load form types.",
+  "NOTIFY.SCOPE_LOAD_ERROR": "Failed to load translations for “{{scope}}”.",
+  "NOTIFY.SAVE_SUCCESS": "{{count}} translation(s) saved.",
+  "NOTIFY.SAVE_ERROR": "Save failed.",
+  "NOTIFY.DISCARD_DONE": "Changes discarded.",
+
+  "ERROR.NO_SESSION_TITLE": "No valid session",
+  "ERROR.NO_SESSION_DESC": "Please open this tool from within Gentics CMS."
+}

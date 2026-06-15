@@ -1,0 +1,91 @@
+{
+    "name": "ct-form-translations",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "prefix": "gtx",
+    "sourceRoot": "apps/ct-form-translations/src",
+    "tags": ["app", "ct", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:application",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/apps/ct-form-translations",
+                "index": "apps/ct-form-translations/src/index.html",
+                "browser": "apps/ct-form-translations/src/main.ts",
+                "polyfills": ["apps/ct-form-translations/src/polyfills.ts"],
+                "tsConfig": "apps/ct-form-translations/tsconfig.app.json",
+                "assets": [
+                    {
+                        "glob": "**/*",
+                        "input": "apps/ct-form-translations/src/assets",
+                        "output": "assets"
+                    }
+                ],
+                "styles": ["apps/ct-form-translations/src/styles/styles.scss"],
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/ct-form-translations/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "scripts": [],
+                "aot": true,
+                "fileReplacements": [
+                    {
+                        "replace": "apps/ct-form-translations/src/environments/environment.ts",
+                        "with": "apps/ct-form-translations/src/environments/environment.prod.ts"
+                    }
+                ],
+                "outputHashing": "all",
+                "optimization": true,
+                "sourceMap": false,
+                "namedChunks": false,
+                "extractLicenses": true
+            },
+            "configurations": {
+                "production": {
+                    "baseHref": "/tools/ct-form-translations/"
+                },
+                "development": {
+                    "fileReplacements": [],
+                    "optimization": false,
+                    "extractLicenses": false,
+                    "sourceMap": true,
+                    "namedChunks": true,
+                    "baseHref": "/"
+                },
+                "ci": {
+                    "progress": false
+                }
+            },
+            "defaultConfiguration": "production"
+        },
+        "serve": {
+            "executor": "@nx/angular:dev-server",
+            "options": {
+                "proxyConfig": "{workspaceRoot}/proxy.conf.json",
+                "liveReload": true
+            },
+            "configurations": {
+                "production": {
+                    "buildTarget": "ct-form-translations:build:production"
+                },
+                "development": {
+                    "buildTarget": "ct-form-translations:build:development"
+                }
+            },
+            "defaultConfiguration": "development",
+            "continuous": true
+        },
+        "e2e": {
+            "executor": "@nx/playwright:playwright",
+            "outputs": ["{workspaceRoot}/.playwright/ct-form-translations"],
+            "options": {
+                "config": "apps/ct-form-translations/playwright.config.ts",
+                "skipInstall": true
+            }
+        }
+    }
+}

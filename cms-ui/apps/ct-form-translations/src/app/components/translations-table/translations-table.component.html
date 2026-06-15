@@ -1,0 +1,59 @@
+@if (keys.length > 0) {
+    <div class="table-wrapper" data-region="translations-table">
+        <table class="translations">
+            <thead>
+                <tr>
+                    <th class="col-key">{{ 'TABLE.HEADER_PLACEHOLDER' | gtxI18n }}</th>
+                    @for (lang of languages; track lang.code) {
+                        <th class="col-lang" [attr.data-lang]="lang.code">
+                            {{ lang.name }}
+                            <span class="lang-meta">({{ lang.code }})</span>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (key of keys; track key) {
+                    <tr [attr.data-id]="key" data-name="row">
+                        <td class="col-key">
+                            <span class="placeholder-key" data-name="key">{{ key }}</span>
+                        </td>
+                        @for (lang of languages; track lang.code) {
+                            <td [attr.data-lang]="lang.code" data-name="cell">
+                                <div
+                                    class="cell-input-wrapper"
+                                    [attr.data-state]="getCellState(key, lang.code)"
+                                    [class.is-dirty]="getCellState(key, lang.code) === 'dirty'"
+                                    [class.is-empty]="getCellState(key, lang.code) === 'empty'"
+                                >
+                                    <input
+                                        type="text"
+                                        data-action="edit-cell"
+                                        [attr.data-key]="key"
+                                        [attr.data-lang]="lang.code"
+                                        [value]="getValue(key, lang.code)"
+                                        [placeholder]="key"
+                                        (input)="onInput(key, lang.code, $event)"
+                                    />
+
+                                    <icon class="cell-indicator" aria-hidden="true">
+                                        @switch (getCellState(key, lang.code)) {
+                                            @case ('dirty') {circle}
+                                            @case ('empty') {remove}
+                                        }
+                                    </icon>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+} @else {
+    <div class="pm-empty-state" data-name="empty-state">
+      <icon>search</icon>
+      <h3>{{ 'TABLE.EMPTY_TITLE' | gtxI18n }}</h3>
+      <p>{{ 'TABLE.EMPTY_DESC' | gtxI18n }}</p>
+    </div>
+}

@@ -1,0 +1,51 @@
+<div class="toolbar" data-region="toolbar">
+    <gtx-search-bar
+        class="toolbar__search"
+        data-action="search"
+        [placeholder]="'TOOLBAR.SEARCH_PLACEHOLDER' | gtxI18n"
+        [query]="search"
+        (change)="onSearchInput($event)"
+    ></gtx-search-bar>
+
+  <div class="toolbar__filter" role="tablist" data-region="filter">
+    <button
+      type="button"
+      data-action="filter"
+      data-id="all"
+      [attr.data-active]="filter === 'all'"
+      [class.is-active]="filter === 'all'"
+      (click)="onFilter('all')">
+      {{ 'TOOLBAR.FILTER_ALL' | gtxI18n }}
+    </button>
+    <button
+      type="button"
+      data-action="filter"
+      data-id="incomplete"
+      [attr.data-active]="filter === 'incomplete'"
+      [class.is-active]="filter === 'incomplete'"
+      (click)="onFilter('incomplete')">
+      {{ 'TOOLBAR.FILTER_INCOMPLETE' | gtxI18n }}
+    </button>
+  </div>
+
+  <div class="toolbar__spacer"></div>
+
+  <div class="toolbar__legend">
+    <span class="toolbar__legend-item">
+      <span class="toolbar__swatch toolbar__swatch--saved"></span>
+      {{ 'TOOLBAR.LEGEND_SAVED' | gtxI18n }}
+    </span>
+    <span class="toolbar__legend-item">
+      <span class="toolbar__swatch toolbar__swatch--dirty"></span>
+      {{ 'TOOLBAR.LEGEND_DIRTY' | gtxI18n }}
+    </span>
+    <span class="toolbar__legend-item">
+      <span class="toolbar__swatch toolbar__swatch--empty"></span>
+      {{ 'TOOLBAR.LEGEND_EMPTY' | gtxI18n }}
+    </span>
+  </div>
+
+  <div class="toolbar__info" data-name="counter" [attr.data-shown]="shown" [attr.data-total]="total">
+    {{ 'TOOLBAR.COUNT' | gtxI18n:{ shown: shown, total: total } }}
+  </div>
+</div>

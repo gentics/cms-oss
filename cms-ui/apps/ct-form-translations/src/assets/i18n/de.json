@@ -1,0 +1,46 @@
+{
+  "TOOL.TITLE": "Formular-Übersetzungen",
+  "TOOL.SUBTITLE": "Pflege der Sprachausgaben für die Form Engine",
+  "TOOL.SESSION_BADGE": "SID",
+
+  "COMMON.SAVE": "Speichern",
+  "COMMON.DISCARD": "Verwerfen",
+  "COMMON.CANCEL": "Abbrechen",
+  "COMMON.LOADING": "Wird geladen …",
+  "COMMON.SAVING": "Wird gespeichert …",
+  "COMMON.RETRY": "Erneut versuchen",
+  "COMMON.CLOSE": "Schließen",
+  "COMMON.UNSAVED_CHANGES": "Ungespeicherte Änderungen",
+
+  "SCOPE.GLOBAL_TITLE": "Globale Übersetzungen",
+  "SCOPE.GLOBAL_DESC": "Diese Übersetzungen gelten für <strong>alle Formulartypen</strong> und können auf Typ-Ebene überschrieben werden.",
+  "SCOPE.TYPE_TITLE": "Formulartyp: {{name}}",
+  "SCOPE.TYPE_DESC": "Spezifische Übersetzungen für den Formulartyp <strong>„{{name}}“</strong>. Überschreibt globale Werte.",
+
+  "TOOLBAR.SEARCH_PLACEHOLDER": "Placeholder suchen …",
+  "TOOLBAR.FILTER_ALL": "Alle",
+  "TOOLBAR.FILTER_INCOMPLETE": "Unvollständig",
+  "TOOLBAR.COUNT": "{{shown}} von {{total}} Placeholder",
+  "TOOLBAR.LEGEND_SAVED": "gespeichert",
+  "TOOLBAR.LEGEND_DIRTY": "geändert",
+  "TOOLBAR.LEGEND_EMPTY": "leer",
+
+  "TABLE.HEADER_PLACEHOLDER": "Placeholder",
+  "TABLE.EMPTY_TITLE": "Keine passenden Placeholder gefunden",
+  "TABLE.EMPTY_DESC": "Suchbegriff oder Filter anpassen.",
+
+  "SAVE_BAR.UNSAVED": "{{count}} ungespeicherte Änderung(en)",
+  "SAVE_BAR.CONFIRM_DISCARD": "Alle Änderungen verwerfen?",
+  "SAVE_BAR.CONFIRM_SCOPE_SWITCH": "Ungespeicherte Änderungen im aktuellen Bereich verwerfen?",
+
+  "NOTIFY.LOAD_ERROR": "Die Initialdaten konnten nicht geladen werden.",
+  "NOTIFY.LANGUAGES_LOAD_ERROR": "Sprachen konnten nicht geladen werden.",
+  "NOTIFY.FORM_TYPES_LOAD_ERROR": "Formulartypen konnten nicht geladen werden.",
+  "NOTIFY.SCOPE_LOAD_ERROR": "Übersetzungen für „{{scope}}“ konnten nicht geladen werden.",
+  "NOTIFY.SAVE_SUCCESS": "{{count}} Übersetzung(en) gespeichert.",
+  "NOTIFY.SAVE_ERROR": "Speichern fehlgeschlagen.",
+  "NOTIFY.DISCARD_DONE": "Änderungen verworfen.",
+
+  "ERROR.NO_SESSION_TITLE": "Keine gültige Sitzung",
+  "ERROR.NO_SESSION_DESC": "Bitte öffnen Sie dieses Tool aus dem Gentics CMS heraus."
+}

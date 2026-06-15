@@ -3,10 +3,12 @@ import {
     ChangeDetectorRef,
     Component,
     OnInit,
+    computed,
     inject,
+    signal,
 } from '@angular/core';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
-import { FormTranslations, FormTranslationsLanguage } from '@gentics/cms-models';
+import { FormTranslations, FormTranslationsLanguage, FormTypeConfiguration } from '@gentics/cms-models';
 import { firstValueFrom } from 'rxjs';
 
 import { AuthenticationService } from '../../core/services/authentication.service';
@@ -20,6 +22,7 @@ import {
 import { FormTranslationsApiService } from '../../services/form-translations-api.service';
 import { ScopeTabInfo } from '../scope-tabs/scope-tabs.component';
 import { CellEditEvent } from '../translations-table/translations-table.component';
+import { ModalService } from '@gentics/ui-core';
 
 type LoadStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
@@ -40,9 +43,10 @@ export class ShellComponent implements OnInit {
     private readonly auth = inject(AuthenticationService);
     private readonly toolApi = inject(ToolApiService);
     private readonly api = inject(FormTranslationsApiService);
+    private readonly modals = inject(ModalService);
     private readonly notifications = inject(I18nNotificationService);
     private readonly i18n = inject(I18nService);
-    private readonly cdr = inject(ChangeDetectorRef);
+    private readonly changeDetector = inject(ChangeDetectorRef);
 
     // -------- bootstrap state --------
     bootstrapStatus: LoadStatus = 'idle';
@@ -50,20 +54,100 @@ export class ShellComponent implements OnInit {
     sid: string | null = null;
 
     // -------- view state --------
-    languages: FormTranslationsLanguage[] = [];
-    scopes: Scope[] = [];
-    activeScopeId: ScopeId = GLOBAL_SCOPE_ID;
+    public readonly languages = signal<FormTranslationsLanguage[]>([]);
+    public readonly formTypeConfigurations = signal<FormTypeConfiguration[]>([]);
+    public readonly savedTranslations = signal<Record<string, FormTranslations>>({});
+
+    public readonly activeScopeId = signal<string>(GLOBAL_SCOPE_ID);
+
+    public readonly scopes = computed<Record<string, Scope>>(() => {
+        const map = {
+            [GLOBAL_SCOPE_ID]: {
+                id: GLOBAL_SCOPE_ID,
+                label: this.i18n.instant('SCOPE.GLOBAL_TITLE'),
+                description: 'SCOPE.GLOBAL_DESC',
+                isGlobal: true,
+            },
+        };
+
+        for (const conf of this.formTypeConfigurations()) {
+            map[conf.type] = {
+                id: conf.type,
+                label: this.i18n.fromObject(conf.nameI18n),
+                description: 'SCOPE.TYPE_DESC',
+                isGlobal: false,
+            };
+        }
+
+        return map;
+    });
+
+    public readonly activeScope = computed(() => {
+        return this.scopes()[this.activeScopeId()];
+    });
+
+    public readonly activeKeys = computed<string[]>(() => {
+        return Object.keys(this.savedTranslations()[this.activeScopeId()]);
+    });
+
+    public readonly visibleKeys = computed<string[]>(() => {
+        const all = this.activeKeys();
+        const q = this.search.trim().toLowerCase();
+        const draft = this.draft();
+
+        return all.filter((key) => {
+            if (q && !key.toLowerCase().includes(q)) {
+                return false;
+            }
+            if (this.filter === 'incomplete') {
+                const incomplete = this.languages().some((l) => (draft[key]?.[l.code] ?? '').trim() === '');
+                if (!incomplete) return false;
+            }
+            return true;
+        });
+    });
+
+    public readonly dirtyCount = computed(() => {
+        return Object.keys(this.draft()).length;
+    });
+
+    public readonly scopeTabs = computed<ScopeTabInfo[]>(() => {
+        const langs = this.languages().length;
+        const active = this.activeScopeId();
+        const translations = this.savedTranslations();
+        const dirtyCount = this.dirtyCount();
+
+        return Object.values(this.scopes()).map((scope) => {
+            const isActive = scope.id === active;
+            const translationData = (isActive)
+                ? merge(translations[scope.id], this.draft())
+                : translations[scope.id];
+            const totalKeys = Object.keys(translationData).length;
+
+            let translatedCount = 0;
+            for (const row of Object.values(translationData)) {
+                for (const val of Object.values(row)) {
+                    if (val.trim() !== '') translatedCount++;
+                }
+            }
+
+            return {
+                scope,
+                translatedCount,
+                totalCount: totalKeys * langs,
+                hasDirty: isActive ? dirtyCount > 0 : false,
+            };
+        });
+    });
+
     search = '';
     filter: FilterMode = 'all';
     saving = false;
 
-    // -------- translations state per scope --------
-    private saved: Record<string, FormTranslations> = {};
-    private draft: Record<string, FormTranslations> = {};
-    private scopeStatus: Record<string, LoadStatus> = {};
+    private draft = signal<FormTranslations>({});
 
     ngOnInit(): void {
-        void this.bootstrap();
+        this.bootstrap();
     }
 
     /* =====================================================================
@@ -77,153 +161,54 @@ export class ShellComponent implements OnInit {
         this.hasSession = this.sid != null;
         if (!this.hasSession) {
             this.bootstrapStatus = 'loaded';
-            this.cdr.markForCheck();
+            this.changeDetector.markForCheck();
             return;
         }
 
         /* Pull-based protocol: expose hasUnsavedChanges() so the embedding
            UI can ask whenever it wants (e.g. on navigation). */
         this.toolApi.initialize({
-            hasUnsavedChanges: () => this.dirtyCount > 0,
+            hasUnsavedChanges: () => Object.keys(this.draft()).length > 0,
         });
 
         try {
-            const [languages, formTypes, globalTranslations] = await Promise.all([
+            const [languages, formTypeConfigurations, globalTranslations] = await Promise.all([
                 firstValueFrom(this.api.loadLanguages()),
                 firstValueFrom(this.api.loadFormTypes()),
                 firstValueFrom(this.api.loadGlobalTranslations()),
             ]);
 
-            this.languages = languages;
-            this.scopes = [
-                {
-                    id: GLOBAL_SCOPE_ID,
-                    label: this.i18n.instant('SCOPE.GLOBAL_TITLE'),
-                    description: 'SCOPE.GLOBAL_DESC',
-                    isGlobal: true,
-                },
-                ...formTypes.map(type => ({
-                    id: type.type,
-                    label: this.pickI18n(type.nameI18n) ?? type.type,
-                    description: 'SCOPE.TYPE_DESC',
-                    isGlobal: false,
-                })),
-            ];
-            this.saved[GLOBAL_SCOPE_ID] = globalTranslations;
-            this.draft[GLOBAL_SCOPE_ID] = clone(globalTranslations);
-            this.scopeStatus[GLOBAL_SCOPE_ID] = 'loaded';
+            this.languages.set(languages);
+            this.formTypeConfigurations.set(formTypeConfigurations);
+
+            const translationMap: Record<string, FormTranslations> = {
+                [GLOBAL_SCOPE_ID]: globalTranslations,
+            };
+
+            const typeTranslations = await Promise.all(formTypeConfigurations.map((formTypeConfig) => {
+                return firstValueFrom(this.api.loadTypeTranslations(formTypeConfig.type)).then((trans) => ({
+                    type: formTypeConfig.type,
+                    translations: trans,
+                }));
+            }));
+
+            for (const entry of typeTranslations) {
+                translationMap[entry.type] = entry.translations;
+            }
+
+            this.savedTranslations.set(translationMap);
+
+            this.draft[GLOBAL_SCOPE_ID] = structuredClone(globalTranslations);
 
             this.bootstrapStatus = 'loaded';
         } catch (err) {
             this.bootstrapStatus = 'error';
             this.notifications.show({ type: 'alert', message: 'NOTIFY.LOAD_ERROR' });
-            // eslint-disable-next-line no-console
+
             console.error('form-translations bootstrap failed', err);
         } finally {
-            this.cdr.markForCheck();
+            this.changeDetector.markForCheck();
         }
-    }
-
-    private async loadScopeIfNeeded(scopeId: ScopeId): Promise<void> {
-        if (this.scopeStatus[scopeId] === 'loaded' || scopeId === GLOBAL_SCOPE_ID) {
-            return;
-        }
-        this.scopeStatus[scopeId] = 'loading';
-        this.cdr.markForCheck();
-        try {
-            const data = await firstValueFrom(this.api.loadTypeTranslations(scopeId));
-            this.saved[scopeId] = data;
-            this.draft[scopeId] = clone(data);
-            this.scopeStatus[scopeId] = 'loaded';
-        } catch (err) {
-            this.scopeStatus[scopeId] = 'error';
-            this.notifications.show({
-                type: 'alert',
-                message: 'NOTIFY.SCOPE_LOAD_ERROR',
-                translationParams: { scope: this.scopes.find(s => s.id === scopeId)?.label ?? scopeId },
-            });
-            // eslint-disable-next-line no-console
-            console.error('scope load failed', err);
-        } finally {
-            this.cdr.markForCheck();
-        }
-    }
-
-    /* =====================================================================
-     *  Derived state (read by the template)
-     * ===================================================================== */
-
-    get activeScope(): Scope | null {
-        return this.scopes.find(s => s.id === this.activeScopeId) ?? null;
-    }
-
-    get activeScopeLoading(): boolean {
-        return this.scopeStatus[this.activeScopeId] === 'loading';
-    }
-
-    get placeholderKeys(): string[] {
-        const set = new Set<string>();
-        for (const map of Object.values(this.saved)) {
-            for (const key of Object.keys(map)) set.add(key);
-        }
-        for (const map of Object.values(this.draft)) {
-            for (const key of Object.keys(map)) set.add(key);
-        }
-        return [...set].sort((a, b) => a.localeCompare(b));
-    }
-
-    get visibleKeys(): string[] {
-        const all = this.placeholderKeys;
-        const q = this.search.trim().toLowerCase();
-        const draft = this.draft[this.activeScopeId] ?? {};
-        return all.filter(key => {
-            if (q && !key.toLowerCase().includes(q)) return false;
-            if (this.filter === 'incomplete') {
-                const incomplete = this.languages.some(l => (draft[key]?.[l.code] ?? '').trim() === '');
-                if (!incomplete) return false;
-            }
-            return true;
-        });
-    }
-
-    get totalKeys(): number {
-        return this.placeholderKeys.length;
-    }
-
-    get dirtyCount(): number {
-        let n = 0;
-        for (const scopeId of Object.keys(this.draft)) {
-            n += countCells(diff(this.saved[scopeId] ?? {}, this.draft[scopeId] ?? {}));
-        }
-        return n;
-    }
-
-    get scopeTabs(): ScopeTabInfo[] {
-        const totalKeys = this.placeholderKeys.length;
-        const langs = this.languages.length;
-        return this.scopes.map(scope => {
-            const draft = this.draft[scope.id] ?? {};
-            let translatedCount = 0;
-            for (const row of Object.values(draft)) {
-                for (const val of Object.values(row)) {
-                    if (val.trim() !== '') translatedCount++;
-                }
-            }
-            return {
-                scope,
-                translatedCount,
-                totalCount: totalKeys * langs,
-                hasDirty: countCells(diff(this.saved[scope.id] ?? {}, draft)) > 0,
-            };
-        });
-    }
-
-    get activeDraft(): FormTranslations {
-        return this.draft[this.activeScopeId] ?? {};
-    }
-
-    get activeSaved(): FormTranslations {
-        return this.saved[this.activeScopeId] ?? {};
     }
 
     /* =====================================================================
@@ -231,15 +216,41 @@ export class ShellComponent implements OnInit {
      * ===================================================================== */
 
     async onScopeSelect(scopeId: ScopeId): Promise<void> {
-        if (scopeId === this.activeScopeId) return;
-        if (this.hasDirtyInScope(this.activeScopeId)) {
-            const confirmed = window.confirm(this.i18n.instant('SAVE_BAR.CONFIRM_SCOPE_SWITCH'));
-            if (!confirmed) return;
-            this.draft[this.activeScopeId] = clone(this.saved[this.activeScopeId] ?? {});
+        if (scopeId === this.activeScopeId()) {
+            return;
         }
-        this.activeScopeId = scopeId;
-        await this.loadScopeIfNeeded(scopeId);
+
+        if (this.dirtyCount() > 0) {
+            const confirmed = await this.askDiscard();
+            if (!confirmed) {
+                return;
+            }
+            this.draft.set({});
+        }
+        this.activeScopeId.set(scopeId);
         /* Pull-based ToolApi: nothing to push — the UI pulls hasUnsavedChanges() when it cares. */
+    }
+
+    async askDiscard(): Promise<boolean> {
+        const dialog = await this.modals.dialog({
+            title: this.i18n.instant('SAVE_BAR.CONFIRM_DISCARD'),
+            body: this.i18n.instant('SAVE_BAR.CONFIRM_SCOPE_SWITCH'),
+            buttons: [
+                {
+                    id: 'cancel',
+                    label: this.i18n.instant('common.cancel_button'),
+                    type: 'secondary',
+                    returnValue: false,
+                },
+                {
+                    id: 'confirm',
+                    label: this.i18n.instant('COMMON.DISCARD'),
+                    type: 'alert',
+                    returnValue: true,
+                },
+            ],
+        });
+        return await dialog.open();
     }
 
     onSearchChange(term: string): void {
@@ -251,75 +262,67 @@ export class ShellComponent implements OnInit {
     }
 
     onCellEdit(event: CellEditEvent): void {
-        const scopeId = this.activeScopeId;
-        const draftForScope = this.draft[scopeId] ?? {};
-        const row = draftForScope[event.key] ?? {};
-        this.draft = {
-            ...this.draft,
-            [scopeId]: {
-                ...draftForScope,
-                [event.key]: { ...row, [event.langCode]: event.value },
-            },
-        };
+        this.draft.update((data) => {
+            data[event.key] = {
+                ...data[event.key],
+                [event.langCode]: event.value,
+            };
+            // Needs to be new object for change detection to kick in
+            return structuredClone(data);
+        });
         /* Pull-based ToolApi: nothing to push — the UI pulls hasUnsavedChanges() when it cares. */
     }
 
     async onSave(): Promise<void> {
-        const scopeId = this.activeScopeId;
-        const scope = this.activeScope;
-        if (!scope) return;
-        const delta = diff(this.saved[scopeId] ?? {}, this.draft[scopeId] ?? {});
-        const cellCount = countCells(delta);
-        if (cellCount === 0) return;
+        const scopeId = this.activeScopeId();
+        const scope = this.activeScope();
+        if (!scope) {
+            return;
+        }
+
+        const changeCount = this.dirtyCount();
+        if (changeCount === 0) {
+            return;
+        }
 
         this.saving = true;
-        this.cdr.markForCheck();
+        this.changeDetector.markForCheck();
         try {
+            const saveData = merge(this.savedTranslations()[this.activeScopeId()], this.draft());
             const obs = scope.isGlobal
-                ? this.api.saveGlobalTranslations(delta)
-                : this.api.saveTypeTranslations(scopeId, delta);
+                ? this.api.saveGlobalTranslations(saveData)
+                : this.api.saveTypeTranslations(scopeId, saveData);
             await firstValueFrom(obs);
 
-            const merged = merge(this.saved[scopeId] ?? {}, delta);
-            this.saved[scopeId] = merged;
-            this.draft[scopeId] = clone(merged);
+            this.savedTranslations.update((data) => {
+                data[scopeId] = saveData;
+                return structuredClone(data);
+            });
+            this.draft.set({});
 
             this.notifications.show({
                 type: 'success',
                 message: 'NOTIFY.SAVE_SUCCESS',
-                translationParams: { count: cellCount },
+                translationParams: { count: changeCount },
             });
             /* Pull-based ToolApi: nothing to push — the UI pulls hasUnsavedChanges() when it cares. */
         } catch (err) {
             this.notifications.show({ type: 'alert', message: 'NOTIFY.SAVE_ERROR' });
-            // eslint-disable-next-line no-console
+
             console.error('save failed', err);
         } finally {
             this.saving = false;
-            this.cdr.markForCheck();
+            this.changeDetector.markForCheck();
         }
     }
 
-    onDiscard(): void {
-        if (!window.confirm(this.i18n.instant('SAVE_BAR.CONFIRM_DISCARD'))) return;
-        const scopeId = this.activeScopeId;
-        this.draft[scopeId] = clone(this.saved[scopeId] ?? {});
+    async onDiscard(): Promise<void> {
+        if (!(await this.askDiscard())) {
+            return;
+        }
+        this.draft.set({});
         this.notifications.show({ type: 'default', message: 'NOTIFY.DISCARD_DONE' });
         /* Pull-based ToolApi: nothing to push — the UI pulls hasUnsavedChanges() when it cares. */
-    }
-
-    /* =====================================================================
-     *  Helpers
-     * ===================================================================== */
-
-    private hasDirtyInScope(scopeId: ScopeId): boolean {
-        return countCells(diff(this.saved[scopeId] ?? {}, this.draft[scopeId] ?? {})) > 0;
-    }
-
-    private pickI18n(value: Record<string, string> | undefined): string | null {
-        if (!value) return null;
-        const lang = this.i18n.getCurrentLanguage();
-        return value[lang] ?? value['en'] ?? Object.values(value)[0] ?? null;
     }
 }
 
@@ -327,38 +330,10 @@ export class ShellComponent implements OnInit {
  *  Pure utilities (kept at module level — no side effects)
  * ===================================================================== */
 
-function clone<T>(value: T): T {
-    return JSON.parse(JSON.stringify(value)) as T;
-}
-
-function diff(saved: FormTranslations, draft: FormTranslations): FormTranslations {
-    const result: FormTranslations = {};
-    const keys = new Set([...Object.keys(saved), ...Object.keys(draft)]);
-    for (const key of keys) {
-        const a = saved[key] ?? {};
-        const b = draft[key] ?? {};
-        const langs = new Set([...Object.keys(a), ...Object.keys(b)]);
-        const row: Record<string, string> = {};
-        for (const lang of langs) {
-            const av = a[lang] ?? '';
-            const bv = b[lang] ?? '';
-            if (av !== bv) row[lang] = bv;
-        }
-        if (Object.keys(row).length > 0) result[key] = row;
-    }
-    return result;
-}
-
 function merge(base: FormTranslations, delta: FormTranslations): FormTranslations {
     const result: FormTranslations = { ...base };
     for (const [key, langs] of Object.entries(delta)) {
         result[key] = { ...(result[key] ?? {}), ...langs };
     }
     return result;
-}
-
-function countCells(map: FormTranslations): number {
-    let n = 0;
-    for (const row of Object.values(map)) n += Object.keys(row).length;
-    return n;
 }

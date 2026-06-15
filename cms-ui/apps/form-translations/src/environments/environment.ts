@@ -10,6 +10,6 @@
 export const environment = {
     production: false,
     toolKey: 'form-translations',
-    useDevMock: true,
+    useDevMock: false,
     devMockLatencyMs: 200,
 };

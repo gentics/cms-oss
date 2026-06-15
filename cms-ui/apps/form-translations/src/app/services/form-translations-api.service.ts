@@ -19,45 +19,37 @@ export class FormTranslationsApiService {
 
     loadLanguages(): Observable<FormTranslationsLanguage[]> {
         return this.client.form.listTranslationLanguages().pipe(
-            map(res => normaliseLanguages(res.languages)),
+            map((res) => res.items),
         );
     }
 
     loadFormTypes(): Observable<FormTypeConfiguration[]> {
         return this.client.form.listConfigurations().pipe(
-            map(res => res.items ?? []),
+            map((res) => res.items ?? []),
         );
     }
 
     loadGlobalTranslations(): Observable<FormTranslations> {
         return this.client.form.listTranslations().pipe(
-            map(res => res.translations ?? {}),
+            map((res) => res.item ?? {}),
         );
     }
 
     loadTypeTranslations(formType: string): Observable<FormTranslations> {
         return this.client.form.listTypeTranslations(formType).pipe(
-            map(res => res.translations ?? {}),
+            map((res) => res.item ?? {}),
         );
     }
 
     saveGlobalTranslations(diff: FormTranslations): Observable<FormTranslations> {
         return this.client.form.updateTranslations(diff).pipe(
-            map(res => res.translations ?? {}),
+            map((res) => res.item ?? {}),
         );
     }
 
     saveTypeTranslations(formType: string, diff: FormTranslations): Observable<FormTranslations> {
         return this.client.form.updateTypeTranslations(formType, diff).pipe(
-            map(res => res.translations ?? {}),
+            map((res) => res.item ?? {}),
         );
     }
-}
-
-function normaliseLanguages(raw: FormTranslationsLanguage[] | string[] | undefined): FormTranslationsLanguage[] {
-    if (!raw) return [];
-    return raw.map(item => {
-        if (typeof item === 'string') return { code: item, name: item.toUpperCase() };
-        return { code: item.code, name: item.name && item.name.trim() !== '' ? item.name : item.code.toUpperCase() };
-    });
 }

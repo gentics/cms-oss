@@ -1,4 +1,5 @@
-import { Response } from './response';
+import { I18nString } from './common';
+import { GenericItemResponse, ListResponse } from './response';
 
 /**
  * One language entry as returned by `GET /form/translations/languages`.
@@ -19,7 +20,7 @@ export interface FormTranslationsLanguage {
  * placeholders/languages that need to change need to be sent — values that
  * are not in the payload are left untouched on the server.
  */
-export type FormTranslations = Record<string, Record<string, string>>;
+export type FormTranslations = Record<string, I18nString>;
 
 /**
  * Response of `GET /form/translations/languages`.
@@ -27,15 +28,11 @@ export type FormTranslations = Record<string, Record<string, string>>;
  * Defined permissively because the actual CMS endpoint may either wrap the
  * languages in a `languages` property or return a bare array of codes.
  */
-export interface FormTranslationsLanguagesResponse extends Response {
-    languages: FormTranslationsLanguage[] | string[];
-}
+export interface FormTranslationsLanguagesResponse extends ListResponse<FormTranslationsLanguage> {}
 
 /**
  * Response of `GET /form/translations` and `POST /form/translations` (global
  * scope), and of `GET /form/types/{type}/translations` and the matching POST
  * (type-specific scope).
  */
-export interface FormTranslationsResponse extends Response {
-    translations: FormTranslations;
-}
+export interface FormTranslationsResponse extends GenericItemResponse<FormTranslations> {}

@@ -10,6 +10,7 @@
   "COMMON.SAVING": "Wird gespeichert …",
   "COMMON.RETRY": "Erneut versuchen",
   "COMMON.CLOSE": "Schließen",
+  "COMMON.UNSAVED_CHANGES": "Ungespeicherte Änderungen",
 
   "SCOPE.GLOBAL_TITLE": "Globale Übersetzungen",
   "SCOPE.GLOBAL_DESC": "Diese Übersetzungen gelten für <strong>alle Formulartypen</strong> und können auf Typ-Ebene überschrieben werden.",

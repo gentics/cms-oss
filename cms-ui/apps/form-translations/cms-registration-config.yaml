@@ -4,7 +4,7 @@
 
 custom_tools:
   - id: form-translations
-    key: form-translations
+    key: form_translations
     name:
       de: Formular-Übersetzungen
       en: Form Translations

@@ -65,7 +65,7 @@
         "serve": {
             "executor": "@nx/angular:dev-server",
             "options": {
-                "proxyConfig": "apps/form-translations/proxy.conf.json",
+                "proxyConfig": "{workspaceRoot}/proxy.conf.json",
                 "liveReload": true
             },
             "configurations": {

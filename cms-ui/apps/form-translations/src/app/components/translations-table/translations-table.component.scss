@@ -129,9 +129,15 @@ table.translations td {
     }
   }
 
-  &.is-dirty input {
-    background: #fffbed;
-    box-shadow: inset 3px 0 0 0 var(--pm-color-warning);
+  &.is-dirty {
+      input {
+        background: #fffbed;
+        box-shadow: inset 3px 0 0 0 var(--pm-color-warning);
+      }
+
+      .cell-indicator {
+        font-size: 0.5rem;
+      }
   }
 
   &.is-empty input {
@@ -149,6 +155,12 @@ table.translations td {
 
   &.is-dirty .cell-indicator { color: var(--pm-color-warning); }
   &.is-empty .cell-indicator { color: var(--pm-color-danger); }
+}
+
+.pm-empty-state {
+    icon {
+        font-size: 4.5rem;
+    }
 }
 
 /* =====================================================================

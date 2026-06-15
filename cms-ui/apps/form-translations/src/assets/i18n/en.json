@@ -10,6 +10,7 @@
   "COMMON.SAVING": "Saving…",
   "COMMON.RETRY": "Retry",
   "COMMON.CLOSE": "Close",
+  "COMMON.UNSAVED_CHANGES": "Unsaved changes",
 
   "SCOPE.GLOBAL_TITLE": "Global translations",
   "SCOPE.GLOBAL_DESC": "These translations apply to <strong>all form types</strong> and can be overridden per type.",

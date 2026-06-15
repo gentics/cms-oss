@@ -93,6 +93,11 @@
   align-items: center;
   gap: var(--pm-spacing-md);
 
+  icon {
+    color: var(--pm-color-primary-dark);
+    font-size: 2rem;
+  }
+
   h3 {
     font-weight: 600;
     margin: 0 0 4px 0;
@@ -125,4 +130,8 @@
 .shell__no-session {
   height: 100vh;
   justify-content: center;
+
+  icon {
+    font-size: 4.5rem;
+  }
 }

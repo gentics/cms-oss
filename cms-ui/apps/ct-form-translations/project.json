@@ -1,31 +1,31 @@
 {
-    "name": "form-translations",
+    "name": "ct-form-translations",
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "prefix": "gtx",
-    "sourceRoot": "apps/form-translations/src",
+    "sourceRoot": "apps/ct-form-translations/src",
     "tags": ["app", "ct", "angular"],
     "targets": {
         "build": {
             "executor": "@nx/angular:application",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/apps/form-translations",
-                "index": "apps/form-translations/src/index.html",
-                "browser": "apps/form-translations/src/main.ts",
-                "polyfills": ["apps/form-translations/src/polyfills.ts"],
-                "tsConfig": "apps/form-translations/tsconfig.app.json",
+                "outputPath": "dist/apps/ct-form-translations",
+                "index": "apps/ct-form-translations/src/index.html",
+                "browser": "apps/ct-form-translations/src/main.ts",
+                "polyfills": ["apps/ct-form-translations/src/polyfills.ts"],
+                "tsConfig": "apps/ct-form-translations/tsconfig.app.json",
                 "assets": [
                     {
                         "glob": "**/*",
-                        "input": "apps/form-translations/src/assets",
+                        "input": "apps/ct-form-translations/src/assets",
                         "output": "assets"
                     }
                 ],
-                "styles": ["apps/form-translations/src/styles/styles.scss"],
+                "styles": ["apps/ct-form-translations/src/styles/styles.scss"],
                 "stylePreprocessorOptions": {
                     "includePaths": [
-                        "apps/form-translations/src/styles",
+                        "apps/ct-form-translations/src/styles",
                         "libs",
                         "node_modules"
                     ]
@@ -34,8 +34,8 @@
                 "aot": true,
                 "fileReplacements": [
                     {
-                        "replace": "apps/form-translations/src/environments/environment.ts",
-                        "with": "apps/form-translations/src/environments/environment.prod.ts"
+                        "replace": "apps/ct-form-translations/src/environments/environment.ts",
+                        "with": "apps/ct-form-translations/src/environments/environment.prod.ts"
                     }
                 ],
                 "outputHashing": "all",
@@ -46,7 +46,7 @@
             },
             "configurations": {
                 "production": {
-                    "baseHref": "/tools/form-translations/"
+                    "baseHref": "/tools/ct-form-translations/"
                 },
                 "development": {
                     "fileReplacements": [],
@@ -81,9 +81,9 @@
         },
         "e2e": {
             "executor": "@nx/playwright:playwright",
-            "outputs": ["{workspaceRoot}/.playwright/form-translations"],
+            "outputs": ["{workspaceRoot}/.playwright/ct-form-translations"],
             "options": {
-                "config": "apps/form-translations/playwright.config.ts",
+                "config": "apps/ct-form-translations/playwright.config.ts",
                 "skipInstall": true
             }
         }

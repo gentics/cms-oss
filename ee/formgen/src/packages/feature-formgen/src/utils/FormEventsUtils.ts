@@ -1250,6 +1250,7 @@ export const submitForm = async (
       const errorMessages = utils.getErrorMessages(
         responseData.properties,
         formState.form.pages,
+        formState.pluginName,
       );
       formState.data = responseData;
       overlayUtils.setOverlay(

@@ -632,10 +632,10 @@ export function setANFieldLoadError(
     elementState.ANFieldLoadError = error;
   }
 }
-
 export function getErrorMessages(
   properties: IDataFields,
   pages: IFormPage[] = [],
+  pluginName: PluginNameEnum,
   pageNumberParent?: number,
   aggregateID?: string,
   subAggregateID?: string,
@@ -652,8 +652,9 @@ export function getErrorMessages(
       } else {
         pageNumber = getPageNumberFromElementId(key, pages);
       }
-      // is there an error on the current element (only relevant if element is visible)
-      if (value.validationMessage && value.visible) {
+      // is there an error on the current element (only relevant if element is visible for forms plugin)
+      const isVisible = pluginName === PluginNameEnum.ACTA_NOVA ? value.visible : true;
+      if (value.validationMessage && isVisible) {
         errorMessages.push({
           validationMessage: value.validationMessage,
           pageNumber,
@@ -661,8 +662,9 @@ export function getErrorMessages(
           }
         });
       }
-      // check if there are subelements (aggregate) (only relevant if element is visible)
-      if ((value.properties || value.value) && value.visible) {
+      // check if there are subelements (aggregate) (only relevant if element is visible for forms plugin)
+      const isSubVisible = pluginName === PluginNameEnum.ACTA_NOVA ? value.visible : true;
+      if ((value.properties || value.value) && isSubVisible) {
         // Keep the aggregate ID stable: if we already know the parent aggregate (e.g. 70C581CE-...), use it;
         // otherwise fall back to the current key.
         const nextAggregateID = aggregateID ?? key;
@@ -690,10 +692,11 @@ export function getErrorMessages(
             getErrorMessages(
               value.properties,
               pages,
+              pluginName,
               pageNumber,
               nextAggregateID,
               nextSubAggregateID,
-              nextSubAggregateSortIndex
+              nextSubAggregateSortIndex,
             ),
           );
         } else {
@@ -701,10 +704,11 @@ export function getErrorMessages(
             getErrorMessages(
               value.value,
               pages,
+              pluginName,
               pageNumber,
               nextAggregateID,
               nextSubAggregateID,
-              nextSubAggregateSortIndex
+              nextSubAggregateSortIndex,
             ),
           );
         }
@@ -719,7 +723,7 @@ export function getErrorMessages(
           const rowId = subAggregat?.id as string | undefined;
           const rowSortIndex = typeof subAggregat?.sortIndex === 'number' ? subAggregat.sortIndex : index;
           errorMessages = errorMessages.concat(
-            getErrorMessages(subAggregat, pages, pageNumber, nextAggregateID, rowId, rowSortIndex),
+            getErrorMessages(subAggregat, pages, pluginName, pageNumber, nextAggregateID, rowId, rowSortIndex),
           );
         }
       }

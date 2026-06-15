@@ -1739,6 +1739,7 @@ const RendererScreen: React.FC<{
       errorMessages = utils.getErrorMessages(
         formState.data.properties,
         formState.form.pages,
+        formState.pluginName,
       );
     }
     return errorMessages;

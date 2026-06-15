@@ -315,7 +315,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         if (fileName) {
             let link = `${API_BASE_URL}/form/${this.form().id}/data/${entryUuid}/binary/${id}`;
 
-            if (index) {
+            if (index != null) {
                 link += `/${index}`;
             }
 

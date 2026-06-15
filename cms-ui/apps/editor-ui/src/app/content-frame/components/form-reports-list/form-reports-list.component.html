@@ -67,6 +67,7 @@
 <div class="table-wrapper">
     @if (tableError == null) {
         <gtx-table
+            class="reports-table"
             [paginated]="true"
             [sortable]="false"
             [selectable]="true"
@@ -101,9 +102,11 @@
 <ng-template #colRenderer let-value="value">
     @if (value == null) {}
     @else if (value?.length != null) {
-        @for (arrVal of value; track arrVal.value ?? arrVal.fileName) {
-            <ng-container [ngTemplateOutlet]="valueRenderer" [ngTemplateOutletContext]="{ value: arrVal }" />
-        }
+        <div class="form-value multi-value">
+            @for (arrVal of value; track arrVal.value ?? arrVal.fileName) {
+                <ng-container [ngTemplateOutlet]="valueRenderer" [ngTemplateOutletContext]="{ value: arrVal }" />
+            }
+        </div>
     } @else {
         <ng-container [ngTemplateOutlet]="valueRenderer" [ngTemplateOutletContext]="{ value: value }" />
     }
@@ -124,7 +127,7 @@
             >{{ value ? 'check' : 'close' }}</icon>
         }
         @case (ValueType.BINARY) {
-            <a class="form-value type-binary" [href]="value.link" download target="_blank">{{ value.fileName }}</a>
+            <a class="form-value type-binary" [href]="value.link" target="_blank">{{ value.fileName }}</a>
         }
     }
 </ng-template>

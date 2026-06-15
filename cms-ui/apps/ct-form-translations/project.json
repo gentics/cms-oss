@@ -45,16 +45,12 @@
                 "extractLicenses": true
             },
             "configurations": {
-                "production": {
-                    "baseHref": "/tools/ct-form-translations/"
-                },
                 "development": {
                     "fileReplacements": [],
                     "optimization": false,
                     "extractLicenses": false,
                     "sourceMap": true,
-                    "namedChunks": true,
-                    "baseHref": "/"
+                    "namedChunks": true
                 },
                 "ci": {
                     "progress": false

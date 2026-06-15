@@ -1,158 +1,133 @@
-<div class="wrapper">
-  <gtx-progress-bar [for]="loading$"></gtx-progress-bar>
 
-  @if (!(loading$ | async) && !(loadingError$ | async)) {
-    <div class="download-buttons">
-      @if (binaryStatus) {
+<div class="download-buttons">
+    <gtx-progress-bar [active]="loadingStatus()"></gtx-progress-bar>
+
+    @if (binaryStatus) {
         <div class="download-group binaries-group">
-          <gtx-button
-            class="download-button"
-            size="small"
-            flat
-            [disabled]="!binaryStatus?.downloadReady"
-            (click)="downloadBinaries()"
+            <gtx-button
+                class="download-button"
+                size="small"
+                flat
+                [disabled]="!binaryStatus?.downloadReady"
+                (click)="downloadBinaries()"
             >
-            <icon left>file_download</icon>{{ 'editor.form_reports_download_binaries_button' | gtxI18n }}
-          </gtx-button>
-          <gtx-button
-            class="generate-button"
-            size="small"
-            flat
-            type="warning"
-            [disabled]="binaryStatus?.requestPending"
-            (click)="generateBinaryDownload()"
+                <icon left>file_download</icon>{{ 'editor.form_reports_download_binaries_button' | gtxI18n }}
+            </gtx-button>
+
+            <gtx-button
+                class="generate-button"
+                size="small"
+                flat
+                type="warning"
+                [disabled]="binaryStatus?.requestPending"
+                (click)="generateBinaryDownload()"
             >
-            <icon left>build</icon>{{ 'editor.form_reports_generate_binary_button' | gtxI18n }}
-          </gtx-button>
-          @if (binaryStatus?.downloadReady) {
-            <div class="creation-date">
-              {{ 'editor.form_reports_binary_generated_at' | gtxI18n: { date: (binaryStatus.downloadTimestamp | gtxI18nDate:'dateTime' ) } }}
-            </div>
-          }
+                <icon left>build</icon>{{ 'editor.form_reports_generate_binary_button' | gtxI18n }}
+            </gtx-button>
+
+            @if (binaryStatus?.downloadReady) {
+                <div class="creation-date">
+                    {{ 'editor.form_reports_binary_generated_at' | gtxI18n: { date: (binaryStatus.downloadTimestamp | gtxI18nDate:'dateTime' ) } }}
+                </div>
+            }
         </div>
-      }
-      @if (exportStatus) {
+    }
+
+    @if (exportStatus) {
         <div class="download-group export-group">
-          <gtx-button
-            class="download-button"
-            size="small"
-            flat
-            [disabled]="!exportStatus?.downloadReady"
-            (click)="downloadExport()"
+            <gtx-button
+                class="download-button"
+                size="small"
+                flat
+                [disabled]="!exportStatus?.downloadReady"
+                (click)="downloadExport()"
             >
-            <icon left>file_download</icon>{{ 'editor.form_reports_download_csv_button' | gtxI18n }}
-          </gtx-button>
-          <gtx-button
-            class="generate-button"
-            size="small"
-            flat
-            type="warning"
-            [disabled]="exportStatus?.requestPending"
-            (click)="generateExportDownload()"
+                <icon left>file_download</icon>{{ 'editor.form_reports_download_csv_button' | gtxI18n }}
+            </gtx-button>
+
+            <gtx-button
+                class="generate-button"
+                size="small"
+                flat
+                type="warning"
+                [disabled]="exportStatus?.requestPending"
+                (click)="generateExportDownload()"
             >
-            <icon left>build</icon>{{ 'editor.form_reports_generate_csv_button' | gtxI18n }}
-          </gtx-button>
-          @if (exportStatus?.downloadReady) {
-            <div class="creation-date">
-              {{ 'editor.form_reports_csv_generated_at' | gtxI18n: { date: (exportStatus.downloadTimestamp | gtxI18nDate:'dateTime' ) } }}
-            </div>
-          }
+                <icon left>build</icon>{{ 'editor.form_reports_generate_csv_button' | gtxI18n }}
+            </gtx-button>
+            @if (exportStatus?.downloadReady) {
+                <div class="creation-date">
+                    {{ 'editor.form_reports_csv_generated_at' | gtxI18n: { date: (exportStatus.downloadTimestamp | gtxI18nDate:'dateTime' ) } }}
+                </div>
+            }
         </div>
-      }
-    </div>
-  }
-
-  @if (loading$ | async) {
-    <div class="loading-info">
-      <span>{{ 'editor.reports_loading_status_loading' | gtxI18n }}</span>
-    </div>
-  } @else if (result?.entries.length === 0) {
-    <div class="loading-info">
-      <span>{{ 'editor.reports_loading_status_empty' | gtxI18n }}</span>
-    </div>
-  } @else if (loadingError$ | async) {
-    <div class="loading-info">
-      <i class="material-icons invalid">warning</i>
-      <span>{{ errorMessage }}</span>
-    </div>
-  } @else if (formConfig == null) {
-    <div class="loading-info">
-      <i class="material-icons invalid">warning</i>
-      <span>{{ 'editor.report_loading_form_type_missing' | gtxI18n }}</span>
-    </div>
-  } @else {
-    <div class="table-wrapper-outer">
-      <div class="table-wrapper-inner">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th data-id="check" class="icon-checkbox">
-                        <icon-checkbox
-                            [selected]="allSelected"
-                            [icon]="icon"
-                            (change)="toggleAllSelect()"
-                        ></icon-checkbox>
-                    </th>
-                    @for (el of elementKeys; track el) {
-                        @if (formElementMap.get(el); as elSettings) {
-                            <ng-container [ngTemplateOutlet]="columnTitle" [ngTemplateOutletContext]="{ id: el, label: elSettings.label | gtxI18nObject }" />
-                        } @else if (formConfig.controls[resultElementMap[el]]; as entryCtl) {
-                            <ng-container [ngTemplateOutlet]="columnTitle" [ngTemplateOutletContext]="{ id: el, label: entryCtl.labelI18n | gtxI18nObject }" />
-                        }
-
-                        <ng-template #columnTitle let-label="label" let-id="id">
-                            <th [attr.data-id]="id" [title]="label">
-                                <span>{{ label }}</span>
-                            </th>
-                        </ng-template>
-                    }
-                    <th data-id="delete" class="delete-icon">
-                        <i
-                            class="material-icons invalid"
-                            [class.disabled]="selected.size === 0"
-                            (click)="deleteMultipleReports()"
-                        >delete</i>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (entry of result?.entries | paginate: paginationConfig; track entry.uuid) {
-                    <tr>
-                        <td data-id="check" class="icon-checkbox fixed sticky-left">
-                            <icon-checkbox
-                                [selected]="selected | gtxIncludes:entry.uuid"
-                                [icon]="icon"
-                                (change)="changeSelection(entry.uuid)"
-                            ></icon-checkbox>
-                        </td>
-                        @for (el of elementKeys; track el) {
-                            @let resultElVal = entry.fields[el];
-                            <td [attr.data-id]="el">
-                                @if (isFile(resultElVal)) {
-                                    <a
-                                        [href]="getFileHref(resultElVal, entry)"
-                                        download
-                                    >
-                                        <span>{{ getEntryValue(resultElVal) }}</span>
-                                    </a>
-                                } @else {
-                                    <span>{{ getEntryValue(resultElVal) }}</span>
-                                }
-                            </td>
-                        }
-                        <td data-id="delete" class="delete-icon fixed sticky-right">
-                            <i (click)="deleteSingleReport(entry)" class="material-icons invalid">delete</i>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-      </div>
-    </div>
-  }
-
-  <div class="paginate-wrapper">
-    <paging-controls (pageChange)="pageChanged($event)"></paging-controls>
-  </div>
-
+    }
 </div>
+
+<div class="table-wrapper">
+    @if (tableError == null) {
+        <gtx-table
+            class="reports-table"
+            [paginated]="true"
+            [sortable]="false"
+            [selectable]="true"
+            [multiple]="true"
+
+            [page]="page()"
+            [perPage]="pageSize()"
+            [totalCount]="totalCount()"
+            [selected]="selected() | gtxValues"
+            [columns]="columns()"
+            [actions]="actions()"
+            [rows]="rows()"
+
+            [renderers]=" {
+                __fallback__: colRenderer
+            }"
+
+            (pageChange)="handlePageChange($event)"
+            (selectedChange)="handleSelectedChange($event)"
+            (actionClick)="handleActionClick($event)"
+        />
+    } @else {
+        <div class="loading-info">
+            <icon class="invalid">warning</icon>
+            <span>{{ tableError }}</span>
+        </div>
+    }
+
+    <gtx-progress-bar [active]="loadingReport() || loadingAction()"></gtx-progress-bar>
+</div>
+
+<ng-template #colRenderer let-value="value">
+    @if (value == null) {}
+    @else if (value?.length != null) {
+        <div class="form-value multi-value">
+            @for (arrVal of value; track arrVal.value ?? arrVal.fileName) {
+                <ng-container [ngTemplateOutlet]="valueRenderer" [ngTemplateOutletContext]="{ value: arrVal }" />
+            }
+        </div>
+    } @else {
+        <ng-container [ngTemplateOutlet]="valueRenderer" [ngTemplateOutletContext]="{ value: value }" />
+    }
+</ng-template>
+
+<ng-template #valueRenderer let-value="value">
+    @switch (value.type) {
+        @case (ValueType.STRING) {
+            <span class="form-value type-string">{{ value.value }}</span>
+        }
+        @case (ValueType.NUMBER) {
+            <span class="form-value type-number">{{ value.value | gtxI18nNumber }}</span>
+        }
+        @case (ValueType.BOOLEAN) {
+            <icon
+                class="form-value type-boolean gtx-table-cell-boolean"
+                [ngClass]="'gtx-table-cell-boolean-' + value"
+            >{{ value ? 'check' : 'close' }}</icon>
+        }
+        @case (ValueType.BINARY) {
+            <a class="form-value type-binary" [href]="value.link" target="_blank">{{ value.fileName }}</a>
+        }
+    }
+</ng-template>

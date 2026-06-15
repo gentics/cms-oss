@@ -80,6 +80,8 @@
         "type_forms_dative": "Forms",
         "type_form_counts": "{{count}} forms",
         "type_form_singular": "One form",
+        "type_form_report": "Form report",
+        "type_form_reports": "Form reports",
         "type_external_form": "External form",
         "type_external_form_article": "The external form",
         "type_external_forms": "External forms",

@@ -80,6 +80,8 @@
         "type_forms_dative": "Formularen",
         "type_form_counts": "{{count}} Formulare",
         "type_form_singular": "Ein Formular",
+        "type_form_report": "Formularbericht",
+        "type_form_reports": "Formularberichte",
         "type_external_form": "Externes Formular",
         "type_external_form_article": "Das externe Formular",
         "type_external_forms": "Externe Formulare",

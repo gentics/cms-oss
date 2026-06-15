@@ -834,6 +834,7 @@ const RendererScreen: React.FC<{
       formState.data = getPrefillData(data.data);
       formState.schema = data.schema;
       formState.captchaConfig = data.captchaConfig;
+      formState.successUrl = data.successUrl;
       uiState.lastPage = data.uiSchema.pages.length;
 
       if (data.schema.formType) {
@@ -873,6 +874,7 @@ const RendererScreen: React.FC<{
       formState.data = getPrefillData(responseBody.data);
       formState.schema = responseBody.schema;
       formState.captchaConfig = responseBody.captchaConfig;
+      formState.successUrl = responseBody.successUrl;
       uiState.lastPage = responseBody.uiSchema.pages.length;
       const missingFlowResponse2 = applyFormFlow(responseBody);
       if (missingFlowResponse2) return missingFlowResponse2;
@@ -945,7 +947,7 @@ const RendererScreen: React.FC<{
     }
 
     // 3) Mock load
-    let responseBody: { uiSchema: IForm, schema: ISchema, data?: IData, captchaConfig?: any; } | null = null;
+    let responseBody: { uiSchema: IForm, schema: ISchema, data?: IData, captchaConfig?: any; successUrl?: { [language: string]: string }; } | null = null;
     if (props.isFormgridPreview && props.previewFormData != null) {
       formState.form = props.previewFormData.uiSchema;
       formState.data = { formID: props.formId, properties: props.prefillContent };
@@ -964,6 +966,7 @@ const RendererScreen: React.FC<{
         formState.form = responseBody!.uiSchema;
         formState.data = responseBody!.data!;
         formState.schema = responseBody!.schema;
+        formState.successUrl = responseBody!.successUrl;
         formState.captchaConfig = responseBody!.captchaConfig;
       }
     }

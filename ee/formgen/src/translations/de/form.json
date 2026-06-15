@@ -176,6 +176,7 @@
     "form_accessibility_dropdownCatalog_radio": "Option: {option}",
     "form_accessibility_dropdownCatalog_radio_hint": "Tippen Sie doppelt, um diese Option auszuwählen.",
     "form_successDefault": "Formular erfolgreich gesendet!",
+    "form_success_redirect": "Fortfahren",
     "form_label_element_value_not_available": "Wert in dieser Sprache nicht verfügbar.",
 
     "form_accessibility_textInput_multiline_label": "Mehrzeiliges Textfeld für {label}",

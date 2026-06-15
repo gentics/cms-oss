@@ -168,6 +168,7 @@
     "form_accessibility_dropdownCatalog_radio": "Option: {option}",
     "form_accessibility_dropdownCatalog_radio_hint": "Double-tap to select this option.",
     "form_successDefault": "Form successfully send!",
+    "form_success_redirect": "Continue",
     "form_expertSearch_singleCheckMark": "Entry selected",
     "form_expertSearch_multipleCheckMark": "Entries selected",
     "form_expertSearch_checkMarksChooseAll": "Select all entries",

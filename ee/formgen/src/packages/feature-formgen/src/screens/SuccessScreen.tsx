@@ -50,6 +50,47 @@ const SuccessScreen: React.FC<SuccessScreenProps> = (props) => {
     }
   };
 
+  // Resolve the redirect target for the current language, falling back to the
+  // short culture code (e.g. "de-AT" -> "de") and finally the first entry.
+  // only for CMS forms 
+  const successUrl = useMemo(() => {
+    const urls = props.formState?.successUrl;
+    if (!urls) return undefined;
+    const culture = props.formState?.culture ?? '';
+    return (
+      urls[culture] ?? urls[culture.split('-')[0]] ?? Object.values(urls)[0]
+    );
+  }, [props.formState?.successUrl, props.formState?.culture]);
+
+  const handleSuccessUrl = () => {
+    if (!successUrl) return;
+    if (Platform.OS === 'web') {
+      window.open(successUrl, '_self')?.focus();
+    }
+  };
+
+  const renderSuccessUrlButton = () => {
+    if (!successUrl) return null;
+    return (
+      <AndpButton
+        title={t('form_success_redirect')}
+        onPress={handleSuccessUrl}
+        wrapperStyle={[
+          styles.buttonWrapper,
+          breakPoints.maximumSm && styles.buttonWrapperScreenMaxSmall,
+          styles.primaryWrapper,
+          { alignSelf: 'center', marginBottom: 24, flexGrow: 0, width: 'auto', minWidth: 180, marginTop: 20 },
+        ]}
+        type="primary"
+        buttonStyle={[
+          styles.primaryButton,
+          { width: '100%', minWidth: 180 }
+        ]}
+        textStyle={[styles.primaryButtonText]}
+      />
+    );
+  };
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fade, {
@@ -146,6 +187,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = (props) => {
               <AndpIcon name="checkMark" style={styles.successIcon} />
             </View>
           </Animated.View>
+          {renderSuccessUrlButton()}
         </View>
         {Platform.OS != 'web' ? (
           <AndpButton
@@ -155,10 +197,13 @@ const SuccessScreen: React.FC<SuccessScreenProps> = (props) => {
               styles.buttonWrapper,
               breakPoints.maximumSm && styles.buttonWrapperScreenMaxSmall,
               styles.primaryWrapper,
-              { alignSelf: 'center', marginBottom: 24, flexGrow: 0 },
+              { alignSelf: 'center', marginBottom: 24, flexGrow: 0, width: 'auto', minWidth: 180 },
             ]}
             type={'primary'}
-            buttonStyle={[styles.primaryButton]}
+            buttonStyle={[
+              styles.primaryButton,
+              { width: '100%', minWidth: 180 }
+            ]}
             textStyle={[styles.primaryButtonText]}
           />
         ) : null}

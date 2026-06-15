@@ -26,7 +26,7 @@
 
         <fileSet>
 			<directory>${basedir}/dist/apps/ct-form-translations/browser</directory>
-			<outputDirectory>/link-checker</outputDirectory>
+			<outputDirectory>/form-translations</outputDirectory>
 			<includes>
 				<include>**</include>
 			</includes>

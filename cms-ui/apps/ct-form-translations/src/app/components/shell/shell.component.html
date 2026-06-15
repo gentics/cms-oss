@@ -35,8 +35,8 @@
         </gtx-scope-tabs>
 
         <gtx-translations-toolbar
-            [search]="search"
-            [filter]="filter"
+            [search]="search()"
+            [filter]="filter()"
             [shown]="visibleKeys().length"
             [total]="activeKeys().length"
             (searchChange)="onSearchChange($event)"
@@ -73,7 +73,7 @@
 
                 <gtx-save-bar
                     [dirtyCount]="dirtyCount()"
-                    [saving]="saving"
+                    [saving]="saving()"
                     (save)="onSave()"
                     (discard)="onDiscard()">
                 </gtx-save-bar>

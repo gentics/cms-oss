@@ -5,6 +5,7 @@
         [placeholder]="'TOOLBAR.SEARCH_PLACEHOLDER' | gtxI18n"
         [query]="search"
         (change)="onSearchInput($event)"
+        (clear)="searchChange.emit('')"
     ></gtx-search-bar>
 
   <div class="toolbar__filter" role="tablist" data-region="filter">

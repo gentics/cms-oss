@@ -59,9 +59,16 @@ export class ShellComponent implements OnInit {
     public readonly savedTranslations = signal<Record<string, FormTranslations>>({});
 
     public readonly activeScopeId = signal<string>(GLOBAL_SCOPE_ID);
+    public readonly search = signal('');
+    public readonly filter = signal<FilterMode>('all');
 
+    public readonly saving = signal(false);
+
+    private draft = signal<FormTranslations>({});
+
+    // -------- computed state --------
     public readonly scopes = computed<Record<string, Scope>>(() => {
-        const map = {
+        const map: Record<string, Scope> = {
             [GLOBAL_SCOPE_ID]: {
                 id: GLOBAL_SCOPE_ID,
                 label: this.i18n.instant('SCOPE.GLOBAL_TITLE'),
@@ -86,22 +93,29 @@ export class ShellComponent implements OnInit {
         return this.scopes()[this.activeScopeId()];
     });
 
+    public readonly activeTranslations = computed(() => {
+        return this.savedTranslations()[this.activeScopeId()];
+    });
+
     public readonly activeKeys = computed<string[]>(() => {
-        return Object.keys(this.savedTranslations()[this.activeScopeId()]);
+        return Object.keys(this.activeTranslations());
     });
 
     public readonly visibleKeys = computed<string[]>(() => {
         const all = this.activeKeys();
-        const q = this.search.trim().toLowerCase();
-        const draft = this.draft();
+        const q = this.search().trim().toLowerCase();
+        const data = merge(this.activeTranslations(), this.draft());
+        const filter = this.filter();
 
         return all.filter((key) => {
             if (q && !key.toLowerCase().includes(q)) {
                 return false;
             }
-            if (this.filter === 'incomplete') {
-                const incomplete = this.languages().some((l) => (draft[key]?.[l.code] ?? '').trim() === '');
-                if (!incomplete) return false;
+            if (filter === 'incomplete') {
+                const incomplete = this.languages().some((l) => (data[key]?.[l.code] ?? '').trim() === '');
+                if (!incomplete) {
+                    return false;
+                }
             }
             return true;
         });
@@ -119,7 +133,7 @@ export class ShellComponent implements OnInit {
 
         return Object.values(this.scopes()).map((scope) => {
             const isActive = scope.id === active;
-            const translationData = (isActive)
+            const translationData: FormTranslations = (isActive)
                 ? merge(translations[scope.id], this.draft())
                 : translations[scope.id];
             const totalKeys = Object.keys(translationData).length;
@@ -140,19 +154,13 @@ export class ShellComponent implements OnInit {
         });
     });
 
-    search = '';
-    filter: FilterMode = 'all';
-    saving = false;
-
-    private draft = signal<FormTranslations>({});
+    /* =====================================================================
+    *  Bootstrap
+    * ===================================================================== */
 
     ngOnInit(): void {
         this.bootstrap();
     }
-
-    /* =====================================================================
-     *  Bootstrap
-     * ===================================================================== */
 
     private async bootstrap(): Promise<void> {
         this.bootstrapStatus = 'loading';
@@ -254,11 +262,11 @@ export class ShellComponent implements OnInit {
     }
 
     onSearchChange(term: string): void {
-        this.search = term;
+        this.search.set(term);
     }
 
     onFilterChange(filter: FilterMode): void {
-        this.filter = filter;
+        this.filter.set(filter);
     }
 
     onCellEdit(event: CellEditEvent): void {
@@ -285,10 +293,10 @@ export class ShellComponent implements OnInit {
             return;
         }
 
-        this.saving = true;
+        this.saving.set(true);
         this.changeDetector.markForCheck();
         try {
-            const saveData = merge(this.savedTranslations()[this.activeScopeId()], this.draft());
+            const saveData = merge(this.activeTranslations(), this.draft());
             const obs = scope.isGlobal
                 ? this.api.saveGlobalTranslations(saveData)
                 : this.api.saveTypeTranslations(scopeId, saveData);
@@ -311,7 +319,7 @@ export class ShellComponent implements OnInit {
 
             console.error('save failed', err);
         } finally {
-            this.saving = false;
+            this.saving.set(false);
             this.changeDetector.markForCheck();
         }
     }

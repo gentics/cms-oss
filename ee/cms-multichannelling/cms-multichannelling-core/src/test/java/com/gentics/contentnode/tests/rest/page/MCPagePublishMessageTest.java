@@ -30,6 +30,7 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
@@ -230,6 +231,8 @@ public class MCPagePublishMessageTest {
 			upd.setPublishContentmap(true);
 			upd.setContentrepositoryId(crId);
 		}).build();
+
+		MeshPublisher.clearCachedData();
 
 		// create test page
 		Page page = createTestPage("Test Page", "testpage.html", otherChannel);

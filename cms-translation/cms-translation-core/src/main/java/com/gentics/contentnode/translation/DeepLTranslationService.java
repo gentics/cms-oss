@@ -1,9 +1,21 @@
 package com.gentics.contentnode.translation;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.Strings;
+import org.apache.logging.log4j.Level;
+import org.apache.tika.utils.StringUtils;
+import org.jsoup.Jsoup;
+
 import com.deepl.api.AuthorizationException;
 import com.deepl.api.DeepLException;
 import com.deepl.api.QuotaExceededException;
 import com.deepl.api.TextResult;
+import com.deepl.api.TextTranslationOptions;
 import com.deepl.api.Translator;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.TranslationException;
@@ -12,12 +24,6 @@ import com.gentics.contentnode.etc.TranslationConfigUtil;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
-import java.util.HashMap;
-import java.util.Map;
-import javax.annotation.Nullable;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Level;
 
 /**
  * Translation service for the DeepL translator.
@@ -67,12 +73,19 @@ public class DeepLTranslationService implements TranslationService {
 	public String translate(String textToTranslate, @Nullable String sourceLanguage,
 			String targetLanguage)
 			throws NodeException {
+		if (StringUtils.isEmpty(textToTranslate)) {
+			return textToTranslate;
+		}
 		var mappedTargetLanguage = mapLanguageCodeToTranslationLanguage(targetLanguage);
 
 		TextResult translatedText;
 		try {
+			TextTranslationOptions options = new TextTranslationOptions();
+			if (!Strings.CS.equals(textToTranslate, Jsoup.parse(textToTranslate).text())) {
+				options.setTagHandlingVersion("v1").setTagHandling("html");
+			}
 			translatedText = translator.translateText(textToTranslate, sourceLanguage,
-					mappedTargetLanguage);
+					mappedTargetLanguage, options);
 		} catch (DeepLException exception) {
 			var errorMessage = this.getErrorMessage(exception);
 			throw new TranslationException(errorMessage.toString());

@@ -56,9 +56,8 @@
                             <div>
                                 <h3>
                                     {{ activeScope().isGlobal ? ('SCOPE.GLOBAL_TITLE' | gtxI18n) : ('SCOPE.TYPE_TITLE' | gtxI18n:{ name: activeScope().label }) }}
-
                                 </h3>
-                                <p>{{ activeScope().description | gtxI18n:{ name: activeScope().label } }}</p>
+                                <p [innerHTML]="(activeScope().description | gtxI18n:{ name: activeScope().label })| safe:'html'"></p>
                             </div>
                         </div>
                     }

@@ -2,7 +2,7 @@
     <gtx-search-bar
         class="toolbar__search"
         data-action="search"
-        [placeholder]="'TOOLBAR.SEARCH_PLACEHOLDER' | gtxI18n"
+        [placeholder]="'tool.search_placeholder' | gtxI18n"
         [query]="search"
         (change)="onSearchInput($event)"
         (clear)="searchChange.emit('')"
@@ -16,7 +16,7 @@
       [attr.data-active]="filter === 'all'"
       [class.is-active]="filter === 'all'"
       (click)="onFilter('all')">
-      {{ 'TOOLBAR.FILTER_ALL' | gtxI18n }}
+      {{ 'tool.filter_type_all' | gtxI18n }}
     </button>
     <button
       type="button"
@@ -25,7 +25,7 @@
       [attr.data-active]="filter === 'incomplete'"
       [class.is-active]="filter === 'incomplete'"
       (click)="onFilter('incomplete')">
-      {{ 'TOOLBAR.FILTER_INCOMPLETE' | gtxI18n }}
+      {{ 'tool.filter_type_incomplete' | gtxI18n }}
     </button>
   </div>
 
@@ -34,19 +34,19 @@
   <div class="toolbar__legend">
     <span class="toolbar__legend-item">
       <span class="toolbar__swatch toolbar__swatch--saved"></span>
-      {{ 'TOOLBAR.LEGEND_SAVED' | gtxI18n }}
+      {{ 'tool.legend_saved' | gtxI18n }}
     </span>
     <span class="toolbar__legend-item">
       <span class="toolbar__swatch toolbar__swatch--dirty"></span>
-      {{ 'TOOLBAR.LEGEND_DIRTY' | gtxI18n }}
+      {{ 'tool.legend_dirty' | gtxI18n }}
     </span>
     <span class="toolbar__legend-item">
       <span class="toolbar__swatch toolbar__swatch--empty"></span>
-      {{ 'TOOLBAR.LEGEND_EMPTY' | gtxI18n }}
+      {{ 'tool.legend_empty' | gtxI18n }}
     </span>
   </div>
 
   <div class="toolbar__info" data-name="counter" [attr.data-shown]="shown" [attr.data-total]="total">
-    {{ 'TOOLBAR.COUNT' | gtxI18n:{ shown: shown, total: total } }}
+    {{ 'tool.placeholder_display_count' | gtxI18n:{ shown: shown, total: total } }}
   </div>
 </div>

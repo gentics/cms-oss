@@ -3,7 +3,7 @@
         <table class="translations">
             <thead>
                 <tr>
-                    <th class="col-key">{{ 'TABLE.HEADER_PLACEHOLDER' | gtxI18n }}</th>
+                    <th class="col-key">{{ 'tool.table_column_placeholder' | gtxI18n }}</th>
                     @for (lang of languages; track lang.code) {
                         <th class="col-lang" [attr.data-lang]="lang.code">
                             {{ lang.name }}
@@ -53,7 +53,7 @@
 } @else {
     <div class="pm-empty-state" data-name="empty-state">
       <icon>search</icon>
-      <h3>{{ 'TABLE.EMPTY_TITLE' | gtxI18n }}</h3>
-      <p>{{ 'TABLE.EMPTY_DESC' | gtxI18n }}</p>
+      <h3>{{ 'tool.table_no_matches_title' | gtxI18n }}</h3>
+      <p>{{ 'tool.table_no_matches_desc' | gtxI18n }}</p>
     </div>
 }

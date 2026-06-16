@@ -24,8 +24,7 @@ export class TranslationsToolbarComponent {
     @Output() readonly searchChange = new EventEmitter<string>();
     @Output() readonly filterChange = new EventEmitter<FilterMode>();
 
-    onSearchInput(event: Event): void {
-        const value = (event.target as HTMLInputElement).value;
+    onSearchInput(value: string): void {
         this.searchChange.emit(value);
     }
 

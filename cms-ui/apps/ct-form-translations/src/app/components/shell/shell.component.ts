@@ -11,8 +11,8 @@ import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { FormTranslations, FormTranslationsLanguage, FormTypeConfiguration } from '@gentics/cms-models';
 import { firstValueFrom } from 'rxjs';
 
-import { AuthenticationService } from '../../core/services/authentication.service';
-import { ToolApiService } from '../../core/services/tool-api.service';
+import { AuthenticationService } from '../../services/authentication.service';
+import { ToolApiService } from '../../services/tool-api.service';
 import {
     FilterMode,
     GLOBAL_SCOPE_ID,
@@ -57,22 +57,20 @@ export class ShellComponent implements OnInit {
     public readonly languages = signal<FormTranslationsLanguage[]>([]);
     public readonly formTypeConfigurations = signal<FormTypeConfiguration[]>([]);
     public readonly savedTranslations = signal<Record<string, FormTranslations>>({});
+    public readonly draft = signal<FormTranslations>({});
 
     public readonly activeScopeId = signal<string>(GLOBAL_SCOPE_ID);
     public readonly search = signal('');
     public readonly filter = signal<FilterMode>('all');
-
     public readonly saving = signal(false);
-
-    private draft = signal<FormTranslations>({});
 
     // -------- computed state --------
     public readonly scopes = computed<Record<string, Scope>>(() => {
         const map: Record<string, Scope> = {
             [GLOBAL_SCOPE_ID]: {
                 id: GLOBAL_SCOPE_ID,
-                label: this.i18n.instant('SCOPE.GLOBAL_TITLE'),
-                description: 'SCOPE.GLOBAL_DESC',
+                label: this.i18n.instant('tool.global_translations_title'),
+                description: 'tool.global_translations_desc',
                 isGlobal: true,
             },
         };
@@ -81,7 +79,7 @@ export class ShellComponent implements OnInit {
             map[conf.type] = {
                 id: conf.type,
                 label: this.i18n.fromObject(conf.nameI18n),
-                description: 'SCOPE.TYPE_DESC',
+                description: 'tool.scope_translations_desc',
                 isGlobal: false,
             };
         }
@@ -205,13 +203,11 @@ export class ShellComponent implements OnInit {
             }
 
             this.savedTranslations.set(translationMap);
-
-            this.draft[GLOBAL_SCOPE_ID] = structuredClone(globalTranslations);
-
+            this.draft.set({});
             this.bootstrapStatus = 'loaded';
         } catch (err) {
             this.bootstrapStatus = 'error';
-            this.notifications.show({ type: 'alert', message: 'NOTIFY.LOAD_ERROR' });
+            this.notifications.show({ type: 'alert', message: 'tool.translation_load_error' });
 
             console.error('form-translations bootstrap failed', err);
         } finally {
@@ -241,8 +237,8 @@ export class ShellComponent implements OnInit {
 
     async askDiscard(): Promise<boolean> {
         const dialog = await this.modals.dialog({
-            title: this.i18n.instant('SAVE_BAR.CONFIRM_DISCARD'),
-            body: this.i18n.instant('SAVE_BAR.CONFIRM_SCOPE_SWITCH'),
+            title: this.i18n.instant('tool.confirm_discard_title'),
+            body: this.i18n.instant('tool.confirm_scope_switch_desc'),
             buttons: [
                 {
                     id: 'cancel',
@@ -252,7 +248,7 @@ export class ShellComponent implements OnInit {
                 },
                 {
                     id: 'confirm',
-                    label: this.i18n.instant('COMMON.DISCARD'),
+                    label: this.i18n.instant('common.discard_button'),
                     type: 'alert',
                     returnValue: true,
                 },
@@ -310,12 +306,12 @@ export class ShellComponent implements OnInit {
 
             this.notifications.show({
                 type: 'success',
-                message: 'NOTIFY.SAVE_SUCCESS',
+                message: 'tool.save_success',
                 translationParams: { count: changeCount },
             });
             /* Pull-based ToolApi: nothing to push — the UI pulls hasUnsavedChanges() when it cares. */
         } catch (err) {
-            this.notifications.show({ type: 'alert', message: 'NOTIFY.SAVE_ERROR' });
+            this.notifications.show({ type: 'alert', message: 'tool.save_error' });
 
             console.error('save failed', err);
         } finally {
@@ -329,7 +325,7 @@ export class ShellComponent implements OnInit {
             return;
         }
         this.draft.set({});
-        this.notifications.show({ type: 'default', message: 'NOTIFY.DISCARD_DONE' });
+        this.notifications.show({ type: 'default', message: 'tool.discard_success' });
         /* Pull-based ToolApi: nothing to push — the UI pulls hasUnsavedChanges() when it cares. */
     }
 }

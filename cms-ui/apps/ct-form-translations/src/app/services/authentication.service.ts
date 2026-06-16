@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
 
 const SID_STORAGE_KEY = 'GCMSUI_sid';
 
@@ -15,7 +14,6 @@ export class AuthenticationService {
 
     private initialized = false;
     private currentSid: string | null = null;
-    private readonly sid$ = new BehaviorSubject<string | null>(null);
 
     /** Must be called once during app bootstrap. */
     init(): void {
@@ -30,14 +28,9 @@ export class AuthenticationService {
         return this.currentSid;
     }
 
-    getSid(): Observable<string | null> {
-        return this.sid$.asObservable();
-    }
-
     /** Re-reads the SID from URL / storage. */
     updateSid(): void {
         this.currentSid = this.extractSidFromLocationOrStorage();
-        this.sid$.next(this.currentSid);
     }
 
     /**

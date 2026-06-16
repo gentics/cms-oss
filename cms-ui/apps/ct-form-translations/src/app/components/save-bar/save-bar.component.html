@@ -8,7 +8,7 @@
     <div class="save-bar__info">
         <span class="save-bar__dot"></span>
         <span data-name="dirty-count" [attr.data-count]="dirtyCount">
-            {{ 'SAVE_BAR.UNSAVED' | gtxI18n:{ count: dirtyCount } }}
+            {{ 'tool.unsaved_count' | gtxI18n:{ count: dirtyCount } }}
         </span>
     </div>
 
@@ -21,16 +21,16 @@
         [disabled]="dirtyCount === 0 || isSaving"
         (click)="discard.emit()"
     >
-        {{ 'COMMON.DISCARD' | gtxI18n }}
+        {{ 'common.discard_button' | gtxI18n }}
     </gtx-button>
 
     <gtx-button
-        type="primary"
+        type="default"
         data-action="save"
         [disabled]="dirtyCount === 0 || isSaving"
         (click)="save.emit()"
     >
-        <icon left class="hollow" [class.spin]="isSaving">{{ isSaving ? 'refresh' : 'save' }}</icon>
-        <span class="button-text">{{ (isSaving ? 'COMMON.SAVING' : 'COMMON.SAVE') | gtxI18n }}</span>
+        <icon left [class.spin]="isSaving">{{ isSaving ? 'refresh' : 'save' }}</icon>
+        <span class="button-text">{{ (isSaving ? 'common.saving' : 'common.save_button') | gtxI18n }}</span>
     </gtx-button>
 </div>

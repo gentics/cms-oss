@@ -23,6 +23,12 @@
         "editor": "Editor",
         "edate": "Edit Date",
 
+        "discard_button": "Discard",
+        "loading": "Loading…",
+        "saving": "Saving…",
+        "retry": "Retry",
+        "unsaved_changes": "Unsaved changes",
+
         "confirm_addition": "Confirm {{ label }}",
         "password_missmatch": "Passwords don not match",
 

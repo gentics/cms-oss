@@ -1,23 +1,20 @@
-import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { inject, NgModule, provideAppInitializer } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
-import { CmsComponentsModule } from '@gentics/cms-components';
+import { CmsComponentsModule, I18nService } from '@gentics/cms-components';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-
-import * as DE_TRANSLATIONS from '../assets/i18n/de.json';
-import * as EN_TRANSLATIONS from '../assets/i18n/en.json';
-import { environment } from '../environments/environment';
+import * as DE_TRANSLATIONS from '../../public/i18n/de.json';
+import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import { AppComponent } from './app.component';
 import { SaveBarComponent } from './components/save-bar/save-bar.component';
 import { ScopeTabsComponent } from './components/scope-tabs/scope-tabs.component';
 import { ShellComponent } from './components/shell/shell.component';
 import { TranslationsTableComponent } from './components/translations-table/translations-table.component';
 import { TranslationsToolbarComponent } from './components/translations-toolbar/translations-toolbar.component';
-import { DevMockInterceptor } from './core/interceptors/dev-mock.interceptor';
-import { AuthenticationService } from './core/services/authentication.service';
+import { AuthenticationService } from './services/authentication.service';
 
 @NgModule({
     declarations: [
@@ -38,18 +35,27 @@ import { AuthenticationService } from './core/services/authentication.service';
     ],
     providers: [
         provideHttpClient(withInterceptorsFromDi()),
-        /* Local dev fallback while the backend endpoints aren't shipped yet.
-           Production builds skip this entirely (see environment.prod.ts). */
-        ...(environment.useDevMock
-            ? [{ provide: HTTP_INTERCEPTORS, useClass: DevMockInterceptor, multi: true }]
-            : []),
         provideAppInitializer(() => {
+            const i18n = inject(I18nService);
             const translate = inject(TranslateService);
             const auth = inject(AuthenticationService);
             const client = inject(GCMSRestClientService);
 
             translate.setTranslation('de', DE_TRANSLATIONS, true);
             translate.setTranslation('en', EN_TRANSLATIONS, true);
+
+            const savedLang = localStorage.getItem('GCMSUI_uiLanguage');
+            if (savedLang === 'de' || savedLang === 'en') {
+                translate.use(savedLang);
+            } else {
+                const infered = i18n.inferUserLanguage();
+                if (infered === 'de' || savedLang === 'en') {
+                    translate.use(infered);
+                } else {
+                    // If nothing matches, we fall back to english just in case
+                    translate.use('en');
+                }
+            }
 
             auth.init();
 

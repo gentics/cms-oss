@@ -2,8 +2,8 @@
 @if (bootstrapStatus === 'loaded' && !hasSession) {
     <div class="shell__no-session pm-error-state" data-name="no-session">
         <icon class="hollow">error</icon>
-        <h2>{{ 'ERROR.NO_SESSION_TITLE' | gtxI18n }}</h2>
-        <p>{{ 'ERROR.NO_SESSION_DESC' | gtxI18n }}</p>
+        <h2>{{ 'tool.missing_session_title' | gtxI18n }}</h2>
+        <p>{{ 'tool.missing_session_desc' | gtxI18n }}</p>
     </div>
 }
 
@@ -18,14 +18,9 @@
 @if (bootstrapStatus === 'loaded' && hasSession) {
     <div class="shell" data-region="shell">
         <header class="shell__header" data-region="header">
-            <h1>{{ 'TOOL.TITLE' | gtxI18n }}</h1>
-            <span class="shell__subtitle">{{ 'TOOL.SUBTITLE' | gtxI18n }}</span>
+            <h1>{{ 'tool.app_title' | gtxI18n }}</h1>
+            <span class="shell__subtitle">{{ 'tool.app_subtitle' | gtxI18n }}</span>
             <div class="shell__header-spacer"></div>
-            @if (sid) {
-                <span class="shell__session-badge">
-                    {{ 'TOOL.SESSION_BADGE' | gtxI18n }}: {{ sid }}
-                </span>
-            }
         </header>
 
         <gtx-scope-tabs
@@ -55,7 +50,7 @@
                             <icon>language</icon>
                             <div>
                                 <h3>
-                                    {{ activeScope().isGlobal ? ('SCOPE.GLOBAL_TITLE' | gtxI18n) : ('SCOPE.TYPE_TITLE' | gtxI18n:{ name: activeScope().label }) }}
+                                    {{ activeScope().isGlobal ? ('tool.global_translations_title' | gtxI18n) : ('tool.scope_translations_title' | gtxI18n:{ name: activeScope().label }) }}
                                 </h3>
                                 <p [innerHTML]="(activeScope().description | gtxI18n:{ name: activeScope().label })| safe:'html'"></p>
                             </div>

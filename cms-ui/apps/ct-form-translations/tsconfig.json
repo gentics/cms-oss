@@ -3,17 +3,14 @@
     "compilerOptions": {
         "target": "es2022",
         "moduleResolution": "bundler",
-        "module": "preserve"
+        "module": "preserve",
     },
     "files": [],
     "include": [],
     "angularCompilerOptions": {
         "annotateForClosureCompiler": true,
-        "skipTemplateCodegen": false,
-        "strictMetadataEmit": true,
         "strictTemplates": false,
         "strictInjectionParameters": true,
-        "enableResourceInlining": false
     },
     "references": [
         {

@@ -23,6 +23,12 @@
         "editor": "Editor",
         "edate": "Bearbeitungsdatum",
 
+        "discard_button": "Verwerfen",
+        "loading": "Wird geladen …",
+        "saving": "Wird gespeichert …",
+        "retry": "Erneut versuchen",
+        "unsaved_changes": "Ungespeicherte Änderungen",
+
         "confirm_addition": "{{ label }} bestätigen",
         "password_missmatch": "Passwörter nicht ident",
 

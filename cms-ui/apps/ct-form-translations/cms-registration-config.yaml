@@ -9,5 +9,5 @@ custom_tools:
       de: Formular-Übersetzungen
       en: Form Translations
     toolUrl: /tools/form-translations/?sid=${SID}
-    iconUrl: /tools/form-translations/assets/icon.svg
+    iconUrl: language
     newtab: false

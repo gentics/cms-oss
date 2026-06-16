@@ -1,6 +1,6 @@
 export const PRODUCT_TOOL_KEYS = [
     'linkchecker',
-    'formgenerator',
+    'form_translations',
 ];
 
 export const ADMIN_TOOL_KEY = 'administration';

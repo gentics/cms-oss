@@ -59,7 +59,7 @@ const cmsElementTypes: IElementTypes = {
     container: Elements.CmsContainerElement,
     conditionalContainer: Elements.CmsContainerElement,
     adminmail: Elements.CatalogElement,
-    usermail: Elements.InputElement
+    usermail: Elements.CmsUserMailElement,
 };
 
 /*

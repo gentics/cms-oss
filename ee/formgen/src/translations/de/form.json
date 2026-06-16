@@ -5,6 +5,7 @@
     "form_print__user_name": "Username",
     "form_submit_error_overlay__first_line": "",
     "form_minError": "Der Wert muss min {{minVal}} sein",
+    "form_invalidEmailError": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
     "form_print__client_info_heading": "Client Informationen",
     "form_preconditions_overlay__first_line": "",
     "form_save_overlay_button_cancel": "Abbrechen",

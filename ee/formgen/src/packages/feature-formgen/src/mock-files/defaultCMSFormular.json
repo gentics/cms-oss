@@ -21,6 +21,19 @@
         "isList": false,
         "name": "CMS-ADMIN-MAIL-FIELD"
       },
+      "CMS-USER-MAIL-FIELD-0001": {
+        "type": "usermail",
+        "updateOnChange": false,
+        "isList": false,
+        "name": "CMS-USER-MAIL-FIELD",
+        "validation": {
+          "regexValidation": {
+            "key": "email",
+            "regex": "^(([^<>()\\[\\]\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\.,;:\\s@\"]+)*)|(\".+\"))@example\\.com$",
+            "errorMessage": { "de": "Es muss immer mit @example.com enden." }
+          }
+        }
+      },
       "CMS-CONDITION-INPUTFIELD": {
         "numberOfLines": 1,
         "type": "string",
@@ -1234,6 +1247,28 @@
               "en-AT": "Sending to this Admin Mail",
               "it-AT": "Sending to Admin Mail",
               "fr-AT": "Sending to Admin Mail"
+            },
+            "description": {},
+            "formGridOptions": {
+              "numberOfColumns": "4",
+              "overlayOptions": {
+                "isShowOverlay": false,
+                "texts": {
+                  "textPre": {},
+                  "textPost": {}
+                }
+              }
+            },
+            "uiSchemaPage": 0
+          },
+          {
+            "type": "property",
+            "id": "CMS-USER-MAIL-FIELD-0001",
+            "label": {
+              "de-AT": "User Mail Element endet mit @example.com",
+              "en-AT": "User Mail Element ends with @example.com",
+              "it-AT": "User Mail Element endet mit @example.com",
+              "fr-AT": "User Mail Element se termine par @example.com"
             },
             "description": {},
             "formGridOptions": {
@@ -5196,6 +5231,12 @@
             "displayName": "Service Desk"
           }
         ]
+      },
+      "CMS-USER-MAIL-FIELD-0001": {
+        "visible": true,
+        "editable": true,
+        "name": "User Mail",
+        "value": ""
       },
       "CMS-CONDITION-INPUTFIELD": {
         "editable": true,

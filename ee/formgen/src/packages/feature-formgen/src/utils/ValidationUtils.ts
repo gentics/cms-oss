@@ -24,6 +24,48 @@ import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScree
 import { postLoadValidation, preLoadValidation } from '../custom/HooksUtils';
 import { InvalidValidationResponse } from '../exceptions/InvalidValidationResponse';
 
+
+/**
+ * Hardcoded E-Mail-Format-Prüfung für usermail-Felder.
+ * Folgt der gleichen updateErrorMessages/localValue-Semantik wie der
+ * regexValidation-Case in commonValidate (siehe unten), damit Live- und
+ * Gesamtvalidierung konsistent sind. Leere Werte werden übersprungen
+ * (required-Check übernimmt commonValidate).
+ */
+export function validateEmail(
+  formState: FormState,
+  jsonpath: string,
+  id: string,
+  updateErrorMessages: boolean,
+  localValue?: any,
+): CommonValidation {
+// pragmatisches Standard-Muster: local@domain.tld
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const elementState = utils.getElementByIdOrJsonPath(
+    formState.data,
+    jsonpath,
+    id,
+  );
+  if (elementState == null) return { isValid: true, errorMessage: '' };
+
+  const value =
+    localValue == null ? utils.getValue(formState, jsonpath, id) : localValue;
+
+  if (value != null && value.length > 0 && !EMAIL_REGEX.test(value)) {
+    const errorMessage = i18n.t('form_invalidEmailError');
+    if (updateErrorMessages) {
+      if (localValue == undefined || localValue == null) {
+        elementState.validationMessage = errorMessage;
+        utils.setStateElementByJsonpath(formState.data, jsonpath, elementState);
+      } else {
+        return { isValid: false, errorMessage };
+      }
+    }
+    return { isValid: false, errorMessage };
+  }
+  return { isValid: true, errorMessage: '' };
+}
+
 export function commonValidate(
   formState: FormState,
   jsonpath: string,

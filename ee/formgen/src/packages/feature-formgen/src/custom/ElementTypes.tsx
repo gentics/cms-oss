@@ -8,7 +8,6 @@ export const FormGridElementTypes: IElementTypes = {
     formgridimage: Elements.FormGridImageElement as unknown as IElementType,
     formgridtext: Elements.FormGridTextElement as unknown as IElementType,
     formgridspacer: Elements.FormGridTextElement as unknown as IElementType,
-    text: Elements.TextElement as unknown as IElementType,
 };
 
 /*
@@ -39,7 +38,6 @@ export const cmsInputElementTypes: IElementTypes = {
 * !IMPORTANT! it is case sensitiv, keys should always be lowercase
 */
 const sharedElementTypes: IElementTypes = {
-    ...FormGridElementTypes,           // shared
     ...cmsInputElementTypes,
     catalog: Elements.CatalogElement,
     datetime: Elements.DateTimeElement as unknown as IElementType,
@@ -54,7 +52,8 @@ const sharedElementTypes: IElementTypes = {
 * !IMPORTANT! it is case sensitiv, keys should always be lowercase 
 */
 const cmsElementTypes: IElementTypes = {
-    ...FormGridElementTypes,           // shared
+    text: Elements.FormGridTextElement as unknown as IElementType,
+    spacer: Elements.FormGridTextElement as unknown as IElementType,
     boolean: Elements.CMSBooleanElement,
     container: Elements.CmsContainerElement,
     conditionalContainer: Elements.CmsContainerElement,

@@ -394,7 +394,9 @@ export function validateField(
     formGridOptions &&
     formGridOptions.type &&
     formGridOptions.type !== 'formgridText' &&
-    formGridOptions.type !== 'formgridSpacer'
+    formGridOptions.type !== 'formgridSpacer' &&
+    formGridOptions.type !== 'text' &&
+    formGridOptions.type !== 'spacer'
   ) {
     return getElementTypeByPlugin(formGridOptions.type.toLowerCase(), formState.pluginName).validate(
       formState,

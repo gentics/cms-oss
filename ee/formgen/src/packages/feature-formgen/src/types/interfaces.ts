@@ -563,6 +563,7 @@ export interface IFormGridOptions {
   hidden?: boolean;
   condition?: ICmsCondition;
   storedValue?: string;
+  text?: ITranslationSet;
 }
 export interface IOverlayInfoOptions {
   isShowOverlay: boolean;

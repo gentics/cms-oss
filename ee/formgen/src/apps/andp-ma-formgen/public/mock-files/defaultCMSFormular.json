@@ -1374,6 +1374,40 @@
             "id": "D0E57593-B6B9-420B-B5DF-22A0A35A8DAA"
           },
           {
+            "type": "property",
+            "id": "text_4e6e5fe601b44ee3ad125dd49c42b76c",
+            "label": {
+              "de": "Hallo",
+              "en": "hello"
+            },
+            "description": {
+              "de": "Hallo",
+              "en": "hello"
+            },
+            "formGridOptions": {
+              "type": "text",
+              "numberOfColumns": 6,
+              "inForm": true,
+              "inSummary": false,
+              "overlayOptions": {
+                "isShowOverlay": false,
+                "texts": {
+                  "textPre": {},
+                  "textPost": {}
+                }
+              },
+              "valueSummary": {
+                "de": "Hallo",
+                "en": "hello"
+              },
+              "text": {
+                "de": "<h1>Hauptüberschrift (h1)</h1><h2>Unterüberschrift (h2)</h2><h3>Kleinere Überschrift (h3)</h3><p>Dies ist ein <strong>normaler Absatz</strong> mit <em>kursivem Text</em> und <u>unterstrichenem Text</u>. Auch <code>Inline-Code</code> ist möglich.</p><p>Ein Link zu <a href=\"https://www.example.com\" target=\"_blank\">example.com</a>.</p><hr><h3>Ungeordnete Liste (ul)</h3><ul><li>Eintrag A</li><li>Eintrag B</li><li>Eintrag C</li></ul><h3>Geordnete Liste (ol)</h3><ol><li>Erster Schritt</li><li>Zweiter Schritt</li><li>Dritter Schritt</li></ol><h3>Zitat / Blockquote</h3><blockquote>\"Das Leben ist zu kurz für schlechten Code.\" – Irgendjemand</blockquote><h3>Codeblock</h3><pre>function hello() {\n  console.log(\"Hallo Welt\");\n}</pre>",
+                "en": "hello"
+              }
+            },
+            "uiSchemaPage": 0
+          },
+          {
             "label": {
               "de-AT": ""
             },

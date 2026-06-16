@@ -1,5 +1,4 @@
 export {default as ANDebugElement} from '../components/elements/an/ANDebugElement';
-export {default as TextElement} from '../components/elements/shared/TextElement';
 export {default as ANInputElement} from '../components/elements/an/ANInputElement';
 export {default as ANBooleanElement} from '../components/elements/an/ANBooleanElement';
 export {default as ANDropDownCatalogElement} from '../components/elements/an/ANDropDownCatalogElement';

@@ -221,6 +221,7 @@
         "item_localized_mail_temp": "E-Mail Vorlage",
         "item_localized_mail_custom": "E-Mail-Vorlage von Page",
         "item_mail_custom_description": "Eigene Seite für E-Mail Template auswählen",
+        "form_admin_mail_template_description": "Vordefiniertes E-Mail Template auswählen",
         "item_name_label": "Name",
         "item_nice_url_label": "Nice URL",
         "item_alternate_urls_label": "Alternative URLs",

@@ -26,6 +26,7 @@ import {
     FileOrImage,
     FileReplaceOptions,
     FileRequestOptions,
+    FileResponse,
     FileUploadResponse,
     Folder,
     FolderCreateRequest,
@@ -50,6 +51,7 @@ import {
     GtxCmsQueryOptions,
     Image,
     ImageRequestOptions,
+    ImageResponse,
     InheritableItem,
     InheritanceRequest,
     InheritanceResponse,
@@ -1349,7 +1351,7 @@ export class FolderActionsService {
                     catchError(() => of(null)),
                 ))).pipe(
                     map((responses: (NodeResponse | null)[]) => responses
-                        .map((res) => res?.item)
+                        .map((res) => res.node)
                         .filter((item) => item != null),
                     ),
                 );
@@ -1358,7 +1360,7 @@ export class FolderActionsService {
                     catchError(() => of(null)),
                 ))).pipe(
                     map((responses: (TemplateResponse | null)[]) => responses
-                        .map((res) => res?.item)
+                        .map((res) => res.template)
                         .filter((item) => item != null),
                     ),
                 );
@@ -1691,7 +1693,7 @@ export class FolderActionsService {
             const res = await translationRequestFunction(pageId, { language: languageCode, channelId: nodeId });
             await this.appState.dispatch(new ListCreatingSuccessAction('page')).toPromise();
 
-            const newPage = res?.page ?? res;
+            const newPage = res?.page;
             // result is not available yet
             if (!newPage) {
                 return;
@@ -2819,7 +2821,7 @@ export class FolderActionsService {
                 }
             }),
             map((loadRes) => {
-                const item = loadRes.file || loadRes.image;
+                const item = (loadRes as FileResponse).file || (loadRes as ImageResponse).image;
                 const normalized = normalize({ ...item }, getNormalizrSchema(type));
                 this.appState.dispatch(new AddEntitiesAction(normalized));
                 this.appState.dispatch(new ListSavingSuccessAction(type));

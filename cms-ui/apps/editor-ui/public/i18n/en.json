@@ -221,6 +221,7 @@
         "item_localized_mail_temp": "Email template",
         "item_localized_mail_custom": "Email template from Page",
         "item_mail_custom_description": "Select custom page to use as the email template",
+        "form_admin_mail_template_description": "Select a pre-defined email template",
         "item_name_label": "Name",
         "item_nice_url_label": "Nice URL",
         "item_alternate_urls_label": "Alternate URLs",

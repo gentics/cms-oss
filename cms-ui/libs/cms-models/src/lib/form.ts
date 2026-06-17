@@ -87,12 +87,11 @@ export interface EditableFormData {
      */
     adminEmailAddress: string;
     /**
-     * The email-template to use when sending an email to the administrator addresses,
-     * configurable per language.
+     * The email-template to use when sending an email to the administrator addresses.
      * Emails to the administrator are sent whenever a user submits a form.
      * Must be null/empty if {@link adminEmailPageId}/{@link adminEmailNodeId} is used.
      */
-    adminEmailTemplate: I18nString;
+    adminEmailTemplate: string;
     /**
      * The page to use when sending an email to the administrator addresses.
      * Emails to the administrator are sent whenever a user submits a form.

@@ -209,10 +209,9 @@
                                     'confirmation-page-setting--inactive': !!useEmailPageTemplate
                                 }"
                             >
-                                <gtx-i18n-select
-                                    [language]="activeFormLanguageCode"
-                                    [availableLanguages]="languages"
-                                    (change)="setEmailTemplateOption($event)"
+                                <gtx-select
+                                    [label]="'editor.form_admin_mail_template_description' | gtxI18n"
+                                    [clearable]="true"
                                     formControlName="adminEmailTemplate"
                                 >
                                     @for (option of activeConfiguration?.adminEmailTemplateOptions; track option.value) {
@@ -220,7 +219,7 @@
                                             {{ option.labelI18n | gtxI18nObject }}
                                         </gtx-option>
                                     }
-                                </gtx-i18n-select>
+                                </gtx-select>
                             </div>
                         </div>
                     </gtx-radio-group>
@@ -294,18 +293,26 @@
                     ></gtx-radio-button>
 
                     <div
-                        class="confirmation-page-setting"
+                        class="confirmation-page-setting lang-select"
                         [ngClass]="{
                             'confirmation-page-setting--active': !useInternalSuccessPage,
                             'confirmation-page-setting--inactive': !!useInternalSuccessPage
                         }"
                     >
-                        <gtx-i18n-input
-                            [label]="'editor.item_success_url' | gtxI18n"
-                            formControlName="successUrlI18n"
-                            [language]="activeFormLanguageCode"
-                            [availableLanguages]="languages"
-                        ></gtx-i18n-input>
+                        @if (formLanguages?.length > 0) {
+                            <gtx-i18n-panel-group
+                                class="columns small-12"
+                                [languages]="formLanguages"
+                                [(activeLanguage)]="activeLanguage"
+                            >
+                                <gtx-i18n-input
+                                    [label]="'editor.item_success_url' | gtxI18n"
+                                    [language]="activeLanguage?.code"
+                                    [availableLanguages]="form?.value?.languages"
+                                    formControlName="successUrlI18n"
+                                ></gtx-i18n-input>
+                            </gtx-i18n-panel-group>
+                        }
                     </div>
                 </div>
             </ng-container>

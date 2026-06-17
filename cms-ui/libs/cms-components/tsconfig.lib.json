@@ -11,7 +11,7 @@
         "src/**/*.ts",
         "testing/src/**/*.ts",
         "aloha/src/**/*.ts",
-        "auth/src/**/*.ts",
+        "auth/src/**/*.ts"
     ],
     "exclude": [
         "cypress.*.ts",
@@ -24,6 +24,6 @@
         "aloha/src/**/*.spec.ts",
         "aloha/src/**/*.cy.ts",
         "auth/src/**/*.spec.ts",
-        "auth/src/**/*.cy.ts",
+        "auth/src/**/*.cy.ts"
     ]
 }

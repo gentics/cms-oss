@@ -243,7 +243,7 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
                 break;
             case 'image':
                 loader = this.client.image.get(item.id, options).pipe(
-                    map((res) => res.file),
+                    map((res) => res.image),
                 ).toPromise();
                 break;
             case 'page':

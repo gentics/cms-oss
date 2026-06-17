@@ -72,8 +72,6 @@ export enum ResponseCode {
  * extend this interface.
  */
 export interface Response {
-    [x: string]: any;
-
     responseInfo: {
         responseCode: ResponseCode;
         responseMessage?: string;
@@ -81,7 +79,6 @@ export interface Response {
 
     /** Messages contained in the response (which should be shown to the user). */
     messages?: ResponseMessage[];
-
 }
 
 export type UnixTimestamp = number;
@@ -1461,7 +1458,7 @@ export interface ContentPackageSyncResponse extends Response {
     progress?: ContentPackageSyncProgress;
 }
 
-export interface ContentPackageErrorResponse extends Response {
+export interface ContentPackageErrorResponse {
     errors: ContentPackageImportError[];
     mismatches: string[];
     timestamp: string;

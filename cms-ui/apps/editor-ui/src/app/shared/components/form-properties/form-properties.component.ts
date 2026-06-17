@@ -226,18 +226,24 @@ export class FormPropertiesComponent
 
     updateEmailTemplate(doUse: boolean): void {
         this.useEmailPageTemplate = doUse;
-        this.form.markAsDirty();
 
-        setControlsEnabled(this.formData, ['adminEmailPageId', 'adminEmailNodeId'], doUse);
-        setControlsEnabled(this.formData, ['adminEmailTemplate'], !doUse);
+        setControlsEnabled(this.formData, ['adminEmailPageId', 'adminEmailNodeId'], doUse, { emitEvent: false });
+        setControlsEnabled(this.formData, ['adminEmailTemplate'], !doUse, { emitEvent: false });
+
+        this.form.markAsDirty();
+        this.form.updateValueAndValidity({ emitEvent: true });
+        this.changeDetector.markForCheck();
     }
 
     updateInternalSuccessPage(doUse: boolean): void {
         this.useInternalSuccessPage = doUse;
-        this.form.markAsDirty();
 
-        setControlsEnabled(this.formData, ['successPageId', 'successNodeId'], doUse);
-        setControlsEnabled(this.formData, ['successUrlI18n'], !doUse);
+        setControlsEnabled(this.formData, ['successPageId', 'successNodeId'], doUse, { emitEvent: false });
+        setControlsEnabled(this.formData, ['successUrlI18n'], !doUse, { emitEvent: false });
+
+        this.form.markAsDirty();
+        this.form.updateValueAndValidity({ emitEvent: true });
+        this.changeDetector.markForCheck();
     }
 
     setSuccessPage(page: ItemInNode<Page<Raw>>): void {
@@ -276,7 +282,7 @@ export class FormPropertiesComponent
         this.changeDetector.markForCheck();
     }
 
-    private isPageUsed(pageId: number, nodeId: number, other: I18nString): boolean {
+    private isPageUsed(pageId: number, nodeId: number, other: I18nString | string): boolean {
         return (pageId != null && pageId !== 0 && nodeId != null && nodeId !== 0) || !other;
     }
 }

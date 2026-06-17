@@ -7,6 +7,7 @@
         #rangeField
         class="range-field"
         [class.with-bounds]="showBounds"
+        [class.focused]="focused"
         [style.--gtx-thumb-offset.%]="(100 / (max - min)) * ((value ?? 0) - min)"
     >
         @if (showBounds) {
@@ -29,10 +30,7 @@
             }
 
             @if (showThumb) {
-                <span
-                    class="thumb"
-                    [class.active]="active"
-                >
+                <span class="thumb">
                     <span class="value">{{ value }}</span>
                 </span>
             }
@@ -54,9 +52,8 @@
                 [value]="value"
 
                 (input)="onInput($event)"
-                (mousedown)="onMousedown($event)"
-                (mouseup)="onMouseup()"
-                (mousemove)="onMousemove($event)"
+                (focus)="markFocused(true)"
+                (blur)="markFocused(false)"
             />
         </div>
     </div>

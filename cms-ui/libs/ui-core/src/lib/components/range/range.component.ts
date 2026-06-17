@@ -3,10 +3,8 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    ElementRef,
     Input,
     numberAttribute,
-    ViewChild,
 } from '@angular/core';
 import { cancelEvent } from '@gentics/common';
 import { UserAgentProvider } from '../../providers';
@@ -90,11 +88,7 @@ export class RangeComponent extends BaseFormElementComponent<number> {
     @Input()
     public name: string;
 
-    @ViewChild('rangeField', { static: true })
-    private rangeFieldRef: ElementRef<HTMLDivElement>;
-
-    public active = false;
-    public thumbOffset = '';
+    public focused = false;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -117,37 +111,7 @@ export class RangeComponent extends BaseFormElementComponent<number> {
         this.triggerChange(newVal);
     }
 
-    onMousedown(e: MouseEvent): void {
-        if (!this.disabled) {
-            this.active = true;
-            this.setThumbPosition(e);
-        }
-    }
-
-    onMouseup(): void {
-        this.active = false;
-    }
-
-    onMousemove(e: MouseEvent): void {
-        if (this.disabled) {
-            return;
-        }
-        if (this.active) {
-            this.setThumbPosition(e);
-        }
-    }
-
-    private setThumbPosition(e: MouseEvent): void {
-        const endMargin = 8;
-        const boundingRect = this.rangeFieldRef.nativeElement.getBoundingClientRect();
-        const wrapperLeft = boundingRect.left;
-        const wrapperWidth = boundingRect.width;
-        let left = e.pageX - wrapperLeft;
-        if (left < endMargin) {
-            left = endMargin;
-        } else if (left > wrapperWidth - endMargin) {
-            left = wrapperWidth - endMargin;
-        }
-        this.thumbOffset = left + 'px';
+    markFocused(focused: boolean): void {
+        this.focused = focused;
     }
 }

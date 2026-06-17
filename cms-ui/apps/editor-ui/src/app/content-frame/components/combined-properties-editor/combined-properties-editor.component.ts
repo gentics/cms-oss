@@ -918,10 +918,14 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                     ...props,
                     data: {
                         ...props.data,
+                        // References must either be a valid ID or 0 to clear them
                         successNodeId: props.data.successNodeId ?? 0,
                         successPageId: props.data.successPageId ?? 0,
                         adminEmailPageId: props.data.adminEmailPageId ?? 0,
                         adminEmailNodeId: props.data.adminEmailNodeId ?? 0,
+                        // Don't send null, always an empty object to clear it properly
+                        successUrlI18n: props.data.successUrlI18n ?? {},
+                        adminEmailSubject: props.data.adminEmailSubject ?? {},
                     },
                 }, postUpdateBehavior);
                 break;
@@ -1086,7 +1090,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         }
 
         return this.client.node.listLanguages(node.id).pipe(
-            map((response) => response.languages),
+            map((response) => response.items),
         );
     }
 

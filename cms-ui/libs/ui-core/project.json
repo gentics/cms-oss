@@ -4,17 +4,11 @@
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "libs/ui-core/src",
-    "tags": [
-        "lib",
-        "angular",
-        "publish"
-    ],
+    "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
-            "outputs": [
-                "{workspaceRoot}/dist/{projectRoot}"
-            ],
+            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
             "options": {
                 "tsConfig": "{projectRoot}/tsconfig.lib.json",
                 "project": "{projectRoot}/ng-package.json"
@@ -31,25 +25,18 @@
             "executor": "@angular-devkit/build-angular:karma",
             "options": {
                 "main": "{projectRoot}/src/test.ts",
-                "polyfills": [
-                    "zone.js",
-                    "zone.js/testing"
-                ],
+                "polyfills": ["zone.js", "zone.js/testing"],
                 "tsConfig": "{projectRoot}/tsconfig.spec.json",
                 "karmaConfig": "{projectRoot}/karma.conf.js",
                 "stylePreprocessorOptions": {
-                    "includePaths": [
-                        "{projectRoot}/src/styles"
-                    ]
+                    "includePaths": ["{projectRoot}/src/styles"]
                 },
                 "watch": false
             },
             "configurations": {
                 "ci": {
                     "codeCoverage": true,
-                    "reporters": [
-                        "junit"
-                    ],
+                    "reporters": ["junit"],
                     "browsers": "ChromeDocker",
                     "progress": false
                 },
@@ -61,17 +48,10 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "{projectRoot}/cypress.config.ts",
+                "cypressConfig": "libs/ui-core/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "image-editor-demo:build"
-            },
-            "configurations": {
-                "ci": {
-                    "quiet": true,
-                    "cypressConfig": "{projectRoot}/cypress.config.ci.ts",
-                    "devServerTarget": "image-editor-demo:build:ci"
-                }
             }
         }
     }

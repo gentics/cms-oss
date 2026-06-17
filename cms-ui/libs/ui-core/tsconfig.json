@@ -4,7 +4,6 @@
         "target": "es2022",
         "module": "preserve",
         "moduleResolution": "bundler",
-
         "strict": false,
         "noImplicitOverride": false,
         "noPropertyAccessFromIndexSignature": false,
@@ -27,6 +26,9 @@
         },
         {
             "path": "./tsconfig.spec.json"
+        },
+        {
+            "path": "./cypress/tsconfig.json"
         }
     ]
 }

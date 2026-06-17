@@ -49,14 +49,10 @@ CmsContainerElement.validate = function (
   formGridOptions?: IFormGridOptions,
   localValue?: any,
 ): CommonValidation {
-  return validationUtils.commonValidate(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    formGridOptions,
-    localValue,
-  );
+  return {
+    isValid: true,
+    errorMessage: '',
+  };
 };
 
 CmsContainerElement.getSummaryValue = function () {

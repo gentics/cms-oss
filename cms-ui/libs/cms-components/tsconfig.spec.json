@@ -1,17 +1,13 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "outDir": "../../dist/out-tsc",
-        "module": "commonjs",
-        "target": "es2016",
-        "types": ["jasmine", "node", "jquery"],
-        "moduleResolution": "node10",
-        "esModuleInterop": true
+        "moduleResolution": "bundler",
+        "module": "es2015",
+        "target": "es2015",
+        "types": ["jasmine", "node", "jquery"]
     },
-    "files": ["src/test-setup.ts"],
+    "files": ["src/test.ts"],
     "include": [
-        "jest.config.ts",
-        "src/**/*.test.ts",
         "src/**/*.spec.ts",
         "src/**/*.d.ts"
     ]

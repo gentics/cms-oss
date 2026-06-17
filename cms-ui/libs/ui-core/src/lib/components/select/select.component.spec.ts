@@ -127,7 +127,7 @@ describe('SelectComponent', () => {
     it('binds its label to the input value',
         componentTest(() => TestComponent, `
             <gtx-select label="testLabel"></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const label: HTMLElement = fixture.nativeElement.querySelector('label');
 
@@ -139,7 +139,7 @@ describe('SelectComponent', () => {
     it('contains class with-label if label is present',
         componentTest(() => TestComponent, `
         <gtx-select label="testLabel"></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-list');
 
@@ -151,7 +151,7 @@ describe('SelectComponent', () => {
     it('does not contain class with-label if label is not present',
         componentTest(() => TestComponent, `
         <gtx-select></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
 
@@ -163,7 +163,7 @@ describe('SelectComponent', () => {
     it('adds a "disabled" attribute to the view-value div if the disabled attribute is true.',
         componentTest(() => TestComponent, `
             <gtx-select label="testLabel" disabled="true"></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
 
@@ -175,7 +175,7 @@ describe('SelectComponent', () => {
     it('when disabled, the viewValue div is not focusable.',
         componentTest(() => TestComponent, `
             <gtx-select label="testLabel" disabled="true"></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
             viewValue.focus();
@@ -185,7 +185,7 @@ describe('SelectComponent', () => {
     );
 
     it('accepts a string "value" and sets the viewValue to match.',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
@@ -197,7 +197,7 @@ describe('SelectComponent', () => {
     );
 
     it('marks the initial value as selected.',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
@@ -216,7 +216,7 @@ describe('SelectComponent', () => {
                 <gtx-option>Baz</gtx-option>
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick();
 
@@ -234,16 +234,16 @@ describe('SelectComponent', () => {
                 <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
 
-            const checkboxes: CheckboxComponent[] = fixture.debugElement.queryAll(By.directive(CheckboxComponent)).map(de => de.componentInstance);
+            const checkboxes: CheckboxComponent[] = fixture.debugElement.queryAll(By.directive(CheckboxComponent)).map((de) => de.componentInstance);
 
-            expect(checkboxes[0].checked).toBe(false);
-            expect(checkboxes[1].checked).toBe(true);
-            expect(checkboxes[2].checked).toBe(true);
+            expect(checkboxes[0].value).toBe(false);
+            expect(checkboxes[1].value).toBe(true);
+            expect(checkboxes[2].value).toBe(true);
 
             tick(1000);
         },
@@ -251,7 +251,7 @@ describe('SelectComponent', () => {
     );
 
     it('updates the "value" when a different option is clicked',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
@@ -355,7 +355,7 @@ describe('SelectComponent', () => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            const getOptionText = () => getListItems(fixture).map(el => el.textContent.trim());
+            const getOptionText = () => getListItems(fixture).map((el) => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
             instance.options.push('Quux');
@@ -376,16 +376,16 @@ describe('SelectComponent', () => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            const getOptionText = () => getListItems(fixture).map(el => el.textContent.trim());
+            const getOptionText = () => getListItems(fixture).map((el) => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
-            const tmp = new Promise<void>((r => {
+            const tmp = new Promise<void>((r) => {
                 setTimeout(() => {
                     instance.options.push('Quux');
                     fixture.detectChanges();
                     fixture.whenRenderingDone().then(() => r());
                 }, 500);
-            }));
+            });
             tick(500);
 
             fixture.detectChanges();
@@ -405,7 +405,7 @@ describe('SelectComponent', () => {
     describe('keyboard controls', () => {
 
         it('should open when enter is pressed',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -416,7 +416,7 @@ describe('SelectComponent', () => {
         );
 
         it('should open when space is pressed',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Space);
@@ -427,7 +427,7 @@ describe('SelectComponent', () => {
         );
 
         it('initial value should be initially selected',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -438,7 +438,7 @@ describe('SelectComponent', () => {
         );
 
         it('down arrow should select subsequent items',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -460,7 +460,7 @@ describe('SelectComponent', () => {
         );
 
         it('up arrow should select previous items',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -482,7 +482,7 @@ describe('SelectComponent', () => {
         );
 
         it('home and end should select first and last items',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -498,7 +498,7 @@ describe('SelectComponent', () => {
         );
 
         it('page up and page down should select first and last items',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -514,7 +514,7 @@ describe('SelectComponent', () => {
         );
 
         it('characters should select subsequent matching options',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -569,7 +569,7 @@ describe('SelectComponent', () => {
             }),
         );
 
-        function sendKeyDown(fixture: ComponentFixture<any>, keyToSend: number | { key: string, keyCode: number }): void {
+        function sendKeyDown(fixture: ComponentFixture<any>, keyToSend: number | { key: string; keyCode: number }): void {
             const eventTarget: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
             const eventProps: KeyboardEventConfig = { bubbles: true };
             if (typeof keyToSend === 'number') {
@@ -809,7 +809,7 @@ describe('SelectComponent', () => {
                 <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
                 let lastEmittedValue: any;
-                instance.valueSubject.subscribe(v => lastEmittedValue = v);
+                instance.valueSubject.subscribe((v) => lastEmittedValue = v);
 
                 const options = [
                     { name: 'First option' },
@@ -844,7 +844,7 @@ describe('SelectComponent', () => {
                 <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
                 let lastEmittedValue: any;
-                instance.valueSubject.subscribe(v => lastEmittedValue = v);
+                instance.valueSubject.subscribe((v) => lastEmittedValue = v);
 
                 const options = [
                     { name: 'First option' },
@@ -910,7 +910,7 @@ function clickSelectAndOpen(fixture: ComponentFixture<TestComponent>): void {
 }
 
 const getListItems = (fixture: ComponentFixture<TestComponent>): HTMLLIElement[] =>
-    fixture.debugElement.queryAll(By.css('.select-option')).map(de => de.nativeElement);
+    fixture.debugElement.queryAll(By.css('.select-option')).map((de) => de.nativeElement);
 
 /**
  * Create an dispatch an 'input' event on the <input> element

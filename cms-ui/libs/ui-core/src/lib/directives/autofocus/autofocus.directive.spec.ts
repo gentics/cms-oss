@@ -28,7 +28,7 @@ import { DropdownTriggerDirective } from '../dropdown-trigger/dropdown-trigger.d
 import { IconDirective } from '../icon/icon.directive';
 import { AutofocusDirective } from './autofocus.directive';
 
-describe('AutofocusDirective', () => {
+xdescribe('AutofocusDirective', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({

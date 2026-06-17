@@ -9,33 +9,15 @@
     },
     "include": [
         "src/**/*.ts",
-        "src/testing/src/**/*.ts",
-        "src/utils/src/**/*.ts",
-        "src/utils/testing/src/**/*.ts",
-        "utils/src/**/*.ts",
-        "utils/src/testing/src/**/*.ts",
-        "utils/src/utils/src/**/*.ts",
-        "utils/src/utils/testing/src/**/*.ts"
+        "testing/src/**/*.ts"
     ],
     "exclude": [
+        "cypress/**",
+        "cypress/*.ts",
         "src/**/*.spec.ts",
-        "src/**/*.test.ts",
-        "jest.config.ts",
-        "jest.config.cts",
-        "src/test-setup.ts",
-        "src/testing/src/**/*.spec.ts",
-        "src/testing/src/**/*.test.ts",
-        "src/utils/src/**/*.spec.ts",
-        "src/utils/src/**/*.test.ts",
-        "src/utils/testing/src/**/*.spec.ts",
-        "src/utils/testing/src/**/*.test.ts",
-        "utils/src/**/*.spec.ts",
-        "utils/src/**/*.test.ts",
-        "utils/src/testing/src/**/*.spec.ts",
-        "utils/src/testing/src/**/*.test.ts",
-        "utils/src/utils/src/**/*.spec.ts",
-        "utils/src/utils/src/**/*.test.ts",
-        "utils/src/utils/testing/src/**/*.spec.ts",
-        "utils/src/utils/testing/src/**/*.test.ts"
+        "src/**/*.cy.ts",
+        "src/test.ts",
+        "testing/src/**/*.spec.ts",
+        "testing/src/**/*.cy.ts"
     ]
 }

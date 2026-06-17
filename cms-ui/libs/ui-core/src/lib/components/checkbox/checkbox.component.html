@@ -1,18 +1,19 @@
 <input
-    ype="checkbox"
+    type="checkbox"
     tabindex="-1"
     aria-hidden="true"
     [attr.id]="id"
     [attr.name]="name"
     [attr.state]="value"
+    [attr.autofocus]="autofocus"
     [disabled]="disabled"
     [required]="required"
     [checked]="value === CHECKBOX_STATE_INDETERMINATE ? null : value"
     [indeterminate]="value === CHECKBOX_STATE_INDETERMINATE"
     [value]="formValue"
-
     (blur)="handleBlur()"
-    (change)="cancelEvent"
+    (click)="toggleState($event)"
+    (change)="toggleState($event)"
 >
 
 <label

@@ -19,7 +19,9 @@
             "tsConfig": "../apps/admin-ui/tsconfig.spec.json",
             "karmaConfig": "../apps/admin-ui/karma.conf.js",
             "polyfills": "../apps/admin-ui/src/polyfills.ts",
-            "styles": ["../apps/admin-ui/src/styles/styles.scss"],
+            "styles": [
+              "../apps/admin-ui/src/styles/styles.scss"
+            ],
             "stylePreprocessorOptions": {
               "includePaths": [
                 "../apps/admin-ui/src/styles",
@@ -27,12 +29,16 @@
                 "../node_modules"
               ]
             },
-            "assets": ["../apps/admin-ui/src/assets"]
+            "assets": [
+              "../apps/admin-ui/src/assets"
+            ]
           },
           "configurations": {
             "ci": {
               "codeCoverage": true,
-              "reporters": ["junit"],
+              "reporters": [
+                "junit"
+              ],
               "browsers": "ChromeDocker",
               "progress": false
             }
@@ -67,7 +73,9 @@
           "configurations": {
             "ci": {
               "codeCoverage": true,
-              "reporters": ["junit"],
+              "reporters": [
+                "junit"
+              ],
               "browsers": "ChromeDocker",
               "progress": false
             }
@@ -92,7 +100,9 @@
             "tsConfig": "../apps/editor-ui/tsconfig.spec.json",
             "karmaConfig": "../apps/editor-ui/karma.conf.js",
             "polyfills": "../apps/editor-ui/src/polyfills.ts",
-            "styles": ["../apps/editor-ui/src/styles/styles.scss"],
+            "styles": [
+              "../apps/editor-ui/src/styles/styles.scss"
+            ],
             "stylePreprocessorOptions": {
               "includePaths": [
                 "../apps/editor-ui/src/styles",
@@ -101,12 +111,16 @@
               ]
             },
             "scripts": [],
-            "assets": ["../apps/editor-ui/src/assets"]
+            "assets": [
+              "../apps/editor-ui/src/assets"
+            ]
           },
           "configurations": {
             "ci": {
               "codeCoverage": true,
-              "reporters": ["junit"],
+              "reporters": [
+                "junit"
+              ],
               "browsers": "ChromeDocker",
               "progress": false
             }
@@ -138,7 +152,9 @@
           "configurations": {
             "ci": {
               "codeCoverage": true,
-              "reporters": ["junit"],
+              "reporters": [
+                "junit"
+              ],
               "browsers": "ChromeDocker",
               "progress": false
             }
@@ -162,7 +178,9 @@
           "configurations": {
             "ci": {
               "codeCoverage": true,
-              "reporters": ["junit"],
+              "reporters": [
+                "junit"
+              ],
               "browsers": "ChromeDocker",
               "progress": false
             }
@@ -194,7 +212,9 @@
           "configurations": {
             "ci": {
               "codeCoverage": true,
-              "reporters": ["junit"],
+              "reporters": [
+                "junit"
+              ],
               "browsers": "ChromeDocker",
               "progress": false
             }
@@ -219,35 +239,9 @@
           "configurations": {
             "ci": {
               "codeCoverage": true,
-              "reporters": ["junit"],
-              "browsers": "ChromeDocker",
-              "progress": false
-            }
-          }
-        }
-      }
-    },
-    "ui-core": {
-      "projectType": "library",
-      "root": "../libs/ui-core",
-      "sourceRoot": "../libs/ui-core/src",
-      "prefix": "gtx",
-      "architect": {
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "main": "../libs/ui-core/src/test.ts",
-            "polyfills": "../libs/ui-core/src/polyfills.ts",
-            "tsConfig": "../libs/ui-core/tsconfig.spec.json",
-            "karmaConfig": "../libs/ui-core/karma.conf.js",
-            "stylePreprocessorOptions": {
-              "includePaths": ["../libs/ui-core/src/styles"]
-            }
-          },
-          "configurations": {
-            "ci": {
-              "codeCoverage": true,
-              "reporters": ["junit"],
+              "reporters": [
+                "junit"
+              ],
               "browsers": "ChromeDocker",
               "progress": false
             }

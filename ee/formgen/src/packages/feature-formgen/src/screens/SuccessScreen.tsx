@@ -22,7 +22,7 @@ import CustomRenderHTML from '@andp/core/src/components/CustomRenderHTML';
 import { successStyles as cusotmSuccessStyles } from '../styles/custom/custom-style';
 import { successStyles } from '../styles/common/common-style';
 
-interface SuccessScreenProps {
+export interface SuccessScreenProps {
   formState: FormState;
   uiState: UIState;
   t: any;
@@ -32,6 +32,18 @@ interface SuccessScreenProps {
   updateState: () => void;
   successContent?: string;
 }
+
+// Resolve the redirect target for the current language, falling back to the
+// short culture code (e.g. "de-AT" -> "de") and finally the first entry.
+// only for CMS forms
+export const resolveSuccessUrl = (
+  formState: FormState,
+): string | undefined => {
+  const urls = formState?.successUrl;
+  if (!urls) return undefined;
+  const culture = formState?.culture ?? '';
+  return urls[culture] ?? urls[culture.split('-')[0]] ?? Object.values(urls)[0];
+};
 
 const { width } = Dimensions.get('window');
 
@@ -50,17 +62,10 @@ const SuccessScreen: React.FC<SuccessScreenProps> = (props) => {
     }
   };
 
-  // Resolve the redirect target for the current language, falling back to the
-  // short culture code (e.g. "de-AT" -> "de") and finally the first entry.
-  // only for CMS forms 
-  const successUrl = useMemo(() => {
-    const urls = props.formState?.successUrl;
-    if (!urls) return undefined;
-    const culture = props.formState?.culture ?? '';
-    return (
-      urls[culture] ?? urls[culture.split('-')[0]] ?? Object.values(urls)[0]
-    );
-  }, [props.formState?.successUrl, props.formState?.culture]);
+  const successUrl = useMemo(
+    () => resolveSuccessUrl(props.formState),
+    [props.formState?.successUrl, props.formState?.culture],
+  );
 
   const handleSuccessUrl = () => {
     if (!successUrl) return;

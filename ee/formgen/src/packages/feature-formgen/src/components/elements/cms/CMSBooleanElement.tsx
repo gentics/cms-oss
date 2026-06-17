@@ -42,8 +42,7 @@ function CMSBooleanElement(props: IFormComponentAttributes) {
     setLocalErrMsg(props.error);
   }, [props.error]);
 
-  const storedValue = props.formGridOptions?.storedValue ?? '';
-
+  const storedValue = utils.getBooleanStoredValue(props.formGridOptions);
   const isChecked = () =>
     storedValue !== '' && props.value === storedValue;
 
@@ -144,7 +143,7 @@ CMSBooleanElement.getSummaryValue = function (
   formGridOptions?: IFormGridOptions,
 ): string {
   const value = utils.getValue(formState, jsonpath, id);
-  const storedValue = formGridOptions?.storedValue ?? '';
+  const storedValue = utils.getBooleanStoredValue(formGridOptions);
   return storedValue !== '' && value === storedValue ? storedValue : '';
 };
 

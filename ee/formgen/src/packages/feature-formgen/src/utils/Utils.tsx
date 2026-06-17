@@ -595,7 +595,17 @@ export function getBinaryURL(formid: string, binaryValue: string, businessObject
   return url;
 }
 
-
+/**
+ * retrieves and returnes the stored value of a given formGridnOption. If storedValue is
+ * empty it returns the default Value 'X'
+ *
+ * @param {IFormGridOptions} formgridOptions
+ * @returns {string} storedValue
+ */
+export function getBooleanStoredValue(formgridOptions?: IFormGridOptions): string {
+  if (!formgridOptions?.storedValue) return 'X'
+  return formgridOptions.storedValue;
+}
 
 export function removeValue(formState: FormState, jsonpath: string) {
   const elementState = getElementByJsonPath(formState.data, jsonpath);

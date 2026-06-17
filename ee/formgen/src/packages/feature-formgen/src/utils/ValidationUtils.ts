@@ -128,12 +128,11 @@ export function commonValidate(
     if (isBooleanType) {
       // Default-Checkbox: mandatory only true/'True' valid, or storedValue for CMS boolean
       if (isDefaultCheckbox) {
-        const storedValue = formGridOptions?.storedValue;
         const isCmsPlugin = formState.pluginName === 'forms';
 
-        const isInvalid = isCmsPlugin && storedValue
-          ? value !== storedValue
-          : value !== true && value !== 'True' && value !== 'true'; // ACtanova plugin 
+        const isInvalid = isCmsPlugin
+          ? value !== utils.getBooleanStoredValue(formGridOptions)
+          : value !== true && value !== 'True' && value !== 'true'; // ActaNova plugin
 
         if (isInvalid) {
           const errorMsg = i18n.t('form_notFilledError');

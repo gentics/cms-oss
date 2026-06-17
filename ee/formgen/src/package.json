@@ -31,32 +31,29 @@
   "devDependencies": {
     "@babel/core": "^7.28.4",
     "@babel/plugin-transform-class-static-block": "^7.28.3",
-    "@expo/metro-runtime": "^6.1.1",
-    "@types/expo": "^32.0.13",
+    "@types/lodash": "^4.17.24",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
+    "babel-plugin-transform-import-meta": "^2.3.3",
+    "copyfiles": "2.4.1",
     "cross-env": "^10.0.0",
     "patch-package": "^8.0.0",
     "prettier": "^3.6.2",
+    "react-native-web": "^0.21.0",
     "sass": "^1.92.1",
+    "semver": "7.6.3",
     "typescript": "^5.9.2"
   },
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
-  "dependencies": {
-    "axios": "^1.13.2",
-    "babel-plugin-transform-import-meta": "^2.3.3",
-    "copyfiles": "2.4.1",
-    "react-native-web": "^0.21.0",
-    "semver": "7.6.3"
-  },
   "overrides": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
-    "@react-native-community/datetimepicker": "8.4.4",
-    "semver": "7.6.3"
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-reanimated": "4.3.1",
+    "react-native-gesture-handler": "2.31.1",
+    "form-data": "^1.13.8"
   }
 }

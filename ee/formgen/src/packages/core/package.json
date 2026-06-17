@@ -14,7 +14,7 @@
     "react-native": ">=0.81 <0.87",
     "react-native-blob-util": ">=0.24.7 <0.25",
     "react-native-file-viewer": ">=2.1.5 <3",
-    "react-native-reanimated": ">=3 <5",
+    "react-native-reanimated": ">=4 <5",
     "react-to-print": ">=2.15 <4"
   },
   "dependencies": {

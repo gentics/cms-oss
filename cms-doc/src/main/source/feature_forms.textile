@@ -990,3 +990,22 @@ It is possible to create special pages in the CMS, which can be used as template
 The pages must be created from templates, which use the markup language +Forms e-mail template+ and must render valid "Handlebars":https://handlebarsjs.com/ code.
 
 Those pages will be excluded from publishing, they will neither be written into the filesystem nor into a Content.Repository.
+
+h3. Redirect After Submission (successUrl)
+
+A successUrl can be configured in the form properties to specify the page the user should be navigated to after successfully submitting a form.
+
+h4. Default Behavior
+
+Because flows are individually configurable and an automatic redirect would restrict the flow execution, the navigation does not happen automatically. Instead, a button is displayed on the success screen whenever a successUrl is configured. The user must actively trigger the redirect by clicking the button.
+
+This behavior is built into the default flow and requires no additional implementation.
+
+h4. Behavior With Customized Flows
+
+If the flow is overridden or extended for a specific project, the default behavior no longer applies. In this case, the redirect logic must be implemented explicitly. Two options are available:
+
+* *Custom Elements:* The logic for evaluating the successUrl and triggering the navigation is implemented directly within the custom element.
+* *Hook postSubmitForm:* The redirect is handled via the postSubmitForm hook, which is called after the form has been submitted successfully.
+
+In both cases, ensure that the successUrl is read from the form data and that the navigation is executed at the correct point in the flow.

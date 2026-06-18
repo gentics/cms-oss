@@ -388,25 +388,6 @@ export function validateField(
   formGridOptions?: IFormGridOptions,
   localValue?: any,
 ): CommonValidation {
-  // For Custom-FormGrid-Elements, which are not in state.data.properties & state.schema.properties
-  if (
-    formGridOptions &&
-    formGridOptions.type &&
-    formGridOptions.type !== 'formgridText' &&
-    formGridOptions.type !== 'formgridSpacer' &&
-    formGridOptions.type !== 'text' &&
-    formGridOptions.type !== 'spacer'
-  ) {
-    return getElementTypeByPlugin(formGridOptions.type.toLowerCase(), formState.pluginName).validate(
-      formState,
-      jsonpath,
-      id,
-      updateErrorMessages,
-      i18n.t,
-      formGridOptions,
-      localValue,
-    );
-  }
 
   const elemState = utils.getElementByIdOrJsonPath(
     formState.data,
@@ -419,10 +400,25 @@ export function validateField(
     return { isValid: false, errorMessage: elemState.validationMessage };
   }
 
-  // do not validate invisible fields and readonly fields
-  if (!elemState || elemState.visible === false || elemState.editable === false) {
+  // do not validate invisible fields, readonly fields, non edtiable, hidden
+  if (!elemState || elemState.visible === false || elemState.editable === false || formGridOptions?.hidden === true) {
     return { isValid: true, errorMessage: '' };
   }
+
+  // or cms-elements which are invisible because of a condition
+  if (typeof elemState.visible === 'undefined') {
+    // if visible is not set in data, evaluate condition as fallback
+    if (formGridOptions?.condition) {
+      const condition = formGridOptions.condition;
+      const referencedValue = formState.data.properties?.[condition.source.control]?.value;
+      let isVisible = referencedValue === condition.equals;
+      if(!isVisible){
+          return { isValid: true, errorMessage: '' };
+      }
+    } 
+  }
+
+
 
   if (
     updateErrorMessages &&
@@ -434,10 +430,17 @@ export function validateField(
     utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
   }
 
-  const elementType = schemaState.type.toLowerCase();
+  let elementType = schemaState.type.toLowerCase();
   let result: CommonValidation = { isValid: true, errorMessage: '' };
+  
+  //if formgridoptions overrides type (andp forms) or for cms forms - the type of formgridoptions is used instead of schema element type
+  if(formGridOptions?.type) {
+    elementType = formGridOptions.type.toLocaleLowerCase();
+  }
+
+
   if (getElementTypeByPlugin(elementType, formState.pluginName)) {
-    result = getElementTypeByPlugin(schemaState.type.toLowerCase(), formState.pluginName).validate(
+    result = getElementTypeByPlugin(elementType, formState.pluginName).validate(
       formState,
       jsonpath,
       id,
@@ -516,6 +519,24 @@ export function areSubElementsValid(
         }
       }
 
+      //if it's a container element, and it's visible (condition), check sub elements (CMS Container structure)
+      //container elements are not part of data structure
+      if (["container", "conditionalcontainer"].includes(obj.type)) {
+        if (obj?.formGridOptions?.condition) {
+          const condition = obj.formGridOptions.condition;
+          const referencedValue = formState.data.properties?.[condition.source.control]?.value;
+          let isVisible = referencedValue === condition.equals;
+          if(isVisible){
+            let containerValid = areSubElementsValid(formState, obj.elements, updateErrorMessages, mockForm);
+            //if any container subElement is invalid - report invalid
+            if(!containerValid) {
+              valid = false;
+            }
+          }
+        } 
+      }       
+
+
       // eslint-disable-next-line
       res.forEach((foundElem: any) => {
         // do not check items or its children which are not visible
@@ -555,6 +576,7 @@ export function areSubElementsValid(
             }
           }
         } else {
+          //check validation for field plain field
           if (
             !isFieldValid(
               formState,
@@ -566,7 +588,9 @@ export function areSubElementsValid(
           ) {
             valid = false;
           }
-          // only run for aggregate
+
+
+          // only run for aggregate, they have more complex data structure (nested data)
           if (obj.type === 'aggregate') {
             const dataField = formState.data.properties?.[obj.id];
             // on aggregate lists there will be no value but a values property (plural)
@@ -818,7 +842,7 @@ export const handleValidation = (
       prevFieldState: any,
       isUpdateOnChange: boolean,
     ) => {
-      if (!isUpdateOnChange) {
+      if (!isUpdateOnChange && fieldState) {
         delete fieldState.validationMessage;
       }
       if (
@@ -841,11 +865,25 @@ export const handleValidation = (
      * Recursively walk through aggregates / containers and apply the clearing rule.
      */
     const clearValidationForField = (
-      field: any,
+      field: IFormElement,
       isUpdateOnChange: boolean,
     ): void => {
       const fieldState = formState.data?.properties?.[field.id];      
       const prevFieldState = previousData?.properties?.[field.id];
+
+      if(field.elements){
+        field.elements.forEach((containerSubElement) => {
+          const fieldState = formState.data?.properties?.[containerSubElement.id];
+          const prevFieldState = previousData?.properties?.[containerSubElement.id];
+
+          maybeClearValidationMessage(
+            fieldState,
+            prevFieldState,
+            isUpdateOnChange,
+          );
+        });
+      }
+
       if (!fieldState) return;
 
       // Simple field
@@ -878,8 +916,15 @@ export const handleValidation = (
         }
       };
 
-      walkEntries(fieldState, prevFieldState);
+      //iterate through aggregat with aggregate data structure
+      if(field.type.toLowerCase() === "aggregate"){
+        walkEntries(fieldState, prevFieldState);
+        return;
+      }
+
+      
     };
+
 
     // ---------- 5. Page‑aware clearing ----------
     const isUpdateOnChange =
@@ -890,7 +935,7 @@ export const handleValidation = (
           ? idx >= uiState.currentPage // löscht ab der aktuellen Seite ( >= ) einschließlich dieser Seite.
           : idx > uiState.currentPage; // löscht erst ab der nächsten Seite ( > ), die aktuelle bleibt unberührt.
         if (shouldClear) {
-          page.elements?.forEach((field: any) => 
+          page.elements?.forEach((field: IFormElement) => 
             clearValidationForField(field, isUpdateOnChange),
           );
         }

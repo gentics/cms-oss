@@ -32,7 +32,7 @@ function CmsContainerElement(props: IFormComponentAttributes) {
       <ElementRenderer
         {...props}
         elements={props.elements}
-        jsonpath={props.jsonpath}
+        jsonpath={""} //otherwise sub-element values are fetched with jsonpath and parent jsonpath --> wrong for CMS forms data structure
         parentId={props.id}
         isAggregate={true}
       />

@@ -4,7 +4,7 @@ import { TestBed, tick } from '@angular/core/testing';
 import { I18nDatePipe, I18nService } from '@gentics/cms-components';
 import { MockI18nService } from '@gentics/cms-components/testing';
 import { Form, FormRequestOptions, Normalized, Page, PageRequestOptions } from '@gentics/cms-models';
-import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { provideTranslateService } from '@ngx-translate/core';
 import { NEVER, Observable } from 'rxjs';

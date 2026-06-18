@@ -4,20 +4,37 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/editor-ui/src",
-    "tags": ["app", "ui", "angular"],
+    "tags": [
+        "app",
+        "ui",
+        "angular"
+    ],
     "targets": {
         "build": {
-            "executor": "@nx/angular:webpack-browser",
-            "outputs": ["{options.outputPath}"],
+            "executor": "@nx/angular:application",
+            "outputs": [
+                "{options.outputPath}"
+            ],
+            "inputs": [
+                "building",
+                "{workspaceRoot}/plugins/esbuild/define-version.js"
+            ],
             "options": {
-                "customWebpackConfig": {
-                    "path": "apps/editor-ui/webpack.partial.js"
-                },
                 "outputPath": "dist/apps/editor-ui",
                 "index": "apps/editor-ui/src/index.html",
-                "main": "apps/editor-ui/src/main.ts",
-                "polyfills": ["apps/editor-ui/src/polyfills.ts"],
+                "browser": "apps/editor-ui/src/main.ts",
+                "polyfills": [
+                    "apps/editor-ui/src/polyfills.ts"
+                ],
                 "tsConfig": "apps/editor-ui/tsconfig.app.json",
+                "plugins": [
+                    {
+                        "path": "{workspaceRoot}/plugins/esbuild/define-version.js",
+                        "options": {
+                            "packageFile": "{workspaceRoot}/package.json"
+                        }
+                    }
+                ],
                 "assets": [
                     {
                         "glob": "**/*",
@@ -25,13 +42,23 @@
                         "output": "assets"
                     }
                 ],
-                "styles": ["apps/editor-ui/src/styles/styles.scss"],
+                "styles": [
+                    "apps/editor-ui/src/styles/styles.scss"
+                ],
                 "stylePreprocessorOptions": {
                     "includePaths": [
                         "apps/editor-ui/src/styles",
                         "libs",
                         "node_modules"
-                    ]
+                    ],
+                    "sass": {
+                        "silenceDeprecations": [
+                            "mixed-decls",
+                            "color-functions",
+                            "global-builtin",
+                            "import"
+                        ]
+                    }
                 },
                 "scripts": [],
                 "allowedCommonJsDependencies": [
@@ -51,22 +78,18 @@
                         "with": "apps/editor-ui/src/environments/environment.prod.ts"
                     }
                 ],
+                "aot": true,
                 "outputHashing": "all",
                 "optimization": true,
                 "sourceMap": false,
                 "namedChunks": false,
-                "extractLicenses": true,
-                "vendorChunk": false,
-                "buildOptimizer": true,
-                "aot": true
+                "extractLicenses": true
             },
             "configurations": {
                 "production": {},
                 "development": {
                     "fileReplacements": [],
-                    "buildOptimizer": false,
                     "optimization": false,
-                    "vendorChunk": true,
                     "extractLicenses": false,
                     "sourceMap": true,
                     "namedChunks": true
@@ -95,23 +118,41 @@
             "continuous": true
         },
         "test": {
-            "executor": "nx:run-commands",
+            "executor": "@angular-devkit/build-angular:karma",
             "options": {
-                "cwd": "./ng-workspace",
-                "command": "node ../node_modules/@angular/cli/bin/ng.js test editor-ui --watch=false"
+                "main": "{projectRoot}/src/test.ts",
+                "polyfills": [
+                    "zone.js",
+                    "zone.js/testing",
+                    "{projectRoot}/src/polyfills.ts"
+                ],
+                "tsConfig": "{projectRoot}/tsconfig.spec.json",
+                "karmaConfig": "{projectRoot}/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/editor-ui/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "watch": false
             },
             "configurations": {
-                "watch": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test editor-ui --watch=true"
-                },
                 "ci": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test editor-ui --watch=false --configuration=ci",
-                    "color": false
+                    "codeCoverage": true,
+                    "reporters": [
+                        "junit"
+                    ],
+                    "browsers": "ChromeDocker",
+                    "progress": false
+                },
+                "watch": {
+                    "watch": true
                 }
             }
         },
         "component-test": {
-            "executor": "nx:noop",
+            "executor": "@nx/cypress:cypress",
             "options": {
                 "cypressConfig": "apps/editor-ui/cypress.config.ts",
                 "testingType": "component",
@@ -129,7 +170,9 @@
         },
         "e2e": {
             "executor": "@nx/playwright:playwright",
-            "outputs": ["{workspaceRoot}/.playwright/editor-ui"],
+            "outputs": [
+                "{workspaceRoot}/.playwright/editor-ui"
+            ],
             "options": {
                 "config": "apps/editor-ui/playwright.config.ts",
                 "skipInstall": true

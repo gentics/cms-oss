@@ -1,16 +1,15 @@
 import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent, I18nInputComponent } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
-import { ItemInNode, Language, Page, PageResponse, Raw, ResponseCode } from '@gentics/cms-models';
-import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { EditableFormData, Form, ItemInNode, Language, Page, PageResponse, Raw, ResponseCode } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
-import { GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
-import { Observable, of } from 'rxjs';
+import { FormProperties, GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
+import { of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { Api } from '../../../core/providers/api';
 import { ApplicationStateService } from '../../../state';
@@ -24,7 +23,7 @@ type PageWithNodeId = ItemInNode<Page<Raw>>;
 describe('FormProperties', () => {
 
     beforeEach(() => {
-        const testBed = configureComponentTest({
+        configureComponentTest({
             imports: [
                 GenticsUICoreModule.forRoot(),
                 FormsModule,
@@ -147,10 +146,10 @@ describe('FormProperties', () => {
 
                 instance.value = {
                     data: {
-                        mailsource_nodeid: TEST_PAGE.nodeId,
-                        mailsource_pageid: TEST_PAGE.id,
-                    },
-                };
+                        adminEmailNodeId: TEST_PAGE.nodeId,
+                        adminEmailPageId: TEST_PAGE.id,
+                    } as Partial<EditableFormData>,
+                } as Form;
                 fixture.detectChanges();
                 tick();
 
@@ -170,7 +169,7 @@ describe('FormProperties', () => {
                         instance.setEmailTemplatePage(selectedTemplatePage);
                     });
                 tick();
-                expect(instance.dataGroup.controls.mailsource_pageid.value).toBe(111);
+                expect((instance.form.controls.data as FormGroup<FormProperties<EditableFormData>>).controls.adminEmailPageId.value).toBe(111);
             }),
         );
     });
@@ -196,27 +195,10 @@ class TestComponent {
     value = {};
 }
 
-class MockFormEditorConfigurationService {
-    getConfiguration$: () => Observable<FormEditorConfiguration> = () => of({
-        form_properties: {},
-        elements: [],
-    });
-}
-
-class MockFormEditorService {
-    activeUiLanguageCode: string;
-}
-
 class MockApi {}
 
 class MockRepositoryBrowserClient {
     openRepositoryBrowser = jasmine.createSpy('openRepositoryBrowser');
-}
-
-class TestI18nService {
-    translate(key: string): string {
-        return key;
-    }
 }
 
 class MockSelectedItemHelper {

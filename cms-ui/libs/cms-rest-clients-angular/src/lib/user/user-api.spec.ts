@@ -1,5 +1,5 @@
 import { UserGroupsRequestOptions, UserListOptions, UserRequestOptions, UserUpdateRequest } from '@gentics/cms-models';
-import { MockApiBase } from '../util/api-base.mock';
+import { MockApiBase } from '../testing';
 import { UserApi } from './user-api';
 
 const USER_ID = 4711;

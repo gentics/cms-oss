@@ -13,9 +13,8 @@
     "useInferencePlugins": false,
     "defaultBase": "dev",
     "release": {
-        "projects": ["tag:publish"],
+        "projects": ["tag:publish", "@gentics/root"],
         "version": {
-            "preVersionCommand": "npm run nx -- run-many -t build",
             "git": {
                 "stageChanges": true,
                 "commit": false,
@@ -26,8 +25,7 @@
             "fallbackCurrentVersionResolver": "disk",
             "versionPrefix": "^",
             "manifestRootsToUpdate": [
-                "{workspaceRoot}/{projectRoot}",
-                "{workspaceRoot}/dist/{projectRoot}"
+                "{projectRoot}"
             ],
             "preserveLocalDependencyProtocols": false,
             "preserveMatchingDependencyRanges": false

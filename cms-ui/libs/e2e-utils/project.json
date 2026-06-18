@@ -3,7 +3,6 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/e2e-utils/src",
     "projectType": "library",
-    "tags": [],
-    "// targets": "to see all targets run: nx show project e2e-utils --web",
+    "tags": ["lib"],
     "targets": {}
 }

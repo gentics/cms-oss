@@ -7,6 +7,8 @@ import {
 import 'zone.js';
 import 'zone.js/testing';
 
+(window as any).global = window;
+
 // First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(
     BrowserTestingModule,

@@ -1,29 +1,15 @@
 {
     "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "types": ["node", "jquery"],
-        "moduleResolution": "bundler"
-    },
     "files": ["src/main.ts", "src/polyfills.ts"],
     "include": [
-        "src/**/*.d.ts",
-        "../../libs/cms-rest-clients-angular/src/public-api.ts",
-        "../../libs/cms-models/src/public-api.ts",
-        "../../libs/ui-core/src/public-api.ts"
+        "src/**/*.ts"
     ],
     "exclude": [
         "src/test.ts",
         "**/*.spec.ts",
+        "**/*.mock.ts",
         "cypress/**/*",
         "cypress.config.ts",
-        "**/*.cy.ts",
-        "**/*.cy.js",
-        "**/*.cy.tsx",
-        "**/*.cy.jsx"
-    ],
-    "references": [
-        {
-            "path": "../../libs/cms-models"
-        }
+        "**/*.cy.ts"
     ]
 }

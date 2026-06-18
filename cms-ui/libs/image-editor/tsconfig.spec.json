@@ -1,17 +1,15 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "outDir": "../../dist/out-tsc",
-        "module": "commonjs",
-        "target": "es2016",
-        "types": ["jest", "node"],
-        "moduleResolution": "node10"
+        "moduleResolution": "bundler",
+        "module": "es2015",
+        "target": "es2015",
+        "types": ["jasmine", "node", "jquery"]
     },
-    "files": ["src/test-setup.ts"],
-    "include": [
-        "jest.config.ts",
-        "src/**/*.test.ts",
-        "src/**/*.spec.ts",
-        "src/**/*.d.ts"
+    "include": ["src/**/*.ts"],
+    "exclude": [
+        "cypress/**/*",
+        "cypress.*.ts",
+        "src/**/*.cy.ts"
     ]
 }

@@ -214,7 +214,7 @@ These commands can be used to create new libraries in the monorepo. It will gene
 npm run nx -- g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
 ```
 
-## Packages
+## Apps
 
 ### Editor UI
 
@@ -239,6 +239,8 @@ npm run nx -- g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
 **Type:** Application
 
 **Readme**: [apps/ct-link-checker/README.md](apps/ct-link-checker/README.md)
+
+## Packages
 
 ### CMS Models
 
@@ -303,7 +305,7 @@ Provides general purpose ui components to create custom applications.
 
 **Readme**: [libs/e2e-utils/README.md](libs/e2e-utils/README.md)
 
-A purely internal library which contains utils, commands, and assertions for cypress based tests (integration-/e2e-tests and component-tests).
+A purely internal library which contains utils, commands, and assertions for playwright based tests.
 
 ## Coding Style
 

@@ -7,5 +7,7 @@ if (environment.production) {
     enableProdMode();
 }
 
-platformBrowser().bootstrapModule(AppModule, { applicationProviders: [provideZoneChangeDetection()], preserveWhitespaces: true,})
-    .catch((err: any) => console.error(err));
+platformBrowser().bootstrapModule(AppModule, {
+    applicationProviders: [provideZoneChangeDetection()],
+    preserveWhitespaces: true,
+}).catch((err: any) => console.error(err));

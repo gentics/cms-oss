@@ -5,7 +5,7 @@
         "declaration": true,
         "declarationMap": true,
         "inlineSources": true,
-        "types": ["node", "jquery"]
+        "types": ["node", "jquery", "jasmine"]
     },
     "include": [
         "src/**/*.ts",
@@ -14,16 +14,9 @@
         "auth/src/**/*.ts"
     ],
     "exclude": [
+        "cypress/**/*",
         "cypress.*.ts",
-        "cypress/**",
-        "karma.conf.js",
-        "src/**/*.spec.ts",
-        "src/**/*.cy.ts",
-        "testing/src/**/*.spec.ts",
-        "testing/src/**/*.cy.ts",
-        "aloha/src/**/*.spec.ts",
-        "aloha/src/**/*.cy.ts",
-        "auth/src/**/*.spec.ts",
-        "auth/src/**/*.cy.ts"
+        "**/*.spec.ts",
+        "**/*.cy.ts"
     ]
 }

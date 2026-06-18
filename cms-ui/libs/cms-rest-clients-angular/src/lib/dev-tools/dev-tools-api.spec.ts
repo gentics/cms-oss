@@ -1,5 +1,5 @@
 import { BaseListOptionsWithPaging, BaseListOptionsWithSkipCount, PackageCreateRequest, PagingSortOrder } from '@gentics/cms-models';
-import { MockApiBase } from '../util/api-base.mock';
+import { MockApiBase } from '../testing';
 import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
 import { DevToolsApi } from './dev-tools-api';
 

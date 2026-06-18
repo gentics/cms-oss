@@ -11,7 +11,7 @@ import {
     getExampleFolderDataNormalized,
     getExampleNodeDataNormalized,
     getExamplePageDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
@@ -38,6 +38,7 @@ import {
     IconCheckbox,
     ImageThumbnailComponent,
     ItemBreadcrumbsComponent,
+    ItemListHeaderComponent,
     ItemListRowComponent,
     ItemStatusLabelComponent,
     LanguageContextSelectorComponent,
@@ -50,7 +51,12 @@ import {
 import { MasonryItemDirective } from '../../../shared/directives/masonry-item/masonry-item.directive';
 import {
     AllItemsSelectedPipe,
+    AnyItemDeletedPipe,
+    AnyItemInheritedPipe,
+    AnyItemPublishedPipe,
+    AnyPageUnpublishedPipe,
     FileSizePipe,
+    FilterItemsPipe,
     GetInheritancePipe,
     HighlightPipe,
     ImageDimensionsPipe,
@@ -78,15 +84,9 @@ import {
     WastebinActionsService,
 } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
-import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
-import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-published.pipe';
-import { AnyPageUnpublishedPipe } from '../../pipes/any-page-unpublished/any-page-unpublished.pipe';
-import { FilterItemsPipe } from '../../pipes/filter-items/filter-items.pipe';
 import { ListService } from '../../providers/list/list.service';
 import { FolderContentsComponent } from '../folder-contents/folder-contents.component';
 import { GridItemComponent } from '../grid-item/grid-item.component';
-import { ItemListHeaderComponent } from '../item-list-header/item-list-header.component';
 import { ItemListComponent } from '../item-list/item-list.component';
 
 const PERMISSIONS = {

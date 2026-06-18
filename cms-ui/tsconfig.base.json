@@ -27,10 +27,13 @@
 
         "paths": {
             "@admin-ui": ["./apps/admin-ui/src/app"],
+            "@admin-ui/testing": ["./apps/admin-ui/src/testing/index.ts"],
             "@admin-ui/*": ["./apps/admin-ui/src/app/*"],
             "@gentics/common": ["./libs/common/src/index.ts"],
+            "@gentics/common/rxjs": ["./libs/common/src/rxjs.ts"],
             "@gentics/aloha-models": ["./libs/aloha-models/src/index.ts"],
             "@gentics/cms-models": ["./libs/cms-models/src/index.ts"],
+            "@gentics/cms-models/testing": ["./libs/cms-models/src/testing.ts"],
             "@gentics/cms-integration-api-models": [
                 "./libs/cms-integration-api-models/src/index.ts"
             ],
@@ -61,6 +64,9 @@
             "@gentics/form-grid": ["./libs/form-grid/src/index.ts"],
             "@gentics/cms-rest-clients-angular": [
                 "./libs/cms-rest-clients-angular/src/index.ts"
+            ],
+            "@gentics/cms-rest-clients-angular/testing": [
+                "./libs/cms-rest-clients-angular/src/lib/testing/index.ts"
             ]
         }
     },

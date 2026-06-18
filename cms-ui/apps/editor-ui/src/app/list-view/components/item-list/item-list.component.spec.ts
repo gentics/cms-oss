@@ -24,7 +24,7 @@ import {
     Node as NodeModel,
     Page,
 } from '@gentics/cms-models';
-import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
+import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable } from 'rxjs';
@@ -40,20 +40,31 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
-import { LanguageStateComponent, MasonryGridComponent } from '../../../shared/components';
-import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.component';
-import { FavouriteToggleComponent } from '../../../shared/components/favourite-toggle/favourite-toggle.component';
-import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
-import { ImageThumbnailComponent } from '../../../shared/components/image-thumbnail/image-thumbnail.component';
-import { ItemBreadcrumbsComponent } from '../../../shared/components/item-breadcrumbs/item-breadcrumbs.component';
-import { ItemListRowComponent } from '../../../shared/components/item-list-row/item-list-row.component';
-import { ItemStatusLabelComponent } from '../../../shared/components/item-status-label/item-status-label.component';
-import { LanguageContextSelectorComponent } from '../../../shared/components/language-context-selector/language-context-selector.component';
-import { ListItemDetails } from '../../../shared/components/list-item-details/list-item-details.component';
-import { PageLanguageIndicatorComponent } from '../../../shared/components/page-language-indicator/page-language-indicator.component';
-import { PagingControls } from '../../../shared/components/paging-controls/paging-controls.component';
-import { StartPageIcon } from '../../../shared/components/start-page-icon/start-page-icon.component';
+import {
+    DetailChip,
+    FavouriteToggleComponent,
+    IconCheckbox,
+    ImageThumbnailComponent,
+    ItemBreadcrumbsComponent,
+    ItemListHeaderComponent,
+    ItemListRowComponent,
+    ItemStatusLabelComponent,
+    LanguageContextSelectorComponent,
+    LanguageStateComponent,
+    ListItemDetails,
+    MasonryGridComponent,
+    PageLanguageIndicatorComponent,
+    PagingControls,
+    StartPageIcon,
+} from '../../../shared/components';
 import { MasonryItemDirective } from '../../../shared/directives';
+import {
+    AnyItemDeletedPipe,
+    AnyItemInheritedPipe,
+    AnyItemPublishedPipe,
+    AnyPageUnpublishedPipe,
+    FilterItemsPipe,
+} from '../../../shared/pipes';
 import { AllItemsSelectedPipe } from '../../../shared/pipes/all-items-selected/all-items-selected.pipe';
 import { FileSizePipe } from '../../../shared/pipes/file-size/file-size.pipe';
 import { GetInheritancePipe } from '../../../shared/pipes/get-inheritance/get-inheritance.pipe';
@@ -69,14 +80,8 @@ import { TruncatePathPipe } from '../../../shared/pipes/truncate-path/truncate-p
 import { UserFullNamePipe } from '../../../shared/pipes/user-full-name/user-full-name.pipe';
 import { ApplicationStateService, FolderActionsService, UsageActionsService, WastebinActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
-import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
-import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-published.pipe';
-import { AnyPageUnpublishedPipe } from '../../pipes/any-page-unpublished/any-page-unpublished.pipe';
-import { FilterItemsPipe } from '../../pipes/filter-items/filter-items.pipe';
 import { ListService } from '../../providers/list/list.service';
 import { GridItemComponent } from '../grid-item/grid-item.component';
-import { ItemListHeaderComponent } from '../item-list-header/item-list-header.component';
 import { ItemListComponent } from './item-list.component';
 
 /**
@@ -141,7 +146,7 @@ class TestComponent implements OnInit {
     activeNodeLanguages: Language[] = [
         { id: 1, code: 'en', name: 'English' },
         { id: 2, code: 'de', name: 'Deutsch (German)' },
-    ]
+    ];
 
     constructor(public appState: ApplicationStateService) { }
 
@@ -1123,7 +1128,7 @@ describe('ItemListComponent', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 instance.itemType = 'page';
                 instance.items = [
-                    { ...getExamplePageData({ id: 1 }), languageVariants: [1, 324423 /* Page ID which doesn't exist */], deleted: { at: 0, by: null } },
+                    { ...getExamplePageData({ id: 1 }), languageVariants: [1, 324423], deleted: { at: 0, by: null } },
                 ];
                 updateItemsInfoState({
                     list: [66],

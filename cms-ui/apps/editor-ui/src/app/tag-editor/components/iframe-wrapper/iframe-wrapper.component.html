@@ -2,7 +2,6 @@
   <gtx-progress-bar [active]="safeSrcUrl && !iFrameLoaded" speed="200ms"></gtx-progress-bar>
   @if (safeSrcUrl) {
     <iframe #iFrame
-      [attr.data-gcms-ui-styles]="iFrameStylesUrl"
       [attr.data-disable-validation]="disableValidation"
       [src]="safeSrcUrl">
     </iframe>

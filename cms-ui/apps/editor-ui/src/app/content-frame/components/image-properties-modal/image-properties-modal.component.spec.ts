@@ -1,8 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { componentTest } from '@editor-ui/testing';
-import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.mock';
 import { I18nService } from '@gentics/cms-components';
 import { MockI18nPipe, MockI18nService } from '@gentics/cms-components/testing';
 import {
@@ -26,15 +24,17 @@ import {
     getExampleFolderDataNormalized,
     getExampleImageData,
     getExampleNodeDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
-import { MockApiBase } from '@gentics/cms-rest-clients-angular/base/api-base.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { provideTranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
+import { MockApiBase } from '../../../../testing';
+import { componentTest } from '../../../../testing/component-test';
+import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { Api, ApiBase } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';

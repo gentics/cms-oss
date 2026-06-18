@@ -9,4 +9,3 @@ export * from './random-id';
 export * from './set-by-path';
 export * from './to-number';
 export * from './value-by-path';
-export * from './wait-take.operator';

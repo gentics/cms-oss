@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { EditMode } from '@gentics/cms-integration-api-models';
+import { AlohaModule } from '@gentics/cms-components/aloha';
+import { AlohaGlobal, CNParentWindow, CNWindow, EditMode } from '@gentics/cms-integration-api-models';
 import { ItemInNode } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
@@ -17,9 +18,6 @@ import { MockAppState, TestApplicationState } from '../../../state/test-applicat
 import { TagEditorService } from '../../../tag-editor';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
-import { AlohaGlobal, CNParentWindow, CNWindow } from '../../models/content-frame';
-import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
-import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
 import { CustomerScriptService } from './customer-script.service';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
@@ -65,11 +63,11 @@ describe('CustomerScriptService', () => {
             imports: [
                 NgxsModule.forRoot(STATE_MODULES),
                 GenticsUICoreModule.forRoot(),
+                AlohaModule.forRoot(),
             ],
             providers: [
                 CustomerScriptService,
                 EntityResolver,
-                AlohaIntegrationService,
                 { provide: HttpClient, useClass: MockHttpClient },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: ApiBase, useClass: MockApiBase },
@@ -79,7 +77,6 @@ describe('CustomerScriptService', () => {
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 { provide: ModalService, useClass: MockModalService },
-                DynamicOverlayService,
             ],
         });
 
@@ -185,7 +182,9 @@ describe('CustomerScriptService', () => {
 
         it('runPreLoadScript() catches errors in the pre-load script', () => {
             const errorMsg = 'Error in pre-load script';
-            PreLoadScript.prototype.run = () => { throw new Error(errorMsg); }
+            PreLoadScript.prototype.run = () => {
+                throw new Error(errorMsg);
+            };
             const errorHandler = TestBed.inject(ErrorHandler);
             const catchErrorSpy = spyOn(errorHandler, 'catch');
 
@@ -203,13 +202,15 @@ describe('CustomerScriptService', () => {
             result.runPostLoadScript();
             expect(postLoadRunSpy).toHaveBeenCalledTimes(1);
             expect(customerScriptSpy).toHaveBeenCalledTimes(1);
-            expect(customerScriptSpy).toHaveBeenCalledWith(mockWindow, mockDocument, mockScriptHost)
+            expect(customerScriptSpy).toHaveBeenCalledWith(mockWindow, mockDocument, mockScriptHost);
         });
 
         it('runPostLoadScript() catches errors in the pre-load script and the customer script', () => {
             const errorMsgPostLoadScript = 'Error in post-load script';
             const errorMsgCustomerScript = 'Error in customer script';
-            PostLoadScript.prototype.run = () => { throw new Error(errorMsgPostLoadScript); }
+            PostLoadScript.prototype.run = () => {
+                throw new Error(errorMsgPostLoadScript);
+            };
             spyOn(customerScriptService, 'invokeCustomerScript').and.throwError(errorMsgCustomerScript);
 
             const errorHandler = TestBed.inject(ErrorHandler);
@@ -219,8 +220,8 @@ describe('CustomerScriptService', () => {
             expect(() => result.runPostLoadScript()).not.toThrow();
 
             expect(catchErrorSpy).toHaveBeenCalledTimes(2);
-            expect(catchErrorSpy.calls.argsFor(0)).toEqual([ jasmine.objectContaining({ message: errorMsgPostLoadScript }), { notification: false } ]);
-            expect(catchErrorSpy.calls.argsFor(1)).toEqual([ jasmine.objectContaining({ message: errorMsgCustomerScript }), { notification: false } ]);
+            expect(catchErrorSpy.calls.argsFor(0)).toEqual([jasmine.objectContaining({ message: errorMsgPostLoadScript }), { notification: false }]);
+            expect(catchErrorSpy.calls.argsFor(1)).toEqual([jasmine.objectContaining({ message: errorMsgCustomerScript }), { notification: false }]);
         });
 
         it('appState contains correct data', () => {
@@ -246,41 +247,6 @@ describe('CustomerScriptService', () => {
 
             expect(spy).toHaveBeenCalled();
             expect(spy.calls.argsFor(0)[0].uiLanguage).toBe('de');
-        });
-
-        it('restRequestGET() delegates to ApiBase.get()', () => {
-            const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const url = 'some/url';
-            const params = { foo: 'bar' };
-            result.restRequestGET(url, params);
-
-            expect(apiBase.get).toHaveBeenCalledWith(url, params);
-        });
-
-        it('restRequestGET() strips leading / before delegating', () => {
-            const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const url = '/some/url';
-            result.restRequestGET(url);
-
-            expect(apiBase.get.calls.argsFor(0)[0]).toBe('some/url');
-        });
-
-        it('restRequestPOST() delegates to ApiBase.post()', () => {
-            const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const url = 'some/url';
-            const data = { quux: 'buux' };
-            const params = { foo: 'bar' };
-            result.restRequestPOST(url, data, params);
-
-            expect(apiBase.post).toHaveBeenCalledWith(url, data, params);
-        });
-
-        it('restRequestPOST() strips leading / before delegating', () => {
-            const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const url = '/some/url';
-            result.restRequestPOST(url, {});
-
-            expect(apiBase.post.calls.argsFor(0)[0]).toBe('some/url');
         });
 
         it('setContentModified() correctly delegates to ContentFrame', () => {
@@ -371,8 +337,8 @@ class MockHttpClient {
 }
 
 class MockApiBase {
-    get = jasmine.createSpy('get').and.returnValue( { toPromise(): void {} });
-    post = jasmine.createSpy('post').and.returnValue( { toPromise(): void {} });
+    get = jasmine.createSpy('get').and.returnValue({ toPromise(): void {} });
+    post = jasmine.createSpy('post').and.returnValue({ toPromise(): void {} });
 }
 class MockEntityResolver {}
 
@@ -398,8 +364,9 @@ class MockWindow {
         settings: {
 
         } as any,
-        trigger: function() {},
+        trigger: function () {},
     };
+
     addEventListener(): void { }
     removeEventListener(): void { }
 }

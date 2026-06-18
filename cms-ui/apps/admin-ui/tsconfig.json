@@ -15,11 +15,8 @@
     "include": [],
     "angularCompilerOptions": {
         "annotateForClosureCompiler": true,
-        "skipTemplateCodegen": false,
-        "strictMetadataEmit": true,
         "strictTemplates": false,
-        "strictInjectionParameters": true,
-        "enableResourceInlining": false
+        "strictInjectionParameters": true
     },
     "references": [
         {

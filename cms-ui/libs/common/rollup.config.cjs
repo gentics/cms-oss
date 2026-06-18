@@ -8,6 +8,10 @@ module.exports = withNx(
         compiler: 'swc',
         format: ['cjs', 'esm'],
         assets: [{ input: '{projectRoot}', output: '.', glob: '*.md' }],
+        additionalEntryPoints: [
+            './src/rxjs.ts'
+        ],
+        generateExportsField: true
     },
     {
         // Provide additional rollup configuration here. See: https://rollupjs.org/configuration-options

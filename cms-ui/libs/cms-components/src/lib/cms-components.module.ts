@@ -1,16 +1,113 @@
-import { inject, ModuleWithProviders, NgModule, provideAppInitializer } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
+import { CommonModule } from '@angular/common';
+import { inject, ModuleWithProviders, NgModule, PipeTransform, provideAppInitializer, Provider, Type } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+import { GenticsUICoreModule } from '@gentics/ui-core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../public/i18n/en.json';
-import { CoreModule } from './core/core.module';
+import {
+    AppVersionLabelComponent,
+    BrowseBoxComponent,
+    I18nInputComponent,
+    I18nPanelGroupComponent,
+    I18nSelectComponent,
+    LinkToManualComponent,
+    PasswordConfirmInputComponent,
+    RichContentEditorComponent,
+    RichContentLinkPropertiesComponent,
+    RichContentModal,
+    StringListComponent,
+    UserMenuComponent,
+    UserMenuToggleComponent,
+    VersionModalComponent,
+} from './components';
+import {
+    ClickOutsideDirective,
+} from './directives';
+import {
+    EntriesPipe,
+    FilterPipe,
+    I18nDatePipe,
+    I18nDurationPipe,
+    I18nNumberPipe,
+    I18nObjectPipe,
+    I18nPipe,
+    I18nRelativeDatePipe,
+    SafePipe,
+    StripRichContentPipe,
+    ValuesPipe,
+} from './pipes';
+import {
+    I18nDatePickerFormatService,
+    I18nNotificationService,
+    I18nRelativeDateService,
+    I18nService,
+    WindowRef,
+} from './providers';
+
+const COMPONENTS: any[] = [
+    AppVersionLabelComponent,
+    BrowseBoxComponent,
+    I18nInputComponent,
+    I18nPanelGroupComponent,
+    I18nSelectComponent,
+    LinkToManualComponent,
+    PasswordConfirmInputComponent,
+    RichContentEditorComponent,
+    RichContentLinkPropertiesComponent,
+    RichContentModal,
+    StringListComponent,
+    UserMenuComponent,
+    UserMenuToggleComponent,
+    VersionModalComponent,
+];
+
+const DIRECTIVES: Type<any>[] = [
+    ClickOutsideDirective,
+];
+
+const PIPES: Type<PipeTransform>[] = [
+    EntriesPipe,
+    FilterPipe,
+    I18nPipe,
+    I18nDatePipe,
+    I18nDurationPipe,
+    I18nNumberPipe,
+    I18nObjectPipe,
+    I18nRelativeDatePipe,
+    StripRichContentPipe,
+    SafePipe,
+    ValuesPipe,
+];
+
+const DECLARATIONS: any[] = [
+    ...COMPONENTS,
+    ...DIRECTIVES,
+    ...PIPES,
+];
+
+const PROVIDERS: Provider[] = [
+    I18nRelativeDateService,
+    I18nNotificationService,
+    I18nDatePickerFormatService,
+    I18nService,
+    WindowRef,
+    ...PIPES,
+];
 
 @NgModule({
+    declarations: DECLARATIONS,
     imports: [
-        CoreModule,
+        CommonModule,
+        ReactiveFormsModule,
+        GenticsUICoreModule,
+        TranslateModule,
     ],
     exports: [
-        CoreModule,
+        ...DECLARATIONS,
+        TranslateModule,
     ],
+    providers: PROVIDERS,
 })
 export class CmsComponentsModule {
     static forRoot(): ModuleWithProviders<CmsComponentsModule> {

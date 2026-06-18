@@ -1,18 +1,17 @@
 import { Component, EventEmitter, Injectable, Input, NO_ERRORS_SCHEMA, Output } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 import { ChannelSyncRequest, Feature, File, Folder, Image, Node, Normalized, Page } from '@gentics/cms-models';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { NgxsModule } from '@ngxs/store';
-import { componentTest } from '../../../../testing/component-test';
+import { componentTest, MockApiBase } from '../../../../testing';
 import { ApiBase } from '../../../core/providers/api';
-import { MockApiBase } from '../../../core/providers/api/api-base.mock';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { replaceInState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { SynchronizeChannelModal } from './synchonize-channel-modal.component';
-import { MockI18nPipe } from '@gentics/cms-components/testing';
 
 describe('SynchronizeChannelModal', () => {
 

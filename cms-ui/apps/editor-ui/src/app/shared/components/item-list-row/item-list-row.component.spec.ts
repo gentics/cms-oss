@@ -14,7 +14,7 @@ import {
     getExampleFolderDataNormalized,
     getExamplePageData,
     getExamplePageDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { provideTranslateService } from '@ngx-translate/core';
 import { componentTest, configureComponentTest } from '../../../../testing';

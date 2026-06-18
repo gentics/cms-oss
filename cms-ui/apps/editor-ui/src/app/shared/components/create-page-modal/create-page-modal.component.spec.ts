@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CoreModule } from '@gentics/cms-components';
+import { CmsComponentsModule } from '@gentics/cms-components';
 import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
+import { PagePropertiesComponent } from '..';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { EditorPermissions } from '../../../common/models';
 import { Api } from '../../../core/providers/api';
@@ -13,10 +13,9 @@ import { ContextMenuOperationsService } from '../../../core/providers/context-me
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
-import { PagePropertiesComponent } from '..';
-import { DynamicDisableDirective } from '../../directives';
 import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
+import { DynamicDisableDirective } from '../../directives';
 import { CreatePageModalComponent } from './create-page-modal.component';
 
 xdescribe('CreatePageModal', () => {
@@ -30,7 +29,7 @@ xdescribe('CreatePageModal', () => {
                 FormsModule,
                 GenticsUICoreModule.forRoot(),
                 ReactiveFormsModule,
-                CoreModule,
+                CmsComponentsModule.forRoot(),
             ],
             providers: [
                 { provide: Api, useClass: MockApi },

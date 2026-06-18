@@ -6,9 +6,14 @@
         "target": "es2015",
         "types": ["jasmine", "node", "jquery"]
     },
-    "files": ["src/test.ts"],
     "include": [
-        "src/**/*.spec.ts",
-        "src/**/*.d.ts"
+        "src/**/*.ts",
+        "testing/src/**/*.ts"
+    ],
+    "exclude": [
+        "cypress/**/*",
+        "cypress.*.ts",
+        "src/**/*.cy.ts",
+        "testing/**/*.cy.ts"
     ]
 }

@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, computed, effect, inject, input, model, OnChanges, OnDestroy, OnInit, signal } from '@angular/core';
-import { discard } from '@gentics/cms-components';
 import { Feature, Item, Language, Node, PagingSortOrder, StagedItemsMap } from '@gentics/cms-models';
 import { randomId, toValidNumber } from '@gentics/common';
+import { discard } from '@gentics/common/rxjs';
 import { ChangesOf } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import {

@@ -9,10 +9,9 @@
     },
     "include": ["src/**/*.ts"],
     "exclude": [
-        "src/**/*.spec.ts",
-        "src/**/*.test.ts",
-        "jest.config.ts",
-        "jest.config.cts",
-        "src/test-setup.ts"
+        "cypress/**/*",
+        "cypress.*.ts",
+        "**/*.spec.ts",
+        "**/*.cy.ts"
     ]
 }

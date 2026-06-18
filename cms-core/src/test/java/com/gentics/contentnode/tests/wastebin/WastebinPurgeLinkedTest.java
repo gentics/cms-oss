@@ -89,7 +89,7 @@ public class WastebinPurgeLinkedTest {
 			pageUrl.setTargetPage(page1);
 		}));
 
-		// delete some things (put them into the wastebin)
+		// publish the referencing, waste the referenced
 		operate(t -> {
 			t.getObject(page2, true).publish();
 			t.getObject(page1).delete();
@@ -103,9 +103,9 @@ public class WastebinPurgeLinkedTest {
 			assertTrue(page1bis + " must be deleted", page1bis.isDeleted());
 		}
 
-		// Reset the current lang context
+		// Reset the current lang context to mimic the truly scheduled env (not possible by default as per ContentNodeTestContext)
 		ContentNodeHelper.setLanguageId(-1);
-		// Purge 'em all
+		// Purge 'em all. Should not throw.
 		CoreInternalSchedulerTask.purgewastebin.execute(new ArrayList<>());
 	}
 }

@@ -1,6 +1,5 @@
 package com.gentics.contentnode.tests.wastebin;
 
-import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
@@ -9,6 +8,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -107,5 +107,9 @@ public class WastebinPurgeLinkedTest {
 		ContentNodeHelper.setLanguageId(-1);
 		// Purge 'em all. Should not throw.
 		CoreInternalSchedulerTask.purgewastebin.execute(new ArrayList<>());
+		// check referenced deleted
+		operate(t -> {
+			assertThat(t.getObject(page1)).as("Wasted page").isNull();
+		});
 	}
 }

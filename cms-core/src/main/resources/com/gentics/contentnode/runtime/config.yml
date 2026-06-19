@@ -736,4 +736,4 @@ velocity:
   string.loader.description: "String Resource Loader"
   string.resource.loader.class: "org.apache.velocity.runtime.resource.loader.StringResourceLoader"
   resource.loader: "string"
-  userdirective: "com.gentics.contentnode.render.RenderDirective,com.gentics.contentnode.render.EditDirective,com.gentics.contentnode.render.GisDirective,com.gentics.contentnode.render.ChannelDirective,com.gentics.contentnode.render.FormDirective"
+  userdirective: "com.gentics.contentnode.render.RenderDirective,com.gentics.contentnode.render.EditDirective,com.gentics.contentnode.render.GisDirective,com.gentics.contentnode.render.ChannelDirective"

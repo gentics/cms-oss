@@ -15,9 +15,9 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ObservableStopper } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, Page } from '@gentics/cms-models';
+import { ObservableStopper } from '@gentics/common/rxjs';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
 import {

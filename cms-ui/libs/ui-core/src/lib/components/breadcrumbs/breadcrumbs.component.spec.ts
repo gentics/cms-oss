@@ -1,4 +1,4 @@
-import { LocationStrategy } from '@angular/common';
+import { LocationChangeListener, LocationStrategy } from '@angular/common';
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, getTestBed, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -30,8 +30,7 @@ function linkHrefs(fixture: ComponentFixture<any>): string[] {
     );
 }
 
-
-describe('Breadcrumbs:', () => {
+describe('Breadcrumbs', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -54,7 +53,7 @@ describe('Breadcrumbs:', () => {
                 { text: "A" },
                 { text: "B" }
             ]'></gtx-breadcrumbs>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick(1000);
             const links = linkTexts(fixture);
@@ -72,7 +71,7 @@ describe('Breadcrumbs:', () => {
                 { text: "B", href: "./relative.html" },
                 { text: "C", href: "#hashlocation" }
             ]'></gtx-breadcrumbs>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick(1000);
             const hrefs = linkHrefs(fixture);
@@ -84,7 +83,7 @@ describe('Breadcrumbs:', () => {
     );
 
     it('changes the text of the created links with the bound input property',
-        componentTest(() => TestComponent, (fixture, component) => {
+        componentTest(() => TestComponent, async (fixture, component) => {
             const links = component.links = [
                 { text: 'A' },
                 { text: 'B' },
@@ -101,6 +100,10 @@ describe('Breadcrumbs:', () => {
                 { text: 'BBB' },
                 { text: 'CCC' },
             ];
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
 
             expect(linkTexts(fixture)).toEqual(['AAA', 'BBB', 'CCC'],
@@ -109,8 +112,8 @@ describe('Breadcrumbs:', () => {
     );
 
     it('changes the href of the created links with the bound input property',
-        componentTest(() => TestComponent, (fixture, component) => {
-            const links = component.links = [
+        componentTest(() => TestComponent, async (fixture, component) => {
+            component.links = [
                 { text: 'A', href: '/a' },
                 { text: 'B', href: './b' },
                 { text: 'C', href: '#c' },
@@ -120,12 +123,15 @@ describe('Breadcrumbs:', () => {
             tick(1000);
             expect(linkHrefs(fixture)).toEqual(['/a', './b', '#c']);
 
-            // Change by value
-            links[0].href = '/aa';
-            links[1].href = './bb';
-            links[2].href = '#cc';
+            component.links[0].href = '/aa';
+            component.links[1].href = './bb';
+            component.links[2].href = '#cc';
+            component.links = [...component.links];
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
 
             expect(linkHrefs(fixture)).toEqual(['/aa', './bb', '#cc'],
                 'href of breadcrumb links did not change by value');
@@ -136,8 +142,11 @@ describe('Breadcrumbs:', () => {
                 { text: 'B', href: './bbb' },
                 { text: 'C', href: '#ccc' },
             ];
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
 
             expect(linkHrefs(fixture)).toEqual(['/aaa', './bbb', '#ccc'],
                 'href of breadcrumb links did not change by reference');
@@ -152,25 +161,33 @@ describe('Breadcrumbs:', () => {
                 { text: 'C', href: '/c' }
             ]" [disabled]="disableBreadcrumbs">
             </gtx-breadcrumbs>`,
-        (fixture, component) => {
+        async (fixture, component) => {
             component.disableBreadcrumbs = false;
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
             expect(linkHrefs(fixture)).toEqual(['/a', '/b', '/c']);
 
             component.disableBreadcrumbs = true;
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
             expect(linkHrefs(fixture)).toEqual([null, null, null]);
 
             component.disableBreadcrumbs = false;
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
             expect(linkHrefs(fixture)).toEqual(['/a', '/b', '/c']);
         },
         ),
     );
-
 
     it('forwards clicks on its links to the "linkClick" EventEmitter',
         componentTest(() => TestComponent, `
@@ -219,14 +236,17 @@ describe('Breadcrumbs:', () => {
         componentTest(() => TestComponent, `
             <gtx-breadcrumbs [links]="links" [routerLinks]="routerLinks">
             </gtx-breadcrumbs>`,
-        (fixture, component) => {
+        async (fixture, component) => {
             component.links = [
                 { text: 'X', href: '/x', someKey: 'someValue' },
             ];
             component.routerLinks = [];
 
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeNull();
 
             component.links = [];
@@ -234,8 +254,11 @@ describe('Breadcrumbs:', () => {
                 { text: 'Y', route: ['/route', 'y'] },
             ];
 
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeNull();
         },
         ),
@@ -245,7 +268,7 @@ describe('Breadcrumbs:', () => {
         componentTest(() => TestComponent, `
             <gtx-breadcrumbs [links]="links" [routerLinks]="routerLinks">
             </gtx-breadcrumbs>`,
-        (fixture, component) => {
+        async (fixture, component) => {
 
             // Links, but no router links
             component.links = [
@@ -254,8 +277,11 @@ describe('Breadcrumbs:', () => {
             ];
             component.routerLinks = [];
 
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
 
             // No links, but router links
@@ -265,8 +291,11 @@ describe('Breadcrumbs:', () => {
                 { text: 'B', route: ['/route', 'b'] },
             ];
 
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
 
             // Both links and router links
@@ -277,8 +306,11 @@ describe('Breadcrumbs:', () => {
                 { text: 'A', route: ['/route', 'a'] },
             ];
 
+            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
-            tick(1000);
+            await fixture.whenStable();
+            fixture.changeDetectorRef.markForCheck();
+            fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
         },
         ),
@@ -312,7 +344,7 @@ describe('Breadcrumbs:', () => {
             componentTest(() => TestComponent, `
                 <gtx-breadcrumbs multilineExpanded='true' [routerLinks]="routerLinks">
                 </gtx-breadcrumbs>`,
-            (fixture, instance) => {
+            async (fixture, instance) => {
                 instance.routerLinks = [
                     { text: 'A', route: ['/TestA/TestB/TestC'] },
                     { text: 'B', route: ['/TestA', 'TestB', 'TestC'] },
@@ -321,9 +353,12 @@ describe('Breadcrumbs:', () => {
                 tick(1000);
                 expect(linkTexts(fixture)).toEqual(['A', 'B']);
 
-                instance.routerLinks.push({ text: 'C', route: ['./TestC'] });
+                instance.routerLinks = [...instance.routerLinks, { text: 'C', route: ['./TestC'] }];
+                fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
-                tick(1000);
+                await fixture.whenStable();
+                fixture.changeDetectorRef.markForCheck();
+                fixture.detectChanges();
                 expect(linkTexts(fixture)).toEqual(['A', 'B', 'C']);
             },
             ),
@@ -336,14 +371,14 @@ describe('Breadcrumbs:', () => {
                     { text: "B", route: "./TestB" },
                     { text: "C", route: ["/TestA", "TestB", "TestC"] }
                 ]'></gtx-breadcrumbs>`,
-            fixture => {
+            (fixture) => {
                 fixture.detectChanges();
                 tick(1000);
 
                 const links = Array.from<HTMLAnchorElement>(fixture.nativeElement.querySelectorAll('a.breadcrumb'));
                 expect(links.length).toBe(3);
 
-                const hrefs = links.map(link => link.getAttribute('href'));
+                const hrefs = links.map((link) => link.getAttribute('href'));
                 expect(hrefs).toEqual(['/TestA/TestB/TestC', './TestB', '/TestA/TestB/TestC']);
             },
             ),
@@ -355,7 +390,7 @@ describe('Breadcrumbs:', () => {
                     { text: "Link1", route: ["/TestA", "TestB", "TestC"] }
                 ]'>
                 </gtx-breadcrumbs>`,
-            fixture => {
+            (fixture) => {
                 const router = getTestBed().inject(Router) as any as MockRouter;
                 router.createUrlTree = (commands: string[], options: any) => commands;
                 router.navigateByUrl = jasmine.createSpy('navigateByUrl');
@@ -413,19 +448,43 @@ describe('Breadcrumbs:', () => {
 
 });
 
-
 class MockRouter {
     events = observableOf([]);
     createUrlTree(commands: string[], options: any): any {
         return commands;
     }
+
     navigateByUrl(...args: any[]): void {}
     serializeUrl(urlTree: string[]): string {
         return urlTree.join('/');
     }
 }
 class MockActivatedRoute { }
-class MockLocationStrategy {
+class MockLocationStrategy implements LocationStrategy {
+    path(includeHash?: boolean): string {
+        return '';
+    }
+
+    getState(): unknown {
+        return {};
+    }
+
+    pushState(state: any, title: string, url: string, queryParams: string): void {}
+
+    replaceState(state: any, title: string, url: string, queryParams: string): void {}
+
+    forward(): void {}
+
+    back(): void {}
+
+    historyGo?(relativePosition: number): void {}
+
+    onPopState(fn: LocationChangeListener): void {}
+
+    getBaseHref(): string {
+        return '';
+    }
+
     prepareExternalUrl(internal: string): string {
         return internal;
     }
@@ -433,7 +492,6 @@ class MockLocationStrategy {
 class MockUsageActions {
     getTotalUsage(): void {}
 }
-
 
 @Component({
     template: `

@@ -8,6 +8,7 @@
     "targets": {
         "compile": {
             "executor": "nx:run-commands",
+            "cache": true,
             "inputs": ["{projectRoot}/compile-docs.ts", "{projectRoot}/docs.input.json"],
             "outputs": ["{projectRoot}/docs.output.json"],
             "options": {

@@ -1,6 +1,6 @@
 import { TestBed, fakeAsync } from '@angular/core/testing';
-import { getExampleEditableTag } from '@editor-ui/testing/test-tag-editor-data.mock';
 import { I18nService } from '@gentics/cms-components';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { MockI18nService } from '@gentics/cms-components/testing';
 import { TagEditorContext, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
 import {
@@ -12,7 +12,7 @@ import {
     Tag,
     TagType,
 } from '@gentics/cms-models';
-import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
@@ -20,6 +20,7 @@ import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
 import { NEVER, Observable } from 'rxjs';
+import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers';
@@ -29,7 +30,6 @@ import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl'
 import { TranslatorImpl } from '../../common/impl/translator-impl';
 import { TagEditorModal } from '../../components/tag-editor-modal/tag-editor-modal.component';
 import { EditTagInfo, TagEditorService } from './tag-editor.service';
-import { AuthenticationModule } from '@gentics/cms-components/auth';
 
 describe('TagEditorService', () => {
 

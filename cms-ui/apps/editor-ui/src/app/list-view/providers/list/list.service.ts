@@ -1,7 +1,7 @@
 import { LocationStrategy } from '@angular/common';
 import { Injectable, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { File as FileModel, Folder, Form, Image, Node, Normalized, Page } from '@gentics/cms-models';
+import { File as FileModel, Folder, Image, Node, Normalized, Page } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
 import { Observable, Subscription, combineLatest, merge } from 'rxjs';
 import {
@@ -37,7 +37,6 @@ export class ListService implements OnDestroy {
 
     itemInfoStreams: {
         folder: Observable<ItemsInfo>;
-        form: Observable<ItemsInfo>;
         page: Observable<ItemsInfo>;
         image: Observable<ItemsInfo>;
         file: Observable<ItemsInfo>;
@@ -45,7 +44,6 @@ export class ListService implements OnDestroy {
 
     itemStreams: {
         folder: Observable<Folder<Normalized>[]>;
-        form: Observable<Form[]>;
         page: Observable<Page<Normalized>[]>;
         image: Observable<Image<Normalized>[]>;
         file: Observable<FileModel<Normalized>[]>;
@@ -117,7 +115,6 @@ export class ListService implements OnDestroy {
         const itemInfoStreams = this.itemInfoStreams = {
             file: this.state.select((state) => state.folder.files),
             folder: this.state.select((state) => state.folder.folders),
-            form: this.state.select((state) => state.folder.forms),
             image: this.state.select((state) => state.folder.images),
             page: this.state.select((state) => state.folder.pages),
         };
@@ -268,7 +265,6 @@ export class ListService implements OnDestroy {
             sortStream((state) => state.folder.pages, this.folderActions.getPages),
             sortStream((state) => state.folder.files, this.folderActions.getFiles),
             sortStream((state) => state.folder.images, this.folderActions.getImages),
-            sortStream((state) => state.folder.forms, this.folderActions.getForms),
         );
         /* eslint-enable @typescript-eslint/unbound-method */
 
@@ -423,7 +419,6 @@ export class ListService implements OnDestroy {
         this.subscriptions.push(setUpPaginationSub('pages', this.folderActions.getPages));
         this.subscriptions.push(setUpPaginationSub('files', this.folderActions.getFiles));
         this.subscriptions.push(setUpPaginationSub('images', this.folderActions.getImages));
-        this.subscriptions.push(setUpPaginationSub('forms', this.folderActions.getForms));
         /* eslint-enable @typescript-eslint/unbound-method */
     }
 

@@ -69,6 +69,7 @@ import { ServerStorage } from './providers/server-storage/server-storage.service
 import { UploadConflictService } from './providers/upload-conflict/upload-conflict.service';
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
 import { UsersnapService } from './providers/usersnap/usersnap.service';
+import { FormListLoaderService } from './providers';
 
 export const getSidFromAppState = (appState: ApplicationStateService): Observable<number> =>
     appState.select((state) => state.auth.sid);
@@ -133,6 +134,7 @@ const PROVIDERS = [
     UploadConflictService,
     UserSettingsService,
     UsersnapService,
+    FormListLoaderService,
     { provide: DateTimePickerFormatProvider, useClass: I18nDatePickerFormatService },
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: GCMS_API_BASE_URL, useValue: API_BASE_URL },

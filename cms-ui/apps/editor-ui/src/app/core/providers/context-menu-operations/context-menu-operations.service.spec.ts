@@ -7,7 +7,7 @@ import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api
 import {
     AllowedSelectionType,
     AllowedSelectionTypeMap,
-    CmsFormData,
+    EditableFormData,
     File,
     Folder,
     FolderItemOrNodeSaveOptionsMap,
@@ -28,7 +28,7 @@ import {
     getExampleFolderDataNormalized,
     getExampleNodeDataNormalized,
     getExampleTemplateData,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions, ModalDialogComponent, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
@@ -113,7 +113,7 @@ describe('ContextMenuOperationsService', () => {
         folderActions = TestBed.inject(FolderActionsService) as any;
         modalService = TestBed.inject(ModalService);
         navigationService = TestBed.inject(NavigationService) as any;
-        wastebinActions = TestBed.inject(WastebinActionsService);
+        wastebinActions = TestBed.inject(WastebinActionsService) as any;
         usageActions = TestBed.inject(UsageActionsService) as any;
         repositoryBrowserClient = TestBed.inject(RepositoryBrowserClient);
         templateActions = TestBed.inject(TemplateActionsService);
@@ -300,201 +300,36 @@ describe('ContextMenuOperationsService', () => {
 
         describe('form', () => {
 
-            const basicFormData: CmsFormData = {
-                email: 'email@email.com',
-                successurl: 'https://successurl.com',
-                mailsubject_i18n: {
+            const basicFormData: Partial<EditableFormData> = {
+                adminEmailAddress: 'email@email.com',
+                successUrlI18n: {
+                    en: 'https://successurl.com',
+                    de: 'https://successurl.com',
+                },
+                adminEmailSubject: {
                     en: 'Email Subject',
                     de: 'E-Mail-Betreff',
                 },
-                mailtemp_i18n: {
-                    en: 'Email Template',
-                    de: 'E-Mail-Vorlage',
-                },
-                elements: [{
-                    globalId: '7d03c625-b95d-4bec-a85d-db00adf940d5',
-                    name: 'buttons_7d03c625_b95d_4bec_a85d_db00adf940d5',
-                    type: 'buttons',
-                    active: true,
-                    elements: [],
-                    submitlabel_i18n: {
-                        en: 'Label',
-                        de: 'Beschriftung',
-                    },
-                    showreset_i18n: {},
-                    resetlabel_i18n: {},
-                }, {
-                    globalId: '5ba859a2-cd08-45f2-8636-ed98bb144679',
-                    name: 'formpage_5ba859a2_cd08_45f2_8636_ed98bb144679',
-                    type: 'formpage',
-                    active: true,
-                    elements: [{
-                        globalId: 'a2d562eb-be5c-4fdd-b5e9-b461261e852f',
-                        name: 'selectgroup_a2d562eb_be5c_4fdd_b5e9_b461261e852f',
-                        type: 'selectgroup',
-                        active: true,
-                        elements: [],
-                        label_i18n: {
-                            en: 'Label',
-                            de: 'Beschriftung',
-                        },
-                        mandatory_i18n: {},
-                        info_i18n: {},
-                        select_type_i18n: {},
-                        additional_element_i18n: {},
-                        options: [{
-                            key: 'Key',
-                            value_i18n: {
-                                en: 'Value',
-                                de: 'Wert',
-                            },
-                        }, {
-                            key: 'Key 2',
-                            value_i18n: {
-                                en: 'Value 2',
-                                de: 'Wert 2',
-                            },
-                        }, {
-                            key: 'Key 3',
-                            value_i18n: {
-                                en: 'Value 3',
-                            },
-                        }],
-                    }],
-                    description_i18n: {
-                        en: 'Label',
-                        de: 'Beschriftung',
-                    },
-                    info_i18n: {
-                        en: 'Label',
-                    },
-                }],
             };
 
-            const basicFormDataWithoutEn: CmsFormData = {
-                email: 'email@email.com',
-                successurl: 'https://successurl.com',
-                mailsubject_i18n: {
+            const basicFormDataWithoutEn: Partial<EditableFormData> = {
+                adminEmailAddress: 'email@email.com',
+                successUrlI18n: {
+                    de: 'https://successurl.com',
+                },
+                adminEmailSubject: {
                     de: 'E-Mail-Betreff',
                 },
-                mailtemp_i18n: {
-                    de: 'E-Mail-Vorlage',
-                },
-                elements: [{
-                    globalId: '7d03c625-b95d-4bec-a85d-db00adf940d5',
-                    name: 'buttons_7d03c625_b95d_4bec_a85d_db00adf940d5',
-                    type: 'buttons',
-                    active: true,
-                    elements: [],
-                    submitlabel_i18n: {
-                        de: 'Beschriftung',
-                    },
-                    showreset_i18n: {},
-                    resetlabel_i18n: {},
-                }, {
-                    globalId: '5ba859a2-cd08-45f2-8636-ed98bb144679',
-                    name: 'formpage_5ba859a2_cd08_45f2_8636_ed98bb144679',
-                    type: 'formpage',
-                    active: true,
-                    elements: [{
-                        globalId: 'a2d562eb-be5c-4fdd-b5e9-b461261e852f',
-                        name: 'selectgroup_a2d562eb_be5c_4fdd_b5e9_b461261e852f',
-                        type: 'selectgroup',
-                        active: true,
-                        elements: [],
-                        label_i18n: {
-                            de: 'Beschriftung',
-                        },
-                        mandatory_i18n: {},
-                        info_i18n: {},
-                        select_type_i18n: {},
-                        additional_element_i18n: {},
-                        options: [{
-                            key: 'Key',
-                            value_i18n: {
-                                de: 'Wert',
-                            },
-                        }, {
-                            key: 'Key 2',
-                            value_i18n: {
-                                de: 'Wert 2',
-                            },
-                        }, {
-                            key: 'Key 3',
-                            value_i18n: {
-                            },
-                        }],
-                    }],
-                    description_i18n: {
-                        de: 'Beschriftung',
-                    },
-                    info_i18n: {
-                    },
-                }],
             };
 
-            const basicFormDataWithoutDe: CmsFormData = {
-                email: 'email@email.com',
-                successurl: 'https://successurl.com',
-                mailsubject_i18n: {
+            const basicFormDataWithoutDe: Partial<EditableFormData> = {
+                adminEmailAddress: 'email@email.com',
+                successUrlI18n: {
+                    en: 'https://successurl.com',
+                },
+                adminEmailSubject: {
                     en: 'Email Subject',
                 },
-                mailtemp_i18n: {
-                    en: 'Email Template',
-                },
-                elements: [{
-                    globalId: '7d03c625-b95d-4bec-a85d-db00adf940d5',
-                    name: 'buttons_7d03c625_b95d_4bec_a85d_db00adf940d5',
-                    type: 'buttons',
-                    active: true,
-                    elements: [],
-                    submitlabel_i18n: {
-                        en: 'Label',
-                    },
-                    showreset_i18n: {},
-                    resetlabel_i18n: {},
-                }, {
-                    globalId: '5ba859a2-cd08-45f2-8636-ed98bb144679',
-                    name: 'formpage_5ba859a2_cd08_45f2_8636_ed98bb144679',
-                    type: 'formpage',
-                    active: true,
-                    elements: [{
-                        globalId: 'a2d562eb-be5c-4fdd-b5e9-b461261e852f',
-                        name: 'selectgroup_a2d562eb_be5c_4fdd_b5e9_b461261e852f',
-                        type: 'selectgroup',
-                        active: true,
-                        elements: [],
-                        label_i18n: {
-                            en: 'Label',
-                        },
-                        mandatory_i18n: {},
-                        info_i18n: {},
-                        select_type_i18n: {},
-                        additional_element_i18n: {},
-                        options: [{
-                            key: 'Key',
-                            value_i18n: {
-                                en: 'Value',
-                            },
-                        }, {
-                            key: 'Key 2',
-                            value_i18n: {
-                                en: 'Value 2',
-                            },
-                        }, {
-                            key: 'Key 3',
-                            value_i18n: {
-                                en: 'Value 3',
-                            },
-                        }],
-                    }],
-                    description_i18n: {
-                        en: 'Label',
-                    },
-                    info_i18n: {
-                        en: 'Label',
-                    },
-                }],
             };
 
             let wastebinActionsMoveItemsToWastebinSpy: jasmine.Spy;

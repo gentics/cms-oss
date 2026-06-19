@@ -119,13 +119,16 @@
             ></gtx-input>
 
             <gtx-range
-                class="columns small-10 medium-9 medium-push-1"
-                min="1"
-                max="100"
+                class="columns small-10"
+                [min]="1"
+                [max]="100"
+                [indicatorSteps]="10"
+                [showBounds]="true"
                 required
+                label="&nbsp;"
                 [value]="form?.controls?.priority?.value"
                 [disabled]="disabled"
-                (change)="priorityRangeChanged($event)"
+                (valueChange)="priorityRangeChanged($event)"
             ></gtx-range>
         </div>
 

@@ -6,6 +6,7 @@ import {
     Input,
     OnChanges,
     OnInit,
+    SimpleChanges,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import {
@@ -69,6 +70,9 @@ export class FormPropertiesComponent
     public languages: Language[];
 
     @Input()
+    public configuration: FormTypeConfiguration;
+
+    @Input()
     public disableLanguageSelect = false;
 
     @Input()
@@ -81,7 +85,6 @@ export class FormPropertiesComponent
 
     public formTypeConfigurations: Record<string, FormTypeConfiguration> | null = null;
     public activeConfiguration: FormTypeConfiguration | null = null;
-    public hadInitialConfiguration = false;
 
     public useEmailPageTemplate: boolean;
     public loadedMailTemplate: Page | null = null;
@@ -114,24 +117,21 @@ export class FormPropertiesComponent
             for (const config of res.items) {
                 this.formTypeConfigurations[config.type] = config;
             }
-            if (this.item?.formType) {
-                this.activeConfiguration = this.formTypeConfigurations[this.item.formType];
-            } else if (this.form) {
-                this.activeConfiguration = this.formTypeConfigurations[this.form.value.formType];
-            }
-            this.hadInitialConfiguration = this.activeConfiguration != null;
 
             this.changeDetector.markForCheck();
         }));
     }
 
+    public override ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
+        if (changes.configuration) {
+            this.activeConfiguration = this.configuration;
+        }
+    }
+
     protected override initializeWithData(): void {
         super.initializeWithData();
-
-        if (this.item?.formType && this.activeConfiguration == null && this.formTypeConfigurations != null) {
-            this.activeConfiguration = this.formTypeConfigurations[this.item.formType];
-            this.hadInitialConfiguration = this.activeConfiguration != null;
-        }
 
         if (Number.isInteger(this.item?.data?.successPageId) && this.item.data.successPageId !== 0) {
             const options: PageRequestOptions = {};
@@ -168,11 +168,15 @@ export class FormPropertiesComponent
             this.item?.data?.adminEmailNodeId,
             this.item?.data?.adminEmailTemplate,
         );
+
+        this.configureForm(this.form.value as any);
     }
 
     protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
         this.formData = new FormGroup<FormProperties<Partial<EditableFormData>>>({
+            formWidth: new FormControl(this.item?.data?.formWidth || this.safeValue(['data', 'formWidth'])),
             flowId: new FormControl(this.item?.data?.flowId || this.safeValue(['data', 'flowId'])),
+            captchaId: new FormControl(this.item?.data.flowId || this.safeValue(['data', 'captchaId'])),
             templateContext: new FormControl(this.item?.data?.templateContext || this.safeValue(['data', 'templateContext'])),
             successUrlI18n: new FormControl(this.item?.data?.successUrlI18n || this.safeValue(['data', 'successUrlI18n'])),
             successPageId: new FormControl(this.item?.data?.successPageId || this.safeValue(['data', 'successPageId'])),
@@ -195,10 +199,7 @@ export class FormPropertiesComponent
 
     protected configureForm(value: FormPropertiesData, loud?: boolean): void {
         // Should be enabled while it's still loading, and if the name isn't in the item (i.E. something has already been selected)
-        setControlsEnabled(this.form, ['formType'], !this.item?.formTypeName && (
-            this.formTypeConfigurations == null
-            || !this.hadInitialConfiguration
-        ));
+        setControlsEnabled(this.form, ['formType'], this.mode !== FormPropertiesMode.EDIT || this.configuration == null, { emitEvent: loud });
 
         const selectedLangs = (value?.languages || []);
         this.formLanguages = (this.languages || []).filter((lang) => selectedLangs.includes(lang.code));
@@ -225,18 +226,24 @@ export class FormPropertiesComponent
 
     updateEmailTemplate(doUse: boolean): void {
         this.useEmailPageTemplate = doUse;
-        this.form.markAsDirty();
 
-        setControlsEnabled(this.formData, ['adminEmailPageId', 'adminEmailNodeId'], doUse);
-        setControlsEnabled(this.formData, ['adminEmailTemplate'], !doUse);
+        setControlsEnabled(this.formData, ['adminEmailPageId', 'adminEmailNodeId'], doUse, { emitEvent: false });
+        setControlsEnabled(this.formData, ['adminEmailTemplate'], !doUse, { emitEvent: false });
+
+        this.form.markAsDirty();
+        this.form.updateValueAndValidity({ emitEvent: true });
+        this.changeDetector.markForCheck();
     }
 
     updateInternalSuccessPage(doUse: boolean): void {
         this.useInternalSuccessPage = doUse;
-        this.form.markAsDirty();
 
-        setControlsEnabled(this.formData, ['successPageId', 'successNodeId'], doUse);
-        setControlsEnabled(this.formData, ['successUrlI18n'], !doUse);
+        setControlsEnabled(this.formData, ['successPageId', 'successNodeId'], doUse, { emitEvent: false });
+        setControlsEnabled(this.formData, ['successUrlI18n'], !doUse, { emitEvent: false });
+
+        this.form.markAsDirty();
+        this.form.updateValueAndValidity({ emitEvent: true });
+        this.changeDetector.markForCheck();
     }
 
     setSuccessPage(page: ItemInNode<Page<Raw>>): void {
@@ -275,7 +282,7 @@ export class FormPropertiesComponent
         this.changeDetector.markForCheck();
     }
 
-    private isPageUsed(pageId: number, nodeId: number, other: I18nString): boolean {
+    private isPageUsed(pageId: number, nodeId: number, other: I18nString | string): boolean {
         return (pageId != null && pageId !== 0 && nodeId != null && nodeId !== 0) || !other;
     }
 }

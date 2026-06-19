@@ -10,30 +10,38 @@
             "executor": "@nx/angular:ng-packagr-lite",
             "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
             "options": {
-                "tsConfig": "libs/ui-core/tsconfig.lib.json",
-                "project": "libs/ui-core/ng-package.json"
+                "tsConfig": "{projectRoot}/tsconfig.lib.json",
+                "project": "{projectRoot}/ng-package.json"
             },
             "configurations": {
                 "production": {
-                    "tsConfig": "libs/ui-core/tsconfig.lib.prod.json"
+                    "tsConfig": "{projectRoot}/tsconfig.lib.prod.json"
                 },
                 "development": {}
             },
             "defaultConfiguration": "production"
         },
         "test": {
-            "executor": "nx:run-commands",
+            "executor": "@angular-devkit/build-angular:karma",
             "options": {
-                "cwd": "./ng-workspace",
-                "command": "node ../node_modules/@angular/cli/bin/ng.js test ui-core --watch=false"
+                "main": "{projectRoot}/src/test.ts",
+                "polyfills": ["zone.js", "zone.js/testing"],
+                "tsConfig": "{projectRoot}/tsconfig.spec.json",
+                "karmaConfig": "{projectRoot}/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": ["{projectRoot}/src/styles"]
+                },
+                "watch": false
             },
             "configurations": {
-                "watch": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test ui-core --watch=true"
-                },
                 "ci": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test ui-core --watch=false --configuration=ci",
-                    "color": false
+                    "codeCoverage": true,
+                    "reporters": ["junit"],
+                    "browsers": "ChromeDocker",
+                    "progress": false
+                },
+                "watch": {
+                    "watch": true
                 }
             }
         },
@@ -44,13 +52,6 @@
                 "testingType": "component",
                 "skipServe": true,
                 "devServerTarget": "image-editor-demo:build"
-            },
-            "configurations": {
-                "ci": {
-                    "quiet": true,
-                    "cypressConfig": "libs/ui-core/cypress.config.ci.ts",
-                    "devServerTarget": "image-editor-demo:build:ci"
-                }
             }
         }
     }

@@ -76,7 +76,7 @@ import { GenticsUICoreModule } from '@gentics/ui-core';
 export class AppModule { }
 ```
 
-7. Add the [`<gtx-overlay-host>`](https://gentics.github.io/gentics-ui-core/#/overlay-host) component to your AppComponent's template if you want to use components that have overlay parts:
+8. Add the [`<gtx-overlay-host>`](https://gentics.github.io/gentics-ui-core/#/overlay-host) component to your AppComponent's template if you want to use components that have overlay parts:
 
 ```HTML
 <!-- app.component.html -->

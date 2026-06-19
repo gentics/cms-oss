@@ -5,7 +5,7 @@
         [ngClass]="[size || '', type || '']"
         [class.btn-flat]="!!flat || !!icon"
         [class.btn-icon]="!!icon"
-        [type]="buttonType"
+        [type]="submit ? 'submit' : 'button'"
         [disabled]="disabled"
         (click)="preventDisabledClick($event)"
     >

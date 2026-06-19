@@ -823,3 +823,4 @@
 2026-03-26  CH-1740 NOP SQL ALTER TABLE form ADD external_id VARCHAR(255) after id; ## add column for external ID
 2026-03-27  CH-1741 NOP SQL ALTER TABLE node ADD COLUMN default_form_folder_id INT NOT NULL default 0;
 2026-05-08  CH-1745 NOP SQL ALTER TABLE form ADD external_hash VARCHAR(255) after external_id; ## add column for external hash
+2026-05-21  CH-1747 NOP SQL CREATE TABLE form_translations (formtype VARCHAR(255) NOT NULL, translations MEDIUMTEXT NOT NULL, PRIMARY KEY (formtype)); ## Add table for form translations

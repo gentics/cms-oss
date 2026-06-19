@@ -1,4 +1,4 @@
-import { MockApiBase } from '../util/api-base.mock';
+import { MockApiBase } from '../testing';
 import { ElasticSearchIndexApi } from './elastic-search-index-api';
 
 describe('ElasticSearchIndexApi', () => {

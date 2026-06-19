@@ -3,8 +3,8 @@
   class="gtx-toast z-depth-3"
   [attr.data-id]="id"
   [ngClass]="type || 'default'"
+  [style.--gtx-top-offset.px]="position"
   [class.dismissing]="dismissing"
-  [style.transform]="getTransform()"
   (click)="dismiss()"
   >
   <span

@@ -1,0 +1,80 @@
+<!-- No-Session-Fehler -->
+@if (bootstrapStatus === 'loaded' && !hasSession) {
+    <div class="shell__no-session pm-error-state" data-name="no-session">
+        <icon class="hollow">error</icon>
+        <h2>{{ 'tool.missing_session_title' | gtxI18n }}</h2>
+        <p>{{ 'tool.missing_session_desc' | gtxI18n }}</p>
+    </div>
+}
+
+<!-- Bootstrap -->
+@if (bootstrapStatus === 'loading') {
+    <div class="shell__loading" data-name="bootstrap-loading">
+        <span class="pm-spinner pm-spinner--lg"></span>
+    </div>
+}
+
+<!-- Main UI -->
+@if (bootstrapStatus === 'loaded' && hasSession) {
+    <div class="shell" data-region="shell">
+        <header class="shell__header" data-region="header">
+            <h1>{{ 'tool.app_title' | gtxI18n }}</h1>
+            <span class="shell__subtitle">{{ 'tool.app_subtitle' | gtxI18n }}</span>
+            <div class="shell__header-spacer"></div>
+        </header>
+
+        <gtx-scope-tabs
+            [tabs]="scopeTabs()"
+            [activeScopeId]="activeScopeId()"
+            (scopeSelect)="onScopeSelect($event)">
+        </gtx-scope-tabs>
+
+        <gtx-translations-toolbar
+            [search]="search()"
+            [filter]="filter()"
+            [shown]="visibleKeys().length"
+            [total]="activeKeys().length"
+            (searchChange)="onSearchChange($event)"
+            (filterChange)="onFilterChange($event)">
+        </gtx-translations-toolbar>
+
+        <main class="shell__main">
+            <div class="shell__content-pane">
+                <div class="shell__scroll-wrapper">
+                    @if (activeScopeId()) {
+                        <div
+                            class="shell__scope-card"
+                            data-name="scope-card"
+                            [attr.data-scope-id]="activeScopeId()"
+                        >
+                            <icon>language</icon>
+                            <div>
+                                <h3>
+                                    {{ activeScope().isGlobal ? ('tool.global_translations_title' | gtxI18n) : ('tool.scope_translations_title' | gtxI18n:{ name: activeScope().label }) }}
+                                </h3>
+                                <p [innerHTML]="(activeScope().description | gtxI18n:{ name: activeScope().label })| safe:'html'"></p>
+                            </div>
+                        </div>
+                    }
+
+                    <gtx-translations-table
+                        [keys]="visibleKeys()"
+                        [languages]="languages()"
+                        [saved]="savedTranslations()[activeScopeId()]"
+                        [draft]="draft()"
+                        (cellEdit)="onCellEdit($event)">
+                    </gtx-translations-table>
+                </div>
+
+                <gtx-save-bar
+                    [dirtyCount]="dirtyCount()"
+                    [saving]="saving()"
+                    (save)="onSave()"
+                    (discard)="onDiscard()">
+                </gtx-save-bar>
+            </div>
+        </main>
+    </div>
+}
+
+<gtx-overlay-host></gtx-overlay-host>

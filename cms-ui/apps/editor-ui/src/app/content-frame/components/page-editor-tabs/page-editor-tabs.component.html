@@ -1,5 +1,5 @@
 <div #tabContainer class="gtx-editor-tabs gtx-overflow-managed">
-  @for (tab of visibleTabs; track identifyTab($index, tab)) {
+  @for (tab of visibleTabs; track tab.id) {
     <button
       class="editor-tab"
       [attr.data-id]="tab.id"

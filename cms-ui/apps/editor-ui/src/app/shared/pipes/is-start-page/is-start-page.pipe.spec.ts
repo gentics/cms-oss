@@ -1,6 +1,5 @@
 import { File, Folder, Image, Normalized, NormalizedEntityStore, Page, Raw } from '@gentics/cms-models';
-import { getExampleEntityStore } from '@gentics/cms-models/testing/entity-store-data.mock';
-import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleEntityStore, getExamplePageData } from '@gentics/cms-models/testing';
 import { IsStartPagePipe } from './is-start-page.pipe';
 
 describe('IsStartPagePipe', () => {

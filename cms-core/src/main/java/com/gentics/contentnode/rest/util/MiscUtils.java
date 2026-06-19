@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
@@ -54,6 +55,7 @@ import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.MultiChannellingFallbackList;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.Content;
@@ -388,9 +390,11 @@ public class MiscUtils {
 			Node node = load(Node.class, nodeId, false);
 
 			if (node != null) {
+				Wastebin wastebinFilter = Optional.ofNullable(t.getWastebinFilter()).orElse(Wastebin.EXCLUDE);
+
 				// try loading the form with external ID in the given node
 				List<Integer> formIds = DBUtils.select(
-						"SELECT form.id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.external_id = ? AND form.deleted = 0 AND folder.node_id = ?",
+						"SELECT form.id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.external_id = ? AND folder.node_id = ?" + wastebinFilter.filterClause("form"),
 						pst -> {
 							pst.setString(1, id);
 							pst.setInt(2, node.getId());

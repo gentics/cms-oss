@@ -120,7 +120,6 @@ import {
     BreadcrumbsService,
     ChipSearchBarConfigService,
     DocumentRef,
-    FormListLoaderService,
     LinkTemplateService,
     PresentationService,
     QueryAssemblerElasticSearchService,
@@ -128,7 +127,7 @@ import {
     RepositoryBrowserClient,
     SuggestionSearchService,
     TranslationActionsService,
-    UIOverridesService,
+    UIOverridesService
 } from './providers';
 
 const COMPONENTS = [
@@ -262,7 +261,6 @@ const PROVIDERS = [
     BreadcrumbsService,
     ChipSearchBarConfigService,
     DocumentRef,
-    FormListLoaderService,
     LinkTemplateService,
     PresentationService,
     QueryAssemblerElasticSearchService,

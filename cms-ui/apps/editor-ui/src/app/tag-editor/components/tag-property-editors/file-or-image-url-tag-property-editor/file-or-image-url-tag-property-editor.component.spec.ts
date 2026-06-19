@@ -17,17 +17,16 @@ import {
     TagPartType,
     TagPropertyType,
 } from '@gentics/cms-models';
-import { getExampleFileData, getExampleFolderData, getExampleImageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleFileData, getExampleFolderData, getExampleImageData } from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of, throwError } from 'rxjs';
-import { componentTest, configureComponentTest } from '../../../../../testing';
+import { componentTest, configureComponentTest, MockApiBase } from '../../../../../testing';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
 import { FeaturesState } from '../../../../common/models';
 import { ApiBase } from '../../../../core/providers/api';
-import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
 import { FilePropertiesComponent } from '../../../../shared/components/file-properties/file-properties.component';

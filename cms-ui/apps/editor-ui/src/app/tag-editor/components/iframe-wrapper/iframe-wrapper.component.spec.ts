@@ -7,7 +7,6 @@ import { componentTest, configureComponentTest } from '../../../../testing';
 import { getTestPagePath, getTestPageUrl } from '../../../../testing/iframe-helpers';
 import { ApplicationStateService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { IFrameWrapperComponent } from './iframe-wrapper.component';
 
 // A longer timeout for Jasmine async tests to allow the IFrame contents to load.
@@ -35,7 +34,6 @@ describe('IFrameWrapperComponent', () => {
             ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: IFrameStylesService, useClass: MockIFrameStylesService },
             ],
             declarations: [
                 IFrameWrapperComponent,
@@ -137,17 +135,6 @@ describe('IFrameWrapperComponent', () => {
         }),
     );
 
-    it('sets the data-gcms-ui-styles attribute correctly on the IFrame',
-        componentTest(() => TestComponent, (fixture, instance) => {
-            const stylesService = TestBed.inject(IFrameStylesService) as IFrameStylesService;
-            instance.srcUrl = SRC_URL1;
-            fixture.detectChanges();
-
-            const iFrameElem: HTMLIFrameElement = fixture.debugElement.query(By.css('iframe')).nativeElement;
-            expect(iFrameElem.dataset.gcmsUiStyles).toEqual(stylesService.stylesUrl);
-        }),
-    );
-
     it('changing width works',
         componentTest(() => TestComponent, (fixture, instance) => {
             instance.srcUrl = SRC_URL1;
@@ -224,10 +211,6 @@ class TestComponent {
     iFrameWidth: string;
 
     onIFrameLoad(): void { }
-}
-
-class MockIFrameStylesService {
-    stylesUrl = 'StylesUrlForIFrame';
 }
 
 class MockQueryList<T> {

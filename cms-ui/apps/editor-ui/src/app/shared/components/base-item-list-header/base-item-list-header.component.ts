@@ -6,7 +6,7 @@ import { EditorPermissions, getNoPermissions, StageableItem, UIMode } from '../.
     template: '',
     standalone: false,
 })
-export abstract class BaseItemListHeaderComponent {
+export abstract class BaseItemListHeaderComponent<T extends StageableItem> {
 
     public readonly UIMode = UIMode;
 
@@ -17,9 +17,9 @@ export abstract class BaseItemListHeaderComponent {
     /** The current node in where this header is being displayed in */
     public readonly node = input.required<Node>();
     /** The current items displayed in the current list page */
-    public readonly currentPageItems = input.required<StageableItem[]>();
+    public readonly currentPageItems = input.required<T[]>();
     /** All items which are currently selected */
-    public readonly selectedItems = input.required<StageableItem[]>();
+    public readonly selectedItems = input.required<T[]>();
 
     /** Total count of items for this item type in the folder */
     public readonly totalCount = input.required<number>();

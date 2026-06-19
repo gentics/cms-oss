@@ -179,9 +179,9 @@ export abstract class BaseFormPropertiesComponent<T> extends BaseFormElementComp
             }
             if (!this.pureInitialValue) {
                 // Set it, in case that the parent-component has no binding for it
-                this.initialValue = false;
+                this.initialValue = this.form.pristine;
             }
-            this.initialValueChange.emit(false);
+            this.initialValueChange.emit(this.form.pristine);
         }));
 
         this.subscriptions.push(this.form.statusChanges.subscribe(() => {
@@ -273,6 +273,9 @@ export abstract class BaseFormPropertiesComponent<T> extends BaseFormElementComp
         if (!this.initialized && this.valueIsSet() && this.form) {
             this.initialized = true;
             this.initializeWithData();
+            this.form.markAsPristine();
+            this.form.markAsUntouched();
+            this.initialValueChange.emit(true);
         }
 
         if (this.form) {

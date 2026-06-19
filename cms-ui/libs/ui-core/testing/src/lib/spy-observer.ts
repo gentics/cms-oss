@@ -1,22 +1,23 @@
 import { Observable, Observer } from 'rxjs';
 
 interface ISubscribable {
-    subscribe(observer?: any, error?: (error: any) => void, complete?: () => void): { unsubscribe(): void; };
+    subscribe(observer?: any, error?: (error: any) => void, complete?: () => void): { unsubscribe(): void };
 }
 
 export class SpyObserver<T> implements Observer<T> {
 
-    next: () => {};
-    error: () => {};
-    complete: () => {};
+    next: jasmine.Spy<(value?: T) => {}>;
+    error: jasmine.Spy<(error?: any) => {}>;
+    complete: jasmine.Spy<() => {}>;
 
     constructor(
-        private name: string = '<observer>'
+        private name: string = '<observer>',
     ) {
         this.next = jasmine.createSpy(this.name + '.next');
         this.error = jasmine.createSpy(this.name + '.error');
         this.complete = jasmine.createSpy(this.name + '.complete');
     }
+
     toString(): string { return `SpyObserver("${name}")`; }
 }
 
@@ -28,7 +29,7 @@ export function subscribeSpyObserver<T>(observable: Observable<T>): SpyObserver<
 export function subscribeSpyObserver<T>(subject: any, observable: Observable<any>): SpyObserver<T>;
 export function subscribeSpyObserver<T>(subject: any, propertyName: string): SpyObserver<T>;
 export function subscribeSpyObserver(subject: any, observableOrName?: any): SpyObserver<any> {
-    let name: string = 'unknown';
+    let name = 'unknown';
     let subscribable: ISubscribable;
 
     if (typeof observableOrName === 'string') {
@@ -36,7 +37,7 @@ export function subscribeSpyObserver(subject: any, observableOrName?: any): SpyO
         subscribable = subject[name];
     } else if (observableOrName) {
         subscribable = observableOrName;
-        for (let k in subject) {
+        for (const k in subject) {
             if (subject[k] === subscribable) {
                 name = k;
                 break;
@@ -47,8 +48,8 @@ export function subscribeSpyObserver(subject: any, observableOrName?: any): SpyO
         name = '<observer>';
     }
 
-    let spy = new SpyObserver(name);
-    let subscription = subscribable.subscribe(spy);
+    const spy = new SpyObserver(name);
+    const subscription = subscribable.subscribe(spy);
     // jasmine.getEnv().afterAll(() => { subscription.unsubscribe(); });
 
     return spy;

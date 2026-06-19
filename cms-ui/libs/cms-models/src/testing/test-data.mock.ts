@@ -385,9 +385,7 @@ export function getExampleFormData(
                 de: 'Danke!',
                 en: 'Thank You!',
             },
-            adminEmailTemplate: {
-                de: '',
-            },
+            adminEmailTemplate: '',
             templateContext: '',
         },
         formType: 'generic',

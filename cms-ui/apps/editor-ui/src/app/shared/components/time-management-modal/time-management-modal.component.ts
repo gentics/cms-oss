@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { Form, FormRequestOptions, Page, PageRequestOptions, QueuedActionRequestClear, TimeManagement } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable, Subscription, of } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { FormListLoaderService } from '../../../core/providers';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { getFormattedTimeMgmtValue, pageVersionsGetLatest } from '../../../core/utils/i18n';
 import { FolderActionsService } from '../../../state';
-import { FormListLoaderService } from '../../providers';
 
 enum VersionManagement {
     KEEP_VERSION = 'keep',

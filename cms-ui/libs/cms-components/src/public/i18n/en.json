@@ -23,6 +23,12 @@
         "editor": "Editor",
         "edate": "Edit Date",
 
+        "discard_button": "Discard",
+        "loading": "Loading…",
+        "saving": "Saving…",
+        "retry": "Retry",
+        "unsaved_changes": "Unsaved changes",
+
         "confirm_addition": "Confirm {{ label }}",
         "password_missmatch": "Passwords don not match",
 
@@ -80,6 +86,8 @@
         "type_forms_dative": "Forms",
         "type_form_counts": "{{count}} forms",
         "type_form_singular": "One form",
+        "type_form_report": "Form report",
+        "type_form_reports": "Form reports",
         "type_external_form": "External form",
         "type_external_form_article": "The external form",
         "type_external_forms": "External forms",

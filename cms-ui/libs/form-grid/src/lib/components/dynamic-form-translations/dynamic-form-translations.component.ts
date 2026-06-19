@@ -26,7 +26,7 @@ export class DynamicFormTranslationsComponent {
     public readonly elementSchema = model<FormSchemaProperty>();
 
     public readonly languages = input.required<string[]>();
-    public readonly selectedLanguage = input.required<string>();
+    public readonly activeLanguage = input.required<string>();
 
     public readonly disabled = input.required<boolean>();
 
@@ -79,7 +79,7 @@ export class DynamicFormTranslationsComponent {
             if (data == null || typeof data !== 'object') {
                 data = {};
             }
-            (data as Record<string, string>)[this.selectedLanguage()] = value;
+            (data as Record<string, string>)[this.activeLanguage()] = value;
             return data;
         });
     }

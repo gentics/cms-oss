@@ -33,11 +33,12 @@ import {
     getExampleLanguageData,
     getExampleNodeData,
     getExamplePageData,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { cloneDeep } from 'lodash-es';
 import { BehaviorSubject, of as observableOf, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
@@ -66,7 +67,6 @@ import {
     ID_OBJ_PROP_CATEGORY_OTHERS,
     NAME_OBJ_PROP_CATEGORY_OTHERS,
 } from './combined-properties-editor.component';
-import { provideTranslateService } from '@ngx-translate/core';
 
 const CONTENT_TAG_NAME = 'contenttag0';
 const TAG0_NAME = 'object.tag0';

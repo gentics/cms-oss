@@ -1,11 +1,30 @@
-import { ChangeDetectorRef, Component, computed, input, model, OnChanges, OnDestroy, OnInit, signal } from '@angular/core';
-import { discard } from '@gentics/cms-components';
+import { ChangeDetectorRef, Component, computed, effect, inject, input, model, OnChanges, OnDestroy, OnInit, signal } from '@angular/core';
 import { Feature, Item, Language, Node, PagingSortOrder, StagedItemsMap } from '@gentics/cms-models';
 import { randomId, toValidNumber } from '@gentics/common';
+import { discard } from '@gentics/common/rxjs';
 import { ChangesOf } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { catchError, debounceTime, distinctUntilChanged, Observable, of, Subject, Subscription, switchMap, tap } from 'rxjs';
-import { emptyItemInfo, FolderPermissionData, ItemLoadData, ItemsInfo, UIMode } from '../../../common/models';
+import {
+    catchError,
+    combineLatest,
+    debounceTime,
+    distinctUntilChanged,
+    filter,
+    Observable,
+    of,
+    Subject,
+    Subscription,
+    switchMap,
+    tap,
+} from 'rxjs';
+import {
+    emptyItemInfo,
+    FolderPermissionData,
+    GtxChipSearchSearchFilterMap,
+    ItemLoadData,
+    ItemsInfo,
+    UIMode,
+} from '../../../common/models';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ApplicationStateService } from '../../../state';
 
@@ -16,6 +35,13 @@ import { ApplicationStateService } from '../../../state';
 export abstract class BaseItemListComponent<T extends Item> implements OnInit, OnChanges, OnDestroy {
 
     public readonly UNIQUE_ID = `item-list-${randomId()}`;
+
+    /* Injections
+     * ===================================================================== */
+
+    public readonly changeDetector = inject(ChangeDetectorRef);
+    public readonly errorHandler = inject(ErrorHandler);
+    public readonly appState = inject(ApplicationStateService);
 
     /* Navigation
      * ===================================================================== */
@@ -46,9 +72,9 @@ export abstract class BaseItemListComponent<T extends Item> implements OnInit, O
     /** The currently active item, which should be highlighted in the list. */
     public readonly activeItemId = input<number>();
     /** Permissions of the editor */
-    public readonly permissions = input<FolderPermissionData>();
+    public readonly permissions = input.required<FolderPermissionData>();
     /** Which mode the UI is currently in */
-    public readonly uiMode = input<UIMode>();
+    public readonly uiMode = input.required<UIMode>();
     /** The term the list is currently filtered by */
     public readonly filterTerm = input<string>('');
 
@@ -128,6 +154,8 @@ export abstract class BaseItemListComponent<T extends Item> implements OnInit, O
     public readonly searchTerm = signal<string>('');
     /** If a elasticsearch query is currently active */
     public readonly elasticSearchQueryActive = signal<boolean>(false);
+    /** The search filters that are used when es is active */
+    public readonly searchFilters = signal<GtxChipSearchSearchFilterMap | null>(null);
     /** List of fields that should be displayed in the list item */
     public readonly displayFields = signal<string[]>([]);
 
@@ -143,11 +171,13 @@ export abstract class BaseItemListComponent<T extends Item> implements OnInit, O
     /** Subscription of loading all items if neccessary */
     private loadAllSubscription: Subscription | null = null;
 
-    constructor(
-        public changeDetector: ChangeDetectorRef,
-        public errorHandler: ErrorHandler,
-        public appState: ApplicationStateService,
-    ) {}
+    constructor() {
+        effect(() => {
+            this.searchTerm();
+            this.searchFilters();
+            this.reload();
+        });
+    }
 
     public abstract loadItems(
         folderId: number,
@@ -183,10 +213,19 @@ export abstract class BaseItemListComponent<T extends Item> implements OnInit, O
             this.reload();
         }));
 
-        this.subscriptions.push(this.appState.select((state) => state.folder.searchFiltersVisible).pipe(
-            distinctUntilChanged(isEqual),
-        ).subscribe((active) => {
-            this.elasticSearchQueryActive.set(active);
+        this.subscriptions.push(combineLatest([
+            this.appState.select((state) => state.folder.searchFilters),
+            this.appState.select((state) => state.folder.searchFiltersVisible).pipe(
+                tap((visible) => {
+                    this.elasticSearchQueryActive.set(visible);
+                }),
+            ),
+            this.appState.select((state) => state.folder.searchFiltersChanging),
+            this.appState.select((state) => state.folder.searchFiltersValid),
+        ]).pipe(
+            filter(([_, visible, changing, valid]) => visible && !changing && valid),
+        ).subscribe(([filters]) => {
+            this.searchFilters.set(filters);
         }));
 
         this.subscriptions.push(this.appState.select((state) => state.features[Feature.WASTEBIN]).subscribe((enabled) => {
@@ -293,7 +332,7 @@ export abstract class BaseItemListComponent<T extends Item> implements OnInit, O
     }
 
     private cacheNewItems(items: T[]): void {
-        const cache = this.cachedItems();
+        const cache = structuredClone(this.cachedItems());
         for (const singleItem of items) {
             cache[singleItem.id] = singleItem;
         }

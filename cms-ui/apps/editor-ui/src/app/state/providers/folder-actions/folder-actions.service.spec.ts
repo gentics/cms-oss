@@ -21,7 +21,7 @@ import {
     getExampleNodeDataNormalized,
     getExamplePageData,
     getExampleUserDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { UploadResponse } from '@gentics/cms-rest-clients-angular';

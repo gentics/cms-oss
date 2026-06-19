@@ -4,15 +4,22 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
-import { EditableTag, PageTagTagPartProperty, ResponseCode, TagPart, TagPartType, TagPropertyType, TemplateTagTagPartProperty } from '@gentics/cms-models';
-import { getExamplePageData, getExampleTemplateData } from '@gentics/cms-models/testing/test-data.mock';
+import {
+    EditableTag,
+    PageTagTagPartProperty,
+    ResponseCode,
+    TagPart,
+    TagPartType,
+    TagPropertyType,
+    TemplateTagTagPartProperty,
+} from '@gentics/cms-models';
+import { getExamplePageData, getExampleTemplateData } from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of, throwError } from 'rxjs';
-import { componentTest, configureComponentTest } from '../../../../../testing';
+import { componentTest, configureComponentTest, MockApiBase } from '../../../../../testing';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
 import { Api, ApiBase } from '../../../../core/providers/api';
-import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../../state';

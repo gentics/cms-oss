@@ -1,7 +1,7 @@
 import { fakeAsync, tick } from '@angular/core/testing';
+import { ObservableStopper } from '@gentics/common/rxjs';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { delay } from 'rxjs/operators';
-import { ObservableStopper } from '../../lib/common/utils';
 import { createDelayedError, subscribeSafely, tickAndGetEmission } from './rxjs-utils';
 
 describe('rxjs-utils', () => {

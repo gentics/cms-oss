@@ -4,12 +4,16 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
     Feature,
     File,
+    FileListResponse,
     Folder,
     FolderItemType,
     FolderListOptions,
+    FolderListResponse,
+    FormListResponse,
     GcmsPermission,
     Image,
     InheritableItem,
+    ItemListResponse,
     ItemPermissions,
     ItemType,
     Language,
@@ -18,8 +22,10 @@ import {
     Normalized,
     Page,
     PageListOptions,
+    PageListResponse,
     Raw,
     ResponseCode,
+    TypedItemListResponse,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
@@ -985,9 +991,19 @@ class MockFolderActions implements Partial<FolderActionsService> {
         throw new Error('localizeItem called but not mocked');
     }
 
-    getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<void>;
-    getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options?: FolderListOptions): Promise<void>;
-    getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options: any = {}): Promise<void> {
+    getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<PageListResponse>;
+    getItems(
+        parentId: number,
+        type: FolderItemType,
+        fetchAll?: boolean,
+        options?: FolderListOptions,
+    ): Promise<FolderListResponse | FormListResponse | PageListResponse | FileListResponse | TypedItemListResponse | ItemListResponse>;
+    getItems(
+        parentId: number,
+        type: FolderItemType,
+        fetchAll?: boolean,
+        options?: any,
+    ): Promise<FolderListResponse | FormListResponse | PageListResponse | FileListResponse | TypedItemListResponse | ItemListResponse> {
         throw new Error('getItems called but not mocked');
     }
 }

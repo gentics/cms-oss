@@ -1,9 +1,5 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EditableEntity, EntityEditorHandler, EntityList, EntityListHandler, NodeBO } from '@admin-ui/common';
-import { ErrorHandler } from '@admin-ui/core';
-import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
-import { NodeFeaturesMap } from '../../../state/features/features.state';
 import { Injectable } from '@angular/core';
-import { discard, I18nNotificationService } from '@gentics/cms-components';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     FormTypeConfiguration,
     Language,
@@ -18,8 +14,22 @@ import {
     NodeSaveRequest,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { discard } from '@gentics/common/rxjs';
 import { forkJoin, Observable, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_PERMISSIONS,
+    EditableEntity,
+    EntityEditorHandler,
+    EntityList,
+    EntityListHandler,
+    NodeBO,
+} from '../../../common';
+import { ErrorHandler } from '../../../core';
+import { NodeFeaturesMap } from '../../../state/features/features.state';
+import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 
 @Injectable()
 export class NodeHandlerService

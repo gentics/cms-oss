@@ -129,17 +129,20 @@
 
                         [config]="config()"
                         [rootId]="ELEMENT_ROOT_CONTAINER_ID"
+                        [parentId]="ELEMENT_ROOT_CONTAINER_ID"
                         [id]="ELEMENT_ROOT_CONTAINER_ID"
                         [level]="0"
                         [pageIndex]="pageIndex()"
                         [languages]="languages()"
                         [mode]="mode()"
                         [gridSurface]="gridSurface"
+                        [isAggregate]="false"
 
+                        [schemaPropertiesMap]="schemaPropertiesMap()"
                         [elements]="elements()"
                         (elementsChange)="updatePageElements($event)"
                         [selectedElement]="selectedElement()"
-                        [selectedElementContainerId]="selectedElementContainerId"
+                        [selectedElementContainerId]="selectedElementContainerId()"
                         (elementSelect)="setSelectedElement($event)"
                         [schema]="schema()"
                         (schemaChange)="updateSchema($event)"
@@ -153,7 +156,17 @@
         </main>
 
         <main class="preview-main">
-            Welcome to preview!
+            <gtx-form-preview
+                [formId]="formId()"
+                [formType]="formType()"
+                [schema]="schema()"
+                [uiSchema]="uiSchema()"
+                [languages]="languages()"
+                [(pageIndex)]="pageIndex"
+                [selectedElementId]="selectedElementId()"
+                (selectedElementIdChange)="setSelectedElement($event)"
+                [(activeLanguage)]="activeLanguage"
+            />
         </main>
 
         @if (editingPage() || (selectedElement() && selectedElementConfiguration())) {
@@ -208,9 +221,13 @@
                             ></gtx-i18n-input>
                         </div>
                     } @else {
-                        <gtx-tabs class="element-tabs">
+                        <gtx-tabs [pure]="true" [activeId]="editingSidebarTab()" class="element-tabs">
                             @if (selectedElementSchema() != null) {
-                                <gtx-tab [id]="EditTabs.DEFINITION" [title]="'form_grid.edit_tab_definition' | gtxI18n">
+                                <gtx-tab
+                                    [id]="EditTabs.DEFINITION"
+                                    [title]="'form_grid.edit_tab_definition' | gtxI18n"
+                                    (select)="changeEditingTab(EditTabs.DEFINITION)"
+                                >
                                     <gtx-form-element-definition
                                         [config]="config()"
                                         [schema]="schema()"
@@ -224,7 +241,11 @@
                                 </gtx-tab>
                             }
 
-                            <gtx-tab [id]="EditTabs.SETTINGS" [title]="'form_grid.edit_tab_settings' | gtxI18n">
+                            <gtx-tab
+                                [id]="EditTabs.SETTINGS"
+                                [title]="'form_grid.edit_tab_settings' | gtxI18n"
+                                (select)="changeEditingTab(EditTabs.SETTINGS)"
+                            >
                                 <gtx-form-element-settings
                                     [config]="config()"
                                     [schema]="schema()"
@@ -232,7 +253,7 @@
                                     [element]="selectedElement()!"
                                     [elementConfig]="selectedElementConfiguration()!"
                                     [elementSchema]="selectedElementSchema()"
-                                    [disabled]="mode() !== FormGridEditMode.FULL"
+                                    [disabled]="mode() === FormGridEditMode.NONE"
                                     (elementChange)="upsetElementChanges($event)"
                                 ></gtx-form-element-settings>
                             </gtx-tab>
@@ -241,6 +262,7 @@
                                 [id]="EditTabs.TRANSLATIONS"
                                 [icon]="hasMissingTranslations() ? 'warning' : ''"
                                 [title]="'form_grid.edit_tab_translations' | gtxI18n"
+                                 (select)="changeEditingTab(EditTabs.TRANSLATIONS)"
                             >
                                 <gtx-form-element-translation
                                     [element]="selectedElement()!"
@@ -250,6 +272,7 @@
                                     (elementSchemaChange)="updateElementSchema($event)"
                                     [mode]="mode()"
                                     [languages]="languages()"
+                                    [(activeLanguage)]="activeLanguage"
                                     (hasMissingTranslationsChange)="hasMissingTranslations.set($event)"
                                 ></gtx-form-element-translation>
                             </gtx-tab>

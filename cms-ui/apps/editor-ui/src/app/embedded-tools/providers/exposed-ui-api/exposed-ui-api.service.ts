@@ -19,6 +19,7 @@ import { map } from 'rxjs/operators';
 import { EditorTab, ITEM_PROPERTIES_TAB, PropertiesTab } from '../../../common/models';
 import { PublishQueueModal } from '../../../core/components/publish-queue-modal/publish-queue-modal.component';
 import { WastebinModal } from '../../../core/components/wastebin-modal/wastebin-modal.component';
+import { FormListLoaderService } from '../../../core/providers';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { MessageService } from '../../../core/providers/message/message.service';
@@ -26,7 +27,6 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { SendMessageModal } from '../../../shared/components/send-message-modal/send-message-modal.component';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
-import { FormListLoaderService } from '../../../shared/providers';
 
 /**
  * All methods declared on this class are callable from tool iframes / tabs.

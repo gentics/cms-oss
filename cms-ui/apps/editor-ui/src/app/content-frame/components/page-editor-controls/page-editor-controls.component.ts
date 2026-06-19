@@ -413,7 +413,8 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
         this.subscriptions.push(this.client.linkChecker.check({
             url: normalizeURL(url, this.linkCheckerPlugin.settings),
         }).subscribe((res) => {
-            res.url = url;
+            // Why does no proper typing exist for this?
+            (res as any).url = url;
             this.linkCheckerPlugin.updateLinkStatus(element, res);
             this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
             this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);

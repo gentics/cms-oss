@@ -6,7 +6,7 @@ import {
     LogoutStart,
     LogoutSuccess,
 } from '@gentics/cms-components/auth';
-import { getExampleUserData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleUserData } from '@gentics/cms-models/testing';
 import { NgxsModule } from '@ngxs/store';
 import { STATE_MODULES } from '../../modules';
 import { TestApplicationState } from '../../test-application-state.mock';

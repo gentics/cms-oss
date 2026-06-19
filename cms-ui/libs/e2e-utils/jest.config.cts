@@ -27,4 +27,5 @@ module.exports = {
     moduleFileExtensions: ['ts', 'js', 'html'],
     testEnvironment: 'node',
     coverageDirectory: '../../coverage/libs/e2e-utils',
+    passWithNoTests: true,
 };

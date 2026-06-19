@@ -3,19 +3,19 @@ import {
     ChangeDetectorRef,
     Component,
     computed,
+    effect,
     input,
     model,
     NgZone,
-    OnChanges,
     output,
     signal,
-    SimpleChanges,
 } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import {
     FormElement,
     FormElementConfiguration,
     FormSchema,
+    FormSchemaProperties,
     FormSchemaProperty,
     FormTypeConfiguration,
     I18nString,
@@ -43,10 +43,11 @@ interface DisplayItem {
     whitelist: string[] | null;
     config: FormElementConfiguration;
     schema?: FormSchemaProperty;
+    visible: boolean;
 }
 
-const MIN_SPAN_CONTAINER = 6;
-const MIN_SPAN_ELEMENT = 3;
+const MIN_SPAN_CONTAINER = 1;
+const MIN_SPAN_ELEMENT = 1;
 
 @Component({
     selector: 'gtx-form-grid-elements-container',
@@ -55,7 +56,7 @@ const MIN_SPAN_ELEMENT = 3;
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class FormGridElementsContainerComponent implements OnChanges {
+export class FormGridElementsContainerComponent {
 
     public readonly FormGridEditMode = FormGridEditMode;
 
@@ -77,11 +78,17 @@ export class FormGridElementsContainerComponent implements OnChanges {
     public readonly pageIndex = input.required<number>();
     /** All languages the form is available in. */
     public readonly languages = input.required<string[]>();
+    /** The ID of the parent container */
+    public readonly parentId = input.required<string>();
+    /** If this element/container is a aggregate */
+    public readonly isAggregate = input.required<boolean>();
 
     /** The schema of the form */
     public readonly schema = model.required<FormSchema>();
     /** The elements of this container */
     public readonly elements = model.required<FormElement[]>();
+    /** All schema properties */
+    public readonly schemaPropertiesMap = input.required<FormSchemaProperties>();
 
     /** HTML element which indicates the resizing. */
     public readonly gridSurface = input.required<HTMLElement>();
@@ -168,15 +175,10 @@ export class FormGridElementsContainerComponent implements OnChanges {
         private zone: NgZone,
         private i18n: I18nService,
         private modals: ModalService,
-    ) {}
-
-    /* HOOKS
-     * ===================================================================== */
-
-    public ngOnChanges(changes: SimpleChanges): void {
-        if (changes['elements'] || changes['schema'] || changes['config']) {
+    ) {
+        effect(() => {
             this.updateDisplayItems();
-        }
+        });
     }
 
     /* TEMPLATE HANDLERS
@@ -210,8 +212,9 @@ export class FormGridElementsContainerComponent implements OnChanges {
         }
 
         const handleEl = event.currentTarget as HTMLElement | null;
-        const hostEl = handleEl?.closest('gtx-sortable-item') as HTMLElement | null;
-        const parentEl = hostEl?.parentElement as HTMLElement | null;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        const hostEl = handleEl?.closest('gtx-sortable-item') as HTMLElement;
+        const parentEl = hostEl?.parentElement;
 
         let rowBase = 0;
         let rowMax = 12;
@@ -271,16 +274,16 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
                 const rect = surface.getBoundingClientRect();
                 const colW = rect.width / 12;
-                const dx = e.clientX - this.resizeStartX!;
+                const dx = e.clientX - this.resizeStartX;
                 const deltaCols = Math.round(dx / colW);
 
-                const nextRaw = this.resizeStartSpan! + deltaCols;
+                const nextRaw = this.resizeStartSpan + deltaCols;
                 const minSpan = this.getMinSpan(this.resizeTarget);
-                const nextSpan = Math.max(minSpan, Math.min(this.resizeRowMaxSpan!, nextRaw));
+                const nextSpan = Math.max(minSpan, Math.min(this.resizeRowMaxSpan, nextRaw));
 
                 this.zone.run(() => {
                     this.setSpan(this.resizeTarget, nextSpan);
-                    const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols! + nextSpan));
+                    const nextOverlaySpan = Math.max(1, Math.min(12, this.resizeRowBaseCols + nextSpan));
                     this.resizeOverlaySpanLocal.set(nextOverlaySpan);
                     this.changeDetector.markForCheck();
                 });
@@ -429,11 +432,11 @@ export class FormGridElementsContainerComponent implements OnChanges {
 
         // Creating a new element when a palette item has been dragged into the grid
         if (event.item.classList.contains('palette-item')) {
-            const elType = event.item.getAttribute('data-element-type')!;
+            const elType = event.item.getAttribute('data-element-type');
             const isControl = event.item.getAttribute('data-is-control') === 'true';
             const containerType = event.item.getAttribute('data-container-type');
 
-            this.addNewElement(elType, event.newDraggableIndex || event.newIndex!, isControl, containerType as any);
+            this.addNewElement(elType, event.newDraggableIndex || event.newIndex, isControl, containerType as any);
             return;
         }
 
@@ -450,10 +453,36 @@ export class FormGridElementsContainerComponent implements OnChanges {
             elementId: elId,
             fromContainerId: fromId,
             toContainerId: toId,
-            targetIndex: Math.max(0, event.newDraggableIndex! - 1),
+            targetIndex: Math.max(0, event.newDraggableIndex - 1),
         });
 
         this.elementMoving.set(null);
+    }
+
+    public setElementVisibility(item: DisplayItem, visibility: boolean, event?: Event): void {
+        cancelEvent(event);
+
+        this.elements.update((data) => {
+            const idx = data.findIndex((el) => el.id === item.id);
+
+            if (idx < 0) {
+                return data;
+            }
+
+            const el = structuredClone(data[idx]);
+            if (el.formGridOptions == null) {
+                if (item.schema) {
+                    el.formGridOptions = {
+                        type: item.schema.type,
+                    };
+                }
+            }
+            el.formGridOptions.hidden = !visibility;
+            const copy = data.slice();
+            copy[idx] = el;
+
+            return copy;
+        });
     }
 
     /* INTERNALS
@@ -493,12 +522,14 @@ export class FormGridElementsContainerComponent implements OnChanges {
     private updateDisplayItems(): void {
         // Can't use computed, as it wouldn't update/call correctly when updating the elements manually.
         this.displayItems.set((this.elements() || []).map((el) => {
-            const itemSchema = this.schema().properties[el.id];
+            const itemSchema = this.schemaPropertiesMap()?.[el.id];
+            const visible = !el.formGridOptions?.['hidden'];
 
             if (itemSchema) {
                 const itemConfig = this.config().controls[itemSchema?.type];
 
                 if (!itemConfig) {
+                    console.warn(`Could not find a control config for type "${itemSchema?.type}"! Is the form-type configuration correct?  Element ${el.id} will not be dispalyed in the editor.`);
                     return null;
                 }
 
@@ -515,17 +546,20 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     whitelist: isAggregate ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
                     schema: itemSchema,
+                    visible,
                 };
             } else {
                 const type = el.formGridOptions?.type;
 
                 if (!type) {
+                    console.warn('Could not determine a item type from element! Element will not be displayed in editor.', el);
                     return null;
                 }
 
                 const itemConfig = (this.config().blocks || {})[type];
 
                 if (!itemConfig) {
+                    console.warn(`Could not find a block config for type "${type}"! Is the form-type configuration correct? Element ${el.id} will not be dispalyed in the editor.`);
                     return null;
                 }
 
@@ -541,6 +575,7 @@ export class FormGridElementsContainerComponent implements OnChanges {
                     isContainer,
                     whitelist: isContainer ? ((itemConfig as any).whitelist || null) : null,
                     config: itemConfig,
+                    visible,
                 };
             }
         }).filter((item) => item != null));
@@ -570,7 +605,6 @@ export class FormGridElementsContainerComponent implements OnChanges {
             formGridOptions: {
                 type,
                 numberOfColumns: containerType ? 12 : 6,
-                value: {},
                 valueSummary: {},
                 inForm: true,
                 inSummary: false,

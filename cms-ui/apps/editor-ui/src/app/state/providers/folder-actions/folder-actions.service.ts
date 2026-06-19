@@ -26,6 +26,7 @@ import {
     FileOrImage,
     FileReplaceOptions,
     FileRequestOptions,
+    FileResponse,
     FileUploadResponse,
     Folder,
     FolderCreateRequest,
@@ -50,6 +51,7 @@ import {
     GtxCmsQueryOptions,
     Image,
     ImageRequestOptions,
+    ImageResponse,
     InheritableItem,
     InheritanceRequest,
     InheritanceResponse,
@@ -494,10 +496,6 @@ export class FolderActionsService {
                 case 'images':
                     loaders.push(this.getImages(folderState.activeFolder, true, folderState.searchTerm));
                     break;
-
-                case 'forms':
-                    loaders.push(this.getForms(folderState.activeFolder, true, folderState.searchTerm));
-                    break;
             }
         }
 
@@ -616,10 +614,6 @@ export class FolderActionsService {
                 await this.getTemplates(parentId, fetchAll, search, pageNumber);
                 break;
 
-            case 'form':
-                await this.getForms(parentId, fetchAll, search, pageNumber);
-                break;
-
             default:
                 // TODO: error logging solution
                 console.log(`itemType ${itemType} not valid.`);
@@ -635,7 +629,6 @@ export class FolderActionsService {
             this.getPages(parentId, fetchAll, search),
             this.getFiles(parentId, fetchAll, search),
             this.getImages(parentId, fetchAll, search),
-            this.getForms(parentId, fetchAll, search),
         ]);
     }
 
@@ -806,28 +799,6 @@ export class FolderActionsService {
      */
     getImage(imageId: number, options?: ImageRequestOptions): Promise<Image<Raw>> {
         return this.getItem(imageId, 'image', options);
-    }
-
-    /**
-     * Get forms in this folder
-     */
-    getForms(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber: number = 1): Promise<FormListResponse> {
-        const itemInfo: ItemsInfo = this.appState.now.folder['forms' as FolderItemTypePlural];
-        const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
-        const recursive = search !== '';
-        const options: FormListOptions = {
-            folderId: parentId,
-            pageSize: maxItems,
-            q: search,
-            recursive,
-            sort: {
-                sortOrder: PagingSortOrder.Asc,
-                attribute: 'name',
-            },
-            page: pageNumber,
-        };
-
-        return this.getItems(parentId, 'form', fetchAll, options) as Promise<FormListResponse>;
     }
 
     /**
@@ -1380,7 +1351,7 @@ export class FolderActionsService {
                     catchError(() => of(null)),
                 ))).pipe(
                     map((responses: (NodeResponse | null)[]) => responses
-                        .map((res) => res?.item)
+                        .map((res) => res.node)
                         .filter((item) => item != null),
                     ),
                 );
@@ -1389,7 +1360,7 @@ export class FolderActionsService {
                     catchError(() => of(null)),
                 ))).pipe(
                     map((responses: (TemplateResponse | null)[]) => responses
-                        .map((res) => res?.item)
+                        .map((res) => res.template)
                         .filter((item) => item != null),
                     ),
                 );
@@ -1722,7 +1693,7 @@ export class FolderActionsService {
             const res = await translationRequestFunction(pageId, { language: languageCode, channelId: nodeId });
             await this.appState.dispatch(new ListCreatingSuccessAction('page')).toPromise();
 
-            const newPage = res?.page ?? res;
+            const newPage = res?.page;
             // result is not available yet
             if (!newPage) {
                 return;
@@ -2850,7 +2821,7 @@ export class FolderActionsService {
                 }
             }),
             map((loadRes) => {
-                const item = loadRes.file || loadRes.image;
+                const item = (loadRes as FileResponse).file || (loadRes as ImageResponse).image;
                 const normalized = normalize({ ...item }, getNormalizrSchema(type));
                 this.appState.dispatch(new AddEntitiesAction(normalized));
                 this.appState.dispatch(new ListSavingSuccessAction(type));

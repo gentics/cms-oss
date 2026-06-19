@@ -5,7 +5,11 @@
     "files.associations": {
         "*.es": "json",
         "part.*.html": "velocity",
-        "*.textile": "asciidoc"
+        "*.textile": "asciidoc",
+        // Force regular JSON, not with comments, as *somewhere* in the building process,
+        // this causes the entire build system to just break.
+        "tsconfig.json": "json",
+        "tsconfig.*.json": "json"
     },
     // Plugin Settings
     "redhat.telemetry.enabled": false,

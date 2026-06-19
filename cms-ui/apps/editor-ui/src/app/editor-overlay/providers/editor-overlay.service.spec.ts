@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/quote-props */
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Pipe, PipeTransform } from '@angular/core';
 import { TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
@@ -6,6 +7,7 @@ import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     CropResizeParameters,
     File,
+    FileRequestOptions,
     Folder,
     FolderItemOrTemplateType,
     FolderRequestOptions,
@@ -101,7 +103,7 @@ describe('EditorOverlayService', () => {
             const folderActions: MockFolderActions = TestBed.inject(FolderActionsService) as any;
             spyOn(folderActions, 'cropAndResizeImage');
 
-            editorOverlayService.editImage({ nodeId: ITEM_NODE, itemId: ITEM_ID });
+            editorOverlayService.editImage({ nodeId: ITEM_NODE, imageId: ITEM_ID });
             editImageState();
             tick();
 
@@ -138,7 +140,7 @@ describe('EditorOverlayService', () => {
             const folderActions: MockFolderActions = TestBed.inject(FolderActionsService) as any;
             spyOn(folderActions, 'getItem').and.callThrough();
 
-            editorOverlayService.editImage({ nodeId: ITEM_NODE, itemId: ITEM_ID });
+            editorOverlayService.editImage({ nodeId: ITEM_NODE, imageId: ITEM_ID });
             expect(folderActions.getItem).toHaveBeenCalledWith(ITEM_ID, 'image', { nodeId: ITEM_NODE });
         }));
     });
@@ -192,11 +194,21 @@ class MockFolderActions implements Partial<FolderActionsService> {
     getItem(itemId: number, type: 'folder', options?: FolderRequestOptions, throwError?: boolean): Promise<Folder<Raw>>;
     getItem(itemId: number, type: 'page', options?: PageRequestOptions, throwError?: boolean): Promise<Page<Raw>>;
     getItem(itemId: number, type: 'image', options?: ImageRequestOptions, throwError?: boolean): Promise<Image<Raw>>;
-    getItem(itemId: number, type: 'file', options?: FolderRequestOptions, throwError?: boolean): Promise<File<Raw>>;
+    getItem(itemId: number, type: 'file', options?: FileRequestOptions, throwError?: boolean): Promise<File<Raw>>;
     getItem(itemId: number, type: 'form', options?: FormRequestOptions, throwError?: boolean): Promise<Form>;
     getItem(itemId: number | string, type: 'template', options?: TemplateRequestOptions, throwError?: boolean): Promise<Template<Raw>>;
-    getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>>;
-    getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>> {
+    getItem(
+        itemId: number | string,
+        type: FolderItemOrTemplateType,
+        options?: any,
+        throwError?: boolean,
+    ): Promise<InheritableItem<Raw> | Form | Template<Raw>>;
+    getItem(
+        itemId: number | string,
+        type: FolderItemOrTemplateType,
+        options?: any,
+        throwError?: boolean,
+    ): Promise<InheritableItem<Raw> | Form | Template<Raw>> {
         return Promise.resolve({
             id: ITEM_ID,
             globalId: 'A123.123456',
@@ -235,6 +247,7 @@ class MockFolderActions implements Partial<FolderActionsService> {
             text: 'mockpic.jpg',
             cls: 'file',
         } as any);
+
     }
 
     getNode(): any {
@@ -252,42 +265,42 @@ class MockEntityResolver {
 
     getEntity(): any {
         return {
-            "id": ITEM_ID,
-            "globalId": 'A123.123456',
-            "name": 'mockpic.jpg',
-            "cdate": 1288366546,
-            "edate": 1530802426,
-            "type": 'image',
-            "typeId": 10011,
-            "fileType": 'image/jpeg',
-            "folderId": SUBFOLDER_ID,
-            "folderName": '[Images]',
-            "fileSize": 33004,
-            "channelId": 0,
-            "inherited": false,
-            "liveUrl": '',
-            "inheritedFrom": MOCK_NODE_NAME,
-            "inheritedFromId": ITEM_NODE,
-            "masterNode": MOCK_NODE_NAME,
-            "masterNodeId": ITEM_NODE,
-            "path": `/${MOCK_NODE_NAME}/[Media]/[Images]/`,
-            "forceOnline": false,
-            "online": true,
-            "broken": false,
-            "excluded": false,
-            "disinheritDefault": false,
-            "disinherited": false,
-            "sizeX": 618,
-            "sizeY": 367,
-            "dpiX": 0,
-            "dpiY": 0,
-            "fpX": 0.5,
-            "fpY": 0.5,
-            "gisResizable": true,
-            "iconCls": 'gtx_image',
-            "leaf": true,
-            "text": 'mockpic.jpg',
-            "cls": 'file',
+            id: ITEM_ID,
+            globalId: 'A123.123456',
+            name: 'mockpic.jpg',
+            cdate: 1288366546,
+            edate: 1530802426,
+            type: 'image',
+            typeId: 10011,
+            fileType: 'image/jpeg',
+            folderId: SUBFOLDER_ID,
+            folderName: '[Images]',
+            fileSize: 33004,
+            channelId: 0,
+            inherited: false,
+            liveUrl: '',
+            inheritedFrom: MOCK_NODE_NAME,
+            inheritedFromId: ITEM_NODE,
+            masterNode: MOCK_NODE_NAME,
+            masterNodeId: ITEM_NODE,
+            path: `/${MOCK_NODE_NAME}/[Media]/[Images]/`,
+            forceOnline: false,
+            online: true,
+            broken: false,
+            excluded: false,
+            disinheritDefault: false,
+            disinherited: false,
+            sizeX: 618,
+            sizeY: 367,
+            dpiX: 0,
+            dpiY: 0,
+            fpX: 0.5,
+            fpY: 0.5,
+            gisResizable: true,
+            iconCls: 'gtx_image',
+            leaf: true,
+            text: 'mockpic.jpg',
+            cls: 'file',
             '@class': 'com.gentics.contentnode.rest.model.Image',
         };
     }

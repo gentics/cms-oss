@@ -60,6 +60,7 @@ import {
 } from '../../../common/models';
 import { areItemsLoading } from '../../../common/utils/are-items-loading';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
+import { FormListLoaderService } from '../../../core/providers';
 import { UploadProgressReporter } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
@@ -78,7 +79,6 @@ import {
     SetUIModeAction,
 } from '../../../state';
 import { ItemListComponent } from '../item-list/item-list.component';
-import { FormListLoaderService } from '../../../shared/providers';
 
 export interface ShowPathStatus {
     image: boolean;
@@ -679,9 +679,6 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
                 break;
             case 'image':
                 this.folderActions.getImages(activeFolderId, itemsInfo.fetchAll, searchTerm);
-                break;
-            case 'form':
-                this.folderActions.getForms(activeFolderId, itemsInfo.fetchAll, searchTerm);
                 break;
         }
     }

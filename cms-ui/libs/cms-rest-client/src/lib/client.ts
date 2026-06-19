@@ -529,6 +529,12 @@ export class GCMSRestClient implements GCMSRootAPI {
         assignConfiguration: (type, nodeId) => this.executeMappedJsonRequest(PUT, `/form/nodes/${nodeId}/types/${type}`),
         unassignConfiguration: (type, nodeId) => this.executeMappedJsonRequest(DELETE, `/form/nodes/${nodeId}/types/${type}`),
 
+        listTranslationLanguages: () => this.executeMappedJsonRequest(GET, '/form/translations/languages'),
+        listTranslations: () => this.executeMappedJsonRequest(GET, '/form/translations'),
+        updateTranslations: (body) => this.executeMappedJsonRequest(POST, '/form/translations', body),
+        listTypeTranslations: (type) => this.executeMappedJsonRequest(GET, `/form/types/${type}/translations`),
+        updateTypeTranslations: (type, body) => this.executeMappedJsonRequest(POST, `/form/types/${type}/translations`, body),
+
         exportStatus: (id) => this.executeMappedJsonRequest(GET, `/form/${id}/export/status`),
         createExport: (id) => this.executeMappedJsonRequest(POST, `/form/${id}/export`),
         binariesStatus: (id) => this.executeMappedJsonRequest(GET, `/form/${id}/binaries/status`),

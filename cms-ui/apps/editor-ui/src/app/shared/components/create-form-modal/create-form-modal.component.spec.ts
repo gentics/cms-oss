@@ -1,19 +1,19 @@
 import { Component, ErrorHandler } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
+import { PagePropertiesComponent } from '..';
+import { componentTest } from '../../../../testing/component-test';
+import { configureComponentTest } from '../../../../testing/configure-component-test';
 import { Api } from '../../../core/providers/api';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
-import { PagePropertiesComponent } from '..';
-import { DynamicDisableDirective } from '../../directives';
 import { ApplicationStateService, FeaturesActionsService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
+import { DynamicDisableDirective } from '../../directives';
 import { CreatePageModalComponent } from '../create-page-modal/create-page-modal.component';
 
 xdescribe('CreateFormModalComponent', () => {
@@ -106,9 +106,9 @@ xdescribe('CreateFormModalComponent', () => {
             fixture.detectChanges();
             tick(1000);
 
-            const dropdownOptions: HTMLElement[] = Array.from(document.querySelectorAll('gtx-dropdown-content .select-option')) ;
+            const dropdownOptions: HTMLElement[] = Array.from(document.querySelectorAll('gtx-dropdown-content .select-option'));
             expect(dropdownOptions.length).toBe(4);
-            expect(dropdownOptions.map(option => option.innerText.trim())).toEqual([
+            expect(dropdownOptions.map((option) => option.innerText.trim())).toEqual([
                 'Contentpage',
                 'Wikipage',
                 'Empty template',
@@ -170,6 +170,7 @@ class MockApi {
     folders = {
         suggestPageFileName: jasmine.createSpy('suggestPageFileName'),
     };
+
     permissions = {
         getFolderPermissions: jasmine.createSpy('getFolderPermissions'),
     };
@@ -181,6 +182,7 @@ class MockFolderActions implements Partial<FolderActionsService> {
     constructor() {
         spyOn(this as any, 'createNewPage').and.callThrough();
     }
+
     createNewPage(page: {
         pageName: string;
         fileName: string;
@@ -195,6 +197,7 @@ class MockFolderActions implements Partial<FolderActionsService> {
     }): Promise<Page<Raw> | void> {
         return Promise.resolve(page as any);
     }
+
     getAllTemplatesOfNode(): Observable<Template[]> {
         return of([]);
     }

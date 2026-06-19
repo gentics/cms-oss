@@ -2,7 +2,7 @@ import { Component, Injectable, ViewChild } from '@angular/core';
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { BaseListResponse, Normalized, Page, PageRequestOptions, ResponseCode } from '@gentics/cms-models';
-import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
+import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing';
 import { of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { PublishQueueModal } from '../../../core/components/publish-queue-modal/publish-queue-modal.component';

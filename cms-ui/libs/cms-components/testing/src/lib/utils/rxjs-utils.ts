@@ -1,7 +1,7 @@
 import { tick } from '@angular/core/testing';
+import { ObservableStopper } from '@gentics/common/rxjs';
 import { Observable, of as observableOf, Subscription } from 'rxjs';
 import { delay, map, takeUntil } from 'rxjs/operators';
-import { ObservableStopper } from '../../../../src/lib/common/utils';
 
 /**
  * Returns an observable that emits the specified data after a delay.

@@ -1,4 +1,9 @@
-<div class="element-container">
+<div
+    class="element-container"
+    [class.active]="active"
+    [class.disabled]="disabled"
+    [class.readonly]="readonly"
+>
     <ng-content select="label" />
 
     <div

@@ -37,6 +37,14 @@ export interface IBreadcrumbRouterLink extends IBreadcrumbItem {
 /** The width configured in the .ellipsis CSS class. */
 const ELLIPSIS_WIDTH = 13;
 
+/*
+ * TODO: This component needs a major rework.
+ * - Resize checks are to be done via resize observer
+ * - entries should be generic, and not separate
+ * - flag for collapsiable (multiline?)
+ * - overflow handling via css, which should be straight forward.
+ *   Similar to how the overflow manager works, just with center elements.
+ */
 /**
  * A Breadcrumbs navigation component.
  *

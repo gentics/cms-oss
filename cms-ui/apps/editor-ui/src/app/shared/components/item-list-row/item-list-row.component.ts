@@ -24,6 +24,7 @@ import {
 } from '@gentics/cms-models';
 import { BaseComponent, ChangesOf, ModalService } from '@gentics/ui-core';
 import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, LanguageState, UIMode } from '../../../common/models';
+import { FormListLoaderService } from '../../../core/providers';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -38,7 +39,6 @@ import {
 } from '../../../state';
 import { TranslatePageModal, TranslatePageModalActions, TranslateResult } from '../translate-page-modal/translate-page-modal.component';
 import { UsageModalComponent } from '../usage-modal/usage-modal.component';
-import { FormListLoaderService } from '../../providers';
 
 type AllowedItemType
     = | Folder<Raw | Normalized>

@@ -10,7 +10,7 @@ import {
     Raw,
     ResponseCode,
 } from '@gentics/cms-models';
-import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { FormProperties, GenticsUICoreModule } from '@gentics/ui-core';

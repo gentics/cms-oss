@@ -3,18 +3,26 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/common/src",
     "projectType": "library",
-    "release": {
-        "version": {
-            "manifestRootsToUpdate": ["dist/{projectRoot}"],
-            "currentVersionResolver": "git-tag",
-            "fallbackCurrentVersionResolver": "disk"
-        }
-    },
     "tags": ["lib", "publish"],
     "targets": {
-        "nx-release-publish": {
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": [
+                "{projectRoot}/test-output/jest"
+            ],
             "options": {
-                "packageRoot": "dist/{projectRoot}"
+                "jestConfig": "{projectRoot}/jest.config.cts"
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {
+                    "color": false,
+                    "colors": false,
+                    "ci": true,
+                    "jestConfig": "{projectRoot}/jest.config.ci.cts"
+                }
             }
         }
     }

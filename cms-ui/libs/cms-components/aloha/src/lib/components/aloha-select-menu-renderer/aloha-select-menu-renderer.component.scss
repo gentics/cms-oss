@@ -34,13 +34,14 @@
         height: 2.5rem;
         align-items: center;
         padding: 0.25rem 0.5rem;
+        border: none;
         border-bottom: 1px solid $gtx-color-mid-gray;
-        background: $gtx-color-very-light-gray;
+        background: #f9f9f9;
         transition: 200ms;
         cursor: pointer;
 
         &:hover {
-            background: $gtx-color-light-gray;
+            background: #e0e0e0;
         }
 
         .entry-icon {
@@ -70,10 +71,10 @@
         }
 
         &.active {
-            background: #cfdcfd;
+            background: rgba($gtx-color-primary, 20%);
 
             &:hover {
-                background: #9eb5f0;
+                background: rgba($gtx-color-primary, 30%);
             }
         }
     }

@@ -1,11 +1,23 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    Input,
+    NgZone,
+    OnDestroy,
+    OnInit,
+    ViewChild,
+} from '@angular/core';
 import { AlohaIntegrationService, NormalizedTabsSettings } from '@gentics/cms-components/aloha';
-import { TAB_ID_LINK_CHECKER } from '@gentics/cms-integration-api-models';
+import { TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER } from '@gentics/cms-integration-api-models';
 import { NodeFeature } from '@gentics/cms-models';
 import { Subscription, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 import { OverflowManager } from '../../utils';
+import { AlohaEditable } from '@gentics/aloha-models';
 
 @Component({
     selector: 'gtx-page-editor-tabs',
@@ -29,6 +41,7 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
     public visibleTabs: NormalizedTabsSettings[] = [];
     public tagEditorOpen = false;
     public linkCheckerEnabled = false;
+    public editable: AlohaEditable | null = null;
 
     /**
      * When we "force" the user to a different tab, because the initial one wasn't visible anymore,
@@ -97,6 +110,12 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
             this.activeTab = newTab;
             this.changeDetector.markForCheck();
         }));
+
+        this.subscriptions.push(this.aloha.activeEditable$.subscribe((editable) => {
+            this.editable = editable;
+            this.updateVisibleTabs();
+            this.changeDetector.markForCheck();
+        }));
     }
 
     public ngAfterViewInit(): void {
@@ -114,12 +133,11 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
         }
     }
 
-    public identifyTab(_idx: number, tab: NormalizedTabsSettings): string {
-        return tab.id;
-    }
-
     public updateVisibleTabs(): void {
-        this.visibleTabs = this.tabs.filter((tab) => tab.hasVisibleGroups && tab.id !== TAB_ID_LINK_CHECKER || this.linkCheckerEnabled);
+        this.visibleTabs = this.tabs.filter((tab) => tab.hasVisibleGroups
+          && (tab.id !== TAB_ID_LINK_CHECKER || this.linkCheckerEnabled)
+          && (tab.id !== TAB_ID_CONSTRUCTS || this.editable != null),
+        );
 
         // In case the active tab is a tab which isn't visible anymore, we update the active tab to the first best one
         if (!this.visibleTabs.some((tab) => tab.id === this.activeTab)) {

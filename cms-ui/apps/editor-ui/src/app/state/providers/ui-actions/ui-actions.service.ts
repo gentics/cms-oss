@@ -18,10 +18,6 @@ import {
 } from '../../modules';
 import { ApplicationStateService } from '../../providers';
 
-// This var is provided by the Webpack DefinePlugin and gets
-// swapped out for a hard-coded string at build-time. See webpack.partial.js.
-declare const GCMS_VERSION: string;
-
 @Injectable()
 export class UIActionsService {
 
@@ -135,7 +131,7 @@ export class UIActionsService {
     }
 
     getUiVersion(): void {
-        this.appState.dispatch(new SetUIVersionAction(GCMS_VERSION));
+        this.appState.dispatch(new SetUIVersionAction(GCMSUI_VERSION || '6.5.0'));
     }
 
     getUsersnapSettings(): void {

@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import {
+    FormTypeConfiguration,
     InheritableItem,
     ItemPermissions,
     Language,
@@ -56,6 +57,9 @@ export class PropertiesEditorComponent
     @Input({ required: true })
     public itemClean = true;
 
+    @Input()
+    public formConfiguration: FormTypeConfiguration;
+
     @Output()
     public itemCleanChange = new EventEmitter<boolean>();
 
@@ -96,6 +100,7 @@ export class PropertiesEditorComponent
 
         if (changes.itemClean && !changes.itemClean.firstChange && this.itemClean && this.control) {
             this.control.markAsPristine();
+            this.control.markAsUntouched();
         }
     }
 
@@ -106,6 +111,10 @@ export class PropertiesEditorComponent
     }
 
     forwardItemCleanChange(value: boolean): void {
+        if (value && this.control) {
+            this.control.markAsPristine();
+            this.control.markAsUntouched();
+        }
         this.itemCleanChange.emit(value);
     }
 }

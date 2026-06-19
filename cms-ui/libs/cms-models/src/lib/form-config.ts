@@ -14,6 +14,11 @@ export enum FormSettingType {
     REFERENCE = 'reference',
 }
 
+export interface FormAlohaConfiguration {
+    plugins?: string[];
+    settings?: Record<string, unknown>;
+}
+
 /**
  * A setting which can be configured by the form creator
  */
@@ -40,6 +45,10 @@ export type FormStringSetting = FormBaseSetting & {
      */
     richContent?: boolean;
     /**
+     * The configuration for the rich-content editor aloha.
+     */
+    aloha?: FormAlohaConfiguration;
+    /**
      * If it should render a multiline input (textarea) for editing instead.
      */
     multiline?: boolean;
@@ -59,6 +68,10 @@ export type FormTranslationSetting = FormBaseSetting & {
      * Enabled HTML editing within the editor.
      */
     richContent?: boolean;
+    /**
+     * The configuration for the rich-content editor aloha.
+     */
+    aloha?: FormAlohaConfiguration;
     /**
      * If it should render a multiline input (textarea) for editing instead.
      */
@@ -261,6 +274,10 @@ export interface FormTypeConfiguration {
      * Options which can be selected for user reference information
      */
     userOptions?: FormSelectOption[];
+    /**
+     * Options which captcha variations are available to use.
+     */
+    captchaOptions?: FormSelectOption[];
     /**
      * Which styling variations the form-type has
      */

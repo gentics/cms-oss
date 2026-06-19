@@ -2,14 +2,15 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import {
     MockTagPropertyInfo,
     getExampleValidationSuccess,
     getMockedTagEditorContext,
     getMultiValidationResult,
     mockEditableTag,
-} from '@editor-ui/testing/test-tag-editor-data.mock';
+} from '../../../../../testing/test-tag-editor-data.mock';
+import { componentTest } from '../../../../../testing/component-test';
+import { configureComponentTest } from '../../../../../testing/configure-component-test';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     BooleanTagPartProperty,

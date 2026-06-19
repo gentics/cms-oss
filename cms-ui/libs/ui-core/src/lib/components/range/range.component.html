@@ -1,34 +1,60 @@
-<label [attr.for]="id">{{ label }}</label>
+<div class="range-content" [class.gecko]="userAgent.isGecko">
+    @if (label) {
+        <label [attr.for]="id">{{ label }}</label>
+    }
 
-<div class="range-field">
-    <input
-        #input
-
-        type="range"
-        [disabled]="disabled"
-        [attr.max]="max"
-        [attr.min]="min"
-        [attr.name]="name"
-        [required]="required"
-        [attr.step]="step"
-
-        [attr.id]="id"
-
-        (blur)="onBlur($event)"
-        (change)="onChangeEvent($event)"
-        (focus)="onFocus($event)"
-        (input)="onInput($event)"
-        (mousedown)="onMousedown($event)"
-        (mouseup)="onMouseup()"
-        (mousemove)="onMousemove($event)"
-    />
-
-    <span
-        class="thumb"
-        [class.hidden]="!thumbLabel"
-        [class.active]="active"
-        [style.left]="thumbLeft"
+    <div
+        #rangeField
+        class="range-field"
+        [class.with-bounds]="showBounds"
+        [class.focused]="focused"
+        [style.--gtx-thumb-offset.%]="(100 / (max - min)) * ((value ?? 0) - min)"
     >
-        <span class="value">{{ currentValue }}</span>
-    </span>
+        @if (showBounds) {
+            <div class="bounds-container">
+                @if (min != null) {
+                    <span class="bounds-display min">{{ min }}</span>
+                }
+                @if (max != null) {
+                    <span class="bounds-display max">{{ max }}</span>
+                }
+            </div>
+        }
+
+        <div class="indicator-container">
+            @if (showIndicators) {
+                <div
+                    class="indicator-stripes"
+                    [style.--gtx-step-count]="((max - min) / (indicatorSteps ?? step))"
+                ></div>
+            }
+
+            @if (showThumb) {
+                <span class="thumb">
+                    <span class="value">{{ value }}</span>
+                </span>
+            }
+        </div>
+
+        <div class="input-container">
+            <input
+                type="range"
+                [attr.max]="max"
+                [attr.min]="min"
+                [attr.step]="step"
+                [attr.data-value]="value ?? 0"
+
+                [attr.name]="name"
+                [attr.id]="id"
+
+                [required]="required"
+                [disabled]="disabled"
+                [value]="value"
+
+                (input)="onInput($event)"
+                (focus)="markFocused(true)"
+                (blur)="markFocused(false)"
+            />
+        </div>
+    </div>
 </div>

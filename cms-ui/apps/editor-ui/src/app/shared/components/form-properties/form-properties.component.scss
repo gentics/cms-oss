@@ -69,8 +69,16 @@ gtx-browse-box {
 .confirmation-page-setting {
     margin-left: calc(1rem + 35px);
     margin-bottom: 0.5rem;
-    transition:
-        opacity .28s ease;
+    transition: opacity .28s ease;
+
+    &.lang-select {
+        margin-left: 0;
+        margin-top: 0.75rem;
+
+        > gtx-i18n-panel-group {
+            padding-left: 0.45rem;
+        }
+    }
 }
 
 .confirmation-page-setting--active {

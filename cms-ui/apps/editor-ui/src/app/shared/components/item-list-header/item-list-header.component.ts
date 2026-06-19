@@ -22,6 +22,7 @@ import { PaginationInstance } from 'ngx-pagination';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 import { EditorPermissions, ItemsInfo, StageableItem, StagingMode, UIMode, getNoPermissions, plural } from '../../../common/models';
+import { FormListLoaderService } from '../../../core/providers';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -34,7 +35,6 @@ import { ApplicationStateService, ChangeListSelectionAction, FolderActionsServic
 import { CreateFolderModalComponent } from '../create-folder-modal/create-folder-modal.component';
 import { CreateFormModalComponent } from '../create-form-modal/create-form-modal.component';
 import { CreatePageModalComponent } from '../create-page-modal/create-page-modal.component';
-import { FormListLoaderService } from '../../providers';
 
 @Component({
     selector: 'item-list-header',
@@ -398,9 +398,6 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             case 'page':
                 this.contextMenuOperations.publishPages(itemsToPublish as Page[]);
                 break;
-            case 'form':
-                this.contextMenuOperations.publishForms(itemsToPublish as Form[]);
-                break;
             default:
                 throw new Error(`Behavior not defined for type: "${type}".`);
         }
@@ -430,9 +427,6 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
         switch (type) {
             case 'page':
                 this.contextMenuOperations.takePagesOffline(itemsToTakeOffline as Page[]);
-                break;
-            case 'form':
-                this.contextMenuOperations.takeFormsOffline(itemsToTakeOffline as Form[]);
                 break;
             default:
                 throw new Error(`Behavior not defined for type: "${type}".`);

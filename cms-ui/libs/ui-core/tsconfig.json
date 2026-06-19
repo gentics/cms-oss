@@ -2,13 +2,14 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "target": "es2022",
+        "module": "preserve",
         "moduleResolution": "bundler",
         "strict": false,
         "noImplicitOverride": false,
         "noPropertyAccessFromIndexSignature": false,
         "noImplicitReturns": false,
         "noFallthroughCasesInSwitch": true,
-        "module": "preserve"
+        "emitDecoratorMetadata": false
     },
     "angularCompilerOptions": {
         "enableI18nLegacyMessageIdFormat": false,
@@ -25,6 +26,9 @@
         },
         {
             "path": "./tsconfig.spec.json"
+        },
+        {
+            "path": "./cypress/tsconfig.json"
         }
     ]
 }

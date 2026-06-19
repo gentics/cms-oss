@@ -1,0 +1,20 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "target": "es2022",
+        "moduleResolution": "bundler",
+        "module": "preserve",
+    },
+    "files": [],
+    "include": [],
+    "angularCompilerOptions": {
+        "annotateForClosureCompiler": true,
+        "strictTemplates": false,
+        "strictInjectionParameters": true,
+    },
+    "references": [
+        {
+            "path": "./tsconfig.app.json"
+        }
+    ]
+}

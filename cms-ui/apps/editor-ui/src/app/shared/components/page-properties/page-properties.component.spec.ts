@@ -2,7 +2,7 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/c
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { CoreModule } from '@gentics/cms-components';
+import { CmsComponentsModule } from '@gentics/cms-components';
 import {
     EditablePageProps,
     Feature,
@@ -17,11 +17,10 @@ import {
     getExamplePageData,
     getExampleTemplateData,
     getExampleTemplateDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
@@ -101,7 +100,7 @@ describe('PagePropertiesComponent', () => {
                 GenticsUICoreModule.forRoot(),
                 FormsModule,
                 ReactiveFormsModule,
-                CoreModule,
+                CmsComponentsModule,
                 GCMSRestClientModule,
             ],
             providers: [

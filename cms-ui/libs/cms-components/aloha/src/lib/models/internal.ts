@@ -12,3 +12,8 @@ export interface RenderedAlohaComponent<C extends AlohaComponent, T> extends Con
     requiresConfirm?: EventEmitter<boolean>;
     manualConfirm?: EventEmitter<void>;
 }
+
+export interface AlohaComponentRenderedEvent<C extends AlohaComponent, T> {
+    name: string;
+    component: RenderedAlohaComponent<C, T>;
+}

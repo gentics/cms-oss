@@ -1,14 +1,19 @@
+import { FALLBACK_LANGUAGE, I18nService, JoinOptions, TranslateParameters } from '@gentics/cms-components';
+import { I18nString } from '@gentics/cms-models';
 import { NEVER, Observable, of } from 'rxjs';
-import { FALLBACK_LANGUAGE, JoinOptions, TranslateParameters } from '../../../../src/lib/common/models';
-import { I18nService } from '../../../../src/lib/core/providers/i18n/i18n.service';
 
 export class MockI18nService implements Required<I18nService> {
 
     private lang = FALLBACK_LANGUAGE;
+    private fallback = FALLBACK_LANGUAGE;
     private languages = new Set([FALLBACK_LANGUAGE]);
 
     public getCurrentLanguage(): string {
         return this.lang;
+    }
+
+    public getFallbackLanguage(): string {
+        return this.fallback;
     }
 
     public getAvailableLangues(): readonly string[] {
@@ -49,5 +54,9 @@ export class MockI18nService implements Required<I18nService> {
 
     public get(key: string | string[], _params?: TranslateParameters): Observable<string> {
         return of(Array.isArray(key) ? key.join('-') : key);
+    }
+
+    public fromObject(obj: I18nString, fallbackLanguage?: string | null): string {
+        return obj?.[this.lang] ?? obj?.[fallbackLanguage];
     }
 }

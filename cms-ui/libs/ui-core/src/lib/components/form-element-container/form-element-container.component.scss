@@ -105,7 +105,7 @@ gtx-form-element-container {
                     cursor: not-allowed;
                 }
 
-                &:not([disabled]):hover {
+                &:not([disabled=true]):hover {
                     color: $gtx-color-mid-gray;
                     cursor: pointer;
 
@@ -126,11 +126,36 @@ gtx-form-element-container {
                     }
                 }
 
-                &:not([disabled]):focus {
+                &:not([disabled=true]):focus {
                     outline-color: $gtx-color-primary;
                     z-index: 1;
                 }
             }
+        }
+
+        &.active {
+            border-color: $gtx-color-primary;
+        }
+
+        &.readonly {
+            .box-wrapper {
+                color: lighten($gtx-color-dark-gray, 10%);
+            }
+        }
+
+        &.disabled {
+            label {
+                color: $gtx-color-dark-gray;
+            }
+
+            .box-wrapper {
+                background-color: $gtx-color-off-white;
+                color: $gtx-color-mid-gray;
+            }
+        }
+
+        &:not(.disabled):not(.readonly) .box-wrapper:focus {
+            border-color: $gtx-color-primary;
         }
     }
 
@@ -143,31 +168,4 @@ gtx-form-element-container {
         }
     }
 
-    &.active {
-        border-color: $gtx-color-primary;
-    }
-
-    &[readonly] {
-        .box-wrapper {
-            color: lighten($gtx-color-dark-gray, 10%);
-        }
-    }
-
-    &[disabled] {
-        border-color: $gtx-color-light-gray;
-        background: $gtx-color-very-light-gray;
-
-        label {
-            color: $gtx-color-dark-gray;
-        }
-
-        .box-wrapper {
-            background-color: $gtx-color-off-white;
-            color: $gtx-color-mid-gray;
-        }
-    }
-
-    &:not([disabled]):not([readonly]) .box-wrapper:focus {
-        border-color: $gtx-color-primary;
-    }
 }

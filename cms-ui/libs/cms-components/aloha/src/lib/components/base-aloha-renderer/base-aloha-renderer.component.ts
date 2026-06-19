@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { AlohaComponent } from '@gentics/aloha-models';
 import { BaseFormElementComponent } from '@gentics/ui-core';
-import { RenderedAlohaComponent } from '../../models/internal';
+import { AlohaComponentRenderedEvent, RenderedAlohaComponent } from '../../models/internal';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { patchMultipleAlohaFunctions, unpatchAllAlohaFunctions } from '../../utils';
 
@@ -32,6 +32,15 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
 
     @Input()
     public settings?: C | Partial<C> | Record<string, any>;
+
+    @Input()
+    public skipAutoRegister = false;
+
+    @Output()
+    public componentRender = new EventEmitter<AlohaComponentRenderedEvent<C, T>>();
+
+    @Output()
+    public componentDestroy = new EventEmitter<string>();
 
     /**
      * Event which is triggered to let the parent component (typically `DynamicDropdownComponent`) know,
@@ -78,12 +87,20 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T>
         if (!name) {
             return;
         }
+        this.componentRender.emit({ name, component: this });
+        if (this.skipAutoRegister) {
+            return;
+        }
         this.aloha.renderedComponents[name] = this;
     }
 
     protected unregisterAsRendered(): void {
         const name = this.slot || this.settings?.name;
         if (!name) {
+            return;
+        }
+        this.componentDestroy.emit(name);
+        if (this.skipAutoRegister) {
             return;
         }
         delete this.aloha.renderedComponents[name];

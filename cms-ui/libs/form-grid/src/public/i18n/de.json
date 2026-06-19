@@ -64,6 +64,8 @@
         "paste_form_type_mismatch": "Einfügen nicht möglich: Das kopierte Element stammt aus einem anderen Formulartyp (\"{{sourceType}}\").",
         "paste_element_success": "Element \"{{name}}\" eingefügt",
         "resize_element_width": "Breite des Elements anpassen",
-        "fallback_element_title": "Unbekanntes oder Unbenanntes element"
+        "fallback_element_title": "Unbekanntes oder Unbenanntes element",
+        "loading_preview": "Lade vorschau ...",
+        "preview_loading_error": "Es gab einen Fehler beim laden der Vorschau!"
     }
 }

@@ -57,6 +57,10 @@ export interface EditableFormData {
      * The ui-schema definition of the form
      */
     'ui-schema': FormUISchema;
+    /**
+     * The ID of the captcha to use for this form.
+     */
+    captchaId?: string;
 
     /* INTERNAL FORMS
      * ===================================================================== */
@@ -83,12 +87,11 @@ export interface EditableFormData {
      */
     adminEmailAddress: string;
     /**
-     * The email-template to use when sending an email to the administrator addresses,
-     * configurable per language.
+     * The email-template to use when sending an email to the administrator addresses.
      * Emails to the administrator are sent whenever a user submits a form.
      * Must be null/empty if {@link adminEmailPageId}/{@link adminEmailNodeId} is used.
      */
-    adminEmailTemplate: I18nString;
+    adminEmailTemplate: string;
     /**
      * The page to use when sending an email to the administrator addresses.
      * Emails to the administrator are sent whenever a user submits a form.
@@ -287,6 +290,36 @@ export interface FormDownloadInfo {
     downloadTimestamp?: string;
     /** Optional error */
     error?: string;
+}
+
+export interface FormInterchangeData {
+    formID: string;
+    version?: string;
+    hasValidationErrors: boolean;
+    hasErrors: boolean;
+
+    possibleValueSets: FormValueSet[];
+    properties: Record<string, FormPropertyData>;
+    currentPage?: number;
+}
+
+export interface FormValueSet {
+    possibleValueSetID: string;
+    possibleValues: FormValueSetEntry[];
+}
+
+export interface FormValueSetEntry {
+    identifier: string;
+    displayName: string;
+}
+
+export interface FormPropertyData {
+    renderingType?: string;
+    possibleValueSetID?: string;
+    visible: boolean;
+    editable: boolean;
+    name: string;
+    value: unknown;
 }
 
 export interface FormSchema {
@@ -492,6 +525,12 @@ export interface FormGridOptions {
      * already exists.
      */
     condition?: FormCondition;
+    /**
+     * If this element is marked as hidden.
+     * If it is, then it should be disregarded entirely and only exists to keep data around.
+     * Usually these elements are filtered out in the backend so they don't even reach formgen.
+     */
+    hidden?: boolean;
     /**
      * How many columns this element should use in the grid
      */

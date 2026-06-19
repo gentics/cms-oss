@@ -19,7 +19,7 @@
                 formControlName="name"
             ></gtx-input>
 
-            @if (form.get('dbType').enabled) {
+            @if (form.controls.dbType.enabled) {
                 <gtx-input
                 type="text"
                 maxlength="255"
@@ -56,7 +56,7 @@
                     formControlName="urlProperty"
                 ></gtx-input>
 
-                @if (form.urlProperty.hasError('pattern')) {
+                @if (form.controls.urlProperty.hasError('pattern')) {
                     <span class="container-validator-errors">
                         {{ 'content_repository.urlProperty_pattern' | gtxI18n }}
                     </span>

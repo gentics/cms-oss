@@ -144,9 +144,13 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         ? formState.data.properties?.[obj.id]?.createable
         : utils.getCreatable(formState, jsonpath);
 
-      let value = obj?.formGridOptions?.value
-        ? obj.formGridOptions.value
-        : utils.getValue(formState, jsonpath, obj.id);
+      let value = null;
+      const elemState = utils.getElementByIdOrJsonPath(formState.data, jsonpath, obj.id);
+      if(elemState) {
+        value = utils.getValue(formState, jsonpath, obj.id, elemState);
+      }else{
+        value = obj?.formGridOptions?.value;
+      }
 
       if ((schemaElem == null && !obj.formGridOptions?.type )|| !isVisible ) {
         return null;

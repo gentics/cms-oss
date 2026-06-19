@@ -323,8 +323,18 @@ export function listAddElement(
   updateState(StatesToUpdateEnum.FormState);
 }
 
-export function getValue(formState: FormState, jsonpath: string, id?: string) {
-  const elemState = getElementByIdOrJsonPath(formState.data, jsonpath, id);
+export function getValue(
+  formState: FormState,
+  jsonpath: string,
+  id?: string,
+  elemState?: ReturnType<typeof getElementByIdOrJsonPath>,
+) {
+  // Allow callers to pass an already resolved elemState to avoid a redundant
+  // getElementByIdOrJsonPath lookup; fall back to resolving it when not provided.
+  elemState =
+    elemState !== undefined
+      ? elemState
+      : getElementByIdOrJsonPath(formState.data, jsonpath, id);
   if (elemState) {
     if (elemState.values) {
       return elemState.values;  

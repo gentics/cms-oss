@@ -381,7 +381,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         });
 
         this.subscriptions.push(
-            this.client.form.createExport(this.form().id).pipe(
+            this.client.form.createExport(this.form().id, { lang: this.i18n.getCurrentLanguage() }).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
                     switchMap(() => this.client.form.exportStatus(this.form().id)),
                     takeWhile((status) => status.requestPending, true),

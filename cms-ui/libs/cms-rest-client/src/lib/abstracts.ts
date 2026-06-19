@@ -380,7 +380,7 @@ import {
     ValidateSidResponse,
     VersionResponse,
     WastebinDeleteOptions,
-    WastebinRestoreOptions,
+    WastebinRestoreOptions, FormExportOptions,
 } from '@gentics/cms-models';
 import {
     LoginResponse as MeshLoginResponse,
@@ -724,7 +724,7 @@ export interface AbstractFormAPI extends BasicAPI {
     updateTypeTranslations: (type: string, body: FormTranslations) => FormTranslationsResponse;
 
     exportStatus: (id: number | string) => FormDownloadInfoResponse;
-    createExport: (id: number | string) => FormDownloadInfoResponse;
+    createExport: (id: number | string, options?: FormExportOptions) => FormDownloadInfoResponse;
     binariesStatus: (id: number | string) => FormDownloadInfoResponse;
     createBinaries: (id: number | string) => FormDownloadInfoResponse;
     downloadData: (id: number | string, downloadUuid: string) => Blob;

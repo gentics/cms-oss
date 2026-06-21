@@ -15,6 +15,7 @@ import {
     SetBrokenLinksCountAction,
     SetCMPVersionAction,
     SetConstructFavourites,
+    SetCopilotOpenAction,
     SetHideExtrasAction,
     SetNodesLoadedAction,
     SetTagEditorOpenAction,
@@ -49,6 +50,7 @@ const INITIAL_UI_STATE: UIState = {
     constructFavourites: [],
     tagEditorOpen: false,
     nodesLoaded: false,
+    copilotOpen: false,
 };
 
 @AppStateBranch<UIState>({
@@ -205,6 +207,13 @@ export class UIStateModule {
     handleSetNodesLoadedAction(ctx: StateContext<UIState>, action: SetNodesLoadedAction): void {
         ctx.patchState({
             nodesLoaded: action.loaded,
+        });
+    }
+
+    @ActionDefinition(SetCopilotOpenAction)
+    handleSetCopilotOpenAction(ctx: StateContext<UIState>, action: SetCopilotOpenAction): void {
+        ctx.patchState({
+            copilotOpen: action.open,
         });
     }
 }

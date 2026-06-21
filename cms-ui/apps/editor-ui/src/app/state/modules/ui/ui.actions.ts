@@ -126,3 +126,10 @@ export class SetNodesLoadedAction {
         public loaded: boolean,
     ) {}
 }
+
+@ActionDeclaration(UI_STATE_KEY)
+export class SetCopilotOpenAction {
+    constructor(
+        public open: boolean,
+    ) {}
+}

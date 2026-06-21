@@ -1,0 +1,78 @@
+<aside
+    class="copilot-sidebar"
+    [class.is-open]="open"
+    [attr.aria-hidden]="!open"
+    role="complementary"
+>
+    <header class="copilot-sidebar-header">
+        <div class="copilot-sidebar-title">
+            <icon class="copilot-sidebar-title-icon">lightbulb</icon>
+            <span>{{ 'copilot.sidebar_title' | gtxI18n }}</span>
+        </div>
+        <gtx-button
+            class="copilot-sidebar-close"
+            icon
+            type="secondary"
+            data-action="copilot-close"
+            [title]="'copilot.close_label' | gtxI18n"
+            (click)="close()"
+        >
+            <icon>close</icon>
+        </gtx-button>
+    </header>
+
+    <section class="copilot-sidebar-body">
+        <div class="copilot-actions" data-testid="copilot-actions">
+            @if (actions.length === 0) {
+                <div class="copilot-empty-state">
+                    <icon class="copilot-empty-state-icon">lightbulb</icon>
+                    <p class="copilot-empty-state-message">
+                        {{ 'copilot.empty_state_message' | gtxI18n }}
+                    </p>
+                </div>
+            } @else {
+                <ul class="copilot-action-list">
+                    @for (action of actions; track trackById($index, action)) {
+                        <li
+                            class="copilot-action-item"
+                            [attr.data-id]="action.id"
+                        >
+                            @if (action.icon) {
+                                <icon class="copilot-action-icon">{{ action.icon }}</icon>
+                            }
+                            <div class="copilot-action-text">
+                                <span class="copilot-action-label">{{ action.labelI18n | gtxI18nObject }}</span>
+                                @if (action.descriptionI18n) {
+                                    <span class="copilot-action-description">{{ action.descriptionI18n | gtxI18nObject }}</span>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </section>
+
+    <footer class="copilot-sidebar-footer">
+        <div class="copilot-chat-input">
+            <gtx-textarea
+                class="copilot-chat-textarea"
+                [label]="'copilot.input_placeholder' | gtxI18n"
+                [disabled]="true"
+            ></gtx-textarea>
+            <gtx-button
+                class="copilot-chat-send"
+                icon
+                type="primary"
+                size="small"
+                [disabled]="true"
+                [title]="'copilot.send_label' | gtxI18n"
+            >
+                <icon>send</icon>
+            </gtx-button>
+        </div>
+        <div class="copilot-chat-hint">
+            {{ 'copilot.preview_hint' | gtxI18n }}
+        </div>
+    </footer>
+</aside>

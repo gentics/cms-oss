@@ -102,6 +102,16 @@
         "link_checker_no_content": "No broken Links detected",
         "constructs_empty": "No Constructs insertable/available"
     },
+    "copilot": {
+        "button_label": "Copilot",
+        "button_tooltip": "Open Content Copilot",
+        "sidebar_title": "Content Copilot",
+        "close_label": "Close Copilot",
+        "send_label": "Send",
+        "input_placeholder": "Ask a question or give an instruction …",
+        "preview_hint": "Preview – actions will be enabled shortly.",
+        "empty_state_message": "No actions configured. Actions can be added via the \"copilot.yml\" file in the UI configuration."
+    },
     "editor": {
         "alert_center_title": "Alert Center",
         "alert_notification_singular_label": "Alert Center: {{ count }} unresolved problem was found",

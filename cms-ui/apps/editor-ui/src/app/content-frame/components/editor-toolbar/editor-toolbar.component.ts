@@ -40,13 +40,19 @@ import { UserSettingsService } from '../../../core/providers/user-settings/user-
 import { PageVersionsModal } from '../../../shared/components';
 import { BreadcrumbsService } from '../../../shared/providers';
 import { PublishableStateUtil } from '../../../shared/util/entity-states';
-import { ApplicationStateService, FocusListAction, FolderActionsService, SetFocusModeAction } from '../../../state';
+import { CopilotConfigService } from '../../../copilot';
+import { ApplicationStateService, FocusListAction, FolderActionsService, SetCopilotOpenAction, SetFocusModeAction } from '../../../state';
 import { AlohaIntegrationService } from '../../providers';
 
 /** Used to define which buttons are visible at a certain moment. */
 interface AvailableButtons {
     compareContents?: boolean;
     compareSources?: boolean;
+    /**
+     * Content Copilot toggle. Visible only while a page is being edited
+     * AND the customer-supplied `copilot.yml` has `enabled: true`.
+     */
+    copilot?: boolean;
     editItem?: boolean;
     edit?: boolean;
     editInheritance?: boolean;
@@ -125,6 +131,14 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public focusMode: boolean;
     public brokenLinkCount = 0;
 
+    /**
+     * Mirror of `CopilotConfigService.enabled$` and the NGXS `state.ui.copilotOpen`
+     * slice, kept as plain properties so the template doesn't need async pipes
+     * (each of which would re-subscribe on every change-detection run).
+     */
+    public copilotEnabled = false;
+    public copilotOpen = false;
+
     /** Subscriptions to cleanup */
     protected subscriptions: Subscription[] = [];
 
@@ -141,6 +155,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         protected folderActions: FolderActionsService,
         protected permissions: PermissionService,
         protected aloha: AlohaIntegrationService,
+        protected copilotConfig: CopilotConfigService,
     ) {}
 
     ngOnInit(): void {
@@ -182,6 +197,20 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         this.subscriptions.push(this.aloha.ready$.subscribe((ready) => {
             this.alohaReady = ready;
             this.buttons = this.determineVisibleButtons();
+            this.changeDetector.markForCheck();
+        }));
+
+        // Wire up Content Copilot: the toolbar button only appears when
+        // the customer's copilot.json has `enabled: true`, and it must
+        // visually reflect the open/closed state of the sidebar so
+        // re-clicking it acts as a toggle indicator.
+        this.subscriptions.push(this.copilotConfig.enabled$.subscribe((enabled) => {
+            this.copilotEnabled = enabled;
+            this.buttons = this.determineVisibleButtons();
+            this.changeDetector.markForCheck();
+        }));
+        this.subscriptions.push(this.appState.select((state) => state.ui.copilotOpen).subscribe((isOpen) => {
+            this.copilotOpen = isOpen;
             this.changeDetector.markForCheck();
         }));
 
@@ -376,6 +405,16 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         this.close.emit();
     }
 
+    /**
+     * Toggle the Content Copilot sidebar. The actual open/close flag is
+     * stored in the NGXS UI state slice (`state.ui.copilotOpen`) so the
+     * sidebar component — which renders elsewhere in the layout tree —
+     * stays in sync without requiring a dedicated singleton service.
+     */
+    toggleCopilot(): void {
+        this.appState.dispatch(new SetCopilotOpenAction(!this.copilotOpen));
+    }
+
     saveChanges(behaviour: SaveBehaviour): void {
         this.save.emit(behaviour);
         this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
@@ -414,6 +453,18 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         return {
             compareContents: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_SOURCES,
             compareSources: (isPage || isForm) && editMode === EditMode.COMPARE_VERSION_CONTENTS,
+            // Per requirement: Copilot button is only ever surfaced while
+            // a page is being edited (not in preview / properties / form
+            // edit / comparison views) and stays gated by the YAML feature
+            // flag so customers can roll the feature out per environment.
+            // Also hidden during a language comparison (`compareWithId`):
+            // two languages are visible side-by-side and it would be
+            // ambiguous which one the Copilot is supposed to act on.
+            copilot: this.copilotEnabled
+                && isPage
+                && editing
+                && !this.locked
+                && !this.editorState?.compareWithId,
             editItem: (editMode === EditMode.EDIT_PROPERTIES || editMode === EditMode.EDIT_INHERITANCE)
               && (isPage || isForm)
               && userCan.edit

@@ -6,7 +6,7 @@ import { UIMode } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { TestApplicationState } from '../../test-application-state.mock';
 import { STATE_MODULES } from '../state-modules';
-import { SetCMPVersionAction, SetUILanguageAction, SetUIOverridesAction, SetUIVersionAction, SetUsersnapSettingsAction } from './ui.actions';
+import { SetCMPVersionAction, SetCopilotOpenAction, SetUILanguageAction, SetUIOverridesAction, SetUIVersionAction, SetUsersnapSettingsAction } from './ui.actions';
 
 const CMP_VERSION: Version = {
     cmpVersion: '7.8',
@@ -67,6 +67,7 @@ describe('UIStateModule', () => {
             constructFavourites: [],
             tagEditorOpen: false,
             nodesLoaded: false,
+            copilotOpen: false,
         });
     });
 
@@ -107,6 +108,16 @@ describe('UIStateModule', () => {
         const settings: UsersnapSettings = { key: 'test' };
         appState.dispatch(new SetUsersnapSettingsAction(settings));
         expect(appState.now.ui.usersnap).toEqual(settings);
+    });
+
+    it('setCopilotOpen toggles the copilot sidebar flag', () => {
+        expect(appState.now.ui.copilotOpen).toBe(false);
+
+        appState.dispatch(new SetCopilotOpenAction(true));
+        expect(appState.now.ui.copilotOpen).toBe(true);
+
+        appState.dispatch(new SetCopilotOpenAction(false));
+        expect(appState.now.ui.copilotOpen).toBe(false);
     });
 
 });

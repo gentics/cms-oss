@@ -56,6 +56,12 @@ $gcms-form-editor-transition-duration: 0.15s;
 @mixin gcmsEditorBoxShadowFormElement {
     box-shadow: rgba( 0, 0, 0, 0.3 ) 0 0 14px -2px;
 }
+// Soft drop shadow for slide-in panels (Content Copilot drawer etc.).
+// Lighter than the form-element shadow because the host element is
+// flush against the edge of the workspace rather than floating.
+@mixin gcmsDrawerBoxShadow {
+    box-shadow: rgba(0, 0, 0, 0.12) -8px 0 24px;
+}
 
 $gcms-editor-primary-color: #ffd493;
 

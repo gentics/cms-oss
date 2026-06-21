@@ -35,4 +35,6 @@ export interface UIState {
     constructFavourites: string[];
     tagEditorOpen: boolean;
     nodesLoaded: boolean;
+    /** Whether the Content Copilot sidebar is currently expanded. */
+    copilotOpen: boolean;
 }

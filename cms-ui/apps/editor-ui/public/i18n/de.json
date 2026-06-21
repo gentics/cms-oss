@@ -102,6 +102,16 @@
         "link_checker_no_content": "Keine defekten Links vorhanden",
         "constructs_empty": "Keine TagTypen einsetzbar/verfügbar"
     },
+    "copilot": {
+        "button_label": "Copilot",
+        "button_tooltip": "Content Copilot öffnen",
+        "sidebar_title": "Content Copilot",
+        "close_label": "Copilot schließen",
+        "send_label": "Senden",
+        "input_placeholder": "Frage stellen oder Anweisung geben …",
+        "preview_hint": "Vorschau – Aktionen werden in Kürze freigeschaltet.",
+        "empty_state_message": "Keine Aktionen konfiguriert. Aktionen können über die Datei „copilot.yml“ in der UI-Konfiguration hinzugefügt werden."
+    },
     "editor": {
         "alert_center_title": "Warnungszentrale",
         "alert_notification_singular_label": "Warnungszentrale: {{ count }} ungelöstes Problem wurde gefunden.",

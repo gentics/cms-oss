@@ -259,7 +259,7 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.activeLanguage.id;
+        const currentLanguageId = this.activeLanguage?.id || this.activeNode.languagesId[0];
         this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
             .then(modal => modal.open())
             .catch(this.errorHandler.catch);

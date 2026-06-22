@@ -1,0 +1,50 @@
+{
+	"display_text": {
+		"en": "Display text",
+		"de": "Anzeigetext"
+	},
+	"link_type": {
+		"en": "Link type",
+		"de": "Linktyp"
+	},
+	"link_type_URL": {
+		"en": "URL",
+		"de": "URL"
+	},
+	"link_type_PAGE": {
+		"en": "Page",
+		"de": "Seite"
+	},
+	"link_type_FILE": {
+		"en": "File",
+		"de": "Datei"
+	},
+	"link_target": {
+		"en": "Target",
+		"de": "Ziel"
+	},
+	"link_item": {
+		"en": "Item",
+		"de": "Artikel"
+	},
+	"link_url": {
+		"en": "URL",
+		"de": "URL"
+	},
+	"link_item_loading_text": {
+		"en": "Loading",
+		"de": "Wird geladen"
+	},
+	"link_target_current_tab": {
+		"en": "Current tab",
+		"de": "Aktueller Tab"
+	},
+	"link_target_new_tab": {
+		"en": "New tab",
+		"de": "Neuer Tab"
+	},	
+	"manage_link_title": {
+		"en": "Title",
+		"de": "Titel"
+	}
+}

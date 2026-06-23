@@ -132,9 +132,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       if (typeof isVisible === 'undefined') {
         // if visible is not set in data, evaluate condition as fallback
         if (obj.formGridOptions?.condition) {
-          const condition = obj.formGridOptions.condition;
-          const referencedValue = formState.data.properties?.[condition.source.control]?.value;
-          isVisible = referencedValue === condition.equals;
+          isVisible = utils.evaluateCmsCondition(formState, obj.formGridOptions.condition);
         } else { // visible is set in AN forms by default
           isVisible = utils.getVisible(formState, jsonpath);
         }

@@ -409,13 +409,11 @@ export function validateField(
   if (typeof elemState.visible === 'undefined') {
     // if visible is not set in data, evaluate condition as fallback
     if (formGridOptions?.condition) {
-      const condition = formGridOptions.condition;
-      const referencedValue = formState.data.properties?.[condition.source.control]?.value;
-      let isVisible = referencedValue === condition.equals;
+      let isVisible = utils.evaluateCmsCondition(formState, formGridOptions.condition);
       if(!isVisible){
           return { isValid: true, errorMessage: '' };
       }
-    } 
+    }
   }
 
 
@@ -523,9 +521,7 @@ export function areSubElementsValid(
       //container elements are not part of data structure
       if (["container", "conditionalcontainer"].includes(obj.type)) {
         if (obj?.formGridOptions?.condition) {
-          const condition = obj.formGridOptions.condition;
-          const referencedValue = formState.data.properties?.[condition.source.control]?.value;
-          let isVisible = referencedValue === condition.equals;
+          let isVisible = utils.evaluateCmsCondition(formState, obj.formGridOptions.condition);
           if(isVisible){
             let containerValid = areSubElementsValid(formState, obj.elements, updateErrorMessages, mockForm);
             //if any container subElement is invalid - report invalid
@@ -757,7 +753,16 @@ const loadValidation = async (
     // Pause for 1 second (simulate network latency)
     await new Promise((resolve) => setTimeout(resolve, 1000));
   } else {
-    apiResponse = await restService.validationRequest(formState.data);
+    // For CMS forms, attach the effective visibility per field so the plugin skips invisible
+    // fields during validation (clone to avoid mutating the React state).
+    const dataToValidate: IData = JSON.parse(JSON.stringify(formState.data));
+    utils.applyCmsVisibility(
+      dataToValidate,
+      formState.form,
+      formState.pluginName,
+      formState,
+    );
+    apiResponse = await restService.validationRequest(dataToValidate);
   }
   utils.endANRequest(uiState, updateState);
 

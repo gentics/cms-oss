@@ -78,11 +78,17 @@
 						#elseif ($entry.type == "feature") 
 							<h4 id="$!{anchorTarget}" style="vertical-align:middle;"><img src="static/images/changelog_types/feature_24.png" alt="" /> <strong>Feature $entry.ticketReference</strong>$!{anchorLinkHint}</h4>
 						#elseif ($entry.type == "manualchange")
-							<div id="$!{anchorTarget}" class="warning"><p><strong>Manual Change</strong> $entry.getHTMLHeadline()$!{anchorLinkHint}</p></div>
-							#set($html = $entry.getHTMLWithoutHeadline())
+							<div id="$!{anchorTarget}" class="warning">
+								<p><strong>Manual Change</strong> $!{anchorLinkHint}</p>
+								$!{html}
+							</div>
+							#set($html = "")
 						#elseif ($entry.type == "optional-manualchange")
-							<div id="$!{anchorTarget}" class="warning"><p><strong>Optional Manual Change</strong> $entry.getHTMLHeadline()$!{anchorLinkHint}</p></div>
-							#set($html = $entry.getHTMLWithoutHeadline())
+							<div id="$!{anchorTarget}" class="warning">
+								<p><strong>Optional Manual Change</strong> $!{anchorLinkHint}</p>
+								$!{html}
+							</div>
+							#set($html = "")
 						#elseif ($entry.type == "security")
 							<h4 id="$!{anchorTarget}" style="vertical-align:middle;"><img src="static/images/changelog_types/security_24.png" alt="" \> <strong>Security $entry.ticketReference</strong>$!{anchorLinkHint}</h4>
 						#elseif ($entry.type == "newui") 

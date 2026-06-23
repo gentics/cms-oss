@@ -1,0 +1,85 @@
+Following changes to the @npm@ packages have to be updated manually in your projects if they are used:
+
+====== @gentics/cms-models
+
+The models for forms and associated models (like configurations) have been fundamentally changed.
+
+All testing utilities which have previously been exported directly, have been moved to an extra entrypoint @testing@.
+Therefore, these testing utilities have to be imported via @\@gentics/cms-models/testing@.
+
+====== @gentics/form-generator
+
+Has been removed entirely. For the new forms editing, use the package @\@gentics/form-grid@ instead.
+
+====== @gentics/cms-rest-client
+
+All testing utilities which have previously been exported directly, have been moved to an extra entrypoint @testing@.
+Therefore, these testing utilities have to be imported via @\@gentics/cms-rest-client/testing@.
+
+====== @gentics/cms-rest-client-angular
+
+All testing utilities which have previously been exported directly, have been moved to an extra entrypoint @testing@.
+Therefore, these testing utilities have to be imported via @\@gentics/cms-rest-client-angular/testing@.
+
+====== @gentics/ui-core
+
+General utility functions which are not angular specific have been moved to @\@gentics/common@:
+
+- @deepFreeze@
+- @cancelEvent@
+- @copySymbols@
+- @cloneWithSymbols@
+- @coerceToBoolean@
+- @coerceToTruelean@
+- @dateInYears@
+- @getDataTransfer@
+- @getEventTarget@
+- @transferHasFiles@
+- @clientReportsMimeTypesOnDrag@
+- @getTransferMimeTypes@
+- @matchesMimeType@
+- @randomId@
+- @setByPath@
+- @toValidNumber@
+- @getValueByPath@
+- @waitTake@ (to @rxjs@ entrypoint, i.E. @\@gentics/common/rxjs@)
+
+The components @gtx-checkbox@ and @gtx-range@ have been updated to extend the @BaseFormElement@ component, and therefore follow it's pattern:
+
+- Removed @blur@ and @focus@ outputs
+- Output @change@ has been renamed to @valueChange@
+
+Specific changes for @gtx-checkbox@
+
+- Input @value@ has been renamed to @formValue@, which is the value that will be submitted on a form submit.
+- Inputs @checked@ and @indeterminate@ have been removed. Use the @value@ input with typing @boolean | 'indeterminate'@ (or @CheckState@) instead.
+
+Specific changes for @gtx-range@
+
+- Input @thumbLabel@ has been renamed to @showThumb@
+- New Inputs @showBoundaries@, @showIndicators@, and @indicatorSteps@ to change appearance of the range.
+
+The base styling for form components have been updated, to remove the margin of each element. This means that positioning and spacing have to be updated in all parent components instead.
+
+The components @gtx-checkbox@ and @gtx-radio-button@ have their layout and styling reworked to work more consistently and to properly scale.
+
+All testing utilities which have previously been exported directly, have been moved to an extra entrypoint @testing@.
+Therefore, these testing utilities have to be imported via @\@gentics/ui-core/testing@.
+
+====== @gentics/cms-components
+
+The base components @BasePropertiesComponent@ and @BasePropertiesListComponent@ have been moved to the @\@gentics/ui-core@ package, and have been renamed to @BaseFormPropertiesComponent@ and @BaseFormListComponent@ respectively.
+
+The @rxjs@ utilities @ObservableStopper@ and the @discard@ operator have been moved to @\@gentics/common/rxjs@.
+
+The components @gtx-i18n-checkbox@, @gtx-key-i18n-value-list-input@, and @gtx-form-browse-box@ have been removed.
+
+The component @gtx-browse-box@ has been reworked to extend the @BaseFormComponent@ and will now handle the item loading and picking on its own:
+
+- Removed input @displayValue@
+- Removed outputs @clear@ and @browse@
+- Added inputs @value@, @allowedSelection@, @contentLanguage@, @onlyInCurrentNode@, @multiple@, @startNode@, @startFolder@, @includeMlId@, @browseTitle@, @showBreadcrumb@, and @breadcrumbTitle@.
+- Added output @valueChange@
+
+All testing utilities which have previously been exported directly, have been moved to an extra entrypoint @testing@.
+Therefore, these testing utilities have to be imported via @\@gentics/cms-components/testing@.

@@ -4,6 +4,7 @@ import { IDataFields, IFeatures, IForm, ISchema } from "./interfaces";
 export type FormgridPreviewData = {
   formId: string;
   formType: string;
+  pluginName: string;
   schema: ISchema;
   uiSchema: IForm;
   features?: IFeatures;
@@ -20,6 +21,7 @@ export type FormgridPreviewData = {
 export interface PreviewInformation {
   dynamic: boolean;
   formType: string;
+  pluginName: string;
   availableLanguages: string[];
   cmsSid?: number;
   features?: IFeatures;

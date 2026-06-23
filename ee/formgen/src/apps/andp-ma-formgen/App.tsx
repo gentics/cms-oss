@@ -70,9 +70,11 @@ export default function App() {
       dynamic: false,
       features: initialPreviewData.features,
       formType: initialPreviewData.formType,
+      pluginName: initialPreviewData.pluginName,
       availableLanguages: [initialPreviewData.language],
       cmsSid: initialPreviewData.cmsSid,
     });
+    setPluginName(initialPreviewData.pluginName);
     setLanguage(initialPreviewData.language);
     setPreviewFormData({
       schema: initialPreviewData.schema,
@@ -109,9 +111,11 @@ export default function App() {
             dynamic: true,
             features: event.features,
             formType: event.formType,
+            pluginName: event.pluginName,
             availableLanguages: event.availableLanguages,
             cmsSid: event.cmsSid,
           });
+          setPluginName(event.pluginName);
           setPreviewFormData({
             schema: event.schema,
             uiSchema: event.uiSchema,

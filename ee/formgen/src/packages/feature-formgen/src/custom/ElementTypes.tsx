@@ -65,13 +65,13 @@ const cmsElementTypes: IElementTypes = {
 * !IMPORTANT! it is case sensitiv, keys should always be lowercase 
 */
 const pluginElementTypes: IPluginElements = {
+    // TODO: Should this shared entry actually be here? When is the plugin-name ever "shared"??
     "shared": sharedElementTypes,
     "acta-nova": anElementTypes,
     "forms": cmsElementTypes
 }
 
 export const getElementTypeByPlugin = (elementType: string, pluginName: string) => {
-    let sharedElementTypes = pluginElementTypes['shared'];
     let specificElementTypes = pluginElementTypes[pluginName] || {};
     // Der specific type wird bevorzugt
     return specificElementTypes[elementType] || sharedElementTypes[elementType];

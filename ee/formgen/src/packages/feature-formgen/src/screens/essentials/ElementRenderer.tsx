@@ -37,7 +37,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       let lowerCaseSchemaElementType = schemaElem.type.toLowerCase();
       let elementConfigurationType: string;
 
-      if (lowerCaseSchemaElementType === "property" && obj && obj.formGridOptions && obj.formGridOptions?.type) {
+      if (lowerCaseSchemaElementType === "property" && obj?.formGridOptions?.type) {
         elementConfigurationType = obj.formGridOptions?.type.toLowerCase();
       } else {
         elementConfigurationType = lowerCaseSchemaElementType;
@@ -46,7 +46,10 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
       let ElemTyp = getElementTypeByPlugin(elementConfigurationType, formState.pluginName)
 
       if (!ElemTyp) {
-        console.warn(`FormGrid: Element type could not be determined from: "${elementConfigurationType}"`, obj, schemaElem);
+        // don't log errors if the "schemas" is not properly initialized yet
+        if (Object.keys(schemas).length !== 0 || elementConfigurationType !== lowerCaseSchemaElementType) {
+          console.warn(`FormGrid: Element type could not be determined from: "${elementConfigurationType}"`, obj, schemaElem);
+        }
         return null;
       }
 

@@ -165,6 +165,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly formType = input<string>('');
     /** The name of the form currently being edited */
     public readonly formName = input<string>('');
+    /** The ID of the flow for this form */
+    public readonly flowId = input.required<string>();
 
     /* PAGE & VIEW
      * ===================================================================== */

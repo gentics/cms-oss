@@ -31,6 +31,7 @@ interface IFeatureUploadConstraintOptions {
 type FormgridPreviewData = {
     formId: string;
     formType: string;
+    pluginName: string;
     schema: FormSchema;
     uiSchema: FormUISchema;
     language: string;
@@ -46,6 +47,7 @@ type FormgridPreviewData = {
  */
 interface PreviewInformation {
     formType: string;
+    pluginName: string;
     features: IFeatures;
     availableLanguages: string[];
     cmsSid?: number;
@@ -155,6 +157,7 @@ export class FormPreviewComponent implements AfterViewInit {
 
     public readonly formId = input.required<number>();
     public readonly formType = input.required<string>();
+    public readonly pluginName = input.required<string>();
     public readonly schema = input.required<FormSchema>();
     public readonly uiSchema = input.required<FormUISchema>();
     public readonly languages = input.required<string[]>();
@@ -286,6 +289,7 @@ export class FormPreviewComponent implements AfterViewInit {
                     currentPage: this.pageIndex(),
                     formId: `${this.formId()}`,
                     formType: this.formType(),
+                    pluginName: this.pluginName(),
                     selectedElementId: this.selectedElementId(),
                     prefillContent: this.prefill(),
                     cmsSid: this.client.getClient().sid as number,
@@ -318,6 +322,7 @@ export class FormPreviewComponent implements AfterViewInit {
                             language: this.activeLanguage(),
                             formId: `${this.formId()}`,
                             formType: this.formType(),
+                            pluginName: this.pluginName(),
                             cmsSid: this.client.getClient().sid as number,
                             pageIndex: this.pageIndex(),
                             elementId: this.selectedElementId(),

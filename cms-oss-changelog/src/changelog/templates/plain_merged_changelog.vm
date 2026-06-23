@@ -51,8 +51,6 @@
 							#set($html = "")
 						#elseif ($entry.type == "security")
 							<h4 id="$!{anchorTarget}" style="vertical-align:middle;"> <strong>Security $entry.ticketReference</strong>$!{anchorLinkHint}</h4>
-						#elseif ($entry.type == "newui")
-							<h4 id="$!{anchorTarget}" style="vertical-align:middle;"> <strong>New UI Update</strong>$!{anchorLinkHint}</h4>
 						#end
 						$html
 					</div>

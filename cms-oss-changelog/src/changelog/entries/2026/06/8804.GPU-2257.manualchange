@@ -1,20 +1,22 @@
-Changes to the Editor-UI Integrations, like custom scripts/Aloha-Plugins in the page edit-mode,
-or custom tag-/property-editors; have to be updated in the implementations:
+Changes to the Editor-UI Integrations, like custom scripts/Aloha-Plugins in the page edit-mode, or custom tag-/property-editors; have to be updated in the implementations:
 
-====== Page edit-mode
+
+h5. Page edit-mode
+
 
 The @GcmsUiBridge@ interface has the following changes:
+* Added function @openImageEditor@ to request that the image editor opens.
+* Deprecated the function @editImage@ in favor of @openImageEditor@, which has a more consistent signature.
+* Removed the deprecated functions @restRequestGET@, @restRequestPOST@, and @restRequestDELETE@. Use the @restClient@ instance (<code>@gentics/cms-rest-client</code>) instead, as mentioned in the deprecation warning.
 
-- Added function @openImageEditor@ to request that the image editor opens.
-- Deprecated the function @editImage@ in favor of @openImageEditor@, which has a more consistent signature.
-- Removed the deprecated functions @restRequestGET@, @restRequestPOST@, and @restRequestDELETE@. Use the @restClient@ instance (@\@gentics/cms-rest-client@) instead, as mentioned in the deprecation warning.
 
-====== Custom Tag/Property Editors
+h5. Custom Tag/Property Editors
+
 
 The @data-gcms-ui-styles@ attribute, which was set to the iframe containing the custom editor, has been removed.
 All styles have to be provided by the custom editor.
 
-The @GcmsUiServices@ interface (see @\@gentics/cms-integration-api-models@), have been aligned with the @GcmsUiBridge@ interface:
 
-- Added the function @openTagEditor@ which was absent
-- Removed the deprecated functions @restRequestGET@, @restRequestPOST@, and @restRequestDELETE@. Use the @restClient@ instance (@\@gentics/cms-rest-client@) instead, as mentioned in the deprecation warning.
+The @GcmsUiServices@ interface (see <code>@gentics/cms-integration-api-models</code>), have been aligned with the @GcmsUiBridge@ interface:
+* Added the function @openTagEditor@ which was absent
+* Removed the deprecated functions @restRequestGET@, @restRequestPOST@, and @restRequestDELETE@. Use the @restClient@ instance (<code>@gentics/cms-rest-client</code>) instead, as mentioned in the deprecation warning.

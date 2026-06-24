@@ -1183,6 +1183,7 @@ const RendererScreen: React.FC<{
   };
 
   const handleSubmitDialogForm = async () => {
+    debugger;
     const isMock: boolean = props.mockForm;
     if (
       !validationUtils.isPageValid(formState, true, uiState.currentPage, isMock)
@@ -1198,16 +1199,7 @@ const RendererScreen: React.FC<{
     uiState.loading = true;
     updateState(StatesToUpdateEnum.UIState);
 
-    const afterValidation = async (valid?: boolean) => {
-      if (!valid) {
-        uiState.loading = false;
-        updateState(StatesToUpdateEnum.UIState);
-        setTimeout(function () {
-          handleFocusError();
-        }, 300);
-        return;
-      }
-      await formEventsUtils.handleSubmitForm(
+    await formEventsUtils.handleSubmitForm(
         formState,
         uiState,
         updateState,
@@ -1222,17 +1214,6 @@ const RendererScreen: React.FC<{
             handleInitFormHooks,
           ),
       );
-    };
-
-    await validationUtils.loadValidationWithHooks(
-      restService,
-      formState,
-      uiState,
-      updateState,
-      afterValidation,
-      undefined,
-      isMock,
-    );
 
     return;
   };

@@ -256,7 +256,6 @@ function ANAggregateElement(props: IFormComponentAttributes) {
   // Merke aktuelle Sortierung (asc/desc) je Spalte
   const [sortDirection, setSortDirection] = useState<string[]>([]);
   const [sortColumn, setSortColumn] = useState<number | null>(null);
-  const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
 
   const [overlayConfirmationState, setOverlayConfirmationState] =
     useState<IOverlayConfirmationState>();
@@ -737,7 +736,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
           key={'agg-mobile-container-' + props.jsonpath}
         >
           {tableRows.map((row, ri) => (
-            <Pressable
+            <HoverableRow
               accessible
               accessibilityRole="button"
               accessibilityLabel={t('form_accessibility_aggregate_record', {
@@ -753,12 +752,8 @@ function ANAggregateElement(props: IFormComponentAttributes) {
                 '-' +
                 row.originalIndex
               }
-              onHoverIn={() => setHoveredRowIndex(ri)}
-              onHoverOut={() => setHoveredRowIndex(null)}
-              style={[
-                styles.mobileCard,
-                hoveredRowIndex === ri && styles.mobileCardHover,
-              ]}
+              baseStyle={styles.mobileCard}
+              hoverStyle={styles.mobileCardHover}
             >
               {tableHeaders.map((header, ci) => (
                 <View
@@ -818,7 +813,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
                   </Pressable>
                 )}
               </View>
-            </Pressable>
+            </HoverableRow>
           ))}
         </View>
       );
@@ -863,7 +858,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
 
         {/* Tabellenbody */}
         {tableRows.map((row, rowIndex) => (
-          <Pressable
+          <HoverableRow
             id={`${props.jsonpath}.value[${rowIndex}]`}
             key={row.originalIndex}
             accessible
@@ -873,12 +868,10 @@ function ANAggregateElement(props: IFormComponentAttributes) {
             accessibilityHint={t('form_accessibility_aggregate_row_hint', {
               index: rowIndex + 1,
             })}
-            onHoverIn={() => setHoveredRowIndex(row.originalIndex)}
-            onHoverOut={() => setHoveredRowIndex(null)}
-            style={[
+            baseStyle={[
               styles.tableRow,
-              hoveredRowIndex === row.originalIndex && styles.tableRowHover,
             ]}
+            hoverStyle={styles.tableRowHover}
           >
             {row.tableCells.map((cell, vi) => (
               <AndpText key={vi} style={styles.tableCell}>
@@ -999,7 +992,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
                 </>
               )}
             </View>
-          </Pressable>
+          </HoverableRow>
         ))}
       </View>
     );
@@ -2328,5 +2321,41 @@ const AggregateAddButton = ({
     </Pressable>
   );
 };
+
+
+const AnimatedRowPressable = Reanimated.createAnimatedComponent(Pressable);
+
+/**
+ * Row wrapper that animates its hover state via useHoverStyle.
+ */
+function HoverableRow({
+  baseStyle,
+  hoverStyle,
+  transitionDuration,
+  children,
+  ...rest
+}: {
+  baseStyle: any;
+  hoverStyle: any;
+  transitionDuration?: number;
+  children: React.ReactNode;
+  [key: string]: any;
+}) {
+  const { animatedStyle, onHoverIn, onHoverOut } = useHoverStyle(
+    baseStyle,
+    hoverStyle,
+    transitionDuration,
+  );
+  return (
+    <AnimatedRowPressable
+      {...rest}
+      onHoverIn={onHoverIn}
+      onHoverOut={onHoverOut}
+      style={animatedStyle}
+    >
+      {children}
+    </AnimatedRowPressable>
+  );
+}
 
 export default ANAggregateElement;

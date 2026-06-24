@@ -568,6 +568,7 @@ const aggregateElementStyles = StyleSheet.create({
     cursor: 'auto',
     borderBottomWidth: theme.border.width.regular,
     borderColor: theme.border.color.darkGray,
+    backgroundColor: theme.colors.backgroundPrimary
   },
 
   tableCell: {

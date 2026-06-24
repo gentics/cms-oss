@@ -161,7 +161,6 @@ export const useHoverStyle = (
   });
 
   const onHoverIn = () => {
-    console.log('Hovering');
     hover.value = withTiming(1, { duration: transitionDuration });
   };
 

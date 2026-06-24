@@ -708,6 +708,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
                 obj.id,
                 t,
                 obj?.formGridOptions,
+                props.restService
               )
             : '';
 

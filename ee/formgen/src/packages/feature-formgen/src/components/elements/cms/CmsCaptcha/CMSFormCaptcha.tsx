@@ -10,13 +10,14 @@ interface Props {
 
 export default function CMSFormCaptcha({ formState }: Props) {
   const config = formState.captchaConfig;
-  if (!config) return null;
-
   const breakPoints = useBreakpoints();
+
   const widthStyle = widthFromColumNumber(
     formState.form.formwidth || 8,
     breakPoints,
   );
+
+  if (!config) return null;
 
   const renderElement = () => {
     switch (config.provider) {

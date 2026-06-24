@@ -1050,7 +1050,7 @@ export function mapCaptchaConfig(
   return {
     provider: raw.provider,
     siteKey: raw.sitekey,
-    mode: raw.mode as FriendlyCaptchaMode | reCaptchaMode | undefined,
+    mode: raw.mode as FriendlyCaptchaMode | reCaptchaMode,
     baseUrl: raw.baseUrl,
     language: raw.language,
   };
